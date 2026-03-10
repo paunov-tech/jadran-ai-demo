@@ -228,6 +228,7 @@ const INTERESTS = [
 /* ─── COMPONENT ─── */
 export default function JadranUnified() {
   const [lang, setLang] = useState("hr");
+  const [splash, setSplash] = useState(true);
   const [phase, setPhase] = useState("pre"); // pre | kiosk | post
   const [subScreen, setSubScreen] = useState("onboard"); // varies per phase
   const [premium, setPremium] = useState(false);
@@ -247,6 +248,7 @@ export default function JadranUnified() {
   const chatEnd = useRef(null);
 
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMsgs]);
+  useEffect(() => { const t = setTimeout(() => setSplash(false), 3800); return () => clearTimeout(t); }, []);
 
   const hour = simHour ?? new Date().getHours();
   const timeCtx = hour < 6 ? "night" : hour < 12 ? "morning" : hour < 18 ? "midday" : hour < 22 ? "evening" : "night";
@@ -799,6 +801,133 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   );
 
   /* ═══ MAIN RENDER ═══ */
+
+  /* ─── CINEMATIC SPLASH ─── */
+  if (splash) return (
+    <div style={{ fontFamily: "'Cormorant Garamond','Georgia',serif", background: "#040608", color: "#E8E0D4", minHeight: "100vh", display: "grid", placeItems: "center", position: "relative", overflow: "hidden" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Outfit:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
+      <style>{`
+        @keyframes splash-wave-1 { 0% { d: path('M0,160 C320,220 640,100 960,160 C1120,190 1280,130 1440,160 L1440,320 L0,320 Z'); }
+          50% { d: path('M0,180 C320,120 640,220 960,140 C1120,110 1280,200 1440,170 L1440,320 L0,320 Z'); }
+          100% { d: path('M0,160 C320,220 640,100 960,160 C1120,190 1280,130 1440,160 L1440,320 L0,320 Z'); } }
+        @keyframes splash-wave-2 { 0% { d: path('M0,200 C360,160 720,240 1080,190 C1260,170 1350,220 1440,200 L1440,320 L0,320 Z'); }
+          50% { d: path('M0,190 C360,240 720,160 1080,210 C1260,230 1350,180 1440,205 L1440,320 L0,320 Z'); }
+          100% { d: path('M0,200 C360,160 720,240 1080,190 C1260,170 1350,220 1440,200 L1440,320 L0,320 Z'); } }
+        @keyframes splash-wave-3 { 0% { d: path('M0,240 C400,220 800,260 1200,235 C1320,225 1380,250 1440,240 L1440,320 L0,320 Z'); }
+          50% { d: path('M0,235 C400,260 800,220 1200,245 C1320,255 1380,230 1440,242 L1440,320 L0,320 Z'); }
+          100% { d: path('M0,240 C400,220 800,260 1200,235 C1320,225 1380,250 1440,240 L1440,320 L0,320 Z'); } }
+        @keyframes splash-logo-reveal { 0% { opacity:0; transform: scale(0.7) translateY(10px); filter: blur(8px); }
+          60% { opacity:1; transform: scale(1.02) translateY(0); filter: blur(0); }
+          100% { opacity:1; transform: scale(1) translateY(0); filter: blur(0); } }
+        @keyframes splash-text-reveal { 0% { opacity:0; transform: translateY(16px); letter-spacing: 12px; }
+          100% { opacity:1; transform: translateY(0); letter-spacing: 8px; } }
+        @keyframes splash-tagline { 0% { opacity:0; transform: translateY(10px); } 100% { opacity:0.6; transform: translateY(0); } }
+        @keyframes splash-line { 0% { width: 0; } 100% { width: 80px; } }
+        @keyframes splash-dots { 0%,20% { opacity:0; } 30% { opacity:1; } 60% { opacity:1; } 70%,100% { opacity:0; } }
+        @keyframes splash-glow { 0%,100% { box-shadow: 0 0 40px rgba(0,180,216,0.2), 0 0 80px rgba(0,180,216,0.08); }
+          50% { box-shadow: 0 0 60px rgba(0,180,216,0.35), 0 0 120px rgba(0,180,216,0.12); } }
+        @keyframes splash-fade-out { 0% { opacity:1; } 100% { opacity:0; pointer-events:none; } }
+        @keyframes splash-particles { 0% { transform: translateY(0) scale(1); opacity: 0.4; }
+          100% { transform: translateY(-120px) scale(0); opacity: 0; } }
+        .splash-wrap { animation: splash-fade-out 0.8s ease 3s forwards; }
+      `}</style>
+
+      {/* Ambient light */}
+      <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse at 50% 60%, rgba(0,180,216,0.06) 0%, transparent 60%), radial-gradient(ellipse at 50% 40%, rgba(201,168,76,0.03) 0%, transparent 50%)" }} />
+
+      {/* Animated waves at bottom */}
+      <svg style={{ position:"absolute", bottom:0, left:0, width:"100%", height:"320px", opacity:0.12 }} viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path fill="#00B4D8" style={{ animation:"splash-wave-1 6s ease-in-out infinite" }}
+          d="M0,160 C320,220 640,100 960,160 C1120,190 1280,130 1440,160 L1440,320 L0,320 Z" />
+        <path fill="#0077B6" style={{ animation:"splash-wave-2 7s ease-in-out infinite", opacity:0.6 }}
+          d="M0,200 C360,160 720,240 1080,190 C1260,170 1350,220 1440,200 L1440,320 L0,320 Z" />
+        <path fill="#023E8A" style={{ animation:"splash-wave-3 5s ease-in-out infinite", opacity:0.4 }}
+          d="M0,240 C400,220 800,260 1200,235 C1320,225 1380,250 1440,240 L1440,320 L0,320 Z" />
+      </svg>
+
+      {/* Floating particles */}
+      <div style={{ position:"absolute", inset:0, pointerEvents:"none" }}>
+        {[...Array(12)].map((_, i) => (
+          <div key={i} style={{
+            position:"absolute",
+            left: `${8 + (i * 7.5)}%`,
+            bottom: `${10 + (i % 3) * 15}%`,
+            width: 3 + (i % 3),
+            height: 3 + (i % 3),
+            borderRadius: "50%",
+            background: i % 2 === 0 ? "rgba(0,180,216,0.5)" : "rgba(201,168,76,0.4)",
+            animation: `splash-particles ${3 + (i % 4)}s ease-in-out ${0.5 + i * 0.3}s infinite`,
+          }} />
+        ))}
+      </div>
+
+      {/* Center content */}
+      <div className="splash-wrap" style={{ textAlign:"center", position:"relative", zIndex:2 }}>
+        {/* Logo circle */}
+        <div style={{
+          width: 96, height: 96, borderRadius: "50%",
+          background: "linear-gradient(135deg, #00B4D8, #0077B6, #023E8A)",
+          display: "grid", placeItems: "center",
+          margin: "0 auto 28px",
+          fontSize: 40, fontWeight: 700, color: "#fff",
+          animation: "splash-logo-reveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both, splash-glow 3s ease-in-out infinite",
+        }}>J</div>
+
+        {/* Brand name */}
+        <div style={{
+          fontSize: 44, fontWeight: 300, textTransform: "uppercase", color: "#E8E0D4",
+          animation: "splash-text-reveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both",
+          letterSpacing: 8,
+        }}>JADRAN</div>
+
+        {/* Decorative line */}
+        <div style={{
+          height: 1, background: "linear-gradient(90deg, transparent, rgba(0,180,216,0.5), rgba(201,168,76,0.3), transparent)",
+          margin: "16px auto",
+          animation: "splash-line 1s cubic-bezier(0.16, 1, 0.3, 1) 1.2s both",
+        }} />
+
+        {/* Tagline */}
+        <div style={{
+          fontFamily: "'Outfit', sans-serif",
+          fontSize: 14, fontWeight: 300, textTransform: "uppercase", letterSpacing: 4,
+          color: "rgba(0,180,216,0.7)",
+          animation: "splash-tagline 0.8s ease 1.6s both",
+        }}>Your Adriatic, Reimagined</div>
+
+        {/* Loading dots */}
+        <div style={{ display:"flex", justifyContent:"center", gap: 6, marginTop: 32 }}>
+          {[0,1,2].map(i => (
+            <div key={i} style={{
+              width: 5, height: 5, borderRadius: "50%",
+              background: "rgba(0,180,216,0.5)",
+              animation: `splash-dots 1.5s ease ${1.8 + i * 0.2}s infinite`,
+            }} />
+          ))}
+        </div>
+
+        {/* Powered by */}
+        <div style={{
+          fontFamily: "'Outfit', sans-serif",
+          fontSize: 10, color: "rgba(107,101,96,0.3)", letterSpacing: 2, textTransform: "uppercase",
+          marginTop: 40,
+          animation: "splash-tagline 0.6s ease 2.2s both",
+        }}>SIAL Consulting d.o.o. · AI-Powered Concierge</div>
+      </div>
+
+      {/* Skip button */}
+      <button onClick={() => setSplash(false)} style={{
+        position:"absolute", bottom: 40, fontFamily:"'Outfit',sans-serif",
+        background:"none", border:"1px solid rgba(232,224,212,0.1)", borderRadius: 20,
+        color:"rgba(232,224,212,0.3)", fontSize: 11, padding:"8px 20px", cursor:"pointer",
+        letterSpacing: 2, textTransform:"uppercase", transition:"all 0.3s",
+        animation: "splash-tagline 0.5s ease 2.5s both",
+      }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(0,180,216,0.3)"; e.currentTarget.style.color = "rgba(0,180,216,0.5)"; }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(232,224,212,0.1)"; e.currentTarget.style.color = "rgba(232,224,212,0.3)"; }}
+      >Skip</button>
+    </div>
+  );
   return (
     <div style={{ fontFamily: "'Cormorant Garamond','Georgia',serif", background: C.bg, color: C.text, minHeight: "100vh", position: "relative" }}>
       {fonts}
