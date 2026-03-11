@@ -19,9 +19,9 @@ const DESTINATIONS = [
 ];
 
 const STEPS = [
-  { num: "01", icon: "🏠", title: "Domaćin kreira apartman", desc: "Registrira smještaj i generira jedinstveni QR kod" },
-  { num: "02", icon: "📱", title: "Gost skenira QR", desc: "Na zidu apartmana — unosi profil i interese" },
-  { num: "03", icon: "🌊", title: "Osobni vodič 24/7", desc: "Provjerene preporuke, lokalni savjeti, rezervacije" },
+  { num: "01", icon: "💬", title: "Pitajte bilo što", desc: "Gdje parkirati kamper? Ima li dump station? Koja plaža za djecu? — odgovor za 3 sekunde." },
+  { num: "02", icon: "📍", title: "Lokalni savjeti", desc: "Ne generički TripAdvisor — nego savjeti od ljudi koji žive na obali. Cijene, udaljenosti, radno vrijeme." },
+  { num: "03", icon: "🌊", title: "Cijela sezona", desc: "Jedan pristup za cijelo ljeto — od Istre do Dubrovnika, na 8 jezika, na svakom uređaju." },
 ];
 
 export default function LandingPage() {
@@ -69,8 +69,13 @@ export default function LandingPage() {
               🗺️ Vodič <span style={{ fontSize: 9, opacity: 0.7, marginLeft: 2 }}>✦</span>
             </a>
             <a href="/host" style={{ padding: "10px 20px", borderRadius: 12, border: "1px solid rgba(14,165,233,0.15)", color: "#7dd3fc", fontSize: 13, textDecoration: "none", fontWeight: 500 }}>
-              🏠 Host Panel
+              🏠 Host
             </a>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <input value={roomInput} onChange={e => setRoomInput(e.target.value)} onKeyDown={e => e.key === "Enter" && goRoom()}
+                placeholder="Room kod" style={{ width: 80, padding: "8px 10px", borderRadius: 10, border: "1px solid rgba(14,165,233,0.1)", background: "transparent", color: "#64748b", fontSize: 11, outline: "none", fontFamily: "inherit" }} />
+              {roomInput && <button onClick={goRoom} style={{ padding: "8px 10px", borderRadius: 10, background: "rgba(14,165,233,0.1)", border: "none", color: "#7dd3fc", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>→</button>}
+            </div>
           </div>
         </div>
 
@@ -80,47 +85,30 @@ export default function LandingPage() {
           opacity: anim ? 1 : 0, transform: anim ? "translateY(0)" : "translateY(30px)",
           transition: "all 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
         }}>
-          <div style={{ fontSize: 60, marginBottom: 20 }}>🌊</div>
+          <div style={{ fontSize: 60, marginBottom: 20 }}>🚐</div>
           <h1 style={{
             fontFamily: "'DM Serif Display', Georgia, serif",
             fontSize: "clamp(36px, 6vw, 56px)", fontWeight: 400, lineHeight: 1.1,
             background: "linear-gradient(135deg, #f0f9ff 30%, #0ea5e9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
             marginBottom: 16,
           }}>
-            Lokalni vodič<br />za savršen Jadran
+            Vaš lokalni vodič<br />za Jadran
           </h1>
-          <p style={{ fontSize: 18, color: "#7dd3fc", maxWidth: 560, margin: "0 auto 40px", lineHeight: 1.6, fontWeight: 300 }}>
-            Provjerene preporuke od lokalaca, skrivene plaže, najbolji restorani — za sve koji vole Jadran. Dostupno na 8 jezika.
+          <p style={{ fontSize: 18, color: "#7dd3fc", maxWidth: 560, margin: "0 auto 32px", lineHeight: 1.6, fontWeight: 300 }}>
+            Legalna noćenja, plaže za kampere, dump station, restorani — sve od lokalaca. Za kampere, jedriličare i sve koji istražuju obalu.
           </p>
 
-          {/* Room code input */}
-          <div style={{
-            display: "inline-flex", gap: 8, padding: 6, borderRadius: 18,
-            background: "rgba(12,28,50,0.7)", border: "1px solid rgba(14,165,233,0.12)",
-            backdropFilter: "blur(20px)",
-          }}>
-            <input
-              type="text"
-              placeholder="Unesite room kod (npr. JADRAN-AB34)"
-              value={roomInput}
-              onChange={e => setRoomInput(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && goRoom()}
-              style={{
-                padding: "14px 20px", borderRadius: 14, border: "none",
-                background: "transparent", color: "#fff", fontSize: 15,
-                outline: "none", width: "min(300px, 50vw)", fontFamily: "inherit",
-              }}
-            />
-            <button onClick={goRoom} style={{
-              padding: "14px 28px", borderRadius: 14, border: "none",
-              background: "linear-gradient(135deg, #0ea5e9, #0284c7)",
-              color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer",
-              boxShadow: "0 4px 16px rgba(14,165,233,0.25)",
-              fontFamily: "inherit",
-            }}>Otvori →</button>
-          </div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 12 }}>
-            Imate QR kod u apartmanu? Skenirajte ili unesite kod ručno.
+          {/* Primary CTA */}
+          <a href="/ai" style={{
+            display: "inline-block", padding: "18px 48px", borderRadius: 18,
+            background: "linear-gradient(135deg, #0ea5e9, #0284c7)",
+            color: "#fff", fontSize: 18, fontWeight: 600, textDecoration: "none",
+            fontFamily: "'DM Serif Display', Georgia, serif",
+            boxShadow: "0 8px 32px rgba(14,165,233,0.3)",
+            transition: "all 0.3s",
+          }}>Isprobajte besplatno →</a>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", marginTop: 14 }}>
+            12 sati besplatno · 3.99€/sezona · 8 jezika · na svakom uređaju
           </div>
         </div>
       </div>
@@ -130,7 +118,7 @@ export default function LandingPage() {
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 40 }}>
             <div style={{ fontSize: 10, color: "#0ea5e9", letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>KAKO FUNKCIONIRA</div>
-            <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 400 }}>Tri koraka do savršenog odmora</div>
+            <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 400 }}>Kako radi do savršenog odmora</div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
             {STEPS.map((s, i) => (
@@ -191,47 +179,51 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* ═══ AI STANDALONE CTA ═══ */}
+      {/* ═══ DEMO VIDEO + SOUND ═══ */}
       <div style={{ padding: "60px 24px", background: "rgba(0,0,0,0.1)" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
-          {/* AI for everyone */}
-          <div style={{
-            padding: 32, borderRadius: 24, textAlign: "center",
-            background: "linear-gradient(135deg, rgba(14,165,233,0.08), rgba(2,132,199,0.04))",
-            border: "1px solid rgba(14,165,233,0.12)",
-          }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🗺️</div>
-            <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, marginBottom: 8 }}>Osobni vodič</div>
-            <div style={{ fontSize: 13, color: "#7dd3fc", marginBottom: 20, lineHeight: 1.6 }}>
-              Pitajte bilo što o destinaciji — preporuke restorana, skrivene plaže, praktični savjeti. 3 besplatna pitanja.
-            </div>
-            <a href="/ai" style={{
-              display: "inline-block", padding: "14px 28px", borderRadius: 16,
-              background: "linear-gradient(135deg, #0ea5e9, #0284c7)",
-              color: "#fff", fontSize: 15, fontWeight: 600, textDecoration: "none",
-              fontFamily: "'DM Serif Display', Georgia, serif",
-              boxShadow: "0 4px 16px rgba(14,165,233,0.25)",
-            }}>Probajte besplatno →</a>
+        <div style={{ maxWidth: 800, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 32 }}>
+            <div style={{ fontSize: 10, color: "#0ea5e9", letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>POGLEDAJTE U AKCIJI</div>
+            <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 400 }}>Vodič koji razumije putnike</div>
           </div>
-
-          {/* Camper special */}
-          <div style={{
-            padding: 32, borderRadius: 24, textAlign: "center",
-            background: "linear-gradient(135deg, rgba(245,158,11,0.06), rgba(251,191,36,0.03))",
-            border: "1px solid rgba(245,158,11,0.1)",
-          }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🚐</div>
-            <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, marginBottom: 8 }}>Kamper vodič</div>
-            <div style={{ fontSize: 13, color: "#fbbf24", marginBottom: 20, lineHeight: 1.6 }}>
-              Legalna noćenja, punjenje vode, parkirališta za kampere — sve na jednom mjestu duž cijele obale.
+          {/* Ambient video — Adriatic coast drone footage */}
+          <div style={{ borderRadius: 24, overflow: "hidden", position: "relative", aspectRatio: "16/9", marginBottom: 24, background: "#0c1c32" }}>
+            <video
+              autoPlay muted loop playsInline
+              style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }}
+              poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect fill='%230c1c32' width='16' height='9'/%3E%3Ctext x='8' y='5' text-anchor='middle' fill='%230ea5e9' font-size='2' opacity='0.3'%3E🌊%3C/text%3E%3C/svg%3E"
+            >
+              <source src="https://cdn.coverr.co/videos/coverr-an-aerial-view-of-the-ocean-1585/1080p.mp4" type="video/mp4" />
+            </video>
+            {/* Overlay with key features */}
+            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "40px 28px 24px", background: "linear-gradient(transparent, rgba(6,14,28,0.9))" }}>
+              <div style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 16 }}>
+                {[
+                  { icon: "🚐", text: "Kamper parking" },
+                  { icon: "💧", text: "Dump station" },
+                  { icon: "🏖️", text: "Plaže" },
+                  { icon: "🍽️", text: "Restorani" },
+                  { icon: "⛽", text: "LPG stanice" },
+                ].map((f, i) => (
+                  <div key={i} style={{ textAlign: "center", color: "rgba(255,255,255,0.8)", fontSize: 12, fontFamily: "'Outfit',sans-serif" }}>
+                    <div style={{ fontSize: 24, marginBottom: 4 }}>{f.icon}</div>
+                    {f.text}
+                  </div>
+                ))}
+              </div>
             </div>
-            <a href="/ai" style={{
-              display: "inline-block", padding: "14px 28px", borderRadius: 16,
-              background: "linear-gradient(135deg, #f59e0b, #d97706)",
-              color: "#fff", fontSize: 15, fontWeight: 600, textDecoration: "none",
-              fontFamily: "'DM Serif Display', Georgia, serif",
-              boxShadow: "0 4px 16px rgba(245,158,11,0.25)",
-            }}>Kamper mode →</a>
+          </div>
+          {/* Ambient sound toggle */}
+          <div style={{ textAlign: "center" }}>
+            <button onClick={() => {
+              const a = document.getElementById("sea-audio");
+              if (a) { if (a.paused) { a.play(); a.volume = 0.3; } else a.pause(); }
+            }} style={{ padding: "10px 24px", borderRadius: 14, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.12)", color: "#7dd3fc", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>
+              🔊 Zvuk mora
+            </button>
+            <audio id="sea-audio" loop preload="none">
+              <source src="https://cdn.freesound.org/previews/531/531015_4921277-lq.mp3" type="audio/mpeg" />
+            </audio>
           </div>
         </div>
       </div>
@@ -245,9 +237,9 @@ export default function LandingPage() {
           border: "1px solid rgba(245,158,11,0.1)",
         }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>⭐</div>
-          <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 28, fontWeight: 400, marginBottom: 8 }}>Premium za 5.99€</div>
+          <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 28, fontWeight: 400, marginBottom: 8 }}>Sezonska pretplata — 3.99€</div>
           <div style={{ fontSize: 14, color: "#7dd3fc", maxWidth: 440, margin: "0 auto 24px", lineHeight: 1.6 }}>
-            Neograničeni razgovori s lokalnim vodičem, skrivena mjesta, detaljna prognoza, praćenje troškova — cijeli boravak.
+            12 sati besplatno za probati. Cijela sezona, neograničeno pitanja, svi uređaji — od Istre do Dubrovnika.
           </div>
           <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap", fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
             {["💬 Lokalni vodič", "💎 Skrivena mjesta", "🍽️ Restorani", "🗺️ Tajne rute", "☀️ Detaljna prognoza", "💰 Praćenje troškova"].map(f => (

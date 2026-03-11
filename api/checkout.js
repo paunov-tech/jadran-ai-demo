@@ -20,8 +20,8 @@ export default async function handler(req, res) {
       line_items: [{
         price_data: {
           currency: "eur",
-          product_data: { name: "JADRAN AI Premium Concierge" },
-          unit_amount: 599,
+          product_data: { name: "JADRAN Vodič — Sezona 2026" },
+          unit_amount: 399,
         },
         quantity: 1,
       }],
