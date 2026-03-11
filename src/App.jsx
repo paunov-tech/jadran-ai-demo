@@ -640,7 +640,7 @@ export default function JadranUnified() {
   const hour = simHour ?? new Date().getHours();
   const timeCtx = hour < 6 ? "night" : hour < 12 ? "morning" : hour < 18 ? "midday" : hour < 22 ? "evening" : "night";
   const dateLocale = lang === "de" || lang === "at" ? "de-DE" : lang === "en" ? "en-GB" : lang === "it" ? "it-IT" : lang === "si" ? "sl-SI" : lang === "cz" ? "cs-CZ" : lang === "pl" ? "pl-PL" : "hr-HR";
-  const isAdmin = isAdmin;
+  const isAdmin = new URLSearchParams(window.location.search).get("admin") === "sial";
   const daysLeft = 7 - kioskDay + 1;
   const budgetLeft = G.budget - G.spent;
 
