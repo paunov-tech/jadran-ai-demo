@@ -261,7 +261,7 @@ const PRACTICAL = {
     { n: {hr:"Hitna pomoć",de:"Notruf",en:"Emergency",it:"Emergenza",si:"Nujna pomoč",cz:"Tísňové volání",pl:"Pogotowie"}, note: "112 / 194", warn: true },
     { n: {hr:"Ljekarna",de:"Apotheke",en:"Pharmacy",it:"Farmacia",si:"Lekarna",cz:"Lékárna",pl:"Apteka"}, d: "300m", note: {hr:"Do 20h",de:"Bis 20 Uhr",en:"Until 8pm",it:"Fino alle 20",si:"Do 20h",cz:"Do 20h",pl:"Do 20:00"}, mapKey: "ljekarna" },
     { n: "WiFi", note: "VillaMarija-5G · Lozinka/Password: jadran2026" },
-    { n: {hr:"Domaćin",de:"Gastgeber",en:"Host",it:"Padrone di casa",si:"Gostitelj",cz:"Hostitel",pl:"Gospodarz"}, note: `${G.host}: ${G.hostPhone} (WhatsApp)` },
+    { n: {hr:"Domaćin",de:"Gastgeber",en:"Host",it:"Padrone di casa",si:"Gostitelj",cz:"Hostitel",pl:"Gospodarz"}, note: `${GUEST_FALLBACK.host}: ${GUEST_FALLBACK.hostPhone} (WhatsApp)` },
   ]},
 };
 
