@@ -508,23 +508,36 @@ export default function JadranUnified() {
     // Live weather
     fetch("/api/gemini", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: "Current weather in Podstrana, Split, Croatia right now. Sea temperature, UV index, sunset time today.", mode: "weather" }),
+      body: JSON.stringify({ prompt: "Current weather RIGHT NOW in Podstrana Split Croatia. Give exact temperature, sea water temperature, UV index, wind direction and speed, humidity percentage, and today's sunset time. Be precise with numbers.", mode: "weather" }),
     }).then(r => r.json()).then(data => {
       try {
-        const clean = data.text.replace(/```json|```/g, "").trim();
-        const w = JSON.parse(clean);
+        let raw = data.text || "";
+        raw = raw.replace(/```json|```/g, "").trim();
+        const objStart = raw.indexOf("{");
+        const objEnd = raw.lastIndexOf("}");
+        if (objStart >= 0 && objEnd > objStart) raw = raw.substring(objStart, objEnd + 1);
+        const w = JSON.parse(raw);
         if (w.temp) setWeather({ icon: w.icon || "☀️", temp: w.temp, sea: w.sea || 24, uv: w.uv || 7, wind: w.wind || "N/A", sunset: w.sunset || "20:30", humidity: w.humidity || 50 });
       } catch { /* keep default */ }
     }).catch(() => { /* keep default */ });
     // Live 7-day forecast
     fetch("/api/gemini", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: "7-day weather forecast for Split, Croatia starting today. For each day give high and low temperature and weather emoji icon.", mode: "forecast" }),
+      body: JSON.stringify({ prompt: "7-day weather forecast for Split Croatia starting today March 2026. Give high and low temperature for each day and appropriate weather emoji (☀️ for sunny, ⛅ for partly cloudy, 🌧️ for rain, 🌤️ for mostly sunny, ⛈️ for storm, 🌦️ for showers). Use real forecast data.", mode: "forecast" }),
     }).then(r => r.json()).then(data => {
       try {
-        const clean = data.text.replace(/```json|```/g, "").trim();
-        const fc = JSON.parse(clean);
-        if (Array.isArray(fc) && fc.length >= 7 && fc[0].h) setForecast(fc);
+        let raw = data.text || "";
+        raw = raw.replace(/```json|```/g, "").trim();
+        // Find JSON array in response
+        const arrStart = raw.indexOf("[");
+        const arrEnd = raw.lastIndexOf("]");
+        if (arrStart >= 0 && arrEnd > arrStart) raw = raw.substring(arrStart, arrEnd + 1);
+        const fc = JSON.parse(raw);
+        if (Array.isArray(fc) && fc.length >= 5 && fc[0].h !== undefined) {
+          // Ensure 7 items, pad if needed
+          while (fc.length < 7) fc.push({ di: fc.length, icon: "☀️", h: 28, l: 20 });
+          setForecast(fc.slice(0, 7));
+        }
       } catch { /* keep default */ }
     }).catch(() => { /* keep default */ });
   }, []);
@@ -1192,12 +1205,12 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
     const [liveLoading, setLiveLoading] = useState(false);
     useEffect(() => {
       const prompts = {
-        parking: "Current parking options near Podstrana and Split Croatia. Include prices per hour, availability, whether they accept cards/SMS payment. Include Parking ispred vile (free), Podstrana centar, Garaža Lora Split.",
-        beach: "Current beach conditions near Podstrana and Split Croatia today. Include water temperature, crowd level, facilities, which beaches have sand vs pebbles. Include Podstrana beach, Kašjuni, Bačvice, Zlatni Rat Brač.",
-        food: "Restaurants, supermarkets and bakeries near Podstrana Croatia. Current opening hours today, delivery options. Include Konzum, local konobas, Wolt/Glovo availability.",
-        routes: "How to get from Podstrana to Split, Trogir, Omiš, and Brač/Hvar by car and bus. Current schedules, prices, travel times. Include ferry schedules from Split.",
-        sun: "Current UV index and sun safety for Split Croatia coast today. Sea temperature, recommended sun protection, pharmacy locations near Podstrana.",
-        emergency: "Emergency contacts for Podstrana/Split Croatia. Hospital, pharmacy hours, police, coast guard numbers.",
+        parking: "List 5 parking options near Podstrana and Split Croatia with current prices 2025/2026. Include: 1) Free parking spots in Podstrana 2) Paid parking Podstrana center ~1€/h 3) Garaža Lora Split covered garage ~10€/day 4) Street parking Split Riva area 5) Park & Ride options. For each give name, price, distance from Podstrana, payment method (cash/card/SMS).",
+        beach: "List 6 beaches near Podstrana Split Croatia with current conditions. Include: 1) Plaža Podstrana 200m - pebble, sunbeds 2) Kašjuni 6km - pebble, most beautiful 3) Bačvice 9km - SAND family friendly 4) Žnjan 7km - long pebble beach 5) Stobreč 3km - sandy areas 6) Zlatni Rat Brač - iconic, ferry needed. For each: distance from Podstrana, type (sand/pebble), facilities, parking, current sea temperature ~23-25°C.",
+        food: "List 6 food options near Podstrana Split Croatia. Include: 1) Konzum supermarket Podstrana 400m open 7-21h 2) Pekara/Bakery Podstrana from 6am 3) Konoba Stari Mlin Srinjine 15min authentic 4) Wolt/Glovo delivery from Split 5) Ribarski restoran seafood 6) Lidl Split 8km budget. For each: name, distance, hours, specialty, price range.",
+        routes: "List 5 transport routes from Podstrana Croatia. Include: 1) Split center 10km - bus #60 every 20min 2€, car 15min 2) Trogir 30km UNESCO - car 25min 3) Omiš 15km + Cetina rafting - car 18min 4) Ferry Split-Brač/Hvar from Jadrolinija - schedule and prices 2025 5) Airport Kaštela 25km. For each: distance, transport options, time, price.",
+        sun: "Sun safety info for Split Croatia coast today. Include: 1) Current UV index and forecast 2) Recommended SPF level 3) Safe swimming hours 4) Sea water temperature 5) Nearest pharmacy in Podstrana 300m hours 8-20h 6) Hydration tips for 30°C+ heat. Give specific actionable advice.",
+        emergency: "Emergency info for Podstrana Split Croatia. Include: 1) Emergency number 112 2) Ambulance 194 3) Police 192 4) Coast guard 195 5) Nearest hospital KBC Split 10km 6) Pharmacy Podstrana 300m open until 20h 7) Tourist police Split. Give exact phone numbers.",
       };
       const prompt = prompts[subScreen];
       if (!prompt) return;
@@ -1207,9 +1220,14 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         body: JSON.stringify({ prompt, mode: "practical" }),
       }).then(r => r.json()).then(d => {
         try {
-          const clean = d.text.replace(/```json|```/g, "").trim();
-          const items = JSON.parse(clean);
-          if (Array.isArray(items) && items.length > 0) setLiveItems(items);
+          let raw = d.text || "";
+          raw = raw.replace(/```json|```/g, "").trim();
+          const arrStart = raw.indexOf("[");
+          const arrEnd = raw.lastIndexOf("]");
+          if (arrStart >= 0 && arrEnd > arrStart) raw = raw.substring(arrStart, arrEnd + 1);
+          raw = raw.replace(/,\s*([}\]])/g, '$1'); // trailing commas
+          const items = JSON.parse(raw);
+          if (Array.isArray(items) && items.length > 0 && items[0].name) setLiveItems(items);
         } catch { /* keep static */ }
         setLiveLoading(false);
       }).catch(() => setLiveLoading(false));
