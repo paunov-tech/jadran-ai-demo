@@ -415,17 +415,7 @@ export default function JadranUnified() {
   console.log("[JADRAN] Component mounted, roomCode:", getRoomCode());
   const [lang, setLang] = useState("hr");
   const [splash, setSplash] = useState(true);
-  // Auto-compute initial phase from guest dates
-  const computeInitialPhase = () => {
-    const now = new Date();
-    const arr = G.arrival ? new Date(G.arrival) : null;
-    const dep = G.departure ? new Date(G.departure) : null;
-    if (arr && now < arr) return "pre";
-    if (arr && dep && now >= arr && now <= dep) return "kiosk";
-    if (dep && now > dep) return "post";
-    return "pre";
-  };
-  const [phase, setPhase] = useState("pre"); // overridden by loadGuest
+  const [phase, setPhase] = useState("pre"); // overridden by loadGuest on mount
   const [subScreen, setSubScreen] = useState("onboard"); // varies per phase
   const [premium, setPremium] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
