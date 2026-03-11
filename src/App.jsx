@@ -653,10 +653,21 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   };
 
   /* ─── COLORS ─── */
-  const C = {
-    bg: "#060910", card: "#0C1018", accent: "#00B4D8", acDim: "rgba(0,180,216,0.1)",
-    gold: "#C9A84C", goDim: "rgba(201,168,76,0.08)", text: "#E8E0D4", mut: "#6B6560",
-    bord: "rgba(232,224,212,0.05)", red: "#EF4444", green: "#22C55E", grDim: "rgba(34,197,94,0.08)",
+  // ─── TIME-AWARE COLOR SYSTEM ───
+  // Azure Blue (day: 6-19h) → Night Blue (evening: 19-6h)
+  const isNight = hour >= 19 || hour < 6;
+  const C = isNight ? {
+    // 🌙 NIGHT BLUE — deep ocean
+    bg: "#040a14", card: "rgba(8,18,32,0.9)", accent: "#38bdf8", acDim: "rgba(56,189,248,0.1)",
+    gold: "#fbbf24", goDim: "rgba(251,191,36,0.08)", text: "#e0f2fe", mut: "#64748b",
+    bord: "rgba(148,163,184,0.08)", red: "#f87171", green: "#4ade80", grDim: "rgba(74,222,128,0.08)",
+    sky: "#0c4a6e", deep: "#082f49",
+  } : {
+    // ☀️ AZURE BLUE — Adriatic day
+    bg: "#0a1628", card: "rgba(12,28,50,0.85)", accent: "#0ea5e9", acDim: "rgba(14,165,233,0.12)",
+    gold: "#f59e0b", goDim: "rgba(245,158,11,0.08)", text: "#f0f9ff", mut: "#7dd3fc",
+    bord: "rgba(14,165,233,0.08)", red: "#f87171", green: "#4ade80", grDim: "rgba(74,222,128,0.08)",
+    sky: "#0c4a6e", deep: "#0e3a5c",
   };
   const dm = { fontFamily: "'Outfit',sans-serif" };
   const fonts = <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Outfit:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />;
@@ -668,12 +679,12 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       color: c === "accent" ? C.accent : c === "gold" ? C.gold : c === "green" ? C.green : C.red }}>{children}</span>
   );
   const Btn = ({ primary, small, children, ...p }) => (
-    <button {...p} style={{ padding: small ? "8px 16px" : "14px 24px", background: primary ? `linear-gradient(135deg,${C.accent},#0077B6)` : "rgba(232,224,212,0.03)",
+    <button {...p} style={{ padding: small ? "8px 16px" : "14px 24px", background: primary ? `linear-gradient(135deg,${C.accent},#0284c7)` : "rgba(186,230,253,0.03)",
       border: primary ? "none" : `1px solid ${C.bord}`, borderRadius: 14, color: primary ? "#fff" : C.text,
-      fontSize: small ? 13 : 16, fontFamily: "'Cormorant Garamond',Georgia,serif", cursor: "pointer", fontWeight: primary ? 600 : 400, transition: "all 0.25s cubic-bezier(0.4,0,0.2,1)", letterSpacing: primary ? 0.5 : 0, boxShadow: primary ? "0 4px 16px rgba(0,180,216,0.25)" : "none", ...(p.style || {}) }} className={primary ? "btn-glow" : ""}>{children}</button>
+      fontSize: small ? 13 : 16, fontFamily: "'Cormorant Garamond',Georgia,serif", cursor: "pointer", fontWeight: primary ? 600 : 400, transition: "all 0.25s cubic-bezier(0.4,0,0.2,1)", letterSpacing: primary ? 0.5 : 0, boxShadow: primary ? "0 4px 16px rgba(14,165,233,0.25)" : "none", ...(p.style || {}) }} className={primary ? "btn-glow" : ""}>{children}</button>
   );
   const Card = ({ children, glow, style: sx, ...p }) => (
-    <div {...p} className="glass" style={{ background: glow ? "rgba(12,16,24,0.85)" : "rgba(12,16,24,0.75)", borderRadius: 18, border: `1px solid ${glow ? "rgba(0,180,216,0.12)" : C.bord}`, padding: 20, transition: "all 0.3s", boxShadow: glow ? "0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(232,224,212,0.03)" : "0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(232,224,212,0.02)", ...sx }}>{children}</div>
+    <div {...p} className="glass" style={{ background: glow ? "rgba(12,28,50,0.85)" : "rgba(12,28,50,0.75)", borderRadius: 18, border: `1px solid ${glow ? "rgba(14,165,233,0.12)" : C.bord}`, padding: 20, transition: "all 0.3s", boxShadow: glow ? "0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(186,230,253,0.03)" : "0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(186,230,253,0.02)", ...sx }}>{children}</div>
   );
   const SectionLabel = ({ children, extra }) => (
     <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 3, textTransform: "uppercase", marginBottom: 14 }}>{children} {extra && <span style={{ color: C.accent }}>{extra}</span>}</div>
@@ -691,7 +702,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         {phases.map((p, i) => (
           <div key={p.k} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, zIndex: 2, cursor: "pointer" }}
             onClick={() => { setPhase(p.k); if (p.k === "pre") setSubScreen("onboard"); else if (p.k === "kiosk") setSubScreen("home"); else setSubScreen("summary"); }}>
-            <div style={{ width: i === idx ? 48 : 38, height: i === idx ? 48 : 38, borderRadius: "50%", background: i === idx ? `linear-gradient(135deg,${C.accent},#0077B6)` : i < idx ? C.acDim : C.card, border: i === idx ? "none" : `2px solid ${i < idx ? C.accent : C.bord}`, display: "grid", placeItems: "center", fontSize: i === idx ? 22 : 17, transition: "all 0.3s", boxShadow: i === idx ? `0 0 24px rgba(0,180,216,0.25)` : "none" }} className={i === idx ? "phase-active" : ""}>{i < idx ? "✓" : p.i}</div>
+            <div style={{ width: i === idx ? 48 : 38, height: i === idx ? 48 : 38, borderRadius: "50%", background: i === idx ? `linear-gradient(135deg,${C.accent},#0284c7)` : i < idx ? C.acDim : C.card, border: i === idx ? "none" : `2px solid ${i < idx ? C.accent : C.bord}`, display: "grid", placeItems: "center", fontSize: i === idx ? 22 : 17, transition: "all 0.3s", boxShadow: i === idx ? `0 0 24px rgba(14,165,233,0.25)` : "none" }} className={i === idx ? "phase-active" : ""}>{i < idx ? "✓" : p.i}</div>
             <div style={{ ...dm, fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: i === idx ? C.accent : C.mut, fontWeight: i === idx ? 700 : 400 }}>{p.l}</div>
           </div>
         ))}
@@ -702,13 +713,13 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   /* ─── PAYWALL ─── */
   const Paywall = () => (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(16px)", zIndex: 300, display: "grid", placeItems: "center", padding: 24 }} onClick={() => setShowPaywall(false)}>
-      <div onClick={e => e.stopPropagation()} className="overlay-enter glass" style={{ background: "rgba(12,16,24,0.92)", borderRadius: 28, maxWidth: 440, width: "100%", padding: "40px 32px", border: `1px solid rgba(201,168,76,0.15)`, textAlign: "center" }}>
+      <div onClick={e => e.stopPropagation()} className="overlay-enter glass" style={{ background: "rgba(12,28,50,0.92)", borderRadius: 28, maxWidth: 440, width: "100%", padding: "40px 32px", border: `1px solid rgba(251,191,36,0.15)`, textAlign: "center" }}>
         <div style={{ fontSize: 48, marginBottom: 12 }}>💎</div>
         <div style={{ fontSize: 26, fontWeight: 400, marginBottom: 6 }}>{t("premiumTitle",lang)}</div>
         <div style={{ ...dm, color: C.mut, fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>
           {t("premiumDesc",lang)}
         </div>
-        <div style={{ background: C.goDim, borderRadius: 16, padding: "20px", border: `1px solid rgba(201,168,76,0.12)`, marginBottom: 20 }}>
+        <div style={{ background: C.goDim, borderRadius: 16, padding: "20px", border: `1px solid rgba(251,191,36,0.12)`, marginBottom: 20 }}>
           <div style={{ fontSize: 40, fontWeight: 300, color: C.gold }}>5.99€</div>
           <div style={{ ...dm, fontSize: 13, color: C.mut }}>{t("entireStay",lang)}</div>
         </div>
@@ -730,8 +741,8 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   /* ─── BOOKING CONFIRM ─── */
   const BookConfirm = () => showConfirm && (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(12px)", zIndex: 250, display: "grid", placeItems: "center" }} onClick={() => setShowConfirm(null)}>
-      <div onClick={e => e.stopPropagation()} style={{ background: C.card, borderRadius: 24, padding: 40, textAlign: "center", maxWidth: 400, border: `1px solid rgba(0,180,216,0.15)` }}>
-        <div className="check-anim" style={{ width: 80, height: 80, borderRadius: "50%", background: `linear-gradient(135deg,${C.accent},#0077B6)`, display: "grid", placeItems: "center", fontSize: 40, margin: "0 auto 20px", color: "#fff", boxShadow: "0 8px 32px rgba(0,180,216,0.35)" }}>✓</div>
+      <div onClick={e => e.stopPropagation()} style={{ background: C.card, borderRadius: 24, padding: 40, textAlign: "center", maxWidth: 400, border: `1px solid rgba(14,165,233,0.15)` }}>
+        <div className="check-anim" style={{ width: 80, height: 80, borderRadius: "50%", background: `linear-gradient(135deg,${C.accent},#0284c7)`, display: "grid", placeItems: "center", fontSize: 40, margin: "0 auto 20px", color: "#fff", boxShadow: "0 8px 32px rgba(14,165,233,0.35)" }}>✓</div>
         <div style={{ fontSize: 22, fontWeight: 400, marginBottom: 6 }}>{t("bookSent",lang)}</div>
         <div style={{ ...dm, color: C.mut, fontSize: 14, marginBottom: 16, lineHeight: 1.6 }}>
           {t("bookConfirm",lang)}
@@ -765,7 +776,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 24 }}>
               {INTERESTS.map(opt => (
                 <div key={opt.k} onClick={() => setInterests(p => { const n = new Set(p); n.has(opt.k) ? n.delete(opt.k) : n.add(opt.k); return n; })}
-                  style={{ padding: "16px 8px", background: interests.has(opt.k) ? C.acDim : C.card, border: `1px solid ${interests.has(opt.k) ? "rgba(0,180,216,0.25)" : C.bord}`, borderRadius: 14, cursor: "pointer", textAlign: "center", ...dm, fontSize: 13, color: interests.has(opt.k) ? C.accent : C.mut, transition: "all 0.3s" }}>
+                  style={{ padding: "16px 8px", background: interests.has(opt.k) ? C.acDim : C.card, border: `1px solid ${interests.has(opt.k) ? "rgba(14,165,233,0.25)" : C.bord}`, borderRadius: 14, cursor: "pointer", textAlign: "center", ...dm, fontSize: 13, color: interests.has(opt.k) ? C.accent : C.mut, transition: "all 0.3s" }}>
                   <span style={{ fontSize: 28, display: "block", marginBottom: 4 }}>{opt.e}</span>{(INTEREST_LABELS[opt.k]||{})[lang] || (INTEREST_LABELS[opt.k]||{}).hr || opt.k}
                 </div>
               ))}
@@ -949,14 +960,14 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             <div style={{ ...dm, fontSize: 10, color: C.mut, letterSpacing: 1 }}>⏰ {t("simulation",lang)}</div>
             <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
               {[{ h: null, l: "Sada" }, { h: 7, l: "07" }, { h: 13, l: "13" }, { h: 19, l: "19" }, { h: 23, l: "23" }].map(t => (
-                <button key={t.l} onClick={() => setSimHour(t.h)} style={{ ...dm, padding: "5px 10px", background: simHour === t.h ? C.acDim : "transparent", border: `1px solid ${simHour === t.h ? "rgba(0,180,216,0.2)" : C.bord}`, borderRadius: 8, color: simHour === t.h ? C.accent : C.mut, fontSize: 11, cursor: "pointer" }}>{t.l}</button>
+                <button key={t.l} onClick={() => setSimHour(t.h)} style={{ ...dm, padding: "5px 10px", background: simHour === t.h ? C.acDim : "transparent", border: `1px solid ${simHour === t.h ? "rgba(14,165,233,0.2)" : C.bord}`, borderRadius: 8, color: simHour === t.h ? C.accent : C.mut, fontSize: 11, cursor: "pointer" }}>{t.l}</button>
               ))}
             </div>
           </Card>
         </div>
 
         {/* AI Tip */}
-        <Card glow style={{ background: `linear-gradient(135deg,${C.goDim},rgba(0,180,216,0.03))`, borderColor: "rgba(201,168,76,0.1)", marginBottom: 20, display: "flex", gap: 16, alignItems: "flex-start" }}>
+        <Card glow style={{ background: `linear-gradient(135deg,${C.goDim},rgba(14,165,233,0.03))`, borderColor: "rgba(251,191,36,0.1)", marginBottom: 20, display: "flex", gap: 16, alignItems: "flex-start" }}>
           <div style={{ fontSize: 28 }}>{tipIcon}</div>
           <div>
             <div style={{ ...dm, fontSize: 10, color: C.gold, fontWeight: 700, letterSpacing: 2, marginBottom: 4 }}>{t("aiRec",lang)}</div>
@@ -990,9 +1001,9 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               else if (t.k === "chat") tryPremium(() => setSubScreen("chat"));
               else setSubScreen(t.k);
             }}
-              className="anim-card glass" style={{ background: "rgba(12,16,24,0.7)", borderRadius: 18, padding: "22px 12px", textAlign: "center", cursor: "pointer", border: `1px solid ${C.bord}`, transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)", position: "relative", boxShadow: "0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(232,224,212,0.02)" }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(0,180,216,0.2)"; e.currentTarget.style.transform = "translateY(-4px) scale(1.02)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.3), 0 0 20px rgba(0,180,216,0.08), inset 0 1px 0 rgba(232,224,212,0.04)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(232,224,212,0.02)"; }}>
+              className="anim-card glass" style={{ background: "rgba(12,28,50,0.7)", borderRadius: 18, padding: "22px 12px", textAlign: "center", cursor: "pointer", border: `1px solid ${C.bord}`, transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)", position: "relative", boxShadow: "0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(186,230,253,0.02)" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.2)"; e.currentTarget.style.transform = "translateY(-4px) scale(1.02)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.3), 0 0 20px rgba(14,165,233,0.08), inset 0 1px 0 rgba(186,230,253,0.04)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(186,230,253,0.02)"; }}>
               <div style={{ fontSize: 32, marginBottom: 6 }}>{t.e}</div>
               <div style={{ ...dm, fontSize: 13, fontWeight: 600 }}>{t.l}</div>
               {(t.k === "gems" || t.k === "chat") && !premium && <div style={{ position: "absolute", top: 8, right: 8, ...dm, fontSize: 9, color: C.gold, background: C.goDim, padding: "2px 6px", borderRadius: 6 }}>PRO</div>}
@@ -1006,7 +1017,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           {EXPERIENCES.map((exp, _expIdx) => (
             <Card key={exp.id} style={{ padding: 0, overflow: "hidden", cursor: "pointer", opacity: booked.has(exp.id) ? 0.5 : 1, animation: `fadeUp 0.5s ease ${_expIdx * 0.08}s both` }}
               onClick={() => !booked.has(exp.id) && setSelectedExp(exp)}>
-              <div style={{ height: 70, background: `linear-gradient(135deg,rgba(0,180,216,0.08),rgba(201,168,76,0.06),rgba(0,100,180,0.05))`, display: "grid", placeItems: "center", fontSize: 36, position: "relative", overflow: "hidden" }}><span className="emoji-float">{exp.emoji}</span></div>
+              <div style={{ height: 70, background: `linear-gradient(135deg,rgba(14,165,233,0.08),rgba(251,191,36,0.06),rgba(3,105,161,0.05))`, display: "grid", placeItems: "center", fontSize: 36, position: "relative", overflow: "hidden" }}><span className="emoji-float">{exp.emoji}</span></div>
               <div style={{ padding: "12px 14px" }}>
                 <div style={{ fontSize: 15, fontWeight: 400, marginBottom: 4 }}>{exp.name}</div>
                 <div style={{ ...dm, display: "flex", justifyContent: "space-between", fontSize: 12, color: C.mut }}>
@@ -1064,7 +1075,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                 {it.affiliate && it.link && <a href={`https://${it.link}`} target="_blank" rel="noopener noreferrer" style={{ ...dm, display: "inline-block", marginTop: 6, padding: "4px 12px", background: C.goDim, borderRadius: 10, fontSize: 11, color: C.gold, textDecoration: "none", letterSpacing: 1 }}>🔗 {it.link}</a>}
                 {it.affiliate && !it.link && <Badge c="gold">PARTNER</Badge>}
                 {it.mapKey && <button onClick={(e) => { e.stopPropagation(); openGoogleMaps(it.mapKey); }}
-                  style={{...dm,marginTop:6,padding:"6px 14px",background:C.acDim,border:`1px solid rgba(0,180,216,0.15)`,borderRadius:10,color:C.accent,fontSize:12,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:4}}>
+                  style={{...dm,marginTop:6,padding:"6px 14px",background:C.acDim,border:`1px solid rgba(14,165,233,0.15)`,borderRadius:10,color:C.accent,fontSize:12,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:4}}>
                   📍 {t("navigate",lang)}</button>}
               </div>
             </Card>
@@ -1086,9 +1097,9 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         {GEMS.map((g, i) => (
           <Card key={i} style={{ cursor: "pointer", position: "relative" }}
             onClick={() => { if (g.premium && !premium) setShowPaywall(true); else setSelectedGem(g); }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(201,168,76,0.25)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.3), 0 0 16px rgba(201,168,76,0.06)"; }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(251,191,36,0.25)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.3), 0 0 16px rgba(251,191,36,0.06)"; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
-            {g.premium && !premium && <div style={{ position: "absolute", inset: 0, background: "rgba(6,9,16,0.7)", borderRadius: 18, display: "grid", placeItems: "center", zIndex: 5 }}>
+            {g.premium && !premium && <div style={{ position: "absolute", inset: 0, background: "rgba(10,22,40,0.7)", borderRadius: 18, display: "grid", placeItems: "center", zIndex: 5 }}>
               <div style={{ textAlign: "center" }}><div style={{ fontSize: 28 }}>🔒</div><div style={{ ...dm, fontSize: 12, color: C.gold }}>Premium</div></div>
             </div>}
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
@@ -1119,24 +1130,24 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               <div style={{ ...dm, color: C.mut, fontSize: 14, marginBottom: 20 }}>{t("askDalmatia",lang)}</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
                 {prompts.map((p, i) => (
-                  <button key={i} onClick={() => setChatInput(p)} style={{ ...dm, padding: "10px 16px", background: "rgba(232,224,212,0.04)", border: `1px solid ${C.bord}`, borderRadius: 14, color: C.text, fontSize: 14, cursor: "pointer" }}>{p}</button>
+                  <button key={i} onClick={() => setChatInput(p)} style={{ ...dm, padding: "10px 16px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, borderRadius: 14, color: C.text, fontSize: 14, cursor: "pointer" }}>{p}</button>
                 ))}
               </div>
             </div>
           )}
           {chatMsgs.map((m, i) => (
-            <div key={i} style={{ maxWidth: "78%", padding: "14px 18px", borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px", background: m.role === "user" ? "rgba(0,180,216,0.08)" : "rgba(232,224,212,0.03)", marginBottom: 10, marginLeft: m.role === "user" ? "auto" : 0, ...dm, fontSize: 15, lineHeight: 1.6, fontWeight: 300, border: `1px solid ${m.role === "user" ? "rgba(0,180,216,0.12)" : C.bord}`, whiteSpace: "pre-wrap" }}>
+            <div key={i} style={{ maxWidth: "78%", padding: "14px 18px", borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px", background: m.role === "user" ? "rgba(14,165,233,0.08)" : "rgba(186,230,253,0.03)", marginBottom: 10, marginLeft: m.role === "user" ? "auto" : 0, ...dm, fontSize: 15, lineHeight: 1.6, fontWeight: 300, border: `1px solid ${m.role === "user" ? "rgba(14,165,233,0.12)" : C.bord}`, whiteSpace: "pre-wrap" }}>
               {m.role !== "user" && <div style={{ fontSize: 10, color: C.accent, marginBottom: 4, letterSpacing: 1, fontWeight: 700 }}>JADRAN AI</div>}
               {m.text}
             </div>
           ))}
-          {chatLoading && <div style={{ ...dm, maxWidth: "78%", padding: "14px 18px", borderRadius: "18px 18px 18px 4px", background: "rgba(232,224,212,0.04)", border: `1px solid ${C.bord}`, opacity: 0.5 }}>● ● ●</div>}
+          {chatLoading && <div style={{ ...dm, maxWidth: "78%", padding: "14px 18px", borderRadius: "18px 18px 18px 4px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, opacity: 0.5 }}>● ● ●</div>}
           <div ref={chatEnd} />
         </div>
         <div style={{ display: "flex", gap: 10, padding: "12px 0", borderTop: `1px solid ${C.bord}` }}>
           <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && doChat()}
-            placeholder={t("askPlaceholder",lang)} style={{ ...dm, flex: 1, padding: "14px 18px", background: "rgba(232,224,212,0.04)", border: `1px solid ${C.bord}`, borderRadius: 18, color: C.text, fontSize: 16, outline: "none" }} />
-          <button onClick={doChat} style={{ padding: "14px 24px", background: `linear-gradient(135deg,${C.accent},#0077B6)`, border: "none", borderRadius: 18, color: "#fff", fontSize: 18, cursor: "pointer", fontWeight: 600 }}>→</button>
+            placeholder={t("askPlaceholder",lang)} style={{ ...dm, flex: 1, padding: "14px 18px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, borderRadius: 18, color: C.text, fontSize: 16, outline: "none" }} />
+          <button onClick={doChat} style={{ padding: "14px 24px", background: `linear-gradient(135deg,${C.accent},#0284c7)`, border: "none", borderRadius: 18, color: "#fff", fontSize: 18, cursor: "pointer", fontWeight: 600 }}>→</button>
         </div>
       </div>
     );
@@ -1165,7 +1176,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
         {/* Loyalty */}
-        <Card glow style={{ background: `linear-gradient(135deg,${C.acDim},${C.goDim})`, borderColor: "rgba(0,180,216,0.1)" }}>
+        <Card glow style={{ background: `linear-gradient(135deg,${C.acDim},${C.goDim})`, borderColor: "rgba(14,165,233,0.1)" }}>
           <div style={{ ...dm, fontSize: 11, textTransform: "uppercase", letterSpacing: 3, color: C.gold, marginBottom: 4 }}>JADRAN LOYALTY</div>
           <div style={{ fontSize: 26, fontWeight: 300 }}>🌊 {LOYALTY.tier}</div>
           <div style={{ ...dm, fontSize: 13, color: C.mut, marginTop: 8 }}>
@@ -1191,7 +1202,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       </div>
 
       {/* Referral */}
-      <Card style={{ textAlign: "center", border: `1px dashed rgba(0,180,216,0.15)`, marginBottom: 20 }}>
+      <Card style={{ textAlign: "center", border: `1px dashed rgba(14,165,233,0.15)`, marginBottom: 20 }}>
         <div style={{ fontSize: 20, fontWeight: 400, marginBottom: 4 }}>{t("inviteFriends",lang)}</div>
         <div style={{ ...dm, fontSize: 13, color: C.mut, marginBottom: 8 }}>{t("bothDiscount",lang)}</div>
         <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: 6, color: C.accent, margin: "10px 0" }}>{LOYALTY.code}</div>
@@ -1220,7 +1231,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       </Card>
 
       {/* Monetization breakdown (admin) */}
-      {new URLSearchParams(window.location.search).get("admin") === "sial" && <Card style={{ background: `linear-gradient(135deg,rgba(201,168,76,0.04),rgba(0,180,216,0.03))`, borderColor: "rgba(201,168,76,0.08)" }}>
+      {new URLSearchParams(window.location.search).get("admin") === "sial" && <Card style={{ background: `linear-gradient(135deg,rgba(251,191,36,0.04),rgba(14,165,233,0.03))`, borderColor: "rgba(251,191,36,0.08)" }}>
         <SectionLabel extra="ADMIN">MONETIZACIJA</SectionLabel>
         <div style={{ ...dm, fontSize: 14, color: C.mut, lineHeight: 1.8 }}>
           1. Premium (5.99€) · 2. Affiliate (~8-15€) · 3. Host fee<br />
@@ -1264,7 +1275,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
 
   /* ─── CINEMATIC SPLASH ─── */
   if (splash) return (
-    <div style={{ fontFamily: "'Cormorant Garamond','Georgia',serif", background: "#040608", color: "#E8E0D4", minHeight: "100vh", display: "grid", placeItems: "center", position: "relative", overflow: "hidden" }}>
+    <div style={{ fontFamily: "'Cormorant Garamond','Georgia',serif", background: "#061020", color: "#e0f2fe", minHeight: "100vh", display: "grid", placeItems: "center", position: "relative", overflow: "hidden" }}>
       <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Outfit:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
       <style>{`
         @keyframes splash-wave-1 { 0% { d: path('M0,160 C320,220 640,100 960,160 C1120,190 1280,130 1440,160 L1440,320 L0,320 Z'); }
@@ -1284,8 +1295,8 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         @keyframes splash-tagline { 0% { opacity:0; transform: translateY(10px); } 100% { opacity:0.6; transform: translateY(0); } }
         @keyframes splash-line { 0% { width: 0; } 100% { width: 80px; } }
         @keyframes splash-dots { 0%,20% { opacity:0; } 30% { opacity:1; } 60% { opacity:1; } 70%,100% { opacity:0; } }
-        @keyframes splash-glow { 0%,100% { box-shadow: 0 0 40px rgba(0,180,216,0.2), 0 0 80px rgba(0,180,216,0.08); }
-          50% { box-shadow: 0 0 60px rgba(0,180,216,0.35), 0 0 120px rgba(0,180,216,0.12); } }
+        @keyframes splash-glow { 0%,100% { box-shadow: 0 0 40px rgba(14,165,233,0.2), 0 0 80px rgba(14,165,233,0.08); }
+          50% { box-shadow: 0 0 60px rgba(14,165,233,0.35), 0 0 120px rgba(14,165,233,0.12); } }
         @keyframes splash-fade-out { 0% { opacity:1; } 100% { opacity:0; pointer-events:none; } }
         @keyframes splash-particles { 0% { transform: translateY(0) scale(1); opacity: 0.4; }
           100% { transform: translateY(-120px) scale(0); opacity: 0; } }
@@ -1293,15 +1304,15 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       `}</style>
 
       {/* Ambient light */}
-      <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse at 50% 60%, rgba(0,180,216,0.06) 0%, transparent 60%), radial-gradient(ellipse at 50% 40%, rgba(201,168,76,0.03) 0%, transparent 50%)" }} />
+      <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse at 50% 60%, rgba(14,165,233,0.06) 0%, transparent 60%), radial-gradient(ellipse at 50% 40%, rgba(251,191,36,0.03) 0%, transparent 50%)" }} />
 
       {/* Animated waves at bottom */}
       <svg style={{ position:"absolute", bottom:0, left:0, width:"100%", height:"320px", opacity:0.12 }} viewBox="0 0 1440 320" preserveAspectRatio="none">
-        <path fill="#00B4D8" style={{ animation:"splash-wave-1 6s ease-in-out infinite" }}
+        <path fill="#0ea5e9" style={{ animation:"splash-wave-1 6s ease-in-out infinite" }}
           d="M0,160 C320,220 640,100 960,160 C1120,190 1280,130 1440,160 L1440,320 L0,320 Z" />
-        <path fill="#0077B6" style={{ animation:"splash-wave-2 7s ease-in-out infinite", opacity:0.6 }}
+        <path fill="#0284c7" style={{ animation:"splash-wave-2 7s ease-in-out infinite", opacity:0.6 }}
           d="M0,200 C360,160 720,240 1080,190 C1260,170 1350,220 1440,200 L1440,320 L0,320 Z" />
-        <path fill="#023E8A" style={{ animation:"splash-wave-3 5s ease-in-out infinite", opacity:0.4 }}
+        <path fill="#075985" style={{ animation:"splash-wave-3 5s ease-in-out infinite", opacity:0.4 }}
           d="M0,240 C400,220 800,260 1200,235 C1320,225 1380,250 1440,240 L1440,320 L0,320 Z" />
       </svg>
 
@@ -1315,7 +1326,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             width: 3 + (i % 3),
             height: 3 + (i % 3),
             borderRadius: "50%",
-            background: i % 2 === 0 ? "rgba(0,180,216,0.5)" : "rgba(201,168,76,0.4)",
+            background: i % 2 === 0 ? "rgba(14,165,233,0.5)" : "rgba(251,191,36,0.4)",
             animation: `splash-particles ${3 + (i % 4)}s ease-in-out ${0.5 + i * 0.3}s infinite`,
           }} />
         ))}
@@ -1326,7 +1337,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         {/* Logo circle */}
         <div style={{
           width: 96, height: 96, borderRadius: "50%",
-          background: "linear-gradient(135deg, #00B4D8, #0077B6, #023E8A)",
+          background: "linear-gradient(135deg, #0ea5e9, #0284c7, #075985)",
           display: "grid", placeItems: "center",
           margin: "0 auto 28px",
           fontSize: 40, fontWeight: 700, color: "#fff",
@@ -1335,14 +1346,14 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
 
         {/* Brand name */}
         <div style={{
-          fontSize: 44, fontWeight: 300, textTransform: "uppercase", color: "#E8E0D4",
+          fontSize: 44, fontWeight: 300, textTransform: "uppercase", color: "#e0f2fe",
           animation: "splash-text-reveal 1s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both",
           letterSpacing: 8,
         }}>JADRAN</div>
 
         {/* Decorative line */}
         <div style={{
-          height: 1, background: "linear-gradient(90deg, transparent, rgba(0,180,216,0.5), rgba(201,168,76,0.3), transparent)",
+          height: 1, background: "linear-gradient(90deg, transparent, rgba(14,165,233,0.5), rgba(251,191,36,0.3), transparent)",
           margin: "16px auto",
           animation: "splash-line 1s cubic-bezier(0.16, 1, 0.3, 1) 1.2s both",
         }} />
@@ -1351,7 +1362,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         <div style={{
           fontFamily: "'Outfit', sans-serif",
           fontSize: 14, fontWeight: 300, textTransform: "uppercase", letterSpacing: 4,
-          color: "rgba(0,180,216,0.7)",
+          color: "rgba(14,165,233,0.7)",
           animation: "splash-tagline 0.8s ease 1.6s both",
         }}>{t("tagline",lang)}</div>
 
@@ -1360,7 +1371,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           {[0,1,2].map(i => (
             <div key={i} style={{
               width: 5, height: 5, borderRadius: "50%",
-              background: "rgba(0,180,216,0.5)",
+              background: "rgba(14,165,233,0.5)",
               animation: `splash-dots 1.5s ease ${1.8 + i * 0.2}s infinite`,
             }} />
           ))}
@@ -1369,7 +1380,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         {/* Powered by */}
         <div style={{
           fontFamily: "'Outfit', sans-serif",
-          fontSize: 10, color: "rgba(107,101,96,0.3)", letterSpacing: 2, textTransform: "uppercase",
+          fontSize: 10, color: "rgba(100,116,139,0.3)", letterSpacing: 2, textTransform: "uppercase",
           marginTop: 40,
           animation: "splash-tagline 0.6s ease 2.2s both",
         }}>SIAL Consulting d.o.o. · AI-Powered Concierge</div>
@@ -1378,18 +1389,18 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       {/* Skip button */}
       <button onClick={() => setSplash(false)} style={{
         position:"absolute", bottom: 40, fontFamily:"'Outfit',sans-serif",
-        background:"none", border:"1px solid rgba(232,224,212,0.1)", borderRadius: 20,
-        color:"rgba(232,224,212,0.3)", fontSize: 11, padding:"8px 20px", cursor:"pointer",
+        background:"none", border:"1px solid rgba(186,230,253,0.1)", borderRadius: 20,
+        color:"rgba(186,230,253,0.3)", fontSize: 11, padding:"8px 20px", cursor:"pointer",
         letterSpacing: 2, textTransform:"uppercase", transition:"all 0.3s",
         animation: "splash-tagline 0.5s ease 2.5s both",
       }}
-        onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(0,180,216,0.3)"; e.currentTarget.style.color = "rgba(0,180,216,0.5)"; }}
-        onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(232,224,212,0.1)"; e.currentTarget.style.color = "rgba(232,224,212,0.3)"; }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.3)"; e.currentTarget.style.color = "rgba(14,165,233,0.5)"; }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(186,230,253,0.1)"; e.currentTarget.style.color = "rgba(186,230,253,0.3)"; }}
       >{t("skipBtn",lang)}</button>
     </div>
   );
   return (
-    <div style={{ fontFamily: "'Cormorant Garamond','Georgia',serif", background: C.bg, color: C.text, minHeight: "100vh", position: "relative" }}>
+    <div style={{ fontFamily: "'Cormorant Garamond','Georgia',serif", background: `linear-gradient(160deg, ${C.bg} 0%, ${C.deep || C.bg} 50%, ${C.sky || C.bg} 100%)`, color: C.text, minHeight: "100vh", minHeight: "100vh", position: "relative" }}>
       {fonts}
 
       <style>{`
@@ -1397,7 +1408,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
         @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-        @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 20px rgba(0,180,216,0.15); } 50% { box-shadow: 0 0 40px rgba(0,180,216,0.3); } }
+        @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 20px rgba(14,165,233,0.15); } 50% { box-shadow: 0 0 40px rgba(14,165,233,0.3); } }
         @keyframes gradient-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         @keyframes wave-move { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -1408,24 +1419,24 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         .jadran-ambient {
           position: fixed; inset: 0; pointer-events: none; z-index: 0;
           background: 
-            radial-gradient(ellipse at 20% 10%, rgba(0,180,216,0.07) 0%, transparent 50%),
-            radial-gradient(ellipse at 80% 90%, rgba(201,168,76,0.04) 0%, transparent 50%),
-            radial-gradient(ellipse at 50% 50%, rgba(0,100,180,0.02) 0%, transparent 70%);
+            radial-gradient(ellipse at 20% 10%, rgba(14,165,233,0.08) 0%, transparent 50%),
+            radial-gradient(ellipse at 80% 80%, rgba(14,165,233,0.04) 0%, transparent 50%),
+            radial-gradient(ellipse at 50% 50%, rgba(6,182,212,0.03) 0%, transparent 70%);
         }
         .jadran-ambient::before {
           content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 300px;
-          background: linear-gradient(to top, rgba(6,9,16,0.95), transparent);
+          background: linear-gradient(to top, rgba(10,22,40,0.95), transparent);
         }
         .jadran-ambient::after {
           content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-          background: linear-gradient(90deg, transparent, rgba(0,180,216,0.4), rgba(201,168,76,0.3), transparent);
+          background: linear-gradient(90deg, transparent, rgba(14,165,233,0.5), rgba(6,182,212,0.3), transparent);
           background-size: 200% 100%;
           animation: gradient-shift 8s ease infinite;
         }
 
         /* Wave decoration */
         .wave-deco { position: fixed; bottom: -2px; left: 0; width: 200%; height: 60px; opacity: 0.03; pointer-events: none; z-index: 1;
-          background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 60'%3E%3Cpath fill='%2300B4D8' d='M0,30 C360,60 720,0 1080,30 C1260,45 1350,15 1440,30 L1440,60 L0,60 Z'/%3E%3C/svg%3E") repeat-x;
+          background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 60'%3E%3Cpath fill='%230ea5e9' d='M0,30 C360,60 720,0 1080,30 C1260,45 1350,15 1440,30 L1440,60 L0,60 Z'/%3E%3C/svg%3E") repeat-x;
           animation: wave-move 12s linear infinite;
         }
 
@@ -1437,11 +1448,11 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         /* Scrollbar */
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(0,180,216,0.15); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(0,180,216,0.3); }
+        ::-webkit-scrollbar-thumb { background: rgba(14,165,233,0.2); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(14,165,233,0.4); }
 
         /* Selection */
-        ::selection { background: rgba(0,180,216,0.25); color: #E8E0D4; }
+        ::selection { background: rgba(14,165,233,0.3); color: #f0f9ff; }
 
         /* Animated cards */
         .anim-card { animation: fadeUp 0.5s ease both; }
@@ -1462,14 +1473,14 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         /* Primary button glow */
         .btn-glow { position: relative; overflow: hidden; }
         .btn-glow::before { content: ''; position: absolute; inset: -2px; border-radius: 16px;
-          background: linear-gradient(135deg, rgba(0,180,216,0.4), rgba(0,119,182,0.2)); filter: blur(8px); opacity: 0; transition: opacity 0.3s; z-index: -1; }
+          background: linear-gradient(135deg, rgba(14,165,233,0.4), rgba(2,132,199,0.2)); filter: blur(8px); opacity: 0; transition: opacity 0.3s; z-index: -1; }
         .btn-glow:hover::before { opacity: 1; }
 
         /* Card glass effect */
         .glass { backdrop-filter: blur(12px) saturate(1.4); -webkit-backdrop-filter: blur(12px) saturate(1.4); }
 
         /* Shimmer loading */
-        .shimmer { background: linear-gradient(90deg, transparent 30%, rgba(0,180,216,0.06) 50%, transparent 70%);
+        .shimmer { background: linear-gradient(90deg, transparent 30%, rgba(14,165,233,0.06) 50%, transparent 70%);
           background-size: 200% 100%; animation: shimmer 2s ease infinite; }
 
         /* Overlay entrance */
@@ -1479,7 +1490,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         .phase-active { animation: pulse-glow 3s ease infinite; }
 
         /* Premium badge shimmer */
-        .premium-shimmer { background: linear-gradient(90deg, rgba(201,168,76,0.08) 0%, rgba(201,168,76,0.2) 50%, rgba(201,168,76,0.08) 100%);
+        .premium-shimmer { background: linear-gradient(90deg, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.2) 50%, rgba(251,191,36,0.08) 100%);
           background-size: 200% 100%; animation: shimmer 3s ease infinite; }
 
         /* Float animation for emojis */
@@ -1505,18 +1516,18 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
 
       <div style={{ position: "relative", zIndex: 2, maxWidth: 1100, margin: "0 auto", padding: "0 24px" }} className="page-enter">
         {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 0", borderBottom: `1px solid rgba(232,224,212,0.04)` }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 0", borderBottom: `1px solid rgba(186,230,253,0.04)` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg,${C.accent},#0077B6)`, display: "grid", placeItems: "center", fontSize: 16, fontWeight: 700, color: "#fff", boxShadow: "0 2px 12px rgba(0,180,216,0.3)" }}>J</div>
+            <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg,${C.accent},#0284c7)`, display: "grid", placeItems: "center", fontSize: 16, fontWeight: 700, color: "#fff", boxShadow: "0 2px 12px rgba(14,165,233,0.3)" }}>J</div>
             <div style={{ fontSize: 18, fontWeight: 400, letterSpacing: 5, textTransform: "uppercase", color: C.accent }}>Jadran</div>
             <span style={{ ...dm, fontSize: 9, color: C.accent, letterSpacing: 2, opacity: 0.6 }}>AI</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {premium && <span className="premium-shimmer" style={{display:"inline-block",padding:"4px 12px",borderRadius:12,fontSize:11,fontFamily:"'Outfit',sans-serif",color:"#C9A84C",letterSpacing:1.5,fontWeight:600}}>⭐ PREMIUM</span>}
-            <div style={{display:"flex",gap:3,background:"rgba(12,16,24,0.6)",borderRadius:12,padding:3,border:`1px solid ${C.bord}`}}>
+            {premium && <span className="premium-shimmer" style={{display:"inline-block",padding:"4px 12px",borderRadius:12,fontSize:11,fontFamily:"'Outfit',sans-serif",color:"#f59e0b",letterSpacing:1.5,fontWeight:600}}>⭐ PREMIUM</span>}
+            <div style={{display:"flex",gap:3,background:"rgba(12,28,50,0.6)",borderRadius:12,padding:3,border:`1px solid ${C.bord}`}}>
               {LANGS.map(lg => (
                 <button key={lg.code} onClick={() => setLang(lg.code)}
-                  style={{...dm,padding:"4px 6px",background:lang===lg.code?C.acDim:"transparent",border:lang===lg.code?`1px solid rgba(0,180,216,0.2)`:"1px solid transparent",borderRadius:9,cursor:"pointer",fontSize:14,lineHeight:1,transition:"all 0.2s"}}
+                  style={{...dm,padding:"4px 6px",background:lang===lg.code?C.acDim:"transparent",border:lang===lg.code?`1px solid rgba(14,165,233,0.2)`:"1px solid transparent",borderRadius:9,cursor:"pointer",fontSize:14,lineHeight:1,transition:"all 0.2s"}}
                   title={lg.name}>{lg.flag}</button>
               ))}
             </div>
@@ -1535,7 +1546,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         {phase === "kiosk" && <div className="page-enter" key={subScreen}><Kiosk /></div>}
         {phase === "post" && <div className="page-enter"><PostStay /></div>}
 
-        <div style={{ ...dm, textAlign: "center", padding: "20px 0 28px", fontSize: 10, color: "rgba(107,101,96,0.3)", letterSpacing: 2, textTransform: "uppercase" }}>
+        <div style={{ ...dm, textAlign: "center", padding: "20px 0 28px", fontSize: 10, color: "rgba(100,116,139,0.3)", letterSpacing: 2, textTransform: "uppercase" }}>
           JADRAN AI · SIAL Consulting d.o.o. · Powered by AI
         </div>
       </div>
@@ -1547,7 +1558,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       {/* Gem detail */}
       {selectedGem && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(16px) saturate(1.5)", zIndex: 200, display: "grid", placeItems: "center", padding: 24 }} onClick={() => setSelectedGem(null)}>
-          <div onClick={e => e.stopPropagation()} className="overlay-enter glass" style={{ background: "rgba(12,16,24,0.92)", borderRadius: 24, maxWidth: 500, width: "100%", padding: 32, border: `1px solid rgba(201,168,76,0.12)` }}>
+          <div onClick={e => e.stopPropagation()} className="overlay-enter glass" style={{ background: "rgba(12,28,50,0.92)", borderRadius: 24, maxWidth: 500, width: "100%", padding: 32, border: `1px solid rgba(251,191,36,0.12)` }}>
             <div style={{ fontSize: 52, textAlign: "center", marginBottom: 12 }}>{selectedGem.emoji}</div>
             <div style={{ fontSize: 26, fontWeight: 400, textAlign: "center", marginBottom: 16 }}>{selectedGem.name}</div>
             <div style={{ ...dm, fontSize: 15, color: C.mut, lineHeight: 1.8, marginBottom: 20 }}>{typeof selectedGem.desc === "object" ? (selectedGem.desc[lang] || selectedGem.desc.hr) : selectedGem.desc}</div>
@@ -1559,12 +1570,12 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                 </div>
               ))}
             </div>
-            <Card glow style={{ background: C.goDim, borderColor: "rgba(201,168,76,0.12)" }}>
+            <Card glow style={{ background: C.goDim, borderColor: "rgba(251,191,36,0.12)" }}>
               <div style={{ ...dm, fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: 1, marginBottom: 4 }}>💡 LOCALS TIP</div>
               <div style={{ ...dm, fontSize: 14, lineHeight: 1.6 }}>{typeof selectedGem.tip === "object" ? (selectedGem.tip[lang] || selectedGem.tip.hr) : selectedGem.tip}</div>
             </Card>
             {selectedGem.mapKey && <button onClick={() => openGoogleMaps(selectedGem.mapKey)}
-              style={{...dm,width:"100%",marginTop:12,padding:"14px",background:C.acDim,border:`1px solid rgba(0,180,216,0.15)`,borderRadius:14,color:C.accent,fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+              style={{...dm,width:"100%",marginTop:12,padding:"14px",background:C.acDim,border:`1px solid rgba(14,165,233,0.15)`,borderRadius:14,color:C.accent,fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
               📍 {t("openMap",lang)}</button>}
             <Btn style={{ width: "100%", marginTop: 8 }} onClick={() => setSelectedGem(null)}>{t("back",lang)}</Btn>
           </div>
@@ -1574,7 +1585,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       {/* Experience booking */}
       {selectedExp && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(16px) saturate(1.5)", zIndex: 200, display: "grid", placeItems: "center", padding: 24 }} onClick={() => setSelectedExp(null)}>
-          <div onClick={e => e.stopPropagation()} className="overlay-enter glass" style={{ background: "rgba(12,16,24,0.92)", borderRadius: 24, maxWidth: 440, width: "100%", padding: 32, border: `1px solid ${C.bord}` }}>
+          <div onClick={e => e.stopPropagation()} className="overlay-enter glass" style={{ background: "rgba(12,28,50,0.92)", borderRadius: 24, maxWidth: 440, width: "100%", padding: 32, border: `1px solid ${C.bord}` }}>
             <div style={{ fontSize: 52, textAlign: "center", marginBottom: 12 }}>{selectedExp.emoji}</div>
             <div style={{ fontSize: 24, fontWeight: 400, textAlign: "center", marginBottom: 16 }}>{selectedExp.name}</div>
             <div style={{ ...dm, display: "flex", justifyContent: "center", gap: 16, marginBottom: 16, fontSize: 13, color: C.mut }}>
