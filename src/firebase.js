@@ -16,6 +16,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const hasConfig = true; // Always true — hardcoded fallback
 
-console.log("[JADRAN] Firebase connected → molty-portal/guests");
+
 
 export { db, hasConfig };

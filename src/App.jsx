@@ -412,7 +412,7 @@ const INTERESTS = [
 
 /* ─── COMPONENT ─── */
 export default function JadranUnified() {
-  console.log("[JADRAN] Component mounted, roomCode:", getRoomCode());
+  // mounted
   const [lang, setLang] = useState("hr");
   const [splash, setSplash] = useState(true);
   const [phase, setPhase] = useState("pre"); // overridden by loadGuest on mount
@@ -507,10 +507,10 @@ export default function JadranUnified() {
   useEffect(() => {
     // Live weather + forecast via Open-Meteo (FREE, no quota)
     fetch("/api/weather").then(r => r.json()).then(data => {
-      console.log("[JADRAN] Weather:", data.current, "Forecast:", data.forecast?.length, "items");
+      
       if (data.current?.temp) setWeather(data.current);
       if (data.forecast?.length >= 5) setForecast(data.forecast);
-    }).catch(e => console.warn("[JADRAN] Weather fetch fail:", e.message));
+    }).catch(() => {});
   }, []);
   // ─── ADMIN: Secret unlock for testing (?unlock=sial) ───
   useEffect(() => {
@@ -1193,7 +1193,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         body: JSON.stringify({ prompt: localizedPrompt, mode: "practical" }),
       }).then(r => r.json()).then(d => {
         const rawText = d.text || "";
-        console.log("[JADRAN] Live data for", subScreen, "raw:", rawText.substring(0, 200));
+        
         try {
           let raw = rawText;
           raw = raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
@@ -1202,11 +1202,11 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           if (arrStart >= 0 && arrEnd > arrStart) raw = raw.substring(arrStart, arrEnd + 1);
           raw = raw.replace(/,\s*([}\]])/g, '$1'); // trailing commas
           const items = JSON.parse(raw);
-          console.log("[JADRAN] Parsed items:", items.length, items[0]?.name);
+          
           if (Array.isArray(items) && items.length > 0 && items[0].name) setLiveItems(items);
-        } catch (e) { console.warn("[JADRAN] Parse fail:", e.message); }
+        } catch { /* fallback to static */ }
         setLiveLoading(false);
-      }).catch(e => { console.warn("[JADRAN] Fetch fail:", e.message); setLiveLoading(false); });
+      }).catch(() => setLiveLoading(false));
     }, [subScreen]);
 
     return (

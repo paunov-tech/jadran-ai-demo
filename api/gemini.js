@@ -36,7 +36,7 @@ export default async function handler(req, res) {
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
     
-    console.log('[GEMINI] Request mode:', mode, 'prompt:', prompt.substring(0, 80));
+    
     
     const response = await fetch(url, {
       method: 'POST',
@@ -47,14 +47,14 @@ export default async function handler(req, res) {
     const data = await response.json();
     
     // Debug: log full response structure
-    console.log('[GEMINI] Response status:', response.status);
-    console.log('[GEMINI] Response keys:', Object.keys(data));
+    
+    
     if (data.error) {
       console.error('[GEMINI] API Error:', JSON.stringify(data.error));
       return res.status(200).json({ text: '', error: data.error.message || 'Gemini error', debug: data.error });
     }
     if (!data.candidates || data.candidates.length === 0) {
-      console.warn('[GEMINI] No candidates. Full response:', JSON.stringify(data).substring(0, 500));
+      
       return res.status(200).json({ text: '', error: 'No candidates', debug: JSON.stringify(data).substring(0, 300) });
     }
 
@@ -63,7 +63,7 @@ export default async function handler(req, res) {
       .filter(Boolean)
       .join('') || '';
 
-    console.log('[GEMINI] Extracted text length:', text.length, 'preview:', text.substring(0, 200));
+    
 
     // Robust JSON extraction
     if (isJson && text) {

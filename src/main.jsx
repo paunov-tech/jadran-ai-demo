@@ -16,17 +16,20 @@ const route = isHost ? "host" : isAI ? "ai" : hasRoom ? "app" : "landing";
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null }; }
   static getDerivedStateFromError(error) { return { error }; }
-  componentDidCatch(error, info) { console.error("JADRAN CRASH:", error, info); }
+  componentDidCatch(error, info) { console.error("Error:", error, info); }
   render() {
     if (this.state.error) return (
-      <div style={{ padding: 40, color: "#f87171", background: "#0a1628", minHeight: "100vh", fontFamily: "monospace" }}>
-        <h2>JADRAN AI — Error</h2>
-        <pre style={{ whiteSpace: "pre-wrap", fontSize: 14, marginTop: 16, color: "#fbbf24" }}>
-          {this.state.error.toString()}
-        </pre>
+      <div style={{ padding: 40, color: "#7dd3fc", background: "#0a1628", minHeight: "100vh", fontFamily: "'Outfit', system-ui, sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🌊</div>
+        <h2 style={{ fontSize: 22, fontWeight: 400, marginBottom: 8, color: "#f0f9ff" }}>Nešto nije u redu</h2>
+        <p style={{ fontSize: 14, color: "#64748b", marginBottom: 24, maxWidth: 400 }}>Stranica se nije učitala ispravno. Pokušajte ponovo ili očistite cache.</p>
+        <button onClick={() => window.location.reload()}
+          style={{ padding: "12px 28px", background: "linear-gradient(135deg, #0ea5e9, #0284c7)", color: "#fff", border: "none", borderRadius: 14, cursor: "pointer", fontSize: 15, fontFamily: "inherit", marginBottom: 12 }}>
+          Pokušaj ponovo
+        </button>
         <button onClick={() => { localStorage.clear(); window.location.reload(); }}
-          style={{ marginTop: 24, padding: "12px 24px", background: "#1e3a5f", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 14 }}>
-          Clear Cache and Reload
+          style={{ padding: "8px 20px", background: "transparent", color: "#64748b", border: "1px solid rgba(14,165,233,0.15)", borderRadius: 12, cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
+          Očisti cache
         </button>
       </div>
     );
