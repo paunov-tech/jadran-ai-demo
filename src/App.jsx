@@ -708,21 +708,66 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   );
   const BackBtn = ({ onClick }) => <button onClick={onClick} style={{ ...dm, background: "none", border: "none", color: C.accent, fontSize: 14, cursor: "pointer", padding: "12px 0" }}>{t("back",lang)}</button>;
 
-  /* ─── PHASE NAVIGATION ─── */
+  /* ─── SVG PICTOGRAMS — premium line icons ─── */
+  const Icon = ({ d, size = 24, color = "currentColor", stroke = 1.8 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round">
+      <path d={d} />
+    </svg>
+  );
+  const IC = {
+    // Phase nav
+    plane:    "M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5Z",
+    home:     "M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-9.5Z M9 21V14h6v7",
+    sparkle:  "M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2Z",
+    // Quick access
+    parking:  "M5 21V5a2 2 0 0 1 2-2h5a5 5 0 0 1 0 10H7",
+    beach:    "M17.5 21H6.5 M12 12a5 5 0 0 0 5-5V3 M7 7h10 M5 21l4.5-9 M19 21l-4.5-9 M12 12v9",
+    sun:      "M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z M12 2v2 M12 20v2 M4.93 4.93l1.41 1.41 M17.66 17.66l1.41 1.41 M2 12h2 M20 12h2 M4.93 19.07l1.41-1.41 M17.66 6.34l1.41-1.41",
+    map:      "M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3V7Z M9 4v13 M15 7v13",
+    food:     "M3 2l0 7a4 4 0 0 0 4 4h2a4 4 0 0 0 4-4V2 M7 2v20 M21 15V2a5 5 0 0 0-5 5v6h4v2h-4v5",
+    medic:    "M18 18H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3Z M12 9v6 M9 12h6",
+    gem:      "M6 3h12l4 6-10 12L2 9l4-6Z M2 9h20 M12 3l-4 6 4 12 4-12-4-6",
+    bot:      "M12 8V4H8 M20 12a8 8 0 1 0-16 0v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5Z M10 15h0 M14 15h0",
+    check:    "M20 6L9 17l-5-5",
+  };
+
+    /* ─── PHASE NAVIGATION ─── */
   const PhaseNav = () => {
-    const phases = [{ k: "pre", l: t("preTrip",lang), i: "✈️" }, { k: "kiosk", l: t("kiosk",lang), i: "🏠" }, { k: "post", l: t("postStay",lang), i: "💫" }];
+    const phases = [
+      { k: "pre", l: t("preTrip",lang), ic: IC.plane },
+      { k: "kiosk", l: t("kiosk",lang), ic: IC.home },
+      { k: "post", l: t("postStay",lang), ic: IC.sparkle },
+    ];
     const idx = phases.findIndex(p => p.k === phase);
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 0, padding: "16px 0", position: "relative" }}>
-        <div style={{ position: "absolute", top: "50%", left: "8%", right: "8%", height: 2, background: C.bord, zIndex: 0 }} />
-        <div style={{ position: "absolute", top: "50%", left: "8%", width: `${(idx / (phases.length - 1)) * 84}%`, height: 2, background: `linear-gradient(90deg,${C.accent},${C.gold})`, zIndex: 1, transition: "width 0.5s" }} />
-        {phases.map((p, i) => (
-          <div key={p.k} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, zIndex: 2, cursor: "pointer" }}
-            onClick={() => { setPhase(p.k); if (p.k === "pre") setSubScreen("onboard"); else if (p.k === "kiosk") setSubScreen("home"); else setSubScreen("summary"); }}>
-            <div style={{ width: i === idx ? 48 : 38, height: i === idx ? 48 : 38, borderRadius: "50%", background: i === idx ? `linear-gradient(135deg,${C.accent},#0284c7)` : i < idx ? C.acDim : C.card, border: i === idx ? "none" : `2px solid ${i < idx ? C.accent : C.bord}`, display: "grid", placeItems: "center", fontSize: i === idx ? 22 : 17, transition: "all 0.3s", boxShadow: i === idx ? `0 0 24px rgba(14,165,233,0.25)` : "none" }} className={i === idx ? "phase-active" : ""}>{i < idx ? "✓" : p.i}</div>
-            <div style={{ ...dm, fontSize: 11, letterSpacing: 2, textTransform: "uppercase", color: i === idx ? C.accent : C.mut, fontWeight: i === idx ? 700 : 400 }}>{p.l}</div>
-          </div>
-        ))}
+      <div style={{ display: "flex", alignItems: "center", gap: 0, padding: "20px 0 12px", position: "relative" }}>
+        {/* Track line */}
+        <div style={{ position: "absolute", top: 28, left: "12%", right: "12%", height: 1, background: C.bord, zIndex: 0 }} />
+        <div style={{ position: "absolute", top: 28, left: "12%", width: `${(idx / (phases.length - 1)) * 76}%`, height: 1, background: `linear-gradient(90deg,${C.accent},${C.warm})`, zIndex: 1, transition: "width 0.6s cubic-bezier(0.4,0,0.2,1)" }} />
+        {phases.map((p, i) => {
+          const active = i === idx;
+          const done = i < idx;
+          return (
+            <div key={p.k} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, zIndex: 2, cursor: "pointer" }}
+              onClick={() => { setPhase(p.k); if (p.k === "pre") setSubScreen("onboard"); else if (p.k === "kiosk") setSubScreen("home"); else setSubScreen("summary"); }}>
+              <div style={{
+                width: active ? 52 : 40, height: active ? 52 : 40,
+                borderRadius: active ? 18 : 14,
+                background: active ? `linear-gradient(135deg,${C.accent},#0284c7)` : done ? C.acDim : "rgba(12,28,50,0.6)",
+                border: active ? "none" : `1.5px solid ${done ? C.accent : C.bord}`,
+                display: "grid", placeItems: "center",
+                transition: "all 0.4s cubic-bezier(0.4,0,0.2,1)",
+                boxShadow: active ? `0 8px 28px rgba(14,165,233,0.25), inset 0 1px 0 rgba(255,255,255,0.15)` : "none",
+              }}>
+                {done
+                  ? <Icon d={IC.check} size={active ? 22 : 18} color={C.accent} stroke={2.2} />
+                  : <Icon d={p.ic} size={active ? 22 : 18} color={active ? "#fff" : done ? C.accent : C.mut} stroke={active ? 2 : 1.5} />
+                }
+              </div>
+              <div style={{ ...dm, fontSize: 10, letterSpacing: 2.5, textTransform: "uppercase", color: active ? C.text : done ? C.accent : C.mut, fontWeight: active ? 700 : done ? 500 : 400 }}>{p.l}</div>
+            </div>
+          );
+        })}
       </div>
     );
   };
@@ -1006,24 +1051,35 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
 
         {/* Quick tiles */}
         <SectionLabel>{t("quickAccess",lang)}</SectionLabel>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 24 }}>
           {[
-            { k: "parking", e: "🅿️", l: t("parking",lang) }, { k: "beach", e: "🏖️", l: t("beaches",lang) },
-            { k: "sun", e: "☀️", l: t("sun",lang) }, { k: "routes", e: "🗺️", l: t("routes",lang) },
-            { k: "food", e: "🍽️", l: t("food",lang) }, { k: "emergency", e: "🏥", l: t("emergency",lang) },
-            { k: "gems", e: "💎", l: t("gems",lang) }, { k: "chat", e: "🤖", l: t("aiGuide",lang) },
+            { k: "parking", ic: IC.parking, l: t("parking",lang), clr: C.accent },
+            { k: "beach", ic: IC.beach, l: t("beaches",lang), clr: "#38bdf8" },
+            { k: "sun", ic: IC.sun, l: t("sun",lang), clr: C.warm },
+            { k: "routes", ic: IC.map, l: t("routes",lang), clr: "#34d399" },
+            { k: "food", ic: IC.food, l: t("food",lang), clr: C.terracotta },
+            { k: "emergency", ic: IC.medic, l: t("emergency",lang), clr: C.red },
+            { k: "gems", ic: IC.gem, l: t("gems",lang), clr: C.gold },
+            { k: "chat", ic: IC.bot, l: t("aiGuide",lang), clr: "#a78bfa" },
           ].map(t => (
             <div key={t.k} onClick={() => {
               if (t.k === "gems") tryPremium(() => setSubScreen("gems"));
               else if (t.k === "chat") tryPremium(() => setSubScreen("chat"));
               else setSubScreen(t.k);
             }}
-              className="anim-card glass" style={{ background: "rgba(12,28,50,0.7)", borderRadius: 18, padding: "22px 12px", textAlign: "center", cursor: "pointer", border: `1px solid ${C.bord}`, transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)", position: "relative", boxShadow: "0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(186,230,253,0.02)" }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.2)"; e.currentTarget.style.transform = "translateY(-4px) scale(1.02)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.3), 0 0 20px rgba(14,165,233,0.08), inset 0 1px 0 rgba(186,230,253,0.04)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(186,230,253,0.02)"; }}>
-              <div style={{ fontSize: 32, marginBottom: 6 }}>{t.e}</div>
-              <div style={{ ...dm, fontSize: 13, fontWeight: 600 }}>{t.l}</div>
-              {(t.k === "gems" || t.k === "chat") && !premium && <div style={{ position: "absolute", top: 8, right: 8, ...dm, fontSize: 9, color: C.gold, background: C.goDim, padding: "2px 6px", borderRadius: 6 }}>PRO</div>}
+              className="anim-card glass" style={{
+                background: "rgba(12,28,50,0.65)", borderRadius: 20, padding: "20px 12px 16px",
+                textAlign: "center", cursor: "pointer", position: "relative",
+                border: `1px solid ${C.bord}`, transition: "all 0.35s cubic-bezier(0.4,0,0.2,1)",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.03)",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = t.clr + "33"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = `0 16px 48px rgba(0,0,0,0.25), 0 0 20px ${t.clr}12`; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.03)"; }}>
+              <div style={{ width: 44, height: 44, borderRadius: 14, background: t.clr + "12", display: "grid", placeItems: "center", margin: "0 auto 10px", border: `1px solid ${t.clr}15`, transition: "all 0.3s" }}>
+                <Icon d={t.ic} size={22} color={t.clr} stroke={1.6} />
+              </div>
+              <div style={{ ...dm, fontSize: 12, fontWeight: 500, color: C.text }}>{t.l}</div>
+              {(t.k === "gems" || t.k === "chat") && !premium && <div style={{ position: "absolute", top: 8, right: 8, ...dm, fontSize: 8, color: C.gold, background: C.goDim, padding: "2px 7px", borderRadius: 8, fontWeight: 600, letterSpacing: 0.5, border: `1px solid rgba(245,158,11,0.1)` }}>PRO</div>}
             </div>
           ))}
         </div>
