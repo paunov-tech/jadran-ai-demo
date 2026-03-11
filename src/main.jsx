@@ -1,8 +1,15 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 
-// Simple path-based routing: /host → HostPanel, everything else → Guest app
-const isHostRoute = window.location.pathname === "/host" || window.location.pathname === "/host/";
+// Route logic:
+// /host         → HostPanel (apartment management)
+// ?room=XXXX    → Guest App (concierge experience)
+// jadran.ai     → Landing Page (marketing + booking)
+const path = window.location.pathname;
+const hasRoom = new URLSearchParams(window.location.search).has("room");
+const isHost = path === "/host" || path === "/host/";
+
+const route = isHost ? "host" : hasRoom ? "app" : "landing";
 
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null }; }
@@ -25,18 +32,20 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-// Lazy load the right component
-const App = React.lazy(() => isHostRoute
-  ? import('./HostPanel.jsx')
-  : import('./App.jsx')
+const App = React.lazy(() =>
+  route === "host" ? import('./HostPanel.jsx')
+  : route === "app" ? import('./App.jsx')
+  : import('./LandingPage.jsx')
 );
+
+const labels = { host: "Host Panel", app: "JADRAN AI", landing: "JADRAN AI" };
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
       <React.Suspense fallback={
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#0a1628", color: "rgba(14,165,233,0.6)", fontFamily: "system-ui", fontSize: 18 }}>
-          🌊 {isHostRoute ? "Host Panel" : "JADRAN AI"}...
+          🌊 {labels[route]}...
         </div>
       }>
         <App />
