@@ -8,22 +8,14 @@ import { useState, useEffect } from "react";
 const BKG = (city, params="") => `https://www.booking.com/searchresults.html?aid=101704203&ss=${encodeURIComponent(city)}&lang=en${params}`;
 
 const DESTINATIONS = [
-  { name: "Split & Podstrana", emoji: "🏛️", desc: "Dioklecijanova palača, Bačvice, Marjan", link: BKG("Split, Croatia"), region: "Dalmacija",
-    img: "https://images.unsplash.com/photo-1555990538-1e7e8e7f5baa?w=440&h=220&fit=crop&auto=format&q=60" },
-  { name: "Makarska rivijera", emoji: "🏖️", desc: "Najljepše plaže Jadrana", link: BKG("Makarska, Croatia"), region: "Dalmacija",
-    img: "https://images.unsplash.com/photo-1592906209472-a36b1f3782ef?w=440&h=220&fit=crop&auto=format&q=60" },
-  { name: "Hvar", emoji: "🌿", desc: "Lavanda, glamur, noćni život", link: BKG("Hvar, Croatia"), region: "Otoci",
-    img: "https://images.unsplash.com/photo-1586015555751-63bb77f4322a?w=440&h=220&fit=crop&auto=format&q=60" },
-  { name: "Rovinj", emoji: "⛪", desc: "Najromantičniji grad Istre", link: BKG("Rovinj, Croatia"), region: "Istra",
-    img: "https://images.unsplash.com/photo-1590845288695-7d0dba34de10?w=440&h=220&fit=crop&auto=format&q=60" },
-  { name: "Pula", emoji: "🏟️", desc: "Rimska arena, obiteljske plaže", link: BKG("Pula, Croatia"), region: "Istra",
-    img: "https://images.unsplash.com/photo-1592157479909-f0a94b55a5ad?w=440&h=220&fit=crop&auto=format&q=60" },
-  { name: "Opatija", emoji: "⚓", desc: "Elegancija Kvarnera", link: BKG("Opatija, Croatia"), region: "Kvarner",
-    img: "https://images.unsplash.com/photo-1600017955613-cfb161984e74?w=440&h=220&fit=crop&auto=format&q=60" },
-  { name: "Dubrovnik", emoji: "🏰", desc: "Biser Jadrana, gradske zidine", link: BKG("Dubrovnik, Croatia"), region: "Dalmacija",
-    img: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=440&h=220&fit=crop&auto=format&q=60" },
-  { name: "Zadar", emoji: "🌅", desc: "Morske orgulje, najljepši zalazak", link: BKG("Zadar, Croatia"), region: "Dalmacija",
-    img: "https://images.unsplash.com/photo-1596370743446-6a7ef43a36f9?w=440&h=220&fit=crop&auto=format&q=60" },
+  { name: "Split & Podstrana", emoji: "🏛️", desc: "Dioklecijanova palača, Bačvice, Marjan", link: BKG("Split, Croatia"), region: "Dalmacija", city: "Split" },
+  { name: "Makarska rivijera", emoji: "🏖️", desc: "Najljepše plaže Jadrana", link: BKG("Makarska, Croatia"), region: "Dalmacija", city: "Makarska" },
+  { name: "Hvar", emoji: "🌿", desc: "Lavanda, glamur, noćni život", link: BKG("Hvar, Croatia"), region: "Otoci", city: "Hvar" },
+  { name: "Rovinj", emoji: "⛪", desc: "Najromantičniji grad Istre", link: BKG("Rovinj, Croatia"), region: "Istra", city: "Rovinj" },
+  { name: "Pula", emoji: "🏟️", desc: "Rimska arena, obiteljske plaže", link: BKG("Pula, Croatia"), region: "Istra", city: "Pula" },
+  { name: "Opatija", emoji: "⚓", desc: "Elegancija Kvarnera", link: BKG("Opatija, Croatia"), region: "Kvarner", city: "Opatija" },
+  { name: "Dubrovnik", emoji: "🏰", desc: "Biser Jadrana, gradske zidine", link: BKG("Dubrovnik, Croatia"), region: "Dalmacija", city: "Dubrovnik" },
+  { name: "Zadar", emoji: "🌅", desc: "Morske orgulje, najljepši zalazak", link: BKG("Zadar, Croatia"), region: "Dalmacija", city: "Zadar" },
 ];
 
 const STEPS = [
@@ -36,8 +28,21 @@ export default function LandingPage() {
   const [lang, setLang] = useState("hr");
   const [roomInput, setRoomInput] = useState("");
   const [anim, setAnim] = useState(false);
+  const [cityImgs, setCityImgs] = useState({});
 
   useEffect(() => { setTimeout(() => setAnim(true), 100); }, []);
+
+  // Load Wikipedia images for destination cards
+  useEffect(() => {
+    DESTINATIONS.forEach(d => {
+      fetch(`/api/cityimg?city=${encodeURIComponent(d.city)}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.url) setCityImgs(prev => ({ ...prev, [d.city]: data.url }));
+        })
+        .catch(() => {});
+    });
+  }, []);
 
   const goRoom = () => {
     const code = roomInput.trim().toUpperCase();
@@ -162,12 +167,12 @@ export default function LandingPage() {
                   onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.25)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(0,0,0,0.3)"; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.06)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
                   {/* Photo background */}
-                  <div style={{
+                  {cityImgs[d.city] && <div style={{
                     position: "absolute", inset: 0,
-                    backgroundImage: `url(${d.img})`,
+                    backgroundImage: `url(${cityImgs[d.city]})`,
                     backgroundSize: "cover", backgroundPosition: "center",
                     transition: "transform 0.5s",
-                  }} className="dest-img" />
+                  }} className="dest-img" />}
                   {/* Dark gradient overlay */}
                   <div style={{ position: "absolute", inset: 0, background: "linear-gradient(0deg, rgba(6,14,28,0.92) 0%, rgba(6,14,28,0.5) 50%, rgba(6,14,28,0.25) 100%)" }} />
                   {/* Content */}
