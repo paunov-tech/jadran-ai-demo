@@ -223,48 +223,72 @@ const FORECAST = [
 ];
 
 const PRACTICAL = {
-  parking: { icon: "🅿️", title: "Parking", items: [
-    { n: "Parking ispred vile", d: "0m", note: "Vaše mjesto: #7", free: true, mapKey: "villa_parking" },
-    { n: "Podstrana centar", d: "400m", note: "8 kn/h · SMS plaćanje", price: "8kn/h", mapKey: "podstrana_centar" },
-    { n: "Garaža Lora (Split)", d: "8km", note: "Natkrivena garaža, 24/7", price: "10€/dan", mapKey: "garaza_lora" },
+  parking: { icon: "🅿️", tk: "parking", items: [
+    { n: "Parking ispred vile", d: "0m", note: {hr:"Vaše mjesto: #7",de:"Ihr Platz: #7",en:"Your spot: #7",it:"Il vostro posto: #7",si:"Vaše mesto: #7",cz:"Vaše místo: #7",pl:"Wasze miejsce: #7"}, free: true, mapKey: "villa_parking" },
+    { n: "Podstrana centar", d: "400m", note: {hr:"8 kn/h · SMS plaćanje",de:"8 kn/h · SMS-Zahlung",en:"8 kn/h · SMS payment",it:"8 kn/h · Pagamento SMS",si:"8 kn/h · SMS plačilo",cz:"8 kn/h · SMS platba",pl:"8 kn/h · Płatność SMS"}, price: "8kn/h", mapKey: "podstrana_centar" },
+    { n: "Garaža Lora (Split)", d: "8km", note: {hr:"Natkrivena garaža, 24/7",de:"Überdachte Garage, 24/7",en:"Covered garage, 24/7",it:"Garage coperto, 24/7",si:"Pokrita garaža, 24/7",cz:"Krytá garáž, 24/7",pl:"Garaż kryty, 24/7"}, price: "10€/dan", mapKey: "garaza_lora" },
   ]},
-  beach: { icon: "🏖️", title: "Plaže", items: [
-    { n: "Plaža Podstrana", d: "200m", note: "3 min pješice · Ležaljke 15€/dan", type: "🪨", mapKey: "plaza_podstrana" },
-    { n: "Kašjuni", d: "6km", note: "12 min autom · Parking 5€ · Najljepša!", type: "🪨", mapKey: "kasjuni" },
-    { n: "Bačvice", d: "9km", note: "PIJESAK! Savršena za djecu · 15 min autom", type: "🏖️", mapKey: "bacvice" },
-    { n: "Zlatni Rat (Brač)", d: "Ferry", note: "Ikonska · Ferry 7:30, 9:30, 12:00", type: "🏖️", affiliate: true, link: "jadrolinija.hr", mapKey: "zlatni_rat" },
+  beach: { icon: "🏖️", tk: "beaches", items: [
+    { n: "Plaža Podstrana", d: "200m", note: {hr:"3 min pješice · Ležaljke 15€/dan",de:"3 Min zu Fuß · Liegen 15€/Tag",en:"3 min walk · Sunbeds 15€/day",it:"3 min a piedi · Lettini 15€/giorno",si:"3 min peš · Ležalniki 15€/dan",cz:"3 min pěšky · Lehátka 15€/den",pl:"3 min pieszo · Leżaki 15€/dzień"}, type: "🪨", mapKey: "plaza_podstrana" },
+    { n: "Kašjuni", d: "6km", note: {hr:"12 min autom · Parking 5€ · Najljepša!",de:"12 Min Fahrt · Parking 5€ · Die Schönste!",en:"12 min drive · Parking 5€ · Most beautiful!",it:"12 min in auto · Parcheggio 5€ · La più bella!",si:"12 min z avtom · Parking 5€ · Najlepša!",cz:"12 min autem · Parkování 5€ · Nejkrásnější!",pl:"12 min autem · Parking 5€ · Najpiękniejsza!"}, type: "🪨", mapKey: "kasjuni" },
+    { n: "Bačvice", d: "9km", note: {hr:"PIJESAK! Savršena za djecu · 15 min autom",de:"SAND! Perfekt für Kinder · 15 Min Fahrt",en:"SAND! Perfect for kids · 15 min drive",it:"SABBIA! Perfetta per bambini · 15 min in auto",si:"PESEK! Popolna za otroke · 15 min z avtom",cz:"PÍSEK! Perfektní pro děti · 15 min autem",pl:"PIASEK! Idealna dla dzieci · 15 min autem"}, type: "🏖️", mapKey: "bacvice" },
+    { n: "Zlatni Rat (Brač)", d: "Ferry", note: {hr:"Ikonska · Ferry 7:30, 9:30, 12:00",de:"Ikonisch · Fähre 7:30, 9:30, 12:00",en:"Iconic · Ferry 7:30, 9:30, 12:00",it:"Iconica · Traghetto 7:30, 9:30, 12:00",si:"Ikonska · Trajekt 7:30, 9:30, 12:00",cz:"Ikonická · Trajekt 7:30, 9:30, 12:00",pl:"Kultowa · Prom 7:30, 9:30, 12:00"}, type: "🏖️", affiliate: true, link: "jadrolinija.hr", mapKey: "zlatni_rat" },
   ]},
-  sun: { icon: "☀️", title: "Sunce & UV", items: [
-    { n: `UV Index: ${W_DEFAULT.uv} (VISOK)`, note: "SPF 50+ obavezno između 11-16h!", warn: true, uvDynamic: true },
-    { n: "Hidracija", note: "Min. 3L vode pri 31°C · Djeca češće!" },
-    { n: "Ljekarna Podstrana", d: "300m", note: "Do 20h · SPF, After Sun, Panthenol" },
+  sun: { icon: "☀️", tk: "sun", items: [
+    { n: "UV Index", note: {hr:"SPF 50+ obavezno između 11-16h!",de:"SPF 50+ Pflicht zwischen 11-16 Uhr!",en:"SPF 50+ mandatory between 11am-4pm!",it:"SPF 50+ obbligatorio tra le 11-16!",si:"SPF 50+ obvezno med 11-16h!",cz:"SPF 50+ povinné mezi 11-16h!",pl:"SPF 50+ obowiązkowe między 11-16!"}, warn: true, uvDynamic: true },
+    { n: {hr:"Hidracija",de:"Hydration",en:"Hydration",it:"Idratazione",si:"Hidracija",cz:"Hydratace",pl:"Nawodnienie"}, note: {hr:"Min. 3L vode pri 31°C · Djeca češće!",de:"Min. 3L Wasser bei 31°C · Kinder öfter!",en:"Min. 3L water at 31°C · Kids more often!",it:"Min. 3L acqua a 31°C · Bambini più spesso!",si:"Min. 3L vode pri 31°C · Otroci pogosteje!",cz:"Min. 3L vody při 31°C · Děti častěji!",pl:"Min. 3L wody przy 31°C · Dzieci częściej!"} },
+    { n: {hr:"Ljekarna Podstrana",de:"Apotheke Podstrana",en:"Pharmacy Podstrana",it:"Farmacia Podstrana",si:"Lekarna Podstrana",cz:"Lékárna Podstrana",pl:"Apteka Podstrana"}, d: "300m", note: {hr:"Do 20h · SPF, After Sun, Panthenol",de:"Bis 20 Uhr · SPF, After Sun, Panthenol",en:"Until 8pm · SPF, After Sun, Panthenol",it:"Fino alle 20 · SPF, After Sun, Panthenol",si:"Do 20h · SPF, After Sun, Panthenol",cz:"Do 20h · SPF, After Sun, Panthenol",pl:"Do 20:00 · SPF, After Sun, Panthenol"} },
   ]},
-  routes: { icon: "🗺️", title: "Prijevoz", items: [
-    { n: "Split centar", d: "10km", note: "Auto 15min / Bus #60 svaki 20min (2€)", mapKey: "split_centar" },
-    { n: "Trogir", d: "30km", note: "Auto 25min · UNESCO · Prekrasan pogled!", mapKey: "trogir" },
-    { n: "Omiš + Cetina", d: "15km", note: "Auto 18min · Rafting dostupan!", affiliate: true, mapKey: "omis" },
-    { n: "Ferry Brač/Hvar", note: "jadrolinija.hr · Online booking 20% jeftinije", affiliate: true, mapKey: "ferry_split" },
+  routes: { icon: "🗺️", tk: "routes", items: [
+    { n: "Split centar", d: "10km", note: {hr:"Auto 15min / Bus #60 svaki 20min (2€)",de:"Auto 15min / Bus #60 alle 20min (2€)",en:"Car 15min / Bus #60 every 20min (2€)",it:"Auto 15min / Bus #60 ogni 20min (2€)",si:"Avto 15min / Bus #60 vsakih 20min (2€)",cz:"Auto 15min / Bus #60 každých 20min (2€)",pl:"Auto 15min / Bus #60 co 20min (2€)"}, mapKey: "split_centar" },
+    { n: "Trogir", d: "30km", note: {hr:"Auto 25min · UNESCO · Prekrasan pogled!",de:"Auto 25min · UNESCO · Herrliche Aussicht!",en:"Car 25min · UNESCO · Beautiful view!",it:"Auto 25min · UNESCO · Vista bellissima!",si:"Avto 25min · UNESCO · Čudovit razgled!",cz:"Auto 25min · UNESCO · Krásný výhled!",pl:"Auto 25min · UNESCO · Piękny widok!"}, mapKey: "trogir" },
+    { n: "Omiš + Cetina", d: "15km", note: {hr:"Auto 18min · Rafting dostupan!",de:"Auto 18min · Rafting verfügbar!",en:"Car 18min · Rafting available!",it:"Auto 18min · Rafting disponibile!",si:"Avto 18min · Rafting na voljo!",cz:"Auto 18min · Rafting k dispozici!",pl:"Auto 18min · Rafting dostępny!"}, affiliate: true, mapKey: "omis" },
+    { n: "Ferry Brač/Hvar", note: {hr:"jadrolinija.hr · Online booking 20% jeftinije",de:"jadrolinija.hr · Online 20% günstiger",en:"jadrolinija.hr · Online booking 20% cheaper",it:"jadrolinija.hr · Prenotazione online 20% più economica",si:"jadrolinija.hr · Online 20% ceneje",cz:"jadrolinija.hr · Online 20% levněji",pl:"jadrolinija.hr · Online 20% taniej"}, affiliate: true, mapKey: "ferry_split" },
   ]},
-  food: { icon: "🍽️", title: "Hrana", items: [
-    { n: "Konzum", d: "400m", note: "7-21h · Svježi kruh do 8h", mapKey: "konzum" },
-    { n: "Pekara Bobis", d: "250m", note: "Od 6h! Burek, kroasani", mapKey: "pekara_bobis" },
-    { n: "Wolt / Glovo", note: "Dostava iz Splita do Podstrane" },
+  food: { icon: "🍽️", tk: "food", items: [
+    { n: "Konzum", d: "400m", note: {hr:"7-21h · Svježi kruh do 8h",de:"7-21 Uhr · Frisches Brot bis 8 Uhr",en:"7am-9pm · Fresh bread until 8am",it:"7-21 · Pane fresco fino alle 8",si:"7-21h · Svež kruh do 8h",cz:"7-21h · Čerstvý chléb do 8h",pl:"7-21 · Świeży chleb do 8"}, mapKey: "konzum" },
+    { n: "Pekara Bobis", d: "250m", note: {hr:"Od 6h! Burek, kroasani",de:"Ab 6 Uhr! Burek, Croissants",en:"From 6am! Burek, croissants",it:"Dalle 6! Burek, croissant",si:"Od 6h! Burek, rogljički",cz:"Od 6h! Burek, croissanty",pl:"Od 6! Burek, croissanty"}, mapKey: "pekara_bobis" },
+    { n: "Wolt / Glovo", note: {hr:"Dostava iz Splita do Podstrane",de:"Lieferung von Split nach Podstrana",en:"Delivery from Split to Podstrana",it:"Consegna da Spalato a Podstrana",si:"Dostava iz Splita do Podstrane",cz:"Doručení ze Splitu do Podstrany",pl:"Dostawa ze Splitu do Podstrany"} },
   ]},
-  emergency: { icon: "🏥", title: "Hitno", items: [
-    { n: "Hitna pomoć: 112 / 194", warn: true },
-    { n: "Ljekarna", d: "300m", note: "Do 20h", mapKey: "ljekarna" },
-    { n: "WiFi", note: "VillaMarija-5G · Lozinka: jadran2026" },
-    { n: "Domaćin", note: `${GUEST.host}: ${GUEST.hostPhone} (WhatsApp)` },
+  emergency: { icon: "🏥", tk: "emergency", items: [
+    { n: {hr:"Hitna pomoć",de:"Notruf",en:"Emergency",it:"Emergenza",si:"Nujna pomoč",cz:"Tísňové volání",pl:"Pogotowie"}, note: "112 / 194", warn: true },
+    { n: {hr:"Ljekarna",de:"Apotheke",en:"Pharmacy",it:"Farmacia",si:"Lekarna",cz:"Lékárna",pl:"Apteka"}, d: "300m", note: {hr:"Do 20h",de:"Bis 20 Uhr",en:"Until 8pm",it:"Fino alle 20",si:"Do 20h",cz:"Do 20h",pl:"Do 20:00"}, mapKey: "ljekarna" },
+    { n: "WiFi", note: "VillaMarija-5G · Lozinka/Password: jadran2026" },
+    { n: {hr:"Domaćin",de:"Gastgeber",en:"Host",it:"Padrone di casa",si:"Gostitelj",cz:"Hostitel",pl:"Gospodarz"}, note: `${GUEST.host}: ${GUEST.hostPhone} (WhatsApp)` },
   ]},
 };
 
 const GEMS = [
-  { name: "Uvala Vruja", emoji: "🏝️", mapKey: "uvala_vruja", type: "Tajna plaža", desc: "Između Omiša i Makarske, dostupna samo pješice. Kristalno more, potpuno divlja.", tip: "Ponesite vode i cipele za hodanje! Nema sjene.", best: "Ujutro", diff: "Srednje", premium: false },
-  { name: "Marjan špilje", emoji: "🕳️", mapKey: "marjan_spilje", type: "Šetnja", desc: "Starokršćanske špilje iz 5. st. na stazi od Kašjuna do vrha Marjana.", tip: "Krenite u 17h, stignete na vrh za zalazak sunca.", best: "Popodne", diff: "Lagano", premium: false },
-  { name: "Konoba Stari Mlin", emoji: "🍷", mapKey: "konoba_stari_mlin", type: "Lokalna tajna", desc: "Srinjine, 15min. Nema jelovnika — domaćin kuha što ima. Pršut, sir, vino iz podruma.", tip: "Nazovite dan ranije. ~80€ za 4 osobe sa vinom.", best: "Večer", diff: "Auto", premium: true },
-  { name: "Klis u zoru", emoji: "🏰", mapKey: "klis", type: "Iskustvo", desc: "Game of Thrones tvrđava u zoru. Nema turista. Pogled na Split i otoke.", tip: "Parking besplatan prije 8h. Dođite u 5:15.", best: "Izlazak sunca", diff: "Lagano", premium: true },
-  { name: "Cetina tajni bazen", emoji: "🌊", mapKey: "cetina_bazen", type: "Kupanje", desc: "3km uzvodno od Omiša, makadamski put do skrivenog prirodnog bazena.", tip: "Skrenite desno kod mosta u Omišu. Makadamski put 1km.", best: "Popodne", diff: "Lagano", premium: true },
-  { name: "Vidova Gora zalazak", emoji: "🌄", mapKey: "vidova_gora", type: "Pogled", desc: "Najviši vrh jadranskih otoka (778m). Auto do vrha. Pogled na Hvar, Vis, Italiju.", tip: "Ferry 12h, auto 30min do vrha, zalazak, večera u Bolu.", best: "Zalazak", diff: "Ferry+Auto", premium: true },
+  { name: "Uvala Vruja", emoji: "🏝️", mapKey: "uvala_vruja", premium: false,
+    type: {hr:"Tajna plaža",de:"Geheimstrand",en:"Secret beach",it:"Spiaggia segreta",si:"Skrita plaža",cz:"Tajná pláž",pl:"Tajna plaża"},
+    desc: {hr:"Između Omiša i Makarske, dostupna samo pješice. Kristalno more, potpuno divlja.",de:"Zwischen Omiš und Makarska, nur zu Fuß erreichbar. Kristallklares Meer, völlig wild.",en:"Between Omiš and Makarska, accessible only on foot. Crystal clear sea, completely wild.",it:"Tra Omiš e Makarska, raggiungibile solo a piedi. Mare cristallino, completamente selvaggia.",si:"Med Omišem in Makarsko, dostopna le peš. Kristalno morje, popolnoma divja.",cz:"Mezi Omišem a Makarskou, přístupná pouze pěšky. Křišťálové moře, zcela divoká.",pl:"Między Omišem a Makarską, dostępna tylko pieszo. Krystaliczne morze, całkowicie dzika."},
+    tip: {hr:"Ponesite vode i cipele za hodanje! Nema sjene.",de:"Bringen Sie Wasser und Wanderschuhe mit! Kein Schatten.",en:"Bring water and walking shoes! No shade.",it:"Portate acqua e scarpe da trekking! Nessuna ombra.",si:"Vzemite vodo in pohodne čevlje! Ni sence.",cz:"Vezměte vodu a turistickou obuv! Žádný stín.",pl:"Weźcie wodę i buty do chodzenia! Brak cienia."},
+    best: {hr:"Ujutro",de:"Morgens",en:"Morning",it:"Mattina",si:"Zjutraj",cz:"Ráno",pl:"Rano"}, diff: {hr:"Srednje",de:"Mittel",en:"Medium",it:"Medio",si:"Srednje",cz:"Střední",pl:"Średni"} },
+  { name: "Marjan špilje", emoji: "🕳️", mapKey: "marjan_spilje", premium: false,
+    type: {hr:"Šetnja",de:"Wanderung",en:"Walk",it:"Passeggiata",si:"Sprehod",cz:"Procházka",pl:"Spacer"},
+    desc: {hr:"Starokršćanske špilje iz 5. st. na stazi od Kašjuna do vrha Marjana.",de:"Frühchristliche Höhlen aus dem 5. Jh. auf dem Weg von Kašjuni zum Marjan-Gipfel.",en:"Early Christian caves from the 5th century on the trail from Kašjuni to Marjan summit.",it:"Grotte paleocristiane del V secolo sul sentiero da Kašjuni alla cima del Marjan.",si:"Starokrščanske jame iz 5. st. na poti od Kašjunov do vrha Marjana.",cz:"Starokřesťanské jeskyně z 5. století na stezce z Kašjuni na vrchol Marjanu.",pl:"Wczesnochrześcijańskie jaskinie z V w. na szlaku z Kašjuni na szczyt Marjanu."},
+    tip: {hr:"Krenite u 17h, stignete na vrh za zalazak sunca.",de:"Starten Sie um 17 Uhr, Gipfel zum Sonnenuntergang.",en:"Start at 5pm, reach the summit for sunset.",it:"Partite alle 17, arrivate in cima per il tramonto.",si:"Začnite ob 17h, na vrh za sončni zahod.",cz:"Vyražte v 17h, na vrchol k západu slunce.",pl:"Wyruszcie o 17, na szczyt o zachodzie słońca."},
+    best: {hr:"Popodne",de:"Nachmittag",en:"Afternoon",it:"Pomeriggio",si:"Popoldne",cz:"Odpoledne",pl:"Popołudnie"}, diff: {hr:"Lagano",de:"Leicht",en:"Easy",it:"Facile",si:"Lahko",cz:"Snadné",pl:"Łatwe"} },
+  { name: "Konoba Stari Mlin", emoji: "🍷", mapKey: "konoba_stari_mlin", premium: true,
+    type: {hr:"Lokalna tajna",de:"Lokales Geheimnis",en:"Local secret",it:"Segreto locale",si:"Lokalna skrivnost",cz:"Místní tajemství",pl:"Lokalny sekret"},
+    desc: {hr:"Srinjine, 15min. Nema jelovnika — domaćin kuha što ima. Pršut, sir, vino iz podruma.",de:"Srinjine, 15 Min. Keine Speisekarte — der Wirt kocht, was da ist. Pršut, Käse, Wein aus dem Keller.",en:"Srinjine, 15min. No menu — the host cooks what's available. Pršut, cheese, wine from the cellar.",it:"Srinjine, 15min. Nessun menù — il padrone cucina ciò che c'è. Pršut, formaggio, vino dalla cantina.",si:"Srinjine, 15min. Ni jedilnika — gostilničar kuha, kar ima. Pršut, sir, vino iz kleti.",cz:"Srinjine, 15 min. Žádné menu — hostitel vaří, co má. Pršut, sýr, víno ze sklepa.",pl:"Srinjine, 15min. Brak menu — gospodarz gotuje co ma. Pršut, ser, wino z piwnicy."},
+    tip: {hr:"Nazovite dan ranije. ~80€ za 4 osobe sa vinom.",de:"Rufen Sie einen Tag vorher an. ~80€ für 4 Personen mit Wein.",en:"Call a day ahead. ~80€ for 4 people with wine.",it:"Chiamate un giorno prima. ~80€ per 4 persone con vino.",si:"Pokličite dan prej. ~80€ za 4 osebe z vinom.",cz:"Zavolejte den předem. ~80€ pro 4 osoby s vínem.",pl:"Zadzwońcie dzień wcześniej. ~80€ za 4 osoby z winem."},
+    best: {hr:"Večer",de:"Abend",en:"Evening",it:"Sera",si:"Večer",cz:"Večer",pl:"Wieczór"}, diff: {hr:"Auto",de:"Auto",en:"Car",it:"Auto",si:"Avto",cz:"Auto",pl:"Auto"} },
+  { name: "Klis", emoji: "🏰", mapKey: "klis", premium: true,
+    type: {hr:"Iskustvo",de:"Erlebnis",en:"Experience",it:"Esperienza",si:"Doživetje",cz:"Zážitek",pl:"Doświadczenie"},
+    desc: {hr:"Game of Thrones tvrđava u zoru. Nema turista. Pogled na Split i otoke.",de:"Game of Thrones Festung im Morgengrauen. Keine Touristen. Blick auf Split und die Inseln.",en:"Game of Thrones fortress at dawn. No tourists. View of Split and the islands.",it:"Fortezza di Game of Thrones all'alba. Nessun turista. Vista su Spalato e le isole.",si:"Game of Thrones trdnjava ob zori. Brez turistov. Pogled na Split in otoke.",cz:"Pevnost ze Hry o trůny za úsvitu. Žádní turisté. Výhled na Split a ostrovy.",pl:"Twierdza z Gry o Tron o świcie. Żadnych turystów. Widok na Split i wyspy."},
+    tip: {hr:"Parking besplatan prije 8h. Dođite u 5:15.",de:"Parking kostenlos vor 8 Uhr. Kommen Sie um 5:15.",en:"Free parking before 8am. Arrive at 5:15.",it:"Parcheggio gratuito prima delle 8. Arrivate alle 5:15.",si:"Parking brezplačen pred 8h. Pridite ob 5:15.",cz:"Parkování zdarma před 8h. Přijeďte v 5:15.",pl:"Parking bezpłatny przed 8. Przyjedźcie o 5:15."},
+    best: {hr:"Izlazak sunca",de:"Sonnenaufgang",en:"Sunrise",it:"Alba",si:"Sončni vzhod",cz:"Východ slunce",pl:"Wschód słońca"}, diff: {hr:"Lagano",de:"Leicht",en:"Easy",it:"Facile",si:"Lahko",cz:"Snadné",pl:"Łatwe"} },
+  { name: "Cetina", emoji: "🌊", mapKey: "cetina_bazen", premium: true,
+    type: {hr:"Kupanje",de:"Baden",en:"Swimming",it:"Nuoto",si:"Kopanje",cz:"Koupání",pl:"Kąpiel"},
+    desc: {hr:"3km uzvodno od Omiša, makadamski put do skrivenog prirodnog bazena.",de:"3km flussaufwärts von Omiš, Schotterweg zum versteckten Naturbecken.",en:"3km upstream from Omiš, gravel road to a hidden natural pool.",it:"3km a monte da Omiš, strada sterrata verso una piscina naturale nascosta.",si:"3km gorvodno od Omiša, makadamska pot do skritega naravnega bazena.",cz:"3km proti proudu od Omiše, štěrková cesta ke skrytému přírodnímu bazénu.",pl:"3km w górę rzeki od Omisza, droga szutrowa do ukrytego naturalnego basenu."},
+    tip: {hr:"Skrenite desno kod mosta u Omišu. Makadamski put 1km.",de:"Rechts abbiegen bei der Brücke in Omiš. Schotterweg 1km.",en:"Turn right at the bridge in Omiš. Gravel road 1km.",it:"Girate a destra al ponte di Omiš. Strada sterrata 1km.",si:"Zavijte desno pri mostu v Omišu. Makadamska pot 1km.",cz:"Odbočte vpravo u mostu v Omiši. Štěrková cesta 1km.",pl:"Skręćcie w prawo przy moście w Omiszu. Droga szutrowa 1km."},
+    best: {hr:"Popodne",de:"Nachmittag",en:"Afternoon",it:"Pomeriggio",si:"Popoldne",cz:"Odpoledne",pl:"Popołudnie"}, diff: {hr:"Lagano",de:"Leicht",en:"Easy",it:"Facile",si:"Lahko",cz:"Snadné",pl:"Łatwe"} },
+  { name: "Vidova Gora", emoji: "🌄", mapKey: "vidova_gora", premium: true,
+    type: {hr:"Pogled",de:"Aussicht",en:"Viewpoint",it:"Panorama",si:"Razgled",cz:"Vyhlídka",pl:"Punkt widokowy"},
+    desc: {hr:"Najviši vrh jadranskih otoka (778m). Auto do vrha. Pogled na Hvar, Vis, Italiju.",de:"Höchster Gipfel der Adriainseln (778m). Auto bis zum Gipfel. Blick auf Hvar, Vis, Italien.",en:"Highest peak of the Adriatic islands (778m). Drive to the top. View of Hvar, Vis, Italy.",it:"Vetta più alta delle isole adriatiche (778m). Auto fino in cima. Vista su Hvar, Vis, Italia.",si:"Najvišji vrh jadranskih otokov (778m). Avto do vrha. Pogled na Hvar, Vis, Italijo.",cz:"Nejvyšší vrchol jadranských ostrovů (778m). Autem na vrchol. Výhled na Hvar, Vis, Itálii.",pl:"Najwyższy szczyt wysp adriatyckich (778m). Autem na szczyt. Widok na Hvar, Vis, Włochy."},
+    tip: {hr:"Ferry 12h, auto 30min do vrha, zalazak, večera u Bolu.",de:"Fähre 12 Uhr, Auto 30 Min zum Gipfel, Sonnenuntergang, Abendessen in Bol.",en:"Ferry 12pm, car 30min to top, sunset, dinner in Bol.",it:"Traghetto 12, auto 30min in cima, tramonto, cena a Bol.",si:"Trajekt 12h, avto 30min do vrha, zahod, večerja v Bolu.",cz:"Trajekt 12h, auto 30min na vrchol, západ slunce, večeře v Bolu.",pl:"Prom 12, auto 30min na szczyt, zachód słońca, kolacja w Bolu."},
+    best: {hr:"Zalazak",de:"Sonnenuntergang",en:"Sunset",it:"Tramonto",si:"Zahod",cz:"Západ slunce",pl:"Zachód słońca"}, diff: "Ferry+Auto" },
 ];
 
 const EXPERIENCES = [
@@ -500,9 +524,9 @@ export default function JadranUnified() {
 
   const hour = simHour ?? new Date().getHours();
   const timeCtx = hour < 6 ? "night" : hour < 12 ? "morning" : hour < 18 ? "midday" : hour < 22 ? "evening" : "night";
+  const dateLocale = lang === "de" || lang === "at" ? "de-DE" : lang === "en" ? "en-GB" : lang === "it" ? "it-IT" : lang === "si" ? "sl-SI" : lang === "cz" ? "cs-CZ" : lang === "pl" ? "pl-PL" : "hr-HR";
   const daysLeft = 7 - kioskDay + 1;
   const budgetLeft = GUEST.budget - GUEST.spent;
-  const dateLocale = lang === "de" || lang === "at" ? "de-DE" : lang === "en" ? "en-GB" : lang === "it" ? "it-IT" : lang === "si" ? "sl-SI" : lang === "cz" ? "cs-CZ" : lang === "pl" ? "pl-PL" : "hr-HR";
 
   const tryPremium = (cb) => { if (premium) { cb(); } else { setShowPaywall(true); } };
 
@@ -891,7 +915,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         <BackBtn onClick={() => setSubScreen("home")} />
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
           <span style={{ fontSize: 40 }}>{data.icon}</span>
-          <div style={{ fontSize: 28, fontWeight: 400 }}>{data.title}</div>
+          <div style={{ fontSize: 28, fontWeight: 400 }}>{data.tk ? t(data.tk,lang) : data.title}</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {data.items.map((it, i) => (
@@ -899,9 +923,9 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               {it.warn && <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.red, marginTop: 8, flexShrink: 0 }} />}
               {it.free && <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.green, marginTop: 8, flexShrink: 0 }} />}
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 16, fontWeight: 400, marginBottom: 2 }}>{it.uvDynamic ? `UV Index: ${weather.uv} (${weather.uv >= 8 ? "VISOK" : weather.uv >= 5 ? "SREDNJI" : "NIZAK"})` : it.n}</div>
+                <div style={{ fontSize: 16, fontWeight: 400, marginBottom: 2 }}>{it.uvDynamic ? `UV ${weather.uv} (${weather.uv >= 8 ? "HIGH" : weather.uv >= 5 ? "MED" : "LOW"})` : typeof it.n === "object" ? (it.n[lang] || it.n.hr || "") : it.n}</div>
                 <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.5 }}>
-                  {it.note}
+                  {typeof it.note === "object" ? (it.note[lang] || it.note.hr || "") : it.note}
                   {it.d && <span style={{ color: C.accent, marginLeft: 8 }}>{it.d}</span>}
                   {it.price && <span style={{ color: C.text, marginLeft: 8 }}>{it.price}</span>}
                   {it.type && <span style={{ marginLeft: 8 }}>{it.type}</span>}
@@ -938,12 +962,12 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             </div>}
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
               <span style={{ fontSize: 32 }}>{g.emoji}</span>
-              <Badge c="gold">{g.type.toUpperCase()}</Badge>
+              <Badge c="gold">{(typeof g.type === "object" ? (g.type[lang] || g.type.hr) : g.type).toUpperCase()}</Badge>
             </div>
             <div style={{ fontSize: 18, fontWeight: 400, marginBottom: 4 }}>{g.name}</div>
-            <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.5 }}>{g.desc.substring(0, 90)}...</div>
+            <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.5 }}>{(typeof g.desc === "object" ? (g.desc[lang] || g.desc.hr) : g.desc).substring(0, 90)}...</div>
             <div style={{ ...dm, display: "flex", gap: 12, marginTop: 10, fontSize: 12, color: C.mut }}>
-              <span>⏰ {g.best}</span><span>📍 {g.diff}</span>
+              <span>⏰ {typeof g.best === "object" ? (g.best[lang] || g.best.hr) : g.best}</span><span>📍 {typeof g.diff === "object" ? (g.diff[lang] || g.diff.hr) : g.diff}</span>
             </div>
           </Card>
         ))}
@@ -1353,7 +1377,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           <div onClick={e => e.stopPropagation()} className="overlay-enter glass" style={{ background: "rgba(12,16,24,0.92)", borderRadius: 24, maxWidth: 500, width: "100%", padding: 32, border: `1px solid rgba(201,168,76,0.12)` }}>
             <div style={{ fontSize: 52, textAlign: "center", marginBottom: 12 }}>{selectedGem.emoji}</div>
             <div style={{ fontSize: 26, fontWeight: 400, textAlign: "center", marginBottom: 16 }}>{selectedGem.name}</div>
-            <div style={{ ...dm, fontSize: 15, color: C.mut, lineHeight: 1.8, marginBottom: 20 }}>{selectedGem.desc}</div>
+            <div style={{ ...dm, fontSize: 15, color: C.mut, lineHeight: 1.8, marginBottom: 20 }}>{typeof selectedGem.desc === "object" ? (selectedGem.desc[lang] || selectedGem.desc.hr) : selectedGem.desc}</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
               {[{ l: "Najbolje doba", v: selectedGem.best }, { l: "Težina", v: selectedGem.diff }].map((x, i) => (
                 <div key={i} style={{ padding: "10px 14px", background: "rgba(0,0,0,0.2)", borderRadius: 10 }}>
@@ -1364,7 +1388,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             </div>
             <Card glow style={{ background: C.goDim, borderColor: "rgba(201,168,76,0.12)" }}>
               <div style={{ ...dm, fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: 1, marginBottom: 4 }}>💡 LOCALS TIP</div>
-              <div style={{ ...dm, fontSize: 14, lineHeight: 1.6 }}>{selectedGem.tip}</div>
+              <div style={{ ...dm, fontSize: 14, lineHeight: 1.6 }}>{typeof selectedGem.tip === "object" ? (selectedGem.tip[lang] || selectedGem.tip.hr) : selectedGem.tip}</div>
             </Card>
             {selectedGem.mapKey && <button onClick={() => openGoogleMaps(selectedGem.mapKey)}
               style={{...dm,width:"100%",marginTop:12,padding:"14px",background:C.acDim,border:`1px solid rgba(0,180,216,0.15)`,borderRadius:14,color:C.accent,fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
