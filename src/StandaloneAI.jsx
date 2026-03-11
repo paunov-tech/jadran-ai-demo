@@ -55,8 +55,15 @@ export default function StandaloneAI() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const chatEnd = useRef(null);
+  const [weather, setWeather] = useState(null);
 
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
+  // Fetch live weather
+  useEffect(() => {
+    fetch("/api/weather").then(r => r.json()).then(d => {
+      if (d.current?.temp) setWeather(d.current);
+    }).catch(() => {});
+  }, []);
 
   // Check premium from URL (after Stripe redirect)
   useEffect(() => {
@@ -109,18 +116,27 @@ export default function StandaloneAI() {
     const regionName = REGIONS.find(r => r.id === region)?.name || "Jadran";
     const modeName = TRAVEL_MODES.find(m => m.id === travelMode)?.name || "";
     const isCamper = travelMode === "camper";
+    const isSailing = travelMode === "sailing";
+    const wxCtx = weather ? `TRENUTNO VRIJEME: ${weather.temp}°C ${weather.icon}, UV ${weather.uv}, vjetar ${weather.wind}, more ${weather.sea}°C, zalazak ${weather.sunset}.` : "";
 
-    const sys = `Ti si JADRAN AI, 24/7 turistički concierge za hrvatsku obalu Jadrana.
-KONTEKST: Gost je u regiji ${regionName}. Putuje kao: ${modeName}.
-JEZIK: ${lang === "de" || lang === "at" ? "Deutsch" : lang === "en" ? "English" : lang === "it" ? "Italiano" : "Hrvatski"}.
+    const sys = `Ti si lokalni turistički vodič za hrvatsku obalu Jadrana.
+KONTEKST: Gost je u regiji ${regionName}. Putuje kao: ${modeName}. ${wxCtx}
+JEZIK: ${lang === "de" || lang === "at" ? "Deutsch" : lang === "en" ? "English" : lang === "it" ? "Italiano" : lang === "si" ? "Slovenščina" : lang === "cz" ? "Čeština" : lang === "pl" ? "Polski" : "Hrvatski"}.
 ${isCamper ? `KAMPER SPECIFIČNO: Ovaj gost putuje kamperom/autodomom. Uvijek uključi:
 - Legalna mjesta za parkiranje i noćenje (kampiralište, autocamp, legalni parking)
 - Najbliže pumpe za vodu i dump station
 - Plaže pristupačne kamperima (širok prilaz, parking za veća vozila)
-- Cijene parkinga za kampere
-- Upozorenja o zabranama divljeg kampiranja
-- Preporuči aplikacije: park4night, Campercontact` : ""}
-PRAVILA: Kratko (3-5 rečenica), toplo, konkretno s cijenama i udaljenostima. Emoji. Lokalni insider savjeti.`;
+- Cijene parkinga za kampere (obično 15-40€/noć ovisno o lokaciji)
+- Upozorenja o zabranama divljeg kampiranja (kazne 130-400€)
+- Preporuči aplikacije: park4night, Campercontact, CamperStop
+- Benzinske postaje s LPG-om ako su u blizini` : ""}
+${isSailing ? `NAUTIČKI TURIZAM: Gost putuje jedricom/brodom. Uključi:
+- Marine i sidrišta s cijenama veza
+- Meteo upozorenja (bura, jugo, maestral) 
+- Opskrba vodom i gorivom u marinama
+- Najbolja sidrišta zaštićena od vjetra
+- Konobe i restorani dostupni s mora` : ""}
+PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Koristi emoji. Lokalni insider savjeti — ne generički turistički info.`;
 
     try {
       const res = await fetch("/api/chat", {
@@ -171,6 +187,13 @@ PRAVILA: Kratko (3-5 rečenica), toplo, konkretno s cijenama i udaljenostima. Em
     "🏖️ Plaže pristupačne kamperima?",
     "⛽ Cijene goriva na ruti?",
     "🌙 Preporuka za noćenje?",
+  ] : travelMode === "sailing" ? [
+    "⚓ Najbolja marina u blizini?",
+    "🌬️ Kakav je vjetar danas?",
+    "🍽️ Konoba dostupna s mora?",
+    "⛽ Gdje napuniti gorivo?",
+    "🏝️ Zaštićeno sidrište?",
+    "🌊 Stanje mora i prognoze?",
   ] : [];
 
   const defaultQuick = [
@@ -283,6 +306,7 @@ PRAVILA: Kratko (3-5 rečenica), toplo, konkretno s cijenama i udaljenostima. Em
           <div style={{ width: 1, height: 20, background: C.bord }} />
           <span style={{ fontSize: 18 }}>{TRAVEL_MODES.find(m => m.id === travelMode)?.emoji}</span>
           <span style={{ fontSize: 13, fontWeight: 600 }}>{REGIONS.find(r => r.id === region)?.name}</span>
+          {weather && <span style={{ fontSize: 12, color: C.mut, marginLeft: 4 }}>{weather.icon} {weather.temp}° · 🌊 {weather.sea}°</span>}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {premium
