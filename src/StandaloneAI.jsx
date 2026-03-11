@@ -112,11 +112,11 @@ ${isCamper ? `KAMPER SPECIFIČNO: Ovaj gost putuje kamperom/autodomom. Uvijek uk
 PRAVILA: Kratko (3-5 rečenica), toplo, konkretno s cijenama i udaljenostima. Emoji. Lokalni insider savjeti.`;
 
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514", max_tokens: 1000, system: sys,
+          system: sys,
           messages: [...msgs.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })), { role: "user", content: msg }],
         }),
       });
