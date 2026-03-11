@@ -822,7 +822,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             </div>
             <div style={{ width: 1, height: 40, background: C.bord }} />
             <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.6 }}>
-              Meer: <strong style={{ color: C.accent }}>{weather.sea}°C</strong> · {weather.wind}<br />
+              {t("sea",lang)}: <strong style={{ color: C.accent }}>{weather.sea}°C</strong> · {weather.wind}<br />
               UV: <strong style={{ color: weather.uv >= 8 ? C.red : C.gold }}>{weather.uv}</strong>{weather.uv >= 8 && <span style={{ color: C.red }}> SPF50+!</span>} · 🌅 {weather.sunset}
             </div>
           </Card>
@@ -842,7 +842,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           <div>
             <div style={{ ...dm, fontSize: 10, color: C.gold, fontWeight: 700, letterSpacing: 2, marginBottom: 4 }}>{t("aiRec",lang)}</div>
             <div style={{ ...dm, fontSize: 15, color: C.text, lineHeight: 1.7, fontWeight: 300 }}>{tip}</div>
-            {GUEST.kids > 0 && hour >= 12 && hour < 18 && <div style={{ ...dm, fontSize: 13, color: C.accent, marginTop: 6 }}>👨‍👩‍👧‍👦 Mit Kindern: Bačvice (Sand, flaches Wasser) ist perfekt!</div>}
+            {GUEST.kids > 0 && hour >= 12 && hour < 18 && <div style={{ ...dm, fontSize: 13, color: C.accent, marginTop: 6 }}>👨‍👩‍👧‍👦 {({hr:"S djecom: Bačvice (pijesak, plitka voda) je savršena!",de:"Mit Kindern: Bačvice (Sand, flaches Wasser) ist perfekt!",en:"With kids: Bačvice (sand, shallow water) is perfect!",it:"Con bambini: Bačvice (sabbia, acqua bassa) è perfetta!",si:"Z otroki: Bačvice (pesek, plitva voda) je popolna!",cz:"S dětmi: Bačvice (písek, mělká voda) je perfektní!",pl:"Z dziećmi: Bačvice (piasek, płytka woda) jest idealna!"})[lang] || "S djecom: Bačvice (pijesak, plitka voda) je savršena!"}</div>}
           </div>
         </Card>
 
