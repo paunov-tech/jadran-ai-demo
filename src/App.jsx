@@ -274,6 +274,20 @@ export default function JadranUnified() {
     updateGuest(roomCode.current, { lang, phase, subScreen, premium, booked: [...booked] });
   }, [lang, phase, subScreen, premium, booked]);
 
+  // ─── ADMIN: Secret unlock for testing (?unlock=sial) ───
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('unlock') === 'sial') {
+      setPremium(true);
+      setSplash(false);
+      setPhase('kiosk');
+      setSubScreen('home');
+      updateGuest(roomCode.current, { premium: true, premiumSource: 'admin_unlock' });
+      const roomParam = params.get('room');
+      window.history.replaceState({}, '', window.location.pathname + (roomParam ? `?room=${roomParam}` : ''));
+    }
+  }, []);
+
   // ─── STRIPE: Detect payment redirect ───
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
