@@ -292,28 +292,28 @@ const GEMS = [
 ];
 
 const EXPERIENCES = [
-  { id: 1, name: "Kajak Pakleni otoci", emoji: "🛶", price: 55, dur: "4h", rating: 4.9, cat: "adventure",
-    gyg: "https://www.getyourguide.com/split-l440/sea-kayak-tour-tc24/?partner_id=JADRANAI", viator: "https://www.viator.com/Split-tours/Kayaking/d4217-g6-c47" },
-  { id: 2, name: "Dalmatinska kuhinja", emoji: "👨‍🍳", price: 60, dur: "4h", rating: 4.8, cat: "gastro",
-    gyg: "https://www.getyourguide.com/split-l440/cooking-class-tc171/?partner_id=JADRANAI", viator: "https://www.viator.com/Split-tours/Cooking-Classes/d4217-g6-c63" },
-  { id: 3, name: "Dioklecijanova palača", emoji: "🏛️", price: 25, dur: "2h", rating: 4.7, cat: "culture",
-    gyg: "https://www.getyourguide.com/split-l440/walking-tour-tc1/?partner_id=JADRANAI", viator: "https://www.viator.com/Split-tours/Walking-Tours/d4217-g6-c53" },
+  { id: 1, name: "Kajak Night Glow", emoji: "🛶", price: 55, dur: "3h", rating: 4.9, cat: "adventure",
+    gyg: "https://www.getyourguide.com/split-l268/split-kayak-night-glow-tour-t438836/?partner_id=9OEGOYI&utm_medium=local_partners", viator: "https://www.viator.com/Split-tours/Kayaking/d4217-g6-c47" },
+  { id: 2, name: "Krka + Wine Tasting", emoji: "🍷", price: 65, dur: "8h", rating: 4.8, cat: "gastro",
+    gyg: "https://www.getyourguide.com/split-l268/day-tour-from-split-krka-waterfalls-tour-wine-tasting-t251842/?partner_id=9OEGOYI&utm_medium=local_partners", viator: "https://www.viator.com/Split-tours/Wine-Tasting/d4217-g6-c54" },
+  { id: 3, name: "Split Walking Tour", emoji: "🏛️", price: 25, dur: "2h", rating: 4.7, cat: "culture",
+    gyg: "https://www.getyourguide.com/split-l268/split-walking-tour-t54976/?partner_id=9OEGOYI&utm_medium=local_partners", viator: "https://www.viator.com/Split-tours/Walking-Tours/d4217-g6-c53" },
   { id: 4, name: "Rafting Cetina", emoji: "🚣", price: 45, dur: "3h", rating: 4.9, cat: "adventure",
-    gyg: "https://www.getyourguide.com/split-l440/rafting-tc31/?partner_id=JADRANAI", viator: "https://www.viator.com/Split-tours/White-Water-Rafting/d4217-g6-c48" },
-  { id: 5, name: "Sunset Sailing", emoji: "⛵", price: 95, dur: "4h", rating: 5.0, cat: "premium",
-    gyg: "https://www.getyourguide.com/split-l440/sailing-tc25/?partner_id=JADRANAI", viator: "https://www.viator.com/Split-tours/Sailing-Trips/d4217-g6-c60" },
-  { id: 6, name: "Wine Tasting Kaštela", emoji: "🍷", price: 40, dur: "3h", rating: 4.8, cat: "gastro",
-    gyg: "https://www.getyourguide.com/split-l440/wine-tasting-tc26/?partner_id=JADRANAI", viator: "https://www.viator.com/Split-tours/Wine-Tasting/d4217-g6-c54" },
+    gyg: "https://www.getyourguide.com/omis-l2096/rafting-on-cetina-river-from-omis-t35592/?partner_id=9OEGOYI&utm_medium=local_partners", viator: "https://www.viator.com/Split-tours/White-Water-Rafting/d4217-g6-c48" },
+  { id: 5, name: "Sunset Cruise", emoji: "⛵", price: 65, dur: "2h", rating: 5.0, cat: "premium",
+    gyg: "https://www.getyourguide.com/split-l268/split-riviera-sunset-cruise-with-summer-vibes-t399715/?partner_id=9OEGOYI&utm_medium=local_partners", viator: "https://www.viator.com/Split-tours/Sailing-Trips/d4217-g6-c60" },
+  { id: 6, name: "Dalmatinska kuhinja", emoji: "👨‍🍳", price: 60, dur: "4h", rating: 4.8, cat: "gastro",
+    gyg: "https://www.getyourguide.com/split-l268/?q=cooking+class&partner_id=9OEGOYI&utm_medium=local_partners", viator: "https://www.viator.com/Split-tours/Cooking-Classes/d4217-g6-c63" },
 ];
 
 const BUNDLES = [
-  { emoji: "💑", includes: ["Sunset Sailing", "Wine Tasting"],
+  { emoji: "💑", includes: ["Sunset Cruise", "Krka + Wine Tasting"],
     name: { hr:"Romantični bijeg", de:"Romantische Flucht", en:"Romantic Escape", it:"Fuga romantica", si:"Romantični pobeg", cz:"Romantický únik", pl:"Romantyczna ucieczka" },
     tip: { hr:"Dodajte večeru u konoba — pitajte AI za preporuku!", de:"Abendessen in einer Konoba dazu — fragen Sie AI!", en:"Add dinner at a konoba — ask AI for a recommendation!", it:"Aggiungete cena in konoba — chiedete all'AI!", si:"Dodajte večerjo v konobi — vprašajte AI!", cz:"Přidejte večeři v konobě — zeptejte se AI!", pl:"Dodajcie kolację w konobie — zapytajcie AI!" } },
-  { emoji: "👨‍👩‍👧‍👦", includes: ["Rafting Cetina", "Kajak Pakleni otoci"],
+  { emoji: "👨‍👩‍👧‍👦", includes: ["Rafting Cetina", "Kajak Night Glow"],
     name: { hr:"Obiteljska avantura", de:"Familienabenteuer", en:"Family Adventure", it:"Avventura in famiglia", si:"Družinska pustolovščina", cz:"Rodinné dobrodružství", pl:"Rodzinna przygoda" },
     tip: { hr:"Kombinacija za adrenalin! Djeca 8+ mogu na rafting.", de:"Adrenalin pur! Kinder ab 8 können Rafting machen.", en:"Adrenaline combo! Kids 8+ can go rafting.", it:"Combinazione adrenalinica! Bambini 8+ possono fare rafting.", si:"Kombinacija za adrenalin! Otroci 8+ na rafting.", cz:"Adrenalinová kombinace! Děti 8+ mohou na rafting.", pl:"Kombinacja adrenaliny! Dzieci 8+ mogą na rafting." } },
-  { emoji: "🍽️", includes: ["Wine Tasting Kaštela", "Dalmatinska kuhinja"],
+  { emoji: "🍽️", includes: ["Krka + Wine Tasting", "Dalmatinska kuhinja"],
     name: { hr:"Gastro otkriće", de:"Gastro-Entdeckung", en:"Gastro Discovery", it:"Scoperta gastronomica", si:"Gastro odkritje", cz:"Gastro objev", pl:"Gastro odkrycie" },
     tip: { hr:"Savršen dan za ljubitelje hrane i vina!", de:"Perfekter Tag für Feinschmecker!", en:"Perfect day for food and wine lovers!", it:"Giornata perfetta per gli amanti del cibo e del vino!", si:"Popoln dan za ljubitelje hrane in vina!", cz:"Perfektní den pro milovníky jídla a vína!", pl:"Idealny dzień dla miłośników jedzenia i wina!" } },
 ];
