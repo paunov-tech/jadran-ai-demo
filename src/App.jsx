@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { loadGuest, updateGuest, getRoomCode, saveGuest } from "./guestStore";
+import { loadGuest, updateGuest, getRoomCode } from "./guestStore";
 import GuestOnboarding from "./GuestOnboarding";
 
 /* ══════════════════════════════════════════════════════════
@@ -411,6 +411,7 @@ const INTERESTS = [
 
 /* ─── COMPONENT ─── */
 export default function JadranUnified() {
+  console.log("[JADRAN] Component mounted, roomCode:", getRoomCode());
   const [lang, setLang] = useState("hr");
   const [splash, setSplash] = useState(true);
   const [phase, setPhase] = useState("pre"); // pre | kiosk | post
