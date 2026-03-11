@@ -291,28 +291,54 @@ const GEMS = [
     best: {hr:"Zalazak",de:"Sonnenuntergang",en:"Sunset",it:"Tramonto",si:"Zahod",cz:"Západ slunce",pl:"Zachód słońca"}, diff: "Ferry+Auto" },
 ];
 
+const GYG = (id) => `https://www.getyourguide.com/${id}/?partner_id=9OEGOYI&utm_medium=local_partners`;
+
 const EXPERIENCES = [
+  // ─── Adventure ───
   { id: 1, name: "Kajak Night Glow", emoji: "🛶", price: 55, dur: "3h", rating: 4.9, cat: "adventure",
-    gyg: "https://www.getyourguide.com/split-l268/split-kayak-night-glow-tour-t438836/?partner_id=9OEGOYI&utm_medium=local_partners", viator: "https://www.viator.com/Split-tours/Kayaking/d4217-g6-c47" },
-  { id: 2, name: "Krka + Wine Tasting", emoji: "🍷", price: 65, dur: "8h", rating: 4.8, cat: "gastro",
-    gyg: "https://www.getyourguide.com/split-l268/day-tour-from-split-krka-waterfalls-tour-wine-tasting-t251842/?partner_id=9OEGOYI&utm_medium=local_partners", viator: "https://www.viator.com/Split-tours/Wine-Tasting/d4217-g6-c54" },
-  { id: 3, name: "Split Walking Tour", emoji: "🏛️", price: 25, dur: "2h", rating: 4.7, cat: "culture",
-    gyg: "https://www.getyourguide.com/split-l268/split-walking-tour-t54976/?partner_id=9OEGOYI&utm_medium=local_partners", viator: "https://www.viator.com/Split-tours/Walking-Tours/d4217-g6-c53" },
-  { id: 4, name: "Rafting Cetina", emoji: "🚣", price: 45, dur: "3h", rating: 4.9, cat: "adventure",
-    gyg: "https://www.getyourguide.com/omis-l2096/rafting-on-cetina-river-from-omis-t35592/?partner_id=9OEGOYI&utm_medium=local_partners", viator: "https://www.viator.com/Split-tours/White-Water-Rafting/d4217-g6-c48" },
+    gyg: GYG("split-l268/split-kayak-night-glow-tour-t438836") },
+  { id: 2, name: "Rafting Cetina", emoji: "🚣", price: 35, dur: "3h", rating: 4.9, cat: "adventure",
+    gyg: GYG("omis-l2096/rafting-on-cetina-river-from-omis-t35592") },
+  { id: 3, name: "ATV Quad + Waterfall", emoji: "🏍️", price: 65, dur: "5h", rating: 4.9, cat: "adventure",
+    gyg: GYG("split-l268/split-atv-quad-tour-adventure-with-waterfall-swimming-t445566") },
+  { id: 4, name: "ATV Quad + River Swim", emoji: "🏞️", price: 75, dur: "5h", rating: 4.8, cat: "adventure",
+    gyg: GYG("split-l268/split-atv-quad-tour-with-waterfall-swim-t719549") },
+
+  // ─── Boats & Sea ───
   { id: 5, name: "Sunset Cruise", emoji: "⛵", price: 65, dur: "2h", rating: 5.0, cat: "premium",
-    gyg: "https://www.getyourguide.com/split-l268/split-riviera-sunset-cruise-with-summer-vibes-t399715/?partner_id=9OEGOYI&utm_medium=local_partners", viator: "https://www.viator.com/Split-tours/Sailing-Trips/d4217-g6-c60" },
-  { id: 6, name: "Dalmatinska kuhinja", emoji: "👨‍🍳", price: 60, dur: "4h", rating: 4.8, cat: "gastro",
-    gyg: "https://www.getyourguide.com/split-l268/?q=cooking+class&partner_id=9OEGOYI&utm_medium=local_partners", viator: "https://www.viator.com/Split-tours/Cooking-Classes/d4217-g6-c63" },
+    gyg: GYG("split-l268/split-riviera-sunset-cruise-with-summer-vibes-t399715") },
+  { id: 6, name: "Blue Cave 5-Island Tour", emoji: "🏝️", price: 110, dur: "10h", rating: 4.8, cat: "premium",
+    gyg: GYG("split-l268/from-split-blue-cave-mamma-mia-vis-hvar-5-islands-tour-t326676") },
+  { id: 7, name: "Private Boat Charter", emoji: "🚤", price: 450, dur: "8h", rating: 4.9, cat: "premium",
+    gyg: GYG("split-l268/private-boat-tour-with-customized-itinerary-from-split-t902412") },
+
+  // ─── Culture & History ───
+  { id: 8, name: "Split Walking Tour", emoji: "🏛️", price: 25, dur: "2h", rating: 4.7, cat: "culture",
+    gyg: GYG("split-l268/split-walking-tour-t54976") },
+  { id: 9, name: "Game of Thrones Tour", emoji: "🐉", price: 60, dur: "2h", rating: 4.9, cat: "culture",
+    gyg: GYG("split-l268/split-private-game-of-thrones-tour-t899804") },
+
+  // ─── Day Trips ───
+  { id: 10, name: "Krka + Wine Tasting", emoji: "🍷", price: 65, dur: "8h", rating: 4.8, cat: "gastro",
+    gyg: GYG("split-l268/day-tour-from-split-krka-waterfalls-tour-wine-tasting-t251842") },
+  { id: 11, name: "Plitvice Lakes", emoji: "🌊", price: 75, dur: "12h", rating: 4.8, cat: "nature",
+    gyg: GYG("split-l268/from-split-plitvice-lakes-guided-tour-with-entry-tickets-t411976") },
+
+  // ─── Gastro ───
+  { id: 12, name: "Dalmatinska kuhinja", emoji: "👨‍🍳", price: 60, dur: "4h", rating: 4.8, cat: "gastro",
+    gyg: GYG("split-l268?q=cooking+class+split") },
 ];
 
 const BUNDLES = [
   { emoji: "💑", includes: ["Sunset Cruise", "Krka + Wine Tasting"],
     name: { hr:"Romantični bijeg", de:"Romantische Flucht", en:"Romantic Escape", it:"Fuga romantica", si:"Romantični pobeg", cz:"Romantický únik", pl:"Romantyczna ucieczka" },
     tip: { hr:"Dodajte večeru u konoba — pitajte AI za preporuku!", de:"Abendessen in einer Konoba dazu — fragen Sie AI!", en:"Add dinner at a konoba — ask AI for a recommendation!", it:"Aggiungete cena in konoba — chiedete all'AI!", si:"Dodajte večerjo v konobi — vprašajte AI!", cz:"Přidejte večeři v konobě — zeptejte se AI!", pl:"Dodajcie kolację w konobie — zapytajcie AI!" } },
-  { emoji: "👨‍👩‍👧‍👦", includes: ["Rafting Cetina", "Kajak Night Glow"],
+  { emoji: "👨‍👩‍👧‍👦", includes: ["Rafting Cetina", "ATV Quad + Waterfall"],
     name: { hr:"Obiteljska avantura", de:"Familienabenteuer", en:"Family Adventure", it:"Avventura in famiglia", si:"Družinska pustolovščina", cz:"Rodinné dobrodružství", pl:"Rodzinna przygoda" },
-    tip: { hr:"Kombinacija za adrenalin! Djeca 8+ mogu na rafting.", de:"Adrenalin pur! Kinder ab 8 können Rafting machen.", en:"Adrenaline combo! Kids 8+ can go rafting.", it:"Combinazione adrenalinica! Bambini 8+ possono fare rafting.", si:"Kombinacija za adrenalin! Otroci 8+ na rafting.", cz:"Adrenalinová kombinace! Děti 8+ mohou na rafting.", pl:"Kombinacja adrenaliny! Dzieci 8+ mogą na rafting." } },
+    tip: { hr:"Adrenalin za cijelu obitelj! Djeca 8+ na rafting, quad za sve.", de:"Adrenalin für die ganze Familie! Kinder ab 8 zum Rafting, Quad für alle.", en:"Adrenaline for the whole family! Kids 8+ can raft, quad for all.", it:"Adrenalina per tutta la famiglia! Bambini 8+ al rafting, quad per tutti.", si:"Adrenalin za celo družino! Otroci 8+ na rafting, quad za vse.", cz:"Adrenalin pro celou rodinu! Děti 8+ na rafting, quad pro všechny.", pl:"Adrenalina dla całej rodziny! Dzieci 8+ na rafting, quad dla wszystkich." } },
+  { emoji: "🏝️", includes: ["Blue Cave 5-Island Tour", "Split Walking Tour"],
+    name: { hr:"Otoci + Povijest", de:"Inseln + Geschichte", en:"Islands + History", it:"Isole + Storia", si:"Otoki + Zgodovina", cz:"Ostrovy + Historie", pl:"Wyspy + Historia" },
+    tip: { hr:"Jedan dan more i otoci, drugi dan Dioklecijanova palača!", de:"Ein Tag Meer und Inseln, am nächsten Diokletianpalast!", en:"One day sea and islands, next day Diocletian's Palace!", it:"Un giorno mare e isole, il giorno dopo il Palazzo di Diocleziano!", si:"En dan morje in otoki, naslednji dan Dioklecijanova palača!", cz:"Jeden den moře a ostrovy, druhý den Diokleciánův palác!", pl:"Jeden dzień morze i wyspy, następny Pałac Dioklecjana!" } },
   { emoji: "🍽️", includes: ["Krka + Wine Tasting", "Dalmatinska kuhinja"],
     name: { hr:"Gastro otkriće", de:"Gastro-Entdeckung", en:"Gastro Discovery", it:"Scoperta gastronomica", si:"Gastro odkritje", cz:"Gastro objev", pl:"Gastro odkrycie" },
     tip: { hr:"Savršen dan za ljubitelje hrane i vina!", de:"Perfekter Tag für Feinschmecker!", en:"Perfect day for food and wine lovers!", it:"Giornata perfetta per gli amanti del cibo e del vino!", si:"Popoln dan za ljubitelje hrane in vina!", cz:"Perfektní den pro milovníky jídla a vína!", pl:"Idealny dzień dla miłośników jedzenia i wina!" } },
