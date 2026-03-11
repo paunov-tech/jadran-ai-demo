@@ -711,27 +711,52 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   /* ─── SVG PICTOGRAMS — premium line icons ─── */
   const Icon = ({ d, size = 24, color = "currentColor", stroke = 1.8 }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round">
-      <path d={d} />
+      {d.split(" M").map((seg, i) => <path key={i} d={i === 0 ? seg : "M" + seg} />)}
     </svg>
   );
   const IC = {
     // Phase nav
     plane:    "M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5Z",
-    home:     "M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-9.5Z M9 21V14h6v7",
-    sparkle:  "M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2Z",
+    home:     "M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z M9 21V14h6v7",
+    sparkle:  "M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8Z",
     // Quick access
     parking:  "M5 21V5a2 2 0 0 1 2-2h5a5 5 0 0 1 0 10H7",
-    beach:    "M17.5 21H6.5 M12 12a5 5 0 0 0 5-5V3 M7 7h10 M5 21l4.5-9 M19 21l-4.5-9 M12 12v9",
-    sun:      "M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z M12 2v2 M12 20v2 M4.93 4.93l1.41 1.41 M17.66 17.66l1.41 1.41 M2 12h2 M20 12h2 M4.93 19.07l1.41-1.41 M17.66 6.34l1.41-1.41",
-    map:      "M3 7l6-3 6 3 6-3v13l-6 3-6-3-6 3V7Z M9 4v13 M15 7v13",
-    food:     "M3 2l0 7a4 4 0 0 0 4 4h2a4 4 0 0 0 4-4V2 M7 2v20 M21 15V2a5 5 0 0 0-5 5v6h4v2h-4v5",
-    medic:    "M18 18H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3Z M12 9v6 M9 12h6",
-    gem:      "M6 3h12l4 6-10 12L2 9l4-6Z M2 9h20 M12 3l-4 6 4 12 4-12-4-6",
-    bot:      "M12 8V4H8 M20 12a8 8 0 1 0-16 0v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5Z M10 15h0 M14 15h0",
+    beach:    "M17.5 21H6.5 M5 21l4.5-9h5l4.5 9 M12 3v9 M7.5 7h9",
+    sun:      "M12 16a4 4 0 1 0 0-8a4 4 0 0 0 0 8Z M12 2v2 M12 20v2 M4.93 4.93l1.41 1.41 M17.66 17.66l1.41 1.41 M2 12h2 M20 12h2 M4.93 19.07l1.41-1.41 M17.66 6.34l1.41-1.41",
+    map:      "M3 7l6-3l6 3l6-3v13l-6 3l-6-3l-6 3Z M9 4v13 M15 7v13",
+    food:     "M3 2v7a4 4 0 0 0 4 4h2a4 4 0 0 0 4-4V2 M7 2v20 M21 15V2c-2.8 0-5 2.2-5 5v6h5",
+    medic:    "M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z M12 9v6 M9 12h6",
+    gem:      "M6 3h12l4 6l-10 12L2 9Z M2 9h20",
+    bot:      "M12 8V4H8 M4 12a8 8 0 0 1 16 0v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z M9 16h0 M15 16h0",
     check:    "M20 6L9 17l-5-5",
+    // City landmarks
+    palace:   "M3 21h18 M5 21V10l7-7l7 7v11 M9 21v-5h6v5 M9 10h0 M15 10h0 M3 10h18 M7 7V4 M17 7V4",
+    arena:    "M4 21c0-6 3.6-10.8 8-10.8S20 15 20 21 M6 21c0-4 2.7-7.2 6-7.2s6 3.2 6 7.2 M2 21h20 M8 10.5V8 M16 10.5V8 M12 10.2V7 M10 11V9 M14 11V9",
+    church:   "M12 2v4 M10 4h4 M8 21V10l4-4l4 4v11 M8 10h8 M3 21h18 M10 16h4 M12 13v3",
+    anchor:   "M12 2a3 3 0 0 0-3 3a3 3 0 0 0 3 3a3 3 0 0 0 3-3a3 3 0 0 0-3-3Z M12 8v13 M5 21a7 7 0 0 1 7-7a7 7 0 0 1 7 7 M8 12H5 M19 12h-3",
+    walls:    "M3 21V6l4-3l4 3l4-3l4 3l2 0v15 M3 6h18 M7 6v15 M11 6v15 M15 6v15",
+    island:   "M2 20c2-3 5-5 10-5s8 2 10 5 M7 15V9l3-4l3 4v6 M12 5V3 M10 5h4",
   };
 
-    /* ─── PHASE NAVIGATION ─── */
+  // City landmark icon mapping — renders SVG instead of emoji for known cities
+  const CITY_ICON = {
+    "Podstrana & Split": { ic: IC.palace, clr: "#0ea5e9", fallback: "🏛️" },
+    "Makarska rivijera": { ic: IC.beach, clr: "#38bdf8", fallback: "🏖️" },
+    "Hvar":              { ic: IC.island, clr: "#f59e0b", fallback: "🏝️" },
+    "Rovinj":            { ic: IC.church, clr: "#fb923c", fallback: "⛪" },
+    "Pula & Medulin":    { ic: IC.arena, clr: "#a78bfa", fallback: "🏟️" },
+    "Opatija":           { ic: IC.anchor, clr: "#34d399", fallback: "⚓" },
+    "Otok Krk":          { ic: IC.island, clr: "#fbbf24", fallback: "🏝️" },
+    "Makarska Riviera":  { ic: IC.beach, clr: "#38bdf8", fallback: "🏖️" },
+    "Krk Island":        { ic: IC.island, clr: "#fbbf24", fallback: "🏝️" },
+  };
+  const CityIcon = ({ name, size = 28 }) => {
+    const city = CITY_ICON[name];
+    if (!city) return null;
+    return <div style={{ width: size + 8, height: size + 8, borderRadius: 10, background: city.clr + "14", display: "grid", placeItems: "center", border: `1px solid ${city.clr}18` }}>
+      <Icon d={city.ic} size={size} color={city.clr} stroke={1.5} />
+    </div>;
+  };
   const PhaseNav = () => {
     const phases = [
       { k: "pre", l: t("preTrip",lang), ic: IC.plane },
@@ -906,7 +931,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                 onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(0,85,166,0.3)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.transform = ""; }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                  <span style={{ fontSize: 28 }}>{a.emoji}</span>
+                  <CityIcon name={a.name.hr || a.name.en} size={24} />
                   <Badge c="accent">{a.region.toUpperCase()}</Badge>
                 </div>
                 <div style={{ fontSize: 15, fontWeight: 400, marginBottom: 4 }}>{a.name[lang] || a.name.hr}</div>
@@ -1294,7 +1319,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               <div style={{ padding: "10px 12px", background: "rgba(0,85,166,0.04)", border: `1px solid rgba(0,85,166,0.1)`, borderRadius: 12, cursor: "pointer", transition: "all 0.3s" }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(0,85,166,0.3)"; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(0,85,166,0.1)"; }}>
-                <span style={{ fontSize: 20 }}>{a.emoji}</span>
+                <CityIcon name={a.name.hr || a.name.en} size={18} />
                 <div style={{ ...dm, fontSize: 12, fontWeight: 500, marginTop: 4 }}>{a.name[lang] || a.name.hr}</div>
               </div>
             </a>
