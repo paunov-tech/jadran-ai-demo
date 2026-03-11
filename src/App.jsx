@@ -1185,10 +1185,12 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       };
       const prompt = prompts[subScreen];
       if (!prompt) return;
+      const langName = {hr:"Croatian",de:"German",at:"German",en:"English",it:"Italian",si:"Slovenian",cz:"Czech",pl:"Polish"}[lang] || "Croatian";
+      const localizedPrompt = prompt + `\n\nRespond in ${langName} language.`;
       setLiveLoading(true);
       fetch("/api/gemini", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, mode: "practical" }),
+        body: JSON.stringify({ prompt: localizedPrompt, mode: "practical" }),
       }).then(r => r.json()).then(d => {
         const rawText = d.text || "";
         console.log("[JADRAN] Live data for", subScreen, "raw:", rawText.substring(0, 200));
