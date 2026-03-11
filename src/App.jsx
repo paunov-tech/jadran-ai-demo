@@ -294,54 +294,60 @@ const GEMS = [
 const GYG = (id) => `https://www.getyourguide.com/${id}/?partner_id=9OEGOYI&utm_medium=local_partners`;
 
 const EXPERIENCES = [
-  // ─── Adventure ───
-  { id: 1, name: "Kajak Night Glow", emoji: "🛶", price: 55, dur: "3h", rating: 4.9, cat: "adventure",
-    gyg: GYG("split-l268/split-kayak-night-glow-tour-t438836") },
-  { id: 2, name: "Rafting Cetina", emoji: "🚣", price: 35, dur: "3h", rating: 4.9, cat: "adventure",
+  // ═══ SREDNJA DALMACIJA (Split, Omiš, Otoci) ═══
+  { id: 1, name: "Rafting Cetina", emoji: "🚣", price: 35, dur: "3h", rating: 4.9, cat: "adventure", region: "split",
     gyg: GYG("omis-l2096/rafting-on-cetina-river-from-omis-t35592") },
-  { id: 3, name: "ATV Quad + Waterfall", emoji: "🏍️", price: 65, dur: "5h", rating: 4.9, cat: "adventure",
+  { id: 2, name: "Kajak Night Glow", emoji: "🛶", price: 55, dur: "3h", rating: 4.9, cat: "adventure", region: "split",
+    gyg: GYG("split-l268/split-kayak-night-glow-tour-t438836") },
+  { id: 3, name: "ATV Quad + Waterfall", emoji: "🏍️", price: 65, dur: "5h", rating: 4.9, cat: "adventure", region: "split",
     gyg: GYG("split-l268/split-atv-quad-tour-adventure-with-waterfall-swimming-t445566") },
-  { id: 4, name: "ATV Quad + River Swim", emoji: "🏞️", price: 75, dur: "5h", rating: 4.8, cat: "adventure",
-    gyg: GYG("split-l268/split-atv-quad-tour-with-waterfall-swim-t719549") },
-
-  // ─── Boats & Sea ───
-  { id: 5, name: "Sunset Cruise", emoji: "⛵", price: 65, dur: "2h", rating: 5.0, cat: "premium",
-    gyg: GYG("split-l268/split-riviera-sunset-cruise-with-summer-vibes-t399715") },
-  { id: 6, name: "Blue Cave 5-Island Tour", emoji: "🏝️", price: 110, dur: "10h", rating: 4.8, cat: "premium",
-    gyg: GYG("split-l268/from-split-blue-cave-mamma-mia-vis-hvar-5-islands-tour-t326676") },
-  { id: 7, name: "Private Boat Charter", emoji: "🚤", price: 450, dur: "8h", rating: 4.9, cat: "premium",
-    gyg: GYG("split-l268/private-boat-tour-with-customized-itinerary-from-split-t902412") },
-
-  // ─── Culture & History ───
-  { id: 8, name: "Split Walking Tour", emoji: "🏛️", price: 25, dur: "2h", rating: 4.7, cat: "culture",
+  { id: 4, name: "Split Walking Tour", emoji: "🏛️", price: 25, dur: "2h", rating: 4.7, cat: "culture", region: "split",
     gyg: GYG("split-l268/split-walking-tour-t54976") },
-  { id: 9, name: "Game of Thrones Tour", emoji: "🐉", price: 60, dur: "2h", rating: 4.9, cat: "culture",
+  { id: 5, name: "Game of Thrones", emoji: "🐉", price: 60, dur: "2h", rating: 4.9, cat: "culture", region: "split",
     gyg: GYG("split-l268/split-private-game-of-thrones-tour-t899804") },
-
-  // ─── Day Trips ───
-  { id: 10, name: "Krka + Wine Tasting", emoji: "🍷", price: 65, dur: "8h", rating: 4.8, cat: "gastro",
+  { id: 6, name: "Blue Cave 5 Islands", emoji: "🏝️", price: 110, dur: "10h", rating: 4.8, cat: "premium", region: "split",
+    gyg: GYG("split-l268/from-split-blue-cave-mamma-mia-vis-hvar-5-islands-tour-t326676") },
+  { id: 7, name: "Hvar + Pakleni Catamaran", emoji: "⛵", price: 89, dur: "10h", rating: 4.8, cat: "premium", region: "split",
+    gyg: GYG("split-l268/split-full-day-boat-trip-to-3-islands-w-lunch-snorkeling-t412889") },
+  { id: 8, name: "Sunset Cruise", emoji: "🌅", price: 65, dur: "2h", rating: 5.0, cat: "premium", region: "split",
+    gyg: GYG("split-l268/split-riviera-sunset-cruise-with-summer-vibes-t399715") },
+  { id: 9, name: "Krka + Wine Tasting", emoji: "🍷", price: 65, dur: "8h", rating: 4.8, cat: "gastro", region: "split",
     gyg: GYG("split-l268/day-tour-from-split-krka-waterfalls-tour-wine-tasting-t251842") },
-  { id: 11, name: "Plitvice Lakes", emoji: "🌊", price: 75, dur: "12h", rating: 4.8, cat: "nature",
+  { id: 10, name: "Plitvice Lakes", emoji: "🌊", price: 75, dur: "12h", rating: 4.8, cat: "nature", region: "split",
     gyg: GYG("split-l268/from-split-plitvice-lakes-guided-tour-with-entry-tickets-t411976") },
 
-  // ─── Gastro ───
-  { id: 12, name: "Dalmatinska kuhinja", emoji: "👨‍🍳", price: 60, dur: "4h", rating: 4.8, cat: "gastro",
-    gyg: GYG("split-l268?q=cooking+class+split") },
+  // ═══ ISTRA (Rovinj, Pula, Motovun) ═══
+  { id: 20, name: "Truffle Hunting", emoji: "🍄", price: 45, dur: "2h", rating: 4.9, cat: "gastro", region: "istria",
+    gyg: GYG("istria-county-l1297/livade-guided-truffle-hunting-walking-tour-t413975") },
+  { id: 21, name: "Istria in 1 Day", emoji: "🏰", price: 55, dur: "9h", rating: 4.7, cat: "culture", region: "istria",
+    gyg: GYG("rovinj-l1299/from-rovinj-rovinj-motovun-and-groznjan-day-tour-t132468") },
+  { id: 22, name: "Inner Istria + Food", emoji: "🫒", price: 65, dur: "8h", rating: 4.8, cat: "gastro", region: "istria",
+    gyg: GYG("pula-l344/istria-guided-tour-of-inner-istria-with-food-tasting-t408255") },
+  { id: 23, name: "Pula Arena + Wine", emoji: "🏟️", price: 50, dur: "6h", rating: 4.7, cat: "culture", region: "istria",
+    gyg: GYG("pula-l344/3-istrian-wineries-tour-t102866") },
+
+  // ═══ KVARNER (Opatija, Rijeka, Krk) ═══
+  { id: 30, name: "Kvarner Bay Tour", emoji: "⚓", price: 55, dur: "5h", rating: 4.8, cat: "culture", region: "kvarner",
+    gyg: GYG("opatija-l1296/best-of-kvarner-bay-half-day-tour-from-rijeka-or-opatija-t977515") },
+  { id: 31, name: "Cres Island Boat", emoji: "🚢", price: 120, dur: "8h", rating: 4.9, cat: "premium", region: "kvarner",
+    gyg: GYG("opatija-l1296?q=cres+island+boat") },
+  { id: 32, name: "Opatija Evening Cruise", emoji: "🌙", price: 45, dur: "2h", rating: 4.8, cat: "premium", region: "kvarner",
+    gyg: GYG("opatija-l1296?q=evening+cruise+kvarner") },
 ];
 
 const BUNDLES = [
+  { emoji: "🏝️", includes: ["Blue Cave 5 Islands", "Split Walking Tour"],
+    name: { hr:"Otoci + Povijest", de:"Inseln + Geschichte", en:"Islands + History", it:"Isole + Storia", si:"Otoki + Zgodovina", cz:"Ostrovy + Historie", pl:"Wyspy + Historia" },
+    tip: { hr:"Jedan dan more i otoci, drugi dan Dioklecijanova palača!", de:"Ein Tag Meer und Inseln, am nächsten Diokletianpalast!", en:"One day sea & islands, next day Diocletian's Palace!", it:"Un giorno mare e isole, il giorno dopo il Palazzo di Diocleziano!", si:"En dan morje in otoki, naslednji dan Dioklecijanova palača!", cz:"Jeden den moře a ostrovy, druhý den Diokleciánův palác!", pl:"Jeden dzień morze i wyspy, następny Pałac Dioklecjana!" } },
+  { emoji: "👨‍👩‍👧‍👦", includes: ["Rafting Cetina", "ATV Quad + Waterfall"],
+    name: { hr:"Adrenalin paket", de:"Adrenalin-Paket", en:"Adrenaline Pack", it:"Pacchetto adrenalina", si:"Adrenalin paket", cz:"Adrenalinový balíček", pl:"Pakiet adrenaliny" },
+    tip: { hr:"Dva dana čistog adrenalina! Djeca 8+ na rafting.", de:"Zwei Tage purer Adrenalin! Kinder ab 8 zum Rafting.", en:"Two days of pure adrenaline! Kids 8+ can raft.", it:"Due giorni di pura adrenalina! Bambini 8+ al rafting.", si:"Dva dni čistega adrenalina! Otroci 8+ na rafting.", cz:"Dva dny čistého adrenalinu! Děti 8+ na rafting.", pl:"Dwa dni czystej adrenaliny! Dzieci 8+ na rafting." } },
+  { emoji: "🍄", includes: ["Truffle Hunting", "Inner Istria + Food"],
+    name: { hr:"Istra Gastro", de:"Istrien Gastro", en:"Istria Gastro", it:"Istria Gastro", si:"Istra Gastro", cz:"Istrie Gastro", pl:"Istria Gastro" },
+    tip: { hr:"Lov na tartufe + konobe unutrašnje Istre — nezaboravno!", de:"Trüffeljagd + Konobas des Hinterlands — unvergesslich!", en:"Truffle hunt + inland konobas — unforgettable!", it:"Caccia al tartufo + konobe dell'entroterra — indimenticabile!", si:"Lov na tartufe + konobe notranje Istre — nepozabno!", cz:"Lov na lanýže + konoby vnitrozemí — nezapomenutelné!", pl:"Polowanie na trufle + konoby w głębi lądu — niezapomniane!" } },
   { emoji: "💑", includes: ["Sunset Cruise", "Krka + Wine Tasting"],
     name: { hr:"Romantični bijeg", de:"Romantische Flucht", en:"Romantic Escape", it:"Fuga romantica", si:"Romantični pobeg", cz:"Romantický únik", pl:"Romantyczna ucieczka" },
-    tip: { hr:"Dodajte večeru u konoba — pitajte AI za preporuku!", de:"Abendessen in einer Konoba dazu — fragen Sie AI!", en:"Add dinner at a konoba — ask AI for a recommendation!", it:"Aggiungete cena in konoba — chiedete all'AI!", si:"Dodajte večerjo v konobi — vprašajte AI!", cz:"Přidejte večeři v konobě — zeptejte se AI!", pl:"Dodajcie kolację w konobie — zapytajcie AI!" } },
-  { emoji: "👨‍👩‍👧‍👦", includes: ["Rafting Cetina", "ATV Quad + Waterfall"],
-    name: { hr:"Obiteljska avantura", de:"Familienabenteuer", en:"Family Adventure", it:"Avventura in famiglia", si:"Družinska pustolovščina", cz:"Rodinné dobrodružství", pl:"Rodzinna przygoda" },
-    tip: { hr:"Adrenalin za cijelu obitelj! Djeca 8+ na rafting, quad za sve.", de:"Adrenalin für die ganze Familie! Kinder ab 8 zum Rafting, Quad für alle.", en:"Adrenaline for the whole family! Kids 8+ can raft, quad for all.", it:"Adrenalina per tutta la famiglia! Bambini 8+ al rafting, quad per tutti.", si:"Adrenalin za celo družino! Otroci 8+ na rafting, quad za vse.", cz:"Adrenalin pro celou rodinu! Děti 8+ na rafting, quad pro všechny.", pl:"Adrenalina dla całej rodziny! Dzieci 8+ na rafting, quad dla wszystkich." } },
-  { emoji: "🏝️", includes: ["Blue Cave 5-Island Tour", "Split Walking Tour"],
-    name: { hr:"Otoci + Povijest", de:"Inseln + Geschichte", en:"Islands + History", it:"Isole + Storia", si:"Otoki + Zgodovina", cz:"Ostrovy + Historie", pl:"Wyspy + Historia" },
-    tip: { hr:"Jedan dan more i otoci, drugi dan Dioklecijanova palača!", de:"Ein Tag Meer und Inseln, am nächsten Diokletianpalast!", en:"One day sea and islands, next day Diocletian's Palace!", it:"Un giorno mare e isole, il giorno dopo il Palazzo di Diocleziano!", si:"En dan morje in otoki, naslednji dan Dioklecijanova palača!", cz:"Jeden den moře a ostrovy, druhý den Diokleciánův palác!", pl:"Jeden dzień morze i wyspy, następny Pałac Dioklecjana!" } },
-  { emoji: "🍽️", includes: ["Krka + Wine Tasting", "Dalmatinska kuhinja"],
-    name: { hr:"Gastro otkriće", de:"Gastro-Entdeckung", en:"Gastro Discovery", it:"Scoperta gastronomica", si:"Gastro odkritje", cz:"Gastro objev", pl:"Gastro odkrycie" },
-    tip: { hr:"Savršen dan za ljubitelje hrane i vina!", de:"Perfekter Tag für Feinschmecker!", en:"Perfect day for food and wine lovers!", it:"Giornata perfetta per gli amanti del cibo e del vino!", si:"Popoln dan za ljubitelje hrane in vina!", cz:"Perfektní den pro milovníky jídla a vína!", pl:"Idealny dzień dla miłośników jedzenia i wina!" } },
+    tip: { hr:"Zalazak na brodu + vodopadi i vino — savršen dan za dvoje!", de:"Sonnenuntergang auf dem Boot + Wasserfälle und Wein!", en:"Sunset cruise + waterfalls and wine — perfect for two!", it:"Tramonto in barca + cascate e vino — perfetto per due!", si:"Zahod na ladji + slapovi in vino — popoln dan za dva!", cz:"Západ na lodi + vodopády a víno — perfektní pro dva!", pl:"Zachód na łodzi + wodospady i wino — idealny dla dwojga!" } },
 ];
 
 const LOYALTY = { points: 345, tier: "Morski val", next: "Dalmatinac", nextPts: 500, code: "WEBER2026" };
