@@ -510,6 +510,7 @@ export default function JadranUnified() {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt: "Current weather RIGHT NOW in Podstrana Split Croatia. Give exact temperature, sea water temperature, UV index, wind direction and speed, humidity percentage, and today's sunset time. Be precise with numbers.", mode: "weather" }),
     }).then(r => r.json()).then(data => {
+      console.log("[JADRAN] Weather raw:", data.text?.substring(0, 200));
       try {
         let raw = data.text || "";
         raw = raw.replace(/```json|```/g, "").trim();
@@ -517,14 +518,16 @@ export default function JadranUnified() {
         const objEnd = raw.lastIndexOf("}");
         if (objStart >= 0 && objEnd > objStart) raw = raw.substring(objStart, objEnd + 1);
         const w = JSON.parse(raw);
+        console.log("[JADRAN] Weather parsed:", w);
         if (w.temp) setWeather({ icon: w.icon || "☀️", temp: w.temp, sea: w.sea || 24, uv: w.uv || 7, wind: w.wind || "N/A", sunset: w.sunset || "20:30", humidity: w.humidity || 50 });
-      } catch { /* keep default */ }
-    }).catch(() => { /* keep default */ });
+      } catch (e) { console.warn("[JADRAN] Weather parse fail:", e.message); }
+    }).catch(e => { console.warn("[JADRAN] Weather fetch fail:", e.message); });
     // Live 7-day forecast
     fetch("/api/gemini", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt: "7-day weather forecast for Split Croatia starting today March 2026. Give high and low temperature for each day and appropriate weather emoji (☀️ for sunny, ⛅ for partly cloudy, 🌧️ for rain, 🌤️ for mostly sunny, ⛈️ for storm, 🌦️ for showers). Use real forecast data.", mode: "forecast" }),
     }).then(r => r.json()).then(data => {
+      console.log("[JADRAN] Forecast raw:", data.text?.substring(0, 300));
       try {
         let raw = data.text || "";
         raw = raw.replace(/```json|```/g, "").trim();
@@ -533,13 +536,14 @@ export default function JadranUnified() {
         const arrEnd = raw.lastIndexOf("]");
         if (arrStart >= 0 && arrEnd > arrStart) raw = raw.substring(arrStart, arrEnd + 1);
         const fc = JSON.parse(raw);
+        console.log("[JADRAN] Forecast parsed:", fc.length, "items, first:", fc[0]);
         if (Array.isArray(fc) && fc.length >= 5 && fc[0].h !== undefined) {
           // Ensure 7 items, pad if needed
           while (fc.length < 7) fc.push({ di: fc.length, icon: "☀️", h: 28, l: 20 });
           setForecast(fc.slice(0, 7));
         }
-      } catch { /* keep default */ }
-    }).catch(() => { /* keep default */ });
+      } catch (e) { console.warn("[JADRAN] Forecast parse fail:", e.message); }
+    }).catch(e => { console.warn("[JADRAN] Forecast fetch fail:", e.message); });
   }, []);
   // ─── ADMIN: Secret unlock for testing (?unlock=sial) ───
   useEffect(() => {
@@ -1219,6 +1223,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt, mode: "practical" }),
       }).then(r => r.json()).then(d => {
+        console.log("[JADRAN] Live data for", subScreen, "raw:", d.text?.substring(0, 200));
         try {
           let raw = d.text || "";
           raw = raw.replace(/```json|```/g, "").trim();
@@ -1227,10 +1232,11 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           if (arrStart >= 0 && arrEnd > arrStart) raw = raw.substring(arrStart, arrEnd + 1);
           raw = raw.replace(/,\s*([}\]])/g, '$1'); // trailing commas
           const items = JSON.parse(raw);
+          console.log("[JADRAN] Parsed items:", items.length, items[0]);
           if (Array.isArray(items) && items.length > 0 && items[0].name) setLiveItems(items);
-        } catch { /* keep static */ }
+        } catch (e) { console.warn("[JADRAN] Parse fail:", e.message); }
         setLiveLoading(false);
-      }).catch(() => setLiveLoading(false));
+      }).catch(e => { console.warn("[JADRAN] Fetch fail:", e.message); setLiveLoading(false); });
     }, [subScreen]);
 
     return (
