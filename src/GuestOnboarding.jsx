@@ -186,7 +186,7 @@ export default function GuestOnboarding({ roomCode, onComplete }) {
               onBlur={e=>e.target.style.borderColor="rgba(255,255,255,0.12)"}
             />
             <div style={{ fontSize:11, color:"rgba(255,255,255,0.4)", margin:"16px 0 8px", fontFamily:"'Outfit',sans-serif" }}>{t.country}</div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:6 }}>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(60px, 1fr))", gap:6 }}>
               {COUNTRIES.map(c => (
                 <button key={c.code} onClick={()=>setCountry(c.code)} style={{
                   display:"flex", flexDirection:"column", alignItems:"center", padding:"8px 2px", borderRadius:12,

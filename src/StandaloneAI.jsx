@@ -34,6 +34,10 @@ const T = {
   en: { title: "AI Concierge", sub: "Local tips for the perfect Adriatic trip", start: "Start chatting", send: "Send", placeholder: "Ask me about the Adriatic...", region: "Where are you?", mode: "How are you traveling?", unlock: "Unlock AI — 5.99€", free3: "3 free questions", remaining: "remaining", upgraded: "Premium unlocked!", back: "← Back", typing: "thinking..." },
   de: { title: "AI Concierge", sub: "Lokale Tipps für den perfekten Adria-Urlaub", start: "Gespräch starten", send: "Senden", placeholder: "Fragen Sie mich über die Adria...", region: "Wo sind Sie?", mode: "Wie reisen Sie?", unlock: "AI freischalten — 5.99€", free3: "3 kostenlose Fragen", remaining: "übrig", upgraded: "Premium freigeschaltet!", back: "← Zurück", typing: "denke nach..." },
   it: { title: "AI Concierge", sub: "Consigli locali per la vacanza perfetta", start: "Inizia a chattare", send: "Invia", placeholder: "Chiedimi dell'Adriatico...", region: "Dove siete?", mode: "Come viaggiate?", unlock: "Sblocca AI — 5.99€", free3: "3 domande gratuite", remaining: "rimanenti", upgraded: "Premium sbloccato!", back: "← Indietro", typing: "penso..." },
+  at: { title: "AI Concierge", sub: "Lokale Tipps für den perfekten Adria-Urlaub", start: "Gespräch starten", send: "Senden", placeholder: "Fragen Sie mich über die Adria...", region: "Wo sind Sie?", mode: "Wie reisen Sie?", unlock: "AI freischalten — 5.99€", free3: "3 kostenlose Fragen", remaining: "übrig", upgraded: "Premium freigeschaltet!", back: "← Zurück", typing: "denke nach..." },
+  si: { title: "AI vodič", sub: "Lokalni nasveti za popoln Jadran", start: "Začni pogovor", send: "Pošlji", placeholder: "Vprašajte me o Jadranu...", region: "Kje ste?", mode: "Kako potujete?", unlock: "Odkleni AI — 5.99€", free3: "3 brezplačna vprašanja", remaining: "preostalo", upgraded: "Premium odklenjen!", back: "← Nazaj", typing: "razmišljam..." },
+  cz: { title: "AI průvodce", sub: "Místní tipy pro perfektní Jadran", start: "Začít konverzaci", send: "Odeslat", placeholder: "Zeptejte se na Jadran...", region: "Kde jste?", mode: "Jak cestujete?", unlock: "Odemknout AI — 5.99€", free3: "3 otázky zdarma", remaining: "zbývá", upgraded: "Premium odemčen!", back: "← Zpět", typing: "přemýšlím..." },
+  pl: { title: "AI przewodnik", sub: "Lokalne wskazówki na Adriatyk", start: "Zacznij rozmowę", send: "Wyślij", placeholder: "Zapytaj o Adriatyk...", region: "Gdzie jesteś?", mode: "Jak podróżujesz?", unlock: "Odblokuj AI — 5.99€", free3: "3 pytania za darmo", remaining: "pozostało", upgraded: "Premium odblokowany!", back: "← Wstecz", typing: "myślę..." },
 };
 
 export default function StandaloneAI() {
@@ -59,10 +63,17 @@ export default function StandaloneAI() {
     const params = new URLSearchParams(window.location.search);
     if (params.get("premium") === "true") {
       setPremium(true);
+      try { localStorage.setItem("jadran_ai_premium", "1"); } catch {}
       window.history.replaceState({}, "", "/ai");
     }
     // Check localStorage
     try { if (localStorage.getItem("jadran_ai_premium") === "1") setPremium(true); } catch {}
+    // Also check ?payment=success from Stripe redirect
+    if (params.get("payment") === "success") {
+      setPremium(true);
+      try { localStorage.setItem("jadran_ai_premium", "1"); } catch {}
+      window.history.replaceState({}, "", "/ai");
+    }
   }, []);
 
   const t = T[lang] || T.en;
@@ -74,7 +85,7 @@ export default function StandaloneAI() {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roomCode: "AI-STANDALONE", guestName: "AI User", lang }),
+        body: JSON.stringify({ roomCode: "AI-STANDALONE", guestName: "AI User", lang, returnPath: "/ai" }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;

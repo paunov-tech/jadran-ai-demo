@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
   try {
-    const { roomCode, guestName, lang } = req.body;
+    const { roomCode, guestName, lang, returnPath } = req.body;
     const origin = req.headers.origin || "https://jadran-ai-demo.vercel.app";
 
     const session = await stripe.checkout.sessions.create({
@@ -26,8 +26,8 @@ export default async function handler(req, res) {
         quantity: 1,
       }],
       mode: "payment",
-      success_url: origin + "?payment=success&session_id={CHECKOUT_SESSION_ID}",
-      cancel_url: origin + "?payment=cancelled",
+      success_url: origin + (returnPath || "") + "?payment=success&session_id={CHECKOUT_SESSION_ID}",
+      cancel_url: origin + (returnPath || "") + "?payment=cancelled",
       metadata: { roomCode: roomCode || "DEMO", guestName: guestName || "Guest" },
     });
 

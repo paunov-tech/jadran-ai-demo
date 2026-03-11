@@ -53,7 +53,7 @@ export default function LandingPage() {
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <a href="/ai" style={{ padding: "10px 20px", borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", color: "#fff", fontSize: 13, textDecoration: "none", fontWeight: 600, boxShadow: "0 4px 12px rgba(14,165,233,0.2)" }}>
-              🤖 AI Concierge
+              🗺️ Vodič
             </a>
             <a href="/host" style={{ padding: "10px 20px", borderRadius: 12, border: "1px solid rgba(14,165,233,0.15)", color: "#7dd3fc", fontSize: 13, textDecoration: "none", fontWeight: 500 }}>
               🏠 Host Panel
@@ -74,10 +74,10 @@ export default function LandingPage() {
             background: "linear-gradient(135deg, #f0f9ff 30%, #0ea5e9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
             marginBottom: 16,
           }}>
-            Vaš AI turistički<br />concierge na Jadranu
+            Lokalni vodič<br />za savršen Jadran
           </h1>
           <p style={{ fontSize: 18, color: "#7dd3fc", maxWidth: 560, margin: "0 auto 40px", lineHeight: 1.6, fontWeight: 300 }}>
-            Za goste u apartmanima, kampere, jedriličare i sve koji vole Jadran. Personalizirani savjeti na 8 jezika.
+            Provjerene preporuke od lokalaca, skrivene plaže, najbolji restorani — za sve koji vole Jadran. Dostupno na 8 jezika.
           </p>
 
           {/* Room code input */}
@@ -95,7 +95,7 @@ export default function LandingPage() {
               style={{
                 padding: "14px 20px", borderRadius: 14, border: "none",
                 background: "transparent", color: "#fff", fontSize: 15,
-                outline: "none", width: 300, fontFamily: "inherit",
+                outline: "none", width: "min(300px, 50vw)", fontFamily: "inherit",
               }}
             />
             <button onClick={goRoom} style={{
@@ -119,7 +119,7 @@ export default function LandingPage() {
             <div style={{ fontSize: 10, color: "#0ea5e9", letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>KAKO FUNKCIONIRA</div>
             <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 32, fontWeight: 400 }}>Tri koraka do savršenog odmora</div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
             {STEPS.map((s, i) => (
               <div key={i} style={{
                 padding: 28, borderRadius: 22,
@@ -169,17 +169,17 @@ export default function LandingPage() {
 
       {/* ═══ AI STANDALONE CTA ═══ */}
       <div style={{ padding: "60px 24px", background: "rgba(0,0,0,0.1)" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
           {/* AI for everyone */}
           <div style={{
             padding: 32, borderRadius: 24, textAlign: "center",
             background: "linear-gradient(135deg, rgba(14,165,233,0.08), rgba(2,132,199,0.04))",
             border: "1px solid rgba(14,165,233,0.12)",
           }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🤖</div>
-            <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, marginBottom: 8 }}>AI Concierge</div>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🗺️</div>
+            <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, marginBottom: 8 }}>Osobni vodič</div>
             <div style={{ fontSize: 13, color: "#7dd3fc", marginBottom: 20, lineHeight: 1.6 }}>
-              Lokalni savjeti, skrivena mjesta, preporuke restorana — za sve putnike. 3 besplatna pitanja.
+              Pitajte bilo što o destinaciji — preporuke restorana, skrivene plaže, praktični savjeti. 3 besplatna pitanja.
             </div>
             <a href="/ai" style={{
               display: "inline-block", padding: "14px 28px", borderRadius: 16,
@@ -199,7 +199,7 @@ export default function LandingPage() {
             <div style={{ fontSize: 48, marginBottom: 12 }}>🚐</div>
             <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, marginBottom: 8 }}>Kamper vodič</div>
             <div style={{ fontSize: 13, color: "#fbbf24", marginBottom: 20, lineHeight: 1.6 }}>
-              Parking za kampere, dump station, pumpe za vodu, legalna noćenja — vaš co-pilot za Jadran.
+              Legalna noćenja, punjenje vode, parkirališta za kampere — sve na jednom mjestu duž cijele obale.
             </div>
             <a href="/ai" style={{
               display: "inline-block", padding: "14px 28px", borderRadius: 16,
@@ -223,10 +223,10 @@ export default function LandingPage() {
           <div style={{ fontSize: 40, marginBottom: 12 }}>⭐</div>
           <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 28, fontWeight: 400, marginBottom: 8 }}>Premium za 5.99€</div>
           <div style={{ fontSize: 14, color: "#7dd3fc", maxWidth: 440, margin: "0 auto 24px", lineHeight: 1.6 }}>
-            AI chat s lokalnim savjetima, skrivena mjesta, detaljna prognoza, budget tracker — cijeli boravak, svi uređaji.
+            Neograničeni razgovori s lokalnim vodičem, skrivena mjesta, detaljna prognoza, praćenje troškova — cijeli boravak.
           </div>
           <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap", fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
-            {["🤖 AI Chat", "💎 Hidden Gems", "🍽️ Lokalna kuhinja", "🗺️ Tajne rute", "☀️ UV & prognoza", "💰 Budget tracker"].map(f => (
+            {["💬 Lokalni vodič", "💎 Skrivena mjesta", "🍽️ Restorani", "🗺️ Tajne rute", "☀️ Detaljna prognoza", "💰 Praćenje troškova"].map(f => (
               <span key={f}>{f}</span>
             ))}
           </div>
@@ -242,7 +242,7 @@ export default function LandingPage() {
         }}>
           <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, fontWeight: 400, marginBottom: 8 }}>Iznajmljujete apartman?</div>
           <div style={{ fontSize: 14, color: "#7dd3fc", marginBottom: 20, lineHeight: 1.6 }}>
-            Dodajte AI concierge svom smještaju. Više zadovoljnih gostiju, bolji review-ovi, dodatni prihod.
+            Ponudite gostima osobnog digitalnog vodiča. Bolji recenzije, manje pitanja, dodatni prihod od preporuka.
           </div>
           <a href="/host" style={{
             display: "inline-block", padding: "14px 32px", borderRadius: 16,
@@ -257,7 +257,7 @@ export default function LandingPage() {
       {/* ═══ FOOTER ═══ */}
       <div style={{ borderTop: "1px solid rgba(14,165,233,0.06)", padding: "24px", textAlign: "center" }}>
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.15)", letterSpacing: 2 }}>
-          JADRAN AI · SIAL Consulting d.o.o. · Powered by AI
+          JADRAN · SIAL Consulting d.o.o. · Podstrana, Hrvatska
         </div>
       </div>
 
