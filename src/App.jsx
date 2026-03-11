@@ -503,7 +503,9 @@ export default function JadranUnified() {
   // ─── WEATHER: Fetch real data via Gemini grounding ───
   const [weather, setWeather] = useState(W_DEFAULT);
   const [forecast, setForecast] = useState(null); // null = use FORECAST_DEFAULT
+  const [liveInfo, setLiveInfo] = useState({}); // live data per practical section
   useEffect(() => {
+    // Live weather
     fetch("/api/gemini", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt: "Current weather in Podstrana, Split, Croatia right now. Sea temperature, UV index, sunset time today.", mode: "weather" }),
@@ -512,6 +514,17 @@ export default function JadranUnified() {
         const clean = data.text.replace(/```json|```/g, "").trim();
         const w = JSON.parse(clean);
         if (w.temp) setWeather({ icon: w.icon || "☀️", temp: w.temp, sea: w.sea || 24, uv: w.uv || 7, wind: w.wind || "N/A", sunset: w.sunset || "20:30", humidity: w.humidity || 50 });
+      } catch { /* keep default */ }
+    }).catch(() => { /* keep default */ });
+    // Live 7-day forecast
+    fetch("/api/gemini", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: "7-day weather forecast for Split, Croatia starting today. For each day give high and low temperature and weather emoji icon.", mode: "forecast" }),
+    }).then(r => r.json()).then(data => {
+      try {
+        const clean = data.text.replace(/```json|```/g, "").trim();
+        const fc = JSON.parse(clean);
+        if (Array.isArray(fc) && fc.length >= 7 && fc[0].h) setForecast(fc);
       } catch { /* keep default */ }
     }).catch(() => { /* keep default */ });
   }, []);
@@ -1174,6 +1187,34 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   const KioskDetail = () => {
     const data = PRACTICAL[subScreen];
     if (!data) return null;
+    // Fetch live info for this section
+    const [liveItems, setLiveItems] = useState(null);
+    const [liveLoading, setLiveLoading] = useState(false);
+    useEffect(() => {
+      const prompts = {
+        parking: "Current parking options near Podstrana and Split Croatia. Include prices per hour, availability, whether they accept cards/SMS payment. Include Parking ispred vile (free), Podstrana centar, Garaža Lora Split.",
+        beach: "Current beach conditions near Podstrana and Split Croatia today. Include water temperature, crowd level, facilities, which beaches have sand vs pebbles. Include Podstrana beach, Kašjuni, Bačvice, Zlatni Rat Brač.",
+        food: "Restaurants, supermarkets and bakeries near Podstrana Croatia. Current opening hours today, delivery options. Include Konzum, local konobas, Wolt/Glovo availability.",
+        routes: "How to get from Podstrana to Split, Trogir, Omiš, and Brač/Hvar by car and bus. Current schedules, prices, travel times. Include ferry schedules from Split.",
+        sun: "Current UV index and sun safety for Split Croatia coast today. Sea temperature, recommended sun protection, pharmacy locations near Podstrana.",
+        emergency: "Emergency contacts for Podstrana/Split Croatia. Hospital, pharmacy hours, police, coast guard numbers.",
+      };
+      const prompt = prompts[subScreen];
+      if (!prompt) return;
+      setLiveLoading(true);
+      fetch("/api/gemini", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt, mode: "practical" }),
+      }).then(r => r.json()).then(d => {
+        try {
+          const clean = d.text.replace(/```json|```/g, "").trim();
+          const items = JSON.parse(clean);
+          if (Array.isArray(items) && items.length > 0) setLiveItems(items);
+        } catch { /* keep static */ }
+        setLiveLoading(false);
+      }).catch(() => setLiveLoading(false));
+    }, [subScreen]);
+
     return (
       <>
         <BackBtn onClick={() => setSubScreen("home")} />
@@ -1181,6 +1222,26 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           <span style={{ fontSize: 40 }}>{data.icon}</span>
           <div style={{ fontSize: 28, fontWeight: 400 }}>{data.tk ? t(data.tk,lang) : data.title}</div>
         </div>
+        {/* Live data from Gemini */}
+        {liveLoading && <Card style={{ marginBottom: 14, padding: "14px 20px", borderColor: "rgba(14,165,233,0.15)" }}>
+          <div style={{ ...dm, display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: C.accent }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: "pulse 1.2s infinite" }} />
+            Ažuriranje podataka...
+          </div>
+        </Card>}
+        {liveItems && <Card warm style={{ marginBottom: 16, borderColor: "rgba(245,158,11,0.12)" }}>
+          <div style={{ ...dm, fontSize: 10, color: C.warm, letterSpacing: 2, fontWeight: 600, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.green }} />
+            UŽIVO — {new Date().toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" })}
+          </div>
+          {liveItems.map((it, i) => (
+            <div key={i} style={{ padding: "8px 0", borderBottom: i < liveItems.length - 1 ? `1px solid ${C.bord}` : "none" }}>
+              <div style={{ fontSize: 14, fontWeight: 500 }}>{it.name}</div>
+              <div style={{ ...dm, fontSize: 12, color: C.mut, lineHeight: 1.5, marginTop: 2 }}>{it.note}</div>
+            </div>
+          ))}
+        </Card>}
+        {/* Static data (always shown as fallback) */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {data.items.map((it, i) => (
             <Card key={i} style={{ borderColor: it.warn ? "rgba(239,68,68,0.12)" : it.free ? "rgba(34,197,94,0.12)" : C.bord, display: "flex", gap: 14, alignItems: "flex-start" }}>

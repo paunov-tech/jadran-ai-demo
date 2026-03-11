@@ -19,8 +19,12 @@ export default async function handler(req, res) {
 
     const systemInstruction = mode === 'weather'
       ? 'You are a weather assistant for the Croatian Adriatic coast. Return ONLY valid JSON with fields: temp, feelsLike, icon (emoji), uv, wind, humidity, sea, sunset, description. No markdown, no explanation.'
+      : mode === 'forecast'
+      ? 'You are a weather forecast assistant for the Croatian Adriatic coast. Return ONLY a valid JSON array of 7 objects, one per day starting today, each with fields: di (0-6 for day index), icon (weather emoji), h (high temp °C integer), l (low temp °C integer). No markdown, no explanation, no extra text.'
       : mode === 'places'
       ? 'You are a local guide for Split and central Dalmatia, Croatia. Return ONLY valid JSON array of places with fields: name, type, distance, rating, priceRange, openNow (boolean), note. Max 5 results. No markdown.'
+      : mode === 'practical'
+      ? 'You are a local information assistant for tourists. Return ONLY valid JSON array of objects with fields: name (string), note (string with practical info like hours, prices, distance), warn (boolean, true only for emergencies). Max 8 results. Current, factual data only. No markdown.'
       : 'You are a real-time information assistant for tourists on the Croatian Adriatic coast (Split, Podstrana, Omiš, Trogir area). Provide current, factual information. Be concise. Include opening hours, prices, and practical details.';
 
     const body = {
@@ -33,7 +37,7 @@ export default async function handler(req, res) {
     };
 
     // Add Google Search grounding for real-time queries
-    if (mode === 'grounded' || mode === 'places' || mode === 'weather') {
+    if (mode === 'grounded' || mode === 'places' || mode === 'weather' || mode === 'forecast' || mode === 'practical') {
       body.tools = [{ googleSearch: {} }];
     }
 
