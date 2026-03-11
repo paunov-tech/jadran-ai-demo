@@ -65,9 +65,6 @@ export default function LandingPage() {
             </div>
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <a href="/ai" style={{ padding: "10px 22px", borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", color: "#fff", fontSize: 13, textDecoration: "none", fontWeight: 600, boxShadow: "0 4px 12px rgba(14,165,233,0.2), inset 0 -2px 0 rgba(245,158,11,0.25)", borderBottom: "1px solid rgba(245,158,11,0.3)" }}>
-              🗺️ Vodič <span style={{ fontSize: 9, opacity: 0.7, marginLeft: 2 }}>✦</span>
-            </a>
             <a href="/host" style={{ padding: "10px 20px", borderRadius: 12, border: "1px solid rgba(14,165,233,0.15)", color: "#7dd3fc", fontSize: 13, textDecoration: "none", fontWeight: 500 }}>
               🏠 Host Panel
             </a>
@@ -94,23 +91,37 @@ export default function LandingPage() {
           </p>
 
           {/* Primary CTAs */}
-          <div style={{ display: "inline-flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center", maxWidth: 600, margin: "0 auto" }}>
             <a href="/ai" style={{
-              padding: "16px 32px", borderRadius: 16, textDecoration: "none",
-              background: "linear-gradient(135deg, #0ea5e9, #0284c7)",
-              color: "#fff", fontSize: 16, fontWeight: 600,
-              fontFamily: "'DM Serif Display', Georgia, serif",
-              boxShadow: "0 6px 24px rgba(14,165,233,0.25)",
-              display: "inline-flex", alignItems: "center", gap: 8,
-            }}>🗺️ Lokalni vodič</a>
+              flex: "1 1 260px", padding: "24px 28px", borderRadius: 22, textDecoration: "none",
+              background: "linear-gradient(135deg, rgba(14,165,233,0.12), rgba(2,132,199,0.06))",
+              border: "1px solid rgba(14,165,233,0.2)",
+              display: "flex", alignItems: "center", gap: 16,
+              transition: "all 0.3s", cursor: "pointer",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.borderColor = "rgba(14,165,233,0.4)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(14,165,233,0.15)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.borderColor = "rgba(14,165,233,0.2)"; e.currentTarget.style.boxShadow = ""; }}>
+              <div style={{ width: 52, height: 52, borderRadius: 16, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 24, flexShrink: 0 }}>🗺️</div>
+              <div style={{ textAlign: "left" }}>
+                <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 19, color: "#f0f9ff", marginBottom: 3 }}>Lokalni vodič</div>
+                <div style={{ fontSize: 12, color: "#7dd3fc", lineHeight: 1.4 }}>Plaže, restorani, skrivena mjesta — pitajte bilo što</div>
+              </div>
+            </a>
             <a href="/ai" style={{
-              padding: "16px 32px", borderRadius: 16, textDecoration: "none",
-              background: "linear-gradient(135deg, #f59e0b, #d97706)",
-              color: "#fff", fontSize: 16, fontWeight: 600,
-              fontFamily: "'DM Serif Display', Georgia, serif",
-              boxShadow: "0 6px 24px rgba(245,158,11,0.25)",
-              display: "inline-flex", alignItems: "center", gap: 8,
-            }}>🚐 Kamper vodič</a>
+              flex: "1 1 260px", padding: "24px 28px", borderRadius: 22, textDecoration: "none",
+              background: "linear-gradient(135deg, rgba(245,158,11,0.08), rgba(251,191,36,0.04))",
+              border: "1px solid rgba(245,158,11,0.2)",
+              display: "flex", alignItems: "center", gap: 16,
+              transition: "all 0.3s", cursor: "pointer",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.borderColor = "rgba(245,158,11,0.4)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(245,158,11,0.12)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.borderColor = "rgba(245,158,11,0.2)"; e.currentTarget.style.boxShadow = ""; }}>
+              <div style={{ width: 52, height: 52, borderRadius: 16, background: "linear-gradient(135deg, #f59e0b, #d97706)", display: "grid", placeItems: "center", fontSize: 24, flexShrink: 0 }}>🚐</div>
+              <div style={{ textAlign: "left" }}>
+                <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 19, color: "#f0f9ff", marginBottom: 3 }}>Kamper vodič</div>
+                <div style={{ fontSize: 12, color: "#fbbf24", lineHeight: 1.4 }}>Parking, dump station, voda, legalna noćenja</div>
+              </div>
+            </a>
           </div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 14 }}>
             3 besplatna pitanja · Premium 5.99€ · 8 jezika
@@ -184,47 +195,33 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* ═══ AI STANDALONE CTA ═══ */}
-      <div style={{ padding: "60px 24px", background: "rgba(0,0,0,0.1)" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
-          {/* AI for everyone */}
+      {/* ═══ ROOM CODE (for apartment guests) ═══ */}
+      <div style={{ padding: "48px 24px", background: "rgba(0,0,0,0.1)" }}>
+        <div style={{ maxWidth: 500, margin: "0 auto", textAlign: "center" }}>
+          <div style={{ fontSize: 10, color: "#7dd3fc", letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>VEĆ IMATE SOBU?</div>
+          <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(20px, 3vw, 26px)', fontWeight: 400, marginBottom: 16 }}>Unesite kod iz apartmana</div>
           <div style={{
-            padding: 32, borderRadius: 24, textAlign: "center",
-            background: "linear-gradient(135deg, rgba(14,165,233,0.08), rgba(2,132,199,0.04))",
-            border: "1px solid rgba(14,165,233,0.12)",
+            display: "inline-flex", gap: 8, padding: 6, borderRadius: 18,
+            background: "rgba(12,28,50,0.7)", border: "1px solid rgba(14,165,233,0.08)",
           }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🗺️</div>
-            <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, marginBottom: 8 }}>Osobni vodič</div>
-            <div style={{ fontSize: 13, color: "#7dd3fc", marginBottom: 20, lineHeight: 1.6 }}>
-              Pitajte bilo što o destinaciji — preporuke restorana, skrivene plaže, praktični savjeti. 3 besplatna pitanja.
-            </div>
-            <a href="/ai" style={{
-              display: "inline-block", padding: "14px 28px", borderRadius: 16,
+            <input
+              type="text"
+              placeholder="npr. JADRAN-AB34"
+              value={roomInput}
+              onChange={e => setRoomInput(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && goRoom()}
+              style={{
+                padding: "12px 18px", borderRadius: 14, border: "none",
+                background: "transparent", color: "#fff", fontSize: 14,
+                outline: "none", width: "min(220px, 50vw)", fontFamily: "inherit",
+              }}
+            />
+            <button onClick={goRoom} style={{
+              padding: "12px 22px", borderRadius: 14, border: "none",
               background: "linear-gradient(135deg, #0ea5e9, #0284c7)",
-              color: "#fff", fontSize: 15, fontWeight: 600, textDecoration: "none",
-              fontFamily: "'DM Serif Display', Georgia, serif",
-              boxShadow: "0 4px 16px rgba(14,165,233,0.25)",
-            }}>Probajte besplatno →</a>
-          </div>
-
-          {/* Camper special */}
-          <div style={{
-            padding: 32, borderRadius: 24, textAlign: "center",
-            background: "linear-gradient(135deg, rgba(245,158,11,0.06), rgba(251,191,36,0.03))",
-            border: "1px solid rgba(245,158,11,0.1)",
-          }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🚐</div>
-            <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, marginBottom: 8 }}>Kamper vodič</div>
-            <div style={{ fontSize: 13, color: "#fbbf24", marginBottom: 20, lineHeight: 1.6 }}>
-              Legalna noćenja, punjenje vode, parkirališta za kampere — sve na jednom mjestu duž cijele obale.
-            </div>
-            <a href="/ai" style={{
-              display: "inline-block", padding: "14px 28px", borderRadius: 16,
-              background: "linear-gradient(135deg, #f59e0b, #d97706)",
-              color: "#fff", fontSize: 15, fontWeight: 600, textDecoration: "none",
-              fontFamily: "'DM Serif Display', Georgia, serif",
-              boxShadow: "0 4px 16px rgba(245,158,11,0.25)",
-            }}>Kamper mode →</a>
+              color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
+              fontFamily: "inherit",
+            }}>Otvori →</button>
           </div>
         </div>
       </div>
