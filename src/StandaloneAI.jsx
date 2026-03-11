@@ -321,20 +321,94 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
       {/* Messages */}
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 10 }}>
         {msgs.length === 0 && (
-          <div style={{ textAlign: "center", padding: "40px 0" }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🌊</div>
-            <div style={{ fontFamily: "'DM Serif Display',Georgia,serif", fontSize: 22, marginBottom: 16 }}>
-              {travelMode === "camper" ? "Kamper vodič" : t.title}
+          <div style={{ padding: "20px 0" }}>
+            {/* ═══ VIBE JADRANA ═══ */}
+            <div style={{ marginBottom: 28 }}>
+              {/* Animated wave header */}
+              <div style={{ position: "relative", borderRadius: 22, overflow: "hidden", marginBottom: 20, background: "linear-gradient(135deg, #0c2d48, #0e3a5c)", padding: "28px 24px" }}>
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 40, opacity: 0.15, pointerEvents: "none" }}>
+                  <svg width="100%" height="40" viewBox="0 0 400 40" preserveAspectRatio="none">
+                    <path fill={C.accent} style={{ animation: "seaV1 4s ease-in-out infinite" }} d="M0,20 C100,32 200,8 300,20 C350,26 375,14 400,20 L400,40 L0,40 Z" />
+                    <path fill={C.accent} style={{ animation: "seaV2 5s ease-in-out infinite", opacity: 0.5 }} d="M0,25 C80,12 160,32 240,22 C320,12 360,30 400,25 L400,40 L0,40 Z" />
+                  </svg>
+                </div>
+                <div style={{ position: "relative", textAlign: "center" }}>
+                  <div style={{ fontSize: 11, color: C.accent, letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>VIBE JADRANA</div>
+                  <div style={{ fontFamily: "'DM Serif Display',Georgia,serif", fontSize: 26, lineHeight: 1.2, marginBottom: 6 }}>
+                    {travelMode === "camper" ? "Sloboda na kotačima 🚐" : travelMode === "sailing" ? "Vjetar u jedrima ⛵" : "Otkrijte obalu 🌊"}
+                  </div>
+                  {weather && <div style={{ fontSize: 13, color: C.mut }}>
+                    {weather.icon} {weather.temp}°C · 🌊 More {weather.sea}°C · UV {weather.uv} · 🌅 {weather.sunset}
+                  </div>}
+                </div>
+              </div>
+
+              {/* Visual highlights grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 20 }}>
+                {(travelMode === "camper" ? [
+                  { emoji: "🅿️", label: "Legalni\nparkinzi", color: C.accent },
+                  { emoji: "💧", label: "Pumpe\nza vodu", color: "#38bdf8" },
+                  { emoji: "🚿", label: "Dump\nstation", color: "#34d399" },
+                  { emoji: "🏖️", label: "Kamper\nplaže", color: "#fbbf24" },
+                  { emoji: "⛽", label: "LPG\nstanice", color: "#fb923c" },
+                  { emoji: "🌙", label: "Noćenje\nbez kazni", color: "#a78bfa" },
+                ] : travelMode === "sailing" ? [
+                  { emoji: "⚓", label: "Marine\ni veze", color: C.accent },
+                  { emoji: "🌬️", label: "Bura\njugo info", color: "#38bdf8" },
+                  { emoji: "⛽", label: "Gorivo\nu marini", color: "#34d399" },
+                  { emoji: "🏝️", label: "Sidrišta\nzaštićena", color: "#fbbf24" },
+                  { emoji: "🍽️", label: "Konobe\ns mora", color: "#fb923c" },
+                  { emoji: "🌊", label: "Stanje\nmora", color: "#a78bfa" },
+                ] : [
+                  { emoji: "🏖️", label: "Skrivene\nplaže", color: C.accent },
+                  { emoji: "🍽️", label: "Lokalne\nkonobe", color: "#fbbf24" },
+                  { emoji: "🏛️", label: "Povijest\ni kultura", color: "#38bdf8" },
+                  { emoji: "🚣", label: "Avanture\ni izleti", color: "#34d399" },
+                  { emoji: "🌅", label: "Zalasci\nsunca", color: "#fb923c" },
+                  { emoji: "💎", label: "Tajne\nlokalaca", color: "#a78bfa" },
+                ]).map((v, i) => (
+                  <div key={i} style={{
+                    padding: "14px 8px", borderRadius: 16, textAlign: "center",
+                    background: C.card, border: `1px solid ${C.bord}`,
+                  }}>
+                    <div style={{ fontSize: 24, marginBottom: 4 }}>{v.emoji}</div>
+                    <div style={{ fontSize: 10, color: v.color, lineHeight: 1.3, whiteSpace: "pre-line", fontWeight: 500 }}>{v.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Adriatic pulse mini */}
+              {weather && <div style={{
+                display: "flex", justifyContent: "space-around", padding: "14px 16px",
+                borderRadius: 16, background: C.card, border: `1px solid ${C.bord}`, marginBottom: 20,
+              }}>
+                {[
+                  { v: `${weather.temp}°`, l: "Zrak", c: C.text },
+                  { v: `${weather.sea}°`, l: "More", c: C.accent },
+                  { v: weather.uv, l: "UV", c: weather.uv >= 8 ? "#f87171" : weather.uv >= 5 ? C.gold : "#4ade80" },
+                  { v: weather.sunset, l: "Zalazak", c: C.gold },
+                ].map((d, i) => (
+                  <div key={i} style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: 18, fontWeight: 300, color: d.c }}>{d.v}</div>
+                    <div style={{ fontSize: 9, color: C.mut, letterSpacing: 1, marginTop: 2 }}>{d.l}</div>
+                  </div>
+                ))}
+              </div>}
             </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-              {quickQs.map(q => (
-                <button key={q} onClick={() => { setInput(q); }}
-                  style={{ padding: "8px 14px", borderRadius: 14, border: `1px solid ${C.bord}`, background: C.card, color: C.mut, fontSize: 12, cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s" }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(14,165,233,0.2)"}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = C.bord}>
-                  {q}
-                </button>
-              ))}
+
+            {/* Quick questions */}
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 10, color: C.mut, letterSpacing: 3, fontWeight: 500, marginBottom: 12 }}>PITAJTE ME</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+                {quickQs.map(q => (
+                  <button key={q} onClick={() => { setInput(q); }}
+                    style={{ padding: "10px 16px", borderRadius: 14, border: `1px solid ${C.bord}`, background: C.card, color: C.mut, fontSize: 12, cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s" }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(14,165,233,0.2)"}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = C.bord}>
+                    {q}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -396,6 +470,8 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
         * { box-sizing: border-box; margin: 0; padding: 0; }
         ::selection { background: rgba(14,165,233,0.3); }
         @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+        @keyframes seaV1 { 0%,100% { d: path('M0,20 C100,32 200,8 300,20 C350,26 375,14 400,20 L400,40 L0,40 Z'); } 50% { d: path('M0,25 C100,12 200,32 300,18 C350,12 375,28 400,22 L400,40 L0,40 Z'); } }
+        @keyframes seaV2 { 0%,100% { d: path('M0,25 C80,12 160,32 240,22 C320,12 360,30 400,25 L400,40 L0,40 Z'); } 50% { d: path('M0,18 C80,30 160,14 240,28 C320,30 360,16 400,22 L400,40 L0,40 Z'); } }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: rgba(14,165,233,0.15); border-radius: 2px; }
       `}</style>
