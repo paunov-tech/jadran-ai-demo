@@ -913,13 +913,18 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         </div>
         <SectionLabel>{t("forecast",lang)}</SectionLabel>
         <div style={{ display: "flex", gap: 2, marginBottom: 24 }}>
-          {(forecast || FORECAST_DEFAULT).map((d, i) => (
-            <div key={i} style={{ flex: 1, textAlign: "center", padding: "12px 4px", borderRadius: 12 }}>
-              <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 1 }}>{(FORECAST_DAYS[lang]||FORECAST_DAYS.hr)[d.di]}</div>
-              <div style={{ fontSize: 22, margin: "4px 0" }}>{d.icon}</div>
-              <div style={{ ...dm, fontSize: 13, color: C.mut }}>{d.h}°</div>
-            </div>
-          ))}
+          {(forecast || FORECAST_DEFAULT).map((d, i) => {
+            const locked = !premium && i >= 3;
+            return (
+              <div key={i} style={{ flex: 1, textAlign: "center", padding: "12px 4px", borderRadius: 12, position: "relative", cursor: locked ? "pointer" : "default" }}
+                onClick={() => locked && setShowPaywall(true)}>
+                <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 1 }}>{(FORECAST_DAYS[lang]||FORECAST_DAYS.hr)[d.di]}</div>
+                <div style={{ fontSize: 22, margin: "4px 0", filter: locked ? "blur(4px)" : "none" }}>{d.icon}</div>
+                <div style={{ ...dm, fontSize: 13, color: C.mut, filter: locked ? "blur(4px)" : "none" }}>{d.h}°</div>
+                {locked && <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}><span style={{ fontSize: 14, color: C.gold }}>🔒</span></div>}
+              </div>
+            );
+          })}
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
           <Card>
@@ -1071,18 +1076,19 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           </Card>}
         </div>
 
-        {/* AI Tip */}
-        <Card glow style={{ background: `linear-gradient(135deg,${C.goDim},rgba(14,165,233,0.03))`, borderColor: "rgba(251,191,36,0.1)", marginBottom: 20, display: "flex", gap: 16, alignItems: "flex-start" }}>
+        {/* AI Tip — premium */}
+        <Card glow style={{ background: `linear-gradient(135deg,${C.goDim},rgba(14,165,233,0.03))`, borderColor: "rgba(251,191,36,0.1)", marginBottom: 20, display: "flex", gap: 16, alignItems: "flex-start", cursor: premium ? "default" : "pointer", position: "relative", overflow: "hidden" }} onClick={() => !premium && setShowPaywall(true)}>
           <div style={{ fontSize: 28 }}>{tipIcon}</div>
           <div>
             <div style={{ ...dm, fontSize: 10, color: C.gold, fontWeight: 700, letterSpacing: 2, marginBottom: 4 }}>{t("aiRec",lang)}</div>
-            <div style={{ ...dm, fontSize: 15, color: C.text, lineHeight: 1.7, fontWeight: 300 }}>{tip}</div>
+            {premium ? <div style={{ ...dm, fontSize: 15, color: C.text, lineHeight: 1.7, fontWeight: 300 }}>{tip}</div> : <div style={{ ...dm, fontSize: 15, color: C.text, lineHeight: 1.7, fontWeight: 300, filter: "blur(6px)", userSelect: "none" }}>{tip}</div>}
+            {!premium && <div style={{ ...dm, position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,22,40,0.3)", borderRadius: 22 }}><span style={{ background: C.goDim, padding: "8px 18px", borderRadius: 14, fontSize: 13, color: C.gold, fontWeight: 600, border: `1px solid rgba(245,158,11,0.15)` }}>⭐ Premium — 5.99€</span></div>}
             {G.kids > 0 && hour >= 12 && hour < 18 && <div style={{ ...dm, fontSize: 13, color: C.accent, marginTop: 6 }}>👨‍👩‍👧‍👦 {({hr:"S djecom: Bačvice (pijesak, plitka voda) je savršena!",de:"Mit Kindern: Bačvice (Sand, flaches Wasser) ist perfekt!",en:"With kids: Bačvice (sand, shallow water) is perfect!",it:"Con bambini: Bačvice (sabbia, acqua bassa) è perfetta!",si:"Z otroki: Bačvice (pesek, plitva voda) je popolna!",cz:"S dětmi: Bačvice (písek, mělká voda) je perfektní!",pl:"Z dziećmi: Bačvice (piasek, płytka woda) jest idealna!"})[lang] || "S djecom: Bačvice (pijesak, plitka voda) je savršena!"}</div>}
           </div>
         </Card>
 
-        {/* Budget */}
-        <Card style={{ marginBottom: 20, padding: "14px 20px" }}>
+        {/* Budget — premium */}
+        <Card style={{ marginBottom: 20, padding: "14px 20px", position: "relative", overflow: "hidden", cursor: premium ? "default" : "pointer" }} onClick={() => !premium && setShowPaywall(true)}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div><span style={{ ...dm, fontSize: 11, color: C.mut }}>{t("budget",lang)} </span><span style={{ fontSize: 20, fontWeight: 300 }}>{G.spent}€</span><span style={{ ...dm, fontSize: 13, color: C.mut }}> / {G.budget}€</span></div>
             <div style={{ ...dm, fontSize: 13, color: C.accent }}>{budgetLeft}€ {t("left",lang)} · ~{Math.round(budgetLeft / daysLeft)}{t("perDay",lang)}</div>
@@ -1096,18 +1102,17 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         <SectionLabel>{t("quickAccess",lang)}</SectionLabel>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 24 }}>
           {[
-            { k: "parking", ic: IC.parking, l: t("parking",lang), clr: C.accent },
-            { k: "beach", ic: IC.beach, l: t("beaches",lang), clr: "#38bdf8" },
-            { k: "sun", ic: IC.sun, l: t("sun",lang), clr: C.warm },
-            { k: "routes", ic: IC.map, l: t("routes",lang), clr: "#34d399" },
-            { k: "food", ic: IC.food, l: t("food",lang), clr: C.terracotta },
-            { k: "emergency", ic: IC.medic, l: t("emergency",lang), clr: C.red },
-            { k: "gems", ic: IC.gem, l: t("gems",lang), clr: C.gold },
-            { k: "chat", ic: IC.bot, l: t("aiGuide",lang), clr: "#a78bfa" },
+            { k: "parking", ic: IC.parking, l: t("parking",lang), clr: C.accent, free: true },
+            { k: "beach", ic: IC.beach, l: t("beaches",lang), clr: "#38bdf8", free: true },
+            { k: "sun", ic: IC.sun, l: t("sun",lang), clr: C.warm, free: false },
+            { k: "routes", ic: IC.map, l: t("routes",lang), clr: "#34d399", free: false },
+            { k: "food", ic: IC.food, l: t("food",lang), clr: C.terracotta, free: false },
+            { k: "emergency", ic: IC.medic, l: t("emergency",lang), clr: C.red, free: true },
+            { k: "gems", ic: IC.gem, l: t("gems",lang), clr: C.gold, free: false },
+            { k: "chat", ic: IC.bot, l: t("aiGuide",lang), clr: "#a78bfa", free: false },
           ].map(t => (
             <div key={t.k} onClick={() => {
-              if (t.k === "gems") tryPremium(() => setSubScreen("gems"));
-              else if (t.k === "chat") tryPremium(() => setSubScreen("chat"));
+              if (!t.free && !premium) setShowPaywall(true);
               else setSubScreen(t.k);
             }}
               className="anim-card glass" style={{
@@ -1122,7 +1127,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                 <Icon d={t.ic} size={22} color={t.clr} stroke={1.6} />
               </div>
               <div style={{ ...dm, fontSize: 12, fontWeight: 500, color: C.text }}>{t.l}</div>
-              {(t.k === "gems" || t.k === "chat") && !premium && <div style={{ position: "absolute", top: 8, right: 8, ...dm, fontSize: 8, color: C.gold, background: C.goDim, padding: "2px 7px", borderRadius: 8, fontWeight: 600, letterSpacing: 0.5, border: `1px solid rgba(245,158,11,0.1)` }}>PRO</div>}
+              {!t.free && !premium && <div style={{ position: "absolute", top: 8, right: 8, ...dm, fontSize: 8, color: C.gold, background: C.goDim, padding: "2px 7px", borderRadius: 8, fontWeight: 600, letterSpacing: 0.5, border: `1px solid rgba(245,158,11,0.1)` }}>PRO</div>}
             </div>
           ))}
         </div>
@@ -1671,6 +1676,11 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           </div>
           {/* Warm divider */}
           <div style={{ height: 1, marginTop: 16, background: `linear-gradient(90deg, transparent, rgba(245,158,11,0.12) 30%, rgba(14,165,233,0.08) 70%, transparent)` }} />
+          {/* Demo mode banner */}
+          {!guestProfile && <div style={{ ...dm, display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, padding: "10px 16px", background: "rgba(245,158,11,0.06)", borderRadius: 12, border: "1px solid rgba(245,158,11,0.1)" }}>
+            <span style={{ fontSize: 12, color: C.warm }}>🎭 Demo mode — ovo je primjer za goste</span>
+            <a href="/host" style={{ ...dm, fontSize: 11, color: C.accent, textDecoration: "none", fontWeight: 600 }}>Host Panel →</a>
+          </div>}
         </div>
 
         {/* Phase Nav */}
