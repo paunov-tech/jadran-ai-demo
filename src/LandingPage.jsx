@@ -21,7 +21,7 @@ const DESTINATIONS = [
 const STEPS = [
   { num: "01", icon: "🏠", title: "Domaćin kreira apartman", desc: "Registrira smještaj i generira jedinstveni QR kod" },
   { num: "02", icon: "📱", title: "Gost skenira QR", desc: "Na zidu apartmana — unosi profil i interese" },
-  { num: "03", icon: "🌊", title: "AI concierge 24/7", desc: "Personalizirane preporuke, lokalni savjeti, booking" },
+  { num: "03", icon: "🌊", title: "Osobni savjetnik 24/7", desc: "Provjerene preporuke, lokalni savjeti, rezervacije" },
 ];
 
 export default function LandingPage() {
@@ -45,10 +45,16 @@ export default function LandingPage() {
         {/* Nav */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, padding: "16px 0" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 20, fontWeight: 700, color: "#fff", boxShadow: "0 4px 16px rgba(14,165,233,0.25)" }}>J</div>
+            <div style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", boxShadow: "0 4px 16px rgba(14,165,233,0.25)" }}>
+              <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
+                <path d="M8 6C8 6 10 6 12 6C16 6 16 14 16 18C16 22 14 26 10 26" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M4 20C6 17 9 17 12 20C15 23 18 23 20 20C22 17 25 17 28 20" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                <path d="M4 24C6 21 9 21 12 24C15 27 18 27 20 24C22 21 25 21 28 24" stroke="rgba(255,255,255,0.3)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+              </svg>
+            </div>
             <div>
               <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 22, letterSpacing: 3, textTransform: "uppercase", lineHeight: 1 }}>Jadran</div>
-              <div style={{ fontSize: 9, color: "#0ea5e9", letterSpacing: 3, fontWeight: 500 }}>AI CONCIERGE</div>
+              <div style={{ fontSize: 9, color: "#0ea5e9", letterSpacing: 3, fontWeight: 500 }}>SAVJETNIK</div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -257,7 +263,7 @@ export default function LandingPage() {
       {/* ═══ FOOTER ═══ */}
       <div style={{ borderTop: "1px solid rgba(14,165,233,0.06)", padding: "24px", textAlign: "center" }}>
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.15)", letterSpacing: 2 }}>
-          JADRAN · SIAL Consulting d.o.o. · Podstrana, Hrvatska
+          JADRAN · SIAL Consulting d.o.o.
         </div>
       </div>
 

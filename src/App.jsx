@@ -3,7 +3,7 @@ import { loadGuest, updateGuest, getRoomCode } from "./guestStore";
 import GuestOnboarding from "./GuestOnboarding";
 
 /* ══════════════════════════════════════════════════════════
-   JADRAN AI — Unified Platform v5
+   JADRAN — Turistički savjetnik v6
    3 Phases: Pre-Trip → Kiosk Stay → Post-Stay
    Monetization: Free/Premium tiers + Affiliate + Concierge
    ══════════════════════════════════════════════════════════ */
@@ -112,7 +112,7 @@ const T = {
   payFeatures1:{ hr:"AI Vodič — pitajte bilo što 24/7", de:"AI-Guide — fragen Sie alles 24/7", at:"AI-Guide — fragen Sie alles 24/7", en:"AI Guide — ask anything 24/7", it:"Guida AI — chiedi qualsiasi cosa 24/7", si:"AI Vodič — vprašajte karkoli 24/7", cz:"AI Průvodce — ptejte se na cokoliv 24/7", pl:"Przewodnik AI — pytaj o cokolwiek 24/7" },
   payFeatures2:{ hr:"6 Hidden Gems sa lokalnim savjetima", de:"6 Hidden Gems mit lokalen Tipps", at:"6 Hidden Gems mit lokalen Tipps", en:"6 Hidden Gems with local tips", it:"6 Gemme nascoste con consigli locali", si:"6 skritih draguljev z lokalnimi nasveti", cz:"6 skrytých perel s místními tipy", pl:"6 ukrytych pereł z lokalnymi wskazówkami" },
   payFeatures3:{ hr:"Personalizirane preporuke po vremenu i interesima", de:"Personalisierte Empfehlungen nach Wetter und Interessen", at:"Personalisierte Empfehlungen nach Wetter und Interessen", en:"Personalized recommendations by weather and interests", it:"Consigli personalizzati per meteo e interessi", si:"Prilagojene priporočila po vremenu in interesih", cz:"Personalizovaná doporučení podle počasí a zájmů", pl:"Spersonalizowane rekomendacje wg pogody i zainteresowań" },
-  payFeatures4:{ hr:"Concierge rezervacije aktivnosti", de:"Concierge-Buchung von Aktivitäten", at:"Concierge-Buchung von Aktivitäten", en:"Concierge activity bookings", it:"Prenotazione attività concierge", si:"Concierge rezervacije aktivnosti", cz:"Concierge rezervace aktivit", pl:"Rezerwacje aktywności concierge" },
+  payFeatures4:{ hr:"Rezervacije aktivnosti s vodičem", de:"Reiseberater-Buchung von Aktivitäten", at:"Reiseberater-Buchung von Aktivitäten", en:"Guided activity bookings", it:"Prenotazione attività con guida", si:"Rezervacije aktivnosti s vodičem", cz:"Rezervace aktivit s průvodcem", pl:"Rezerwacje aktywności z przewodnikiem" },
   payFeatures5:{ hr:"Loyalty bodovi i popusti za sljedeći put", de:"Treuepunkte und Rabatte für den nächsten Besuch", at:"Treuepunkte und Rabatte für den nächsten Besuch", en:"Loyalty points and discounts for next visit", it:"Punti fedeltà e sconti per la prossima visita", si:"Točke zvestobe in popusti za naslednjič", cz:"Věrnostní body a slevy na příští návštěvu", pl:"Punkty lojalnościowe i zniżki na następny pobyt" },
   payVia:     { hr:"Plaćanje putem Stripe · SIAL Consulting d.o.o.", de:"Zahlung über Stripe · SIAL Consulting d.o.o.", at:"Zahlung über Stripe · SIAL Consulting d.o.o.", en:"Payment via Stripe · SIAL Consulting d.o.o.", it:"Pagamento tramite Stripe · SIAL Consulting d.o.o.", si:"Plačilo prek Stripe · SIAL Consulting d.o.o.", cz:"Platba přes Stripe · SIAL Consulting d.o.o.", pl:"Płatność przez Stripe · SIAL Consulting d.o.o." },
   earlyBird:  { hr:"Early Bird 2027: 20% popusta pri rezervaciji prije 1. listopada.", de:"Early Bird 2027: 20% Rabatt bei Buchung vor 1. Oktober.", at:"Early Bird 2027: 20% Rabatt bei Buchung vor 1. Oktober.", en:"Early Bird 2027: 20% off when booking before October 1st.", it:"Early Bird 2027: 20% di sconto prenotando prima del 1° ottobre.", si:"Early Bird 2027: 20% popusta pri rezervaciji pred 1. oktobrom.", cz:"Early Bird 2027: 20% sleva při rezervaci před 1. říjnem.", pl:"Early Bird 2027: 20% zniżki przy rezerwacji przed 1 października." },
@@ -650,7 +650,7 @@ export default function JadranUnified() {
     setChatMsgs(p => [...p, { role: "user", text: msg }]);
     setChatLoading(true);
     try {
-      const sys = `Ti si JADRAN AI, 24/7 turistički concierge u Podstrani (blizu Splita), Hrvatska.
+      const sys = `Ti si lokalni turistički savjetnik za Podstranu i okolicu Splita (blizu Splita), Hrvatska.
 GOST: ${G.name}, ${G.country}, ${G.adults} odraslih + ${G.kids} djece (${G.kidsAges.join(',')} god). Interesi: ${G.interests.join(', ')}. ${G.car ? 'Ima auto.' : 'Nema auto.'}
 SMJEŠTAJ: ${G.accommodation}. Domaćin: ${G.host} (${G.hostPhone}).
 VRIJEME: ${weather.temp}°C ${weather.icon}, UV ${weather.uv}, more ${weather.sea}°C, zalazak ${weather.sunset}. Dan: ${kioskDay}/7.
@@ -1072,6 +1072,41 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             </div>
           </Card>}
         </div>
+
+        {/* ═══ LIVE ADRIATIC PULSE ═══ */}
+        <Card style={{ marginBottom: 20, padding: 0, overflow: "hidden", position: "relative" }}>
+          {/* Animated wave background */}
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, opacity: 0.12, pointerEvents: "none" }}>
+            <svg width="100%" height="60" viewBox="0 0 400 60" preserveAspectRatio="none" style={{ display: "block" }}>
+              <path fill={C.accent} style={{ animation: "seaPulse1 4s ease-in-out infinite" }} d="M0,30 C100,45 200,15 300,30 C350,37 375,25 400,30 L400,60 L0,60 Z" />
+              <path fill={C.accent} style={{ animation: "seaPulse2 5s ease-in-out infinite", opacity: 0.5 }} d="M0,35 C80,20 160,45 240,32 C320,20 360,40 400,35 L400,60 L0,60 Z" />
+            </svg>
+          </div>
+          <div style={{ padding: "18px 22px", position: "relative" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <div style={{ ...dm, display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.green, boxShadow: `0 0 8px ${C.green}`, animation: "pulse 2s infinite" }} />
+                <span style={{ fontSize: 10, color: C.mut, letterSpacing: 3, fontWeight: 600 }}>ADRIATIC PULSE</span>
+              </div>
+              <span style={{ ...dm, fontSize: 10, color: C.mut }}>{new Date().toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" })}</span>
+            </div>
+            <div style={{ display: "flex", gap: 0, justifyContent: "space-between" }}>
+              {[
+                { label: {hr:"MORE",de:"MEER",en:"SEA",it:"MARE"}[lang]||"MORE", value: `${weather.sea}°`, sub: "surface", icon: "🌊", color: C.accent },
+                { label: {hr:"ZRAK",de:"LUFT",en:"AIR",it:"ARIA"}[lang]||"ZRAK", value: `${weather.temp}°`, sub: weather.icon, icon: null, color: C.text },
+                { label: "UV", value: weather.uv, sub: weather.uv >= 8 ? "!" : weather.uv >= 5 ? "med" : "low", icon: null, color: weather.uv >= 8 ? C.red : weather.uv >= 5 ? C.warm : C.green },
+                { label: {hr:"VJETAR",de:"WIND",en:"WIND",it:"VENTO"}[lang]||"VJETAR", value: weather.wind?.split(" ")[1] || "—", sub: weather.wind?.split(" ")[0] || "", icon: null, color: C.mut },
+                { label: "🌅", value: weather.sunset || "—", sub: "", icon: null, color: C.warm },
+              ].map((m, i) => (
+                <div key={i} style={{ textAlign: "center", flex: 1 }}>
+                  <div style={{ ...dm, fontSize: 9, color: C.mut, letterSpacing: 1, marginBottom: 4 }}>{m.label}</div>
+                  <div style={{ fontSize: 20, fontWeight: 300, color: m.color, lineHeight: 1 }}>{m.icon || ""}{m.value}</div>
+                  <div style={{ ...dm, fontSize: 10, color: C.mut, marginTop: 2 }}>{m.sub}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
 
         {/* AI Tip — premium */}
         <Card glow style={{ background: `linear-gradient(135deg,${C.goDim},rgba(14,165,233,0.03))`, borderColor: "rgba(251,191,36,0.1)", marginBottom: 20, display: "flex", gap: 16, alignItems: "flex-start", cursor: premium ? "default" : "pointer", position: "relative", overflow: "hidden" }} onClick={() => !premium && setShowPaywall(true)}>
@@ -1511,15 +1546,20 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
 
       {/* Center content */}
       <div className="splash-wrap" style={{ textAlign:"center", position:"relative", zIndex:2 }}>
-        {/* Logo circle */}
+        {/* Logo */}
         <div style={{
-          width: 96, height: 96, borderRadius: "50%",
+          width: 96, height: 96, borderRadius: 28,
           background: "linear-gradient(135deg, #0ea5e9, #0284c7, #075985)",
           display: "grid", placeItems: "center",
           margin: "0 auto 28px",
-          fontSize: 40, fontWeight: 700, color: "#fff",
           animation: "splash-logo-reveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both, splash-glow 3s ease-in-out infinite",
-        }}>J</div>
+        }}>
+          <svg width="52" height="52" viewBox="0 0 32 32" fill="none">
+            <path d="M8 6C8 6 10 6 12 6C16 6 16 14 16 18C16 22 14 26 10 26" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M4 20C6 17 9 17 12 20C15 23 18 23 20 20C22 17 25 17 28 20" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+            <path d="M4 24C6 21 9 21 12 24C15 27 18 27 20 24C22 21 25 21 28 24" stroke="rgba(255,255,255,0.3)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+          </svg>
+        </div>
 
         {/* Brand name */}
         <div style={{
@@ -1560,7 +1600,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           fontSize: 10, color: "rgba(100,116,139,0.3)", letterSpacing: 2, textTransform: "uppercase",
           marginTop: 40,
           animation: "splash-tagline 0.6s ease 2.2s both",
-        }}>SIAL Consulting d.o.o. · AI-Powered Concierge</div>
+        }}>SIAL Consulting d.o.o. · jadran.ai</div>
       </div>
 
       {/* Skip button */}
@@ -1592,6 +1632,8 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         @keyframes scale-in { from { opacity:0; transform: scale(0.9); } to { opacity:1; transform: scale(1); } }
         @keyframes slide-up { from { opacity:0; transform: translateY(40px); } to { opacity:1; transform: translateY(0); } }
         @keyframes check-pop { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        @keyframes seaPulse1 { 0%,100% { d: path('M0,30 C100,45 200,15 300,30 C350,37 375,25 400,30 L400,60 L0,60 Z'); } 50% { d: path('M0,35 C100,20 200,42 300,28 C350,22 375,38 400,32 L400,60 L0,60 Z'); } }
+        @keyframes seaPulse2 { 0%,100% { d: path('M0,35 C80,20 160,45 240,32 C320,20 360,40 400,35 L400,60 L0,60 Z'); } 50% { d: path('M0,28 C80,42 160,22 240,38 C320,42 360,25 400,30 L400,60 L0,60 Z'); } }
 
         .jadran-ambient {
           position: fixed; inset: 0; pointer-events: none; z-index: 0;
@@ -1703,10 +1745,16 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         <div style={{ padding: "20px 0 16px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 14, background: `linear-gradient(135deg,${C.accent},#0284c7)`, display: "grid", placeItems: "center", fontSize: 18, fontWeight: 700, color: "#fff", boxShadow: "0 4px 16px rgba(14,165,233,0.25), inset 0 1px 0 rgba(255,255,255,0.2)" }}>J</div>
+              <div style={{ width: 42, height: 42, borderRadius: 14, background: `linear-gradient(135deg,${C.accent},#0284c7)`, display: "grid", placeItems: "center", boxShadow: "0 4px 16px rgba(14,165,233,0.25), inset 0 1px 0 rgba(255,255,255,0.2)" }}>
+              <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+                <path d="M8 6C8 6 10 6 12 6C16 6 16 14 16 18C16 22 14 26 10 26" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M4 20C6 17 9 17 12 20C15 23 18 23 20 20C22 17 25 17 28 20" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                <path d="M4 24C6 21 9 21 12 24C15 27 18 27 20 24C22 21 25 21 28 24" stroke="rgba(255,255,255,0.3)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+              </svg>
+            </div>
               <div>
                 <div style={{ ...hf, fontSize: 22, fontWeight: 400, letterSpacing: 3, textTransform: "uppercase", color: C.text, lineHeight: 1 }}>Jadran</div>
-                <div style={{ ...dm, fontSize: 9, color: C.accent, letterSpacing: 3, marginTop: 2, fontWeight: 500 }}>AI CONCIERGE</div>
+                <div style={{ ...dm, fontSize: 9, color: C.accent, letterSpacing: 3, marginTop: 2, fontWeight: 500 }}>SAVJETNIK</div>
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
@@ -1751,7 +1799,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         {phase === "post" && <div className="page-enter"><PostStay /></div>}
 
         <div style={{ ...dm, textAlign: "center", padding: "20px 0 28px", fontSize: 10, color: "rgba(100,116,139,0.3)", letterSpacing: 2, textTransform: "uppercase" }}>
-          JADRAN · SIAL Consulting d.o.o. · Podstrana, Hrvatska
+          JADRAN · SIAL Consulting d.o.o.
         </div>
       </div>
 

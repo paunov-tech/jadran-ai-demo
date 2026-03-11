@@ -43,14 +43,14 @@ const INTERESTS = [
 
 /* ── i18n ── */
 const TX = {
-  hr: { welcome:"Dobrodošli!", sub:"Vaš AI turistički vodič za savršen odmor na Jadranu", s1:"Tko ste vi?", s2:"Kada dolazite?", s3:"Što vas zanima?", name:"Ime (npr. Familie Weber)", country:"Zemlja", cin:"Dolazak", cout:"Odlazak", adults:"Odrasli", kids:"Djeca", next:"Dalje", back:"Natrag", go:"Započni avanturu!", pick2:"Odaberite barem 2 interesa", nights:"noći", saving:"Pripremamo vaš doživljaj..." },
-  en: { welcome:"Welcome!", sub:"Your AI travel concierge for the perfect Adriatic getaway", s1:"Who are you?", s2:"When are you visiting?", s3:"What interests you?", name:"Name (e.g. Familie Weber)", country:"Country", cin:"Check-in", cout:"Check-out", adults:"Adults", kids:"Children", next:"Next", back:"Back", go:"Start your adventure!", pick2:"Pick at least 2 interests", nights:"nights", saving:"Preparing your experience..." },
-  de: { welcome:"Willkommen!", sub:"Ihr AI-Reisebegleiter für den perfekten Adria-Urlaub", s1:"Wer sind Sie?", s2:"Wann kommen Sie?", s3:"Was interessiert Sie?", name:"Name (z.B. Familie Weber)", country:"Land", cin:"Anreise", cout:"Abreise", adults:"Erwachsene", kids:"Kinder", next:"Weiter", back:"Zurück", go:"Abenteuer starten!", pick2:"Mindestens 2 Interessen wählen", nights:"Nächte", saving:"Wir bereiten Ihr Erlebnis vor..." },
-  it: { welcome:"Benvenuti!", sub:"Il vostro concierge AI per la vacanza perfetta sull'Adriatico", s1:"Chi siete?", s2:"Quando arrivate?", s3:"Cosa vi interessa?", name:"Nome (es. Famiglia Weber)", country:"Paese", cin:"Arrivo", cout:"Partenza", adults:"Adulti", kids:"Bambini", next:"Avanti", back:"Indietro", go:"Inizia l'avventura!", pick2:"Almeno 2 interessi", nights:"notti", saving:"Prepariamo la vostra esperienza..." },
-  si: { welcome:"Dobrodošli!", sub:"Vaš AI turistični vodič za popoln oddih na Jadranu", s1:"Kdo ste?", s2:"Kdaj prihajate?", s3:"Kaj vas zanima?", name:"Ime (npr. Družina Weber)", country:"Država", cin:"Prihod", cout:"Odhod", adults:"Odrasli", kids:"Otroci", next:"Naprej", back:"Nazaj", go:"Začnite avanturo!", pick2:"Izberite vsaj 2", nights:"noči", saving:"Pripravljamo..." },
-  cz: { welcome:"Vítejte!", sub:"Váš AI průvodce pro dokonalou dovolenou", s1:"Kdo jste?", s2:"Kdy přijedete?", s3:"Co vás zajímá?", name:"Jméno", country:"Země", cin:"Příjezd", cout:"Odjezd", adults:"Dospělí", kids:"Děti", next:"Další", back:"Zpět", go:"Začněte!", pick2:"Vyberte 2+", nights:"nocí", saving:"Připravujeme..." },
-  pl: { welcome:"Witajcie!", sub:"Wasz AI przewodnik na idealny urlop", s1:"Kim jesteście?", s2:"Kiedy?", s3:"Co was interesuje?", name:"Imię", country:"Kraj", cin:"Przyjazd", cout:"Wyjazd", adults:"Dorośli", kids:"Dzieci", next:"Dalej", back:"Wstecz", go:"Start!", pick2:"Wybierz 2+", nights:"nocy", saving:"Przygotowujemy..." },
-  at: { welcome:"Willkommen!", sub:"Ihr AI-Reisebegleiter für den perfekten Adria-Urlaub", s1:"Wer sind Sie?", s2:"Wann kommen Sie?", s3:"Was interessiert Sie?", name:"Name (z.B. Familie Weber)", country:"Land", cin:"Anreise", cout:"Abreise", adults:"Erwachsene", kids:"Kinder", next:"Weiter", back:"Zurück", go:"Abenteuer starten!", pick2:"Mindestens 2 Interessen", nights:"Nächte", saving:"Wird vorbereitet..." },
+  hr: { welcome:"Dobrodošli!", sub:"Vaš osobni turistički savjetnik za Jadran", s1:"Tko ste vi?", s2:"Kada dolazite?", s3:"Što vas zanima?", name:"Ime (npr. Familie Weber)", country:"Zemlja", cin:"Dolazak", cout:"Odlazak", adults:"Odrasli", kids:"Djeca", next:"Dalje", back:"Natrag", go:"Započni avanturu!", pick2:"Odaberite barem 2 interesa", nights:"noći", saving:"Pripremamo vaš doživljaj..." },
+  en: { welcome:"Welcome!", sub:"Your personal guide to the perfect Adriatic getaway", s1:"Who are you?", s2:"When are you visiting?", s3:"What interests you?", name:"Name (e.g. Familie Weber)", country:"Country", cin:"Check-in", cout:"Check-out", adults:"Adults", kids:"Children", next:"Next", back:"Back", go:"Start your adventure!", pick2:"Pick at least 2 interests", nights:"nights", saving:"Preparing your experience..." },
+  de: { welcome:"Willkommen!", sub:"Ihr persönlicher Reiseberater für die Adria", s1:"Wer sind Sie?", s2:"Wann kommen Sie?", s3:"Was interessiert Sie?", name:"Name (z.B. Familie Weber)", country:"Land", cin:"Anreise", cout:"Abreise", adults:"Erwachsene", kids:"Kinder", next:"Weiter", back:"Zurück", go:"Abenteuer starten!", pick2:"Mindestens 2 Interessen wählen", nights:"Nächte", saving:"Wir bereiten Ihr Erlebnis vor..." },
+  it: { welcome:"Benvenuti!", sub:"La vostra guida personale per la vacanza perfetta sull'Adriatico", s1:"Chi siete?", s2:"Quando arrivate?", s3:"Cosa vi interessa?", name:"Nome (es. Famiglia Weber)", country:"Paese", cin:"Arrivo", cout:"Partenza", adults:"Adulti", kids:"Bambini", next:"Avanti", back:"Indietro", go:"Inizia l'avventura!", pick2:"Almeno 2 interessi", nights:"notti", saving:"Prepariamo la vostra esperienza..." },
+  si: { welcome:"Dobrodošli!", sub:"Vaš osebni turistični vodič za Jadran", s1:"Kdo ste?", s2:"Kdaj prihajate?", s3:"Kaj vas zanima?", name:"Ime (npr. Družina Weber)", country:"Država", cin:"Prihod", cout:"Odhod", adults:"Odrasli", kids:"Otroci", next:"Naprej", back:"Nazaj", go:"Začnite avanturo!", pick2:"Izberite vsaj 2", nights:"noči", saving:"Pripravljamo..." },
+  cz: { welcome:"Vítejte!", sub:"Váš osobní průvodce na dovolenou", s1:"Kdo jste?", s2:"Kdy přijedete?", s3:"Co vás zajímá?", name:"Jméno", country:"Země", cin:"Příjezd", cout:"Odjezd", adults:"Dospělí", kids:"Děti", next:"Další", back:"Zpět", go:"Začněte!", pick2:"Vyberte 2+", nights:"nocí", saving:"Připravujeme..." },
+  pl: { welcome:"Witajcie!", sub:"Wasz osobisty przewodnik na urlop", s1:"Kim jesteście?", s2:"Kiedy?", s3:"Co was interesuje?", name:"Imię", country:"Kraj", cin:"Przyjazd", cout:"Wyjazd", adults:"Dorośli", kids:"Dzieci", next:"Dalej", back:"Wstecz", go:"Start!", pick2:"Wybierz 2+", nights:"nocy", saving:"Przygotowujemy..." },
+  at: { welcome:"Willkommen!", sub:"Ihr persönlicher Reiseberater für die Adria", s1:"Wer sind Sie?", s2:"Wann kommen Sie?", s3:"Was interessiert Sie?", name:"Name (z.B. Familie Weber)", country:"Land", cin:"Anreise", cout:"Abreise", adults:"Erwachsene", kids:"Kinder", next:"Weiter", back:"Zurück", go:"Abenteuer starten!", pick2:"Mindestens 2 Interessen", nights:"Nächte", saving:"Wird vorbereitet..." },
 };
 
 function langFromCountry(c) { return { DE:"de",AT:"at",HR:"hr",IT:"it",SI:"si",CZ:"cz",PL:"pl" }[c] || "en"; }
@@ -161,7 +161,15 @@ export default function GuestOnboarding({ roomCode, onComplete }) {
           {/* Header */}
           <div style={{ textAlign:"center", marginBottom:24 }}>
             <div style={{ fontSize:28, fontWeight:800, color:"#fff", letterSpacing:"-0.02em", fontFamily:"'Outfit','DM Sans',system-ui,sans-serif", marginBottom:6 }}>
-              🌊 JADRAN<span style={{ fontWeight:300, opacity:0.5 }}>.ai</span>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center" }}>
+                  <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+                    <path d="M8 6C8 6 10 6 12 6C16 6 16 14 16 18C16 22 14 26 10 26" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d="M4 20C6 17 9 17 12 20C15 23 18 23 20 20C22 17 25 17 28 20" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                  </svg>
+                </div>
+                <span>JADRAN</span>
+              </div>
             </div>
             <div style={{ fontSize:20, fontWeight:700, color:"#7dd3fc", fontFamily:"'Outfit',sans-serif", marginBottom:4 }}>{t.welcome}</div>
             <div style={{ fontSize:12, color:"rgba(255,255,255,0.45)", lineHeight:1.4, fontFamily:"'Outfit',sans-serif" }}>{t.sub}</div>

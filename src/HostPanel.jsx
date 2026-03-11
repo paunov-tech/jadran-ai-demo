@@ -188,7 +188,7 @@ export default function HostPanel() {
               h2{margin-bottom:8px;} p{color:#666;font-size:14px;}</style></head>
               <body>
                 <h2>${qrModal.name}</h2>
-                <p>Skenirajte za AI concierge</p>
+                <p>Skenirajte za turistički savjetnik</p>
                 <img src="${qrSvg(`https://jadran.ai?room=${qrModal.roomCode}`, 300)}" width="300" />
                 <p style="margin-top:16px;font-family:monospace;font-size:12px;">jadran.ai?room=${qrModal.roomCode}</p>
                 <p style="color:#aaa;font-size:10px;margin-top:24px;">JADRAN AI · SIAL Consulting d.o.o.</p>
@@ -378,7 +378,7 @@ export default function HostPanel() {
 
         {/* Footer */}
         <div style={{ textAlign: "center", padding: "32px 0 20px", fontSize: 10, color: "rgba(255,255,255,0.15)" }}>
-          JADRAN AI Host Panel · SIAL Consulting d.o.o. · v1.0
+          JADRAN Host Panel · SIAL Consulting d.o.o.
         </div>
       </div>
 

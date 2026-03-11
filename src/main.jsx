@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client'
 // Route logic:
 // /host         → HostPanel (apartment management)
 // /ai           → Standalone AI (pay & use, campers, day-trippers)
-// ?room=XXXX    → Guest App (concierge for apartment guests)
+// ?room=XXXX    → Guest App (guide for apartment guests)
 // jadran.ai     → Landing Page (marketing + booking)
 const path = window.location.pathname;
 const hasRoom = new URLSearchParams(window.location.search).has("room");
@@ -44,7 +44,7 @@ const App = React.lazy(() =>
   : import('./LandingPage.jsx')
 );
 
-const labels = { host: "Host Panel", ai: "AI Concierge", app: "JADRAN AI", landing: "JADRAN AI" };
+const labels = { host: "Host Panel", ai: "Savjetnik", app: "JADRAN", landing: "JADRAN" };
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
