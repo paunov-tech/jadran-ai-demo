@@ -140,6 +140,12 @@ const T = {
   bookVia:    { hr:"Rezerviraj preko", de:"Buchen über", at:"Buchen über", en:"Book via", it:"Prenota tramite", si:"Rezerviraj prek", cz:"Rezervovat přes", pl:"Zarezerwuj przez" },
   familyPrice:{ hr:"Obitelj", de:"Familie", at:"Familie", en:"Family", it:"Famiglia", si:"Družina", cz:"Rodina", pl:"Rodzina" },
   revenue:    { hr:"PRIHOD", de:"UMSATZ", at:"UMSATZ", en:"REVENUE", it:"RICAVI", si:"PRIHODKI", cz:"PŘÍJMY", pl:"PRZYCHODY" },
+  // ─── Accommodation ───
+  findStay:   { hr:"PRONAĐI SMJEŠTAJ", de:"UNTERKUNFT FINDEN", at:"UNTERKUNFT FINDEN", en:"FIND ACCOMMODATION", it:"TROVA ALLOGGIO", si:"NAJDI NASTANITEV", cz:"NAJÍT UBYTOVÁNÍ", pl:"ZNAJDŹ NOCLEG" },
+  extendStay: { hr:"Produžite boravak?", de:"Aufenthalt verlängern?", at:"Aufenthalt verlängern?", en:"Extend your stay?", it:"Prolungare il soggiorno?", si:"Podaljšaj bivanje?", cz:"Prodloužit pobyt?", pl:"Przedłużyć pobyt?" },
+  planNext:   { hr:"Planirajte sljedeći odmor", de:"Planen Sie den nächsten Urlaub", at:"Planen Sie den nächsten Urlaub", en:"Plan your next vacation", it:"Pianifica la prossima vacanza", si:"Načrtujte naslednje počitnice", cz:"Naplánujte další dovolenou", pl:"Zaplanuj następne wakacje" },
+  bestDeals:  { hr:"Najbolje ponude", de:"Beste Angebote", at:"Beste Angebote", en:"Best deals", it:"Migliori offerte", si:"Najboljše ponudbe", cz:"Nejlepší nabídky", pl:"Najlepsze oferty" },
+  browseOn:   { hr:"Pogledaj na Booking.com →", de:"Auf Booking.com ansehen →", at:"Auf Booking.com ansehen →", en:"Browse on Booking.com →", it:"Cerca su Booking.com →", si:"Poglej na Booking.com →", cz:"Prohlédnout na Booking.com →", pl:"Zobacz na Booking.com →" },
   night:      { hr:"Laku noć", de:"Gute Nacht", at:"Gute Nacht", en:"Good night", it:"Buonanotte", si:"Lahko noč", cz:"Dobrou noc", pl:"Dobranoc" },
 };
 
@@ -293,6 +299,38 @@ const GEMS = [
 
 const GYG = (id) => `https://www.getyourguide.com/${id}/?partner_id=9OEGOYI&utm_medium=local_partners`;
 const VIA = (id) => `https://www.viator.com/tours/${id}?pid=P00292197&mcid=42383&medium=link`;
+const BKG = (dest, params="") => `https://www.booking.com/searchresults.html?aid=101704203&dest_type=city&dest_id=${dest}${params}`;
+
+const ACCOMMODATION = [
+  { region: "split", emoji: "🏖️",
+    name: { hr:"Podstrana & Split", de:"Podstrana & Split", en:"Podstrana & Split", it:"Podstrana & Spalato", si:"Podstrana & Split", cz:"Podstrana & Split", pl:"Podstrana & Split" },
+    note: { hr:"Blizu centra, plaže na dohvat ruke", de:"Stadtnah, Strände in Reichweite", en:"Near center, beaches within reach", it:"Vicino al centro, spiagge a portata", si:"Blizu centra, plaže na dosegu", cz:"Blízko centra, pláže na dosah", pl:"Blisko centrum, plaże w zasięgu" },
+    link: BKG("-92163", "&checkin=&checkout=&group_adults=2&no_rooms=1&sb_travel_purpose=leisure") },
+  { region: "split", emoji: "🏝️",
+    name: { hr:"Makarska rivijera", de:"Makarska Riviera", en:"Makarska Riviera", it:"Riviera di Makarska", si:"Makarska riviera", cz:"Makarská riviéra", pl:"Riwiera Makarska" },
+    note: { hr:"Najljepše plaže Dalmacije", de:"Die schönsten Strände Dalmatiens", en:"Dalmatia's most beautiful beaches", it:"Le spiagge più belle della Dalmazia", si:"Najlepše plaže Dalmacije", cz:"Nejkrásnější pláže Dalmácie", pl:"Najpiękniejsze plaże Dalmacji" },
+    link: BKG("-89007") },
+  { region: "split", emoji: "⛵",
+    name: { hr:"Hvar", de:"Hvar", en:"Hvar", it:"Hvar", si:"Hvar", cz:"Hvar", pl:"Hvar" },
+    note: { hr:"Glamur + lavanda + noćni život", de:"Glamour + Lavendel + Nachtleben", en:"Glamour + lavender + nightlife", it:"Glamour + lavanda + vita notturna", si:"Glamur + sivka + nočno življenje", cz:"Glamour + levandule + noční život", pl:"Glamour + lawenda + życie nocne" },
+    link: BKG("-89750") },
+  { region: "istria", emoji: "🫒",
+    name: { hr:"Rovinj", de:"Rovinj", en:"Rovinj", it:"Rovigno", si:"Rovinj", cz:"Rovinj", pl:"Rovinj" },
+    note: { hr:"Najromantičniji grad Istre", de:"Die romantischste Stadt Istriens", en:"Istria's most romantic town", it:"La città più romantica dell'Istria", si:"Najbolj romantično mesto Istre", cz:"Nejromantičtější město Istrie", pl:"Najbardziej romantyczne miasto Istrii" },
+    link: BKG("-91498") },
+  { region: "istria", emoji: "🏟️",
+    name: { hr:"Pula & Medulin", de:"Pula & Medulin", en:"Pula & Medulin", it:"Pola & Medulin", si:"Pula & Medulin", cz:"Pula & Medulin", pl:"Pula & Medulin" },
+    note: { hr:"Rimska arena + obiteljske plaže", de:"Römische Arena + Familienstrände", en:"Roman arena + family beaches", it:"Arena romana + spiagge per famiglie", si:"Rimska arena + družinske plaže", cz:"Římská aréna + rodinné pláže", pl:"Rzymska arena + plaże rodzinne" },
+    link: BKG("-91614") },
+  { region: "kvarner", emoji: "⚓",
+    name: { hr:"Opatija", de:"Opatija", en:"Opatija", it:"Abbazia", si:"Opatija", cz:"Opatija", pl:"Opatija" },
+    note: { hr:"Biser Kvarnera, elegancija + šetnice", de:"Perle der Kvarner, Eleganz + Promenaden", en:"Pearl of Kvarner, elegance + promenades", it:"Perla del Quarnero, eleganza + lungomare", si:"Biser Kvarnerja, eleganca + sprehajališča", cz:"Perla Kvarneru, elegance + promenády", pl:"Perła Kwarneru, elegancja + promenady" },
+    link: BKG("-91382") },
+  { region: "kvarner", emoji: "🏝️",
+    name: { hr:"Otok Krk", de:"Insel Krk", en:"Krk Island", it:"Isola di Krk", si:"Otok Krk", cz:"Ostrov Krk", pl:"Wyspa Krk" },
+    note: { hr:"Zlatni otok — most s kopnom", de:"Goldene Insel — Brücke zum Festland", en:"Golden island — bridge to mainland", it:"Isola d'oro — ponte con la terraferma", si:"Zlati otok — most s kopnim", cz:"Zlatý ostrov — most na pevninu", pl:"Złota wyspa — most z lądem" },
+    link: BKG("-91127") },
+];
 
 const EXPERIENCES = [
   // ═══ SREDNJA DALMACIJA (Split, Omiš, Otoci) ═══
@@ -758,6 +796,27 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             ))}
           </Card>
         </div>
+
+        {/* Accommodation — Booking.com Affiliate */}
+        <SectionLabel extra="Booking.com">{t("findStay",lang)}</SectionLabel>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 12, marginBottom: 24 }}>
+          {ACCOMMODATION.map((a, i) => (
+            <a key={i} href={a.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
+              <Card style={{ cursor: "pointer", padding: 16, transition: "all 0.3s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(0,85,166,0.3)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.transform = ""; }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <span style={{ fontSize: 28 }}>{a.emoji}</span>
+                  <Badge c="accent">{a.region.toUpperCase()}</Badge>
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 400, marginBottom: 4 }}>{a.name[lang] || a.name.hr}</div>
+                <div style={{ ...dm, fontSize: 12, color: C.mut, lineHeight: 1.5 }}>{a.note[lang] || a.note.hr}</div>
+                <div style={{ ...dm, fontSize: 11, color: "#0055A6", marginTop: 8, fontWeight: 600 }}>{t("browseOn",lang)}</div>
+              </Card>
+            </a>
+          ))}
+        </div>
+
         <div style={{ textAlign: "center", padding: "16px 0" }}>
           <Btn primary onClick={() => setSubScreen("transit")}>{t("simArrival",lang)}</Btn>
         </div>
@@ -933,6 +992,18 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           ))}
         </div>
 
+        {/* Extend Stay — Booking.com */}
+        <Card style={{ marginBottom: 16, border: "1px dashed rgba(0,85,166,0.2)", background: "rgba(0,85,166,0.03)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 400 }}>🏨 {t("extendStay",lang)}</div>
+              <div style={{ ...dm, fontSize: 12, color: C.mut, marginTop: 2 }}>{t("bestDeals",lang)} — Booking.com</div>
+            </div>
+            <a href={BKG("-92163", "&checkin=&checkout=&group_adults=2&no_rooms=1")} target="_blank" rel="noopener noreferrer"
+              style={{ padding: "10px 18px", background: "linear-gradient(135deg,#003580,#0055A6)", borderRadius: 12, color: "#fff", fontSize: 13, fontFamily: "'Cormorant Garamond',Georgia,serif", fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap" }}>{t("browseOn",lang)}</a>
+          </div>
+        </Card>
+
         <div style={{ textAlign: "center", padding: "8px 0 16px" }}>
           <Btn onClick={() => { setPhase("post"); setSubScreen("summary"); }}>{t("checkOut",lang)}</Btn>
         </div>
@@ -1100,13 +1171,25 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         <Btn primary>{t("shareCode",lang)}</Btn>
       </Card>
 
-      {/* Rebooking */}
+      {/* Rebooking — Booking.com Affiliate */}
       <Card style={{ textAlign: "center", padding: 28, marginBottom: 20 }}>
         <div style={{ fontSize: 22, fontWeight: 400, marginBottom: 6 }}>{t("nextYear",lang)}</div>
         <div style={{ ...dm, fontSize: 14, color: C.mut, marginBottom: 16, lineHeight: 1.6 }}>
-          {t("earlyBird",lang)}
+          {t("planNext",lang)}
         </div>
-        <Btn primary>{t("planSummer",lang)}</Btn>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(140px,1fr))", gap: 10, marginBottom: 16, textAlign: "left" }}>
+          {ACCOMMODATION.slice(0, 4).map((a, i) => (
+            <a key={i} href={a.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
+              <div style={{ padding: "10px 12px", background: "rgba(0,85,166,0.04)", border: `1px solid rgba(0,85,166,0.1)`, borderRadius: 12, cursor: "pointer", transition: "all 0.3s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(0,85,166,0.3)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(0,85,166,0.1)"; }}>
+                <span style={{ fontSize: 20 }}>{a.emoji}</span>
+                <div style={{ ...dm, fontSize: 12, fontWeight: 500, marginTop: 4 }}>{a.name[lang] || a.name.hr}</div>
+              </div>
+            </a>
+          ))}
+        </div>
+        <a href={BKG("-92163")} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "14px 28px", background: "linear-gradient(135deg,#003580,#0055A6)", borderRadius: 14, color: "#fff", fontSize: 16, fontFamily: "'Cormorant Garamond',Georgia,serif", fontWeight: 600, textDecoration: "none", boxShadow: "0 4px 16px rgba(0,53,128,0.3)" }}>{t("browseOn",lang)}</a>
       </Card>
 
       {/* Monetization breakdown (admin) */}
