@@ -5,17 +5,17 @@
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect } from "react";
 
-const BKG = (dest, params="") => `https://www.booking.com/searchresults.html?aid=101704203&dest_type=city&dest_id=${dest}${params}`;
+const BKG = (city, params="") => `https://www.booking.com/searchresults.html?aid=101704203&ss=${encodeURIComponent(city)}&lang=en${params}`;
 
 const DESTINATIONS = [
-  { name: "Split & Podstrana", emoji: "🏛️", desc: "Dioklecijanova palača, Bačvice, Marjan", link: BKG("-92163"), region: "Dalmacija" },
-  { name: "Makarska rivijera", emoji: "🏖️", desc: "Najljepše plaže Jadrana", link: BKG("-89007"), region: "Dalmacija" },
-  { name: "Hvar", emoji: "🌿", desc: "Lavanda, glamur, noćni život", link: BKG("-89750"), region: "Otoci" },
-  { name: "Rovinj", emoji: "⛪", desc: "Najromantičniji grad Istre", link: BKG("-91498"), region: "Istra" },
-  { name: "Pula", emoji: "🏟️", desc: "Rimska arena, obiteljske plaže", link: BKG("-91614"), region: "Istra" },
-  { name: "Opatija", emoji: "⚓", desc: "Elegancija Kvarnera", link: BKG("-91382"), region: "Kvarner" },
-  { name: "Dubrovnik", emoji: "🏰", desc: "Biser Jadrana, gradske zidine", link: BKG("-89043"), region: "Dalmacija" },
-  { name: "Zadar", emoji: "🌅", desc: "Morske orgulje, najljepši zalazak", link: BKG("-92233"), region: "Dalmacija" },
+  { name: "Split & Podstrana", emoji: "🏛️", desc: "Dioklecijanova palača, Bačvice, Marjan", link: BKG("Split, Croatia"), region: "Dalmacija" },
+  { name: "Makarska rivijera", emoji: "🏖️", desc: "Najljepše plaže Jadrana", link: BKG("Makarska, Croatia"), region: "Dalmacija" },
+  { name: "Hvar", emoji: "🌿", desc: "Lavanda, glamur, noćni život", link: BKG("Hvar, Croatia"), region: "Otoci" },
+  { name: "Rovinj", emoji: "⛪", desc: "Najromantičniji grad Istre", link: BKG("Rovinj, Croatia"), region: "Istra" },
+  { name: "Pula", emoji: "🏟️", desc: "Rimska arena, obiteljske plaže", link: BKG("Pula, Croatia"), region: "Istra" },
+  { name: "Opatija", emoji: "⚓", desc: "Elegancija Kvarnera", link: BKG("Opatija, Croatia"), region: "Kvarner" },
+  { name: "Dubrovnik", emoji: "🏰", desc: "Biser Jadrana, gradske zidine", link: BKG("Dubrovnik, Croatia"), region: "Dalmacija" },
+  { name: "Zadar", emoji: "🌅", desc: "Morske orgulje, najljepši zalazak", link: BKG("Zadar, Croatia"), region: "Dalmacija" },
 ];
 
 const STEPS = [
