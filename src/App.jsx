@@ -85,6 +85,29 @@ const T = {
   morning:    { hr:"Dobro jutro", de:"Guten Morgen", at:"Guten Morgen", en:"Good morning", it:"Buongiorno", si:"Dobro jutro", cz:"Dobré ráno", pl:"Dzień dobry" },
   midday:     { hr:"Dobar dan", de:"Guten Tag", at:"Grüß Gott", en:"Good afternoon", it:"Buon pomeriggio", si:"Dober dan", cz:"Dobré odpoledne", pl:"Dzień dobry" },
   evening:    { hr:"Dobra večer", de:"Guten Abend", at:"Guten Abend", en:"Good evening", it:"Buonasera", si:"Dober večer", cz:"Dobrý večer", pl:"Dobry wieczór" },
+
+  // ─── Missing i18n keys (bugfix) ───
+  booked:     { hr:"Rezervirano", de:"Gebucht", at:"Gebucht", en:"Booked", it:"Prenotato", si:"Rezervirano", cz:"Zarezervováno", pl:"Zarezerwowano" },
+  daysToGo:   { hr:"dana do odmora", de:"Tage bis zum Urlaub", at:"Tage bis zum Urlaub", en:"days until vacation", it:"giorni alla vacanza", si:"dni do počitnic", cz:"dní do dovolené", pl:"dni do wakacji" },
+  arrived:    { hr:"Stigli! → Pokreni Kiosk", de:"Angekommen! → Kiosk starten", at:"Angekommen! → Kiosk starten", en:"Arrived! → Start Kiosk", it:"Arrivati! → Avvia Kiosk", si:"Prispeli! → Zaženi Kiosk", cz:"Dorazili! → Spustit Kiosk", pl:"Przyjechaliśmy! → Uruchom Kiosk" },
+  points:     { hr:"bodova", de:"Punkte", at:"Punkte", en:"points", it:"punti", si:"točk", cz:"bodů", pl:"punktów" },
+  more:       { hr:"još", de:"Noch", at:"Noch", en:"more", it:"ancora", si:"še", cz:"ještě", pl:"jeszcze" },
+  loyaltyTier:{ hr:"Morski val", de:"Meereswelle", at:"Meereswelle", en:"Sea Wave", it:"Onda marina", si:"Morski val", cz:"Mořská vlna", pl:"Fala morska" },
+  daysStay:   { hr:"dana", de:"Tage", at:"Tage", en:"days", it:"giorni", si:"dni", cz:"dní", pl:"dni" },
+  activitiesDone:{ hr:"aktivnosti", de:"Aktivitäten", at:"Aktivitäten", en:"activities", it:"attività", si:"aktivnosti", cz:"aktivit", pl:"aktywności" },
+  unforgettable:{ hr:"Nezaboravno", de:"Unvergesslich", at:"Unvergesslich", en:"Unforgettable", it:"Indimenticabile", si:"Nepozabno", cz:"Nezapomenutelné", pl:"Niezapomniane" },
+  bothDiscount:{ hr:"Oboje dobivate popust na sljedeću rezervaciju", de:"Beide erhalten Rabatt auf die nächste Buchung", at:"Beide erhalten Rabatt auf die nächste Buchung", en:"Both of you get a discount on next booking", it:"Entrambi ottenete uno sconto sulla prossima prenotazione", si:"Oba dobita popust na naslednjo rezervacijo", cz:"Oba získáte slevu na příští rezervaci", pl:"Oboje otrzymujecie zniżkę na następną rezerwację" },
+  askDalmatia:{ hr:"Pitajte bilo što o Dalmaciji", de:"Fragen Sie alles über Dalmatien", at:"Fragen Sie alles über Dalmatien", en:"Ask anything about Dalmatia", it:"Chiedi qualsiasi cosa sulla Dalmazia", si:"Vprašajte karkoli o Dalmaciji", cz:"Zeptejte se na cokoliv o Dalmácii", pl:"Zapytaj o cokolwiek o Dalmacji" },
+  localTip:   { hr:"Lokalni znaju — turisti ne", de:"Einheimische wissen — Touristen nicht", at:"Einheimische wissen — Touristen nicht", en:"Locals know — tourists don't", it:"I locali sanno — i turisti no", si:"Domačini vedo — turisti ne", cz:"Místní ví — turisté ne", pl:"Lokalni wiedzą — turyści nie" },
+  checkOut:   { hr:"Simulacija: Check-out →", de:"Simulation: Check-out →", at:"Simulation: Check-out →", en:"Simulation: Check-out →", it:"Simulazione: Check-out →", si:"Simulacija: Check-out →", cz:"Simulace: Check-out →", pl:"Symulacja: Check-out →" },
+  chatPrompt1:{ hr:"Što danas s djecom?", de:"Was heute mit Kindern?", at:"Was heute mit Kindern?", en:"What to do with kids today?", it:"Cosa fare con i bambini oggi?", si:"Kaj danes z otroki?", cz:"Co dnes s dětmi?", pl:"Co dziś z dziećmi?" },
+  chatPrompt2:{ hr:"Tajne plaže?", de:"Geheime Strände?", at:"Geheime Strände?", en:"Secret beaches?", it:"Spiagge segrete?", si:"Skrite plaže?", cz:"Tajné pláže?", pl:"Tajne plaże?" },
+  chatPrompt3:{ hr:"Preporuka za večeru?", de:"Abendessen-Tipp?", at:"Abendessen-Tipp?", en:"Dinner recommendation?", it:"Consiglio per cena?", si:"Priporočilo za večerjo?", cz:"Tip na večeři?", pl:"Polecenie na kolację?" },
+  chatPrompt4:{ hr:"Gdje parkirati u Splitu?", de:"Wo parken in Split?", at:"Wo parken in Split?", en:"Where to park in Split?", it:"Dove parcheggiare a Spalato?", si:"Kje parkirati v Splitu?", cz:"Kde parkovat ve Splitu?", pl:"Gdzie parkować w Splicie?" },
+  viewOn:     { hr:"Pogledaj na", de:"Ansehen auf", at:"Ansehen auf", en:"View on", it:"Vedi su", si:"Poglej na", cz:"Zobrazit na", pl:"Zobacz na" },
+  bookVia:    { hr:"Rezerviraj preko", de:"Buchen über", at:"Buchen über", en:"Book via", it:"Prenota tramite", si:"Rezerviraj prek", cz:"Rezervovat přes", pl:"Zarezerwuj przez" },
+  familyPrice:{ hr:"Obitelj", de:"Familie", at:"Familie", en:"Family", it:"Famiglia", si:"Družina", cz:"Rodina", pl:"Rodzina" },
+  revenue:    { hr:"PRIHOD", de:"UMSATZ", at:"UMSATZ", en:"REVENUE", it:"RICAVI", si:"PRIHODKI", cz:"PŘÍJMY", pl:"PRZYCHODY" },
   night:      { hr:"Laku noć", de:"Gute Nacht", at:"Gute Nacht", en:"Good night", it:"Buonanotte", si:"Lahko noč", cz:"Dobrou noc", pl:"Dobranoc" },
 };
 
@@ -148,7 +171,7 @@ const GUEST = {
   budget: 1200, spent: 345, email: "weber@email.de"
 };
 
-const W = { icon: "☀️", temp: 31, sea: 25, uv: 8, wind: "Z 8 km/h", sunset: "20:47", humidity: 45 };
+const W_DEFAULT = { icon: "☀️", temp: 28, sea: 24, uv: 7, wind: "Z 8 km/h", sunset: "20:30", humidity: 50 };
 
 const FORECAST = [
   { d: "Pon", icon: "☀️", h: 31, l: 22 }, { d: "Uto", icon: "⛅", h: 28, l: 21 },
@@ -170,7 +193,7 @@ const PRACTICAL = {
     { n: "Zlatni Rat (Brač)", d: "Ferry", note: "Ikonska · Ferry 7:30, 9:30, 12:00", type: "🏖️", affiliate: true, link: "jadrolinija.hr", mapKey: "zlatni_rat" },
   ]},
   sun: { icon: "☀️", title: "Sunce & UV", items: [
-    { n: `UV Index: ${W.uv} (VISOK)`, note: "SPF 50+ obavezno između 11-16h!", warn: true },
+    { n: `UV Index: ${W_DEFAULT.uv} (VISOK)`, note: "SPF 50+ obavezno između 11-16h!", warn: true, uvDynamic: true },
     { n: "Hidracija", note: "Min. 3L vode pri 31°C · Djeca češće!" },
     { n: "Ljekarna Podstrana", d: "300m", note: "Do 20h · SPF, After Sun, Panthenol" },
   ]},
@@ -203,18 +226,24 @@ const GEMS = [
 ];
 
 const EXPERIENCES = [
-  { id: 1, name: "Kajak Pakleni otoci", emoji: "🛶", price: 55, ourPrice: 65, dur: "4h", rating: 4.9, spots: 3, cat: "adventure" },
-  { id: 2, name: "Dalmatinska kuhinja", emoji: "👨‍🍳", price: 50, ourPrice: 65, dur: "4h", rating: 4.8, spots: 6, cat: "gastro" },
-  { id: 3, name: "Dioklecijanova palača", emoji: "🏛️", price: 25, ourPrice: 35, dur: "2h", rating: 4.7, spots: 8, cat: "culture" },
-  { id: 4, name: "Rafting Cetina", emoji: "🚣", price: 45, ourPrice: 55, dur: "3h", rating: 4.9, spots: 4, cat: "adventure" },
-  { id: 5, name: "Sunset Sailing", emoji: "⛵", price: 95, ourPrice: 120, dur: "4h", rating: 5.0, spots: 2, cat: "premium" },
-  { id: 6, name: "Wine Tasting Kaštela", emoji: "🍷", price: 35, ourPrice: 45, dur: "3h", rating: 4.8, spots: 4, cat: "gastro" },
+  { id: 1, name: "Kajak Pakleni otoci", emoji: "🛶", price: 55, dur: "4h", rating: 4.9, cat: "adventure",
+    gyg: "https://www.getyourguide.com/split-l440/sea-kayak-tour-tc24/?partner_id=JADRANAI", viator: "https://www.viator.com/Split-tours/Kayaking/d4217-g6-c47" },
+  { id: 2, name: "Dalmatinska kuhinja", emoji: "👨‍🍳", price: 60, dur: "4h", rating: 4.8, cat: "gastro",
+    gyg: "https://www.getyourguide.com/split-l440/cooking-class-tc171/?partner_id=JADRANAI", viator: "https://www.viator.com/Split-tours/Cooking-Classes/d4217-g6-c63" },
+  { id: 3, name: "Dioklecijanova palača", emoji: "🏛️", price: 25, dur: "2h", rating: 4.7, cat: "culture",
+    gyg: "https://www.getyourguide.com/split-l440/walking-tour-tc1/?partner_id=JADRANAI", viator: "https://www.viator.com/Split-tours/Walking-Tours/d4217-g6-c53" },
+  { id: 4, name: "Rafting Cetina", emoji: "🚣", price: 45, dur: "3h", rating: 4.9, cat: "adventure",
+    gyg: "https://www.getyourguide.com/split-l440/rafting-tc31/?partner_id=JADRANAI", viator: "https://www.viator.com/Split-tours/White-Water-Rafting/d4217-g6-c48" },
+  { id: 5, name: "Sunset Sailing", emoji: "⛵", price: 95, dur: "4h", rating: 5.0, cat: "premium",
+    gyg: "https://www.getyourguide.com/split-l440/sailing-tc25/?partner_id=JADRANAI", viator: "https://www.viator.com/Split-tours/Sailing-Trips/d4217-g6-c60" },
+  { id: 6, name: "Wine Tasting Kaštela", emoji: "🍷", price: 40, dur: "3h", rating: 4.8, cat: "gastro",
+    gyg: "https://www.getyourguide.com/split-l440/wine-tasting-tc26/?partner_id=JADRANAI", viator: "https://www.viator.com/Split-tours/Wine-Tasting/d4217-g6-c54" },
 ];
 
 const BUNDLES = [
-  { name: "Romantični bijeg", emoji: "💑", includes: ["Sunset Sailing", "Spa za dvoje", "Večera"], price: 280, orig: 345 },
-  { name: "Obiteljska avantura", emoji: "👨‍👩‍👧‍👦", includes: ["Rafting Cetina", "Kajak tura", "Zlatni Rat izlet"], price: 160, orig: 195 },
-  { name: "Gastro otkriće", emoji: "🍽️", includes: ["Wine Tasting", "Cooking Class", "Konoba večera"], price: 125, orig: 145 },
+  { name: "Romantični bijeg", emoji: "💑", includes: ["Sunset Sailing", "Wine Tasting"], tip: "Dodajte večeru u konoba — pitajte AI za preporuku!" },
+  { name: "Obiteljska avantura", emoji: "👨‍👩‍👧‍👦", includes: ["Rafting Cetina", "Kajak Pakleni otoci"], tip: "Kombinacija za adrenalin! Djeca 8+ mogu na rafting." },
+  { name: "Gastro otkriće", emoji: "🍽️", includes: ["Wine Tasting Kaštela", "Dalmatinska kuhinja"], tip: "Savršen dan za ljubitelje hrane i vina!" },
 ];
 
 const LOYALTY = { points: 345, tier: "Morski val", next: "Dalmatinac", nextPts: 500, code: "WEBER2026" };
@@ -274,6 +303,21 @@ export default function JadranUnified() {
     updateGuest(roomCode.current, { lang, phase, subScreen, premium, booked: [...booked] });
   }, [lang, phase, subScreen, premium, booked]);
 
+
+  // ─── WEATHER: Fetch real data via Gemini grounding ───
+  const [weather, setWeather] = useState(W_DEFAULT);
+  useEffect(() => {
+    fetch("/api/gemini", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: "Current weather in Podstrana, Split, Croatia right now. Sea temperature, UV index, sunset time today.", mode: "weather" }),
+    }).then(r => r.json()).then(data => {
+      try {
+        const clean = data.text.replace(/```json|```/g, "").trim();
+        const w = JSON.parse(clean);
+        if (w.temp) setWeather({ icon: w.icon || "☀️", temp: w.temp, sea: w.sea || 24, uv: w.uv || 7, wind: w.wind || "N/A", sunset: w.sunset || "20:30", humidity: w.humidity || 50 });
+      } catch { /* keep default */ }
+    }).catch(() => { /* keep default */ });
+  }, []);
   // ─── ADMIN: Secret unlock for testing (?unlock=sial) ───
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -373,7 +417,7 @@ export default function JadranUnified() {
       const res = await fetch('/api/book', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          activityName: exp.name, price: exp.ourPrice,
+          activityName: exp.name, price: exp.price,
           quantity: totalPersons, roomCode: roomCode.current,
           guestName: GUEST.name, lang,
         }),
@@ -413,7 +457,7 @@ export default function JadranUnified() {
       const sys = `Ti si JADRAN AI, 24/7 turistički concierge u Podstrani (blizu Splita), Hrvatska.
 GOST: ${GUEST.name}, ${GUEST.country}, ${GUEST.adults} odraslih + ${GUEST.kids} djece (${GUEST.kidsAges.join(',')} god). Interesi: ${GUEST.interests.join(', ')}. ${GUEST.car ? 'Ima auto.' : 'Nema auto.'}
 SMJEŠTAJ: ${GUEST.accommodation}. Domaćin: ${GUEST.host} (${GUEST.hostPhone}).
-VRIJEME: ${W.temp}°C ${W.icon}, UV ${W.uv}, more ${W.sea}°C, zalazak ${W.sunset}. Dan: ${kioskDay}/7.
+VRIJEME: ${weather.temp}°C ${weather.icon}, UV ${weather.uv}, more ${weather.sea}°C, zalazak ${weather.sunset}. Dan: ${kioskDay}/7.
 HIDDEN GEMS: ${GEMS.map(g => g.name).join(', ')}.
 Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang==="it"?"Italiano":lang==="si"?"Slovenščina":lang==="cz"?"Čeština":lang==="pl"?"Polski":"Hrvatski"}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i udaljenostima. Emoji.`;
       const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -567,7 +611,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
     if (subScreen === "pretrip") return (
       <>
         <div style={{ padding: "24px 0 8px" }}>
-          <div style={{ fontSize: 30, fontWeight: 400 }}>7 Tage bis zum Urlaub ☀️</div>
+          <div style={{ fontSize: 30, fontWeight: 400 }}>7 {t("daysToGo",lang)} ☀️</div>
           <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>12.–19. Juli 2026 · {GUEST.accommodation}</div>
         </div>
         <SectionLabel>WETTERVORHERSAGE</SectionLabel>
@@ -639,7 +683,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           </Card>
         </div>
         <div style={{ textAlign: "center" }}>
-          <Btn primary onClick={() => { setPhase("kiosk"); setSubScreen("home"); }}>Angekommen! → Kiosk starten</Btn>
+          <Btn primary onClick={() => { setPhase("kiosk"); setSubScreen("home"); }}>{t("arrived",lang)}</Btn>
         </div>
       </>
     );
@@ -652,17 +696,36 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
     const greetKey = hour < 6 ? "night" : hour < 12 ? "morning" : hour < 18 ? "midday" : hour < 22 ? "evening" : "night";
     const greeting = t(greetKey, lang);
     const tipIcon = hour < 6 ? "🌙" : hour < 12 ? "☕" : hour < 18 ? "🏖️" : hour < 22 ? "🍷" : "🌙";
-    const tip = hour < 6 ? "Morgen sonnig. Alarm für 8h empfohlen. WiFi: VillaMarija-5G / jadran2026."
-      : hour < 12 ? "Perfekt für Strand Kašjuni — vor 10h kommen. Pekara Bobis (250m) hat frischen Burek ab 6h!"
-      : hour < 18 ? `UV ${W.uv} — Schatten suchen bis 16h! Dioklecijanova Palača oder Konzum Einkauf ideal.`
-      : hour < 22 ? `Sonnenuntergang ${W.sunset}. Konoba Stari Mlin (15min) — rufen Sie einen Tag vorher an!`
-      : "Gute Nacht. Morgen sonnig, Meer 25°C.";
+    const tips = {
+      hr: hour < 6 ? "Sutra sunčano. Alarm za 8h. WiFi: VillaMarija-5G / jadran2026."
+        : hour < 12 ? "Savršeno za plažu Kašjuni — dođite prije 10h. Pekara Bobis (250m) ima burek od 6h!"
+        : hour < 18 ? `UV ${weather.uv} — tražite hlad do 16h! Dioklecijanova palača ili Konzum idealni.`
+        : hour < 22 ? `Zalazak sunca ${weather.sunset}. Konoba Stari Mlin (15min) — nazovite dan ranije!`
+        : "Laku noć. Sutra sunčano, more 25°C.",
+      de: hour < 6 ? "Morgen sonnig. Alarm für 8h empfohlen. WiFi: VillaMarija-5G / jadran2026."
+        : hour < 12 ? "Perfekt für Strand Kašjuni — vor 10h kommen. Pekara Bobis (250m) hat frischen Burek ab 6h!"
+        : hour < 18 ? `UV ${weather.uv} — Schatten suchen bis 16h! Dioklecijanova Palača oder Konzum ideal.`
+        : hour < 22 ? `Sonnenuntergang ${weather.sunset}. Konoba Stari Mlin (15min) — rufen Sie einen Tag vorher an!`
+        : "Gute Nacht. Morgen sonnig, Meer 25°C.",
+      en: hour < 6 ? "Tomorrow sunny. Set alarm for 8am. WiFi: VillaMarija-5G / jadran2026."
+        : hour < 12 ? "Perfect for Kašjuni beach — arrive before 10am. Pekara Bobis (250m) has fresh burek from 6am!"
+        : hour < 18 ? `UV ${weather.uv} — seek shade until 4pm! Diocletian's Palace or Konzum shopping ideal.`
+        : hour < 22 ? `Sunset at ${weather.sunset}. Konoba Stari Mlin (15min) — call a day ahead!`
+        : "Good night. Tomorrow sunny, sea 25°C.",
+      it: hour < 6 ? "Domani sole. Sveglia alle 8. WiFi: VillaMarija-5G / jadran2026."
+        : hour < 12 ? "Perfetto per spiaggia Kašjuni — arrivare prima delle 10. Pekara Bobis (250m) ha burek fresco dalle 6!"
+        : hour < 18 ? `UV ${weather.uv} — cercate ombra fino alle 16! Palazzo di Diocleziano o Konzum ideali.`
+        : hour < 22 ? `Tramonto ${weather.sunset}. Konoba Stari Mlin (15min) — chiamate un giorno prima!`
+        : "Buonanotte. Domani sole, mare 25°C.",
+    };
+    const tip = tips[lang] || tips[lang === "at" ? "de" : "hr"] || tips.hr;
+    const dateLocale = lang === "de" || lang === "at" ? "de-DE" : lang === "en" ? "en-GB" : lang === "it" ? "it-IT" : lang === "si" ? "sl-SI" : lang === "cz" ? "cs-CZ" : lang === "pl" ? "pl-PL" : "hr-HR";
 
     return (
       <>
         <div style={{ padding: "20px 0 16px" }}>
           <div style={{ ...dm, fontSize: 12, color: C.mut, letterSpacing: 2, textTransform: "uppercase" }}>
-            {tipIcon} {new Date().toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" })} · Tag {kioskDay}/7
+            {tipIcon} {new Date().toLocaleDateString(dateLocale, { weekday: "long", day: "numeric", month: "long" })} · {t("day",lang)} {kioskDay}/7
           </div>
           <div style={{ fontSize: 32, fontWeight: 400, marginTop: 6 }}>
             {greeting}, <span style={{ color: C.gold }}>{GUEST.first}</span>
@@ -673,12 +736,12 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         <div style={{ display: "flex", gap: 14, marginBottom: 20, flexWrap: "wrap" }}>
           <Card style={{ flex: 2, display: "flex", alignItems: "center", gap: 16, padding: "16px 22px" }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-              <span style={{ fontSize: 36 }}>{W.icon}</span><span style={{ fontSize: 44, fontWeight: 300 }}>{W.temp}°</span>
+              <span style={{ fontSize: 36 }}>{weather.icon}</span><span style={{ fontSize: 44, fontWeight: 300 }}>{weather.temp}°</span>
             </div>
             <div style={{ width: 1, height: 40, background: C.bord }} />
             <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.6 }}>
-              Meer: <strong style={{ color: C.accent }}>{W.sea}°C</strong> · {W.wind}<br />
-              UV: <strong style={{ color: W.uv >= 8 ? C.red : C.gold }}>{W.uv}</strong>{W.uv >= 8 && <span style={{ color: C.red }}> SPF50+!</span>} · 🌅 {W.sunset}
+              Meer: <strong style={{ color: C.accent }}>{weather.sea}°C</strong> · {weather.wind}<br />
+              UV: <strong style={{ color: weather.uv >= 8 ? C.red : C.gold }}>{weather.uv}</strong>{weather.uv >= 8 && <span style={{ color: C.red }}> SPF50+!</span>} · 🌅 {weather.sunset}
             </div>
           </Card>
           <Card style={{ display: "flex", flexDirection: "column", gap: 6, padding: "14px 18px", minWidth: 180 }}>
@@ -747,16 +810,16 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                 <div style={{ fontSize: 15, fontWeight: 400, marginBottom: 4 }}>{exp.name}</div>
                 <div style={{ ...dm, display: "flex", justifyContent: "space-between", fontSize: 12, color: C.mut }}>
                   <span>⏱{exp.dur} · ⭐{exp.rating} · 🎫{exp.spots}</span>
-                  <span style={{ color: C.accent, fontSize: 16, fontWeight: 300 }}>{exp.ourPrice}€</span>
+                  <span style={{ color: C.accent, fontSize: 16, fontWeight: 300 }}>~{exp.price}€</span>
                 </div>
-                {booked.has(exp.id) && <Badge c="green">✓ Gebucht</Badge>}
+                {booked.has(exp.id) && <Badge c="green">✓ {t("booked",lang)}</Badge>}
               </div>
             </Card>
           ))}
         </div>
 
         <div style={{ textAlign: "center", padding: "8px 0 16px" }}>
-          <Btn onClick={() => { setPhase("post"); setSubScreen("summary"); }}>Simulation: Check-out →</Btn>
+          <Btn onClick={() => { setPhase("post"); setSubScreen("summary"); }}>{t("checkOut",lang)}</Btn>
         </div>
       </>
     );
@@ -778,14 +841,15 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               {it.warn && <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.red, marginTop: 8, flexShrink: 0 }} />}
               {it.free && <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.green, marginTop: 8, flexShrink: 0 }} />}
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 16, fontWeight: 400, marginBottom: 2 }}>{it.n}</div>
+                <div style={{ fontSize: 16, fontWeight: 400, marginBottom: 2 }}>{it.uvDynamic ? `UV Index: ${weather.uv} (${weather.uv >= 8 ? "VISOK" : weather.uv >= 5 ? "SREDNJI" : "NIZAK"})` : it.n}</div>
                 <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.5 }}>
                   {it.note}
                   {it.d && <span style={{ color: C.accent, marginLeft: 8 }}>{it.d}</span>}
                   {it.price && <span style={{ color: C.text, marginLeft: 8 }}>{it.price}</span>}
                   {it.type && <span style={{ marginLeft: 8 }}>{it.type}</span>}
                 </div>
-                {it.affiliate && <Badge c="gold">AFFILIATE · {it.link || "booking link"}</Badge>}
+                {it.affiliate && it.link && <a href={`https://${it.link}`} target="_blank" rel="noopener noreferrer" style={{ ...dm, display: "inline-block", marginTop: 6, padding: "4px 12px", background: C.goDim, borderRadius: 10, fontSize: 11, color: C.gold, textDecoration: "none", letterSpacing: 1 }}>🔗 {it.link}</a>}
+                {it.affiliate && !it.link && <Badge c="gold">PARTNER</Badge>}
                 {it.mapKey && <button onClick={(e) => { e.stopPropagation(); openGoogleMaps(it.mapKey); }}
                   style={{...dm,marginTop:6,padding:"6px 14px",background:C.acDim,border:`1px solid rgba(0,180,216,0.15)`,borderRadius:10,color:C.accent,fontSize:12,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:4}}>
                   📍 {t("navigate",lang)}</button>}
@@ -803,7 +867,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
         <span style={{ fontSize: 36 }}>💎</span>
         <div><div style={{ fontSize: 28, fontWeight: 400 }}>Hidden Gems</div>
-          <div style={{ ...dm, fontSize: 13, color: C.mut }}>Lokalni znaju — turisti ne</div></div>
+          <div style={{ ...dm, fontSize: 13, color: C.mut }}>{t("localTip",lang)}</div></div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 14, marginTop: 20 }}>
         {GEMS.map((g, i) => (
@@ -830,7 +894,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   );
 
   const KioskChat = () => {
-    const prompts = ["Was heute mit Kindern?", "Geheime Strände?", "Abendessen-Tipp?", "Wo parken in Split?"];
+    const prompts = [t("chatPrompt1",lang), t("chatPrompt2",lang), t("chatPrompt3",lang), t("chatPrompt4",lang)];
     return (
       <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 240px)" }}>
         <BackBtn onClick={() => setSubScreen("home")} />
@@ -839,7 +903,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             <div style={{ textAlign: "center", padding: "40px 20px" }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>🌊</div>
               <div style={{ fontSize: 24, fontWeight: 300, marginBottom: 8 }}>{t("askAnything",lang)}</div>
-              <div style={{ ...dm, color: C.mut, fontSize: 14, marginBottom: 20 }}>Fragen Sie alles über Dalmatien</div>
+              <div style={{ ...dm, color: C.mut, fontSize: 14, marginBottom: 20 }}>{t("askDalmatia",lang)}</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
                 {prompts.map((p, i) => (
                   <button key={i} onClick={() => setChatInput(p)} style={{ ...dm, padding: "10px 16px", background: "rgba(232,224,212,0.04)", border: `1px solid ${C.bord}`, borderRadius: 14, color: C.text, fontSize: 14, cursor: "pointer" }}>{p}</button>
@@ -882,7 +946,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         <div style={{ fontSize: 60, marginBottom: 12 }} className="emoji-float">🌅</div>
         <div style={{ fontSize: 30, fontWeight: 400 }}>Hvala, {GUEST.first}!</div>
         <div style={{ ...dm, color: C.mut, fontSize: 15, marginTop: 8, lineHeight: 1.6 }}>
-          7 Tage · {EXPERIENCES.filter(e => booked.has(e.id)).length + 2} Aktivitäten · {GUEST.spent}€ · Unvergesslich
+          7 {t("daysStay",lang)} · {EXPERIENCES.filter(e => booked.has(e.id)).length + 2} {t("activitiesDone",lang)} · {GUEST.spent}€ · {t("unforgettable",lang)}
         </div>
       </div>
 
@@ -892,32 +956,31 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           <div style={{ ...dm, fontSize: 11, textTransform: "uppercase", letterSpacing: 3, color: C.gold, marginBottom: 4 }}>JADRAN LOYALTY</div>
           <div style={{ fontSize: 26, fontWeight: 300 }}>🌊 {LOYALTY.tier}</div>
           <div style={{ ...dm, fontSize: 13, color: C.mut, marginTop: 8 }}>
-            {LOYALTY.points} Punkte → <strong style={{ color: C.gold }}>{LOYALTY.next}</strong> ({LOYALTY.nextPts})
+            {LOYALTY.points} {t("points",lang)} → <strong style={{ color: C.gold }}>{LOYALTY.next}</strong> ({LOYALTY.nextPts})
           </div>
           <div style={{ height: 8, borderRadius: 4, background: "rgba(0,0,0,0.3)", overflow: "hidden", margin: "12px 0 6px" }}>
             <div style={{ height: "100%", width: `${(LOYALTY.points / LOYALTY.nextPts) * 100}%`, borderRadius: 4, background: `linear-gradient(90deg,${C.accent},${C.gold})` }} />
           </div>
-          <div style={{ ...dm, fontSize: 11, color: C.mut }}>Noch {LOYALTY.nextPts - LOYALTY.points} Punkte</div>
+          <div style={{ ...dm, fontSize: 11, color: C.mut }}>{t("more",lang)} {LOYALTY.nextPts - LOYALTY.points} {t("points",lang)}</div>
         </Card>
 
-        {/* Revenue summary (admin view) */}
-        <Card>
-          <div style={{ ...dm, fontSize: 11, textTransform: "uppercase", letterSpacing: 3, color: C.accent, marginBottom: 8 }}>💰 PRIHOD (admin)</div>
+        {/* Revenue summary — admin only (visible with ?admin=sial) */}
+        {new URLSearchParams(window.location.search).get("admin") === "sial" && <Card>
+          <div style={{ ...dm, fontSize: 11, textTransform: "uppercase", letterSpacing: 3, color: C.accent, marginBottom: 8 }}>💰 {t("revenue",lang)} (admin)</div>
           <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 2 }}>
             Premium: <strong style={{ color: C.green }}>5.99€</strong><br />
-            Concierge marža: <strong style={{ color: C.green }}>~{EXPERIENCES.filter(e => booked.has(e.id)).reduce((s, e) => s + (e.ourPrice - e.price), 0) + 30}€</strong><br />
-            Affiliate klikovi: <strong style={{ color: C.green }}>~8-12€</strong><br />
+            Affiliate: <strong style={{ color: C.green }}>~8-15€</strong><br />
             <span style={{ borderTop: `1px solid ${C.bord}`, display: "block", paddingTop: 4, marginTop: 4 }}>
-              UKUPNO po gostu: <strong style={{ color: C.gold, fontSize: 18 }}>~{55 + EXPERIENCES.filter(e => booked.has(e.id)).reduce((s, e) => s + (e.ourPrice - e.price), 0)}€</strong>
+              UKUPNO: <strong style={{ color: C.gold, fontSize: 18 }}>~20-30€</strong>
             </span>
           </div>
-        </Card>
+        </Card>}
       </div>
 
       {/* Referral */}
       <Card style={{ textAlign: "center", border: `1px dashed rgba(0,180,216,0.15)`, marginBottom: 20 }}>
         <div style={{ fontSize: 20, fontWeight: 400, marginBottom: 4 }}>{t("inviteFriends",lang)}</div>
-        <div style={{ ...dm, fontSize: 13, color: C.mut, marginBottom: 8 }}>Beide erhalten Rabatt auf die nächste Buchung</div>
+        <div style={{ ...dm, fontSize: 13, color: C.mut, marginBottom: 8 }}>{t("bothDiscount",lang)}</div>
         <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: 6, color: C.accent, margin: "10px 0" }}>{LOYALTY.code}</div>
         <Btn primary>{t("shareCode",lang)}</Btn>
       </Card>
@@ -1222,7 +1285,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         {phase === "post" && <div className="page-enter"><PostStay /></div>}
 
         <div style={{ ...dm, textAlign: "center", padding: "20px 0 28px", fontSize: 10, color: "rgba(107,101,96,0.3)", letterSpacing: 2, textTransform: "uppercase" }}>
-          JADRAN AI · SIAL Consulting d.o.o. · Powered by Claude + Gemini
+          JADRAN AI · SIAL Consulting d.o.o. · Powered by AI
         </div>
       </div>
 
@@ -1264,19 +1327,19 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             <div style={{ fontSize: 52, textAlign: "center", marginBottom: 12 }}>{selectedExp.emoji}</div>
             <div style={{ fontSize: 24, fontWeight: 400, textAlign: "center", marginBottom: 16 }}>{selectedExp.name}</div>
             <div style={{ ...dm, display: "flex", justifyContent: "center", gap: 16, marginBottom: 16, fontSize: 13, color: C.mut }}>
-              <span>⏱ {selectedExp.dur}</span><span>⭐ {selectedExp.rating}</span><span>🎫 {selectedExp.spots} mjesta</span>
+              <span>⏱ {selectedExp.dur}</span><span>⭐ {selectedExp.rating}</span>
             </div>
-            <div style={{ textAlign: "center", marginBottom: 20 }}>
-              <div style={{ fontSize: 36, fontWeight: 300, color: C.accent }}>{selectedExp.ourPrice}€</div>
-              <div style={{ ...dm, fontSize: 12, color: C.mut }}>{t("perPerson",lang)} · Transfer</div>
-              {GUEST.kids > 0 && <div style={{ ...dm, fontSize: 13, color: C.gold, marginTop: 4 }}>Familie: ~{selectedExp.ourPrice * 2 + Math.round(selectedExp.ourPrice * 0.5 * 2)}€</div>}
-            </div>
-            <div style={{ ...dm, fontSize: 11, color: C.mut, textAlign: "center", marginBottom: 16, padding: "8px", background: "rgba(0,0,0,0.15)", borderRadius: 10 }}>
-              💰 Marža: {selectedExp.ourPrice - selectedExp.price}€/osobi (admin info)
+            <Card style={{ textAlign: "center", marginBottom: 16 }}>
+              <div style={{ ...dm, fontSize: 12, color: C.mut, marginBottom: 4 }}>{t("perPerson",lang)}</div>
+              <div style={{ fontSize: 36, fontWeight: 300, color: C.accent }}>~{selectedExp.price}€</div>
+              {GUEST.kids > 0 && <div style={{ ...dm, fontSize: 13, color: C.gold, marginTop: 4 }}>{t("familyPrice",lang)}: ~{selectedExp.price * 2 + Math.round(selectedExp.price * 0.5 * 2)}€</div>}
+            </Card>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 12 }}>
+              {selectedExp.gyg && <a href={selectedExp.gyg} target="_blank" rel="noopener noreferrer" style={{ display: "block", padding: "14px 20px", background: "linear-gradient(135deg,#FF5533,#FF7744)", borderRadius: 14, color: "#fff", fontSize: 16, fontFamily: "'Cormorant Garamond',Georgia,serif", fontWeight: 600, textAlign: "center", textDecoration: "none", letterSpacing: 0.5, boxShadow: "0 4px 16px rgba(255,85,51,0.3)" }}>{t("bookVia",lang)} GetYourGuide →</a>}
+              {selectedExp.viator && <a href={selectedExp.viator} target="_blank" rel="noopener noreferrer" style={{ display: "block", padding: "14px 20px", background: "linear-gradient(135deg,#2B8B4B,#3DA65E)", borderRadius: 14, color: "#fff", fontSize: 16, fontFamily: "'Cormorant Garamond',Georgia,serif", fontWeight: 600, textAlign: "center", textDecoration: "none", letterSpacing: 0.5, boxShadow: "0 4px 16px rgba(43,139,75,0.3)" }}>{t("bookVia",lang)} Viator →</a>}
             </div>
             <div style={{ display: "flex", gap: 10 }}>
               <Btn style={{ flex: 1 }} onClick={() => setSelectedExp(null)}>{t("back",lang)}</Btn>
-              <Btn primary style={{ flex: 1 }} onClick={() => startBookingCheckout(selectedExp)}>{payLoading ? "⏳..." : t("bookNow",lang)}</Btn>
             </div>
           </div>
         </div>
