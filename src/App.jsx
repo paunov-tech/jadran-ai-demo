@@ -661,33 +661,50 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
     bg: "#040a14", card: "rgba(8,18,32,0.9)", accent: "#38bdf8", acDim: "rgba(56,189,248,0.1)",
     gold: "#fbbf24", goDim: "rgba(251,191,36,0.08)", text: "#e0f2fe", mut: "#64748b",
     bord: "rgba(148,163,184,0.08)", red: "#f87171", green: "#4ade80", grDim: "rgba(74,222,128,0.08)",
-    sky: "#0c4a6e", deep: "#082f49",
+    sky: "#0c4a6e", deep: "#082f49", warm: "#fbbf24", sand: "rgba(251,191,36,0.06)", terracotta: "#fb923c",
   } : {
     // ☀️ AZURE BLUE — Adriatic day
     bg: "#0a1628", card: "rgba(12,28,50,0.85)", accent: "#0ea5e9", acDim: "rgba(14,165,233,0.12)",
     gold: "#f59e0b", goDim: "rgba(245,158,11,0.08)", text: "#f0f9ff", mut: "#7dd3fc",
     bord: "rgba(14,165,233,0.08)", red: "#f87171", green: "#4ade80", grDim: "rgba(74,222,128,0.08)",
-    sky: "#0c4a6e", deep: "#0e3a5c",
+    sky: "#0c4a6e", deep: "#0e3a5c", warm: "#f59e0b", sand: "rgba(245,158,11,0.05)", terracotta: "#f97316",
   };
   const dm = { fontFamily: "'Outfit',sans-serif" };
-  const fonts = <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Outfit:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />;
+  const fonts = <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=Outfit:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />;
+  const hf = { fontFamily: "'DM Serif Display','Cormorant Garamond',Georgia,serif" }; // heading font
 
   /* ─── SHARED COMPONENTS ─── */
   const Badge = ({ c = "accent", children }) => (
-    <span style={{ ...dm, display: "inline-block", padding: "3px 10px", borderRadius: 10, fontSize: 11, letterSpacing: 1,
-      background: c === "accent" ? C.acDim : c === "gold" ? C.goDim : c === "green" ? C.grDim : "rgba(239,68,68,0.08)",
-      color: c === "accent" ? C.accent : c === "gold" ? C.gold : c === "green" ? C.green : C.red }}>{children}</span>
+    <span style={{ ...dm, display: "inline-block", padding: "4px 12px", borderRadius: 20, fontSize: 11, letterSpacing: 0.5, fontWeight: 500,
+      background: c === "accent" ? C.acDim : c === "gold" ? C.goDim : c === "green" ? C.grDim : "rgba(248,113,113,0.08)",
+      color: c === "accent" ? C.accent : c === "gold" ? C.gold : c === "green" ? C.green : C.red,
+      border: `1px solid ${c === "accent" ? "rgba(14,165,233,0.1)" : c === "gold" ? "rgba(245,158,11,0.1)" : c === "green" ? "rgba(74,222,128,0.1)" : "rgba(248,113,113,0.1)"}`,
+    }}>{children}</span>
   );
   const Btn = ({ primary, small, children, ...p }) => (
-    <button {...p} style={{ padding: small ? "8px 16px" : "14px 24px", background: primary ? `linear-gradient(135deg,${C.accent},#0284c7)` : "rgba(186,230,253,0.03)",
-      border: primary ? "none" : `1px solid ${C.bord}`, borderRadius: 14, color: primary ? "#fff" : C.text,
-      fontSize: small ? 13 : 16, fontFamily: "'Cormorant Garamond',Georgia,serif", cursor: "pointer", fontWeight: primary ? 600 : 400, transition: "all 0.25s cubic-bezier(0.4,0,0.2,1)", letterSpacing: primary ? 0.5 : 0, boxShadow: primary ? "0 4px 16px rgba(14,165,233,0.25)" : "none", ...(p.style || {}) }} className={primary ? "btn-glow" : ""}>{children}</button>
+    <button {...p} style={{ padding: small ? "10px 18px" : "16px 28px", background: primary ? `linear-gradient(135deg,${C.accent} 0%,#0284c7 100%)` : "rgba(186,230,253,0.03)",
+      border: primary ? "none" : `1px solid rgba(186,230,253,0.06)`, borderRadius: 16, color: primary ? "#fff" : C.text,
+      fontSize: small ? 13 : 17, fontFamily: "'DM Serif Display','Cormorant Garamond',Georgia,serif", cursor: "pointer", fontWeight: primary ? 400 : 400, transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)", letterSpacing: primary ? 0.3 : 0, boxShadow: primary ? "0 6px 24px rgba(14,165,233,0.2), inset 0 1px 0 rgba(255,255,255,0.15)" : "none", ...(p.style || {}) }} className={primary ? "btn-glow" : ""}>{children}</button>
   );
-  const Card = ({ children, glow, style: sx, ...p }) => (
-    <div {...p} className="glass" style={{ background: glow ? "rgba(12,28,50,0.85)" : "rgba(12,28,50,0.75)", borderRadius: 18, border: `1px solid ${glow ? "rgba(14,165,233,0.12)" : C.bord}`, padding: 20, transition: "all 0.3s", boxShadow: glow ? "0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(186,230,253,0.03)" : "0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(186,230,253,0.02)", ...sx }}>{children}</div>
+  const Card = ({ children, glow, warm: isWarm, style: sx, ...p }) => (
+    <div {...p} className="glass anim-card" style={{
+      background: isWarm
+        ? `linear-gradient(165deg, rgba(12,28,50,0.82), rgba(24,20,16,0.75))`
+        : glow ? "rgba(12,28,50,0.82)" : "rgba(12,28,50,0.7)",
+      borderRadius: 22, padding: 24,
+      border: `1px solid ${isWarm ? "rgba(245,158,11,0.1)" : glow ? "rgba(14,165,233,0.12)" : C.bord}`,
+      transition: "all 0.35s cubic-bezier(0.4,0,0.2,1)",
+      boxShadow: glow
+        ? "0 12px 40px rgba(0,0,0,0.25), 0 0 0 1px rgba(14,165,233,0.04), inset 0 1px 0 rgba(255,255,255,0.04)"
+        : "0 8px 32px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.03)",
+      ...sx,
+    }}>{children}</div>
   );
   const SectionLabel = ({ children, extra }) => (
-    <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 3, textTransform: "uppercase", marginBottom: 14 }}>{children} {extra && <span style={{ color: C.accent }}>{extra}</span>}</div>
+    <div style={{ ...dm, fontSize: 10, color: C.mut, letterSpacing: 4, textTransform: "uppercase", marginBottom: 16, fontWeight: 500, display: "flex", alignItems: "center", gap: 10 }}>
+      <span style={{ width: 16, height: 1, background: `linear-gradient(90deg, ${C.accent}, transparent)` }} />
+      {children} {extra && <span style={{ color: C.accent, fontWeight: 600 }}>{extra}</span>}
+    </div>
   );
   const BackBtn = ({ onClick }) => <button onClick={onClick} style={{ ...dm, background: "none", border: "none", color: C.accent, fontSize: 14, cursor: "pointer", padding: "12px 0" }}>{t("back",lang)}</button>;
 
@@ -762,7 +779,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         {onboardStep === 0 && (
           <Card style={{ padding: 40 }}>
             <div style={{ fontSize: 64, marginBottom: 16 }} className="emoji-float">🌊</div>
-            <div style={{ fontSize: 32, fontWeight: 400, marginBottom: 6, background: `linear-gradient(135deg,${C.text},${C.accent})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{t("welcome",lang)}</div>
+            <div style={{ ...hf, fontSize: 36, fontWeight: 400, marginBottom: 8, background: `linear-gradient(135deg,${C.text} 30%,${C.accent})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{t("welcome",lang)}</div>
             <div style={{ ...dm, color: C.mut, fontSize: 15, marginBottom: 28, lineHeight: 1.7 }}>
               {t("hostUsesName",lang).replace("{HOST}","")}<strong style={{ color: C.gold }}>{G.host}</strong><br />{t("onboardSub",lang)}
             </div>
@@ -939,8 +956,8 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           <div style={{ ...dm, fontSize: 12, color: C.mut, letterSpacing: 2, textTransform: "uppercase" }}>
             {tipIcon} {new Date().toLocaleDateString(dateLocale, { weekday: "long", day: "numeric", month: "long" })} · {t("day",lang)} {kioskDay}/7
           </div>
-          <div style={{ fontSize: 32, fontWeight: 400, marginTop: 6 }}>
-            {greeting}, <span style={{ color: C.gold }}>{G.first}</span>
+          <div style={{ ...hf, fontSize: 36, fontWeight: 400, marginTop: 8, lineHeight: 1.2 }}>
+            {greeting}, <span style={{ color: C.warm, fontStyle: "italic" }}>{G.first}</span>
           </div>
         </div>
 
@@ -1168,7 +1185,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
     <>
       <div style={{ textAlign: "center", padding: "28px 0 8px" }}>
         <div style={{ fontSize: 60, marginBottom: 12 }} className="emoji-float">🌅</div>
-        <div style={{ fontSize: 30, fontWeight: 400 }}>{t("thanks",lang)}, {G.first}!</div>
+        <div style={{ ...hf, fontSize: 34, fontWeight: 400 }}>{t("thanks",lang)}, <span style={{ color: C.warm, fontStyle: "italic" }}>{G.first}</span>!</div>
         <div style={{ ...dm, color: C.mut, fontSize: 15, marginTop: 8, lineHeight: 1.6 }}>
           7 {t("daysStay",lang)} · {EXPERIENCES.filter(e => booked.has(e.id)).length + 2} {t("activitiesDone",lang)} · {G.spent}€ · {t("unforgettable",lang)}
         </div>
@@ -1470,6 +1487,10 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         button:hover { transform: translateY(-1px); }
         button:active { transform: translateY(0) scale(0.98); }
 
+        /* Card hover — premium lift */
+        .glass { transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important; }
+        .glass:hover { transform: translateY(-2px); box-shadow: 0 16px 48px rgba(0,0,0,0.25), 0 0 0 1px rgba(14,165,233,0.06), inset 0 1px 0 rgba(255,255,255,0.05) !important; }
+
         /* Primary button glow */
         .btn-glow { position: relative; overflow: hidden; }
         .btn-glow::before { content: ''; position: absolute; inset: -2px; border-radius: 16px;
@@ -1515,27 +1536,42 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       <div className="jadran-ambient" />
 
       <div style={{ position: "relative", zIndex: 2, maxWidth: 1100, margin: "0 auto", padding: "0 24px" }} className="page-enter">
-        {/* Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 0", borderBottom: `1px solid rgba(186,230,253,0.04)` }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: "50%", background: `linear-gradient(135deg,${C.accent},#0284c7)`, display: "grid", placeItems: "center", fontSize: 16, fontWeight: 700, color: "#fff", boxShadow: "0 2px 12px rgba(14,165,233,0.3)" }}>J</div>
-            <div style={{ fontSize: 18, fontWeight: 400, letterSpacing: 5, textTransform: "uppercase", color: C.accent }}>Jadran</div>
-            <span style={{ ...dm, fontSize: 9, color: C.accent, letterSpacing: 2, opacity: 0.6 }}>AI</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {premium && <span className="premium-shimmer" style={{display:"inline-block",padding:"4px 12px",borderRadius:12,fontSize:11,fontFamily:"'Outfit',sans-serif",color:"#f59e0b",letterSpacing:1.5,fontWeight:600}}>⭐ PREMIUM</span>}
-            <div style={{display:"flex",gap:3,background:"rgba(12,28,50,0.6)",borderRadius:12,padding:3,border:`1px solid ${C.bord}`}}>
-              {LANGS.map(lg => (
-                <button key={lg.code} onClick={() => setLang(lg.code)}
-                  style={{...dm,padding:"4px 6px",background:lang===lg.code?C.acDim:"transparent",border:lang===lg.code?`1px solid rgba(14,165,233,0.2)`:"1px solid transparent",borderRadius:9,cursor:"pointer",fontSize:14,lineHeight:1,transition:"all 0.2s"}}
-                  title={lg.name}>{lg.flag}</button>
-              ))}
+        {/* Header — premium hotel lobby */}
+        <div style={{ padding: "20px 0 16px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 42, height: 42, borderRadius: 14, background: `linear-gradient(135deg,${C.accent},#0284c7)`, display: "grid", placeItems: "center", fontSize: 18, fontWeight: 700, color: "#fff", boxShadow: "0 4px 16px rgba(14,165,233,0.25), inset 0 1px 0 rgba(255,255,255,0.2)" }}>J</div>
+              <div>
+                <div style={{ ...hf, fontSize: 22, fontWeight: 400, letterSpacing: 3, textTransform: "uppercase", color: C.text, lineHeight: 1 }}>Jadran</div>
+                <div style={{ ...dm, fontSize: 9, color: C.accent, letterSpacing: 3, marginTop: 2, fontWeight: 500 }}>AI CONCIERGE</div>
+              </div>
             </div>
-            <div style={{ ...dm, textAlign: "right" }}>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>{G.flag} {G.name}</div>
-              <div style={{ fontSize: 11, color: C.mut }}>{G.accommodation}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              {premium && <span className="premium-shimmer" style={{display:"inline-flex",alignItems:"center",gap:4,padding:"5px 14px",borderRadius:20,fontSize:10,fontFamily:"'Outfit',sans-serif",color:C.gold,letterSpacing:1.5,fontWeight:600,border:`1px solid rgba(245,158,11,0.12)`}}>⭐ PREMIUM</span>}
+              <div style={{display:"flex",gap:2,background:"rgba(12,28,50,0.5)",borderRadius:14,padding:3,border:`1px solid ${C.bord}`,backdropFilter:"blur(8px)"}}>
+                {LANGS.map(lg => (
+                  <button key={lg.code} onClick={() => setLang(lg.code)}
+                    style={{...dm,padding:"5px 7px",background:lang===lg.code?C.acDim:"transparent",border:lang===lg.code?`1px solid rgba(14,165,233,0.15)`:"1px solid transparent",borderRadius:11,cursor:"pointer",fontSize:15,lineHeight:1,transition:"all 0.25s"}}
+                    title={lg.name}>{lg.flag}</button>
+                ))}
+              </div>
             </div>
           </div>
+          {/* Guest bar */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14, padding: "12px 18px", background: C.sand, borderRadius: 16, border: `1px solid rgba(245,158,11,0.06)` }}>
+            <div style={{ ...dm, display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 18 }}>{G.flag}</span>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{G.name}</div>
+                <div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>{G.accommodation}</div>
+              </div>
+            </div>
+            {G.arrival && <div style={{ ...dm, fontSize: 11, color: C.mut, textAlign: "right" }}>
+              {new Date(G.arrival).toLocaleDateString(dateLocale || "hr-HR", {day:"numeric",month:"short"})} – {new Date(G.departure).toLocaleDateString(dateLocale || "hr-HR", {day:"numeric",month:"short"})}
+            </div>}
+          </div>
+          {/* Warm divider */}
+          <div style={{ height: 1, marginTop: 16, background: `linear-gradient(90deg, transparent, rgba(245,158,11,0.12) 30%, rgba(14,165,233,0.08) 70%, transparent)` }} />
         </div>
 
         {/* Phase Nav */}
