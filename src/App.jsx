@@ -66,7 +66,7 @@ const T = {
   // ─── Premium ───
   premiumTitle:{ hr:"JADRAN AI Premium", de:"JADRAN AI Premium", at:"JADRAN AI Premium", en:"JADRAN AI Premium", it:"JADRAN AI Premium", si:"JADRAN AI Premium", cz:"JADRAN AI Premium", pl:"JADRAN AI Premium" },
   premiumDesc: { hr:"Otključajte AI vodič, skrivena mjesta i personalizirane preporuke.", de:"Schalten Sie AI-Guide, versteckte Orte und personalisierte Empfehlungen frei.", at:"Schalten Sie AI-Guide, versteckte Orte und personalisierte Empfehlungen frei.", en:"Unlock AI guide, hidden places, and personalized recommendations.", it:"Sblocca guida AI, luoghi nascosti e consigli personalizzati.", si:"Odklenite AI vodič, skrita mesta in prilagojene priporočila.", cz:"Odemkněte AI průvodce, skrytá místa a personalizovaná doporučení.", pl:"Odblokuj przewodnik AI, ukryte miejsca i spersonalizowane rekomendacje." },
-  unlockPremium:{ hr:"Otključaj Premium — 4.99€ →", de:"Premium freischalten — 4.99€ →", at:"Premium freischalten — 4.99€ →", en:"Unlock Premium — 4.99€ →", it:"Sblocca Premium — 4.99€ →", si:"Odklenite Premium — 4.99€ →", cz:"Odemknout Premium — 4.99€ →", pl:"Odblokuj Premium — 4.99€ →" },
+  unlockPremium:{ hr:"Otključaj Premium — 5.99€ →", de:"Premium freischalten — 5.99€ →", at:"Premium freischalten — 5.99€ →", en:"Unlock Premium — 5.99€ →", it:"Sblocca Premium — 5.99€ →", si:"Odklenite Premium — 5.99€ →", cz:"Odemknout Premium — 5.99€ →", pl:"Odblokuj Premium — 5.99€ →" },
   entireStay: { hr:"za cijeli boravak · jednokratno", de:"für den gesamten Aufenthalt · einmalig", at:"für den gesamten Aufenthalt · einmalig", en:"for entire stay · one-time", it:"per tutto il soggiorno · una tantum", si:"za celotno bivanje · enkratno", cz:"na celý pobyt · jednorázově", pl:"na cały pobyt · jednorazowo" },
 
   // ─── Chat ───
@@ -436,7 +436,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           {t("premiumDesc",lang)}
         </div>
         <div style={{ background: C.goDim, borderRadius: 16, padding: "20px", border: `1px solid rgba(201,168,76,0.12)`, marginBottom: 20 }}>
-          <div style={{ fontSize: 40, fontWeight: 300, color: C.gold }}>4.99€</div>
+          <div style={{ fontSize: 40, fontWeight: 300, color: C.gold }}>5.99€</div>
           <div style={{ ...dm, fontSize: 13, color: C.mut }}>{t("entireStay",lang)}</div>
         </div>
         <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.8, marginBottom: 20, textAlign: "left" }}>
@@ -856,7 +856,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         <Card>
           <div style={{ ...dm, fontSize: 11, textTransform: "uppercase", letterSpacing: 3, color: C.accent, marginBottom: 8 }}>💰 PRIHOD (admin)</div>
           <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 2 }}>
-            Premium: <strong style={{ color: C.green }}>4.99€</strong><br />
+            Premium: <strong style={{ color: C.green }}>5.99€</strong><br />
             Concierge marža: <strong style={{ color: C.green }}>~{EXPERIENCES.filter(e => booked.has(e.id)).reduce((s, e) => s + (e.ourPrice - e.price), 0) + 30}€</strong><br />
             Affiliate klikovi: <strong style={{ color: C.green }}>~8-12€</strong><br />
             <span style={{ borderTop: `1px solid ${C.bord}`, display: "block", paddingTop: 4, marginTop: 4 }}>
@@ -887,7 +887,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       <Card style={{ background: `linear-gradient(135deg,rgba(201,168,76,0.04),rgba(0,180,216,0.03))`, borderColor: "rgba(201,168,76,0.08)" }}>
         <SectionLabel extra="ADMIN">MONETIZACIJA — BEZ UGOVORA</SectionLabel>
         <div style={{ ...dm, fontSize: 14, color: C.mut, lineHeight: 1.8 }}>
-          <strong style={{ color: C.text }}>1. Premium fee (4.99€)</strong> — Gost plaća Stripe-om. Zero ugovora.<br />
+          <strong style={{ color: C.text }}>1. Premium fee (5.99€)</strong> — Gost plaća Stripe-om. Zero ugovora.<br />
           <strong style={{ color: C.text }}>2. Concierge marža (~15-25€/aktivnost)</strong> — Bookiraš po nižoj cijeni, prodaješ višu. Gost ne zna razliku, dobiva bolju uslugu.<br />
           <strong style={{ color: C.text }}>3. Affiliate (4-8% po kliku/bookingu)</strong> — Jadrolinija, GetYourGuide, Booking. Automatski prihod.<br />
           <strong style={{ color: C.text }}>4. Host fee (20€/mj neformalno)</strong> — "Tablet servis" — Srđan dogovori na licu mjesta.<br />
