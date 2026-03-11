@@ -8,28 +8,20 @@ import { useState, useEffect } from "react";
 const BKG = (city, params="") => `https://www.booking.com/searchresults.html?aid=101704203&ss=${encodeURIComponent(city)}&lang=en${params}`;
 
 const DESTINATIONS = [
-  { name: "Split & Podstrana", emoji: "🏛️", desc: "Dioklecijanova palača, Bačvice, Marjan", link: BKG("Split, Croatia"), region: "Dalmacija",
-    sky: "M0,50 L0,42 C5,38 10,28 18,20 C22,17 25,18 28,24 L32,34 L35,40 L38,42 L40,44 L42,43 L44,42 L46,43 L48,42 L50,41 L52,42 L55,43 L57,42 L59,40 L60,38 L61,14 L62,10 L63,14 L64,38 L65,40 L68,42 L70,43 L72,42 L75,43 L78,44 L82,43 L85,44 L90,45 L95,46 L100,48 L100,50 Z" },
-  { name: "Makarska rivijera", emoji: "🏖️", desc: "Najljepše plaže Jadrana", link: BKG("Makarska, Croatia"), region: "Dalmacija",
-    sky: "M0,50 L0,48 L5,46 L8,45 L12,44 L15,43 L18,42 L20,40 L22,36 L24,30 L26,22 L28,16 L30,12 L32,9 L34,7 L36,6 L38,7 L40,8 L42,10 L44,12 L46,11 L48,13 L50,15 L52,14 L54,16 L56,18 L58,20 L60,22 L62,25 L64,28 L66,32 L68,35 L70,38 L72,40 L75,42 L80,44 L85,46 L90,47 L95,48 L100,49 L100,50 Z" },
-  { name: "Hvar", emoji: "🌿", desc: "Lavanda, glamur, noćni život", link: BKG("Hvar, Croatia"), region: "Otoci",
-    sky: "M0,50 L5,48 L10,46 L12,45 L15,44 L18,43 L20,42 L22,41 L24,40 L25,38 L26,34 L27,30 L28,34 L30,38 L32,40 L34,42 L36,40 L38,38 L40,36 L42,34 L44,32 L46,30 L48,28 L50,26 L52,24 L54,22 L56,20 L58,18 L60,16 L62,14 L64,16 L66,20 L68,24 L70,30 L72,36 L75,40 L78,44 L82,46 L88,48 L95,49 L100,50 Z" },
-  { name: "Rovinj", emoji: "⛪", desc: "Najromantičniji grad Istre", link: BKG("Rovinj, Croatia"), region: "Istra",
-    sky: "M0,50 L8,48 L12,47 L16,46 L20,44 L24,42 L27,40 L30,38 L33,36 L36,33 L39,30 L42,26 L44,22 L46,18 L47,14 L48,10 L48.5,5 L49,3 L49.5,5 L50,10 L51,14 L52,18 L54,22 L56,26 L58,30 L60,33 L63,36 L66,38 L69,40 L72,42 L76,44 L80,46 L84,47 L88,48 L94,49 L100,50 Z" },
-  { name: "Pula", emoji: "🏟️", desc: "Rimska arena, obiteljske plaže", link: BKG("Pula, Croatia"), region: "Istra",
-    sky: "M0,50 L5,48 L10,47 L15,46 L20,45 L24,44 L27,42 L30,38 L32,34 L34,30 L36,26 L38,23 L40,20 L42,18 L44,17 L46,16 L48,15.5 L50,15 L52,15.5 L54,16 L56,17 L58,18 L60,20 L62,23 L64,26 L66,30 L68,34 L70,38 L73,42 L76,44 L80,45 L85,46 L90,47 L95,48 L100,50 Z" },
-  { name: "Opatija", emoji: "⚓", desc: "Elegancija Kvarnera", link: BKG("Opatija, Croatia"), region: "Kvarner",
-    sky: "M0,50 L3,48 L6,46 L9,44 L12,42 L15,40 L18,38 L20,37 L22,36 L24,35 L26,34 L28,33 L30,32 L32,34 L34,33 L36,31 L38,30 L40,31 L42,32 L44,30 L46,29 L48,30 L50,32 L52,33 L54,31 L56,30 L58,32 L60,34 L62,36 L65,38 L68,40 L72,42 L76,44 L80,46 L85,47 L90,48 L95,49 L100,50 Z" },
-  { name: "Dubrovnik", emoji: "🏰", desc: "Biser Jadrana, gradske zidine", link: BKG("Dubrovnik, Croatia"), region: "Dalmacija",
-    sky: "M0,50 L3,48 L6,44 L8,36 L9,32 L10,36 L12,40 L14,42 L16,44 L18,42 L20,38 L22,34 L24,30 L25,26 L26,22 L27,18 L28,15 L29,18 L30,22 L31,26 L32,24 L33,20 L34,24 L35,28 L36,26 L37,22 L38,26 L39,28 L40,24 L41,20 L42,16 L43,12 L44,16 L45,20 L46,24 L47,28 L48,26 L49,22 L50,26 L52,30 L54,28 L56,32 L58,30 L60,34 L62,36 L64,38 L66,36 L68,38 L70,40 L72,42 L75,44 L80,46 L85,47 L90,48 L95,49 L100,50 Z" },
-  { name: "Zadar", emoji: "🌅", desc: "Morske orgulje, najljepši zalazak", link: BKG("Zadar, Croatia"), region: "Dalmacija",
-    sky: "M0,50 L5,48 L10,46 L12,45 L15,44 L18,43 L20,42 L22,43 L24,42 L26,40 L28,38 L30,36 L31,28 L32,20 L33,12 L33.5,8 L34,12 L35,20 L36,28 L37,36 L38,38 L40,36 L42,34 L43,30 L44,26 L44.5,30 L45,34 L46,36 L48,38 L50,40 L52,42 L55,40 L58,42 L60,43 L65,44 L70,45 L75,44 L78,45 L82,46 L86,47 L90,48 L95,49 L100,50 Z" },
+  { name: "Split & Podstrana", emoji: "🏛️", desc: "Dioklecijanova palača, Bačvice, Marjan", link: BKG("Split, Croatia"), region: "Dalmacija" },
+  { name: "Makarska rivijera", emoji: "🏖️", desc: "Najljepše plaže Jadrana", link: BKG("Makarska, Croatia"), region: "Dalmacija" },
+  { name: "Hvar", emoji: "🌿", desc: "Lavanda, glamur, noćni život", link: BKG("Hvar, Croatia"), region: "Otoci" },
+  { name: "Rovinj", emoji: "⛪", desc: "Najromantičniji grad Istre", link: BKG("Rovinj, Croatia"), region: "Istra" },
+  { name: "Pula", emoji: "🏟️", desc: "Rimska arena, obiteljske plaže", link: BKG("Pula, Croatia"), region: "Istra" },
+  { name: "Opatija", emoji: "⚓", desc: "Elegancija Kvarnera", link: BKG("Opatija, Croatia"), region: "Kvarner" },
+  { name: "Dubrovnik", emoji: "🏰", desc: "Biser Jadrana, gradske zidine", link: BKG("Dubrovnik, Croatia"), region: "Dalmacija" },
+  { name: "Zadar", emoji: "🌅", desc: "Morske orgulje, najljepši zalazak", link: BKG("Zadar, Croatia"), region: "Dalmacija" },
 ];
 
 const STEPS = [
   { num: "01", icon: "🏠", title: "Domaćin kreira apartman", desc: "Registrira smještaj i generira jedinstveni QR kod" },
   { num: "02", icon: "📱", title: "Gost skenira QR", desc: "Na zidu apartmana — unosi profil i interese" },
-  { num: "03", icon: "🌊", title: "Osobni savjetnik 24/7", desc: "Provjerene preporuke, lokalni savjeti, rezervacije" },
+  { num: "03", icon: "🌊", title: "Osobni vodič 24/7", desc: "Provjerene preporuke, lokalni savjeti, rezervacije" },
 ];
 
 export default function LandingPage() {
@@ -53,16 +45,10 @@ export default function LandingPage() {
         {/* Nav */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, padding: "16px 0" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", boxShadow: "0 4px 16px rgba(14,165,233,0.25)" }}>
-              <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-                <path d="M8 6C8 6 10 6 12 6C16 6 16 14 16 18C16 22 14 26 10 26" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
-                <path d="M4 20C6 17 9 17 12 20C15 23 18 23 20 20C22 17 25 17 28 20" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-                <path d="M4 24C6 21 9 21 12 24C15 27 18 27 20 24C22 21 25 21 28 24" stroke="rgba(255,255,255,0.3)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-              </svg>
-            </div>
+            <div style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 20, fontWeight: 700, color: "#fff", boxShadow: "0 4px 16px rgba(14,165,233,0.25)" }}>J</div>
             <div>
               <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 22, letterSpacing: 3, textTransform: "uppercase", lineHeight: 1 }}>Jadran</div>
-              <div style={{ fontSize: 9, color: "#0ea5e9", letterSpacing: 3, fontWeight: 500 }}>SAVJETNIK</div>
+              <div style={{ fontSize: 9, color: "#0ea5e9", letterSpacing: 3, fontWeight: 500 }}>VODIČ</div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -161,18 +147,12 @@ export default function LandingPage() {
             {DESTINATIONS.map((d, i) => (
               <a key={i} href={d.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
                 <div style={{
-                  padding: 20, borderRadius: 20, position: "relative", overflow: "hidden",
+                  padding: 20, borderRadius: 20,
                   background: "rgba(12,28,50,0.6)", border: "1px solid rgba(14,165,233,0.06)",
                   cursor: "pointer", transition: "all 0.3s",
                 }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.2)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.06)"; e.currentTarget.style.transform = ""; }}>
-                  {/* City skyline silhouette */}
-                  {d.sky && <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 50, opacity: 0.07, pointerEvents: "none" }}>
-                    <svg width="100%" height="50" viewBox="0 0 100 50" preserveAspectRatio="none" style={{ display: "block" }}>
-                      <path d={d.sky} fill="#0ea5e9" />
-                    </svg>
-                  </div>}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                     <span style={{ fontSize: 28 }}>{d.emoji}</span>
                     <span style={{ fontSize: 10, color: "#7dd3fc", padding: "3px 10px", borderRadius: 10, background: "rgba(14,165,233,0.08)" }}>{d.region}</span>

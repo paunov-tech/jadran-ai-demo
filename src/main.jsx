@@ -44,7 +44,7 @@ const App = React.lazy(() =>
   : import('./LandingPage.jsx')
 );
 
-const labels = { host: "Host Panel", ai: "Savjetnik", app: "JADRAN", landing: "JADRAN" };
+const labels = { host: "Host Panel", ai: "Vodič", app: "JADRAN", landing: "JADRAN" };
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
