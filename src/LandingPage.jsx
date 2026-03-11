@@ -52,6 +52,9 @@ export default function LandingPage() {
             </div>
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <a href="/ai" style={{ padding: "10px 20px", borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", color: "#fff", fontSize: 13, textDecoration: "none", fontWeight: 600, boxShadow: "0 4px 12px rgba(14,165,233,0.2)" }}>
+              🤖 AI Concierge
+            </a>
             <a href="/host" style={{ padding: "10px 20px", borderRadius: 12, border: "1px solid rgba(14,165,233,0.15)", color: "#7dd3fc", fontSize: 13, textDecoration: "none", fontWeight: 500 }}>
               🏠 Host Panel
             </a>
@@ -73,8 +76,8 @@ export default function LandingPage() {
           }}>
             Vaš AI turistički<br />concierge na Jadranu
           </h1>
-          <p style={{ fontSize: 18, color: "#7dd3fc", maxWidth: 520, margin: "0 auto 40px", lineHeight: 1.6, fontWeight: 300 }}>
-            Personalizirane preporuke, skrivena mjesta, lokalni savjeti — sve na jednom mjestu, na 8 jezika.
+          <p style={{ fontSize: 18, color: "#7dd3fc", maxWidth: 560, margin: "0 auto 40px", lineHeight: 1.6, fontWeight: 300 }}>
+            Za goste u apartmanima, kampere, jedriličare i sve koji vole Jadran. Personalizirani savjeti na 8 jezika.
           </p>
 
           {/* Room code input */}
@@ -160,6 +163,51 @@ export default function LandingPage() {
                 </div>
               </a>
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ AI STANDALONE CTA ═══ */}
+      <div style={{ padding: "60px 24px", background: "rgba(0,0,0,0.1)" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+          {/* AI for everyone */}
+          <div style={{
+            padding: 32, borderRadius: 24, textAlign: "center",
+            background: "linear-gradient(135deg, rgba(14,165,233,0.08), rgba(2,132,199,0.04))",
+            border: "1px solid rgba(14,165,233,0.12)",
+          }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🤖</div>
+            <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, marginBottom: 8 }}>AI Concierge</div>
+            <div style={{ fontSize: 13, color: "#7dd3fc", marginBottom: 20, lineHeight: 1.6 }}>
+              Lokalni savjeti, skrivena mjesta, preporuke restorana — za sve putnike. 3 besplatna pitanja.
+            </div>
+            <a href="/ai" style={{
+              display: "inline-block", padding: "14px 28px", borderRadius: 16,
+              background: "linear-gradient(135deg, #0ea5e9, #0284c7)",
+              color: "#fff", fontSize: 15, fontWeight: 600, textDecoration: "none",
+              fontFamily: "'DM Serif Display', Georgia, serif",
+              boxShadow: "0 4px 16px rgba(14,165,233,0.25)",
+            }}>Probajte besplatno →</a>
+          </div>
+
+          {/* Camper special */}
+          <div style={{
+            padding: 32, borderRadius: 24, textAlign: "center",
+            background: "linear-gradient(135deg, rgba(245,158,11,0.06), rgba(251,191,36,0.03))",
+            border: "1px solid rgba(245,158,11,0.1)",
+          }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🚐</div>
+            <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, marginBottom: 8 }}>Kamper vodič</div>
+            <div style={{ fontSize: 13, color: "#fbbf24", marginBottom: 20, lineHeight: 1.6 }}>
+              Parking za kampere, dump station, pumpe za vodu, legalna noćenja — vaš co-pilot za Jadran.
+            </div>
+            <a href="/ai" style={{
+              display: "inline-block", padding: "14px 28px", borderRadius: 16,
+              background: "linear-gradient(135deg, #f59e0b, #d97706)",
+              color: "#fff", fontSize: 15, fontWeight: 600, textDecoration: "none",
+              fontFamily: "'DM Serif Display', Georgia, serif",
+              boxShadow: "0 4px 16px rgba(245,158,11,0.25)",
+            }}>Kamper mode →</a>
           </div>
         </div>
       </div>

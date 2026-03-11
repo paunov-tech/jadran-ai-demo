@@ -3,13 +3,15 @@ import ReactDOM from 'react-dom/client'
 
 // Route logic:
 // /host         → HostPanel (apartment management)
-// ?room=XXXX    → Guest App (concierge experience)
+// /ai           → Standalone AI (pay & use, campers, day-trippers)
+// ?room=XXXX    → Guest App (concierge for apartment guests)
 // jadran.ai     → Landing Page (marketing + booking)
 const path = window.location.pathname;
 const hasRoom = new URLSearchParams(window.location.search).has("room");
 const isHost = path === "/host" || path === "/host/";
+const isAI = path === "/ai" || path === "/ai/";
 
-const route = isHost ? "host" : hasRoom ? "app" : "landing";
+const route = isHost ? "host" : isAI ? "ai" : hasRoom ? "app" : "landing";
 
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null }; }
@@ -34,11 +36,12 @@ class ErrorBoundary extends React.Component {
 
 const App = React.lazy(() =>
   route === "host" ? import('./HostPanel.jsx')
+  : route === "ai" ? import('./StandaloneAI.jsx')
   : route === "app" ? import('./App.jsx')
   : import('./LandingPage.jsx')
 );
 
-const labels = { host: "Host Panel", app: "JADRAN AI", landing: "JADRAN AI" };
+const labels = { host: "Host Panel", ai: "AI Concierge", app: "JADRAN AI", landing: "JADRAN AI" };
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
