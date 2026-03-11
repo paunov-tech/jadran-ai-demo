@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { loadGuest, updateGuest, getRoomCode } from "./guestStore";
+import { loadGuest, updateGuest, getRoomCode, saveGuest } from "./guestStore";
+import GuestOnboarding from "./GuestOnboarding";
 
 /* ══════════════════════════════════════════════════════════
    JADRAN AI — Unified Platform v4
@@ -201,7 +202,7 @@ const getMapEmbed = (coordKey) => {
 
 
 /* ─── DATA ─── */
-const GUEST = {
+const GUEST_FALLBACK = {
   name: "Familie Weber", first: "Weber", country: "DE", lang: "de", flag: "🇩🇪",
   adults: 2, kids: 2, kidsAges: [7, 11], interests: ["gastro", "adventure", "culture"],
   arrival: "2026-07-12", departure: "2026-07-19", car: true, carPlate: "M-WB 4521",
@@ -260,7 +261,7 @@ const PRACTICAL = {
     { n: {hr:"Hitna pomoć",de:"Notruf",en:"Emergency",it:"Emergenza",si:"Nujna pomoč",cz:"Tísňové volání",pl:"Pogotowie"}, note: "112 / 194", warn: true },
     { n: {hr:"Ljekarna",de:"Apotheke",en:"Pharmacy",it:"Farmacia",si:"Lekarna",cz:"Lékárna",pl:"Apteka"}, d: "300m", note: {hr:"Do 20h",de:"Bis 20 Uhr",en:"Until 8pm",it:"Fino alle 20",si:"Do 20h",cz:"Do 20h",pl:"Do 20:00"}, mapKey: "ljekarna" },
     { n: "WiFi", note: "VillaMarija-5G · Lozinka/Password: jadran2026" },
-    { n: {hr:"Domaćin",de:"Gastgeber",en:"Host",it:"Padrone di casa",si:"Gostitelj",cz:"Hostitel",pl:"Gospodarz"}, note: `${GUEST.host}: ${GUEST.hostPhone} (WhatsApp)` },
+    { n: {hr:"Domaćin",de:"Gastgeber",en:"Host",it:"Padrone di casa",si:"Gostitelj",cz:"Hostitel",pl:"Gospodarz"}, note: `${G.host}: ${G.hostPhone} (WhatsApp)` },
   ]},
 };
 
@@ -432,6 +433,11 @@ export default function JadranUnified() {
   const chatEnd = useRef(null);
   const roomCode = useRef(getRoomCode());
 
+  // ─── GUEST ONBOARDING STATE ───
+  const [guestProfile, setGuestProfile] = useState(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const G = guestProfile || GUEST_FALLBACK;
+
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMsgs]);
   useEffect(() => { const t = setTimeout(() => setSplash(false), 3800); return () => clearTimeout(t); }, []);
 
@@ -444,6 +450,26 @@ export default function JadranUnified() {
         if (data.lang) setLang(data.lang);
         if (data.phase) { setPhase(data.phase); setSubScreen(data.subScreen || "home"); }
         if (data.booked) setBooked(new Set(data.booked));
+        // Load guest profile fields if they exist
+        if (data.name && data.country) {
+          setGuestProfile({
+            name: data.name, first: data.first || data.name.split(" ").pop(),
+            country: data.country, flag: data.flag || "🌍", lang: data.lang || "en",
+            adults: data.adults || 2, kids: data.kids || 0, kidsAges: data.kidsAges || [],
+            interests: data.interests || ["gastro","adventure"],
+            arrival: data.arrival || data.checkIn || "2026-07-12",
+            departure: data.departure || data.checkOut || "2026-07-19",
+            car: data.car || false, carPlate: data.carPlate || "",
+            accommodation: data.accommodation || "Apartman", host: data.host || "",
+            hostPhone: data.hostPhone || "", budget: data.budget || 1200,
+            spent: data.spent || 0, email: data.email || "",
+          });
+        } else if (roomCode.current && roomCode.current !== "DEMO") {
+          // No profile yet — show onboarding
+          setShowOnboarding(true);
+        }
+      } else if (roomCode.current && roomCode.current !== "DEMO") {
+        setShowOnboarding(true);
       }
       // Mark ready AFTER initial state is applied
       setTimeout(() => { persistReady.current = true; }, 500);
@@ -542,7 +568,7 @@ export default function JadranUnified() {
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomCode: roomCode.current, guestName: GUEST.name, lang }),
+        body: JSON.stringify({ roomCode: roomCode.current, guestName: G.name, lang }),
       });
       const data = await res.json();
       if (data.url) {
@@ -566,13 +592,13 @@ export default function JadranUnified() {
   const startBookingCheckout = async (exp) => {
     setPayLoading(true);
     try {
-      const totalPersons = GUEST.adults + (GUEST.kids || 0);
+      const totalPersons = G.adults + (G.kids || 0);
       const res = await fetch('/api/book', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           activityName: exp.name, price: exp.price,
           quantity: totalPersons, roomCode: roomCode.current,
-          guestName: GUEST.name, lang,
+          guestName: G.name, lang,
         }),
       });
       const data = await res.json();
@@ -597,7 +623,7 @@ export default function JadranUnified() {
   const timeCtx = hour < 6 ? "night" : hour < 12 ? "morning" : hour < 18 ? "midday" : hour < 22 ? "evening" : "night";
   const dateLocale = lang === "de" || lang === "at" ? "de-DE" : lang === "en" ? "en-GB" : lang === "it" ? "it-IT" : lang === "si" ? "sl-SI" : lang === "cz" ? "cs-CZ" : lang === "pl" ? "pl-PL" : "hr-HR";
   const daysLeft = 7 - kioskDay + 1;
-  const budgetLeft = GUEST.budget - GUEST.spent;
+  const budgetLeft = G.budget - G.spent;
 
   const tryPremium = (cb) => { if (premium) { cb(); } else { setShowPaywall(true); } };
 
@@ -609,8 +635,8 @@ export default function JadranUnified() {
     setChatLoading(true);
     try {
       const sys = `Ti si JADRAN AI, 24/7 turistički concierge u Podstrani (blizu Splita), Hrvatska.
-GOST: ${GUEST.name}, ${GUEST.country}, ${GUEST.adults} odraslih + ${GUEST.kids} djece (${GUEST.kidsAges.join(',')} god). Interesi: ${GUEST.interests.join(', ')}. ${GUEST.car ? 'Ima auto.' : 'Nema auto.'}
-SMJEŠTAJ: ${GUEST.accommodation}. Domaćin: ${GUEST.host} (${GUEST.hostPhone}).
+GOST: ${G.name}, ${G.country}, ${G.adults} odraslih + ${G.kids} djece (${G.kidsAges.join(',')} god). Interesi: ${G.interests.join(', ')}. ${G.car ? 'Ima auto.' : 'Nema auto.'}
+SMJEŠTAJ: ${G.accommodation}. Domaćin: ${G.host} (${G.hostPhone}).
 VRIJEME: ${weather.temp}°C ${weather.icon}, UV ${weather.uv}, more ${weather.sea}°C, zalazak ${weather.sunset}. Dan: ${kioskDay}/7.
 HIDDEN GEMS: ${GEMS.map(g => g.name).join(', ')}.
 Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang==="it"?"Italiano":lang==="si"?"Slovenščina":lang==="cz"?"Čeština":lang==="pl"?"Polski":"Hrvatski"}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i udaljenostima. Emoji.`;
@@ -726,7 +752,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             <div style={{ fontSize: 64, marginBottom: 16 }} className="emoji-float">🌊</div>
             <div style={{ fontSize: 32, fontWeight: 400, marginBottom: 6, background: `linear-gradient(135deg,${C.text},${C.accent})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{t("welcome",lang)}</div>
             <div style={{ ...dm, color: C.mut, fontSize: 15, marginBottom: 28, lineHeight: 1.7 }}>
-              {t("hostUsesName",lang).replace("{HOST}","")}<strong style={{ color: C.gold }}>{GUEST.host}</strong><br />{t("onboardSub",lang)}
+              {t("hostUsesName",lang).replace("{HOST}","")}<strong style={{ color: C.gold }}>{G.host}</strong><br />{t("onboardSub",lang)}
             </div>
             <Btn primary onClick={() => setOnboardStep(1)}>{t("createProfile",lang)}</Btn>
           </Card>
@@ -766,7 +792,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       <>
         <div style={{ padding: "24px 0 8px" }}>
           <div style={{ fontSize: 30, fontWeight: 400 }}>7 {t("daysToGo",lang)} ☀️</div>
-          <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>{new Date(GUEST.arrival).toLocaleDateString(dateLocale || "hr-HR", {day:"numeric",month:"long"})} – {new Date(GUEST.departure).toLocaleDateString(dateLocale || "hr-HR", {day:"numeric",month:"long",year:"numeric"})} · {GUEST.accommodation}</div>
+          <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>{new Date(G.arrival).toLocaleDateString(dateLocale || "hr-HR", {day:"numeric",month:"long"})} – {new Date(G.departure).toLocaleDateString(dateLocale || "hr-HR", {day:"numeric",month:"long",year:"numeric"})} · {G.accommodation}</div>
         </div>
         <SectionLabel>{t("forecast",lang)}</SectionLabel>
         <div style={{ display: "flex", gap: 2, marginBottom: 24 }}>
@@ -827,13 +853,13 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       <>
         <div style={{ padding: "24px 0 8px" }}>
           <div style={{ fontSize: 28, fontWeight: 400 }}>{t("safeTrip",lang)} 🚗</div>
-          <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>{GUEST.country === "DE" ? "München" : GUEST.country === "AT" ? "Wien" : GUEST.country === "IT" ? "Trieste" : GUEST.country === "SI" ? "Ljubljana" : GUEST.country === "CZ" ? "Praha" : GUEST.country === "PL" ? "Kraków" : "Polazište"} → Podstrana</div>
+          <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>{G.country === "DE" ? "München" : G.country === "AT" ? "Wien" : G.country === "IT" ? "Trieste" : G.country === "SI" ? "Ljubljana" : G.country === "CZ" ? "Praha" : G.country === "PL" ? "Kraków" : "Polazište"} → Podstrana</div>
         </div>
         {/* Map */}
         <div style={{ height: 160, borderRadius: 18, background: "linear-gradient(135deg,#1a2332,#0f1822)", position: "relative", overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 16 }}>
           <div style={{ position: "absolute", top: "50%", left: "10%", right: "10%", height: 3, background: C.bord }} />
           <div style={{ position: "absolute", top: "50%", left: "10%", width: `${transitProg * 0.8}%`, height: 3, background: `linear-gradient(90deg,${C.accent},${C.gold})`, transition: "width 0.4s" }} />
-          <div style={{ position: "absolute", top: "calc(50% - 8px)", left: "8%", ...dm, fontSize: 12, color: C.mut }}>{GUEST.flag} {GUEST.country === "DE" ? "München" : GUEST.country === "AT" ? "Wien" : GUEST.country === "IT" ? "Trieste" : GUEST.country === "SI" ? "Ljubljana" : GUEST.country === "CZ" ? "Praha" : GUEST.country === "PL" ? "Kraków" : "Start"}</div>
+          <div style={{ position: "absolute", top: "calc(50% - 8px)", left: "8%", ...dm, fontSize: 12, color: C.mut }}>{G.flag} {G.country === "DE" ? "München" : G.country === "AT" ? "Wien" : G.country === "IT" ? "Trieste" : G.country === "SI" ? "Ljubljana" : G.country === "CZ" ? "Praha" : G.country === "PL" ? "Kraków" : "Start"}</div>
           <div style={{ position: "absolute", top: "calc(50% - 14px)", left: `calc(10% + ${transitProg * 0.8}% - 14px)`, fontSize: 28, transition: "left 0.4s" }}>🚗</div>
           <div style={{ position: "absolute", top: "calc(50% - 10px)", right: "6%", fontSize: 22 }}>🏖️</div>
         </div>
@@ -844,7 +870,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             <div style={{ ...dm, fontSize: 14, color: C.mut, lineHeight: 1.8 }}>
               {transitProg < 40 && "🍽️ " + t("transitTip1",lang)}
               {transitProg >= 40 && transitProg < 75 && "🎫 " + t("transitTip2",lang)}
-              {transitProg >= 75 && "🏖️ " + t("transitTip3",lang).replace("{HOST}", GUEST.host)}
+              {transitProg >= 75 && "🏖️ " + t("transitTip3",lang).replace("{HOST}", G.host)}
             </div>
           </Card>
           <Card>
@@ -902,7 +928,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             {tipIcon} {new Date().toLocaleDateString(dateLocale, { weekday: "long", day: "numeric", month: "long" })} · {t("day",lang)} {kioskDay}/7
           </div>
           <div style={{ fontSize: 32, fontWeight: 400, marginTop: 6 }}>
-            {greeting}, <span style={{ color: C.gold }}>{GUEST.first}</span>
+            {greeting}, <span style={{ color: C.gold }}>{G.first}</span>
           </div>
         </div>
 
@@ -934,18 +960,18 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           <div>
             <div style={{ ...dm, fontSize: 10, color: C.gold, fontWeight: 700, letterSpacing: 2, marginBottom: 4 }}>{t("aiRec",lang)}</div>
             <div style={{ ...dm, fontSize: 15, color: C.text, lineHeight: 1.7, fontWeight: 300 }}>{tip}</div>
-            {GUEST.kids > 0 && hour >= 12 && hour < 18 && <div style={{ ...dm, fontSize: 13, color: C.accent, marginTop: 6 }}>👨‍👩‍👧‍👦 {({hr:"S djecom: Bačvice (pijesak, plitka voda) je savršena!",de:"Mit Kindern: Bačvice (Sand, flaches Wasser) ist perfekt!",en:"With kids: Bačvice (sand, shallow water) is perfect!",it:"Con bambini: Bačvice (sabbia, acqua bassa) è perfetta!",si:"Z otroki: Bačvice (pesek, plitva voda) je popolna!",cz:"S dětmi: Bačvice (písek, mělká voda) je perfektní!",pl:"Z dziećmi: Bačvice (piasek, płytka woda) jest idealna!"})[lang] || "S djecom: Bačvice (pijesak, plitka voda) je savršena!"}</div>}
+            {G.kids > 0 && hour >= 12 && hour < 18 && <div style={{ ...dm, fontSize: 13, color: C.accent, marginTop: 6 }}>👨‍👩‍👧‍👦 {({hr:"S djecom: Bačvice (pijesak, plitka voda) je savršena!",de:"Mit Kindern: Bačvice (Sand, flaches Wasser) ist perfekt!",en:"With kids: Bačvice (sand, shallow water) is perfect!",it:"Con bambini: Bačvice (sabbia, acqua bassa) è perfetta!",si:"Z otroki: Bačvice (pesek, plitva voda) je popolna!",cz:"S dětmi: Bačvice (písek, mělká voda) je perfektní!",pl:"Z dziećmi: Bačvice (piasek, płytka woda) jest idealna!"})[lang] || "S djecom: Bačvice (pijesak, plitka voda) je savršena!"}</div>}
           </div>
         </Card>
 
         {/* Budget */}
         <Card style={{ marginBottom: 20, padding: "14px 20px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div><span style={{ ...dm, fontSize: 11, color: C.mut }}>{t("budget",lang)} </span><span style={{ fontSize: 20, fontWeight: 300 }}>{GUEST.spent}€</span><span style={{ ...dm, fontSize: 13, color: C.mut }}> / {GUEST.budget}€</span></div>
+            <div><span style={{ ...dm, fontSize: 11, color: C.mut }}>{t("budget",lang)} </span><span style={{ fontSize: 20, fontWeight: 300 }}>{G.spent}€</span><span style={{ ...dm, fontSize: 13, color: C.mut }}> / {G.budget}€</span></div>
             <div style={{ ...dm, fontSize: 13, color: C.accent }}>{budgetLeft}€ {t("left",lang)} · ~{Math.round(budgetLeft / daysLeft)}{t("perDay",lang)}</div>
           </div>
           <div style={{ height: 5, borderRadius: 3, background: C.bord, overflow: "hidden", marginTop: 8 }}>
-            <div style={{ height: "100%", width: `${(GUEST.spent / GUEST.budget * 100)}%`, borderRadius: 3, background: `linear-gradient(90deg,${C.accent},${C.gold})` }} />
+            <div style={{ height: "100%", width: `${(G.spent / G.budget * 100)}%`, borderRadius: 3, background: `linear-gradient(90deg,${C.accent},${C.gold})` }} />
           </div>
         </Card>
 
@@ -1130,9 +1156,9 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
     <>
       <div style={{ textAlign: "center", padding: "28px 0 8px" }}>
         <div style={{ fontSize: 60, marginBottom: 12 }} className="emoji-float">🌅</div>
-        <div style={{ fontSize: 30, fontWeight: 400 }}>{t("thanks",lang)}, {GUEST.first}!</div>
+        <div style={{ fontSize: 30, fontWeight: 400 }}>{t("thanks",lang)}, {G.first}!</div>
         <div style={{ ...dm, color: C.mut, fontSize: 15, marginTop: 8, lineHeight: 1.6 }}>
-          7 {t("daysStay",lang)} · {EXPERIENCES.filter(e => booked.has(e.id)).length + 2} {t("activitiesDone",lang)} · {GUEST.spent}€ · {t("unforgettable",lang)}
+          7 {t("daysStay",lang)} · {EXPERIENCES.filter(e => booked.has(e.id)).length + 2} {t("activitiesDone",lang)} · {G.spent}€ · {t("unforgettable",lang)}
         </div>
       </div>
 
@@ -1204,6 +1230,36 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   );
 
   /* ═══ MAIN RENDER ═══ */
+
+  /* ─── GUEST ONBOARDING ─── */
+  if (showOnboarding) return (
+    <GuestOnboarding
+      roomCode={roomCode.current}
+      onComplete={(guestData) => {
+        setGuestProfile({
+          name: guestData.name, first: guestData.first || guestData.name.split(" ").pop(),
+          country: guestData.country, flag: guestData.flag || "🌍", lang: guestData.lang || "en",
+          adults: guestData.adults || 2, kids: guestData.kids || 0, kidsAges: guestData.kidsAges || [],
+          interests: guestData.interests || [], arrival: guestData.arrival || "",
+          departure: guestData.departure || "", car: guestData.car || false,
+          accommodation: guestData.accommodation || "", host: guestData.host || "",
+          hostPhone: guestData.hostPhone || "", budget: guestData.budget || 1200,
+          spent: guestData.spent || 0, email: guestData.email || "",
+        });
+        setLang(guestData.lang || "en");
+        // Auto-set phase based on dates
+        const now = new Date();
+        const cin = new Date(guestData.arrival);
+        const cout = new Date(guestData.departure);
+        if (now < cin) { setPhase("pre"); setSubScreen("pretrip"); }
+        else if (now <= cout) { setPhase("kiosk"); setSubScreen("home"); }
+        else { setPhase("post"); setSubScreen("summary"); }
+        setInterests(new Set(guestData.interests || []));
+        setShowOnboarding(false);
+        setSplash(false);
+      }}
+    />
+  );
 
   /* ─── CINEMATIC SPLASH ─── */
   if (splash) return (
@@ -1464,8 +1520,8 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               ))}
             </div>
             <div style={{ ...dm, textAlign: "right" }}>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>{GUEST.flag} {GUEST.name}</div>
-              <div style={{ fontSize: 11, color: C.mut }}>{GUEST.accommodation}</div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>{G.flag} {G.name}</div>
+              <div style={{ fontSize: 11, color: C.mut }}>{G.accommodation}</div>
             </div>
           </div>
         </div>
@@ -1526,7 +1582,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             <Card style={{ textAlign: "center", marginBottom: 16 }}>
               <div style={{ ...dm, fontSize: 12, color: C.mut, marginBottom: 4 }}>{t("perPerson",lang)}</div>
               <div style={{ fontSize: 36, fontWeight: 300, color: C.accent }}>~{selectedExp.price}€</div>
-              {GUEST.kids > 0 && <div style={{ ...dm, fontSize: 13, color: C.gold, marginTop: 4 }}>{t("familyPrice",lang)}: ~{selectedExp.price * 2 + Math.round(selectedExp.price * 0.5 * 2)}€</div>}
+              {G.kids > 0 && <div style={{ ...dm, fontSize: 13, color: C.gold, marginTop: 4 }}>{t("familyPrice",lang)}: ~{selectedExp.price * 2 + Math.round(selectedExp.price * 0.5 * 2)}€</div>}
             </Card>
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 12 }}>
               {selectedExp.gyg && <a href={selectedExp.gyg} target="_blank" rel="noopener noreferrer" style={{ display: "block", padding: "14px 20px", background: "linear-gradient(135deg,#FF5533,#FF7744)", borderRadius: 14, color: "#fff", fontSize: 16, fontFamily: "'Cormorant Garamond',Georgia,serif", fontWeight: 600, textAlign: "center", textDecoration: "none", letterSpacing: 0.5, boxShadow: "0 4px 16px rgba(255,85,51,0.3)" }}>{t("bookVia",lang)} GetYourGuide →</a>}
