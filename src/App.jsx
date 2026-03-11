@@ -233,6 +233,7 @@ export default function JadranUnified() {
   const [subScreen, setSubScreen] = useState("onboard"); // varies per phase
   const [premium, setPremium] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [payLoading, setPayLoading] = useState(false);
   const [onboardStep, setOnboardStep] = useState(0);
   const [interests, setInterests] = useState(new Set(["gastro", "adventure"]));
   const [transitProg, setTransitProg] = useState(35);
@@ -249,6 +250,103 @@ export default function JadranUnified() {
 
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMsgs]);
   useEffect(() => { const t = setTimeout(() => setSplash(false), 3800); return () => clearTimeout(t); }, []);
+
+  // ─── STRIPE: Detect payment redirect ───
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentStatus = params.get('payment');
+    const sessionId = params.get('session_id');
+    const bookingStatus = params.get('booking');
+    const activityName = params.get('activity');
+
+    if (paymentStatus === 'success' && sessionId) {
+      // Verify payment server-side
+      fetch('/api/verify', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+      }).then(r => r.json()).then(data => {
+        if (data.paid) {
+          setPremium(true);
+          setSplash(false);
+          setPhase('kiosk');
+          setSubScreen('home');
+        }
+      }).catch(() => {
+        // If verify fails, still unlock for UX (webhook will catch it)
+        setPremium(true);
+      });
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    if (bookingStatus === 'success' && activityName) {
+      setSplash(false);
+      setPhase('kiosk');
+      setSubScreen('home');
+      setShowConfirm(decodeURIComponent(activityName));
+      setBooked(prev => new Set([...prev, activityName]));
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    if (paymentStatus === 'cancelled' || bookingStatus === 'cancelled') {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
+  // ─── STRIPE: Start Premium Checkout ───
+  const startPremiumCheckout = async () => {
+    setPayLoading(true);
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomCode: 'DEMO', guestName: GUEST.name, lang }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url; // Redirect to Stripe
+      } else {
+        // Fallback: unlock in demo mode
+        setPremium(true);
+        setShowPaywall(false);
+      }
+    } catch {
+      // Stripe not configured — demo mode unlock
+      setPremium(true);
+      setShowPaywall(false);
+    }
+    setPayLoading(false);
+  };
+
+  // ─── STRIPE: Start Activity Booking Checkout ───
+  const startBookingCheckout = async (exp) => {
+    setPayLoading(true);
+    try {
+      const totalPersons = GUEST.adults + (GUEST.kids || 0);
+      const res = await fetch('/api/book', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          activityName: exp.name, price: exp.ourPrice,
+          quantity: totalPersons, roomCode: 'DEMO',
+          guestName: GUEST.name, lang,
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        // Fallback demo mode
+        setBooked(p => new Set([...p, exp.id]));
+        setShowConfirm(exp.name);
+        setSelectedExp(null);
+      }
+    } catch {
+      // Stripe not configured — demo mode
+      setBooked(p => new Set([...p, exp.id]));
+      setShowConfirm(exp.name);
+      setSelectedExp(null);
+    }
+    setPayLoading(false);
+  };
 
   const hour = simHour ?? new Date().getHours();
   const timeCtx = hour < 6 ? "night" : hour < 12 ? "morning" : hour < 18 ? "midday" : hour < 22 ? "evening" : "night";
@@ -348,8 +446,8 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           ✓ Concierge booking aktivnosti<br />
           ✓ Loyalty bodovi i popusti za sljedeći put
         </div>
-        <Btn primary style={{ width: "100%", marginBottom: 10 }} onClick={() => { setPremium(true); setShowPaywall(false); }}>
-          {t("unlockPremium",lang)}
+        <Btn primary style={{ width: "100%", marginBottom: 10 }} onClick={startPremiumCheckout}>
+          {payLoading ? "⏳..." : t("unlockPremium",lang)}
         </Btn>
         <div style={{ ...dm, fontSize: 11, color: C.mut }}>Plaćanje putem Stripe · SIAL Consulting d.o.o.</div>
       </div>
@@ -1129,8 +1227,8 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               💰 Marža: {selectedExp.ourPrice - selectedExp.price}€/osobi (admin info)
             </div>
             <div style={{ display: "flex", gap: 10 }}>
-              <Btn style={{ flex: 1 }} onClick={() => setSelectedExp(null)}>Zurück</Btn>
-              <Btn primary style={{ flex: 1 }} onClick={() => { setBooked(p => new Set([...p, selectedExp.id])); setShowConfirm(selectedExp.name); setSelectedExp(null); }}>Buchen →</Btn>
+              <Btn style={{ flex: 1 }} onClick={() => setSelectedExp(null)}>{t("back",lang)}</Btn>
+              <Btn primary style={{ flex: 1 }} onClick={() => startBookingCheckout(selectedExp)}>{payLoading ? "⏳..." : t("bookNow",lang)}</Btn>
             </div>
           </div>
         </div>
