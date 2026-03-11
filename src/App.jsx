@@ -292,29 +292,30 @@ const GEMS = [
 ];
 
 const GYG = (id) => `https://www.getyourguide.com/${id}/?partner_id=9OEGOYI&utm_medium=local_partners`;
+const VIA = (id) => `https://www.viator.com/tours/${id}?pid=P00292197&mcid=42383&medium=link`;
 
 const EXPERIENCES = [
   // ═══ SREDNJA DALMACIJA (Split, Omiš, Otoci) ═══
   { id: 1, name: "Rafting Cetina", emoji: "🚣", price: 35, dur: "3h", rating: 4.9, cat: "adventure", region: "split",
-    gyg: GYG("omis-l2096/rafting-on-cetina-river-from-omis-t35592") },
+    gyg: GYG("omis-l2096/rafting-on-cetina-river-from-omis-t35592"), viator: VIA("Split/rafting-on-Cetina-river-Omis/d4185-261342P1") },
   { id: 2, name: "Kajak Night Glow", emoji: "🛶", price: 55, dur: "3h", rating: 4.9, cat: "adventure", region: "split",
     gyg: GYG("split-l268/split-kayak-night-glow-tour-t438836") },
   { id: 3, name: "ATV Quad + Waterfall", emoji: "🏍️", price: 65, dur: "5h", rating: 4.9, cat: "adventure", region: "split",
     gyg: GYG("split-l268/split-atv-quad-tour-adventure-with-waterfall-swimming-t445566") },
   { id: 4, name: "Split Walking Tour", emoji: "🏛️", price: 25, dur: "2h", rating: 4.7, cat: "culture", region: "split",
-    gyg: GYG("split-l268/split-walking-tour-t54976") },
+    gyg: GYG("split-l268/split-walking-tour-t54976"), viator: VIA("Split/Split-Diocletians-Palace-Walking-Tour/d4185-54976P1") },
   { id: 5, name: "Game of Thrones", emoji: "🐉", price: 60, dur: "2h", rating: 4.9, cat: "culture", region: "split",
     gyg: GYG("split-l268/split-private-game-of-thrones-tour-t899804") },
   { id: 6, name: "Blue Cave 5 Islands", emoji: "🏝️", price: 110, dur: "10h", rating: 4.8, cat: "premium", region: "split",
-    gyg: GYG("split-l268/from-split-blue-cave-mamma-mia-vis-hvar-5-islands-tour-t326676") },
+    gyg: GYG("split-l268/from-split-blue-cave-mamma-mia-vis-hvar-5-islands-tour-t326676"), viator: VIA("Split/Blue-Cave-and-Hvar-Tour-from-Split/d4185-17622P2") },
   { id: 7, name: "Hvar + Pakleni Catamaran", emoji: "⛵", price: 89, dur: "10h", rating: 4.8, cat: "premium", region: "split",
-    gyg: GYG("split-l268/split-full-day-boat-trip-to-3-islands-w-lunch-snorkeling-t412889") },
+    gyg: GYG("split-l268/split-full-day-boat-trip-to-3-islands-w-lunch-snorkeling-t412889"), viator: VIA("Split/Three-Island-Tour-from-Split/d4185-412889P1") },
   { id: 8, name: "Sunset Cruise", emoji: "🌅", price: 65, dur: "2h", rating: 5.0, cat: "premium", region: "split",
     gyg: GYG("split-l268/split-riviera-sunset-cruise-with-summer-vibes-t399715") },
   { id: 9, name: "Krka + Wine Tasting", emoji: "🍷", price: 65, dur: "8h", rating: 4.8, cat: "gastro", region: "split",
-    gyg: GYG("split-l268/day-tour-from-split-krka-waterfalls-tour-wine-tasting-t251842") },
+    gyg: GYG("split-l268/day-tour-from-split-krka-waterfalls-tour-wine-tasting-t251842"), viator: VIA("Split/From-Split-Krka-Waterfalls-Food-Wine-Tasting-Tour/d4185-251842P1") },
   { id: 10, name: "Plitvice Lakes", emoji: "🌊", price: 75, dur: "12h", rating: 4.8, cat: "nature", region: "split",
-    gyg: GYG("split-l268/from-split-plitvice-lakes-guided-tour-with-entry-tickets-t411976") },
+    gyg: GYG("split-l268/from-split-plitvice-lakes-guided-tour-with-entry-tickets-t411976"), viator: VIA("Split/Plitvice-Lakes-Guided-Tour-with-Entry-Tickets/d4185-411976P1") },
 
   // ═══ ISTRA (Rovinj, Pula, Motovun) ═══
   { id: 20, name: "Truffle Hunting", emoji: "🍄", price: 45, dur: "2h", rating: 4.9, cat: "gastro", region: "istria",
