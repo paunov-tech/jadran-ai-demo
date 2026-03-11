@@ -510,7 +510,7 @@ export default function JadranUnified() {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt: "Current weather RIGHT NOW in Podstrana Split Croatia. Give exact temperature, sea water temperature, UV index, wind direction and speed, humidity percentage, and today's sunset time. Be precise with numbers.", mode: "weather" }),
     }).then(r => r.json()).then(data => {
-      console.log("[JADRAN] Weather raw:", data.text?.substring(0, 200));
+      console.log("[JADRAN] Weather raw:", data.text?.substring(0, 200), "error:", data.error, "debug:", data.debug);
       try {
         let raw = data.text || "";
         raw = raw.replace(/```json|```/g, "").trim();
@@ -527,7 +527,7 @@ export default function JadranUnified() {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ prompt: "7-day weather forecast for Split Croatia starting today March 2026. Give high and low temperature for each day and appropriate weather emoji (☀️ for sunny, ⛅ for partly cloudy, 🌧️ for rain, 🌤️ for mostly sunny, ⛈️ for storm, 🌦️ for showers). Use real forecast data.", mode: "forecast" }),
     }).then(r => r.json()).then(data => {
-      console.log("[JADRAN] Forecast raw:", data.text?.substring(0, 300));
+      console.log("[JADRAN] Forecast raw:", data.text?.substring(0, 300), "error:", data.error);
       try {
         let raw = data.text || "";
         raw = raw.replace(/```json|```/g, "").trim();
@@ -1223,7 +1223,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt, mode: "practical" }),
       }).then(r => r.json()).then(d => {
-        console.log("[JADRAN] Live data for", subScreen, "raw:", d.text?.substring(0, 200));
+        console.log("[JADRAN] Live data for", subScreen, "raw:", d.text?.substring(0, 200), "error:", d.error, "debug:", d.debug);
         try {
           let raw = d.text || "";
           raw = raw.replace(/```json|```/g, "").trim();

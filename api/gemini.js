@@ -7,40 +7,37 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'Gemini API key not configured' });
+  if (!apiKey) return res.status(500).json({ error: 'Gemini API key not configured', text: '' });
 
   try {
     const { prompt, mode } = req.body;
 
     const INSTRUCTIONS = {
-      weather: 'Return ONLY a JSON object with fields: temp (number), feelsLike (number), icon (weather emoji), uv (number), wind (string), humidity (number), sea (sea water temp number), sunset (HH:MM string), description (string). Use real current data. NO markdown, NO backticks, NO explanation — raw JSON only.',
-      forecast: 'Return ONLY a JSON array of exactly 7 objects for 7-day forecast starting today. Each: {"di":INDEX,"icon":"EMOJI","h":HIGH_TEMP,"l":LOW_TEMP}. Temperatures are Celsius integers. Use real forecast data. NO markdown, NO backticks — raw JSON array only.',
-      places: 'Return ONLY a JSON array. Each object: {"name":"STRING","type":"STRING","distance":"STRING","rating":NUMBER,"priceRange":"STRING","openNow":BOOLEAN,"note":"STRING"}. Max 5. Use real data. NO markdown.',
-      practical: 'Return ONLY a JSON array of 5-8 objects. Each MUST be: {"name":"STRING","note":"STRING with hours prices distances current status","warn":false}. warn=true ONLY for emergency numbers. Use REAL current data. NO markdown, NO backticks, NO explanation — output starts with [ ends with ].',
-      grounded: 'You are a real-time information assistant for Croatian Adriatic coast tourists. Be concise. Include hours, prices, practical details.',
+      weather: 'Return ONLY a JSON object: {"temp":NUMBER,"icon":"EMOJI","uv":NUMBER,"wind":"STRING","humidity":NUMBER,"sea":NUMBER,"sunset":"HH:MM","description":"STRING"}. Use real current data. No markdown.',
+      forecast: 'Return ONLY a JSON array of 7 objects: [{"di":0,"icon":"EMOJI","h":NUMBER,"l":NUMBER},...]. Celsius integers. Real forecast. No markdown.',
+      practical: 'Return ONLY a JSON array: [{"name":"STRING","note":"STRING with hours prices distances","warn":false},...]. 5-8 items. Real data. No markdown.',
+      places: 'Return ONLY a JSON array of places: [{"name":"STRING","type":"STRING","note":"STRING"},...]. Max 5. Real data. No markdown.',
+      grounded: 'Provide current factual information for tourists on the Croatian Adriatic coast. Be concise.',
     };
 
     const sys = INSTRUCTIONS[mode] || INSTRUCTIONS.grounded;
     const jsonModes = ['weather', 'forecast', 'places', 'practical'];
     const isJson = jsonModes.includes(mode);
 
-    const userPrompt = isJson
-      ? prompt + '\n\nIMPORTANT: Respond with RAW JSON only. No markdown, no code blocks, no text before or after.'
-      : prompt;
-
     const body = {
-      contents: [{ parts: [{ text: userPrompt }] }],
+      contents: [{ parts: [{ text: prompt }] }],
       systemInstruction: { parts: [{ text: sys }] },
       generationConfig: {
-        temperature: isJson ? 0.05 : 0.7,
-        maxOutputTokens: isJson ? 800 : 1024,
+        temperature: isJson ? 0.1 : 0.7,
+        maxOutputTokens: 1024,
       },
+      tools: [{ googleSearch: {} }],
     };
 
-    // Google Search grounding for real-time data
-    body.tools = [{ googleSearch: {} }];
-
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+    
+    console.log('[GEMINI] Request mode:', mode, 'prompt:', prompt.substring(0, 80));
+    
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -48,16 +45,29 @@ export default async function handler(req, res) {
     });
 
     const data = await response.json();
+    
+    // Debug: log full response structure
+    console.log('[GEMINI] Response status:', response.status);
+    console.log('[GEMINI] Response keys:', Object.keys(data));
+    if (data.error) {
+      console.error('[GEMINI] API Error:', JSON.stringify(data.error));
+      return res.status(200).json({ text: '', error: data.error.message || 'Gemini error', debug: data.error });
+    }
+    if (!data.candidates || data.candidates.length === 0) {
+      console.warn('[GEMINI] No candidates. Full response:', JSON.stringify(data).substring(0, 500));
+      return res.status(200).json({ text: '', error: 'No candidates', debug: JSON.stringify(data).substring(0, 300) });
+    }
 
-    let text = data.candidates?.[0]?.content?.parts
+    let text = data.candidates[0]?.content?.parts
       ?.map(p => p.text || '')
       .filter(Boolean)
       .join('') || '';
 
+    console.log('[GEMINI] Extracted text length:', text.length, 'preview:', text.substring(0, 200));
+
     // Robust JSON extraction
     if (isJson && text) {
       text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-      // Find JSON boundaries
       if (!text.startsWith('{') && !text.startsWith('[')) {
         const objIdx = text.indexOf('{');
         const arrIdx = text.indexOf('[');
@@ -68,21 +78,16 @@ export default async function handler(req, res) {
           if (end > start) text = text.substring(start, end + 1);
         }
       }
-      // Fix trailing commas
       text = text.replace(/,\s*([}\]])/g, '$1');
-      // Validate
-      try { JSON.parse(text); } catch (e) {
-        console.warn('Gemini JSON issue:', e.message, 'raw:', text.substring(0, 300));
-      }
     }
 
-    const sources = data.candidates?.[0]?.groundingMetadata?.groundingChunks
+    const sources = data.candidates[0]?.groundingMetadata?.groundingChunks
       ?.map(c => ({ title: c.web?.title, uri: c.web?.uri }))
       .filter(s => s.title) || [];
 
     return res.status(200).json({ text, sources, mode });
   } catch (err) {
-    console.error('Gemini API error:', err);
-    return res.status(500).json({ error: 'Gemini service unavailable' });
+    console.error('[GEMINI] Exception:', err.message, err.stack);
+    return res.status(200).json({ text: '', error: err.message });
   }
 }
