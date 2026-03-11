@@ -52,8 +52,8 @@ export default function LandingPage() {
             </div>
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <a href="/ai" style={{ padding: "10px 20px", borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", color: "#fff", fontSize: 13, textDecoration: "none", fontWeight: 600, boxShadow: "0 4px 12px rgba(14,165,233,0.2)" }}>
-              🗺️ Vodič
+            <a href="/ai" style={{ padding: "10px 22px", borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", color: "#fff", fontSize: 13, textDecoration: "none", fontWeight: 600, boxShadow: "0 4px 12px rgba(14,165,233,0.2), inset 0 -2px 0 rgba(245,158,11,0.25)", borderBottom: "1px solid rgba(245,158,11,0.3)" }}>
+              🗺️ Vodič <span style={{ fontSize: 9, opacity: 0.7, marginLeft: 2 }}>✦</span>
             </a>
             <a href="/host" style={{ padding: "10px 20px", borderRadius: 12, border: "1px solid rgba(14,165,233,0.15)", color: "#7dd3fc", fontSize: 13, textDecoration: "none", fontWeight: 500 }}>
               🏠 Host Panel
