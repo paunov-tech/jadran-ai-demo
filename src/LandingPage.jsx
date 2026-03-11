@@ -8,14 +8,22 @@ import { useState, useEffect } from "react";
 const BKG = (city, params="") => `https://www.booking.com/searchresults.html?aid=101704203&ss=${encodeURIComponent(city)}&lang=en${params}`;
 
 const DESTINATIONS = [
-  { name: "Split & Podstrana", emoji: "🏛️", desc: "Dioklecijanova palača, Bačvice, Marjan", link: BKG("Split, Croatia"), region: "Dalmacija" },
-  { name: "Makarska rivijera", emoji: "🏖️", desc: "Najljepše plaže Jadrana", link: BKG("Makarska, Croatia"), region: "Dalmacija" },
-  { name: "Hvar", emoji: "🌿", desc: "Lavanda, glamur, noćni život", link: BKG("Hvar, Croatia"), region: "Otoci" },
-  { name: "Rovinj", emoji: "⛪", desc: "Najromantičniji grad Istre", link: BKG("Rovinj, Croatia"), region: "Istra" },
-  { name: "Pula", emoji: "🏟️", desc: "Rimska arena, obiteljske plaže", link: BKG("Pula, Croatia"), region: "Istra" },
-  { name: "Opatija", emoji: "⚓", desc: "Elegancija Kvarnera", link: BKG("Opatija, Croatia"), region: "Kvarner" },
-  { name: "Dubrovnik", emoji: "🏰", desc: "Biser Jadrana, gradske zidine", link: BKG("Dubrovnik, Croatia"), region: "Dalmacija" },
-  { name: "Zadar", emoji: "🌅", desc: "Morske orgulje, najljepši zalazak", link: BKG("Zadar, Croatia"), region: "Dalmacija" },
+  { name: "Split & Podstrana", emoji: "🏛️", desc: "Dioklecijanova palača, Bačvice, Marjan", link: BKG("Split, Croatia"), region: "Dalmacija",
+    img: "https://images.unsplash.com/photo-1555990538-1e7e8e7f5baa?w=440&h=220&fit=crop&auto=format&q=60" },
+  { name: "Makarska rivijera", emoji: "🏖️", desc: "Najljepše plaže Jadrana", link: BKG("Makarska, Croatia"), region: "Dalmacija",
+    img: "https://images.unsplash.com/photo-1592906209472-a36b1f3782ef?w=440&h=220&fit=crop&auto=format&q=60" },
+  { name: "Hvar", emoji: "🌿", desc: "Lavanda, glamur, noćni život", link: BKG("Hvar, Croatia"), region: "Otoci",
+    img: "https://images.unsplash.com/photo-1586015555751-63bb77f4322a?w=440&h=220&fit=crop&auto=format&q=60" },
+  { name: "Rovinj", emoji: "⛪", desc: "Najromantičniji grad Istre", link: BKG("Rovinj, Croatia"), region: "Istra",
+    img: "https://images.unsplash.com/photo-1590845288695-7d0dba34de10?w=440&h=220&fit=crop&auto=format&q=60" },
+  { name: "Pula", emoji: "🏟️", desc: "Rimska arena, obiteljske plaže", link: BKG("Pula, Croatia"), region: "Istra",
+    img: "https://images.unsplash.com/photo-1592157479909-f0a94b55a5ad?w=440&h=220&fit=crop&auto=format&q=60" },
+  { name: "Opatija", emoji: "⚓", desc: "Elegancija Kvarnera", link: BKG("Opatija, Croatia"), region: "Kvarner",
+    img: "https://images.unsplash.com/photo-1600017955613-cfb161984e74?w=440&h=220&fit=crop&auto=format&q=60" },
+  { name: "Dubrovnik", emoji: "🏰", desc: "Biser Jadrana, gradske zidine", link: BKG("Dubrovnik, Croatia"), region: "Dalmacija",
+    img: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=440&h=220&fit=crop&auto=format&q=60" },
+  { name: "Zadar", emoji: "🌅", desc: "Morske orgulje, najljepši zalazak", link: BKG("Zadar, Croatia"), region: "Dalmacija",
+    img: "https://images.unsplash.com/photo-1596370743446-6a7ef43a36f9?w=440&h=220&fit=crop&auto=format&q=60" },
 ];
 
 const STEPS = [
@@ -143,23 +151,34 @@ export default function LandingPage() {
             <div style={{ fontSize: 10, color: "#f59e0b", letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>DESTINACIJE</div>
             <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 400 }}>Otkrijte Jadran</div>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 16 }}>
             {DESTINATIONS.map((d, i) => (
               <a key={i} href={d.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
                 <div style={{
-                  padding: 20, borderRadius: 20,
-                  background: "rgba(12,28,50,0.6)", border: "1px solid rgba(14,165,233,0.06)",
-                  cursor: "pointer", transition: "all 0.3s",
+                  padding: 0, borderRadius: 20, overflow: "hidden", position: "relative",
+                  background: "#0c1c32", border: "1px solid rgba(14,165,233,0.06)",
+                  cursor: "pointer", transition: "all 0.3s", minHeight: 200,
                 }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.2)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.06)"; e.currentTarget.style.transform = ""; }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                    <span style={{ fontSize: 28 }}>{d.emoji}</span>
-                    <span style={{ fontSize: 10, color: "#7dd3fc", padding: "3px 10px", borderRadius: 10, background: "rgba(14,165,233,0.08)" }}>{d.region}</span>
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.25)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(0,0,0,0.3)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.06)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
+                  {/* Photo background */}
+                  <div style={{
+                    position: "absolute", inset: 0,
+                    backgroundImage: `url(${d.img})`,
+                    backgroundSize: "cover", backgroundPosition: "center",
+                    transition: "transform 0.5s",
+                  }} className="dest-img" />
+                  {/* Dark gradient overlay */}
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(0deg, rgba(6,14,28,0.92) 0%, rgba(6,14,28,0.5) 50%, rgba(6,14,28,0.25) 100%)" }} />
+                  {/* Content */}
+                  <div style={{ position: "relative", padding: 20, display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: 200 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", padding: "3px 10px", borderRadius: 10, background: "rgba(14,165,233,0.15)", backdropFilter: "blur(4px)" }}>{d.region}</span>
+                    </div>
+                    <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 20, fontWeight: 400, marginBottom: 4, textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>{d.name}</div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.5, marginBottom: 10 }}>{d.desc}</div>
+                    <div style={{ fontSize: 12, color: "#0ea5e9", fontWeight: 600 }}>Booking.com →</div>
                   </div>
-                  <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 18, fontWeight: 400, marginBottom: 4 }}>{d.name}</div>
-                  <div style={{ fontSize: 12, color: "#7dd3fc", lineHeight: 1.5, marginBottom: 10 }}>{d.desc}</div>
-                  <div style={{ fontSize: 12, color: "#0ea5e9", fontWeight: 600 }}>Booking.com →</div>
                 </div>
               </a>
             ))}
@@ -264,6 +283,8 @@ export default function LandingPage() {
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
         ::selection { background: rgba(14,165,233,0.3); }
+        .dest-img { transition: transform 0.5s ease !important; }
+        a:hover .dest-img { transform: scale(1.08) !important; }
         @media (max-width: 768px) {
           input[style] { width: 180px !important; }
         }
