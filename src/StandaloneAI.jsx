@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // JADRAN AI — Standalone AI Assistant
 // Route: jadran.ai/ai
-// Pay 3.99€/sezona → travel guide without apartment context
+// Pay 5.99€ → travel guide without apartment context
 // Perfect for: campervan travelers, day-trippers, cruise visitors
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useRef } from "react";
@@ -30,24 +30,23 @@ const LANGS = [
 ];
 
 const T = {
-  hr: { title: "Jadran Vodič", sub: "Lokalni savjeti za savršen odmor", start: "Započni razgovor", send: "Pošalji", placeholder: "Pitajte me o Jadranu...", region: "Gdje ste?", mode: "Kako putujete?", unlock: "Sezona — 3.99€", free3: "3 besplatna pitanja", remaining: "preostalo", upgraded: "Premium otključan!", back: "← Natrag", typing: "razmišljam..." },
-  en: { title: "Jadran Guide", sub: "Local tips for the perfect Adriatic trip", start: "Start chatting", send: "Send", placeholder: "Ask me about the Adriatic...", region: "Where are you?", mode: "How are you traveling?", unlock: "Season — 3.99€", free3: "3 free questions", remaining: "remaining", upgraded: "Premium unlocked!", back: "← Back", typing: "thinking..." },
-  de: { title: "Jadran Reiseführer", sub: "Lokale Tipps für den perfekten Adria-Urlaub", start: "Gespräch starten", send: "Senden", placeholder: "Fragen Sie mich über die Adria...", region: "Wo sind Sie?", mode: "Wie reisen Sie?", unlock: "Saison — 3.99€", free3: "3 kostenlose Fragen", remaining: "übrig", upgraded: "Premium freigeschaltet!", back: "← Zurück", typing: "denke nach..." },
-  it: { title: "Guida Jadran", sub: "Consigli locali per la vacanza perfetta", start: "Inizia a chattare", send: "Invia", placeholder: "Chiedimi dell'Adriatico...", region: "Dove siete?", mode: "Come viaggiate?", unlock: "Stagione — 3.99€", free3: "3 domande gratuite", remaining: "rimanenti", upgraded: "Premium sbloccato!", back: "← Indietro", typing: "penso..." },
-  at: { title: "Jadran Reiseführer", sub: "Lokale Tipps für den perfekten Adria-Urlaub", start: "Gespräch starten", send: "Senden", placeholder: "Fragen Sie mich über die Adria...", region: "Wo sind Sie?", mode: "Wie reisen Sie?", unlock: "Saison — 3.99€", free3: "3 kostenlose Fragen", remaining: "übrig", upgraded: "Premium freigeschaltet!", back: "← Zurück", typing: "denke nach..." },
-  si: { title: "Jadran vodič", sub: "Lokalni nasveti za popoln Jadran", start: "Začni pogovor", send: "Pošlji", placeholder: "Vprašajte me o Jadranu...", region: "Kje ste?", mode: "Kako potujete?", unlock: "Sezona — 3.99€", free3: "3 brezplačna vprašanja", remaining: "preostalo", upgraded: "Premium odklenjen!", back: "← Nazaj", typing: "razmišljam..." },
-  cz: { title: "Jadran průvodce", sub: "Místní tipy pro perfektní Jadran", start: "Začít konverzaci", send: "Odeslat", placeholder: "Zeptejte se na Jadran...", region: "Kde jste?", mode: "Jak cestujete?", unlock: "Sezóna — 3.99€", free3: "3 otázky zdarma", remaining: "zbývá", upgraded: "Premium odemčen!", back: "← Zpět", typing: "přemýšlím..." },
-  pl: { title: "Jadran przewodnik", sub: "Lokalne wskazówki na Adriatyk", start: "Zacznij rozmowę", send: "Wyślij", placeholder: "Zapytaj o Adriatyk...", region: "Gdzie jesteś?", mode: "Jak podróżujesz?", unlock: "Sezon — 3.99€", free3: "3 pytania za darmo", remaining: "pozostało", upgraded: "Premium odblokowany!", back: "← Wstecz", typing: "myślę..." },
+  hr: { title: "Jadran Vodič", sub: "Lokalni savjeti za savršen odmor", start: "Započni razgovor", send: "Pošalji", placeholder: "Pitajte me o Jadranu...", region: "Gdje ste?", mode: "Kako putujete?", unlock: "Otključaj vodič — 5.99€", free3: "3 besplatna pitanja", remaining: "preostalo", upgraded: "Premium otključan!", back: "← Natrag", typing: "razmišljam..." },
+  en: { title: "Jadran Guide", sub: "Local tips for the perfect Adriatic trip", start: "Start chatting", send: "Send", placeholder: "Ask me about the Adriatic...", region: "Where are you?", mode: "How are you traveling?", unlock: "Unlock guide — 5.99€", free3: "3 free questions", remaining: "remaining", upgraded: "Premium unlocked!", back: "← Back", typing: "thinking..." },
+  de: { title: "Jadran Reiseführer", sub: "Lokale Tipps für den perfekten Adria-Urlaub", start: "Gespräch starten", send: "Senden", placeholder: "Fragen Sie mich über die Adria...", region: "Wo sind Sie?", mode: "Wie reisen Sie?", unlock: "Freischalten — 5.99€", free3: "3 kostenlose Fragen", remaining: "übrig", upgraded: "Premium freigeschaltet!", back: "← Zurück", typing: "denke nach..." },
+  it: { title: "Guida Jadran", sub: "Consigli locali per la vacanza perfetta", start: "Inizia a chattare", send: "Invia", placeholder: "Chiedimi dell'Adriatico...", region: "Dove siete?", mode: "Come viaggiate?", unlock: "Sblocca guida — 5.99€", free3: "3 domande gratuite", remaining: "rimanenti", upgraded: "Premium sbloccato!", back: "← Indietro", typing: "penso..." },
+  at: { title: "Jadran Reiseführer", sub: "Lokale Tipps für den perfekten Adria-Urlaub", start: "Gespräch starten", send: "Senden", placeholder: "Fragen Sie mich über die Adria...", region: "Wo sind Sie?", mode: "Wie reisen Sie?", unlock: "Freischalten — 5.99€", free3: "3 kostenlose Fragen", remaining: "übrig", upgraded: "Premium freigeschaltet!", back: "← Zurück", typing: "denke nach..." },
+  si: { title: "Jadran vodič", sub: "Lokalni nasveti za popoln Jadran", start: "Začni pogovor", send: "Pošlji", placeholder: "Vprašajte me o Jadranu...", region: "Kje ste?", mode: "Kako potujete?", unlock: "Odkleni vodič — 5.99€", free3: "3 brezplačna vprašanja", remaining: "preostalo", upgraded: "Premium odklenjen!", back: "← Nazaj", typing: "razmišljam..." },
+  cz: { title: "Jadran průvodce", sub: "Místní tipy pro perfektní Jadran", start: "Začít konverzaci", send: "Odeslat", placeholder: "Zeptejte se na Jadran...", region: "Kde jste?", mode: "Jak cestujete?", unlock: "Odemknout průvodce — 5.99€", free3: "3 otázky zdarma", remaining: "zbývá", upgraded: "Premium odemčen!", back: "← Zpět", typing: "přemýšlím..." },
+  pl: { title: "Jadran przewodnik", sub: "Lokalne wskazówki na Adriatyk", start: "Zacznij rozmowę", send: "Wyślij", placeholder: "Zapytaj o Adriatyk...", region: "Gdzie jesteś?", mode: "Jak podróżujesz?", unlock: "Odblokuj przewodnik — 5.99€", free3: "3 pytania za darmo", remaining: "pozostało", upgraded: "Premium odblokowany!", back: "← Wstecz", typing: "myślę..." },
 };
 
 export default function StandaloneAI() {
-  const [step, setStep] = useState("chat"); // straight to chat
+  const [step, setStep] = useState("setup"); // setup | chat
   const [lang, setLang] = useState("hr");
   const [region, setRegion] = useState(null);
   const [travelMode, setTravelMode] = useState(null);
   const [premium, setPremium] = useState(false);
-  // 12h free trial
-  const [trialExpired, setTrialExpired] = useState(false);
+  const [freeLeft, setFreeLeft] = useState(3);
   const [showPaywall, setShowPaywall] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
 
@@ -59,31 +58,29 @@ export default function StandaloneAI() {
   const [weather, setWeather] = useState(null);
 
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
-  // Fetch live weather + set welcome message
+  // Fetch live weather
   useEffect(() => {
     fetch("/api/weather").then(r => r.json()).then(d => {
       if (d.current?.temp) setWeather(d.current);
     }).catch(() => {});
-    // Welcome message
-    setMsgs([{ role: "assistant", text: "Pozdrav! 🌊 Ja sam vaš lokalni vodič za Jadran. Recite mi — gdje se nalazite ili kamo putujete? Putujem li kamperom, brodom, ili ste u apartmanu?" }]);
   }, []);
 
-  // Check premium + 12h trial
+  // Check premium from URL (after Stripe redirect)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("premium") === "true" || params.get("payment") === "success") {
+    if (params.get("premium") === "true") {
       setPremium(true);
       try { localStorage.setItem("jadran_ai_premium", "1"); } catch {}
       window.history.replaceState({}, "", "/ai");
     }
+    // Check localStorage
     try { if (localStorage.getItem("jadran_ai_premium") === "1") setPremium(true); } catch {}
-    // 12h free trial
-    try {
-      let start = localStorage.getItem("jadran_trial_start");
-      if (!start) { start = Date.now().toString(); localStorage.setItem("jadran_trial_start", start); }
-      const hours = (Date.now() - parseInt(start)) / 3600000;
-      if (hours > 12) setTrialExpired(true);
-    } catch {}
+    // Also check ?payment=success from Stripe redirect
+    if (params.get("payment") === "success") {
+      setPremium(true);
+      try { localStorage.setItem("jadran_ai_premium", "1"); } catch {}
+      window.history.replaceState({}, "", "/ai");
+    }
   }, []);
 
   const t = T[lang] || T.en;
@@ -108,23 +105,22 @@ export default function StandaloneAI() {
   // ─── AI CHAT ───
   const sendMsg = async () => {
     if (!input.trim() || loading) return;
-    if (!premium && trialExpired) { setShowPaywall(true); return; }
+    if (!premium && freeLeft <= 0) { setShowPaywall(true); return; }
 
     const msg = input.trim();
     setInput("");
     setMsgs(p => [...p, { role: "user", text: msg }]);
     setLoading(true);
-    // trial active — no decrement needed
+    if (!premium) setFreeLeft(f => f - 1);
 
-    const regionName = region ? (REGIONS.find(r => r.id === region)?.name || "Jadran") : "hrvatska obala Jadrana";
-    const modeName = travelMode ? (TRAVEL_MODES.find(m => m.id === travelMode)?.name || "") : "";
+    const regionName = REGIONS.find(r => r.id === region)?.name || "Jadran";
+    const modeName = TRAVEL_MODES.find(m => m.id === travelMode)?.name || "";
     const isCamper = travelMode === "camper";
     const isSailing = travelMode === "sailing";
     const wxCtx = weather ? `TRENUTNO VRIJEME: ${weather.temp}°C ${weather.icon}, UV ${weather.uv}, vjetar ${weather.wind}, more ${weather.sea}°C, zalazak ${weather.sunset}.` : "";
 
     const sys = `Ti si lokalni turistički vodič za hrvatsku obalu Jadrana.
-KONTEKST: ${regionName ? "Gost je u regiji " + regionName + "." : "Još ne znaš gdje je gost — pitaj ga."} ${modeName ? "Putuje kao: " + modeName + "." : ""} ${wxCtx}
-PRAVILO: Ako gost spomene kamper, autodom, VW California, Fiat Ducato — automatski uključi kamper savjete (parking, voda, dump station, legalna mjesta). Ako spomene jedrilicu/brod/marinu — daj nautičke savjete. Ne pitaj ako možeš zaključiti iz konteksta.
+KONTEKST: Gost je u regiji ${regionName}. Putuje kao: ${modeName}. ${wxCtx}
 JEZIK: ${lang === "de" || lang === "at" ? "Deutsch" : lang === "en" ? "English" : lang === "it" ? "Italiano" : lang === "si" ? "Slovenščina" : lang === "cz" ? "Čeština" : lang === "pl" ? "Polski" : "Hrvatski"}.
 ${isCamper ? `KAMPER SPECIFIČNO: Ovaj gost putuje kamperom/autodomom. Uvijek uključi:
 - Legalna mjesta za parkiranje i noćenje (kampiralište, autocamp, legalni parking)
@@ -170,9 +166,8 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
       onClick={() => setShowPaywall(false)}>
       <div onClick={e => e.stopPropagation()} style={{ background: "rgba(12,28,50,0.95)", borderRadius: 24, padding: 36, maxWidth: 400, width: "100%", textAlign: "center", border: "1px solid rgba(245,158,11,0.1)" }}>
         <div style={{ fontSize: 48, marginBottom: 12 }}>⭐</div>
-        <div style={{ fontFamily: "'DM Serif Display',Georgia,serif", fontSize: 26, marginBottom: 8 }}>Sezonska pretplata</div>
-        <div style={{ fontSize: 40, fontWeight: 300, color: C.gold, marginBottom: 8 }}>3.99€</div>
-        <div style={{ fontSize: 12, color: C.mut, marginBottom: 4 }}>Cijela sezona · svi uređaji · neograničeno</div>
+        <div style={{ fontFamily: "'DM Serif Display',Georgia,serif", fontSize: 26, marginBottom: 8 }}>Premium AI</div>
+        <div style={{ fontSize: 40, fontWeight: 300, color: C.gold, marginBottom: 8 }}>5.99€</div>
         <div style={{ fontSize: 13, color: C.mut, marginBottom: 24, lineHeight: 1.6 }}>
           Neograničena pitanja, lokalni savjeti, personalizirane preporuke{travelMode === "camper" ? ", kamper parking & voda" : ""}.
         </div>
@@ -185,7 +180,7 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
   );
 
   // ═══ CAMPER-SPECIFIC QUICK QUESTIONS ═══
-  const camperQuick = (!travelMode || travelMode === "camper") ? [
+  const camperQuick = travelMode === "camper" ? [
     "🅿️ Gdje mogu legalno parkirati kamper?",
     "💧 Najbliža pumpa za vodu?",
     "🚿 Dump station u blizini?",
@@ -317,7 +312,7 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
           {premium
             ? <span style={{ padding: "4px 12px", borderRadius: 12, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.12)", color: C.gold, fontSize: 10, fontWeight: 600 }}>⭐ PREMIUM</span>
             : <button onClick={() => setShowPaywall(true)} style={{ padding: "4px 12px", borderRadius: 12, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.12)", color: C.gold, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                {!trialExpired ? "12h besplatno ✓" : t.unlock}
+                {freeLeft > 0 ? `${freeLeft}/3 ${t.remaining}` : t.unlock}
               </button>
           }
         </div>
@@ -371,10 +366,10 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
       </div>
 
       {/* Free questions warning */}
-      {!premium && trialExpired && (
+      {!premium && freeLeft <= 0 && (
         <div style={{ padding: "10px 20px", background: "rgba(245,158,11,0.06)", borderTop: "1px solid rgba(245,158,11,0.1)", textAlign: "center", flexShrink: 0 }}>
           <button onClick={() => setShowPaywall(true)} style={{ background: "none", border: "none", color: C.gold, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-            ⭐ Besplatni period završen — {t.unlock}
+            ⭐ Besplatna pitanja potrošena — {t.unlock}
           </button>
         </div>
       )}
