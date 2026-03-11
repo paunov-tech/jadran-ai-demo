@@ -43,7 +43,7 @@ export default function LandingPage() {
       {/* ═══ HERO ═══ */}
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px" }}>
         {/* Nav */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 0" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, padding: "16px 0" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 20, fontWeight: 700, color: "#fff", boxShadow: "0 4px 16px rgba(14,165,233,0.25)" }}>J</div>
             <div>
@@ -63,7 +63,7 @@ export default function LandingPage() {
 
         {/* Hero content */}
         <div style={{
-          padding: "80px 0 60px", textAlign: "center",
+          padding: "clamp(40px, 8vw, 80px) 0 clamp(30px, 6vw, 60px)", textAlign: "center",
           opacity: anim ? 1 : 0, transform: anim ? "translateY(0)" : "translateY(30px)",
           transition: "all 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
         }}>
@@ -117,7 +117,7 @@ export default function LandingPage() {
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 40 }}>
             <div style={{ fontSize: 10, color: "#0ea5e9", letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>KAKO FUNKCIONIRA</div>
-            <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 32, fontWeight: 400 }}>Tri koraka do savršenog odmora</div>
+            <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 400 }}>Tri koraka do savršenog odmora</div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
             {STEPS.map((s, i) => (
@@ -141,7 +141,7 @@ export default function LandingPage() {
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 40 }}>
             <div style={{ fontSize: 10, color: "#f59e0b", letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>DESTINACIJE</div>
-            <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 32, fontWeight: 400 }}>Otkrijte Jadran</div>
+            <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 400 }}>Otkrijte Jadran</div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 16 }}>
             {DESTINATIONS.map((d, i) => (

@@ -230,7 +230,7 @@ PRAVILA: Kratko (3-5 rečenica), toplo, konkretno s cijenama i udaljenostima. Em
         {/* Region */}
         <div style={{ marginBottom: 36 }}>
           <div style={{ fontSize: 11, color: C.mut, letterSpacing: 3, marginBottom: 12, fontWeight: 500 }}>{t.region}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
             {REGIONS.map(r => (
               <div key={r.id} onClick={() => setRegion(r.id)} style={{
                 padding: "14px 16px", borderRadius: 16, cursor: "pointer",
@@ -318,7 +318,7 @@ PRAVILA: Kratko (3-5 rečenica), toplo, konkretno s cijenama i udaljenostima. Em
         {msgs.map((m, i) => (
           <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
             <div style={{
-              maxWidth: "80%", padding: "12px 16px", borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+              maxWidth: "85%", padding: "12px 16px", borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
               background: m.role === "user" ? "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(2,132,199,0.1))" : C.card,
               border: `1px solid ${m.role === "user" ? "rgba(14,165,233,0.2)" : C.bord}`,
               fontSize: 14, lineHeight: 1.7, whiteSpace: "pre-wrap",

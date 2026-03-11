@@ -269,7 +269,7 @@ export default function HostPanel() {
         </div>
 
         {/* Stats bar */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 12, marginBottom: 24 }}>
           {[
             { label: "Apartmani", value: apartments.length, icon: "🏠", color: C.accent },
             { label: "Gosti aktivni", value: guests.filter(g => { const p = g.phase; return p === "kiosk" || p === "pre"; }).length, icon: "👥", color: C.green },
