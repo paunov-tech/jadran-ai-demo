@@ -65,6 +65,14 @@ export default function LandingPage() {
             </div>
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 2, background: "rgba(12,28,50,0.5)", borderRadius: 12, padding: 3 }}>
+              {[["hr","🇭🇷"],["de","🇩🇪"],["at","🇦🇹"],["en","🇬🇧"],["it","🇮🇹"],["si","🇸🇮"],["cz","🇨🇿"],["pl","🇵🇱"]].map(([c,f]) => (
+                <button key={c} onClick={() => setLang(c)}
+                  style={{ padding: "4px 6px", background: lang === c ? "rgba(14,165,233,0.12)" : "transparent", border: lang === c ? "1px solid rgba(14,165,233,0.15)" : "1px solid transparent", borderRadius: 9, cursor: "pointer", fontSize: 14, lineHeight: 1 }}>
+                  {f}
+                </button>
+              ))}
+            </div>
             <a href="/host" style={{ padding: "10px 20px", borderRadius: 12, border: "1px solid rgba(14,165,233,0.15)", color: "#7dd3fc", fontSize: 13, textDecoration: "none", fontWeight: 500 }}>
               🏠 Host Panel
             </a>
