@@ -39,7 +39,7 @@ const T = {
   left:       { hr:"preostalo", de:"übrig", at:"übrig", en:"left", it:"rimanente", si:"preostalo", cz:"zbývá", pl:"pozostało" },
   perDay:     { hr:"€/dan", de:"€/Tag", at:"€/Tag", en:"€/day", it:"€/giorno", si:"€/dan", cz:"€/den", pl:"€/dzień" },
   day:        { hr:"Dan", de:"Tag", at:"Tag", en:"Day", it:"Giorno", si:"Dan", cz:"Den", pl:"Dzień" },
-  simulation: { hr:"SIMULACIJA", de:"SIMULATION", at:"SIMULATION", en:"SIMULATION", it:"SIMULAZIONE", si:"SIMULACIJA", cz:"SIMULACE", pl:"SYMULACJA" },
+  simulation: { hr:"DOBA DANA", de:"TAGESZEIT", at:"TAGESZEIT", en:"TIME OF DAY", it:"ORA DEL GIORNO", si:"ČAS DNEVA", cz:"DENNÍ DOBA", pl:"PORA DNIA" },
   aiRec:      { hr:"AI PREPORUKA", de:"AI-EMPFEHLUNG", at:"AI-EMPFEHLUNG", en:"AI RECOMMENDATION", it:"SUGGERIMENTO AI", si:"AI PRIPOROČILO", cz:"AI DOPORUČENÍ", pl:"REKOMENDACJA AI" },
 
   // ─── Practical sections ───
@@ -100,7 +100,7 @@ const T = {
   beachKayak: { hr:"Plaža + Kajak", de:"Strandtag + Kayak", at:"Strandtag + Kayak", en:"Beach + Kayak", it:"Spiaggia + Kayak", si:"Plaža + Kajak", cz:"Pláž + Kajak", pl:"Plaża + Kajak" },
   aiOptimized:{ hr:"AI je optimizirao raspored prema vremenu.", de:"AI hat den Zeitplan wetterabhängig optimiert.", at:"AI hat den Zeitplan wetterabhängig optimiert.", en:"AI optimized the schedule based on weather.", it:"L'AI ha ottimizzato il programma in base al meteo.", si:"AI je optimiziral urnik glede na vreme.", cz:"AI optimalizovala plán podle počasí.", pl:"AI zoptymalizowało plan na podstawie pogody." },
   packages:   { hr:"PAKETI", de:"PAKETE", at:"PAKETE", en:"PACKAGES", it:"PACCHETTI", si:"PAKETI", cz:"BALÍČKY", pl:"PAKIETY" },
-  simArrival: { hr:"Simulacija: Dan dolaska →", de:"Simulation: Anreisetag →", at:"Simulation: Anreisetag →", en:"Simulation: Arrival day →", it:"Simulazione: Giorno di arrivo →", si:"Simulacija: Dan prihoda →", cz:"Simulace: Den příjezdu →", pl:"Symulacja: Dzień przyjazdu →" },
+  simArrival: { hr:"Pogledajte putovanje →", de:"Reise ansehen →", at:"Reise ansehen →", en:"View your journey →", it:"Visualizza il viaggio →", si:"Oglejte si potovanje →", cz:"Zobrazit cestu →", pl:"Zobacz podróż →" },
   safeTrip:   { hr:"Sretan put!", de:"Gute Reise!", at:"Gute Reise!", en:"Safe travels!", it:"Buon viaggio!", si:"Srečno pot!", cz:"Šťastnou cestu!", pl:"Szczęśliwej podróży!" },
   onTheRoad:  { hr:"NA PUTU", de:"UNTERWEGS", at:"UNTERWEGS", en:"ON THE ROAD", it:"IN VIAGGIO", si:"NA POTI", cz:"NA CESTĚ", pl:"W DRODZE" },
   arrival:    { hr:"DOLAZAK", de:"ANKUNFT", at:"ANKUNFT", en:"ARRIVAL", it:"ARRIVO", si:"PRIHOD", cz:"PŘÍJEZD", pl:"PRZYJAZD" },
@@ -132,7 +132,7 @@ const T = {
   bothDiscount:{ hr:"Oboje dobivate popust na sljedeću rezervaciju", de:"Beide erhalten Rabatt auf die nächste Buchung", at:"Beide erhalten Rabatt auf die nächste Buchung", en:"Both of you get a discount on next booking", it:"Entrambi ottenete uno sconto sulla prossima prenotazione", si:"Oba dobita popust na naslednjo rezervacijo", cz:"Oba získáte slevu na příští rezervaci", pl:"Oboje otrzymujecie zniżkę na następną rezerwację" },
   askDalmatia:{ hr:"Pitajte bilo što o Dalmaciji", de:"Fragen Sie alles über Dalmatien", at:"Fragen Sie alles über Dalmatien", en:"Ask anything about Dalmatia", it:"Chiedi qualsiasi cosa sulla Dalmazia", si:"Vprašajte karkoli o Dalmaciji", cz:"Zeptejte se na cokoliv o Dalmácii", pl:"Zapytaj o cokolwiek o Dalmacji" },
   localTip:   { hr:"Lokalni znaju — turisti ne", de:"Einheimische wissen — Touristen nicht", at:"Einheimische wissen — Touristen nicht", en:"Locals know — tourists don't", it:"I locali sanno — i turisti no", si:"Domačini vedo — turisti ne", cz:"Místní ví — turisté ne", pl:"Lokalni wiedzą — turyści nie" },
-  checkOut:   { hr:"Simulacija: Check-out →", de:"Simulation: Check-out →", at:"Simulation: Check-out →", en:"Simulation: Check-out →", it:"Simulazione: Check-out →", si:"Simulacija: Check-out →", cz:"Simulace: Check-out →", pl:"Symulacja: Check-out →" },
+  checkOut:   { hr:"Check-out →", de:"Check-out →", at:"Check-out →", en:"Check-out →", it:"Check-out →", si:"Check-out →", cz:"Check-out →", pl:"Check-out →" },
   chatPrompt1:{ hr:"Što danas s djecom?", de:"Was heute mit Kindern?", at:"Was heute mit Kindern?", en:"What to do with kids today?", it:"Cosa fare con i bambini oggi?", si:"Kaj danes z otroki?", cz:"Co dnes s dětmi?", pl:"Co dziś z dziećmi?" },
   chatPrompt2:{ hr:"Tajne plaže?", de:"Geheime Strände?", at:"Geheime Strände?", en:"Secret beaches?", it:"Spiagge segrete?", si:"Skrite plaže?", cz:"Tajné pláže?", pl:"Tajne plaże?" },
   chatPrompt3:{ hr:"Preporuka za večeru?", de:"Abendessen-Tipp?", at:"Abendessen-Tipp?", en:"Dinner recommendation?", it:"Consiglio per cena?", si:"Priporočilo za večerjo?", cz:"Tip na večeři?", pl:"Polecenie na kolację?" },
@@ -222,7 +222,8 @@ const FORECAST_DAYS = {
   cz: ["Po","Út","St","Čt","Pá","So","Ne"],
   pl: ["Pon","Wt","Śr","Czw","Pt","Sob","Ndz"],
 };
-const FORECAST = [
+// Forecast fallback — overridden by Gemini if available
+const FORECAST_DEFAULT = [
   { di: 0, icon: "☀️", h: 31, l: 22 }, { di: 1, icon: "⛅", h: 28, l: 21 },
   { di: 2, icon: "🌧️", h: 23, l: 19 }, { di: 3, icon: "☀️", h: 30, l: 22 },
   { di: 4, icon: "☀️", h: 32, l: 23 }, { di: 5, icon: "⛅", h: 29, l: 21 },
@@ -414,7 +415,17 @@ export default function JadranUnified() {
   console.log("[JADRAN] Component mounted, roomCode:", getRoomCode());
   const [lang, setLang] = useState("hr");
   const [splash, setSplash] = useState(true);
-  const [phase, setPhase] = useState("pre"); // pre | kiosk | post
+  // Auto-compute initial phase from guest dates
+  const computeInitialPhase = () => {
+    const now = new Date();
+    const arr = G.arrival ? new Date(G.arrival) : null;
+    const dep = G.departure ? new Date(G.departure) : null;
+    if (arr && now < arr) return "pre";
+    if (arr && dep && now >= arr && now <= dep) return "kiosk";
+    if (dep && now > dep) return "post";
+    return "pre";
+  };
+  const [phase, setPhase] = useState("pre"); // overridden by loadGuest
   const [subScreen, setSubScreen] = useState("onboard"); // varies per phase
   const [premium, setPremium] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
@@ -449,7 +460,22 @@ export default function JadranUnified() {
       if (data) {
         if (data.premium) setPremium(true);
         if (data.lang) setLang(data.lang);
-        if (data.phase) { setPhase(data.phase); setSubScreen(data.subScreen || "home"); }
+        if (data.phase) {
+          // Use date-based phase if dates are available
+          const autoPhase = (() => {
+            const now = new Date();
+            const arr = data.arrival ? new Date(data.arrival) : null;
+            const dep = data.departure ? new Date(data.departure) : null;
+            if (arr && now < arr) return "pre";
+            if (arr && dep && now >= arr && now <= dep) return "kiosk";
+            if (dep && now > dep) return "post";
+            return data.phase;
+          })();
+          setPhase(autoPhase);
+          if (autoPhase === "pre") setSubScreen(data.subScreen || "onboard");
+          else if (autoPhase === "kiosk") setSubScreen(data.subScreen || "home");
+          else setSubScreen(data.subScreen || "summary");
+        }
         if (data.booked) setBooked(new Set(data.booked));
         // Load guest profile fields if they exist
         if (data.name && data.country) {
@@ -486,6 +512,7 @@ export default function JadranUnified() {
 
   // ─── WEATHER: Fetch real data via Gemini grounding ───
   const [weather, setWeather] = useState(W_DEFAULT);
+  const [forecast, setForecast] = useState(null); // null = use FORECAST_DEFAULT
   useEffect(() => {
     fetch("/api/gemini", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -623,6 +650,7 @@ export default function JadranUnified() {
   const hour = simHour ?? new Date().getHours();
   const timeCtx = hour < 6 ? "night" : hour < 12 ? "morning" : hour < 18 ? "midday" : hour < 22 ? "evening" : "night";
   const dateLocale = lang === "de" || lang === "at" ? "de-DE" : lang === "en" ? "en-GB" : lang === "it" ? "it-IT" : lang === "si" ? "sl-SI" : lang === "cz" ? "cs-CZ" : lang === "pl" ? "pl-PL" : "hr-HR";
+  const isAdmin = isAdmin;
   const daysLeft = 7 - kioskDay + 1;
   const budgetLeft = G.budget - G.spent;
 
@@ -890,12 +918,12 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
     if (subScreen === "pretrip") return (
       <>
         <div style={{ padding: "24px 0 8px" }}>
-          <div style={{ fontSize: 30, fontWeight: 400 }}>7 {t("daysToGo",lang)} ☀️</div>
+          <div style={{ fontSize: 30, fontWeight: 400 }}>{Math.max(0, Math.ceil((new Date(G.arrival) - new Date()) / 86400000))} {t("daysToGo",lang)} ☀️</div>
           <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>{new Date(G.arrival).toLocaleDateString(dateLocale || "hr-HR", {day:"numeric",month:"long"})} – {new Date(G.departure).toLocaleDateString(dateLocale || "hr-HR", {day:"numeric",month:"long",year:"numeric"})} · {G.accommodation}</div>
         </div>
         <SectionLabel>{t("forecast",lang)}</SectionLabel>
         <div style={{ display: "flex", gap: 2, marginBottom: 24 }}>
-          {FORECAST.map((d, i) => (
+          {(forecast || FORECAST_DEFAULT).map((d, i) => (
             <div key={i} style={{ flex: 1, textAlign: "center", padding: "12px 4px", borderRadius: 12 }}>
               <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 1 }}>{(FORECAST_DAYS[lang]||FORECAST_DAYS.hr)[d.di]}</div>
               <div style={{ fontSize: 22, margin: "4px 0" }}>{d.icon}</div>
@@ -962,7 +990,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           <div style={{ position: "absolute", top: "calc(50% - 14px)", left: `calc(10% + ${transitProg * 0.8}% - 14px)`, fontSize: 28, transition: "left 0.4s" }}>🚗</div>
           <div style={{ position: "absolute", top: "calc(50% - 10px)", right: "6%", fontSize: 22 }}>🏖️</div>
         </div>
-        <input type="range" min={0} max={100} value={transitProg} onChange={e => setTransitProg(+e.target.value)} style={{ width: "100%", accentColor: C.accent, marginBottom: 16 }} />
+        {isAdmin && <input type="range" min={0} max={100} value={transitProg} onChange={e => setTransitProg(+e.target.value)} style={{ width: "100%", accentColor: C.accent, marginBottom: 16 }} />}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
           <Card>
             <SectionLabel>{t("onTheRoad",lang)}</SectionLabel>
@@ -983,7 +1011,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           </Card>
         </div>
         <div style={{ textAlign: "center" }}>
-          <Btn primary onClick={() => { setPhase("kiosk"); setSubScreen("home"); }}>{t("arrived",lang)}</Btn>
+          <Btn primary onClick={() => { setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" }); }}>{t("arrived",lang)}</Btn>
         </div>
       </>
     );
@@ -1043,14 +1071,14 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               UV: <strong style={{ color: weather.uv >= 8 ? C.red : C.gold }}>{weather.uv}</strong>{weather.uv >= 8 && <span style={{ color: C.red }}> SPF50+!</span>} · 🌅 {weather.sunset}
             </div>
           </Card>
-          <Card style={{ display: "flex", flexDirection: "column", gap: 6, padding: "14px 18px", minWidth: 180 }}>
+          {isAdmin && <Card style={{ display: "flex", flexDirection: "column", gap: 6, padding: "14px 18px", minWidth: 180 }}>
             <div style={{ ...dm, fontSize: 10, color: C.mut, letterSpacing: 1 }}>⏰ {t("simulation",lang)}</div>
             <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
               {[{ h: null, l: "Sada" }, { h: 7, l: "07" }, { h: 13, l: "13" }, { h: 19, l: "19" }, { h: 23, l: "23" }].map(t => (
                 <button key={t.l} onClick={() => setSimHour(t.h)} style={{ ...dm, padding: "5px 10px", background: simHour === t.h ? C.acDim : "transparent", border: `1px solid ${simHour === t.h ? "rgba(14,165,233,0.2)" : C.bord}`, borderRadius: 8, color: simHour === t.h ? C.accent : C.mut, fontSize: 11, cursor: "pointer" }}>{t.l}</button>
               ))}
             </div>
-          </Card>
+          </Card>}
         </div>
 
         {/* AI Tip */}
@@ -1141,7 +1169,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         </Card>
 
         <div style={{ textAlign: "center", padding: "8px 0 16px" }}>
-          <Btn onClick={() => { setPhase("post"); setSubScreen("summary"); }}>{t("checkOut",lang)}</Btn>
+          <Btn onClick={() => { setPhase("post"); setSubScreen("summary"); updateGuest(roomCode.current, { phase: "post", subScreen: "summary" }); }}>{t("checkOut",lang)}</Btn>
         </div>
       </>
     );
@@ -1287,7 +1315,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         </Card>
 
         {/* Revenue summary — admin only (visible with ?admin=sial) */}
-        {new URLSearchParams(window.location.search).get("admin") === "sial" && <Card>
+        {isAdmin && <Card>
           <div style={{ ...dm, fontSize: 11, textTransform: "uppercase", letterSpacing: 3, color: C.accent, marginBottom: 8 }}>💰 {t("revenue",lang)} (admin)</div>
           <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 2 }}>
             Premium: <strong style={{ color: C.green }}>5.99€</strong><br />
@@ -1329,7 +1357,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       </Card>
 
       {/* Monetization breakdown (admin) */}
-      {new URLSearchParams(window.location.search).get("admin") === "sial" && <Card style={{ background: `linear-gradient(135deg,rgba(251,191,36,0.04),rgba(14,165,233,0.03))`, borderColor: "rgba(251,191,36,0.08)" }}>
+      {isAdmin && <Card style={{ background: `linear-gradient(135deg,rgba(251,191,36,0.04),rgba(14,165,233,0.03))`, borderColor: "rgba(251,191,36,0.08)" }}>
         <SectionLabel extra="ADMIN">MONETIZACIJA</SectionLabel>
         <div style={{ ...dm, fontSize: 14, color: C.mut, lineHeight: 1.8 }}>
           1. Premium (5.99€) · 2. Affiliate (~8-15€) · 3. Host fee<br />
