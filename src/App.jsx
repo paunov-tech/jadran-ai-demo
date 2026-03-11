@@ -303,6 +303,18 @@ const GYG = (id) => `https://www.getyourguide.com/${id}/?partner_id=9OEGOYI&utm_
 const VIA = (id) => `https://www.viator.com/tours/${id}?pid=P00292197&mcid=42383&medium=link`;
 const BKG = (city, params="") => `https://www.booking.com/searchresults.html?aid=101704203&ss=${encodeURIComponent(city)}&lang=en${params}`;
 
+const SKYLINES = {
+  split: "M0,50 L10,50 L10,35 L14,35 L14,20 L16,20 L16,12 L18,12 L18,20 L20,20 L20,35 L30,35 L30,42 L35,42 L35,38 L40,38 L40,42 L50,42 L50,46 L60,46 L60,40 L65,40 L65,44 L75,44 L75,48 L85,48 L85,44 L90,44 L90,48 L100,48 L100,50 Z",
+  makarska: "M0,50 L5,48 L15,30 L25,18 L35,14 L45,20 L50,28 L55,32 L60,38 L65,42 L70,44 L75,43 L80,45 L85,46 L90,44 L95,46 L100,50 Z",
+  hvar: "M0,50 L10,48 L15,42 L18,38 L20,30 L22,26 L24,30 L28,40 L35,44 L40,42 L42,40 L44,42 L50,44 L55,46 L60,44 L65,46 L70,48 L80,46 L90,48 L100,50 Z",
+  rovinj: "M0,50 L15,48 L20,44 L25,42 L28,40 L30,36 L32,32 L33,18 L34,14 L35,10 L36,14 L37,18 L38,32 L40,36 L42,38 L45,40 L50,42 L55,44 L60,42 L65,44 L70,46 L80,44 L90,48 L100,50 Z",
+  pula: "M0,50 L10,48 L18,46 L22,38 L25,32 L28,28 L32,25 L36,24 L40,22 L44,21 L48,20 L52,20 L56,21 L60,22 L64,24 L68,25 L72,28 L75,32 L78,38 L82,46 L90,48 L100,50 Z",
+  opatija: "M0,50 L8,48 L12,44 L15,40 L18,36 L20,38 L22,34 L25,38 L28,36 L30,40 L35,42 L38,40 L40,38 L42,36 L45,34 L48,36 L50,40 L55,42 L60,44 L65,42 L70,44 L75,46 L80,44 L85,46 L90,48 L100,50 Z",
+  krk: "M0,50 L10,48 L20,44 L25,38 L28,34 L32,30 L35,28 L38,30 L42,34 L45,32 L48,30 L52,32 L58,36 L62,38 L68,40 L75,44 L80,46 L85,44 L90,46 L95,48 L100,50 Z",
+  dubrovnik: "M0,50 L5,46 L8,42 L10,38 L12,34 L13,30 L15,34 L18,30 L20,26 L22,30 L25,28 L28,32 L30,28 L32,24 L34,20 L36,24 L38,28 L42,30 L45,26 L48,30 L50,34 L55,30 L58,34 L60,38 L65,40 L70,38 L75,40 L80,44 L85,46 L90,48 L100,50 Z",
+  zadar: "M0,50 L10,48 L15,44 L18,40 L20,36 L22,38 L25,34 L28,30 L30,34 L35,38 L38,36 L40,32 L42,28 L44,32 L48,36 L52,40 L58,42 L65,44 L70,46 L80,44 L85,42 L90,46 L100,50 Z",
+};
+
 const ACCOMMODATION = [
   { region: "split", emoji: "🏖️",
     name: { hr:"Podstrana & Split", de:"Podstrana & Split", en:"Podstrana & Split", it:"Podstrana & Spalato", si:"Podstrana & Split", cz:"Podstrana & Split", pl:"Podstrana & Split" },
@@ -947,9 +959,17 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 12, marginBottom: 24 }}>
           {ACCOMMODATION.map((a, i) => (
             <a key={i} href={a.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
-              <Card style={{ cursor: "pointer", padding: 16, transition: "all 0.3s" }}
+              <Card style={{ cursor: "pointer", padding: 16, transition: "all 0.3s", position: "relative", overflow: "hidden" }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(0,85,166,0.3)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.transform = ""; }}>
+                {/* City skyline */}
+                {(() => { const nm = (a.name.hr||"").toLowerCase(); const sky = SKYLINES[nm.includes("split")||nm.includes("podstrana")?"split":nm.includes("krk")||nm.includes("otok")?"krk":nm.split(" ")[0]] || SKYLINES[a.region]; return sky ? (
+                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 40, opacity: 0.06, pointerEvents: "none" }}>
+                    <svg width="100%" height="40" viewBox="0 0 100 50" preserveAspectRatio="none" style={{ display: "block" }}>
+                      <path d={sky} fill={C.accent} />
+                    </svg>
+                  </div>
+                ) : null; })()}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                   <CityIcon name={a.name.hr || a.name.en} size={24} />
                   <Badge c="accent">{a.region.toUpperCase()}</Badge>
