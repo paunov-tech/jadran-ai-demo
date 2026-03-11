@@ -1186,14 +1186,11 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       const prompt = prompts[subScreen];
       if (!prompt) return;
       setLiveLoading(true);
-      fetch("/api/chat", {
+      fetch("/api/gemini", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system: "You are a local information assistant for Podstrana/Split, Croatia. Return ONLY a JSON array of 5-8 objects. Each object: {\"name\":\"STRING\",\"note\":\"STRING with practical details like hours, prices, distances\",\"warn\":false}. Set warn:true ONLY for emergency numbers. Output raw JSON only — no markdown, no backticks, no explanation.",
-          messages: [{ role: "user", content: prompt }],
-        }),
+        body: JSON.stringify({ prompt, mode: "practical" }),
       }).then(r => r.json()).then(d => {
-        const rawText = d.content?.map(c => c.text || "").join("") || d.text || "";
+        const rawText = d.text || "";
         console.log("[JADRAN] Live data for", subScreen, "raw:", rawText.substring(0, 200));
         try {
           let raw = rawText;
