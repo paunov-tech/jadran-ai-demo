@@ -3,7 +3,7 @@ import { loadGuest, updateGuest, getRoomCode } from "./guestStore";
 import GuestOnboarding from "./GuestOnboarding";
 
 /* ══════════════════════════════════════════════════════════
-   JADRAN AI — Unified Platform v4
+   JADRAN AI — Unified Platform v5
    3 Phases: Pre-Trip → Kiosk Stay → Post-Stay
    Monetization: Free/Premium tiers + Affiliate + Concierge
    ══════════════════════════════════════════════════════════ */
@@ -1096,6 +1096,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           <div style={{ height: 5, borderRadius: 3, background: C.bord, overflow: "hidden", marginTop: 8 }}>
             <div style={{ height: "100%", width: `${(G.spent / G.budget * 100)}%`, borderRadius: 3, background: `linear-gradient(90deg,${C.accent},${C.gold})` }} />
           </div>
+          {!premium && <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,22,40,0.4)", borderRadius: 22, backdropFilter: "blur(4px)" }}><span style={{ ...dm, background: C.goDim, padding: "6px 14px", borderRadius: 12, fontSize: 12, color: C.gold, fontWeight: 600, border: `1px solid rgba(245,158,11,0.15)` }}>⭐ Premium</span></div>}
         </Card>
 
         {/* Quick tiles */}
