@@ -13,7 +13,6 @@ const L = {
   en: { hero: "Your local guide\nfor the perfect Adriatic", sub: "Trusted recommendations from locals, hidden beaches, best restaurants — for all Adriatic lovers. In 8 languages.", guide: "Local Guide", guideDesc: "Beaches, restaurants, hidden gems — just ask", camper: "Camper Guide", camperDesc: "Parking, dump stations, water, legal overnight stays", free3: "3 free questions · Premium 5.99€ · 8 languages", howTitle: "How it works", s1t: "Just ask", s1d: "Type your question — answer in 3 seconds. Local tips with prices and distances.", s2t: "In 8 languages", s2d: "English, German, Croatian, Italian, Slovenian, Czech, Polish — your language, our Adriatic.", s3t: "Personal guide 24/7", s3d: "Trusted recommendations, local tips, bookings", dest: "Discover the Adriatic", room: "HAVE A ROOM CODE?", roomSub: "Enter the code from your apartment", premium: "Premium for 5.99€", premDesc: "Unlimited conversations, hidden gems, detailed forecast, budget tracking — your entire stay.", host: "Renting an apartment?", hostDesc: "Offer your guests a personal digital guide. Better reviews, fewer questions, extra income.", hostBtn: "Register apartment →" },
   it: { hero: "La tua guida locale\nper l'Adriatico perfetto", sub: "Consigli verificati dai locali, spiagge nascoste, migliori ristoranti — per tutti gli amanti dell'Adriatico. In 8 lingue.", guide: "Guida locale", guideDesc: "Spiagge, ristoranti, luoghi nascosti — basta chiedere", camper: "Guida camper", camperDesc: "Parcheggio, scarico, acqua, soste legali", free3: "3 domande gratuite · Premium 5.99€ · 8 lingue", howTitle: "Come funziona", s1t: "Chiedete qualsiasi cosa", s1d: "Scrivete la domanda — risposta in 3 secondi. Consigli locali con prezzi e distanze.", s2t: "In 8 lingue", s2d: "Italiano, tedesco, croato, inglese, sloveno, ceco, polacco — la vostra lingua, il nostro Adriatico.", s3t: "Guida personale 24/7", s3d: "Consigli verificati, suggerimenti locali, prenotazioni", dest: "Scoprite l'Adriatico", room: "AVETE UN CODICE?", roomSub: "Inserite il codice dell'appartamento", premium: "Premium a 5.99€", premDesc: "Conversazioni illimitate, gemme nascoste, previsioni dettagliate, monitoraggio budget — tutto il soggiorno.", host: "Affittate un appartamento?", hostDesc: "Offrite ai vostri ospiti una guida digitale personale. Migliori recensioni, meno domande, entrate extra.", hostBtn: "Registra appartamento →" },
 };
-const tx = (k) => (L[lang] || L[lang === "at" ? "de" : "hr"] || L.hr)[k] || L.hr[k];
 
 const DESTINATIONS = [
   { name: "Split & Podstrana", emoji: "🏛️", desc: "Dioklecijanova palača, Bačvice, Marjan", link: BKG("Split, Croatia"), region: "Dalmacija", city: "Split" },
@@ -34,6 +33,7 @@ const STEPS = [
 
 export default function LandingPage() {
   const [lang, setLang] = useState("hr");
+  const tx = (k) => (L[lang] || L[lang === "at" ? "de" : "hr"] || L.hr)[k] || L.hr[k];
   const [roomInput, setRoomInput] = useState("");
   const [anim, setAnim] = useState(false);
   const [cityImgs, setCityImgs] = useState({});
