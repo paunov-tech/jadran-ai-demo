@@ -1,21 +1,21 @@
-// src/firebase.js — JADRAN AI Firebase config
-// Env vars: VITE_FB_API_KEY, VITE_FB_AUTH_DOMAIN, VITE_FB_PROJECT_ID,
-//           VITE_FB_STORAGE, VITE_FB_MSG_ID, VITE_FB_APP_ID
+// src/firebase.js — JADRAN AI Firebase (shared molty-portal project)
+// Uses "guests" collection — separate from ANVIL's portals/customers/materials
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FB_API_KEY,
-  authDomain: import.meta.env.VITE_FB_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FB_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FB_STORAGE,
-  messagingSenderId: import.meta.env.VITE_FB_MSG_ID,
-  appId: import.meta.env.VITE_FB_APP_ID,
+  apiKey: import.meta.env.VITE_FB_API_KEY || "AIzaSyDertBFBwHCgf_iiucApWtlhB66va1OvYM",
+  authDomain: import.meta.env.VITE_FB_AUTH_DOMAIN || "molty-portal.firebaseapp.com",
+  projectId: import.meta.env.VITE_FB_PROJECT_ID || "molty-portal",
+  storageBucket: import.meta.env.VITE_FB_STORAGE || "molty-portal.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FB_MSG_ID || "1010121862220",
+  appId: import.meta.env.VITE_FB_APP_ID || "1:1010121862220:web:fc08a0aa51ca0415e058e9",
 };
 
-// Only init if config exists (graceful fallback for dev without Firebase)
-const hasConfig = firebaseConfig.apiKey && firebaseConfig.projectId;
-const app = hasConfig ? initializeApp(firebaseConfig) : null;
-const db = app ? getFirestore(app) : null;
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const hasConfig = true; // Always true — hardcoded fallback
+
+console.log("[JADRAN] Firebase connected → molty-portal/guests");
 
 export { db, hasConfig };
