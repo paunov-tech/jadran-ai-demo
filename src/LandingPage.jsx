@@ -93,34 +93,27 @@ export default function LandingPage() {
             Provjerene preporuke od lokalaca, skrivene plaže, najbolji restorani — za sve koji vole Jadran. Dostupno na 8 jezika.
           </p>
 
-          {/* Room code input */}
-          <div style={{
-            display: "inline-flex", gap: 8, padding: 6, borderRadius: 18,
-            background: "rgba(12,28,50,0.7)", border: "1px solid rgba(14,165,233,0.12)",
-            backdropFilter: "blur(20px)",
-          }}>
-            <input
-              type="text"
-              placeholder="Unesite room kod (npr. JADRAN-AB34)"
-              value={roomInput}
-              onChange={e => setRoomInput(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && goRoom()}
-              style={{
-                padding: "14px 20px", borderRadius: 14, border: "none",
-                background: "transparent", color: "#fff", fontSize: 15,
-                outline: "none", width: "min(300px, 50vw)", fontFamily: "inherit",
-              }}
-            />
-            <button onClick={goRoom} style={{
-              padding: "14px 28px", borderRadius: 14, border: "none",
+          {/* Primary CTAs */}
+          <div style={{ display: "inline-flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+            <a href="/ai" style={{
+              padding: "16px 32px", borderRadius: 16, textDecoration: "none",
               background: "linear-gradient(135deg, #0ea5e9, #0284c7)",
-              color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer",
-              boxShadow: "0 4px 16px rgba(14,165,233,0.25)",
-              fontFamily: "inherit",
-            }}>Otvori →</button>
+              color: "#fff", fontSize: 16, fontWeight: 600,
+              fontFamily: "'DM Serif Display', Georgia, serif",
+              boxShadow: "0 6px 24px rgba(14,165,233,0.25)",
+              display: "inline-flex", alignItems: "center", gap: 8,
+            }}>🗺️ Lokalni vodič</a>
+            <a href="/ai" style={{
+              padding: "16px 32px", borderRadius: 16, textDecoration: "none",
+              background: "linear-gradient(135deg, #f59e0b, #d97706)",
+              color: "#fff", fontSize: 16, fontWeight: 600,
+              fontFamily: "'DM Serif Display', Georgia, serif",
+              boxShadow: "0 6px 24px rgba(245,158,11,0.25)",
+              display: "inline-flex", alignItems: "center", gap: 8,
+            }}>🚐 Kamper vodič</a>
           </div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 12 }}>
-            Imate QR kod u apartmanu? Skenirajte ili unesite kod ručno.
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 14 }}>
+            3 besplatna pitanja · Premium 5.99€ · 8 jezika
           </div>
         </div>
       </div>
