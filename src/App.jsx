@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { loadGuest, updateGuest, getRoomCode } from "./guestStore";
 
 /* ══════════════════════════════════════════════════════════
    JADRAN AI — Unified Platform v4
@@ -247,9 +248,31 @@ export default function JadranUnified() {
   const [chatLoading, setChatLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(null);
   const chatEnd = useRef(null);
+  const roomCode = useRef(getRoomCode());
 
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMsgs]);
   useEffect(() => { const t = setTimeout(() => setSplash(false), 3800); return () => clearTimeout(t); }, []);
+
+  // ─── PERSISTENCE: Load guest state from Firestore/localStorage ───
+  const persistReady = useRef(false);
+  useEffect(() => {
+    loadGuest(roomCode.current).then(data => {
+      if (data) {
+        if (data.premium) setPremium(true);
+        if (data.lang) setLang(data.lang);
+        if (data.phase) { setPhase(data.phase); setSubScreen(data.subScreen || "home"); }
+        if (data.booked) setBooked(new Set(data.booked));
+      }
+      // Mark ready AFTER initial state is applied
+      setTimeout(() => { persistReady.current = true; }, 500);
+    }).catch(() => { persistReady.current = true; });
+  }, []);
+
+  // ─── PERSISTENCE: Auto-save on key state changes ───
+  useEffect(() => {
+    if (!persistReady.current) return;
+    updateGuest(roomCode.current, { lang, phase, subScreen, premium, booked: [...booked] });
+  }, [lang, phase, subScreen, premium, booked]);
 
   // ─── STRIPE: Detect payment redirect ───
   useEffect(() => {
@@ -270,13 +293,16 @@ export default function JadranUnified() {
           setSplash(false);
           setPhase('kiosk');
           setSubScreen('home');
+          updateGuest(roomCode.current, { premium: true, premiumSessionId: sessionId, phase: 'kiosk' });
         }
       }).catch(() => {
         // If verify fails, still unlock for UX (webhook will catch it)
         setPremium(true);
+        updateGuest(roomCode.current, { premium: true, premiumSessionId: sessionId });
       });
-      // Clean URL
-      window.history.replaceState({}, '', window.location.pathname);
+      // Clean URL (keep ?room= if present)
+      const roomParam = new URLSearchParams(window.location.search).get('room');
+      window.history.replaceState({}, '', window.location.pathname + (roomParam ? `?room=${roomParam}` : ''));
     }
 
     if (bookingStatus === 'success' && activityName) {
@@ -284,12 +310,18 @@ export default function JadranUnified() {
       setPhase('kiosk');
       setSubScreen('home');
       setShowConfirm(decodeURIComponent(activityName));
-      setBooked(prev => new Set([...prev, activityName]));
-      window.history.replaceState({}, '', window.location.pathname);
+      setBooked(prev => {
+        const next = new Set([...prev, activityName]);
+        updateGuest(roomCode.current, { booked: [...next] });
+        return next;
+      });
+      const roomParam = new URLSearchParams(window.location.search).get('room');
+      window.history.replaceState({}, '', window.location.pathname + (roomParam ? `?room=${roomParam}` : ''));
     }
 
     if (paymentStatus === 'cancelled' || bookingStatus === 'cancelled') {
-      window.history.replaceState({}, '', window.location.pathname);
+      const roomParam = new URLSearchParams(window.location.search).get('room');
+      window.history.replaceState({}, '', window.location.pathname + (roomParam ? `?room=${roomParam}` : ''));
     }
   }, []);
 
@@ -299,7 +331,7 @@ export default function JadranUnified() {
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomCode: 'DEMO', guestName: GUEST.name, lang }),
+        body: JSON.stringify({ roomCode: roomCode.current, guestName: GUEST.name, lang }),
       });
       const data = await res.json();
       if (data.url) {
@@ -308,11 +340,13 @@ export default function JadranUnified() {
         // Fallback: unlock in demo mode
         setPremium(true);
         setShowPaywall(false);
+        updateGuest(roomCode.current, { premium: true, premiumSource: "demo_fallback" });
       }
     } catch {
       // Stripe not configured — demo mode unlock
       setPremium(true);
       setShowPaywall(false);
+      updateGuest(roomCode.current, { premium: true, premiumSource: "demo_fallback" });
     }
     setPayLoading(false);
   };
@@ -326,7 +360,7 @@ export default function JadranUnified() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           activityName: exp.name, price: exp.ourPrice,
-          quantity: totalPersons, roomCode: 'DEMO',
+          quantity: totalPersons, roomCode: roomCode.current,
           guestName: GUEST.name, lang,
         }),
       });
