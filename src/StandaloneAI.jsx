@@ -64,6 +64,8 @@ export default function StandaloneAI() {
   const cameraRef = useRef(null);
   const [weather, setWeather] = useState(null);
   const [weatherTime, setWeatherTime] = useState(null);
+  const [notifPerm, setNotifPerm] = useState("default");
+  const [lastAlert, setLastAlert] = useState(null);
   const [regionImgs, setRegionImgs] = useState({});
 
   useEffect(() => { scrollAnchor.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [msgs, loading]);
@@ -86,8 +88,17 @@ export default function StandaloneAI() {
         .then(r => r.json())
         .then(d => { 
           if (d.current?.temp) { 
-            setWeather({ ...d.current, location: c.loc }); 
-            setWeatherTime(new Date()); 
+            const w = { ...d.current, location: c.loc };
+            setWeather(w); setWeatherTime(new Date());
+            if (notifPerm === "granted") {
+              const a = [];
+              if (w.windSpeed > 35) a.push(w.windName + " " + w.windSpeed + " km/h!");
+              if (w.seaLevel >= 4) a.push("More " + w.seaState);
+              if (w.uv >= 9) a.push("UV " + w.uv + " — zaštita!");
+              if (w.pressure < 1005) a.push("Tlak " + w.pressure + " hPa — oluja");
+              const k = a.join("|");
+              if (a.length && k !== lastAlert) { setLastAlert(k); try { new Notification("⚠️ JADRAN", { body: a.join("\n"), icon: "/icon-192.svg", tag: "wx-alert", renotify: true }); } catch {} }
+            }
           }
         })
         .catch(() => {});
@@ -716,6 +727,13 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
                 <div style={{ fontSize: 11, color: C.mut, marginTop: 4 }}>
                   📍 {weather.location || "Jadran"} · Ažurirano {weatherTime ? weatherTime.toLocaleTimeString("hr", { hour: "2-digit", minute: "2-digit" }) : "—"}
                 </div>
+                {notifPerm === "default" && "Notification" in window && (
+                  <button onClick={async () => { const p = await Notification.requestPermission(); setNotifPerm(p); if (p === "granted") new Notification("✅ JADRAN", { body: "Upozorenja za vjetar i more su aktivna.", icon: "/icon-192.svg" }); }}
+                    style={{ marginTop: 8, padding: "8px 16px", borderRadius: 10, border: `1px solid ${C.accent}30`, background: "transparent", color: C.accent, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                    🔔 Dozvoli obavijesti za vrijeme
+                  </button>
+                )}
+                {notifPerm === "granted" && <div style={{ marginTop: 6, fontSize: 10, color: "#22c55e" }}>🔔 Obavijesti aktivne</div>}
               </div>
 
               {/* Main cards grid */}
