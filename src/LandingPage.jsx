@@ -146,56 +146,60 @@ export default function LandingPage() {
           <p style={{ fontSize: "clamp(14px, 2.2vw, 17px)", color: "#94a3b8", lineHeight: 1.6, maxWidth: 520, margin: "0 auto 28px" }}>{tx("sub")}</p>
           {/* 4 CTA Cards — 2x2 grid */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, maxWidth: 520, margin: "0 auto" }}>
+            {/* Camper */}
             <a href="/ai?niche=camper" style={{
-              padding: "16px 14px", borderRadius: 16, textDecoration: "none",
-              background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)",
-              display: "flex", alignItems: "center", gap: 14, transition: "all 0.3s",
+              borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
+              border: "1px solid rgba(245,158,11,0.2)", transition: "all 0.3s", display: "block", minHeight: 100,
             }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(245,158,11,0.4)"; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(245,158,11,0.12)"; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(245,158,11,0.2)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
-              <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg, #f59e0b, #d97706)", display: "grid", placeItems: "center", fontSize: 22, flexShrink: 0 }}>🚐</div>
-              <div>
-                <div style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#f0f4f8" }}>{tx("tab1")}</div>
-                <div style={{ fontSize: 12, color: "#fbbf24", marginTop: 2 }}>{tx("tab1s")}</div>
+              <div style={{ position: "absolute", inset: 0, backgroundImage: "url(https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?w=400&q=75)", backgroundSize: "cover", backgroundPosition: "center" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(245,158,11,0.7) 0%, rgba(15,23,42,0.85) 100%)" }} />
+              <div style={{ position: "relative", padding: "18px 14px" }}>
+                <div style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#fff" }}>{tx("tab1")}</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 3 }}>{tx("tab1s")}</div>
               </div>
             </a>
+            {/* Local / Auto */}
             <a href="/ai?niche=local" style={{
-              padding: "16px 14px", borderRadius: 16, textDecoration: "none",
-              background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)",
-              display: "flex", alignItems: "center", gap: 14, transition: "all 0.3s",
+              borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
+              border: "1px solid rgba(14,165,233,0.15)", transition: "all 0.3s", display: "block", minHeight: 100,
             }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.3)"; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(14,165,233,0.1)"; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.15)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
-              <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 22, flexShrink: 0 }}>🚗</div>
-              <div>
-                <div style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#f0f4f8" }}>{tx("tab2")}</div>
-                <div style={{ fontSize: 12, color: "#7dd3fc", marginTop: 2 }}>{tx("tab2s")}</div>
+              <div style={{ position: "absolute", inset: 0, backgroundImage: "url(https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&q=75)", backgroundSize: "cover", backgroundPosition: "center" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(14,165,233,0.65) 0%, rgba(15,23,42,0.85) 100%)" }} />
+              <div style={{ position: "relative", padding: "18px 14px" }}>
+                <div style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#fff" }}>{tx("tab2")}</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 3 }}>{tx("tab2s")}</div>
               </div>
             </a>
+            {/* Sailing / Yacht */}
             <a href="/ai?niche=sailing" style={{
-              padding: "16px 14px", borderRadius: 16, textDecoration: "none",
-              background: "rgba(14,165,233,0.04)", border: "1px solid rgba(14,165,233,0.1)",
-              display: "flex", alignItems: "center", gap: 14, transition: "all 0.3s",
+              borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
+              border: "1px solid rgba(6,182,212,0.15)", transition: "all 0.3s", display: "block", minHeight: 100,
             }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.25)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.1)"; e.currentTarget.style.transform = ""; }}>
-              <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg, #06b6d4, #0891b2)", display: "grid", placeItems: "center", fontSize: 22, flexShrink: 0 }}>⛵</div>
-              <div>
-                <div style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#f0f4f8" }}>{tx("tab3")}</div>
-                <div style={{ fontSize: 12, color: "#67e8f9", marginTop: 2 }}>{tx("tab3s")}</div>
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(6,182,212,0.3)"; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(6,182,212,0.1)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(6,182,212,0.15)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
+              <div style={{ position: "absolute", inset: 0, backgroundImage: "url(https://images.unsplash.com/photo-1540946485063-a40da27545f8?w=400&q=75)", backgroundSize: "cover", backgroundPosition: "center" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(6,182,212,0.6) 0%, rgba(15,23,42,0.85) 100%)" }} />
+              <div style={{ position: "relative", padding: "18px 14px" }}>
+                <div style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#fff" }}>{tx("tab3")}</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 3 }}>{tx("tab3s")}</div>
               </div>
             </a>
+            {/* Cruise */}
             <a href="/ai?niche=cruiser" style={{
-              padding: "16px 14px", borderRadius: 16, textDecoration: "none",
-              background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.1)",
-              display: "flex", alignItems: "center", gap: 14, transition: "all 0.3s",
+              borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
+              border: "1px solid rgba(168,85,247,0.15)", transition: "all 0.3s", display: "block", minHeight: 100,
             }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.25)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.1)"; e.currentTarget.style.transform = ""; }}>
-              <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg, #a855f7, #7c3aed)", display: "grid", placeItems: "center", fontSize: 22, flexShrink: 0 }}>🚢</div>
-              <div>
-                <div style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#f0f4f8" }}>{tx("tab4")}</div>
-                <div style={{ fontSize: 12, color: "#c4b5fd", marginTop: 2 }}>{tx("tab4s")}</div>
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.3)"; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(168,85,247,0.1)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.15)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
+              <div style={{ position: "absolute", inset: 0, backgroundImage: "url(https://images.unsplash.com/photo-1548574505-5e239809ee19?w=400&q=75)", backgroundSize: "cover", backgroundPosition: "center" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(168,85,247,0.6) 0%, rgba(15,23,42,0.85) 100%)" }} />
+              <div style={{ position: "relative", padding: "18px 14px" }}>
+                <div style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#fff" }}>{tx("tab4")}</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 3 }}>{tx("tab4s")}</div>
               </div>
             </a>
           </div>

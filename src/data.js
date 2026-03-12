@@ -46,8 +46,8 @@ export const EXPERIENCES = [
   // Makarska
   { id: 17, name: "Biokovo Skywalk", emoji: "🏔️", price: 35, dur: "3h", rating: 4.8, cat: "nature", region: "makarska",
     link: GYG("makarska-l2098/biokovo-skywalk-guided-tour-t535283") },
-  { id: 18, name: "Brač Island Ferry", emoji: "🏖️", price: 25, dur: "8h", rating: 4.7, cat: "adventure", region: "makarska",
-    link: GYG("makarska-l2098?q=brac+island") },
+  { id: 18, name: "Brač Golden Horn", emoji: "🏖️", price: 35, dur: "8h", rating: 4.7, cat: "adventure", region: "makarska",
+    link: GYG("split-l268/from-split-golden-horn-beach-brac-island-day-trip-t977515") },
   // Istra
   { id: 20, name: "Truffle Hunting", emoji: "🍄", price: 45, dur: "2h", rating: 4.9, cat: "gastro", region: "istra",
     link: GYG("istria-county-l1297/livade-guided-truffle-hunting-walking-tour-t413975") },
@@ -59,7 +59,7 @@ export const EXPERIENCES = [
     link: GYG("pula-l344/3-istrian-wineries-tour-t102866") },
   // Kvarner
   { id: 30, name: "Kvarner Bay Tour", emoji: "⚓", price: 55, dur: "5h", rating: 4.8, cat: "culture", region: "kvarner",
-    link: GYG("opatija-l1296/best-of-kvarner-bay-half-day-tour-from-rijeka-or-opatija-t977515") },
+    link: GYG("opatija-l1296/from-opatija-kvarner-bay-islands-boat-tour-t651847") },
   { id: 31, name: "Cres Island Boat", emoji: "🚢", price: 120, dur: "8h", rating: 4.9, cat: "premium", region: "kvarner",
     link: GYG("opatija-l1296?q=cres+island+boat") },
   { id: 32, name: "Opatija Evening Cruise", emoji: "🌙", price: 45, dur: "2h", rating: 4.8, cat: "premium", region: "kvarner",
@@ -321,5 +321,5 @@ export const DUBROVNIK_INTEL = [
     link: GYG("ston-l4159/ston-oyster-and-wine-tasting-tour-t197562") },
   { id: "mljet-trajekt", spot: "Trajekt za Mljet (Prapratno)", emoji: "⛴️", severity: "medium",
     intel: "NP Mljet je hit ali trajekt ljeti krcat. Ostavi kamper na parkingu na Pelješcu, idi kao pješak (jeftinije i brže). Na Mljetu — najam bicikala za obilazak jezera.",
-    link: GYG("dubrovnik-l518/dubrovnik-mljet-national-park-full-day-tour-t97898") },
+    link: GYG("dubrovnik-l518/from-dubrovnik-mljet-island-full-day-tour-t535989") },
 ];
