@@ -39,6 +39,8 @@ export default function LandingPage() {
   const [anim, setAnim] = useState(false);
   const [roomInput, setRoomInput] = useState("");
   const [chatStep, setChatStep] = useState(0);
+  const [trendImgs, setTrendImgs] = useState({});
+  const [carouselIdx, setCarouselIdx] = useState(0);
 
   useEffect(() => { setTimeout(() => setAnim(true), 200); }, []);
   useEffect(() => {
@@ -47,6 +49,25 @@ export default function LandingPage() {
       return () => clearTimeout(t);
     }
   }, [chatStep]);
+
+  // Load trending images
+  useEffect(() => {
+    const cities = [...new Set(TRENDING.map(t => t.city))];
+    cities.forEach(city => {
+      fetch(`/api/cityimg?city=${encodeURIComponent(city)}`)
+        .then(r => r.json())
+        .then(d => { if (d.url) setTrendImgs(prev => ({ ...prev, [city]: d.url })); })
+        .catch(() => {});
+    });
+  }, []);
+
+  // Auto-carousel
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCarouselIdx(i => (i + 1) % TRENDING.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
 
   const goChat = () => { window.location.href = `/ai?niche=camper${dest ? "&dest=" + dest : ""}`; };
   const goRoom = () => { const c = roomInput.trim().toUpperCase(); if (c) window.location.href = `/?room=${encodeURIComponent(c)}`; };
@@ -190,14 +211,17 @@ export default function LandingPage() {
             <div style={{ fontSize: 9, color: "#f59e0b", letterSpacing: 5, fontWeight: 600, marginBottom: 8 }}>{"🔥"} POPULARNO</div>
             <h2 style={{ fontFamily: F, fontSize: "clamp(20px, 3.5vw, 28px)", fontWeight: 700 }}>{tx("trendTitle")}</h2>
           </div>
-          <div style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 12, scrollSnapType: "x mandatory" }}>
+          <div style={{ position: "relative" }}>
+          <div id="trend-scroll" style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 16, scrollSnapType: "x mandatory", scrollBehavior: "smooth" }}>
             {TRENDING.map((t, i) => (
               <a key={i} href={t.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit", scrollSnapAlign: "start" }}>
-                <div style={{ minWidth: 240, borderRadius: 18, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden", transition: "all 0.3s" }}
+                <div style={{ minWidth: 280, borderRadius: 18, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden", transition: "all 0.3s" }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.15)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"; e.currentTarget.style.transform = ""; }}>
-                  <div style={{ height: 120, background: "linear-gradient(135deg, #0c2d48, #0e3a5c)", display: "grid", placeItems: "center", fontSize: 40, position: "relative" }}>
-                    {t.emoji}
+                  <div style={{ height: 160, background: "linear-gradient(135deg, #0c2d48, #0e3a5c)", position: "relative", overflow: "hidden" }}>
+                    {trendImgs[t.city] && <img src={trendImgs[t.city]} alt={t.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.7 }} />}
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 40%, rgba(10,22,40,0.9) 100%)" }} />
+                    <div style={{ position: "absolute", top: 12, left: 12, fontSize: 28 }}>{t.emoji}</div>
                     <span style={{ position: "absolute", top: 8, left: 8, padding: "2px 8px", borderRadius: 6, background: "rgba(14,165,233,0.12)", color: "#38bdf8", fontSize: 9, fontWeight: 600, letterSpacing: 1 }}>{t.tag}</span>
                   </div>
                   <div style={{ padding: "14px 16px" }}>
@@ -211,6 +235,16 @@ export default function LandingPage() {
                 </div>
               </a>
             ))}
+          </div>
+          {/* Carousel dots */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 8 }}>
+            {TRENDING.map((_, i) => (
+              <button key={i} onClick={() => {
+                setCarouselIdx(i);
+                document.getElementById("trend-scroll")?.scrollTo({ left: i * 254, behavior: "smooth" });
+              }} style={{ width: carouselIdx === i ? 20 : 8, height: 8, borderRadius: 4, border: "none", background: carouselIdx === i ? "#0ea5e9" : "rgba(255,255,255,0.15)", cursor: "pointer", transition: "all 0.3s", padding: 0 }} />
+            ))}
+          </div>
           </div>
         </div>
       </section>
