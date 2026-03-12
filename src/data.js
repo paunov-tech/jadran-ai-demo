@@ -113,3 +113,50 @@ export const filterByRegion = (items, regionId) => {
   const regions = REGION_MAP[regionId] || [regionId];
   return items.filter(it => regions.includes(it.region));
 };
+
+// ═══════════════════════════════════════════════════════════════
+// CAMPER BLACK SPOTS — Critical warnings that build trust
+// These make the AI more valuable than Google Maps
+// ═══════════════════════════════════════════════════════════════
+export const CAMPER_WARNINGS = [
+  { id: "biokovo", name: "Biokovo – Sveti Jure", region: "makarska", emoji: "⛰️", severity: "high",
+    danger: "Put uzak, serpentine, dva auta se teško mimoilaze. Kamperi imaju zabranu ili rizik zaglavljivanja.",
+    advice: "Ne krećite kamperom iznad ulaza u Park prirode. Parkirajte u podnožju i rezervirajte Guided Tour kombijem.",
+    link: GYG("makarska-l2098/biokovo-skywalk-guided-tour-t535283") },
+  { id: "rovinj", name: "Stari grad Rovinj", region: "istra", emoji: "🚫", severity: "medium",
+    danger: "Rampe i kazne za kampere koji pokušavaju prići centru. Zoniranje je strogo.",
+    advice: "Parking 'Valdibora' (sjever) ili 'Končeta'. Do crkve Sv. Eufemije biciklom ili taksijem, 5 min.",
+    link: null },
+  { id: "prizna", name: "Trajekt Prizna–Žigljen (Pag)", region: "kvarner", emoji: "🌬️", severity: "high",
+    danger: "Jaka bura često zatvara liniju. Kamperi su prvi na udaru — zabrana pri vjetru >60 km/h.",
+    advice: "Kad puše bura — ne idite na trajekt. Koristite Paški most, ali vozite polako kroz Senjsku dragu.",
+    link: null },
+  { id: "pitve", name: "Tunel Pitve (Hvar)", region: "split", emoji: "🚧", severity: "critical",
+    danger: "Jedini put ka južnom Hvaru (Zavala, Ivan Dolac). Širina 2.3m, visina 2.4m. Većina kampera NE PROLAZI.",
+    advice: "Vaš kamper je gotovo sigurno previsok. Ostavite vozilo u Jelsi i uzmite lokalni transfer na južne plaže.",
+    link: null },
+  { id: "trogir", name: "Centar Trogira – stari most", region: "split", emoji: "🌉", severity: "medium",
+    danger: "Epske gužve, skretanje na Čiovo preko starog mosta je horor za velika vozila.",
+    advice: "Koristite Novi most ('Most hrvatskih branitelja') da zaobiđete centar. Ušteda: 45 minuta.",
+    link: null },
+  { id: "senj", name: "Magistrala kod Senja (Vratnik)", region: "kvarner", emoji: "💨", severity: "high",
+    danger: "Nagli pad temperature i udari bure. Kamperi s ceradama su najugroženiji.",
+    advice: "Kad puše — svratite na Vratniku dok se vjetar ne smiri. Imaju parking za kampere.",
+    link: null },
+  { id: "vrbnik", name: "Vrbnik (Krk)", region: "kvarner", emoji: "🏘️", severity: "medium",
+    danger: "Ulice toliko uske da su turistička atrakcija. GPS često navede kamper unutra — nema nazad bez dizalice.",
+    advice: "Stanite na velikom parkingu na ulazu. Ne pokušavajte ulazak u stari grad. Do vinarije 5 min hoda.",
+    link: null },
+  { id: "stiniva", name: "Plaža Stiniva (Vis)", region: "split", emoji: "🏖️", severity: "medium",
+    danger: "Put je strm i završava bez okretnice. Kamperom nećete doći do plaže.",
+    advice: "Ostavite kamper kod skretanja za 'Marine Zemlje'. Stiniva je 20 min pješice. Ponijeti vodu!",
+    link: GYG("vis-l4764?q=stiniva+boat") },
+  { id: "cres", name: "Porozina–Dragozetići (Cres)", region: "kvarner", emoji: "⚠️", severity: "high",
+    danger: "Put širok za jedno i pol vozilo, provalija bez bankine sa strane.",
+    advice: "Pustite lokalce da prođu. Vozite sredinom, koristite proširenja. Pauza: Kamp Kovačine u Cresu.",
+    link: BKG("Cres, Croatia") },
+  { id: "krka", name: "NP Krka – Skradin parking", region: "zadar", emoji: "🅿️", severity: "medium",
+    danger: "Skradin je često prebukiran i tijesan za manevrisanje kamp kućicom.",
+    advice: "Idite na ulaz Lozovac — ogroman besplatan parking za kampere + direktan bus do slapova.",
+    link: GYG("sibenik-l2091/krka-waterfalls-day-trip-from-sibenik-t75621") },
+];

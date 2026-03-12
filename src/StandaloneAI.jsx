@@ -5,7 +5,7 @@
 // Perfect for: campervan travelers, day-trippers, cruise visitors
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useRef } from "react";
-import { EXPERIENCES, GEMS, BOOKING_CITIES, filterByRegion } from "./data.js";
+import { EXPERIENCES, GEMS, BOOKING_CITIES, CAMPER_WARNINGS, filterByRegion } from "./data.js";
 
 const REGIONS = [
   { id: "split", name: "Split & okolica", emoji: "🏛️", desc: "Dioklecijanova palača, Podstrana, Omiš" },
@@ -143,7 +143,11 @@ ${isCamper ? `KAMPER SPECIFIČNO: Ovaj gost putuje kamperom/autodomom. Uvijek uk
 - Cijene parkinga za kampere (obično 15-40€/noć ovisno o lokaciji)
 - Upozorenja o zabranama divljeg kampiranja (kazne 130-400€)
 - Preporuči aplikacije: park4night, Campercontact, CamperStop
-- Benzinske postaje s LPG-om ako su u blizini` : ""}
+- Benzinske postaje s LPG-om ako su u blizini
+
+⚠️ KRITIČNA UPOZORENJA ZA KAMPERE — ovo MORAŠ znati i UVIJEK upozoriti gosta kad je relevantno:
+${CAMPER_WARNINGS.map(w => `• ${w.name}: ${w.danger} → SAVJET: ${w.advice}`).join("\n")}
+Ako gost spomene bilo koju od ovih lokacija, ODMAH upozori na opasnost i daj alternativu.` : ""}
 ${isSailing ? `NAUTIČKI TURIZAM: Gost putuje jedricom/brodom. Uključi:
 - Marine i sidrišta s cijenama veza
 - Meteo upozorenja (bura, jugo, maestral) 
@@ -519,6 +523,47 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
                           </div>
                         </div>
                       </a>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* ⚠️ Camper Warnings — trust builders */}
+            {(() => {
+              if (niche === "local") return null;
+              const warnings = filterByRegion(CAMPER_WARNINGS, region);
+              return warnings.length > 0 && (travelMode === "camper" || niche === "camper") && (
+                <div style={{ marginBottom: 20, padding: "0 4px" }}>
+                  <div style={{ fontSize: 10, color: "#f87171", letterSpacing: 3, fontWeight: 600, marginBottom: 10 }}>⚠️ UPOZORENJA ZA KAMPERE</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {warnings.map(w => (
+                      <div key={w.id} style={{
+                        padding: "14px 16px", borderRadius: 16,
+                        background: isNight ? "rgba(248,113,113,0.06)" : "rgba(248,113,113,0.08)",
+                        border: `1px solid ${w.severity === "critical" ? "rgba(239,68,68,0.3)" : w.severity === "high" ? "rgba(248,113,113,0.2)" : "rgba(248,113,113,0.1)"}`,
+                      }}>
+                        <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                          <span style={{ fontSize: 22 }}>{w.emoji}</span>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                              <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{w.name}</span>
+                              <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 8,
+                                background: w.severity === "critical" ? "rgba(239,68,68,0.15)" : w.severity === "high" ? "rgba(248,113,113,0.1)" : "rgba(251,191,36,0.1)",
+                                color: w.severity === "critical" ? "#ef4444" : w.severity === "high" ? "#f87171" : C.gold,
+                                fontWeight: 700, letterSpacing: 1,
+                              }}>{w.severity === "critical" ? "KRITIČNO" : w.severity === "high" ? "OPASNO" : "PAŽNJA"}</span>
+                            </div>
+                            <div style={{ fontSize: 12, color: isNight ? "#fca5a5" : "#b91c1c", lineHeight: 1.4, marginBottom: 6 }}>{w.danger}</div>
+                            <div style={{ fontSize: 12, color: C.accent, lineHeight: 1.4 }}>💡 {w.advice}</div>
+                            {w.link && <a href={w.link} target="_blank" rel="noopener noreferrer" style={{
+                              display: "inline-block", marginTop: 8, padding: "5px 14px", borderRadius: 10,
+                              background: isNight ? "rgba(14,165,233,0.1)" : "rgba(14,165,233,0.08)", border: `1px solid ${C.bord}`,
+                              fontSize: 11, color: C.accent, textDecoration: "none", fontWeight: 500,
+                            }}>Rezerviraj alternativu →</a>}
+                          </div>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
