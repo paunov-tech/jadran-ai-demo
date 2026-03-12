@@ -83,7 +83,7 @@ const T = {
     walkieTalk: "Press to talk", walkieListen: "Listening...", walkieAnswer: "Responding...",
     walkieInfo: "Hands-free · Screen stays on", walkieSnap: "Snap photo",
     errVision: "Analysis failed. Please try again.", errConnection: "Connection unavailable. Please try again.",
-    freeNote: "24h free · then from €3.99/week", trialExpired: "Free day expired",
+    freeNote: "24h free · then from €3.99/week", trialExpired: "Free day expired", payExpired: "FREE DAY EXPIRED", payTitle: "Unlock your guide", payFeatures: "Unlimited questions 24/7|All tips unlocked|8+ hidden beaches & restaurants|Personalized route for today", payCamper: "Camper parking, dump stations, water", payIstra: "Istria Insider — seasonal tips", payWeek: "Week", payWeekSub: "7 days · 1 region", paySeason: "Season", paySeasonSub: "30 days · all regions", payLoading: "Redirecting to payment...", paySecure: "Secure payment via Stripe · No hidden costs · Cancel anytime", payLater: "Maybe later",
   },
   de: { title: "Jadran Reiseführer", sub: "Geprüfte Insider-Tipps für Ihren Adria-Urlaub", start: "Gespräch starten", send: "Senden", placeholder: "Fragen Sie mich zur Adria...", region: "Wählen Sie Ihre Region", mode: "Wie reisen Sie?", unlock: "Freischalten — ab 3,99€", free3: "3 kostenlose Fragen", remaining: "übrig", upgraded: "Premium freigeschaltet!", back: "Zurück", typing: "einen Moment...",
     nicCamper: "Camper-Reiseführer", nicCamperSub: "Stellplätze, Routen, Ver-/Entsorgung, Warnungen",
@@ -106,7 +106,7 @@ const T = {
     walkieTalk: "Zum Sprechen drücken", walkieListen: "Ich höre zu...", walkieAnswer: "Antwort wird erstellt...",
     walkieInfo: "Freisprechanlage · Display bleibt an", walkieSnap: "Foto aufnehmen",
     errVision: "Analyse fehlgeschlagen. Bitte erneut versuchen.", errConnection: "Verbindung nicht verfügbar. Bitte erneut versuchen.",
-    freeNote: "24h kostenlos · danach ab 3,99€/Woche", trialExpired: "Kostenloser Tag abgelaufen",
+    freeNote: "24h kostenlos · danach ab 3,99€/Woche", trialExpired: "Kostenloser Tag abgelaufen", payExpired: "KOSTENLOSER TAG ABGELAUFEN", payTitle: "Schalten Sie Ihren Reiseführer frei", payFeatures: "Unbegrenzte Fragen 24/7|Alle Tipps freigeschaltet|8+ versteckte Strände und Restaurants|Personalisierte Route für heute", payCamper: "Camper-Parkplätze, Entsorgung, Wasser", payIstra: "Istrien Insider — saisonale Tipps", payWeek: "Woche", payWeekSub: "7 Tage · 1 Region", paySeason: "Saison", paySeasonSub: "30 Tage · alle Regionen", payLoading: "Weiterleitung zur Zahlung...", paySecure: "Sichere Zahlung über Stripe · Keine versteckten Kosten · Jederzeit kündbar", payLater: "Vielleicht später",
   },
   it: { title: "Guida Jadran", sub: "Consigli verificati per la vacanza perfetta sull'Adriatico", start: "Inizia a chattare", send: "Invia", placeholder: "Chiedimi dell'Adriatico...", region: "Scegliete la regione", mode: "Come viaggiate?", unlock: "Sblocca — da 3,99€", free3: "3 domande gratuite", remaining: "rimanenti", upgraded: "Premium sbloccato!", back: "Indietro", typing: "penso...",
     nicCamper: "Guida camper", nicCamperSub: "Parcheggi, percorsi, scarico, avvertenze per camper",
@@ -129,7 +129,7 @@ const T = {
     walkieTalk: "Premi per parlare", walkieListen: "Ascolto...", walkieAnswer: "Rispondo...",
     walkieInfo: "Vivavoce · Schermo sempre acceso", walkieSnap: "Scatta foto",
     errVision: "Analisi fallita. Riprovare.", errConnection: "Connessione non disponibile. Riprovare.",
-    freeNote: "24h gratis · poi da 3,99€/settimana", trialExpired: "Giorno gratuito scaduto",
+    freeNote: "24h gratis · poi da 3,99€/settimana", trialExpired: "Giorno gratuito scaduto", payExpired: "GIORNO GRATUITO SCADUTO", payTitle: "Sblocca la tua guida", payFeatures: "Domande illimitate 24/7|Tutti i consigli sbloccati|8+ spiagge e ristoranti nascosti|Percorso personalizzato per oggi", payCamper: "Parcheggi camper, scarico, acqua", payIstra: "Istria Insider — consigli stagionali", payWeek: "Settimana", payWeekSub: "7 giorni · 1 regione", paySeason: "Stagione", paySeasonSub: "30 giorni · tutte le regioni", payLoading: "Reindirizzamento al pagamento...", paySecure: "Pagamento sicuro tramite Stripe · Nessun costo nascosto · Cancella in qualsiasi momento", payLater: "Forse più tardi",
   },
   at: { title: "Jadran Urlaubsguide", sub: "Insider-Tipps für deinen Adria-Urlaub — direkt von Einheimischen", start: "Los geht's!", send: "Abschicken", placeholder: "Frag mich was über die Adria...", region: "Wo geht's hin?", mode: "Wie bist du unterwegs?", unlock: "Freischalten — ab 3,99€", free3: "3 Fragen gratis", remaining: "übrig", upgraded: "Premium freigeschaltet!", back: "Zurück", typing: "Moment...",
     nicCamper: "Camper-Guide", nicCamperSub: "Stellplätze, Routen, Ver-/Entsorgung, Warnungen für Camper",
@@ -152,7 +152,7 @@ const T = {
     walkieTalk: "Zum Reden drücken", walkieListen: "I hör zu...", walkieAnswer: "Antwort kommt...",
     walkieInfo: "Freisprechanlage · Display bleibt an", walkieSnap: "Foto machen",
     errVision: "Analyse fehlgeschlagen. Bitte nochmal probieren.", errConnection: "Verbindung nicht verfügbar. Bitte nochmal probieren.",
-    freeNote: "24h gratis · dann ab 3,99€/Woche", trialExpired: "Gratis-Tag abgelaufen",
+    freeNote: "24h gratis · dann ab 3,99€/Woche", trialExpired: "Gratis-Tag abgelaufen", payExpired: "GRATIS-TAG ABGELAUFEN", payTitle: "Schalt deinen Guide frei", payFeatures: "Unbegrenzt Fragen 24/7|Alle Tipps freigeschaltet|8+ versteckte Strände und Beisln|Personalisierte Route für heute", payCamper: "Camper-Stellplätze, Entsorgung, Wasser", payIstra: "Istrien Insider — Tipps zur Saison", payWeek: "Woche", payWeekSub: "7 Tage · 1 Region", paySeason: "Saison", paySeasonSub: "30 Tage · alle Regionen", payLoading: "Weiterleitung zur Zahlung...", paySecure: "Sichere Zahlung via Stripe · Keine versteckten Kosten · Jederzeit kündbar", payLater: "Vielleicht später",
   },
   si: { title: "Jadran vodič", sub: "Lokalni nasveti za popoln oddih na Jadranu", start: "Začni pogovor", send: "Pošlji", placeholder: "Vprašajte me o Jadranu...", region: "Izberite regijo", mode: "Kako potujete?", unlock: "Odkleni — od 3,99€", free3: "3 brezplačna vprašanja", remaining: "preostalo", upgraded: "Premium odklenjen!", back: "Nazaj", typing: "razmišljam...",
     nicCamper: "Vodič za kamper", nicCamperSub: "Parkirišča, poti, opozorila za kamper",
@@ -175,7 +175,7 @@ const T = {
     walkieTalk: "Pritisni za govor", walkieListen: "Poslušam...", walkieAnswer: "Odgovarjam...",
     walkieInfo: "Prostoročno · Zaslon ne ugasne", walkieSnap: "Fotografiraj",
     errVision: "Analiza ni uspela. Poskusite znova.", errConnection: "Povezava ni na voljo. Poskusite znova.",
-    freeNote: "24h brezplačno · nato od 3,99€/teden", trialExpired: "Brezplačni dan je potekel",
+    freeNote: "24h brezplačno · nato od 3,99€/teden", trialExpired: "Brezplačni dan je potekel", payExpired: "BREZPLAČNI DAN JE POTEKEL", payTitle: "Odkleni vodič", payFeatures: "Neomejeno vprašanj 24/7|Vsi nasveti odklenjeni|8+ skritih plaž|Personalizirana pot za danes", payCamper: "Parkirišča za kamper, voda", payIstra: "Istra Insider", payWeek: "Teden", payWeekSub: "7 dni · 1 regija", paySeason: "Sezona", paySeasonSub: "30 dni · vse regije", payLoading: "Preusmerjanje na plačilo...", paySecure: "Varno plačilo prek Stripe · Brez skritih stroškov · Prekliči kadar koli", payLater: "Mogoče pozneje",
   },
   cz: { title: "Jadran průvodce", sub: "Místní tipy pro perfektní dovolenou na Jadranu", start: "Začít konverzaci", send: "Odeslat", placeholder: "Zeptejte se na Jadran...", region: "Vyberte region", mode: "Jak cestujete?", unlock: "Odemknout — od 3,99€", free3: "3 otázky zdarma", remaining: "zbývá", upgraded: "Premium odemčen!", back: "Zpět", typing: "přemýšlím...",
     nicCamper: "Průvodce pro karavany", nicCamperSub: "Parkování, trasy, služby, varování pro karavany",
@@ -198,7 +198,7 @@ const T = {
     walkieTalk: "Stiskněte pro mluvení", walkieListen: "Poslouchám...", walkieAnswer: "Odpovídám...",
     walkieInfo: "Hlasité ovládání · Displej zůstává zapnutý", walkieSnap: "Vyfotit",
     errVision: "Analýza selhala. Zkuste to znovu.", errConnection: "Připojení není k dispozici. Zkuste to znovu.",
-    freeNote: "24h zdarma · poté od 3,99€/týden", trialExpired: "Bezplatný den vypršel",
+    freeNote: "24h zdarma · poté od 3,99€/týden", trialExpired: "Bezplatný den vypršel", payExpired: "BEZPLATNÝ DEN VYPRŠEL", payTitle: "Odemkněte průvodce", payFeatures: "Neomezené dotazy 24/7|Všechny tipy odemčeny|8+ skrytých pláží|Personalizovaná trasa na dnes", payCamper: "Parkování pro karavany, voda", payIstra: "Istrie Insider", payWeek: "Týden", payWeekSub: "7 dní · 1 region", paySeason: "Sezóna", paySeasonSub: "30 dní · všechny regiony", payLoading: "Přesměrování na platbu...", paySecure: "Bezpečná platba přes Stripe · Žádné skryté poplatky · Zrušení kdykoliv", payLater: "Možná později",
   },
   pl: { title: "Jadran przewodnik", sub: "Lokalne wskazówki na idealny urlop nad Adriatykiem", start: "Zacznij rozmowę", send: "Wyślij", placeholder: "Zapytaj o Adriatyk...", region: "Wybierz region", mode: "Jak podróżujesz?", unlock: "Odblokuj — od 3,99€", free3: "3 pytania za darmo", remaining: "pozostało", upgraded: "Premium odblokowany!", back: "Wstecz", typing: "myślę...",
     nicCamper: "Przewodnik kamperowy", nicCamperSub: "Parkingi, trasy, stacje serwisowe, ostrzeżenia",
@@ -221,7 +221,7 @@ const T = {
     walkieTalk: "Naciśnij, aby mówić", walkieListen: "Słucham...", walkieAnswer: "Odpowiadam...",
     walkieInfo: "Tryb głośnomówiący · Ekran nie gaśnie", walkieSnap: "Zrób zdjęcie",
     errVision: "Analiza nie powiodła się. Spróbuj ponownie.", errConnection: "Brak połączenia. Spróbuj ponownie.",
-    freeNote: "24h za darmo · potem od 3,99€/tydzień", trialExpired: "Darmowy dzień wygasł",
+    freeNote: "24h za darmo · potem od 3,99€/tydzień", trialExpired: "Darmowy dzień wygasł", payExpired: "DARMOWY DZIEŃ WYGASŁ", payTitle: "Odblokuj przewodnik", payFeatures: "Nieograniczone pytania 24/7|Wszystkie wskazówki odblokowane|8+ ukrytych plaż|Spersonalizowana trasa na dziś", payCamper: "Parkingi dla kamperów, woda", payIstra: "Istria Insider", payWeek: "Tydzień", payWeekSub: "7 dni · 1 region", paySeason: "Sezon", paySeasonSub: "30 dni · wszystkie regiony", payLoading: "Przekierowanie do płatności...", paySecure: "Bezpieczna płatność przez Stripe · Brak ukrytych kosztów · Anuluj w dowolnym momencie", payLater: "Może później",
   },
 };
 
@@ -524,16 +524,13 @@ export default function StandaloneAI() {
       onClick={() => setShowPaywall(false)}>
       <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "32px 24px", maxWidth: 440, width: "100%", border: "1px solid rgba(245,158,11,0.1)" }}>
         <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <div style={{ fontSize: 10, color: C.accent, letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>BESPLATNI DAN JE ISTEKAO</div>
-          <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 24, color: C.text }}>Otključajte svog vodiča</div>
+          <div style={{ fontSize: 10, color: C.accent, letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>{t.payExpired}</div>
+          <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 24, color: C.text }}>{t.payTitle}</div>
         </div>
         <div style={{ padding: "14px 16px", borderRadius: 14, background: isNight ? "rgba(14,165,233,0.04)" : "rgba(14,165,233,0.06)", marginBottom: 20, fontSize: 13, lineHeight: 2, color: C.text }}>
-          ✅ Neograničena AI pitanja 24/7<br/>
-          ✅ Svi savjeti na upozorenjima otključani<br/>
-          ✅ 8+ skrivenih plaža i konoba<br/>
-          {(travelMode === "camper" || niche === "camper") && <>✅ Kamper parking, dump station, voda<br/></>}
-          {region === "istra" && <>✅ Istra Insider — sezonski savjeti<br/></>}
-          ✅ Personalizirana ruta za danas
+          {t.payFeatures.split("|").map((f,i) => <span key={i}>✅ {f}<br/></span>)}
+          {(travelMode === "camper" || niche === "camper") && <>✅ {t.payCamper}<br/></>}
+          {region === "istra" && <>✅ {t.payIstra}<br/></>}
         </div>
         <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
           <button onClick={() => startCheckout("week")} disabled={payLoading}
@@ -541,8 +538,8 @@ export default function StandaloneAI() {
             onMouseEnter={e => e.currentTarget.style.borderColor = C.accent}
             onMouseLeave={e => e.currentTarget.style.borderColor = C.bord}>
             <div style={{ fontSize: 28, fontWeight: 300, color: C.accent }}>3.99€</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginTop: 4 }}>Tjedan</div>
-            <div style={{ fontSize: 11, color: C.mut, marginTop: 2 }}>7 dana · 1 regija</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginTop: 4 }}>{t.payWeek}</div>
+            <div style={{ fontSize: 11, color: C.mut, marginTop: 2 }}>{t.payWeekSub}</div>
           </button>
           <button onClick={() => startCheckout("season")} disabled={payLoading}
             style={{ flex: 1, padding: "16px 12px", borderRadius: 16, border: "1px solid rgba(245,158,11,0.2)", background: isNight ? "rgba(245,158,11,0.04)" : "rgba(245,158,11,0.08)", cursor: "pointer", fontFamily: "inherit", textAlign: "center", position: "relative", overflow: "hidden", transition: "all 0.2s" }}
@@ -550,12 +547,21 @@ export default function StandaloneAI() {
             onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(245,158,11,0.2)"}>
             <div style={{ position: "absolute", top: 0, right: 0, padding: "2px 10px", background: C.gold, color: "#fff", fontSize: 9, fontWeight: 700, borderRadius: "0 14px 0 8px" }}>BEST</div>
             <div style={{ fontSize: 28, fontWeight: 300, color: C.gold }}>7.99€</div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginTop: 4 }}>Sezona</div>
-            <div style={{ fontSize: 11, color: C.mut, marginTop: 2 }}>30 dana · sve regije</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginTop: 4 }}>{t.paySeason}</div>
+            <div style={{ fontSize: 11, color: C.mut, marginTop: 2 }}>{t.paySeasonSub}</div>
           </button>
         </div>
-        {payLoading && <div style={{ textAlign: "center", fontSize: 13, color: C.accent, marginBottom: 8 }}>⏳ Preusmjeravanje na plaćanje...</div>}
-        <button onClick={() => setShowPaywall(false)} style={{ width: "100%", background: "none", border: "none", color: C.mut, fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: 8 }}>Možda kasnije</button>
+        {payLoading && <div style={{ textAlign: "center", fontSize: 13, color: C.accent, marginBottom: 8 }}>⏳ {t.payLoading}</div>}
+        {/* Payment methods + security */}
+        <div style={{ textAlign: "center", marginTop: 12, marginBottom: 8 }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
+            {["VISA","Mastercard","Apple Pay","Google Pay"].map(m => (
+              <span key={m} style={{ padding: "3px 8px", borderRadius: 6, background: isNight ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)", border: `1px solid ${isNight ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"}`, fontSize: 9, color: C.mut, fontWeight: 500 }}>{m}</span>
+            ))}
+          </div>
+          <div style={{ fontSize: 9, color: C.mut }}>🔒 {t.paySecure}</div>
+        </div>
+        <button onClick={() => setShowPaywall(false)} style={{ width: "100%", background: "none", border: "none", color: C.mut, fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: 8 }}>{t.payLater}</button>
       </div>
     </div>
   );

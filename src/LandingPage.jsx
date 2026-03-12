@@ -24,12 +24,7 @@ const TRENDING = [
   { emoji: "🏰", title: "Dubrovnik zidine", sub: "Bez \u010Dekanja", price: "45\u20AC", link: GYG("dubrovnik-l518/dubrovnik-old-town-and-city-walls-walking-tour-t50564"), tag: "DUBROVNIK" },
 ];
 
-// Demo chat built from translations
-const DEMO_CHAT_STATIC = [
-  { role: "user", textKey: "demoQ" },
-  { role: "ai", textKey: "demoA" },
-  { role: "cta", textKey: "demoCta" },
-];
+// Demo chat built dynamically from tx() translations
 
 
 const DESTINATIONS = [
@@ -59,7 +54,7 @@ export default function LandingPage() {
 
   useEffect(() => { setTimeout(() => setAnim(true), 200); }, []);
   useEffect(() => {
-    if (chatStep < DEMO_CHAT.length) {
+    if (chatStep < 3) {
       const t = setTimeout(() => setChatStep(s => s + 1), chatStep === 0 ? 1200 : 1800);
       return () => clearTimeout(t);
     }
@@ -192,6 +187,12 @@ export default function LandingPage() {
             </a>
           </div>
           <div style={{ marginTop: 16, fontSize: 11, color: "#334155" }}>{tx("freeInfo")}</div>
+          <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
+            {["VISA","Mastercard","Apple Pay","Google Pay"].map(m => (
+              <span key={m} style={{ padding: "3px 8px", borderRadius: 6, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", fontSize: 9, color: "#64748b" }}>{m}</span>
+            ))}
+          </div>
+          <div style={{ fontSize: 9, color: "#334155", marginTop: 6 }}>🔒 Stripe secure payments</div>
         </div>
       </section>
 
