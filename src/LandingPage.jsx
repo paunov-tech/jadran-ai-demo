@@ -349,7 +349,7 @@ export default function LandingPage() {
               <div style={{ width: 14, height: 14, borderRadius: "50%", background: "#F79E1B", opacity: 0.85 }} />
             </div>
             <div style={{ padding: "6px 12px", borderRadius: 6, background: "#000", display: "flex", alignItems: "center", gap: 4 }}>
-              <span style={{ color: "#fff", fontSize: 13 }}>🍎</span>
+              <svg width="13" height="16" viewBox="0 0 17 20" fill="#fff"><path d="M13.6 10.4c0-2.7 2.2-4 2.3-4.1-1.3-1.9-3.2-2.1-3.9-2.2-1.6-.2-3.2 1-4 1s-2.1-1-3.5-.9c-1.8 0-3.4 1-4.3 2.7-1.9 3.2-.5 8 1.3 10.7.9 1.3 2 2.7 3.4 2.7 1.4-.1 1.9-.9 3.5-.9s2.1.9 3.5.8c1.5 0 2.3-1.3 3.2-2.6 1-1.5 1.4-2.9 1.5-3-.1 0-2.8-1.1-2.8-4.2h-.2zM11.2 2.7c.7-.9 1.2-2.2 1.1-3.4-1 0-2.3.7-3 1.6-.7.8-1.3 2-1.1 3.2 1.2.1 2.3-.6 3-1.4z"/></svg>
               <span style={{ color: "#fff", fontSize: 11, fontWeight: 600 }}>Pay</span>
             </div>
             <div style={{ padding: "6px 12px", borderRadius: 6, background: "#fff", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", gap: 3 }}>
