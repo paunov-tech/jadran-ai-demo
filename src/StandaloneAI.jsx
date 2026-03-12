@@ -646,9 +646,10 @@ export default function StandaloneAI() {
 
 
   // ═══ ICE-BREAKER — context-aware welcome message ═══
-  const generateIcebreaker = () => {
+  const generateIcebreaker = (overrideRegion) => {
     const h = new Date().getHours();
-    const regionName = REGIONS.find(r => r.id === region)?.name || "Jadran";
+    const activeRegion = overrideRegion || region;
+    const regionName = REGIONS.find(r => r.id === activeRegion)?.name || "Jadran";
     const isCamperMode = travelMode === "camper" || niche === "camper";
     const w = weather;
     
@@ -670,7 +671,7 @@ export default function StandaloneAI() {
 
     // ─── FOLLOW-UP SCENARIOS (returning user, 4+ hours) ───
     if (isReturning && isCamperMode) {
-      const regionExps = filterByRegion(EXPERIENCES, region);
+      const regionExps = filterByRegion(EXPERIENCES, activeRegion);
       
       // Scenario 1: "Jutro posle" (6-12h) — dnevni izleti
       if (h >= 6 && h < 12) {
@@ -689,7 +690,7 @@ ${isCamperMode ? "\nAko ste ipak za vožnju — treba li vam mapa lokalnih putev
         const gastro = regionExps.find(e => e.cat === "gastro") || regionExps.find(e => e.name.includes("Wine"));
         return `Hej! Bliži se vrijeme za večeru. 🍽️ Znam da je nakon cijelog dana najteže tražiti dobar restoran ${isCamperMode ? "s velikim parkingom" : ""}.
 
-${region === "split" ? "Moj prijedlog: Konoba Matoni, Podstrana — terasa nad morem, pašticada 14€. Imaju prostran parking za kampere!" : region === "istra" ? "Moj prijedlog: Konoba Batelina, Banjole kod Pule — svježa riba po kg, prostran ravan parking." : region === "dubrovnik" ? "Moj prijedlog: Na Pelješcu — stonske kamenice 1€/kom, domaće vino, parking bez stresa." : region === "kvarner" ? "Moj prijedlog: Konoba Nada, Vrbnik na Krku — domaća janjetina, pogled na more, parking na ulazu u selo." : "Pitaj me za preporuku konobe s parkingom u blizini!"}
+${activeRegion === "split" ? "Moj prijedlog: Konoba Matoni, Podstrana — terasa nad morem, pašticada 14€. Imaju prostran parking za kampere!" : activeRegion === "istra" ? "Moj prijedlog: Konoba Batelina, Banjole kod Pule — svježa riba po kg, prostran ravan parking." : activeRegion === "dubrovnik" ? "Moj prijedlog: Na Pelješcu — stonske kamenice 1€/kom, domaće vino, parking bez stresa." : activeRegion === "kvarner" ? "Moj prijedlog: Konoba Nada, Vrbnik na Krku — domaća janjetina, pogled na more, parking na ulazu u selo." : "Pitaj me za preporuku konobe s parkingom u blizini!"}
 ${gastro ? `\n[${gastro.name} — ${gastro.price}€](${gastro.link})` : ""}
 
 Treba li navigacija do parkinga ili imate drugi plan za večeras?`;
@@ -697,12 +698,12 @@ Treba li navigacija do parkinga ili imate drugi plan za večeras?`;
       
       // Scenario 3: "Spremanje za pokret" (48h+ ili default returning)
       if (visitCount >= 3 || hoursSinceLast > 24) {
-        const booking = BOOKING_CITIES.find(c => c.region === region);
-        const nextRegion = region === "istra" ? "Kvarner" : region === "kvarner" ? "Dalmacija" : region === "split" ? "jug prema Dubrovniku" : region === "dubrovnik" ? "sjever prema Splitu" : "sljedeću destinaciju";
+        const booking = BOOKING_CITIES.find(c => c.region === activeRegion);
+        const nextRegion = activeRegion === "istra" ? "Kvarner" : activeRegion === "kvarner" ? "Dalmacija" : activeRegion === "split" ? "jug prema Dubrovniku" : activeRegion === "dubrovnik" ? "sjever prema Splitu" : "sljedeću destinaciju";
         return `Pozdrav ponovo! 🚐 Vidim da ste već ${visitCount > 3 ? "nekoliko dana" : "par dana"} u regiji ${regionName}.
 
 ${w ? w.icon + " " + w.temp + "°C" : ""} Ako planirate da se pomjerite prema ${nextRegion}, imam logistički savjet:
-${region === "istra" ? "Na Istarskom Ipsilonu pazi na bočni vjetar kod vijadukta Limska draga — kamperi III kategorije." : region === "kvarner" ? "Ako idete na otoke (Krk, Cres, Pag), kupite kartu za trajekt unaprijed da preskočite redove." : region === "split" ? "Magistrala kod Omiša (prevoj Dubci) ima bočni vjetar — kamperi s ceradom na 40 km/h." : "Pelješki most je besplatan — ne morate više kroz Neum!"}
+${activeRegion === "istra" ? "Na Istarskom Ipsilonu pazi na bočni vjetar kod vijadukta Limska draga — kamperi III kategorije." : activeRegion === "kvarner" ? "Ako idete na otoke (Krk, Cres, Pag), kupite kartu za trajekt unaprijed da preskočite redove." : activeRegion === "split" ? "Magistrala kod Omiša (prevoj Dubci) ima bočni vjetar — kamperi s ceradom na 40 km/h." : "Pelješki most je besplatan — ne morate više kroz Neum!"}
 ${booking ? `\nMali kampovi se brzo pune. Pronašao sam slobodne parcele za sutra:
 [Pogledaj smještaj — ${booking.name}](${booking.link})` : ""}
 
@@ -725,13 +726,13 @@ Kamo dalje — trebate rutu ili preporuku za usput?`;
       if (isCamperMode) {
         return `Uh, vrijeme danas nije na našoj strani! ${w.icon} ${windWarn ? "Jaka bura otežava vožnju kamperima uz obalu." : "Kiša pada u regiji " + regionName + "."}
 
-Nema smisla sjediti u vozilu — ovo je savršen dan za istraživanje unutrašnjosti na toplom. ${region === "istra" ? "Preporučujem degustaciju vina i pršuta u lokalnoj vinariji — imaju zaštićen parking za kamper.\n[Rezerviraj degustaciju vina](https://www.getyourguide.com/istria-county-l1297/livade-guided-truffle-hunting-walking-tour-t413975/?partner_id=9OEGOYI&utm_medium=local_partners)" : region === "split" ? "Idealan dan za Dioklecijanove podrume — pod krovom, a fascinantan!\n[Rezerviraj obilazak palače](https://www.getyourguide.com/split-l268/split-walking-tour-t54976/?partner_id=9OEGOYI&utm_medium=local_partners)" : "Idealan dan za lokalne konobe u unutrašnjosti — topla jela i vino iz podruma."}
+Nema smisla sjediti u vozilu — ovo je savršen dan za istraživanje unutrašnjosti na toplom. ${activeRegion === "istra" ? "Preporučujem degustaciju vina i pršuta u lokalnoj vinariji — imaju zaštićen parking za kamper.\n[Rezerviraj degustaciju vina](https://www.getyourguide.com/istria-county-l1297/livade-guided-truffle-hunting-walking-tour-t413975/?partner_id=9OEGOYI&utm_medium=local_partners)" : activeRegion === "split" ? "Idealan dan za Dioklecijanove podrume — pod krovom, a fascinantan!\n[Rezerviraj obilazak palače](https://www.getyourguide.com/split-l268/split-walking-tour-t54976/?partner_id=9OEGOYI&utm_medium=local_partners)" : "Idealan dan za lokalne konobe u unutrašnjosti — topla jela i vino iz podruma."}
 
 Gdje se trenutno nalaziš da ti provjerim prohodnost puteva? 🛡️`;
       }
       return `Vrijeme danas traži plan B! ${w.icon} ${windWarn ? "Vjetar je jak — " + w.windSpeed + " km/h." : "Kiša pada, ali to znači manje turista svugdje!"}
 
-Preporučujem dan u unutrašnjosti: lokalne konobe, vinarije, muzeji. ${region === "istra" ? "Motovun i Grožnjan su prekrasni po kiši — manje turista, više atmosfere! 🍷" : "Savršen dan za skrivene lokalne tajne! 🍷"}
+Preporučujem dan u unutrašnjosti: lokalne konobe, vinarije, muzeji. ${activeRegion === "istra" ? "Motovun i Grožnjan su prekrasni po kiši — manje turista, više atmosfere! 🍷" : "Savršen dan za skrivene lokalne tajne! 🍷"}
 
 Što vas zanima — hrana, kultura, ili nešto treće?`;
     }
@@ -742,7 +743,7 @@ Preporučujem dan u unutrašnjosti: lokalne konobe, vinarije, muzeji. ${region =
       if (isCamperMode) {
         return `Dobra večer! 🌅 Zalazak u ${regionName} je danas u ${w?.sunset || "19:30"} — savršeno za večeru s pogledom.
 
-${region === "split" ? "Konoba Matoni u Podstrani — terasa nad morem, pašticada 14€, i imaju veliki parking za kampere!" : region === "istra" ? "Konoba Batelina u Banjolama kod Pule — svježa riba po kg, a parking je prostran i ravan." : region === "dubrovnik" ? "Na Pelješcu obavezno probaj stonske kamenice — 1€/kom! Parking bez problema.\n[Rezerviraj degustaciju kamenica](https://www.getyourguide.com/ston-l4159/ston-oyster-and-wine-tasting-tour-t197562/?partner_id=9OEGOYI&utm_medium=local_partners)" : "Lokalne konobe u " + regionName + " imaju mjesta za kamper — pitaj me za preporuku!"}
+${activeRegion === "split" ? "Konoba Matoni u Podstrani — terasa nad morem, pašticada 14€, i imaju veliki parking za kampere!" : activeRegion === "istra" ? "Konoba Batelina u Banjolama kod Pule — svježa riba po kg, a parking je prostran i ravan." : activeRegion === "dubrovnik" ? "Na Pelješcu obavezno probaj stonske kamenice — 1€/kom! Parking bez problema.\n[Rezerviraj degustaciju kamenica](https://www.getyourguide.com/ston-l4159/ston-oyster-and-wine-tasting-tour-t197562/?partner_id=9OEGOYI&utm_medium=local_partners)" : "Lokalne konobe u " + regionName + " imaju mjesta za kamper — pitaj me za preporuku!"}
 
 Treba li ti parking za večeras ili želiš preporuku za sutra? 🚐`;
       }
@@ -756,7 +757,7 @@ Treba li ti parking za večeras ili želiš preporuku za sutra? 🚐`;
       if (isCamperMode) {
         return `Dobro jutro! ☀️ ${w ? w.icon + " " + w.temp + "°C" : ""}, more ${w?.sea || 20}°C — savršen dan za avanturu!
 
-${w?.waveHeight && w.waveHeight < 0.5 ? "More je mirno kao ulje — idealno za izlet brodom!\n[Pogledaj dostupne izlete](https://www.getyourguide.com/split-l268/from-split-blue-cave-mamma-mia-vis-hvar-5-islands-tour-t326676/?partner_id=9OEGOYI&utm_medium=local_partners) 🚤" : ""}${region === "istra" ? " Rt Kamenjak je rano ujutro prazan — ali zatvori ventilaciju frižidera zbog prašine na makadamu!" : region === "split" ? " Kašjuni plaža pod Marjanom — dođi prije 10h dok je prazna!" : ""}
+${w?.waveHeight && w.waveHeight < 0.5 ? "More je mirno kao ulje — idealno za izlet brodom!\n[Pogledaj dostupne izlete](https://www.getyourguide.com/split-l268/from-split-blue-cave-mamma-mia-vis-hvar-5-islands-tour-t326676/?partner_id=9OEGOYI&utm_medium=local_partners) 🚤" : ""}${activeRegion === "istra" ? " Rt Kamenjak je rano ujutro prazan — ali zatvori ventilaciju frižidera zbog prašine na makadamu!" : activeRegion === "split" ? " Kašjuni plaža pod Marjanom — dođi prije 10h dok je prazna!" : ""}
 
 Kamo danas — plaže, izleti, ili tranzit prema sljedećoj destinaciji?`;
       }
@@ -929,9 +930,9 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
             {REGIONS.map(r => (
               <div key={r.id} onClick={() => {
                 setRegion(r.id);
-                // Auto-start chat if travel mode is set (niche auto-sets it)
+                // Auto-start chat — pass r.id directly (React state is async!)
                 if (travelMode) {
-                  setTimeout(() => { setStep("chat"); setTimeout(() => setMsgs([{ role: "assistant", text: generateIcebreaker() }]), 300); }, 150);
+                  setTimeout(() => { setStep("chat"); setTimeout(() => setMsgs([{ role: "assistant", text: generateIcebreaker(r.id) }]), 300); }, 150);
                 }
               }} style={{
                 padding: "14px 16px", borderRadius: 16, cursor: "pointer",
