@@ -192,7 +192,7 @@ PRAVILA ODGOVORA:
 - Uvijek: završi sa jednim bonus savjetom ili ponudom ("Dok si u tom kraju...")
 - Nikad: "Preporučujem da posjetite..." — umjesto toga: "Kreni 15 min južnije ka..."
 - Nikad: generički TripAdvisor stil — ti si lokalni čovjek koji živi tu
-- LINKOVI: Kad preporučuješ aktivnost ili rezervaciju, koristi format [Tekst dugmeta](URL). Primjer: [Rezerviraj izlet brodom](https://www.getyourguide.com/...). Ovo se prikazuje kao klikabilno dugme u chatu.` :
+- LINKOVI: Kad preporučuješ aktivnost ili rezervaciju, koristi format [Tekst dugmeta](URL). Primjer: [Rezerviraj izlet brodom](https://www.getyourguide.com/...). Ovo se prikazuje kao klikabilno dugme u chatu. UVIJEK umetni barem jedan link u odgovor ako preporučuješ aktivnost, restoran ili izlet.` :
 
     isSailing ? `Ti si lokalni nautički vodič za hrvatsku obalu Jadrana.
 KONTEKST: Gost plovi u regiji ${regionName}. ${wxCtx}
@@ -295,7 +295,7 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
       if (isCamperMode) {
         return `Uh, vrijeme danas nije na našoj strani! ${w.icon} ${windWarn ? "Jaka bura otežava vožnju kamperima uz obalu." : "Kiša pada u regiji " + regionName + "."}
 
-Nema smisla sjediti u vozilu — ovo je savršen dan za istraživanje unutrašnjosti na toplom. ${region === "istra" ? "Preporučujem degustaciju vina i pršuta u lokalnoj vinariji — imaju ogroman zaštićen parking za kamper." : region === "split" ? "Idealan dan za Dioklecijanove podrume ili muzej u Splitu — pod krovom, a fascinantan." : "Idealan dan za lokalne konobe u unutrašnjosti — topla jela i vino iz podruma."}
+Nema smisla sjediti u vozilu — ovo je savršen dan za istraživanje unutrašnjosti na toplom. ${region === "istra" ? "Preporučujem degustaciju vina i pršuta u lokalnoj vinariji — imaju zaštićen parking za kamper.\n[Rezerviraj degustaciju vina](https://www.getyourguide.com/istria-county-l1297/livade-guided-truffle-hunting-walking-tour-t413975/?partner_id=9OEGOYI&utm_medium=local_partners)" : region === "split" ? "Idealan dan za Dioklecijanove podrume — pod krovom, a fascinantan!\n[Rezerviraj obilazak palače](https://www.getyourguide.com/split-l268/split-walking-tour-t54976/?partner_id=9OEGOYI&utm_medium=local_partners)" : "Idealan dan za lokalne konobe u unutrašnjosti — topla jela i vino iz podruma."}
 
 Gdje se trenutno nalaziš da ti provjerim prohodnost puteva? 🛡️`;
       }
@@ -312,7 +312,7 @@ Preporučujem dan u unutrašnjosti: lokalne konobe, vinarije, muzeji. ${region =
       if (isCamperMode) {
         return `Dobra večer! 🌅 Zalazak u ${regionName} je danas u ${w?.sunset || "19:30"} — savršeno za večeru s pogledom.
 
-${region === "split" ? "Konoba Matoni u Podstrani — terasa nad morem, pašticada 14€, i imaju veliki parking za kampere!" : region === "istra" ? "Konoba Batelina u Banjolama kod Pule — svježa riba po kg, a parking je prostran i ravan." : region === "dubrovnik" ? "Na Pelješcu obavezno probaj stonske kamenice — 1€/kom! Parking bez problema." : "Lokalne konobe u " + regionName + " imaju mjesta za kamper — pitaj me za preporuku!"}
+${region === "split" ? "Konoba Matoni u Podstrani — terasa nad morem, pašticada 14€, i imaju veliki parking za kampere!" : region === "istra" ? "Konoba Batelina u Banjolama kod Pule — svježa riba po kg, a parking je prostran i ravan." : region === "dubrovnik" ? "Na Pelješcu obavezno probaj stonske kamenice — 1€/kom! Parking bez problema.\n[Rezerviraj degustaciju kamenica](https://www.getyourguide.com/ston-l4159/ston-oyster-and-wine-tasting-tour-t197562/?partner_id=9OEGOYI&utm_medium=local_partners)" : "Lokalne konobe u " + regionName + " imaju mjesta za kamper — pitaj me za preporuku!"}
 
 Treba li ti parking za večeras ili želiš preporuku za sutra? 🚐`;
       }
@@ -326,7 +326,7 @@ Treba li ti parking za večeras ili želiš preporuku za sutra? 🚐`;
       if (isCamperMode) {
         return `Dobro jutro! ☀️ ${w ? w.icon + " " + w.temp + "°C" : ""}, more ${w?.sea || 20}°C — savršen dan za avanturu!
 
-${w?.waveHeight && w.waveHeight < 0.5 ? "More je mirno kao ulje — idealno za izlet brodom! 🚤" : ""}${region === "istra" ? " Rt Kamenjak je rano ujutro prazan — ali zatvori ventilaciju frižidera zbog prašine na makadamu!" : region === "split" ? " Kašjuni plaža pod Marjanom — dođi prije 10h dok je prazna!" : ""}
+${w?.waveHeight && w.waveHeight < 0.5 ? "More je mirno kao ulje — idealno za izlet brodom!\n[Pogledaj dostupne izlete](https://www.getyourguide.com/split-l268/from-split-blue-cave-mamma-mia-vis-hvar-5-islands-tour-t326676/?partner_id=9OEGOYI&utm_medium=local_partners) 🚤" : ""}${region === "istra" ? " Rt Kamenjak je rano ujutro prazan — ali zatvori ventilaciju frižidera zbog prašine na makadamu!" : region === "split" ? " Kašjuni plaža pod Marjanom — dođi prije 10h dok je prazna!" : ""}
 
 Kamo danas — plaže, izleti, ili tranzit prema sljedećoj destinaciji?`;
       }
@@ -605,8 +605,8 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
               fontSize: 14, lineHeight: 1.7, whiteSpace: "pre-wrap",
             }}>
               {m.role === "assistant" ? m.text.split("\n").map((line, j) => {
-                // Parse [label](url) into rich buttons
-                const parts = line.split(/(\[[^\]]+\]\([^)]+\))/g);
+                // Parse [label](url) into rich buttons AND plain URLs into links
+                const parts = line.split(/(\[[^\]]+\]\([^)]+\))|(https?:\/\/[^\s)]+)/g).filter(Boolean);
                 return <div key={j} style={{ marginBottom: line === "" ? 4 : 0 }}>{parts.map((part, k) => {
                   const linkMatch = part.match(/\[([^\]]+)\]\(([^)]+)\)/);
                   if (linkMatch) {
@@ -619,6 +619,14 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
                       onMouseEnter={e => e.currentTarget.style.transform = "translateY(-1px)"}
                       onMouseLeave={e => e.currentTarget.style.transform = ""}
                     >{linkMatch[1]} →</a>;
+                  }
+                  if (/^https?:\/\//.test(part)) {
+                    const label = part.includes("getyourguide") ? "Pogledaj ponudu" : part.includes("viator") ? "Pogledaj turu" : part.includes("booking.com") ? "Pogledaj smještaj" : "Otvori link";
+                    return <a key={k} href={part} target="_blank" rel="noopener noreferrer" style={{
+                      display: "inline-block", margin: "6px 4px 2px 0", padding: "6px 14px", borderRadius: 10,
+                      background: isNight ? "rgba(14,165,233,0.1)" : "rgba(14,165,233,0.08)", border: `1px solid ${C.bord}`,
+                      fontSize: 11, color: C.accent, textDecoration: "none", fontWeight: 500,
+                    }}>{label} →</a>;
                   }
                   return <span key={k}>{part}</span>;
                 })}</div>;
