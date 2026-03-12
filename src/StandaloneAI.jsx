@@ -636,7 +636,7 @@ export default function StandaloneAI() {
           <div>{premiumPlan?.purchasedAt ? new Date(premiumPlan.purchasedAt).toLocaleDateString(lang === "de" || lang === "at" ? "de-AT" : lang === "en" ? "en-GB" : "hr-HR", { day: "numeric", month: "long", year: "numeric" }) : ""}</div>
           <div style={{ marginTop: 4, fontSize: 10 }}>{lang === "en" ? "Receipt sent to your email by Stripe" : lang === "de" || lang === "at" ? "Rechnung per E-Mail von Stripe" : lang === "it" ? "Ricevuta inviata da Stripe via email" : "Račun poslan na email putem Stripe"}</div>
         </div>
-        <button onClick={() => { setShowSuccess(false); if (step === "setup") { setStep("chat"); setTimeout(() => setMsgs([{ role: "assistant", text: generateIcebreaker() }]), 300); } }}
+        <button onClick={() => { setShowSuccess(false); if (step === "setup") { const ice = generateIcebreaker(); setMsgs([{ role: "assistant", text: ice }]); setStep("chat"); window.scrollTo(0, 0); } }}
           style={{ width: "100%", padding: "16px", borderRadius: 16, border: "none", background: "linear-gradient(135deg, #22c55e, #16a34a)", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "'Playfair Display',Georgia,serif", boxShadow: "0 4px 16px rgba(34,197,94,0.3)" }}>
           {lang === "en" ? "Start exploring →" : lang === "de" ? "Los geht's →" : lang === "at" ? "Los geht's! →" : lang === "it" ? "Inizia a esplorare →" : "Započnite istraživanje →"}
         </button>
@@ -851,9 +851,11 @@ export default function StandaloneAI() {
             {REGIONS.map(r => (
               <div key={r.id} onClick={() => {
                 setRegion(r.id);
-                // Auto-start chat — pass r.id directly (React state is async!)
                 if (travelMode) {
-                  setTimeout(() => { setStep("chat"); setTimeout(() => setMsgs([{ role: "assistant", text: generateIcebreaker(r.id) }]), 300); }, 150);
+                  const ice = generateIcebreaker(r.id);
+                  setMsgs([{ role: "assistant", text: ice }]);
+                  setStep("chat");
+                  window.scrollTo(0, 0);
                 }
               }} style={{
                 padding: "14px 16px", borderRadius: 16, cursor: "pointer",
@@ -873,7 +875,7 @@ export default function StandaloneAI() {
 
         {/* Start — only shows if no niche (direct /ai access, mode not auto-set) */}
         {!niche && (
-          <button onClick={() => { if (region && travelMode) { setStep("chat"); setTimeout(() => setMsgs([{ role: "assistant", text: generateIcebreaker() }]), 300); } }}
+          <button onClick={() => { if (region && travelMode) { const ice = generateIcebreaker(); setMsgs([{ role: "assistant", text: ice }]); setStep("chat"); window.scrollTo(0, 0); } }}
             disabled={!region || !travelMode}
             style={{
               width: "100%", padding: "18px", borderRadius: 18, border: "none",
@@ -942,7 +944,7 @@ export default function StandaloneAI() {
       {/* Header */}
       <div style={{ padding: "14px 20px", paddingTop: "max(14px, env(safe-area-inset-top, 14px))", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.bord}`, flexShrink: 0, background: isNight ? "transparent" : "rgba(255,255,255,0.4)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <button onClick={() => setStep("setup")} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 10, border: `1px solid ${C.bord}`, background: "transparent", color: C.text, fontSize: 16, cursor: "pointer", transition: "all 0.2s", flexShrink: 0 }}
+          <button onClick={() => { setStep("setup"); window.scrollTo(0, 0); }} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 10, border: `1px solid ${C.bord}`, background: "transparent", color: C.text, fontSize: 16, cursor: "pointer", transition: "all 0.2s", flexShrink: 0 }}
               onMouseEnter={e => e.currentTarget.style.borderColor = C.accent}
               onMouseLeave={e => e.currentTarget.style.borderColor = C.bord}>‹</button>
           <div style={{ width: 1, height: 20, background: C.bord }} />
