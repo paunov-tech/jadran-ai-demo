@@ -110,7 +110,6 @@ export default function LandingPage() {
 
   return (
     <div style={{ background: "#0a1628", color: "#f0f4f8", fontFamily: B, overflowX: "hidden" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
       {/* NAV */}
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, padding: "10px 20px", paddingTop: "max(10px, env(safe-area-inset-top, 10px))", display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(10,22,40,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
@@ -132,7 +131,7 @@ export default function LandingPage() {
       <section style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", overflow: "hidden" }}>
         <video autoPlay muted loop playsInline style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.25 }}
           poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3Crect fill='%230a0e17'/%3E%3C/svg%3E">
-          <source src="https://videos.pexels.com/video-files/1093662/1093662-hd_1920_1080_30fps.mp4" type="video/mp4" />
+          <source src="https://videos.pexels.com/video-files/1093662/1093662-sd_640_360_30fps.mp4" type="video/mp4" />
         </video>
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,14,23,0.6) 0%, rgba(10,14,23,0.3) 40%, rgba(10,14,23,0.95) 100%)" }} />
         <div style={{ position: "relative", maxWidth: 680, margin: "0 auto", padding: "100px 24px 60px", textAlign: "center", opacity: anim ? 1 : 0, transform: anim ? "translateY(0)" : "translateY(40px)", transition: "all 1s cubic-bezier(0.16, 1, 0.3, 1)" }}>
@@ -149,7 +148,7 @@ export default function LandingPage() {
             {/* Camper */}
             <a href="/ai?niche=camper" style={{
               borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
-              border: "1px solid rgba(245,158,11,0.2)", transition: "all 0.3s", display: "block", minHeight: 100,
+              border: "1px solid rgba(245,158,11,0.2)", transition: "all 0.3s", display: "block", minHeight: 90,
             }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(245,158,11,0.4)"; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(245,158,11,0.12)"; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(245,158,11,0.2)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
@@ -163,7 +162,7 @@ export default function LandingPage() {
             {/* Local / Auto */}
             <a href="/ai?niche=local" style={{
               borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
-              border: "1px solid rgba(14,165,233,0.15)", transition: "all 0.3s", display: "block", minHeight: 100,
+              border: "1px solid rgba(14,165,233,0.15)", transition: "all 0.3s", display: "block", minHeight: 90,
             }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.3)"; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(14,165,233,0.1)"; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.15)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
@@ -177,7 +176,7 @@ export default function LandingPage() {
             {/* Sailing / Yacht */}
             <a href="/ai?niche=sailing" style={{
               borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
-              border: "1px solid rgba(6,182,212,0.15)", transition: "all 0.3s", display: "block", minHeight: 100,
+              border: "1px solid rgba(6,182,212,0.15)", transition: "all 0.3s", display: "block", minHeight: 90,
             }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(6,182,212,0.3)"; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(6,182,212,0.1)"; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(6,182,212,0.15)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
@@ -191,7 +190,7 @@ export default function LandingPage() {
             {/* Cruise */}
             <a href="/ai?niche=cruiser" style={{
               borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
-              border: "1px solid rgba(168,85,247,0.15)", transition: "all 0.3s", display: "block", minHeight: 100,
+              border: "1px solid rgba(168,85,247,0.15)", transition: "all 0.3s", display: "block", minHeight: 90,
             }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.3)"; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(168,85,247,0.1)"; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.15)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>

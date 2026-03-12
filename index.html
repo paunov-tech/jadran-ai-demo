@@ -13,6 +13,15 @@
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://jadran.ai" />
 
+  <!-- Performance: preconnect + fonts in head (prevents layout shift) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://images.unsplash.com" />
+  <link rel="preconnect" href="https://api.anthropic.com" />
+  <link rel="preconnect" href="https://upload.wikimedia.org" />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
   <!-- Open Graph (Facebook, LinkedIn) -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://jadran.ai" />

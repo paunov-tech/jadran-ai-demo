@@ -815,7 +815,6 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
   // ═══ SETUP SCREEN ═══
   if (step === "setup") return (
     <div style={{ minHeight: "100vh", background: C.heroBg, fontFamily: "'Outfit',system-ui,sans-serif", color: C.text }}>
-      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
       <div style={{ maxWidth: 540, margin: "0 auto", padding: "40px 24px" }}>
         {/* Header */}
@@ -1017,7 +1016,6 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
   // ═══ CHAT SCREEN ═══
   return (
     <div style={{ height: "100dvh", display: "flex", flexDirection: "column", background: C.chatBg, fontFamily: "'Outfit',system-ui,sans-serif", color: C.text }}>
-      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
       {/* Header */}
       <div style={{ padding: "14px 20px", paddingTop: "max(14px, env(safe-area-inset-top, 14px))", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.bord}`, flexShrink: 0, background: isNight ? "transparent" : "rgba(255,255,255,0.4)" }}>
