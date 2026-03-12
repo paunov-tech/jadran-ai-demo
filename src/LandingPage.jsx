@@ -8,11 +8,11 @@ import { useState, useEffect } from "react";
 const GYG = (id) => `https://www.getyourguide.com/${id}/?partner_id=9OEGOYI&utm_medium=local_partners`;
 
 const L = {
-  hr: { badge: "Bez skidanja aplikacije. Radi odmah.", h1a: "Jadran ne oprašta", h1b: "uske ulice i visoke kazne.", h1c: "Tvoj lokalni AI suvozač je tu.", sub: "Od Istre do Dalmacije. Unesi gabarite svog vozila i odmah dobij sigurne rute, tajne parkinge i popuste za skrivene konobe.", destLabel: "Kamo ideš?", lenLabel: "Dužina vozila?", cta: "Započni Chat", pain1t: "Zaboravi na kazne", pain1d: "Naš AI zna visinu svakog podvožnjaka i širinu svakog starog grada. Ne rizikuj zaglavljivanje kampera na usponima Biokova ili uličicama Trogira.", pain2t: "Bura te neće iznenaditi", pain2d: "Povezani smo sa lokalnim meteo-stanicama. Ako udari vjetar opasan za tvoju tendu, dobijaš upozorenje i lokaciju najbližeg zaklona.", pain3t: "Mjesta koja Google ne zna", pain3d: "Otkrij OPG-ove, vinarije s besplatnim parkingom i prazne uvale koje samo lokalci čuvaju za sebe.", demoTitle: "Pametnije od mape. Brže od recepcije.", trendTitle: "Što se traži na Jadranu?", b2bTitle: "Vlasnik ste apartmana, kampa ili konobe?", b2bDesc: "Prestanite odgovarati na ista pitanja 50 puta dnevno. Podijelite naš QR kod gostima — oni dobijaju 24/7 vodiča na svom jeziku, a vi mirnu recepciju.", b2bBtn: "Generiraj besplatan QR kod", sticky: "Spremio si se za put?", stickyBtn: "POKRENI JADRAN.AI" },
-  de: { badge: "Keine App nötig. Sofort nutzbar.", h1a: "Die Adria verzeiht keine", h1b: "engen Gassen und hohen Strafen.", h1c: "Ihr lokaler AI-Copilot.", sub: "Von Istrien bis Dalmatien. Fahrzeugmaße eingeben, sichere Routen und geheime Parkplätze erhalten.", destLabel: "Wohin?", lenLabel: "Fahrzeuglänge?", cta: "Chat starten", pain1t: "Keine Strafen mehr", pain1d: "Unsere KI kennt jede Unterführung und jede Altstadtgasse. Kein Risiko.", pain2t: "Bora überrascht nicht", pain2d: "Verbunden mit lokalen Wetterstationen. Bei Sturmwind erhalten Sie sofort eine Warnung.", pain3t: "Was Google nicht kennt", pain3d: "Familienbetriebe, Weingüter mit Parkplatz und leere Buchten.", demoTitle: "Schlauer als jede Karte.", trendTitle: "Was wird an der Adria gesucht?", b2bTitle: "Vermieten Sie eine Unterkunft?", b2bDesc: "Teilen Sie unseren QR-Code — Ihre Gäste erhalten einen 24/7 Guide.", b2bBtn: "Kostenlosen QR-Code erstellen", sticky: "Bereit?", stickyBtn: "JADRAN.AI STARTEN" },
-  at: { badge: "Keine App nötig. Sofort nutzbar.", h1a: "Die Adria verzeiht keine", h1b: "engen Gassen und hohen Strafen.", h1c: "Dein lokaler AI-Copilot.", sub: "Von Istrien bis Dalmatien. Gib deine Fahrzeugmaße ein und hol dir sichere Routen und geheime Parkplätze.", destLabel: "Wohin?", lenLabel: "Fahrzeuglänge?", cta: "Chat starten", pain1t: "Vergiss die Strafen", pain1d: "Unsere KI kennt jede Unterführung und jede Altstadtgasse. Null Risiko.", pain2t: "Bora überrascht dich nicht", pain2d: "Verbunden mit lokalen Wetterstationen. Bei Sturmwind bekommst du sofort eine Warnung.", pain3t: "Was Google nicht kennt", pain3d: "Familienbetriebe, Weingüter mit Camper-Parkplatz und leere Buchten.", demoTitle: "Schlauer als jede Karte.", trendTitle: "Was wird an der Adria gesucht?", b2bTitle: "Vermietest du eine Unterkunft?", b2bDesc: "Teil unseren QR-Code — deine Gäste kriegen einen 24/7 Guide.", b2bBtn: "Gratis QR-Code erstellen", sticky: "Bereit?", stickyBtn: "JADRAN.AI STARTEN" },
-  en: { badge: "No app needed. Works instantly.", h1a: "The Adriatic doesn't forgive", h1b: "narrow streets and steep fines.", h1c: "Your local AI co-pilot is here.", sub: "From Istria to Dalmatia. Enter your vehicle size and get safe routes, secret parking and local discounts.", destLabel: "Where to?", lenLabel: "Vehicle length?", cta: "Start Chat", pain1t: "Forget about fines", pain1d: "Our AI knows every underpass height and every old town width. Zero risk.", pain2t: "Bora won't surprise you", pain2d: "Connected to local weather stations. Dangerous wind triggers an instant warning.", pain3t: "What Google doesn't know", pain3d: "Family farms, wineries with free parking and empty coves only locals know.", demoTitle: "Smarter than any map.", trendTitle: "Trending on the Adriatic?", b2bTitle: "Own a property?", b2bDesc: "Share our QR code — your guests get a 24/7 guide in their language.", b2bBtn: "Generate free QR code", sticky: "Ready?", stickyBtn: "LAUNCH JADRAN.AI" },
-  it: { badge: "Nessun download. Funziona subito.", h1a: "L'Adriatico non perdona", h1b: "strade strette e multe salate.", h1c: "Il tuo copilota AI locale.", sub: "Dall'Istria alla Dalmazia. Inserisci le dimensioni del veicolo e ottieni percorsi sicuri.", destLabel: "Dove vai?", lenLabel: "Lunghezza?", cta: "Inizia Chat", pain1t: "Dimentica le multe", pain1d: "La nostra IA conosce ogni sottopasso e ogni centro storico.", pain2t: "La Bora non sorprende", pain2d: "Collegati alle stazioni meteo. Vento pericoloso = avviso immediato.", pain3t: "Cosa Google non sa", pain3d: "Agriturismi, cantine con parcheggio e calette vuote.", demoTitle: "Più smart di ogni mappa.", trendTitle: "Tendenze sull'Adriatico?", b2bTitle: "Affitti un alloggio?", b2bDesc: "Condividi il QR code — ospiti ottengono guida 24/7.", b2bBtn: "Genera QR gratuito", sticky: "Pronto?", stickyBtn: "LANCIA JADRAN.AI" },
+  hr: { badge: "Bez skidanja aplikacije. Radi odmah.", h1a: "Jadran ne oprašta", h1b: "uske ulice i visoke kazne.", h1c: "Tvoj lokalni AI vodič je tu.", sub: "Od Istre do Dalmacije. Unesi gabarite svog vozila i odmah dobij sigurne rute, tajne parkinge i popuste za skrivene konobe.", destLabel: "Kamo ideš?", lenLabel: "Dužina vozila?", cta: "Započni Chat", pain1t: "Zaboravi na kazne", pain1d: "Naš AI zna visinu svakog podvožnjaka i širinu svakog starog grada. Ne rizikuj zaglavljivanje kampera na usponima Biokova ili uličicama Trogira.", pain2t: "Bura te neće iznenaditi", pain2d: "Povezani smo sa lokalnim meteo-stanicama. Ako udari vjetar opasan za tvoju tendu, dobijaš upozorenje i lokaciju najbližeg zaklona.", pain3t: "Mjesta koja Google ne zna", pain3d: "Otkrij OPG-ove, vinarije s besplatnim parkingom i prazne uvale koje samo lokalci čuvaju za sebe.", demoTitle: "Pametnije od mape. Brže od recepcije.", trendTitle: "Što se traži na Jadranu?", b2bTitle: "Vlasnik ste apartmana, kampa ili konobe?", b2bDesc: "Prestanite odgovarati na ista pitanja 50 puta dnevno. Podijelite naš QR kod gostima — oni dobijaju 24/7 vodiča na svom jeziku, a vi mirnu recepciju.", b2bBtn: "Generiraj besplatan QR kod", sticky: "Spremio si se za put?", stickyBtn: "POKRENI JADRAN.AI" },
+  de: { badge: "Keine App nötig. Sofort nutzbar.", h1a: "Die Adria verzeiht keine", h1b: "engen Gassen und hohen Strafen.", h1c: "Ihr lokaler AI-Reiseführer.", sub: "Von Istrien bis Dalmatien. Fahrzeugmaße eingeben, sichere Routen und geheime Parkplätze erhalten.", destLabel: "Wohin?", lenLabel: "Fahrzeuglänge?", cta: "Chat starten", pain1t: "Keine Strafen mehr", pain1d: "Unsere KI kennt jede Unterführung und jede Altstadtgasse. Kein Risiko.", pain2t: "Bora überrascht nicht", pain2d: "Verbunden mit lokalen Wetterstationen. Bei Sturmwind erhalten Sie sofort eine Warnung.", pain3t: "Was Google nicht kennt", pain3d: "Familienbetriebe, Weingüter mit Parkplatz und leere Buchten.", demoTitle: "Schlauer als jede Karte.", trendTitle: "Was wird an der Adria gesucht?", b2bTitle: "Vermieten Sie eine Unterkunft?", b2bDesc: "Teilen Sie unseren QR-Code — Ihre Gäste erhalten einen 24/7 Guide.", b2bBtn: "Kostenlosen QR-Code erstellen", sticky: "Bereit?", stickyBtn: "JADRAN.AI STARTEN" },
+  at: { badge: "Keine App nötig. Sofort nutzbar.", h1a: "Die Adria verzeiht keine", h1b: "engen Gassen und hohen Strafen.", h1c: "Dein lokaler AI-Reiseführer.", sub: "Von Istrien bis Dalmatien. Gib deine Fahrzeugmaße ein und hol dir sichere Routen und geheime Parkplätze.", destLabel: "Wohin?", lenLabel: "Fahrzeuglänge?", cta: "Chat starten", pain1t: "Vergiss die Strafen", pain1d: "Unsere KI kennt jede Unterführung und jede Altstadtgasse. Null Risiko.", pain2t: "Bora überrascht dich nicht", pain2d: "Verbunden mit lokalen Wetterstationen. Bei Sturmwind bekommst du sofort eine Warnung.", pain3t: "Was Google nicht kennt", pain3d: "Familienbetriebe, Weingüter mit Camper-Parkplatz und leere Buchten.", demoTitle: "Schlauer als jede Karte.", trendTitle: "Was wird an der Adria gesucht?", b2bTitle: "Vermietest du eine Unterkunft?", b2bDesc: "Teil unseren QR-Code — deine Gäste kriegen einen 24/7 Guide.", b2bBtn: "Gratis QR-Code erstellen", sticky: "Bereit?", stickyBtn: "JADRAN.AI STARTEN" },
+  en: { badge: "No app needed. Works instantly.", h1a: "The Adriatic doesn't forgive", h1b: "narrow streets and steep fines.", h1c: "Your local AI guide is here.", sub: "From Istria to Dalmatia. Enter your vehicle size and get safe routes, secret parking and local discounts.", destLabel: "Where to?", lenLabel: "Vehicle length?", cta: "Start Chat", pain1t: "Forget about fines", pain1d: "Our AI knows every underpass height and every old town width. Zero risk.", pain2t: "Bora won't surprise you", pain2d: "Connected to local weather stations. Dangerous wind triggers an instant warning.", pain3t: "What Google doesn't know", pain3d: "Family farms, wineries with free parking and empty coves only locals know.", demoTitle: "Smarter than any map.", trendTitle: "Trending on the Adriatic?", b2bTitle: "Own a property?", b2bDesc: "Share our QR code — your guests get a 24/7 guide in their language.", b2bBtn: "Generate free QR code", sticky: "Ready?", stickyBtn: "LAUNCH JADRAN.AI" },
+  it: { badge: "Nessun download. Funziona subito.", h1a: "L'Adriatico non perdona", h1b: "strade strette e multe salate.", h1c: "La tua guida AI locale.", sub: "Dall'Istria alla Dalmazia. Inserisci le dimensioni del veicolo e ottieni percorsi sicuri.", destLabel: "Dove vai?", lenLabel: "Lunghezza?", cta: "Inizia Chat", pain1t: "Dimentica le multe", pain1d: "La nostra IA conosce ogni sottopasso e ogni centro storico.", pain2t: "La Bora non sorprende", pain2d: "Collegati alle stazioni meteo. Vento pericoloso = avviso immediato.", pain3t: "Cosa Google non sa", pain3d: "Agriturismi, cantine con parcheggio e calette vuote.", demoTitle: "Più smart di ogni mappa.", trendTitle: "Tendenze sull'Adriatico?", b2bTitle: "Affitti un alloggio?", b2bDesc: "Condividi il QR code — ospiti ottengono guida 24/7.", b2bBtn: "Genera QR gratuito", sticky: "Pronto?", stickyBtn: "LANCIA JADRAN.AI" },
 };
 
 const TRENDING = [
@@ -55,11 +55,11 @@ export default function LandingPage() {
   const B = "'Outfit', system-ui, sans-serif";
 
   return (
-    <div style={{ background: "#0a0e17", color: "#f0f4f8", fontFamily: B, overflowX: "hidden" }}>
+    <div style={{ background: "#0a1628", color: "#f0f4f8", fontFamily: B, overflowX: "hidden" }}>
       <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
       {/* NAV */}
-      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, padding: "10px 20px", paddingTop: "max(10px, env(safe-area-inset-top, 10px))", display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(10,14,23,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, padding: "10px 20px", paddingTop: "max(10px, env(safe-area-inset-top, 10px))", display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(10,22,40,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ width: 32, height: 32, borderRadius: 9, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 14, fontWeight: 800, color: "#fff" }}>J</div>
           <span style={{ fontFamily: F, fontSize: 16, fontWeight: 700, letterSpacing: 2 }}>JADRAN</span>
@@ -78,7 +78,7 @@ export default function LandingPage() {
       <section style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", overflow: "hidden" }}>
         <video autoPlay muted loop playsInline style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.25 }}
           poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3Crect fill='%230a0e17'/%3E%3C/svg%3E">
-          <source src="https://cdn.coverr.co/videos/coverr-an-aerial-view-of-the-ocean-1585/1080p.mp4" type="video/mp4" />
+          <source src="https://videos.pexels.com/video-files/1093662/1093662-hd_1920_1080_30fps.mp4" type="video/mp4" />
         </video>
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,14,23,0.6) 0%, rgba(10,14,23,0.3) 40%, rgba(10,14,23,0.95) 100%)" }} />
         <div style={{ position: "relative", maxWidth: 680, margin: "0 auto", padding: "100px 24px 60px", textAlign: "center", opacity: anim ? 1 : 0, transform: anim ? "translateY(0)" : "translateY(40px)", transition: "all 1s cubic-bezier(0.16, 1, 0.3, 1)" }}>
@@ -88,26 +88,34 @@ export default function LandingPage() {
             <span style={{ background: "linear-gradient(135deg, #38bdf8, #0ea5e9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{tx("h1c")}</span>
           </h1>
           <p style={{ fontSize: "clamp(14px, 2.2vw, 17px)", color: "#94a3b8", lineHeight: 1.6, maxWidth: 520, margin: "0 auto 28px" }}>{tx("sub")}</p>
-          {/* Mini-form */}
-          <div style={{ background: "rgba(255,255,255,0.04)", backdropFilter: "blur(16px)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 18, padding: 16, maxWidth: 400, margin: "0 auto" }}>
-            <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-              <div style={{ flex: 2 }}>
-                <div style={{ fontSize: 9, color: "#475569", marginBottom: 3, letterSpacing: 1 }}>{tx("destLabel")}</div>
-                <select value={dest} onChange={e => setDest(e.target.value)} style={{ width: "100%", padding: "12px 10px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.03)", color: "#e2e8f0", fontSize: 14, fontFamily: B, outline: "none", appearance: "none" }}>
-                  <option value="">{"\u2014"}</option>
-                  {DESTS.map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
+          {/* Two CTA Buttons */}
+          <div style={{ display: "flex", gap: 14, maxWidth: 480, margin: "0 auto", flexWrap: "wrap", justifyContent: "center" }}>
+            <a href="/ai?niche=camper" style={{
+              flex: "1 1 200px", padding: "20px 24px", borderRadius: 18, textDecoration: "none",
+              background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)",
+              display: "flex", alignItems: "center", gap: 14, transition: "all 0.3s",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(245,158,11,0.4)"; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(245,158,11,0.12)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(245,158,11,0.2)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg, #f59e0b, #d97706)", display: "grid", placeItems: "center", fontSize: 22, flexShrink: 0 }}>🚐</div>
+              <div>
+                <div style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#f0f4f8" }}>Kamper vodič</div>
+                <div style={{ fontSize: 12, color: "#fbbf24", marginTop: 2 }}>Parking, rute, upozorenja</div>
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 9, color: "#475569", marginBottom: 3, letterSpacing: 1 }}>{tx("lenLabel")}</div>
-                <input value={vLen} onChange={e => setVLen(e.target.value)} placeholder="7.5m" style={{ width: "100%", padding: "12px 10px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.03)", color: "#e2e8f0", fontSize: 14, fontFamily: B, outline: "none" }} />
+            </a>
+            <a href="/ai?niche=local" style={{
+              flex: "1 1 200px", padding: "20px 24px", borderRadius: 18, textDecoration: "none",
+              background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)",
+              display: "flex", alignItems: "center", gap: 14, transition: "all 0.3s",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.3)"; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(14,165,233,0.1)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.15)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 22, flexShrink: 0 }}>🗺️</div>
+              <div>
+                <div style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#f0f4f8" }}>Lokalni vodič</div>
+                <div style={{ fontSize: 12, color: "#7dd3fc", marginTop: 2 }}>Plaže, konobe, izleti</div>
               </div>
-            </div>
-            <button onClick={goChat} style={{ width: "100%", padding: "15px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #ef4444, #dc2626)", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: F, boxShadow: "0 6px 24px rgba(239,68,68,0.3)", transition: "all 0.3s" }}
-              onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
-              onMouseLeave={e => e.currentTarget.style.transform = ""}>
-              {tx("cta")} {"\u2192"}
-            </button>
+            </a>
           </div>
           <div style={{ marginTop: 16, fontSize: 11, color: "#334155" }}>24h besplatno {"\u00B7"} 8 jezika {"\u00B7"} bez registracije</div>
         </div>
@@ -131,7 +139,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ LIVE DEMO ═══ */}
-      <section style={{ padding: "72px 24px", background: "linear-gradient(180deg, #0a0e17, #0c1829)" }}>
+      <section style={{ padding: "72px 24px", background: "linear-gradient(180deg, #0a1628, #0e3a5c)" }}>
         <div style={{ maxWidth: 860, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 40 }}>
             <div style={{ fontSize: 9, color: "#0ea5e9", letterSpacing: 5, fontWeight: 600, marginBottom: 8 }}>DEMO</div>
@@ -139,7 +147,7 @@ export default function LandingPage() {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 32, alignItems: "center" }}>
             {/* Phone mockup */}
-            <div style={{ background: "linear-gradient(135deg, #1e293b, #0f172a)", borderRadius: 28, padding: "14px 10px", maxWidth: 320, margin: "0 auto", boxShadow: "0 16px 48px rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.05)" }}>
+            <div style={{ background: "linear-gradient(135deg, #0c2d48, #0e3a5c)", borderRadius: 28, padding: "14px 10px", maxWidth: 320, margin: "0 auto", boxShadow: "0 16px 48px rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.05)" }}>
               <div style={{ padding: "6px 10px 10px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
                 <div style={{ width: 24, height: 24, borderRadius: 7, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 10, fontWeight: 800, color: "#fff" }}>J</div>
                 <div style={{ fontSize: 12, fontWeight: 600 }}>Jadran AI</div>
@@ -176,7 +184,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ TRENDING ═══ */}
-      <section style={{ padding: "72px 24px", background: "#0a0e17" }}>
+      <section style={{ padding: "72px 24px", background: "#0a1628" }}>
         <div style={{ maxWidth: 960, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 32 }}>
             <div style={{ fontSize: 9, color: "#f59e0b", letterSpacing: 5, fontWeight: 600, marginBottom: 8 }}>{"\U0001F525"} POPULARNO</div>
@@ -188,7 +196,7 @@ export default function LandingPage() {
                 <div style={{ minWidth: 240, borderRadius: 18, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden", transition: "all 0.3s" }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.15)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"; e.currentTarget.style.transform = ""; }}>
-                  <div style={{ height: 120, background: "linear-gradient(135deg, #1e293b, #0f172a)", display: "grid", placeItems: "center", fontSize: 40, position: "relative" }}>
+                  <div style={{ height: 120, background: "linear-gradient(135deg, #0c2d48, #0e3a5c)", display: "grid", placeItems: "center", fontSize: 40, position: "relative" }}>
                     {t.emoji}
                     <span style={{ position: "absolute", top: 8, left: 8, padding: "2px 8px", borderRadius: 6, background: "rgba(14,165,233,0.12)", color: "#38bdf8", fontSize: 9, fontWeight: 600, letterSpacing: 1 }}>{t.tag}</span>
                   </div>
@@ -208,7 +216,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ B2B ═══ */}
-      <section style={{ padding: "72px 24px", background: "linear-gradient(180deg, #0c1829, #0a1628)" }}>
+      <section style={{ padding: "72px 24px", background: "linear-gradient(180deg, #0e3a5c, #0a1628)" }}>
         <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
           <h2 style={{ fontFamily: F, fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 700, color: "#facc15", marginBottom: 14 }}>{tx("b2bTitle")}</h2>
           <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 28 }}>{tx("b2bDesc")}</p>
@@ -225,15 +233,16 @@ export default function LandingPage() {
 
       {/* FOOTER */}
       <footer style={{ padding: "20px", paddingBottom: "calc(20px + 52px)", textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.03)" }}>
-        <div style={{ fontSize: 11, color: "#1e293b" }}>JADRAN {"\u00B7"} SIAL Consulting d.o.o. {"\u00B7"} 2026</div>
+        <div style={{ fontSize: 11, color: "#0c4a6e" }}>JADRAN {"\u00B7"} SIAL Consulting d.o.o. {"\u00B7"} 2026</div>
       </footer>
 
       {/* ═══ STICKY BAR ═══ */}
       <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99, padding: "8px 16px", paddingBottom: "max(8px, env(safe-area-inset-bottom, 8px))", background: "linear-gradient(135deg, #16a34a, #15803d)", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 -4px 16px rgba(0,0,0,0.3)" }}>
         <span style={{ color: "#fff", fontSize: 13, fontWeight: 500 }}>{"\U0001F4AC"} {tx("sticky")}</span>
-        <a href="/ai?niche=camper" style={{ padding: "9px 20px", borderRadius: 10, background: "#fff", color: "#15803d", fontSize: 13, fontWeight: 800, textDecoration: "none", fontFamily: F, letterSpacing: 0.5 }}>
-          {tx("stickyBtn")}
-        </a>
+        <div style={{ display: "flex", gap: 6 }}>
+          <a href="/ai?niche=camper" style={{ padding: "8px 14px", borderRadius: 8, background: "#fff", color: "#15803d", fontSize: 12, fontWeight: 800, textDecoration: "none", fontFamily: F }}>{"🚜"} Kamper</a>
+          <a href="/ai?niche=local" style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(255,255,255,0.2)", color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none", fontFamily: F }}>{"🗺️"} Vodič</a>
+        </div>
       </div>
 
       <style>{`

@@ -580,6 +580,35 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
 
       {/* Messages */}
       <div ref={scrollBox} style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "0", display: "flex", flexDirection: "column" }}>
+        
+        {/* ═══ VIBE JADRANA MINI — always visible ═══ */}
+        {msgs.length > 0 && weather && (
+          <div style={{ padding: "10px 16px", background: isNight ? "rgba(12,45,72,0.5)" : "rgba(14,165,233,0.04)", borderBottom: `1px solid ${C.bord}`, flexShrink: 0 }}>
+            <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 16, fontWeight: 500 }}>{weather.icon} {weather.temp}°</div>
+                <div style={{ fontSize: 8, color: C.mut, letterSpacing: 1 }}>ZRAK</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 16, fontWeight: 500, color: C.accent }}>🌊 {weather.sea}°</div>
+                <div style={{ fontSize: 8, color: C.mut, letterSpacing: 1 }}>MORE</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 16, fontWeight: 500 }}>{weather.windDir} {weather.windSpeed}</div>
+                <div style={{ fontSize: 8, color: C.mut, letterSpacing: 1 }}>VJETAR</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 16, fontWeight: 500, color: weather.uv >= 8 ? "#f87171" : weather.uv >= 5 ? C.gold : "#4ade80" }}>UV {weather.uv}</div>
+                <div style={{ fontSize: 8, color: C.mut, letterSpacing: 1 }}>{weather.uv >= 8 ? "VISOK" : weather.uv >= 5 ? "SPF30+" : "NIZAK"}</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 16, fontWeight: 500, color: C.gold }}>🌅 {weather.sunset}</div>
+                <div style={{ fontSize: 8, color: C.mut, letterSpacing: 1 }}>ZALAZAK</div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {msgs.length === 0 && (
           <div style={{ padding: 0 }}>
             {/* ═══ VIBE JADRANA — SHOWROOM ═══ */}
