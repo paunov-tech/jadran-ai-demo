@@ -497,7 +497,9 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
       <div style={{ maxWidth: 540, margin: "0 auto", padding: "40px 24px" }}>
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 40 }}>
-          <a href="/" style={{ display: "flex", alignItems: "center", gap: 4, color: C.mut, fontSize: 13, textDecoration: "none", padding: "6px 0" }}>← {t.back}</a>
+          <a href="/" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 12, border: `1px solid ${C.bord}`, background: C.card, color: C.text, textDecoration: "none", fontSize: 18, transition: "all 0.2s" }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = C.accent}
+              onMouseLeave={e => e.currentTarget.style.borderColor = C.bord}>‹</a>
           <div style={{ display: "flex", gap: 2, background: isNight ? "rgba(12,28,50,0.5)" : "rgba(255,255,255,0.5)", borderRadius: 12, padding: 3 }}>
             {LANGS.map(l => (
               <button key={l.code} onClick={() => setLang(l.code)}
@@ -523,7 +525,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
           {niche === "local" && <>
             <div style={{ fontSize: 40, marginBottom: 8 }}>🚗</div>
             <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 26, fontWeight: 700, lineHeight: 1.2, marginBottom: 6 }}>Lokalni vodič</div>
-            <div style={{ fontSize: 14, color: C.mut }}>Plaže, konobe, skrivena mjesta — prilagođeno za automobil</div>
+            <div style={{ fontSize: 14, color: C.mut }}>Apartman, hotel ili automobilom uz obalu — plaže, konobe, skrivena mjesta</div>
           </>}
           {niche === "sailing" && <>
             <div style={{ fontSize: 40, marginBottom: 8 }}>⛵</div>
@@ -638,7 +640,9 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
       {/* Header */}
       <div style={{ padding: "14px 20px", paddingTop: "max(14px, env(safe-area-inset-top, 14px))", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.bord}`, flexShrink: 0, background: isNight ? "transparent" : "rgba(255,255,255,0.4)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <button onClick={() => setStep("setup")} style={{ background: "none", border: "none", color: C.mut, fontSize: 15, cursor: "pointer", fontFamily: "inherit", padding: "8px 12px 8px 0", minHeight: 44, display: "flex", alignItems: "center" }}>{t.back}</button>
+          <button onClick={() => setStep("setup")} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 10, border: `1px solid ${C.bord}`, background: "transparent", color: C.text, fontSize: 16, cursor: "pointer", transition: "all 0.2s", flexShrink: 0 }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = C.accent}
+              onMouseLeave={e => e.currentTarget.style.borderColor = C.bord}>‹</button>
           <div style={{ width: 1, height: 20, background: C.bord }} />
           <span style={{ fontSize: 18 }}>{TRAVEL_MODES.find(m => m.id === travelMode)?.emoji}</span>
           <span style={{ fontSize: 13, fontWeight: 600 }}>{REGIONS.find(r => r.id === region)?.name}</span>
