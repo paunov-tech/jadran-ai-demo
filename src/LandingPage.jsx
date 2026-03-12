@@ -1,331 +1,249 @@
 // ═══════════════════════════════════════════════════════════════
-// JADRAN AI — Landing Page
-// For direct visitors to jadran.ai (no ?room= parameter)
-// Booking.com affiliate + room code entry + host CTA
+// JADRAN AI — Landing Page v2 "Izlog"
+// Conversion-optimized: Video hero, pain relief, live demo,
+// social proof carousel, B2B section, sticky CTA
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect } from "react";
 
-const BKG = (city, params="") => `https://www.booking.com/searchresults.html?aid=101704203&ss=${encodeURIComponent(city)}&lang=en${params}`;
+const GYG = (id) => `https://www.getyourguide.com/${id}/?partner_id=9OEGOYI&utm_medium=local_partners`;
 
 const L = {
-  hr: { hero: "Lokalni vodič\nza savršen Jadran", sub: "Provjerene preporuke od lokalaca, skrivene plaže, najbolji restorani — za sve koji vole Jadran. Dostupno na 8 jezika.", guide: "Lokalni vodič", guideDesc: "Plaže, restorani, skrivena mjesta — pitajte bilo što", camper: "Kamper vodič", camperDesc: "Parking, dump station, voda, legalna noćenja", free3: "3 besplatna pitanja · Premium 5.99€ · 8 jezika", howTitle: "Kako radi", s1t: "Pitajte bilo što", s1d: "Napišite pitanje — odgovor stiže za 3 sekunde. Lokalni savjeti s cijenama i udaljenostima.", s2t: "Na 8 jezika", s2d: "Hrvatski, njemački, engleski, talijanski, slovenski, češki, poljski — vaš jezik, naš Jadran.", s3t: "Osobni vodič 24/7", s3d: "Provjerene preporuke, lokalni savjeti, rezervacije", dest: "Otkrijte Jadran", room: "VEĆ IMATE SOBU?", roomSub: "Unesite kod iz apartmana", premium: "Premium za 5.99€", premDesc: "Neograničeni razgovori s lokalnim vodičem, skrivena mjesta, detaljna prognoza, praćenje troškova — cijeli boravak.", host: "Iznajmljujete apartman?", hostDesc: "Ponudite gostima osobnog digitalnog vodiča. Bolji recenzije, manje pitanja, dodatni prihod od preporuka.", hostBtn: "Registrirajte apartman →" },
-  de: { hero: "Ihr lokaler Reiseführer\nfür die perfekte Adria", sub: "Geprüfte Empfehlungen von Einheimischen — versteckte Strände, beste Restaurants, praktische Tipps. In 8 Sprachen.", guide: "Lokaler Reiseführer", guideDesc: "Strände, Restaurants, Geheimtipps — fragen Sie einfach", camper: "Camper-Reiseführer", camperDesc: "Stellplätze, Ver- & Entsorgung, legale Übernachtung", free3: "3 kostenlose Fragen · Premium 5.99€ · 8 Sprachen", howTitle: "So funktioniert's", s1t: "Einfach fragen", s1d: "Stellen Sie eine Frage — Antwort in 3 Sekunden. Lokale Tipps mit Preisen und Entfernungen.", s2t: "In 8 Sprachen", s2d: "Deutsch, Kroatisch, Englisch, Italienisch, Slowenisch, Tschechisch, Polnisch — Ihre Sprache, unsere Adria.", s3t: "Persönlicher Reiseführer 24/7", s3d: "Geprüfte Empfehlungen, lokale Tipps, Direktbuchungen", dest: "Entdecken Sie die Adria", room: "BEREITS GEBUCHT?", roomSub: "Geben Sie den Zimmercode aus Ihrer Unterkunft ein", premium: "Premium für 5.99€", premDesc: "Unbegrenzte Gespräche, Geheimtipps, detaillierte Vorhersage, Budgetverfolgung — der ganze Aufenthalt.", host: "Vermieten Sie eine Unterkunft?", hostDesc: "Bieten Sie Gästen einen digitalen Reiseführer. Bessere Bewertungen, weniger Fragen, zusätzliches Einkommen.", hostBtn: "Unterkunft registrieren →" },
-  at: { hero: "Dein Urlaubsguide\nfür die perfekte Adria", sub: "Insider-Tipps von Einheimischen — versteckte Strände, die besten Konobas, praktische Hinweise. Auf 8 Sprachen.", guide: "Lokaler Guide", guideDesc: "Strände, Restaurants, Geheimtipps — frag einfach drauflos", camper: "Camper-Guide", camperDesc: "Stellplätze, Entsorgung, Wasser, legale Übernachtung", free3: "3 Fragen gratis · Premium 5.99€ · 8 Sprachen", howTitle: "So funktioniert's", s1t: "Einfach fragen", s1d: "Stell deine Frage — Antwort in 3 Sekunden. Insider-Tipps mit Preisen und Entfernungen.", s2t: "Auf 8 Sprachen", s2d: "Deutsch, Kroatisch, Englisch, Italienisch, Slowenisch, Tschechisch, Polnisch — deine Sprache, unsere Adria.", s3t: "Dein Guide rund um die Uhr", s3d: "Geprüfte Tipps, lokale Empfehlungen, Buchungen", dest: "Entdecke die Adria", room: "SCHON GEBUCHT?", roomSub: "Gib den Code aus deiner Unterkunft ein", premium: "Premium um 5.99€", premDesc: "Unbegrenzt Fragen an deinen Guide, Geheimtipps, Wettervorhersage, Budgettracker — für den ganzen Urlaub.", host: "Vermietest du eine Unterkunft?", hostDesc: "Biet deinen Gästen einen digitalen Guide. Bessere Bewertungen, weniger Nachfragen, zusätzliches Einkommen.", hostBtn: "Unterkunft registrieren →" },
-  en: { hero: "Your local guide\nfor the perfect Adriatic", sub: "Trusted recommendations from locals, hidden beaches, best restaurants — for all Adriatic lovers. In 8 languages.", guide: "Local Guide", guideDesc: "Beaches, restaurants, hidden gems — just ask", camper: "Camper Guide", camperDesc: "Parking, dump stations, water, legal overnight stays", free3: "3 free questions · Premium 5.99€ · 8 languages", howTitle: "How it works", s1t: "Just ask", s1d: "Type your question — answer in 3 seconds. Local tips with prices and distances.", s2t: "In 8 languages", s2d: "English, German, Croatian, Italian, Slovenian, Czech, Polish — your language, our Adriatic.", s3t: "Personal guide 24/7", s3d: "Trusted recommendations, local tips, bookings", dest: "Discover the Adriatic", room: "HAVE A ROOM CODE?", roomSub: "Enter the code from your apartment", premium: "Premium for 5.99€", premDesc: "Unlimited conversations, hidden gems, detailed forecast, budget tracking — your entire stay.", host: "Renting an apartment?", hostDesc: "Offer your guests a personal digital guide. Better reviews, fewer questions, extra income.", hostBtn: "Register apartment →" },
-  it: { hero: "La tua guida locale\nper l'Adriatico perfetto", sub: "Consigli verificati dai locali, spiagge nascoste, migliori ristoranti — per tutti gli amanti dell'Adriatico. In 8 lingue.", guide: "Guida locale", guideDesc: "Spiagge, ristoranti, luoghi nascosti — basta chiedere", camper: "Guida camper", camperDesc: "Parcheggio, scarico, acqua, soste legali", free3: "3 domande gratuite · Premium 5.99€ · 8 lingue", howTitle: "Come funziona", s1t: "Chiedete qualsiasi cosa", s1d: "Scrivete la domanda — risposta in 3 secondi. Consigli locali con prezzi e distanze.", s2t: "In 8 lingue", s2d: "Italiano, tedesco, croato, inglese, sloveno, ceco, polacco — la vostra lingua, il nostro Adriatico.", s3t: "Guida personale 24/7", s3d: "Consigli verificati, suggerimenti locali, prenotazioni", dest: "Scoprite l'Adriatico", room: "AVETE UN CODICE?", roomSub: "Inserite il codice dell'appartamento", premium: "Premium a 5.99€", premDesc: "Conversazioni illimitate, gemme nascoste, previsioni dettagliate, monitoraggio budget — tutto il soggiorno.", host: "Affittate un appartamento?", hostDesc: "Offrite ai vostri ospiti una guida digitale personale. Migliori recensioni, meno domande, entrate extra.", hostBtn: "Registra appartamento →" },
+  hr: { badge: "Bez skidanja aplikacije. Radi odmah.", h1a: "Jadran ne oprašta", h1b: "uske ulice i visoke kazne.", h1c: "Tvoj lokalni AI suvozač je tu.", sub: "Od Istre do Dalmacije. Unesi gabarite svog vozila i odmah dobij sigurne rute, tajne parkinge i popuste za skrivene konobe.", destLabel: "Kamo ideš?", lenLabel: "Dužina vozila?", cta: "Započni Chat", pain1t: "Zaboravi na kazne", pain1d: "Naš AI zna visinu svakog podvožnjaka i širinu svakog starog grada. Ne rizikuj zaglavljivanje kampera na usponima Biokova ili uličicama Trogira.", pain2t: "Bura te neće iznenaditi", pain2d: "Povezani smo sa lokalnim meteo-stanicama. Ako udari vjetar opasan za tvoju tendu, dobijaš upozorenje i lokaciju najbližeg zaklona.", pain3t: "Mjesta koja Google ne zna", pain3d: "Otkrij OPG-ove, vinarije s besplatnim parkingom i prazne uvale koje samo lokalci čuvaju za sebe.", demoTitle: "Pametnije od mape. Brže od recepcije.", trendTitle: "Što se traži na Jadranu?", b2bTitle: "Vlasnik ste apartmana, kampa ili konobe?", b2bDesc: "Prestanite odgovarati na ista pitanja 50 puta dnevno. Podijelite naš QR kod gostima — oni dobijaju 24/7 vodiča na svom jeziku, a vi mirnu recepciju.", b2bBtn: "Generiraj besplatan QR kod", sticky: "Spremio si se za put?", stickyBtn: "POKRENI JADRAN.AI" },
+  de: { badge: "Keine App nötig. Sofort nutzbar.", h1a: "Die Adria verzeiht keine", h1b: "engen Gassen und hohen Strafen.", h1c: "Ihr lokaler AI-Copilot.", sub: "Von Istrien bis Dalmatien. Fahrzeugmaße eingeben, sichere Routen und geheime Parkplätze erhalten.", destLabel: "Wohin?", lenLabel: "Fahrzeuglänge?", cta: "Chat starten", pain1t: "Keine Strafen mehr", pain1d: "Unsere KI kennt jede Unterführung und jede Altstadtgasse. Kein Risiko.", pain2t: "Bora überrascht nicht", pain2d: "Verbunden mit lokalen Wetterstationen. Bei Sturmwind erhalten Sie sofort eine Warnung.", pain3t: "Was Google nicht kennt", pain3d: "Familienbetriebe, Weingüter mit Parkplatz und leere Buchten.", demoTitle: "Schlauer als jede Karte.", trendTitle: "Was wird an der Adria gesucht?", b2bTitle: "Vermieten Sie eine Unterkunft?", b2bDesc: "Teilen Sie unseren QR-Code — Ihre Gäste erhalten einen 24/7 Guide.", b2bBtn: "Kostenlosen QR-Code erstellen", sticky: "Bereit?", stickyBtn: "JADRAN.AI STARTEN" },
+  at: { badge: "Keine App nötig. Sofort nutzbar.", h1a: "Die Adria verzeiht keine", h1b: "engen Gassen und hohen Strafen.", h1c: "Dein lokaler AI-Copilot.", sub: "Von Istrien bis Dalmatien. Gib deine Fahrzeugmaße ein und hol dir sichere Routen und geheime Parkplätze.", destLabel: "Wohin?", lenLabel: "Fahrzeuglänge?", cta: "Chat starten", pain1t: "Vergiss die Strafen", pain1d: "Unsere KI kennt jede Unterführung und jede Altstadtgasse. Null Risiko.", pain2t: "Bora überrascht dich nicht", pain2d: "Verbunden mit lokalen Wetterstationen. Bei Sturmwind bekommst du sofort eine Warnung.", pain3t: "Was Google nicht kennt", pain3d: "Familienbetriebe, Weingüter mit Camper-Parkplatz und leere Buchten.", demoTitle: "Schlauer als jede Karte.", trendTitle: "Was wird an der Adria gesucht?", b2bTitle: "Vermietest du eine Unterkunft?", b2bDesc: "Teil unseren QR-Code — deine Gäste kriegen einen 24/7 Guide.", b2bBtn: "Gratis QR-Code erstellen", sticky: "Bereit?", stickyBtn: "JADRAN.AI STARTEN" },
+  en: { badge: "No app needed. Works instantly.", h1a: "The Adriatic doesn't forgive", h1b: "narrow streets and steep fines.", h1c: "Your local AI co-pilot is here.", sub: "From Istria to Dalmatia. Enter your vehicle size and get safe routes, secret parking and local discounts.", destLabel: "Where to?", lenLabel: "Vehicle length?", cta: "Start Chat", pain1t: "Forget about fines", pain1d: "Our AI knows every underpass height and every old town width. Zero risk.", pain2t: "Bora won't surprise you", pain2d: "Connected to local weather stations. Dangerous wind triggers an instant warning.", pain3t: "What Google doesn't know", pain3d: "Family farms, wineries with free parking and empty coves only locals know.", demoTitle: "Smarter than any map.", trendTitle: "Trending on the Adriatic?", b2bTitle: "Own a property?", b2bDesc: "Share our QR code — your guests get a 24/7 guide in their language.", b2bBtn: "Generate free QR code", sticky: "Ready?", stickyBtn: "LAUNCH JADRAN.AI" },
+  it: { badge: "Nessun download. Funziona subito.", h1a: "L'Adriatico non perdona", h1b: "strade strette e multe salate.", h1c: "Il tuo copilota AI locale.", sub: "Dall'Istria alla Dalmazia. Inserisci le dimensioni del veicolo e ottieni percorsi sicuri.", destLabel: "Dove vai?", lenLabel: "Lunghezza?", cta: "Inizia Chat", pain1t: "Dimentica le multe", pain1d: "La nostra IA conosce ogni sottopasso e ogni centro storico.", pain2t: "La Bora non sorprende", pain2d: "Collegati alle stazioni meteo. Vento pericoloso = avviso immediato.", pain3t: "Cosa Google non sa", pain3d: "Agriturismi, cantine con parcheggio e calette vuote.", demoTitle: "Più smart di ogni mappa.", trendTitle: "Tendenze sull'Adriatico?", b2bTitle: "Affitti un alloggio?", b2bDesc: "Condividi il QR code — ospiti ottengono guida 24/7.", b2bBtn: "Genera QR gratuito", sticky: "Pronto?", stickyBtn: "LANCIA JADRAN.AI" },
 };
 
-const DESTINATIONS = [
-  { name: "Split & Podstrana", emoji: "🏛️", desc: "Dioklecijanova palača, Bačvice, Marjan", link: BKG("Split, Croatia"), region: "Dalmacija", city: "Split" },
-  { name: "Makarska rivijera", emoji: "🏖️", desc: "Najljepše plaže Jadrana", link: BKG("Makarska, Croatia"), region: "Dalmacija", city: "Makarska" },
-  { name: "Hvar", emoji: "🌿", desc: "Lavanda, glamur, noćni život", link: BKG("Hvar, Croatia"), region: "Otoci", city: "Hvar" },
-  { name: "Rovinj", emoji: "⛪", desc: "Najromantičniji grad Istre", link: BKG("Rovinj, Croatia"), region: "Istra", city: "Rovinj" },
-  { name: "Pula", emoji: "🏟️", desc: "Rimska arena, obiteljske plaže", link: BKG("Pula, Croatia"), region: "Istra", city: "Pula" },
-  { name: "Opatija", emoji: "⚓", desc: "Elegancija Kvarnera", link: BKG("Opatija, Croatia"), region: "Kvarner", city: "Opatija" },
-  { name: "Dubrovnik", emoji: "🏰", desc: "Biser Jadrana, gradske zidine", link: BKG("Dubrovnik, Croatia"), region: "Dalmacija", city: "Dubrovnik" },
-  { name: "Zadar", emoji: "🌅", desc: "Morske orgulje, najljepši zalazak", link: BKG("Zadar, Croatia"), region: "Dalmacija", city: "Zadar" },
+const TRENDING = [
+  { emoji: "\U0001F6A4", title: "Limski kanal \u2014 tura brodom", sub: "Samo 12 mjesta", price: "45\u20AC", link: GYG("rovinj-l1299/from-rovinj-rovinj-motovun-and-groznjan-day-tour-t132468"), tag: "ISTRA" },
+  { emoji: "\U0001F377", title: "Degustacija na Pelješcu", sub: "Parking za kampere", price: "35\u20AC", link: GYG("ston-l4159/ston-oyster-and-wine-tasting-tour-t197562"), tag: "DUBROVNIK" },
+  { emoji: "\U0001F3DD\uFE0F", title: "Blue Cave & 5 otoka", sub: "Cijeli dan na moru", price: "110\u20AC", link: GYG("split-l268/from-split-blue-cave-mamma-mia-vis-hvar-5-islands-tour-t326676"), tag: "SPLIT" },
+  { emoji: "\U0001F344", title: "Lov na tartufe \u2014 Motovun", sub: "Pravi lovac i pas", price: "45\u20AC", link: GYG("istria-county-l1297/livade-guided-truffle-hunting-walking-tour-t413975"), tag: "ISTRA" },
+  { emoji: "\U0001F3F0", title: "Dubrovnik zidine", sub: "Bez \u010Dekanja", price: "45\u20AC", link: GYG("dubrovnik-l518/dubrovnik-old-town-and-city-walls-walking-tour-t50564"), tag: "DUBROVNIK" },
 ];
 
-const STEPS = [
-  { num: "01", icon: "🏠", title: "Domaćin kreira apartman", desc: "Registrira smještaj i generira jedinstveni QR kod" },
-  { num: "02", icon: "📱", title: "Gost skenira QR", desc: "Na zidu apartmana — unosi profil i interese" },
-  { num: "03", icon: "🌊" },
+const DEMO_CHAT = [
+  { role: "user", text: "Mogu li kamperom do centra Pule?" },
+  { role: "ai", text: "Nikako! \U0001F6A8 Pauk oko Arene cilja kampere \u2014 kazna 60\u20AC. Parkiraj na Gregovici, besplatno. Bolt do centra 5 min." },
+  { role: "cta", text: "Konoba Batelina \u2014 svježa riba, ravan parking" },
 ];
+
+const DESTS = ["Rovinj","Split","Dubrovnik","Zadar","Pula","Makarska","Hvar","Opatija"];
 
 export default function LandingPage() {
   const [lang, setLang] = useState("hr");
   const tx = (k) => (L[lang] || L.hr)[k] || L.hr[k];
-  const [roomInput, setRoomInput] = useState("");
+  const [dest, setDest] = useState("");
+  const [vLen, setVLen] = useState("");
   const [anim, setAnim] = useState(false);
-  const [cityImgs, setCityImgs] = useState({});
+  const [roomInput, setRoomInput] = useState("");
+  const [chatStep, setChatStep] = useState(0);
 
-  useEffect(() => { setTimeout(() => setAnim(true), 100); }, []);
-
-  // Load Wikipedia images for destination cards
+  useEffect(() => { setTimeout(() => setAnim(true), 200); }, []);
   useEffect(() => {
-    DESTINATIONS.forEach(d => {
-      fetch(`/api/cityimg?city=${encodeURIComponent(d.city)}`)
-        .then(r => r.json())
-        .then(data => {
-          if (data.url) setCityImgs(prev => ({ ...prev, [d.city]: data.url }));
-        })
-        .catch(() => {});
-    });
-  }, []);
+    if (chatStep < DEMO_CHAT.length) {
+      const t = setTimeout(() => setChatStep(s => s + 1), chatStep === 0 ? 1200 : 1800);
+      return () => clearTimeout(t);
+    }
+  }, [chatStep]);
 
-  const goRoom = () => {
-    const code = roomInput.trim().toUpperCase();
-    if (code) window.location.href = `/?room=${encodeURIComponent(code)}`;
-  };
+  const goChat = () => { window.location.href = `/ai?niche=camper${dest ? "&dest=" + dest : ""}`; };
+  const goRoom = () => { const c = roomInput.trim().toUpperCase(); if (c) window.location.href = `/?room=${encodeURIComponent(c)}`; };
+
+  const F = "'Playfair Display', Georgia, serif";
+  const B = "'Outfit', system-ui, sans-serif";
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(160deg, #0a1628 0%, #0e3a5c 50%, #134e6f 100%)", color: "#f0f9ff", fontFamily: "'Outfit', system-ui, sans-serif" }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <div style={{ background: "#0a0e17", color: "#f0f4f8", fontFamily: B, overflowX: "hidden" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+      {/* NAV */}
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, padding: "10px 20px", paddingTop: "max(10px, env(safe-area-inset-top, 10px))", display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(10,14,23,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ width: 32, height: 32, borderRadius: 9, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 14, fontWeight: 800, color: "#fff" }}>J</div>
+          <span style={{ fontFamily: F, fontSize: 16, fontWeight: 700, letterSpacing: 2 }}>JADRAN</span>
+        </div>
+        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 1, background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 2 }}>
+            {[["hr","\U0001F1ED\U0001F1F7"],["de","\U0001F1E9\U0001F1EA"],["at","\U0001F1E6\U0001F1F9"],["en","\U0001F1EC\U0001F1E7"],["it","\U0001F1EE\U0001F1F9"]].map(([c,f]) => (
+              <button key={c} onClick={() => setLang(c)} style={{ padding: "2px 4px", background: lang === c ? "rgba(14,165,233,0.2)" : "transparent", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, lineHeight: 1 }}>{f}</button>
+            ))}
+          </div>
+          <a href="/host" style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)", color: "#64748b", fontSize: 11, textDecoration: "none" }}>Host</a>
+        </div>
+      </nav>
 
       {/* ═══ HERO ═══ */}
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px" }}>
-        {/* Nav */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12, padding: "16px 0" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 20, fontWeight: 700, color: "#fff", boxShadow: "0 4px 16px rgba(14,165,233,0.25)" }}>J</div>
-            <div>
-              <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 22, letterSpacing: 3, textTransform: "uppercase", lineHeight: 1 }}>Jadran</div>
-              <div style={{ fontSize: 9, color: "#0ea5e9", letterSpacing: 3, fontWeight: 500 }}>VODIČ</div>
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <div style={{ display: "flex", gap: 2, background: "rgba(12,28,50,0.5)", borderRadius: 12, padding: 3 }}>
-              {[["hr","🇭🇷"],["de","🇩🇪"],["at","🇦🇹"],["en","🇬🇧"],["it","🇮🇹"],["si","🇸🇮"],["cz","🇨🇿"],["pl","🇵🇱"]].map(([c,f]) => (
-                <button key={c} onClick={() => setLang(c)}
-                  style={{ padding: "4px 6px", background: lang === c ? "rgba(14,165,233,0.12)" : "transparent", border: lang === c ? "1px solid rgba(14,165,233,0.15)" : "1px solid transparent", borderRadius: 9, cursor: "pointer", fontSize: 14, lineHeight: 1 }}>
-                  {f}
-                </button>
-              ))}
-            </div>
-            <a href="/host" style={{ padding: "10px 20px", borderRadius: 12, border: "1px solid rgba(14,165,233,0.15)", color: "#7dd3fc", fontSize: 13, textDecoration: "none", fontWeight: 500 }}>
-              🏠 Host Panel
-            </a>
-          </div>
-        </div>
-
-        {/* Hero content */}
-        <div style={{
-          padding: "clamp(40px, 8vw, 80px) 0 clamp(30px, 6vw, 60px)", textAlign: "center",
-          opacity: anim ? 1 : 0, transform: anim ? "translateY(0)" : "translateY(30px)",
-          transition: "all 0.8s cubic-bezier(0.16, 1, 0.3, 1)",
-        }}>
-          <div style={{ fontSize: 60, marginBottom: 20 }}>🌊</div>
-          <h1 style={{
-            fontFamily: "'DM Serif Display', Georgia, serif",
-            fontSize: "clamp(36px, 6vw, 56px)", fontWeight: 400, lineHeight: 1.1,
-            background: "linear-gradient(135deg, #f0f9ff 30%, #0ea5e9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-            marginBottom: 16,
-          }}>
-            {tx("hero").split("\n").map((l,i) => <span key={i}>{l}{i===0 && <br/>}</span>)}
+      <section style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", overflow: "hidden" }}>
+        <video autoPlay muted loop playsInline style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.25 }}
+          poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3Crect fill='%230a0e17'/%3E%3C/svg%3E">
+          <source src="https://cdn.coverr.co/videos/coverr-an-aerial-view-of-the-ocean-1585/1080p.mp4" type="video/mp4" />
+        </video>
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,14,23,0.6) 0%, rgba(10,14,23,0.3) 40%, rgba(10,14,23,0.95) 100%)" }} />
+        <div style={{ position: "relative", maxWidth: 680, margin: "0 auto", padding: "100px 24px 60px", textAlign: "center", opacity: anim ? 1 : 0, transform: anim ? "translateY(0)" : "translateY(40px)", transition: "all 1s cubic-bezier(0.16, 1, 0.3, 1)" }}>
+          <div style={{ display: "inline-block", padding: "5px 14px", borderRadius: 20, background: "rgba(250,204,21,0.1)", border: "1px solid rgba(250,204,21,0.15)", color: "#facc15", fontSize: 11, fontWeight: 600, marginBottom: 20, letterSpacing: 1 }}>{"\u26A1"} {tx("badge")}</div>
+          <h1 style={{ fontFamily: F, fontSize: "clamp(28px, 5.5vw, 52px)", fontWeight: 800, lineHeight: 1.15, marginBottom: 18 }}>
+            <span style={{ color: "#f87171" }}>{tx("h1a")}<br/>{tx("h1b")}</span><br/>
+            <span style={{ background: "linear-gradient(135deg, #38bdf8, #0ea5e9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{tx("h1c")}</span>
           </h1>
-          <p style={{ fontSize: 18, color: "#7dd3fc", maxWidth: 560, margin: "0 auto 40px", lineHeight: 1.6, fontWeight: 300 }}>
-            {tx("sub")}
-          </p>
-
-          {/* Primary CTAs */}
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center", maxWidth: 600, margin: "0 auto" }}>
-            <a href="/ai?niche=local" style={{
-              flex: "1 1 260px", padding: "24px 28px", borderRadius: 22, textDecoration: "none",
-              background: "linear-gradient(135deg, rgba(14,165,233,0.12), rgba(2,132,199,0.06))",
-              border: "1px solid rgba(14,165,233,0.2)",
-              display: "flex", alignItems: "center", gap: 16,
-              transition: "all 0.3s", cursor: "pointer",
-            }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.borderColor = "rgba(14,165,233,0.4)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(14,165,233,0.15)"; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.borderColor = "rgba(14,165,233,0.2)"; e.currentTarget.style.boxShadow = ""; }}>
-              <div style={{ width: 52, height: 52, borderRadius: 16, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 24, flexShrink: 0 }}>🗺️</div>
-              <div style={{ textAlign: "left" }}>
-                <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 19, color: "#f0f9ff", marginBottom: 3 }}>Lokalni vodič</div>
-                <div style={{ fontSize: 12, color: "#7dd3fc", lineHeight: 1.4 }}>{tx("guideDesc")}</div>
+          <p style={{ fontSize: "clamp(14px, 2.2vw, 17px)", color: "#94a3b8", lineHeight: 1.6, maxWidth: 520, margin: "0 auto 28px" }}>{tx("sub")}</p>
+          {/* Mini-form */}
+          <div style={{ background: "rgba(255,255,255,0.04)", backdropFilter: "blur(16px)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 18, padding: 16, maxWidth: 400, margin: "0 auto" }}>
+            <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+              <div style={{ flex: 2 }}>
+                <div style={{ fontSize: 9, color: "#475569", marginBottom: 3, letterSpacing: 1 }}>{tx("destLabel")}</div>
+                <select value={dest} onChange={e => setDest(e.target.value)} style={{ width: "100%", padding: "12px 10px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.03)", color: "#e2e8f0", fontSize: 14, fontFamily: B, outline: "none", appearance: "none" }}>
+                  <option value="">{"\u2014"}</option>
+                  {DESTS.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
               </div>
-            </a>
-            <a href="/ai?niche=camper" style={{
-              flex: "1 1 260px", padding: "24px 28px", borderRadius: 22, textDecoration: "none",
-              background: "linear-gradient(135deg, rgba(245,158,11,0.08), rgba(251,191,36,0.04))",
-              border: "1px solid rgba(245,158,11,0.2)",
-              display: "flex", alignItems: "center", gap: 16,
-              transition: "all 0.3s", cursor: "pointer",
-            }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.borderColor = "rgba(245,158,11,0.4)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(245,158,11,0.12)"; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.borderColor = "rgba(245,158,11,0.2)"; e.currentTarget.style.boxShadow = ""; }}>
-              <div style={{ width: 52, height: 52, borderRadius: 16, background: "linear-gradient(135deg, #f59e0b, #d97706)", display: "grid", placeItems: "center", fontSize: 24, flexShrink: 0 }}>🚐</div>
-              <div style={{ textAlign: "left" }}>
-                <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 19, color: "#f0f9ff", marginBottom: 3 }}>Kamper vodič</div>
-                <div style={{ fontSize: 12, color: "#fbbf24", lineHeight: 1.4 }}>{tx("camperDesc")}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 9, color: "#475569", marginBottom: 3, letterSpacing: 1 }}>{tx("lenLabel")}</div>
+                <input value={vLen} onChange={e => setVLen(e.target.value)} placeholder="7.5m" style={{ width: "100%", padding: "12px 10px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.03)", color: "#e2e8f0", fontSize: 14, fontFamily: B, outline: "none" }} />
               </div>
-            </a>
+            </div>
+            <button onClick={goChat} style={{ width: "100%", padding: "15px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #ef4444, #dc2626)", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: F, boxShadow: "0 6px 24px rgba(239,68,68,0.3)", transition: "all 0.3s" }}
+              onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
+              onMouseLeave={e => e.currentTarget.style.transform = ""}>
+              {tx("cta")} {"\u2192"}
+            </button>
           </div>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 14 }}>
-            {tx("free3")}
-          </div>
-          {/* Social proof + urgency hooks */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 24, flexWrap: "wrap" }}>
-            {[
-              { icon: "🔥", text: "847 pitanja danas" },
-              { icon: "⭐", text: "4.9 / 5 ocjena" },
-              { icon: "🌍", text: "8 jezika" },
-            ].map((h, i) => (
-              <div key={i} style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", display: "flex", alignItems: "center", gap: 4 }}>
-                <span>{h.icon}</span> {h.text}
-              </div>
-            ))}
-          </div>
+          <div style={{ marginTop: 16, fontSize: 11, color: "#334155" }}>24h besplatno {"\u00B7"} 8 jezika {"\u00B7"} bez registracije</div>
         </div>
-      </div>
+      </section>
 
-      {/* ═══ HOW IT WORKS ═══ */}
-      <div style={{ background: "rgba(0,0,0,0.15)", padding: "60px 24px" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 40 }}>
-            <div style={{ fontSize: 10, color: "#0ea5e9", letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>KAKO FUNKCIONIRA</div>
-            <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 400 }}>Tri koraka do savršenog odmora</div>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
-            {STEPS.map((s, i) => (
-              <div key={i} style={{
-                padding: 28, borderRadius: 22,
-                background: "rgba(12,28,50,0.6)", border: "1px solid rgba(14,165,233,0.08)",
-                backdropFilter: "blur(12px)", textAlign: "center",
-              }}>
-                <div style={{ fontSize: 36, marginBottom: 12 }}>{s.icon}</div>
-                <div style={{ fontSize: 11, color: "#0ea5e9", fontWeight: 700, letterSpacing: 2, marginBottom: 8 }}>KORAK {s.num}</div>
-                <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 20, fontWeight: 400, marginBottom: 8 }}>{tx("s" + s.num.replace("0","") + "t")}</div>
-                <div style={{ fontSize: 13, color: "#7dd3fc", lineHeight: 1.6, fontWeight: 300 }}>{tx("s" + s.num.replace("0","") + "d")}</div>
-              </div>
-            ))}
-          </div>
+      {/* ═══ PAIN RELIEF ═══ */}
+      <section style={{ background: "#f8fafc", color: "#0f172a", padding: "72px 24px" }}>
+        <div style={{ maxWidth: 960, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
+          {[
+            { icon: "\u26D4", t: tx("pain1t"), d: tx("pain1d"), c: "#ef4444" },
+            { icon: "\U0001F32C\uFE0F", t: tx("pain2t"), d: tx("pain2d"), c: "#f59e0b" },
+            { icon: "\U0001F48E", t: tx("pain3t"), d: tx("pain3d"), c: "#0ea5e9" },
+          ].map((p, i) => (
+            <div key={i} style={{ padding: 28, borderRadius: 18, background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.04)", border: "1px solid #e2e8f0" }}>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: p.c + "10", display: "grid", placeItems: "center", fontSize: 24, marginBottom: 14 }}>{p.icon}</div>
+              <h3 style={{ fontFamily: F, fontSize: 20, fontWeight: 700, marginBottom: 8, color: "#0f172a" }}>{p.t}</h3>
+              <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.7 }}>{p.d}</p>
+            </div>
+          ))}
         </div>
-      </div>
+      </section>
 
-      {/* ═══ DESTINATIONS ═══ */}
-      <div style={{ padding: "60px 24px" }}>
-        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+      {/* ═══ LIVE DEMO ═══ */}
+      <section style={{ padding: "72px 24px", background: "linear-gradient(180deg, #0a0e17, #0c1829)" }}>
+        <div style={{ maxWidth: 860, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 40 }}>
-          {/* Popular questions hook */}
-          <div style={{ marginBottom: 40, padding: "24px", borderRadius: 22, background: "rgba(14,165,233,0.04)", border: "1px solid rgba(14,165,233,0.06)" }}>
-            <div style={{ fontSize: 10, color: "#0ea5e9", letterSpacing: 4, fontWeight: 600, marginBottom: 14, textAlign: "center" }}>POPULARNA PITANJA</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
-              {["Gdje parkirati kamper u Splitu?", "Dump station Istra?", "Skrivena plaža Hvar?", "Konoba bez turista?", "LPG stanica Dalmacija?", "Legalno noćenje kamperom?"].map((q, i) => (
-                <a key={i} href={`/ai?niche=${i < 3 ? "camper" : "local"}`} style={{
-                  padding: "8px 16px", borderRadius: 14, fontSize: 12, textDecoration: "none",
-                  background: i < 3 ? "rgba(245,158,11,0.06)" : "rgba(14,165,233,0.06)",
-                  border: `1px solid ${i < 3 ? "rgba(245,158,11,0.1)" : "rgba(14,165,233,0.08)"}`,
-                  color: i < 3 ? "#fbbf24" : "#7dd3fc", transition: "all 0.2s",
-                }}>{q}</a>
-              ))}
+            <div style={{ fontSize: 9, color: "#0ea5e9", letterSpacing: 5, fontWeight: 600, marginBottom: 8 }}>DEMO</div>
+            <h2 style={{ fontFamily: F, fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 700 }}>{tx("demoTitle")}</h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 32, alignItems: "center" }}>
+            {/* Phone mockup */}
+            <div style={{ background: "linear-gradient(135deg, #1e293b, #0f172a)", borderRadius: 28, padding: "14px 10px", maxWidth: 320, margin: "0 auto", boxShadow: "0 16px 48px rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.05)" }}>
+              <div style={{ padding: "6px 10px 10px", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                <div style={{ width: 24, height: 24, borderRadius: 7, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 10, fontWeight: 800, color: "#fff" }}>J</div>
+                <div style={{ fontSize: 12, fontWeight: 600 }}>Jadran AI</div>
+                <div style={{ fontSize: 8, color: "#22c55e", marginLeft: 2 }}>{"\u25CF"} online</div>
+              </div>
+              <div style={{ minHeight: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: 6, padding: "0 4px" }}>
+                {DEMO_CHAT.slice(0, chatStep).map((m, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", animation: "fadeSlide 0.5s both" }}>
+                    {m.role === "cta" ? (
+                      <div style={{ width: "88%", padding: "10px 12px", borderRadius: 12, background: "linear-gradient(135deg, #ef4444, #dc2626)", color: "#fff", fontSize: 12, fontWeight: 600, textAlign: "center" }}>
+                        {"\U0001F37D\uFE0F"} {m.text} {"\u2192"}
+                      </div>
+                    ) : (
+                      <div style={{ maxWidth: "80%", padding: "8px 12px", borderRadius: m.role === "user" ? "12px 12px 3px 12px" : "12px 12px 12px 3px", background: m.role === "user" ? "rgba(14,165,233,0.12)" : "rgba(255,255,255,0.05)", fontSize: 12, lineHeight: 1.5 }}>
+                        {m.text}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Right text */}
+            <div>
+              <p style={{ fontSize: 14, color: "#94a3b8", lineHeight: 1.8, marginBottom: 20 }}>
+                Hans pita: <em>"Mogu li kamperom do centra Pule?"</em><br/><br/>
+                AI odmah upozorava na pauka, daje besplatan parking, i rezervira sto u konobi {"\u2014"} sa popustom. Sve u 3 sekunde.
+              </p>
+              <a href="/ai?niche=camper" style={{ display: "inline-block", padding: "13px 28px", borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", color: "#fff", fontSize: 15, fontWeight: 700, textDecoration: "none", fontFamily: F }}>
+                Probaj besplatno {"\u2192"}
+              </a>
             </div>
           </div>
-                        <div style={{ fontSize: 10, color: "#f59e0b", letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>DESTINACIJE</div>
-            <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 400 }}>{tx("dest")}</div>
+        </div>
+      </section>
+
+      {/* ═══ TRENDING ═══ */}
+      <section style={{ padding: "72px 24px", background: "#0a0e17" }}>
+        <div style={{ maxWidth: 960, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 32 }}>
+            <div style={{ fontSize: 9, color: "#f59e0b", letterSpacing: 5, fontWeight: 600, marginBottom: 8 }}>{"\U0001F525"} POPULARNO</div>
+            <h2 style={{ fontFamily: F, fontSize: "clamp(20px, 3.5vw, 28px)", fontWeight: 700 }}>{tx("trendTitle")}</h2>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 16 }}>
-            {DESTINATIONS.map((d, i) => (
-              <a key={i} href={d.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
-                <div style={{
-                  padding: 0, borderRadius: 20, overflow: "hidden", position: "relative",
-                  background: "#0c1c32", border: "1px solid rgba(14,165,233,0.06)",
-                  cursor: "pointer", transition: "all 0.3s", minHeight: 200,
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.25)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(0,0,0,0.3)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.06)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
-                  {/* Photo background */}
-                  {cityImgs[d.city] && <div style={{
-                    position: "absolute", inset: 0,
-                    backgroundImage: `url(${cityImgs[d.city]})`,
-                    backgroundSize: "cover", backgroundPosition: "center",
-                    transition: "transform 0.5s",
-                  }} className="dest-img" />}
-                  {/* Dark gradient overlay */}
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(0deg, rgba(6,14,28,0.92) 0%, rgba(6,14,28,0.5) 50%, rgba(6,14,28,0.25) 100%)" }} />
-                  {/* Content */}
-                  <div style={{ position: "relative", padding: 20, display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: 200 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.7)", padding: "3px 10px", borderRadius: 10, background: "rgba(14,165,233,0.15)", backdropFilter: "blur(4px)" }}>{d.region}</span>
+          <div style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 12, scrollSnapType: "x mandatory" }}>
+            {TRENDING.map((t, i) => (
+              <a key={i} href={t.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit", scrollSnapAlign: "start" }}>
+                <div style={{ minWidth: 240, borderRadius: 18, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden", transition: "all 0.3s" }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.15)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"; e.currentTarget.style.transform = ""; }}>
+                  <div style={{ height: 120, background: "linear-gradient(135deg, #1e293b, #0f172a)", display: "grid", placeItems: "center", fontSize: 40, position: "relative" }}>
+                    {t.emoji}
+                    <span style={{ position: "absolute", top: 8, left: 8, padding: "2px 8px", borderRadius: 6, background: "rgba(14,165,233,0.12)", color: "#38bdf8", fontSize: 9, fontWeight: 600, letterSpacing: 1 }}>{t.tag}</span>
+                  </div>
+                  <div style={{ padding: "14px 16px" }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 3 }}>{t.title}</div>
+                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 10 }}>{t.sub}</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: 18, fontWeight: 700, color: "#22c55e" }}>{t.price}</span>
+                      <span style={{ padding: "6px 12px", borderRadius: 8, background: "rgba(14,165,233,0.08)", color: "#38bdf8", fontSize: 11, fontWeight: 600 }}>Pitaj AI {"\u2192"}</span>
                     </div>
-                    <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 20, fontWeight: 400, marginBottom: 4, textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>{d.name}</div>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.5, marginBottom: 10 }}>{d.desc}</div>
-                    <div style={{ fontSize: 12, color: "#0ea5e9", fontWeight: 600 }}>Booking.com →</div>
                   </div>
                 </div>
               </a>
             ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ═══ ROOM CODE (for apartment guests) ═══ */}
-      <div style={{ padding: "48px 24px", background: "rgba(0,0,0,0.1)" }}>
-        <div style={{ maxWidth: 500, margin: "0 auto", textAlign: "center" }}>
-          <div style={{ fontSize: 10, color: "#7dd3fc", letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>{tx("room")}</div>
-          <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(20px, 3vw, 26px)', fontWeight: 400, marginBottom: 16 }}>{tx("roomSub")}</div>
-          <div style={{
-            display: "inline-flex", gap: 8, padding: 6, borderRadius: 18,
-            background: "rgba(12,28,50,0.7)", border: "1px solid rgba(14,165,233,0.08)",
-          }}>
-            <input
-              type="text"
-              placeholder="npr. JADRAN-AB34"
-              value={roomInput}
-              onChange={e => setRoomInput(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && goRoom()}
-              style={{
-                padding: "12px 18px", borderRadius: 14, border: "none",
-                background: "transparent", color: "#fff", fontSize: 14,
-                outline: "none", width: "min(220px, 50vw)", fontFamily: "inherit",
-              }}
-            />
-            <button onClick={goRoom} style={{
-              padding: "12px 22px", borderRadius: 14, border: "none",
-              background: "linear-gradient(135deg, #0ea5e9, #0284c7)",
-              color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
-              fontFamily: "inherit",
-            }}>Otvori →</button>
+      {/* ═══ B2B ═══ */}
+      <section style={{ padding: "72px 24px", background: "linear-gradient(180deg, #0c1829, #0a1628)" }}>
+        <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
+          <h2 style={{ fontFamily: F, fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 700, color: "#facc15", marginBottom: 14 }}>{tx("b2bTitle")}</h2>
+          <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 28 }}>{tx("b2bDesc")}</p>
+          <a href="/host" style={{ display: "inline-block", padding: "14px 32px", borderRadius: 12, background: "#fff", color: "#0a1628", fontSize: 15, fontWeight: 700, textDecoration: "none", fontFamily: F }}>
+            {tx("b2bBtn")} {"\u2192"}
+          </a>
+          <div style={{ marginTop: 32, display: "inline-flex", gap: 6, alignItems: "center", padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
+            <input value={roomInput} onChange={e => setRoomInput(e.target.value)} onKeyDown={e => e.key === "Enter" && goRoom()}
+              placeholder="Room kod" style={{ width: 100, padding: "8px 10px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)", background: "transparent", color: "#94a3b8", fontSize: 13, outline: "none", fontFamily: B }} />
+            {roomInput && <button onClick={goRoom} style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(14,165,233,0.08)", border: "none", color: "#38bdf8", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Otvori {"\u2192"}</button>}
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ═══ PREMIUM CTA ═══ */}
-      <div style={{ padding: "40px 24px 60px" }}>
-        <div style={{
-          maxWidth: 700, margin: "0 auto", padding: "40px 32px",
-          borderRadius: 24, textAlign: "center",
-          background: "linear-gradient(135deg, rgba(245,158,11,0.06), rgba(14,165,233,0.04))",
-          border: "1px solid rgba(245,158,11,0.1)",
-        }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>⭐</div>
-          <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 28, fontWeight: 400, marginBottom: 8 }}>{tx("premium")}</div>
-          <div style={{ fontSize: 14, color: "#7dd3fc", maxWidth: 440, margin: "0 auto 24px", lineHeight: 1.6 }}>
-            {tx("premDesc")}
-          </div>
-          <div style={{ display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap", fontSize: 13, color: "rgba(255,255,255,0.5)" }}>
-            {["💬 Lokalni vodič", "💎 Skrivena mjesta", "🍽️ Restorani", "🗺️ Tajne rute", "☀️ Detaljna prognoza", "💰 Praćenje troškova"].map(f => (
-              <span key={f}>{f}</span>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* FOOTER */}
+      <footer style={{ padding: "20px", paddingBottom: "calc(20px + 52px)", textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.03)" }}>
+        <div style={{ fontSize: 11, color: "#1e293b" }}>JADRAN {"\u00B7"} SIAL Consulting d.o.o. {"\u00B7"} 2026</div>
+      </footer>
 
-      {/* ═══ HOST CTA ═══ */}
-      <div style={{ padding: "0 24px 60px" }}>
-        <div style={{
-          maxWidth: 700, margin: "0 auto", padding: "32px",
-          borderRadius: 24, textAlign: "center",
-          background: "rgba(12,28,50,0.5)", border: "1px dashed rgba(14,165,233,0.15)",
-        }}>
-          <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 24, fontWeight: 400, marginBottom: 8 }}>{tx("host")}</div>
-          <div style={{ fontSize: 14, color: "#7dd3fc", marginBottom: 20, lineHeight: 1.6 }}>
-            {tx("hostDesc")}
-          </div>
-          <a href="/host" style={{
-            display: "inline-block", padding: "14px 32px", borderRadius: 16,
-            background: "linear-gradient(135deg, #0ea5e9, #0284c7)",
-            color: "#fff", fontSize: 16, fontWeight: 600, textDecoration: "none",
-            fontFamily: "'DM Serif Display', Georgia, serif",
-            boxShadow: "0 6px 24px rgba(14,165,233,0.2)",
-          }}>{tx("hostBtn")}</a>
-        </div>
-      </div>
-
-      {/* ═══ FOOTER ═══ */}
-      <div style={{ borderTop: "1px solid rgba(14,165,233,0.06)", padding: "24px", textAlign: "center" }}>
-        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.15)", letterSpacing: 2 }}>
-          JADRAN · SIAL Consulting d.o.o.
-        </div>
+      {/* ═══ STICKY BAR ═══ */}
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99, padding: "8px 16px", paddingBottom: "max(8px, env(safe-area-inset-bottom, 8px))", background: "linear-gradient(135deg, #16a34a, #15803d)", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 -4px 16px rgba(0,0,0,0.3)" }}>
+        <span style={{ color: "#fff", fontSize: 13, fontWeight: 500 }}>{"\U0001F4AC"} {tx("sticky")}</span>
+        <a href="/ai?niche=camper" style={{ padding: "9px 20px", borderRadius: 10, background: "#fff", color: "#15803d", fontSize: 13, fontWeight: 800, textDecoration: "none", fontFamily: F, letterSpacing: 0.5 }}>
+          {tx("stickyBtn")}
+        </a>
       </div>
 
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
         ::selection { background: rgba(14,165,233,0.3); }
-        .dest-img { transition: transform 0.5s ease !important; }
-        a:hover .dest-img { transform: scale(1.08) !important; }
-        @media (max-width: 768px) {
-          input[style] { width: 180px !important; }
-        }
+        html { scroll-behavior: smooth; }
+        @keyframes fadeSlide { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        select option { background: #1e293b; color: #f0f4f8; }
+        ::-webkit-scrollbar { height: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(14,165,233,0.2); border-radius: 2px; }
       `}</style>
     </div>
   );
