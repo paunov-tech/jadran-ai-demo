@@ -179,7 +179,7 @@ const LANG_MAP = {
 };
 
 // ── MAIN ASSEMBLER ──
-function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode }) {
+function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData }) {
   const parts = [];
 
   // 1. BASE
@@ -222,6 +222,11 @@ KORISTI OVE DIMENZIJE za provjeru:
     if (anchorCatalog) parts.push(`SIDRIŠTA:\n${anchorCatalog}`);
   }
 
+  // 6b. DHMZ NAVTEX (only for sailing)
+  if (mode === "sailing" && navtexData) {
+    parts.push(`DHMZ NAVTEX PROGNOZA (službena pomorska prognoza):\n${navtexData}\nKORISTI OVE PODATKE za savjete o sigurnosti plovidbe!`);
+  }
+
   // 7. CRUISE DATA (only for cruiser)
   if (mode === "cruiser" && cruiseCtx) {
     parts.push(cruiseCtx);
@@ -248,12 +253,12 @@ export default async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
 
   try {
-    const { system, messages, mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode } = req.body;
+    const { system, messages, mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData } = req.body;
 
     let systemPrompt = '';
     try {
       systemPrompt = mode && region 
-        ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode })
+        ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData })
         : (system || '');
     } catch (promptErr) {
       // If prompt building fails, use minimal fallback

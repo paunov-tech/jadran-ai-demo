@@ -254,6 +254,7 @@ export default function StandaloneAI() {
   const cameraRef = useRef(null);
   const [weather, setWeather] = useState(null);
   const [weatherTime, setWeatherTime] = useState(null);
+  const [navtex, setNavtex] = useState(null);
   const [notifPerm, setNotifPerm] = useState("default");
   const [lastAlert, setLastAlert] = useState(null);
   const [regionImgs, setRegionImgs] = useState({});
@@ -297,6 +298,12 @@ export default function StandaloneAI() {
     const interval = setInterval(fetchWx, 60000); // Every 60 seconds
     return () => clearInterval(interval);
   }, [region]);
+
+  // Fetch DHMZ NAVTEX for sailing mode
+  useEffect(() => {
+    if (travelMode !== "sailing") return;
+    fetch("/api/navtex").then(r => r.json()).then(d => { if (d.zones) setNavtex(d); }).catch(() => {});
+  }, [travelMode]);
   // Load region image when region selected
   useEffect(() => {
     if (!region || regionImgs[region]) return;
@@ -508,6 +515,15 @@ export default function StandaloneAI() {
           marinaCatalog: marinaCatalog || undefined,
           anchorCatalog: anchorCatalog || undefined,
           cruiseCtx: cruiseCtx || undefined,
+          navtexData: travelMode === "sailing" && navtex ? (() => {
+            const zone = navtex.regionZoneMap?.[region] || "srednji";
+            const parts = [];
+            if (navtex.warning) parts.push(`⚠️ UPOZORENJE: ${navtex.warning}`);
+            if (navtex.zones?.[zone]) parts.push(`PROGNOZA (${zone} Jadran): ${navtex.zones[zone]}`);
+            const st = navtex.stations?.find(s => s.place === (navtex.regionStationMap?.[region] || "Split"));
+            if (st) parts.push(`POSTAJA ${st.place}: vjetar ${st.wind} čv, more ${st.sea}, vidljivost ${st.visibility} km, tlak ${st.pressure} hPa, ${st.conditions}`);
+            return parts.join("\n");
+          })() : undefined,
           messages: [...msgs.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })), { role: "user", content: msg }],
         }),
       });
@@ -1147,6 +1163,75 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
                   Podaci: Open-Meteo Marine API · Lokacija: {weather.location || "Jadran"} · Osvježavanje svaku minutu
                 </div>
               </div>
+
+              {/* ═══ DHMZ NAVTEX — only in sailing mode ═══ */}
+              {travelMode === "sailing" && navtex && (() => {
+                const zone = navtex.regionZoneMap?.[region] || "srednji";
+                const forecast = navtex.zones?.[zone] || "";
+                const station = navtex.stations?.find(s => s.place === (navtex.regionStationMap?.[region] || "Split"));
+                const detailed = navtex.jadranDetailed?.[zone] || "";
+                return (
+                  <div style={{ margin: "0 12px 8px", borderRadius: 16, border: `1px solid ${isNight ? "rgba(6,182,212,0.15)" : "rgba(6,182,212,0.2)"}`, background: isNight ? "rgba(6,182,212,0.03)" : "rgba(6,182,212,0.04)", overflow: "hidden" }}>
+                    {/* Header */}
+                    <div style={{ padding: "10px 14px 6px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ fontSize: 16 }}>⚓</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: "#06b6d4", letterSpacing: 2 }}>DHMZ NAVTEX</span>
+                      </div>
+                      <a href="https://meteo.hr/prognoze.php?section=prognoze_specp&param=pomorci" target="_blank" rel="noopener noreferrer" style={{ fontSize: 9, color: C.mut, textDecoration: "none" }}>meteo.hr →</a>
+                    </div>
+                    
+                    {/* Warning banner */}
+                    {navtex.warning && (
+                      <div style={{ padding: "6px 14px", background: "rgba(245,158,11,0.08)", borderTop: "1px solid rgba(245,158,11,0.1)", fontSize: 11, color: "#f59e0b", fontWeight: 600 }}>
+                        ⚠️ {navtex.warning}
+                      </div>
+                    )}
+
+                    {/* Zone forecast */}
+                    <div style={{ padding: "8px 14px" }}>
+                      <div style={{ fontSize: 10, color: C.accent, fontWeight: 600, letterSpacing: 1, marginBottom: 4 }}>
+                        {zone === "sjeverni" ? "SJEVERNI JADRAN" : zone === "srednji" ? "SREDNJI JADRAN" : "JUŽNI JADRAN"}
+                      </div>
+                      <div style={{ fontSize: 12, color: C.text, lineHeight: 1.5 }}>
+                        {forecast || detailed}
+                      </div>
+                    </div>
+
+                    {/* Nearest station data */}
+                    {station && (
+                      <div style={{ padding: "6px 14px 10px", display: "flex", gap: 12, flexWrap: "wrap", borderTop: `1px solid ${C.bord}` }}>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ fontSize: 10, color: C.mut }}>📍 {station.place}</div>
+                        </div>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: C.text }}>💨 {station.wind}</div>
+                          <div style={{ fontSize: 8, color: C.mut }}>vjetar (čv)</div>
+                        </div>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: C.accent }}>🌊 {station.sea}</div>
+                          <div style={{ fontSize: 8, color: C.mut }}>more</div>
+                        </div>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: C.text }}>👁️ {station.visibility} km</div>
+                          <div style={{ fontSize: 8, color: C.mut }}>vidljivost</div>
+                        </div>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{station.pressure} hPa</div>
+                          <div style={{ fontSize: 8, color: C.mut }}>tlak</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Valid until */}
+                    {navtex.validUntil && (
+                      <div style={{ padding: "4px 14px 8px", fontSize: 9, color: C.mut, textAlign: "center" }}>
+                        Prognoza vrijedi do: {navtex.validUntil} · Izvor: DHMZ Državni hidrometeorološki zavod
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div> : <div style={{ padding: 40, textAlign: "center", color: C.mut, fontSize: 13 }}>{t.loading}</div>}
 
             {/* Floating conversation previews — shows what the AI can do */}
