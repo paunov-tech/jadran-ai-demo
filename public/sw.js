@@ -1,5 +1,5 @@
 // JADRAN Service Worker — Offline-first for campers with spotty signal
-const CACHE_NAME = "jadran-v1";
+const CACHE_NAME = "jadran-v2";
 const SHELL = [
   "/",
   "/ai",
@@ -28,6 +28,9 @@ self.addEventListener("activate", (e) => {
 // Fetch — network-first for API, cache-first for assets
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
+
+  // SKIP: Let browser handle JS/CSS modules directly (hashed filenames = immutable)
+  if (url.pathname.startsWith("/assets/")) return;
 
   // API calls: network-first, cache fallback for weather
   if (url.pathname.startsWith("/api/")) {
