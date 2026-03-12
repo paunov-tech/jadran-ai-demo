@@ -138,6 +138,17 @@ export default function StandaloneAI() {
     const isCamper = travelMode === "camper";
     const isSailing = travelMode === "sailing";
     const wxCtx = weather ? `TRENUTNO VRIJEME: ${weather.temp}°C ${weather.icon}, osjeća se ${weather.feelsLike || weather.temp}°C, UV ${weather.uv}, vjetar ${weather.windDir || ""} ${weather.windSpeed || ""} km/h (udari ${weather.gusts || "—"} km/h), more ${weather.sea}°C, valovi ${weather.waveHeight || 0}m, tlak ${weather.pressure || "—"} hPa, zalazak ${weather.sunset}.` : "";
+    
+    // Build REAL affiliate link catalog for this region
+    const regionExps = filterByRegion(EXPERIENCES, region).slice(0, 8);
+    const dubLinks = region === "dubrovnik" ? DUBROVNIK_INTEL.filter(d => d.link).map(d => `• ${d.spot} → [${d.spot}](${d.link})`) : [];
+    const warnLinks = filterByRegion(CAMPER_WARNINGS, region).filter(w => w.link).map(w => `• ${w.name} (alternativa) → [${w.name}](${w.link})`);
+    const allLinks = [
+      ...regionExps.map(e => `• ${e.name} (${e.price}€, ${e.dur}) → [${e.name} — ${e.price}€](${e.link})`),
+      ...dubLinks,
+      ...warnLinks,
+    ];
+    const linkCatalog = allLinks.join("\n");
 
     const langStr = lang === "at" ? "Österreichisches Deutsch — verwende du-Form, warmen Ton, österreichische Ausdrücke (Jause statt Brotzeit, Schmankerl, Beisl statt Kneipe, leiwand statt toll, heuer statt dieses Jahr, Sackerl statt Tüte, Paradeiser statt Tomaten). Sprich wie ein guter Freund aus Kärnten der die Adria in- und auswendig kennt" : lang === "de" ? "Deutsch — verwende Sie-Form, sachlich aber freundlich" : lang === "en" ? "English" : lang === "it" ? "Italiano" : lang === "si" ? "Slovenščina" : lang === "cz" ? "Čeština" : lang === "pl" ? "Polski" : "Hrvatski";
 
@@ -192,19 +203,29 @@ PRAVILA ODGOVORA:
 - Uvijek: završi sa jednim bonus savjetom ili ponudom ("Dok si u tom kraju...")
 - Nikad: "Preporučujem da posjetite..." — umjesto toga: "Kreni 15 min južnije ka..."
 - Nikad: generički TripAdvisor stil — ti si lokalni čovjek koji živi tu
-- LINKOVI: Kad preporučuješ aktivnost ili rezervaciju, koristi format [Tekst dugmeta](URL). Primjer: [Rezerviraj izlet brodom](https://www.getyourguide.com/...). Ovo se prikazuje kao klikabilno dugme u chatu. UVIJEK umetni barem jedan link u odgovor ako preporučuješ aktivnost, restoran ili izlet.` :
+- LINKOVI: KORISTI ISKLJUČIVO linkove iz ovog kataloga. NIKAD ne izmišljaj URL-ove!
+Format: [Tekst](URL) — prikazuje se kao dugme u chatu.
+KATALOG AKTIVNOSTI ZA OVU REGIJU:
+${linkCatalog}
+Kad preporučuješ aktivnost, KOPIRAJ tačan link iz kataloga iznad. Ako aktivnost nije u katalogu, NE stavljaj link.` :
 
     isSailing ? `Ti si lokalni nautički vodič za hrvatsku obalu Jadrana.
 KONTEKST: Gost plovi u regiji ${regionName}. ${wxCtx}
 JEZIK: ${langStr}.
 Uključi: marine i sidrišta s cijenama veza, meteo upozorenja (bura, jugo, maestral), opskrba vodom i gorivom, najbolja zaštićena sidrišta, konobe dostupne s mora.
 Daj konkretne koordinate sidrišta, dubinu, zaštićenost od pojedinog vjetra. Završi sa preporukom za sutra.
-PRAVILA: Kratko (4-6 rečenica), konkretno s cijenama i udaljenostima u NM. Koristi emoji. Lokalni insider. Za linkove koristi format [Tekst](URL).` :
+PRAVILA: Kratko (4-6 rečenica), konkretno s cijenama i udaljenostima u NM. Koristi emoji. Lokalni insider.
+LINKOVI — koristi ISKLJUČIVO ove:
+${linkCatalog}
+Format: [Tekst](URL). Nikad ne izmišljaj linkove.` :
 
     `Ti si lokalni turistički vodič za hrvatsku obalu Jadrana.
 KONTEKST: Gost je u regiji ${regionName}. ${modeName ? "Putuje kao: " + modeName + "." : ""} ${wxCtx}
 JEZIK: ${langStr}.
-PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Koristi emoji. Lokalni insider savjeti — ne generički turistički info. Završi sa jednom bonus preporukom. Za linkove koristi format [Tekst](URL).`;
+PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Koristi emoji. Lokalni insider savjeti — ne generički turistički info. Završi sa jednom bonus preporukom.
+LINKOVI — koristi ISKLJUČIVO ove:
+${linkCatalog}
+Format: [Tekst](URL). Nikad ne izmišljaj linkove.`;
 
     try {
       const res = await fetch("/api/chat", {
