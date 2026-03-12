@@ -20,6 +20,7 @@ const TRAVEL_MODES = [
   { id: "apartment", emoji: "🏠", name: "Apartman/Hotel", desc: "Fiksni smještaj" },
   { id: "camper", emoji: "🚐", name: "Kamper / Autodom", desc: "Sloboda na kotačima" },
   { id: "sailing", emoji: "⛵", name: "Jedrilica / Brod", desc: "Nautički turizam" },
+  { id: "cruiser", emoji: "🚢", name: "Kruzer", desc: "Lučki dan — maksimum u 8h" },
   { id: "daytrip", emoji: "🚗", name: "Dnevni izlet", desc: "Prolazim kroz" },
   { id: "cruise", emoji: "🚢", name: "Krstarenje", desc: "Kratko zaustavljanje" },
 ];
@@ -122,6 +123,8 @@ export default function StandaloneAI() {
     const params = new URLSearchParams(window.location.search);
     const n = params.get("niche");
     if (n === "camper" || n === "local") { setNiche(n); if (n === "camper") setTravelMode("camper"); }
+    if (n === "sailing") { setNiche(n); setTravelMode("sailing"); }
+    if (n === "cruiser") { setNiche(n); setTravelMode("cruiser"); }
     if (params.get("premium") === "true") {
       setPremium(true);
       try { localStorage.setItem("jadran_ai_premium", "1"); } catch {}
@@ -212,12 +215,34 @@ export default function StandaloneAI() {
     const modeName = TRAVEL_MODES.find(m => m.id === travelMode)?.name || "";
     const isCamper = travelMode === "camper";
     const isSailing = travelMode === "sailing";
+    const isCruiser = travelMode === "cruiser";
     const wxCtx = weather ? `TRENUTNO VRIJEME: ${weather.temp}°C ${weather.icon}, osjeća se ${weather.feelsLike || weather.temp}°C, UV ${weather.uv}, vjetar ${weather.windDir || ""} ${weather.windSpeed || ""} km/h (udari ${weather.gusts || "—"} km/h), more ${weather.sea}°C, valovi ${weather.waveHeight || 0}m, tlak ${weather.pressure || "—"} hPa, zalazak ${weather.sunset}.` : "";
     
     // Build REAL affiliate link catalog for this region
     const regionExps = filterByRegion(EXPERIENCES, region).slice(0, 8);
     const dubLinks = region === "dubrovnik" ? DUBROVNIK_INTEL.filter(d => d.link).map(d => `• ${d.spot} → [${d.spot}](${d.link})`) : [];
     const warnLinks = filterByRegion(CAMPER_WARNINGS, region).filter(w => w.link).map(w => `• ${w.name} (alternativa) → [${w.name}](${w.link})`);
+    // Build nautical context
+    const regionMarinas = MARINAS.filter(m => m.region === region).slice(0, 4);
+    const regionAnchors = ANCHORAGES.filter(a => a.region === region).slice(0, 4);
+    const cruisePort = CRUISE_PORTS.find(p => p.region === region);
+    
+    const marinaCatalog = regionMarinas.map(m => 
+      `• ${m.name}: ${m.berths} vezova, max ${m.maxLen}, ${m.price}, gorivo:${m.fuel?"da":"ne"}, VHF ${m.vhf}. ${m.note}`
+    ).join("\n");
+    
+    const anchorCatalog = regionAnchors.map(a =>
+      `• ${a.name}: dubina ${a.depth}, dno ${a.bottom}, zaštita od ${a.shelter}, ${a.fee}. ${a.note}`
+    ).join("\n");
+    
+    const cruiseCtx = cruisePort ? `LUKA: ${cruisePort.name}
+Terminal: ${cruisePort.terminal}, shuttle: ${cruisePort.shuttle}
+MUST-SEE: ${cruisePort.mustSee}
+IZBJEGAVAJ: ${cruisePort.avoid}
+HRANA: ${cruisePort.foodTip}
+SHOPPING: ${cruisePort.shopping}
+PLAN DANA: ${cruisePort.timePlan}` : "";
+
     const allLinks = [
       ...regionExps.map(e => `• ${e.name} (${e.price}€, ${e.dur}) → [${e.name} — ${e.price}€](${e.link})`),
       ...dubLinks,
@@ -285,12 +310,32 @@ KATALOG AKTIVNOSTI ZA OVU REGIJU:
 ${linkCatalog}
 Kad preporučuješ aktivnost, KOPIRAJ tačan link iz kataloga iznad. Ako aktivnost nije u katalogu, NE stavljaj link.` :
 
-    isSailing ? `Ti si lokalni nautički vodič za hrvatsku obalu Jadrana.
-KONTEKST: Gost plovi u regiji ${regionName}. ${wxCtx}
+    isSailing ? `Ti si kapetan — lokalni nautički vodič za hrvatsku obalu Jadrana. Govoriš jezikom mornara.
+
+KONTEKST: Jedriličar/motornjak plovi u regiji ${regionName}. ${wxCtx}
 JEZIK: ${langStr}.
-Uključi: marine i sidrišta s cijenama veza, meteo upozorenja (bura, jugo, maestral), opskrba vodom i gorivom, najbolja zaštićena sidrišta, konobe dostupne s mora.
-Daj konkretne koordinate sidrišta, dubinu, zaštićenost od pojedinog vjetra. Završi sa preporukom za sutra.
-PRAVILA: Kratko (4-6 rečenica), konkretno s cijenama i udaljenostima u NM. Koristi emoji. Lokalni insider.
+
+MARINE U REGIJI:
+${marinaCatalog || "Nema podataka za ovu regiju."}
+
+SIDRIŠTA:
+${anchorCatalog || "Pitaj me za konkretnu lokaciju."}
+
+TVOJ PRIORITET:
+1. SIGURNOST: Provjeri vjetar prije svake preporuke. Bura = ostani u zaštićenoj luci. Jugo = pripremi se na valove. Maestral = uživaj.
+2. NAVIGACIJA: Daj udaljenosti u NM, kurz, procijenu vremena plovidbe. Upozori na plićake, podvodne grebene, struje.
+3. SIDRIŠTA: Dubina, dno (pijesak/mulj/kamen), zaštićenost od pojedinog vjetra, cijena boje/veza. 
+4. KONOBE S MORA: Preporuči konobe gdje možeš pristati brodom ili dinghy do obale.
+5. GORIVO I VODA: Najbliža pumpa, cijena, radno vrijeme. Upozori ako nema goriva na otocima.
+6. VHF: Kanal kapetanije, MRCC Split 16/10, VTS na uskim prolazima.
+
+PRAVILA:
+- Kratko (4-6 rečenica), ali KONKRETNO — cijene, NM, dubina, kurs
+- Koristi nautičke izraze: bova, vez, sidrište, škver, burin, refuli
+- Emoji za čitljivost
+- NIKAD ne preporučuj sidrenje ako je bura >30 čvorova
+- Završi s prognozom za sutra + preporuka kamo ploviti
+- PRAVOPIS: Toleriraj greške — "sidrisčte" = sidrište, "marinaa" = marina
 LINKOVI — koristi ISKLJUČIVO ove:
 ${linkCatalog}
 Format: [Tekst](URL). Nikad ne izmišljaj linkove.` :
@@ -527,6 +572,13 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
     "⛽ Gdje napuniti gorivo?",
     "🏝️ Zaštićeno sidrište?",
     "🌊 Stanje mora i prognoze?",
+  ] : travelMode === "cruiser" ? [
+    "🗺️ Optimalan plan dana za 8h?",
+    "🍽️ Gdje jesti lokalno i jeftino?",
+    "📸 Najbolja lokacija za fotku?",
+    "🛍️ Što kupiti kao suvenir?",
+    "⚠️ Što izbjegavati?",
+    "🏖️ Najbliža plaža od luke?",
   ] : [];
 
   const defaultQuick = [
@@ -571,7 +623,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
         <div style={{ marginBottom: 28 }}>
           <div style={{ fontSize: 11, color: C.mut, letterSpacing: 3, marginBottom: 12, fontWeight: 500 }}>{t.mode}</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
-            {TRAVEL_MODES.filter(m => niche === "camper" ? m.id === "camper" : niche === "local" ? m.id !== "camper" : true).map(m => (
+            {TRAVEL_MODES.filter(m => niche === "camper" ? m.id === "camper" : niche === "cruiser" ? m.id === "cruiser" : niche === "local" ? !["camper","cruiser"].includes(m.id) : true).map(m => (
               <div key={m.id} onClick={() => setTravelMode(m.id)} style={{
                 padding: "16px 12px", borderRadius: 16, textAlign: "center", cursor: "pointer",
                 background: travelMode === m.id ? "rgba(14,165,233,0.12)" : C.card,
@@ -935,6 +987,14 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
               "🅿️ Gdje parkirati kamper?",
               "🍽️ Večera s parkingom?",
               "⛽ Benzinska / LPG?",
+            ] : travelMode === "sailing" || niche === "sailing" ? [
+              "⚓ Najbliža marina s vezom?",
+              "🌊 Stanje mora i vjetar?",
+              "🍽️ Konoba dostupna s mora?",
+            ] : travelMode === "cruiser" || niche === "cruiser" ? [
+              "🗺️ Plan dana za 8 sati?",
+              "🍽️ Lokalni ručak bez turističke cijene?",
+              "📸 Fotogenična lokacija?",
             ] : [
               "🏖️ Najbolja plaža u blizini?",
               "🍽️ Preporuka za ručak?",

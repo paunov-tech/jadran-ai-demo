@@ -193,6 +193,65 @@ export const ISTRA_CAMPER_INTEL = [
 // REGIONAL DEEP-LOCAL INTELLIGENCE — Pro-Camper Expert
 // Knowledge not available on standard maps
 // ═══════════════════════════════════════════════════════════════
+
+// ═══ NAUTICAL DATA ═══
+export const MARINAS = [
+  // Istra
+  { name: "ACI Marina Rovinj", region: "istra", lat: 45.08, lon: 13.64, berths: 390, maxLen: "40m", vhf: 17, fuel: true, water: true, electric: true, price: "3.0-5.5€/m", wifi: true, note: "Zaštićena od svih vjetrova osim juga. Restoran na rivi odličan." },
+  { name: "ACI Marina Pula", region: "istra", lat: 44.87, lon: 13.85, berths: 213, maxLen: "35m", vhf: 17, fuel: true, water: true, electric: true, price: "2.5-4.5€/m", wifi: true, note: "Blizu Arene. Otvorena jugu — pri najavi prebaci se u Veruda." },
+  { name: "Marina Veruda", region: "istra", lat: 44.83, lon: 13.85, berths: 630, maxLen: "50m", vhf: 17, fuel: true, water: true, electric: true, price: "3.5-6.0€/m", wifi: true, note: "Najveća marina u Istri. Odlična zaštita. Supermarket 200m." },
+  // Kvarner
+  { name: "ACI Marina Cres", region: "kvarner", lat: 44.96, lon: 14.41, berths: 462, maxLen: "30m", vhf: 17, fuel: true, water: true, electric: true, price: "2.0-3.5€/m", wifi: true, note: "Mirna marina. Grad Cres na pješačkoj udaljenosti. Dobar za obitelji." },
+  { name: "ACI Marina Supetarska Draga", region: "kvarner", lat: 44.79, lon: 14.74, berths: 280, maxLen: "25m", vhf: 17, fuel: false, water: true, electric: true, price: "2.0-3.0€/m", wifi: true, note: "Rab — mirno sidrište. Pijesak Lopar 10 min autom." },
+  // Split
+  { name: "ACI Marina Split", region: "split", lat: 43.51, lon: 16.44, berths: 355, maxLen: "60m", vhf: 17, fuel: true, water: true, electric: true, price: "3.5-7.0€/m", wifi: true, note: "Centar Splita, Dioklecijanova 5 min. Skupo ljeti ali lokacija neprocjenjiva." },
+  { name: "Marina Kaštela", region: "split", lat: 43.55, lon: 16.38, berths: 420, maxLen: "25m", vhf: 17, fuel: true, water: true, electric: true, price: "2.0-3.5€/m", wifi: true, note: "15 min od Splita, upola jeftinije. Taxi boat do grada." },
+  { name: "ACI Marina Milna", region: "split", lat: 43.33, lon: 16.45, berths: 197, maxLen: "30m", vhf: 17, fuel: true, water: true, electric: true, price: "2.5-4.0€/m", wifi: true, note: "Brač — najzaštićenija luka na otoku. Konoba Palma na rivi." },
+  // Dubrovnik
+  { name: "ACI Marina Dubrovnik", region: "dubrovnik", lat: 42.66, lon: 18.06, berths: 425, maxLen: "60m", vhf: 17, fuel: true, water: true, electric: true, price: "4.0-8.0€/m", wifi: true, note: "Komolac, 6km od starog grada. Bus 1A do Pila vrata." },
+  // Zadar
+  { name: "Marina Dalmacija Sukošan", region: "zadar", lat: 44.04, lon: 15.30, berths: 1200, maxLen: "40m", vhf: 17, fuel: true, water: true, electric: true, price: "2.5-4.0€/m", wifi: true, note: "Najveća marina na Jadranu! Kornati na dohvat ruke." },
+  { name: "ACI Marina Žut", region: "zadar", lat: 43.87, lon: 15.29, berths: 120, maxLen: "20m", vhf: 17, fuel: false, water: true, electric: true, price: "2.0-3.0€/m", wifi: false, note: "Kornati — potpuna tišina. Restoran Goro jedina opcija ali vrhunski." },
+];
+
+export const ANCHORAGES = [
+  // Free/cheap anchorages (sidrišta)
+  { name: "Palmižana", region: "split", lat: 43.16, lon: 16.39, depth: "5-12m", bottom: "pijesak", shelter: "Z,JZ,J", fee: "besplatno", note: "Pakleni otoci. Tirkizno more, konoba Meneghello." },
+  { name: "Uvala Stiniva", region: "split", lat: 43.16, lon: 16.17, depth: "8-15m", bottom: "pijesak", shelter: "Z,SZ", fee: "besplatno", note: "Vis — najljepša plaža na svijetu. Sidri ispred, pliva do obale." },
+  { name: "Uvala Srebrna", region: "split", lat: 43.17, lon: 16.18, depth: "6-10m", bottom: "pijesak/trava", shelter: "J,JZ", fee: "besplatno", note: "Vis — mirno sidrište, konoba na plaži." },
+  { name: "Luka Polače", region: "dubrovnik", lat: 42.79, lon: 17.23, depth: "4-10m", bottom: "mulj", shelter: "svi osim JI", fee: "NP Mljet ulaz", note: "Mljet — rimske ruševine, jezera 2km. Boja 30€/noć ili sidro." },
+  { name: "Telašćica", region: "zadar", lat: 43.88, lon: 15.16, depth: "6-15m", bottom: "pijesak/mulj", shelter: "svi vjetrovi", fee: "PP ulaz ~20€", note: "Dugi otok — potpuna zaštita. Slano jezero, strmci 160m." },
+  { name: "Uvala Sakarun", region: "zadar", lat: 44.13, lon: 14.87, depth: "4-8m", bottom: "pijesak", shelter: "J,JZ,Z", fee: "besplatno", note: "Dugi otok — 'Hrvatski Karibi'. Plitko tirkizno more." },
+  { name: "Limski kanal", region: "istra", lat: 45.13, lon: 13.72, depth: "10-30m", bottom: "mulj", shelter: "svi vjetrovi", fee: "besplatno", note: "Fjord usred Istre. Viking bar na klifi, kamenice s uzgajališta." },
+];
+
+export const CRUISE_PORTS = [
+  { name: "Split - Gradska luka", city: "Split", region: "split", terminal: "Da", shuttle: "Nije potreban — Dioklecijanova 200m", maxShips: 2, tipTime: "07:00-19:00",
+    mustSee: "Dioklecijanova palača (5 min), Riva, Marjan park (20 min šetnje), Bačvice plaža",
+    avoid: "Taxi od terminala — sve je pješačko! Izbjegavajte restorane na samoj Rivi (turistička cijena).",
+    foodTip: "Konoba Fetivi (3 min od luke, lokalna cijena) ili Tržnica (Pazar) za svježe voće.",
+    shopping: "Hajduk shop za suvenire, Tržnica za lavandu i pršut.",
+    timePlan: "09:00 Palača → 10:30 Marjan → 12:00 Ručak Fetivi → 13:30 Bačvice → 15:00 Tržnica → 16:30 Riva kava" },
+  { name: "Dubrovnik - Gruž", city: "Dubrovnik", region: "dubrovnik", terminal: "Da", shuttle: "Bus 1A/1B do Pila vrata (2€, 15 min)", maxShips: 4, tipTime: "07:00-18:00",
+    mustSee: "Gradske zidine (35€ rano ujutro!), Stradun, Minčeta, Buža bar (kava na stijenama)",
+    avoid: "Zidine poslijepodne (gužva + sunce). Cable car skup (27€) — Srđ pješice 30 min ako ste fit.",
+    foodTip: "Lokrum otok (15 min brodom, 22€ return) — mir od gužve + plaža nudista.",
+    shopping: "Dubrovačka tržnica za lavandu. Izbjegavajte GoT suvenire na Stradunu — duplo skuplje.",
+    timePlan: "08:00 Zidine (manje gužve!) → 10:00 Stradun → 11:00 Lokrum → 14:00 Buža bar → 16:00 Shopping → 17:00 Gruž" },
+  { name: "Zadar", city: "Zadar", region: "zadar", terminal: "Ne — tender", shuttle: "Iskrcaj na Rivi, sve pješke", maxShips: 1, tipTime: "08:00-17:00",
+    mustSee: "Morske orgulje (besplatno!), Pozdrav suncu, Sv. Donat, Forum",
+    avoid: "Taxi na Rivi — sve je unutar 15 min pješačenja.",
+    foodTip: "Tržnica za sir i pršut (Paški sir 15€/kg). Restoran Pet bunara za fine dining.",
+    shopping: "Maraschino liker (originalni, samo u Zadru). Lavanda, maslinovo ulje.",
+    timePlan: "08:30 Orgulje + Pozdrav suncu → 10:00 Forum + Sv.Donat → 11:30 Tržnica → 12:30 Ručak → 14:00 Šetnja zidinama → 16:00 Kava na Rivi" },
+  { name: "Kotor (Montenegro)", city: "Kotor", region: "dubrovnik", terminal: "Da — ali često tender", shuttle: "Iskrcaj kod starog grada", maxShips: 2, tipTime: "07:00-18:00",
+    mustSee: "Tvrđava Sv.Ivana (1350 stepenica — krenite RANO!), Stari grad, Gospa od Škrpjela (boat 5€)",
+    avoid: "Popodnevni uspon na tvrđavu — vrućina je ubojita. Krenite u 8h!",
+    foodTip: "Konoba Scala Santa (skrivena u starom gradu). Crnogorski pršut + vranac vino.",
+    shopping: "Crnogorsko maslinovo ulje jeftinije nego u HR.",
+    timePlan: "08:00 Tvrđava (dok je hladno!) → 10:30 Stari grad → 12:00 Ručak → 13:30 Gospa od Škrpjela → 15:00 Perast → 17:00 Povratak" },
+];
+
 export const DEEP_LOCAL = {
   istra: [
     { id: "limski", spot: "Kanfanar – Limski kanal", emoji: "🛣️", 

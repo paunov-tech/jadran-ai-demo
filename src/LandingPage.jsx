@@ -163,6 +163,32 @@ export default function LandingPage() {
                 <div style={{ fontSize: 12, color: "#7dd3fc", marginTop: 2 }}>Plaže, konobe, izleti</div>
               </div>
             </a>
+            <a href="/ai?niche=sailing" style={{
+              flex: "1 1 200px", padding: "20px 24px", borderRadius: 18, textDecoration: "none",
+              background: "rgba(14,165,233,0.04)", border: "1px solid rgba(14,165,233,0.1)",
+              display: "flex", alignItems: "center", gap: 14, transition: "all 0.3s",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.25)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.1)"; e.currentTarget.style.transform = ""; }}>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg, #06b6d4, #0891b2)", display: "grid", placeItems: "center", fontSize: 22, flexShrink: 0 }}>⛵</div>
+              <div>
+                <div style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#f0f4f8" }}>Nautički vodič</div>
+                <div style={{ fontSize: 12, color: "#67e8f9", marginTop: 2 }}>Marine, sidrišta, vjetar</div>
+              </div>
+            </a>
+            <a href="/ai?niche=cruiser" style={{
+              flex: "1 1 200px", padding: "20px 24px", borderRadius: 18, textDecoration: "none",
+              background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.1)",
+              display: "flex", alignItems: "center", gap: 14, transition: "all 0.3s",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.25)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.1)"; e.currentTarget.style.transform = ""; }}>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg, #a855f7, #7c3aed)", display: "grid", placeItems: "center", fontSize: 22, flexShrink: 0 }}>🚢</div>
+              <div>
+                <div style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#f0f4f8" }}>Kruzer vodič</div>
+                <div style={{ fontSize: 12, color: "#c4b5fd", marginTop: 2 }}>Lučki dan, plan po minutu</div>
+              </div>
+            </a>
           </div>
           <div style={{ marginTop: 16, fontSize: 11, color: "#334155" }}>24h besplatno {"\u00B7"} 8 jezika {"\u00B7"} bez registracije</div>
         </div>
@@ -321,9 +347,11 @@ export default function LandingPage() {
       {/* ═══ STICKY BAR ═══ */}
       <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99, padding: "8px 16px", paddingBottom: "max(8px, env(safe-area-inset-bottom, 8px))", background: "linear-gradient(135deg, #16a34a, #15803d)", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 -4px 16px rgba(0,0,0,0.3)" }}>
         <span style={{ color: "#fff", fontSize: 13, fontWeight: 500 }}>{"💬"} {tx("sticky")}</span>
-        <div style={{ display: "flex", gap: 6 }}>
-          <a href="/ai?niche=camper" style={{ padding: "8px 14px", borderRadius: 8, background: "#fff", color: "#15803d", fontSize: 12, fontWeight: 800, textDecoration: "none", fontFamily: F }}>{"🚐"} Kamper</a>
-          <a href="/ai?niche=local" style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(255,255,255,0.2)", color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none", fontFamily: F }}>{"🗺️"} Vodič</a>
+        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+          <a href="/ai?niche=camper" style={{ padding: "7px 10px", borderRadius: 8, background: "#fff", color: "#15803d", fontSize: 11, fontWeight: 800, textDecoration: "none" }}>🚐</a>
+          <a href="/ai?niche=local" style={{ padding: "7px 10px", borderRadius: 8, background: "rgba(255,255,255,0.25)", color: "#fff", fontSize: 11, fontWeight: 700, textDecoration: "none" }}>🗺️</a>
+          <a href="/ai?niche=sailing" style={{ padding: "7px 10px", borderRadius: 8, background: "rgba(255,255,255,0.15)", color: "#fff", fontSize: 11, fontWeight: 700, textDecoration: "none" }}>⛵</a>
+          <a href="/ai?niche=cruiser" style={{ padding: "7px 10px", borderRadius: 8, background: "rgba(255,255,255,0.15)", color: "#fff", fontSize: 11, fontWeight: 700, textDecoration: "none" }}>🚢</a>
         </div>
       </div>
 
