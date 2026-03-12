@@ -191,19 +191,20 @@ PRAVILA ODGOVORA:
 - Uvijek: jedan emoji po ključnoj informaciji
 - Uvijek: završi sa jednim bonus savjetom ili ponudom ("Dok si u tom kraju...")
 - Nikad: "Preporučujem da posjetite..." — umjesto toga: "Kreni 15 min južnije ka..."
-- Nikad: generički TripAdvisor stil — ti si lokalni čovjek koji živi tu` :
+- Nikad: generički TripAdvisor stil — ti si lokalni čovjek koji živi tu
+- LINKOVI: Kad preporučuješ aktivnost ili rezervaciju, koristi format [Tekst dugmeta](URL). Primjer: [Rezerviraj izlet brodom](https://www.getyourguide.com/...). Ovo se prikazuje kao klikabilno dugme u chatu.` :
 
     isSailing ? `Ti si lokalni nautički vodič za hrvatsku obalu Jadrana.
 KONTEKST: Gost plovi u regiji ${regionName}. ${wxCtx}
 JEZIK: ${langStr}.
 Uključi: marine i sidrišta s cijenama veza, meteo upozorenja (bura, jugo, maestral), opskrba vodom i gorivom, najbolja zaštićena sidrišta, konobe dostupne s mora.
 Daj konkretne koordinate sidrišta, dubinu, zaštićenost od pojedinog vjetra. Završi sa preporukom za sutra.
-PRAVILA: Kratko (4-6 rečenica), konkretno s cijenama i udaljenostima u NM. Koristi emoji. Lokalni insider.` :
+PRAVILA: Kratko (4-6 rečenica), konkretno s cijenama i udaljenostima u NM. Koristi emoji. Lokalni insider. Za linkove koristi format [Tekst](URL).` :
 
     `Ti si lokalni turistički vodič za hrvatsku obalu Jadrana.
 KONTEKST: Gost je u regiji ${regionName}. ${modeName ? "Putuje kao: " + modeName + "." : ""} ${wxCtx}
 JEZIK: ${langStr}.
-PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Koristi emoji. Lokalni insider savjeti — ne generički turistički info. Završi sa jednom bonus preporukom.`;
+PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Koristi emoji. Lokalni insider savjeti — ne generički turistički info. Završi sa jednom bonus preporukom. Za linkove koristi format [Tekst](URL).`;
 
     try {
       const res = await fetch("/api/chat", {
@@ -279,6 +280,73 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
       </div>
     </div>
   );
+
+
+  // ═══ ICE-BREAKER — context-aware welcome message ═══
+  const generateIcebreaker = () => {
+    const h = new Date().getHours();
+    const regionName = REGIONS.find(r => r.id === region)?.name || "Jadran";
+    const isCamperMode = travelMode === "camper" || niche === "camper";
+    const w = weather;
+    
+    // Weather-conditional (rain or strong wind)
+    if (w && (w.windSpeed > 40 || w.icon === "🌧️" || w.icon === "🌦️" || w.icon === "⛈️")) {
+      const windWarn = w.windSpeed > 40;
+      if (isCamperMode) {
+        return `Uh, vrijeme danas nije na našoj strani! ${w.icon} ${windWarn ? "Jaka bura otežava vožnju kamperima uz obalu." : "Kiša pada u regiji " + regionName + "."}
+
+Nema smisla sjediti u vozilu — ovo je savršen dan za istraživanje unutrašnjosti na toplom. ${region === "istra" ? "Preporučujem degustaciju vina i pršuta u lokalnoj vinariji — imaju ogroman zaštićen parking za kamper." : region === "split" ? "Idealan dan za Dioklecijanove podrume ili muzej u Splitu — pod krovom, a fascinantan." : "Idealan dan za lokalne konobe u unutrašnjosti — topla jela i vino iz podruma."}
+
+Gdje se trenutno nalaziš da ti provjerim prohodnost puteva? 🛡️`;
+      }
+      return `Vrijeme danas traži plan B! ${w.icon} ${windWarn ? "Vjetar je jak — " + w.windSpeed + " km/h." : "Kiša pada, ali to znači manje turista svugdje!"}
+
+Preporučujem dan u unutrašnjosti: lokalne konobe, vinarije, muzeji. ${region === "istra" ? "Motovun i Grožnjan su prekrasni po kiši — manje turista, više atmosfere! 🍷" : "Savršen dan za skrivene lokalne tajne! 🍷"}
+
+Što vas zanima — hrana, kultura, ili nešto treće?`;
+    }
+    
+    // Time-conditional
+    if (h >= 17 && h < 21) {
+      // Evening - dinner time
+      if (isCamperMode) {
+        return `Dobra večer! 🌅 Zalazak u ${regionName} je danas u ${w?.sunset || "19:30"} — savršeno za večeru s pogledom.
+
+${region === "split" ? "Konoba Matoni u Podstrani — terasa nad morem, pašticada 14€, i imaju veliki parking za kampere!" : region === "istra" ? "Konoba Batelina u Banjolama kod Pule — svježa riba po kg, a parking je prostran i ravan." : region === "dubrovnik" ? "Na Pelješcu obavezno probaj stonske kamenice — 1€/kom! Parking bez problema." : "Lokalne konobe u " + regionName + " imaju mjesta za kamper — pitaj me za preporuku!"}
+
+Treba li ti parking za večeras ili želiš preporuku za sutra? 🚐`;
+      }
+      return `Dobra večer! 🌅 More je ${w?.sea || 20}°C, zalazak u ${w?.sunset || "19:30"}. Savršeno za šetnju rivom.
+
+Što planirate za večeras — romantična večera, noćni život, ili mirna kava uz more?`;
+    }
+    
+    if (h >= 6 && h < 10) {
+      // Morning - activity time
+      if (isCamperMode) {
+        return `Dobro jutro! ☀️ ${w ? w.icon + " " + w.temp + "°C" : ""}, more ${w?.sea || 20}°C — savršen dan za avanturu!
+
+${w?.waveHeight && w.waveHeight < 0.5 ? "More je mirno kao ulje — idealno za izlet brodom! 🚤" : ""}${region === "istra" ? " Rt Kamenjak je rano ujutro prazan — ali zatvori ventilaciju frižidera zbog prašine na makadamu!" : region === "split" ? " Kašjuni plaža pod Marjanom — dođi prije 10h dok je prazna!" : ""}
+
+Kamo danas — plaže, izleti, ili tranzit prema sljedećoj destinaciji?`;
+      }
+      return `Dobro jutro! ☀️ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : "Prekrasan dan na Jadranu!"}
+
+Što planirate danas — plaže, izleti, kultura? 🌊`;
+    }
+    
+    // Default - general welcome
+    if (isCamperMode) {
+      return `Pozdrav! 🚐 Dobrodošli u ${regionName}. Ja sam vaš lokalni kamper expert — poznajem svaki parking, dump station i skrivenu uvalu na ovom dijelu obale.
+
+${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C, vjetar " + (w.windDir || "") + " " + (w.windSpeed || "") + " km/h" : ""}
+
+Što vam prvo treba — siguran parking za noćas, preporuka za plažu pristupačnu kamperom, ili nešto treće?`;
+    }
+    return `Pozdrav! 🌊 Dobrodošli u ${regionName}. Poznajem svaku skrivenu plažu i konubu na ovom dijelu obale.
+
+${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima? 🗺️`;
+  };
 
   // ═══ CAMPER-SPECIFIC QUICK QUESTIONS ═══
   const camperQuick = travelMode === "camper" ? [
@@ -373,7 +441,7 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
         </div>
 
         {/* Start */}
-        <button onClick={() => { if (region && travelMode) setStep("chat"); }}
+        <button onClick={() => { if (region && travelMode) { setStep("chat"); setTimeout(() => setMsgs([{ role: "assistant", text: generateIcebreaker() }]), 300); } }}
           disabled={!region || !travelMode}
           style={{
             width: "100%", padding: "18px", borderRadius: 18, border: "none",
@@ -536,7 +604,25 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
               border: `1px solid ${m.role === "user" ? "rgba(14,165,233,0.2)" : C.bord}`,
               fontSize: 14, lineHeight: 1.7, whiteSpace: "pre-wrap",
             }}>
-              {m.text}
+              {m.role === "assistant" ? m.text.split("\n").map((line, j) => {
+                // Parse [label](url) into rich buttons
+                const parts = line.split(/(\[[^\]]+\]\([^)]+\))/g);
+                return <div key={j} style={{ marginBottom: line === "" ? 4 : 0 }}>{parts.map((part, k) => {
+                  const linkMatch = part.match(/\[([^\]]+)\]\(([^)]+)\)/);
+                  if (linkMatch) {
+                    return <a key={k} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" style={{
+                      display: "inline-block", margin: "6px 4px 2px 0", padding: "8px 16px", borderRadius: 12,
+                      background: "linear-gradient(135deg, #0ea5e9, #0284c7)", color: "#fff",
+                      fontSize: 12, fontWeight: 600, textDecoration: "none",
+                      boxShadow: "0 2px 8px rgba(14,165,233,0.2)", transition: "all 0.2s",
+                    }}
+                      onMouseEnter={e => e.currentTarget.style.transform = "translateY(-1px)"}
+                      onMouseLeave={e => e.currentTarget.style.transform = ""}
+                    >{linkMatch[1]} →</a>;
+                  }
+                  return <span key={k}>{part}</span>;
+                })}</div>;
+              }) : m.text}
             </div>
           </div>
         ))}
