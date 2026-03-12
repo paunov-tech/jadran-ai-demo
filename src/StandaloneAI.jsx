@@ -310,6 +310,73 @@ Format: [Tekst](URL). Nikad ne izmišljaj linkove.`;
     const isCamperMode = travelMode === "camper" || niche === "camper";
     const w = weather;
     
+    // ─── RETURNING USER DETECTION ───
+    let isReturning = false;
+    let hoursSinceLast = 0;
+    let visitCount = 1;
+    try {
+      const lastVisit = localStorage.getItem("jadran_last_chat");
+      const vc = parseInt(localStorage.getItem("jadran_visit_count") || "0");
+      visitCount = vc + 1;
+      localStorage.setItem("jadran_visit_count", String(visitCount));
+      localStorage.setItem("jadran_last_chat", Date.now().toString());
+      if (lastVisit) {
+        hoursSinceLast = (Date.now() - parseInt(lastVisit)) / 3600000;
+        if (hoursSinceLast >= 4) isReturning = true;
+      }
+    } catch {}
+
+    // ─── FOLLOW-UP SCENARIOS (returning user, 4+ hours) ───
+    if (isReturning && isCamperMode) {
+      const regionExps = filterByRegion(EXPERIENCES, region);
+      
+      // Scenario 1: "Jutro posle" (6-12h) — dnevni izleti
+      if (h >= 6 && h < 12) {
+        const boatTrip = regionExps.find(e => e.cat === "premium" || e.name.includes("Cave") || e.name.includes("Island")) || regionExps[0];
+        return `Dobro jutro! ☕ Nadam se da je noć u ${regionName} prošla odlično.
+
+${w ? w.icon + " Danas " + w.temp + "°C" + (w.windSpeed < 15 ? ", gotovo bez vjetra — savršen dan za more!" : ".") : "Prekrasan dan!"}${w?.waveHeight && w.waveHeight < 0.5 ? " More mirno kao ulje!" : ""}
+
+Većina gostiju danas ide na izlet — ${boatTrip ? `još ima mjesta!
+[${boatTrip.name} — ${boatTrip.price}€](${boatTrip.link})` : "pitaj me za preporuku!"}
+${isCamperMode ? "\nAko ste ipak za vožnju — treba li vam mapa lokalnih puteva sigurnih za kampere?" : ""}`;
+      }
+      
+      // Scenario 2: "Kasno popodne" (15-21h) — večera
+      if (h >= 15 && h < 21) {
+        const gastro = regionExps.find(e => e.cat === "gastro") || regionExps.find(e => e.name.includes("Wine"));
+        return `Hej! Bliži se vrijeme za večeru. 🍽️ Znam da je nakon cijelog dana najteže tražiti dobar restoran ${isCamperMode ? "s velikim parkingom" : ""}.
+
+${region === "split" ? "Moj prijedlog: Konoba Matoni, Podstrana — terasa nad morem, pašticada 14€. Imaju prostran parking za kampere!" : region === "istra" ? "Moj prijedlog: Konoba Batelina, Banjole kod Pule — svježa riba po kg, prostran ravan parking." : region === "dubrovnik" ? "Moj prijedlog: Na Pelješcu — stonske kamenice 1€/kom, domaće vino, parking bez stresa." : region === "kvarner" ? "Moj prijedlog: Konoba Nada, Vrbnik na Krku — domaća janjetina, pogled na more, parking na ulazu u selo." : "Pitaj me za preporuku konobe s parkingom u blizini!"}
+${gastro ? `\n[${gastro.name} — ${gastro.price}€](${gastro.link})` : ""}
+
+Treba li navigacija do parkinga ili imate drugi plan za večeras?`;
+      }
+      
+      // Scenario 3: "Spremanje za pokret" (48h+ ili default returning)
+      if (visitCount >= 3 || hoursSinceLast > 24) {
+        const booking = BOOKING_CITIES.find(c => c.region === region);
+        const nextRegion = region === "istra" ? "Kvarner" : region === "kvarner" ? "Dalmacija" : region === "split" ? "jug prema Dubrovniku" : region === "dubrovnik" ? "sjever prema Splitu" : "sljedeću destinaciju";
+        return `Pozdrav ponovo! 🚐 Vidim da ste već ${visitCount > 3 ? "nekoliko dana" : "par dana"} u regiji ${regionName}.
+
+${w ? w.icon + " " + w.temp + "°C" : ""} Ako planirate da se pomjerite prema ${nextRegion}, imam logistički savjet:
+${region === "istra" ? "Na Istarskom Ipsilonu pazi na bočni vjetar kod vijadukta Limska draga — kamperi III kategorije." : region === "kvarner" ? "Ako idete na otoke (Krk, Cres, Pag), kupite kartu za trajekt unaprijed da preskočite redove." : region === "split" ? "Magistrala kod Omiša (prevoj Dubci) ima bočni vjetar — kamperi s ceradom na 40 km/h." : "Pelješki most je besplatan — ne morate više kroz Neum!"}
+${booking ? `\nMali kampovi se brzo pune. Pronašao sam slobodne parcele za sutra:
+[Pogledaj smještaj — ${booking.name}](${booking.link})` : ""}
+
+Kamo dalje — trebate rutu ili preporuku za usput?`;
+      }
+    }
+    
+    // ─── RETURNING NON-CAMPER ───
+    if (isReturning) {
+      return `Dobrodošli natrag! 🌊 ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} u ${regionName}.
+
+Što planirate danas? Mogu preporučiti ${h < 12 ? "jutarnji izlet ili plažu" : h < 17 ? "popodnevnu aktivnost ili skrivenu uvalu" : "večeru s pogledom ili noćni izlaz"}. 🗺️`;
+    }
+    
+    // ─── FIRST VISIT — existing ice-breaker logic ───
+    
     // Weather-conditional (rain or strong wind)
     if (w && (w.windSpeed > 40 || w.icon === "🌧️" || w.icon === "🌦️" || w.icon === "⛈️")) {
       const windWarn = w.windSpeed > 40;
