@@ -43,6 +43,7 @@ const T = {
 
 export default function StandaloneAI() {
   const [step, setStep] = useState("setup"); // setup | chat
+  const [niche, setNiche] = useState(null); // "camper" | "local" | null — set from landing CTA
   const [lang, setLang] = useState("hr");
   const [region, setRegion] = useState(null);
   const [travelMode, setTravelMode] = useState(null);
@@ -76,9 +77,11 @@ export default function StandaloneAI() {
       .catch(() => {});
   }, [region]);
 
-  // Check premium from URL (after Stripe redirect)
+  // Check URL params: premium + niche mode
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const n = params.get("niche");
+    if (n === "camper" || n === "local") { setNiche(n); if (n === "camper") setTravelMode("camper"); }
     if (params.get("premium") === "true") {
       setPremium(true);
       try { localStorage.setItem("jadran_ai_premium", "1"); } catch {}
@@ -239,7 +242,7 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
           <div style={{ display: "flex", gap: 2, background: isNight ? "rgba(12,28,50,0.5)" : "rgba(255,255,255,0.5)", borderRadius: 12, padding: 3 }}>
             {LANGS.map(l => (
               <button key={l.code} onClick={() => setLang(l.code)}
-                style={{ padding: "4px 6px", background: lang === l.code ? "rgba(14,165,233,0.12)" : "transparent", border: lang === l.code ? "1px solid rgba(14,165,233,0.15)" : "1px solid transparent", borderRadius: 9, cursor: "pointer", fontSize: 14, lineHeight: 1 }}>
+                style={{ padding: "4px 6px", background: lang === l.code ? "rgba(14,165,233,0.12)" : "transparent", border: lang === l.code ? `1px solid ${C.accent}40` : "1px solid transparent", borderRadius: 9, cursor: "pointer", fontSize: 14, lineHeight: 1 }}>
                 {l.flag}
               </button>
             ))}
@@ -257,7 +260,7 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
         <div style={{ marginBottom: 28 }}>
           <div style={{ fontSize: 11, color: C.mut, letterSpacing: 3, marginBottom: 12, fontWeight: 500 }}>{t.mode}</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
-            {TRAVEL_MODES.map(m => (
+            {TRAVEL_MODES.filter(m => niche === "camper" ? m.id === "camper" : niche === "local" ? m.id !== "camper" : true).map(m => (
               <div key={m.id} onClick={() => setTravelMode(m.id)} style={{
                 padding: "16px 12px", borderRadius: 16, textAlign: "center", cursor: "pointer",
                 background: travelMode === m.id ? "rgba(14,165,233,0.12)" : C.card,
@@ -298,7 +301,7 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
           disabled={!region || !travelMode}
           style={{
             width: "100%", padding: "18px", borderRadius: 18, border: "none",
-            background: region && travelMode ? "linear-gradient(135deg, #0ea5e9, #0284c7)" : "rgba(255,255,255,0.06)",
+            background: region && travelMode ? "linear-gradient(135deg, #0ea5e9, #0284c7)" : (isNight ? "rgba(255,255,255,0.06)" : "rgba(12,74,110,0.08)"),
             color: "#fff", fontSize: 17, fontWeight: 600, cursor: region && travelMode ? "pointer" : "not-allowed",
             opacity: region && travelMode ? 1 : 0.4,
             fontFamily: "'DM Serif Display',Georgia,serif",
@@ -308,7 +311,7 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
         </button>
 
         {/* Free tier note */}
-        <div style={{ textAlign: "center", marginTop: 16, fontSize: 12, color: "rgba(255,255,255,0.3)" }}>
+        <div style={{ textAlign: "center", marginTop: 16, fontSize: 12, color: isNight ? "rgba(255,255,255,0.3)" : "rgba(12,74,110,0.4)" }}>
           {t.free3} · Premium {t.unlock.split("—")[1]}
         </div>
       </div>
@@ -322,7 +325,7 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
       <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
       {/* Header */}
-      <div style={{ padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.bord}`, flexShrink: 0 }}>
+      <div style={{ padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.bord}`, flexShrink: 0, background: isNight ? "transparent" : "rgba(255,255,255,0.4)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <button onClick={() => setStep("setup")} style={{ background: "none", border: "none", color: C.mut, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>{t.back}</button>
           <div style={{ width: 1, height: 20, background: C.bord }} />
@@ -351,8 +354,22 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
               ? "linear-gradient(180deg, #0f2b3d 0%, #0c4a6e 30%, #0ea5e9 65%, #38bdf8 80%, #7dd3fc 100%)"
               : "linear-gradient(180deg, #60a5fa 0%, #38bdf8 25%, #0ea5e9 50%, #0284c7 75%, #0369a1 100%)"
             }}>
-              {/* Sun/Moon */}
-              <div style={{ position: "absolute", top: "18%", left: "50%", transform: "translateX(-50%)", width: 60, height: 60, borderRadius: "50%", background: isNight ? "radial-gradient(circle, #fbbf24 30%, rgba(251,191,36,0.3) 60%, transparent 100%)" : "radial-gradient(circle, #fef08a 20%, #fbbf24 40%, rgba(251,191,36,0.2) 70%, transparent 100%)", boxShadow: "0 0 60px rgba(251,191,36,0.4), 0 0 120px rgba(251,191,36,0.15)", animation: "sunGlow 4s ease-in-out infinite" }} />
+              {/* Sun or Moon based on time */}
+              {isNight ? (
+                <div style={{ position: "absolute", top: "15%", left: "50%", transform: "translateX(-50%)" }}>
+                  <div style={{ width: 50, height: 50, borderRadius: "50%", background: "radial-gradient(circle at 35% 35%, #e2e8f0 0%, #94a3b8 50%, #64748b 100%)", boxShadow: "0 0 40px rgba(148,163,184,0.3), 0 0 80px rgba(148,163,184,0.1)", animation: "sunGlow 6s ease-in-out infinite" }} />
+                  {[{t:8,l:42,s:2},{t:14,l:55,s:1.5},{t:6,l:60,s:1},{t:18,l:38,s:1.5},{t:3,l:48,s:1}].map((st,i) => (
+                    <div key={i} style={{ position:"absolute", top:st.t, left:st.l, width:st.s, height:st.s, borderRadius:"50%", background:"rgba(255,255,255,0.6)" }} />
+                  ))}
+                </div>
+              ) : (
+                <div style={{ position: "absolute", top: "12%", left: "50%", transform: "translateX(-50%)", width: 70, height: 70, borderRadius: "50%", background: "radial-gradient(circle, #fef9c3 15%, #fde047 35%, #fbbf24 55%, rgba(251,191,36,0.2) 75%, transparent 100%)", boxShadow: "0 0 80px rgba(251,191,36,0.5), 0 0 160px rgba(251,191,36,0.2)", animation: "sunGlow 4s ease-in-out infinite" }}>
+                  {/* Sun rays */}
+                  {[0,45,90,135,180,225,270,315].map(deg => (
+                    <div key={deg} style={{ position:"absolute", top:"50%", left:"50%", width:2, height:12, background:"rgba(251,191,36,0.3)", transformOrigin:"center -12px", transform:`rotate(${deg}deg)`, borderRadius:1 }} />
+                  ))}
+                </div>
+              )}
               {/* Horizon glow */}
               <div style={{ position: "absolute", top: "55%", left: 0, right: 0, height: 80, background: "radial-gradient(ellipse 80% 100% at 50% 0%, rgba(251,191,36,0.15), transparent)", pointerEvents: "none" }} />
               {/* Animated sea */}
@@ -430,7 +447,7 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
                   </button>
                 ))}
               </div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.2)", marginTop: 14 }}>3 besplatna pitanja · Premium 5.99€</div>
+              <div style={{ fontSize: 11, color: isNight ? "rgba(255,255,255,0.2)" : "rgba(12,74,110,0.3)", marginTop: 14 }}>3 besplatna pitanja · Premium 5.99€</div>
             </div>
           </div>
         )}
@@ -468,7 +485,8 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
 
             {/* Activities — affiliate, always visible */}
             {(() => {
-              const acts = filterByRegion(EXPERIENCES, region).slice(0, 6);
+              const allActs = filterByRegion(EXPERIENCES, region);
+              const acts = (niche === 'camper' ? allActs.filter(a => ['adventure','nature'].includes(a.cat)) : niche === 'local' ? allActs.filter(a => a.cat !== 'nature' || true) : allActs).slice(0, 6);
               return acts.length > 0 && (
                 <div style={{ marginBottom: 20, padding: "0 4px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
@@ -591,7 +609,7 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
 
       {/* Free questions warning */}
       {!premium && freeLeft <= 0 && (
-        <div style={{ padding: "10px 20px", background: "rgba(245,158,11,0.06)", borderTop: "1px solid rgba(245,158,11,0.1)", textAlign: "center", flexShrink: 0 }}>
+        <div style={{ padding: "10px 20px", background: isNight ? "rgba(245,158,11,0.06)" : "rgba(245,158,11,0.1)", borderTop: "1px solid rgba(245,158,11,0.15)", textAlign: "center", flexShrink: 0 }}>
           <button onClick={() => setShowPaywall(true)} style={{ background: "none", border: "none", color: C.gold, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
             ⭐ Besplatna pitanja potrošena — {t.unlock}
           </button>
@@ -599,7 +617,7 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
       )}
 
       {/* Input */}
-      <div style={{ padding: "12px 16px", borderTop: `1px solid ${C.bord}`, display: "flex", gap: 8, flexShrink: 0 }}>
+      <div style={{ padding: "12px 16px", borderTop: `1px solid ${C.bord}`, display: "flex", gap: 8, flexShrink: 0, background: isNight ? "transparent" : "rgba(255,255,255,0.3)" }}>
         <input value={input} onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); } }}
           placeholder={t.placeholder}
@@ -608,7 +626,7 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
         <button onClick={sendMsg} disabled={loading || !input.trim()}
           style={{
             width: 48, height: 48, borderRadius: 16, border: "none",
-            background: input.trim() && !loading ? "linear-gradient(135deg, #0ea5e9, #0284c7)" : "rgba(255,255,255,0.06)",
+            background: input.trim() && !loading ? "linear-gradient(135deg, #0ea5e9, #0284c7)" : (isNight ? "rgba(255,255,255,0.06)" : "rgba(12,74,110,0.08)"),
             color: "#fff", fontSize: 18, cursor: input.trim() && !loading ? "pointer" : "not-allowed",
             display: "grid", placeItems: "center",
           }}>↑</button>

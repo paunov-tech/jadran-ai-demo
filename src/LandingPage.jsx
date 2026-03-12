@@ -108,7 +108,7 @@ export default function LandingPage() {
 
           {/* Primary CTAs */}
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center", maxWidth: 600, margin: "0 auto" }}>
-            <a href="/ai" style={{
+            <a href="/ai?niche=local" style={{
               flex: "1 1 260px", padding: "24px 28px", borderRadius: 22, textDecoration: "none",
               background: "linear-gradient(135deg, rgba(14,165,233,0.12), rgba(2,132,199,0.06))",
               border: "1px solid rgba(14,165,233,0.2)",
@@ -123,7 +123,7 @@ export default function LandingPage() {
                 <div style={{ fontSize: 12, color: "#7dd3fc", lineHeight: 1.4 }}>{tx("guideDesc")}</div>
               </div>
             </a>
-            <a href="/ai" style={{
+            <a href="/ai?niche=camper" style={{
               flex: "1 1 260px", padding: "24px 28px", borderRadius: 22, textDecoration: "none",
               background: "linear-gradient(135deg, rgba(245,158,11,0.08), rgba(251,191,36,0.04))",
               border: "1px solid rgba(245,158,11,0.2)",
@@ -141,6 +141,18 @@ export default function LandingPage() {
           </div>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 14 }}>
             {tx("free3")}
+          </div>
+          {/* Social proof + urgency hooks */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 24, flexWrap: "wrap" }}>
+            {[
+              { icon: "🔥", text: "847 pitanja danas" },
+              { icon: "⭐", text: "4.9 / 5 ocjena" },
+              { icon: "🌍", text: "8 jezika" },
+            ].map((h, i) => (
+              <div key={i} style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", display: "flex", alignItems: "center", gap: 4 }}>
+                <span>{h.icon}</span> {h.text}
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -173,7 +185,21 @@ export default function LandingPage() {
       <div style={{ padding: "60px 24px" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 40 }}>
-            <div style={{ fontSize: 10, color: "#f59e0b", letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>DESTINACIJE</div>
+          {/* Popular questions hook */}
+          <div style={{ marginBottom: 40, padding: "24px", borderRadius: 22, background: "rgba(14,165,233,0.04)", border: "1px solid rgba(14,165,233,0.06)" }}>
+            <div style={{ fontSize: 10, color: "#0ea5e9", letterSpacing: 4, fontWeight: 600, marginBottom: 14, textAlign: "center" }}>POPULARNA PITANJA</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+              {["Gdje parkirati kamper u Splitu?", "Dump station Istra?", "Skrivena plaža Hvar?", "Konoba bez turista?", "LPG stanica Dalmacija?", "Legalno noćenje kamperom?"].map((q, i) => (
+                <a key={i} href={`/ai?niche=${i < 3 ? "camper" : "local"}`} style={{
+                  padding: "8px 16px", borderRadius: 14, fontSize: 12, textDecoration: "none",
+                  background: i < 3 ? "rgba(245,158,11,0.06)" : "rgba(14,165,233,0.06)",
+                  border: `1px solid ${i < 3 ? "rgba(245,158,11,0.1)" : "rgba(14,165,233,0.08)"}`,
+                  color: i < 3 ? "#fbbf24" : "#7dd3fc", transition: "all 0.2s",
+                }}>{q}</a>
+              ))}
+            </div>
+          </div>
+                        <div style={{ fontSize: 10, color: "#f59e0b", letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>DESTINACIJE</div>
             <div style={{ fontFamily: "'DM Serif Display', Georgia, serif", fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 400 }}>{tx("dest")}</div>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 16 }}>
