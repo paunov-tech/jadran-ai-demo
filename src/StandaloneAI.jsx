@@ -326,7 +326,7 @@ export default function StandaloneAI() {
     if (params.get("premium") === "true") {
       setPremium(true);
       try { localStorage.setItem("jadran_ai_premium", "1"); } catch {}
-      window.history.replaceState({}, "", "/ai");
+      window.history.replaceState({}, "", "/ai" + (n ? "?niche=" + n : ""));
     }
     // Check localStorage
     try { 
@@ -354,12 +354,12 @@ export default function StandaloneAI() {
         setPremiumPlan(premData);
       } catch {}
       setShowSuccess(true);
-      window.history.replaceState({}, "", "/ai" + (niche ? "?niche=" + niche : ""));
+      window.history.replaceState({}, "", "/ai" + (n ? "?niche=" + n : ""));
     }
     // Auto-open paywall from landing "KUPI ODMAH"
     if (params.get("buy") === "true") {
       setShowPaywall(true);
-      window.history.replaceState({}, "", "/ai");
+      window.history.replaceState({}, "", "/ai" + (n ? "?niche=" + n : ""));
     }
   }, []);
 
@@ -832,16 +832,17 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
           </div>
         </div>
 
-        {/* Niche-specific hero — photo card with golden glow, clickable → Stripe */}
-        {niche && !premium && (
-          <div onClick={() => startCheckout("season")} style={{
-            borderRadius: 18, position: "relative", overflow: "hidden", cursor: "pointer",
-            border: "1px solid rgba(245,158,11,0.25)", marginBottom: 24,
-            boxShadow: "0 0 20px rgba(245,158,11,0.08), 0 0 60px rgba(245,158,11,0.04)",
+        {/* Niche photo hero — always visible when niche set */}
+        {niche && (
+          <div onClick={() => !premium && startCheckout("season")} style={{
+            borderRadius: 18, position: "relative", overflow: "hidden",
+            cursor: premium ? "default" : "pointer",
+            border: premium ? `1px solid rgba(34,197,94,0.25)` : "1px solid rgba(245,158,11,0.25)", marginBottom: 24,
+            boxShadow: premium ? "0 0 20px rgba(34,197,94,0.08)" : "0 0 20px rgba(245,158,11,0.08), 0 0 60px rgba(245,158,11,0.04)",
             transition: "all 0.3s",
           }}
-            onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 0 30px rgba(245,158,11,0.15), 0 0 80px rgba(245,158,11,0.08)"; e.currentTarget.style.borderColor = "rgba(245,158,11,0.4)"; }}
-            onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 0 20px rgba(245,158,11,0.08), 0 0 60px rgba(245,158,11,0.04)"; e.currentTarget.style.borderColor = "rgba(245,158,11,0.25)"; }}>
+            onMouseEnter={e => { if (!premium) { e.currentTarget.style.boxShadow = "0 0 30px rgba(245,158,11,0.15), 0 0 80px rgba(245,158,11,0.08)"; e.currentTarget.style.borderColor = "rgba(245,158,11,0.4)"; }}}
+            onMouseLeave={e => { if (!premium) { e.currentTarget.style.boxShadow = "0 0 20px rgba(245,158,11,0.08), 0 0 60px rgba(245,158,11,0.04)"; e.currentTarget.style.borderColor = "rgba(245,158,11,0.25)"; }}}>
             <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${niche === "camper" ? "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?w=600&q=75" : niche === "sailing" ? "https://images.unsplash.com/photo-1540946485063-a40da27545f8?w=600&q=75" : niche === "cruiser" ? "https://images.unsplash.com/photo-1548574505-5e239809ee19?w=600&q=75" : "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&q=75"})`, backgroundSize: "cover", backgroundPosition: "center" }} />
             <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${niche === "camper" ? "rgba(245,158,11,0.7)" : niche === "sailing" ? "rgba(6,182,212,0.65)" : niche === "cruiser" ? "rgba(168,85,247,0.65)" : "rgba(14,165,233,0.65)"} 0%, rgba(15,23,42,0.88) 100%)` }} />
             <div style={{ position: "relative", padding: "20px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -853,15 +854,16 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
                   {niche === "camper" ? t.nicCamperSub : niche === "sailing" ? t.nicSailingSub : niche === "cruiser" ? t.nicCruiserSub : t.nicLocalSub}
                 </div>
               </div>
-              <div style={{ padding: "8px 14px", borderRadius: 10, background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#0f172a", fontWeight: 800, fontSize: 12, flexShrink: 0, boxShadow: "0 2px 8px rgba(245,158,11,0.3)" }}>
-                ⭐ PREMIUM
-              </div>
+              {premium
+                ? <div style={{ padding: "8px 14px", borderRadius: 10, background: "linear-gradient(135deg, #22c55e, #16a34a)", color: "#fff", fontWeight: 700, fontSize: 11, flexShrink: 0 }}>⭐ PREMIUM</div>
+                : <div style={{ padding: "8px 14px", borderRadius: 10, background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#0f172a", fontWeight: 800, fontSize: 12, flexShrink: 0, boxShadow: "0 2px 8px rgba(245,158,11,0.3)" }}>⭐ PREMIUM</div>
+              }
             </div>
           </div>
         )}
 
-        {/* J logo + title for non-niche or premium */}
-        {(!niche || premium) && (
+        {/* J logo + title — only when no niche (direct /ai) */}
+        {!niche && (
           <div style={{ textAlign: "center", marginBottom: 32 }}>
             <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 14 }}>
               <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 22, fontWeight: 800, color: "#fff" }}>J</div>
