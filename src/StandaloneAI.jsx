@@ -62,7 +62,13 @@ export default function StandaloneAI() {
   const [weather, setWeather] = useState(null);
   const [regionImgs, setRegionImgs] = useState({});
 
-  useEffect(() => { if (msgs.length > 0) setTimeout(() => chatEnd.current?.scrollTo({ top: chatEnd.current.scrollHeight, behavior: "smooth" }), 100); }, [msgs]);
+  useEffect(() => { 
+    if (msgs.length > 0) {
+      requestAnimationFrame(() => {
+        chatEnd.current?.scrollTo({ top: chatEnd.current.scrollHeight, behavior: "smooth" });
+      });
+    }
+  }, [msgs, loading]);
   // Fetch live weather
   useEffect(() => {
     fetch("/api/weather").then(r => r.json()).then(d => {
@@ -577,7 +583,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
       </div>
 
       {/* Messages */}
-      <div ref={chatEnd} style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "0", display: "flex", flexDirection: "column", gap: 10, justifyContent: msgs.length > 0 ? "flex-end" : "flex-start" }}>
+      <div ref={chatEnd} style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "0", display: "flex", flexDirection: "column", gap: 10 }}>
         {msgs.length === 0 && (
           <div style={{ padding: 0 }}>
             {/* ═══ VIBE JADRANA — SHOWROOM ═══ */}
@@ -685,6 +691,9 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
           </div>
         )}
 
+        {/* Spacer pushes messages to bottom when few */}
+        {msgs.length > 0 && <div style={{ flex: 1 }} />}
+
         {msgs.map((m, i) => (
           <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", padding: "0 16px" }}>
             <div style={{
@@ -748,7 +757,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
         )}
 
         {loading && (
-          <div style={{ display: "flex", justifyContent: "flex-start" }}>
+          <div style={{ display: "flex", justifyContent: "flex-start", padding: "0 16px" }}>
             <div style={{ padding: "12px 20px", borderRadius: "18px 18px 18px 4px", background: C.card, border: `1px solid ${C.bord}` }}>
               <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                 {[0, 1, 2].map(d => <div key={d} style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: `pulse 1.2s ${d * 0.2}s infinite` }} />)}
@@ -1026,9 +1035,8 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
             })()}
           </div>
         )}
+        <div style={{ minHeight: 8, flexShrink: 0 }} />
       </div>
-
-      {/* Free questions warning */}
       {!premium && trialExpired && (
         <div style={{ padding: "10px 20px", background: isNight ? "rgba(245,158,11,0.06)" : "rgba(245,158,11,0.1)", borderTop: "1px solid rgba(245,158,11,0.15)", textAlign: "center", flexShrink: 0 }}>
           <button onClick={() => setShowPaywall(true)} style={{ background: "none", border: "none", color: C.gold, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
