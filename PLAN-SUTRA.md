@@ -1,89 +1,85 @@
-# JADRAN.AI — Plan za sutra (13.03.2026)
+# JADRAN.AI — Plan za 13.03.2026 (četvrtak)
 
-## Backup potvrda
-- **Tag:** `v2.0-session4-final` (142 commita)
-- **Prethodni tag:** `v1.0-landing-final` (landing zaključan)
-- **Repo:** github.com/paunov-tech/jadran-ai-demo
-- **Live:** jadran.ai / jadran-ai-demo.vercel.app
+## Status: PRODUCTION READY
+- Tag: `v2.0-session4-final` · 150 commita · 21/21 testova PASS
+- Live: jadran.ai
 
 ---
 
-## Trenutni status: SPREMAN ZA REKLAMU
+## JUTRO (09:00–10:00) — Smoke test na mobilnom
 
-### Funkcionalno ✅
-- AI Chat radi (Sonnet 4, temperature 0.4)
-- 4 niše: Kamper / Lokalni / Nautika / Kruzer
-- DHMZ NAVTEX za nautičare
-- Jadran Lens (📷 kamera)
-- Walkie-Talkie (📻 hands-free)
-- 10 poruka besplatno → Paywall
-- Stripe LIVE: 4.99€/tjedan, 9.99€/sezona
-- Post-purchase potvrda
-- 31 GYG + 7 Booking affiliate linkovi (svi ispravni)
-- 8 jezika (uklj. AT Kärntner dijalekt)
-- AI guardrails (off-topic + ton konciježa)
+Sve u **incognito** modu (čist cache):
 
-### Vizualno ✅
-- Landing: foto tabovi, video hero, demo, destinacije, trending
-- Setup: foto hero kartica (zlatni sjaj), social proof, auto-start
-- Chat: Vibe dashboard, NAVTEX, mini bar
-- Footer: Stripe badge
-- Mobile: touch radi, responsive, safe-area
+1. `jadran.ai` → landing učitava brzo, foto tabovi, nula emoji
+2. Tap Kamper → setup (foto kartica klikabilna, 9.99€) → tap Istra → chat INSTANT
+3. Icebreaker: profesionalan ton, nula emoji, tačna regija
+4. Pitaj: "Kako da zamenim ulje na Mercedesu?" → odbijanje
+5. Pitaj: "JAOOOO LUDILOOO 🥳🥳 stižemo u Istru" → smiren odgovor
+6. Pošalji 10 poruka → 11. → paywall se pojavi
+7. Testiraj Stripe (4242 4242 4242 4242, bilo koji datum/CVC)
+8. `jadran.ai/api/health` → API OK
+9. Nautika mod → provjeri NAVTEX karticu
+10. Kruzer mod → Dubrovnik → provjeri Viator linkove u chatu
 
----
+## JUTRO (10:00–11:00) — Analytics
 
-## PLAN ZA SUTRA — REKLAMNA KAMPANJA
+**Plausible Analytics** (lakši od GA, GDPR-compliant, bez cookie bannera):
+- Registracija: plausible.io
+- Dodaj script u index.html
+- Custom events: `chat_start`, `msg_sent`, `paywall_shown`, `checkout_click`, `payment_success`
 
-### Jutro (9:00-10:00) — Provjera
-1. **Test sva 4 toka** na mobilnom (incognito):
-   - Landing → Kamper → Istra → Chat (10 poruka → paywall)
-   - Landing → Nautika → Split → Chat (NAVTEX vidljiv)
-   - Landing → Kruzer → Dubrovnik → Chat
-   - Landing → Lokalni → Kvarner → Chat
-2. **Test plaćanje** (Stripe test kartica 4242 4242 4242 4242)
-3. **Test guardrails** ("Kako promijeniti ulje?" + "LUDILOOO 🥳🥳")
+## PODNE (11:00–13:00) — Reklame
 
-### Jutro (10:00-11:00) — Analytics
-4. **Dodaj Google Analytics / Plausible** (mjerenje konverzija)
-   - Events: page_view, chat_start, msg_sent, paywall_shown, checkout_click, payment_success
-   - Funnel: Landing → Setup → Chat → Paywall → Payment
+### Facebook/Instagram:
+- Audience: DE + AT + CH, 30-55, interesi: Camping, Kroatien, Segeln, Adria
+- Creative: screenshot landing sa foto tabovima
+- Tekst: "Dein persönlicher Adria-Guide. 10 Nachrichten gratis."
+- Budget: 15€/dan test, 3 ad seta
+- Landing: jadran.ai (auto-detect jezik)
 
-### Podne (11:00-13:00) — Ad setup
-5. **Facebook/Instagram Ads:**
-   - Audience: DE + AT + EN, 25-55, interests: camping, sailing, Croatia vacation
-   - Creative: screenshot landing + "Dein Adria-Guide ab 4,99€"
-   - Budget: 20€/dan test
-   - Landing: jadran.ai (auto-detect language)
+### Google Ads:
+- Keywords: "croatia camper route", "adriatic sailing guide", "dubrovnik cruise shore excursion"
+- Deep link po niši: jadran.ai/ai?niche=camper
+- Budget: 10€/dan test
 
-6. **Google Ads:**
-   - Keywords: "Croatia camper route", "Adriatic sailing guide", "Dubrovnik cruise what to do"
-   - Landing: jadran.ai/ai?niche=camper (deep link po niši)
+## POPODNE (14:00–16:00) — Monitoring
 
-### Popodne — Monitoring
-7. **Pratiti:**
-   - Vercel Analytics (traffic)
-   - Stripe Dashboard (prihodi)
-   - /api/health (API zdravlje)
-   - Console errors u browseru
+- Vercel Analytics → traffic
+- Stripe Dashboard → prihodi
+- /api/health → API zdravlje
+- Browser console → JS errors
 
 ---
 
 ## PRIORITETI PRVE SEDMICE
 
-| Prioritet | Zadatak | Razlog |
-|-----------|---------|--------|
-| 🔴 P0 | Rate limiting na API | Sprječava abuse/DDoS |
-| 🔴 P0 | Error monitoring (Sentry) | Hvata JS errors u produkciji |
-| 🟡 P1 | Analytics events | Mjerenje konverzijskog funela |
-| 🟡 P1 | A/B test cijena (4.99 vs 6.99) | Optimizacija revenue |
-| 🟢 P2 | Više B2B partnera | Konobe, kampovi u bazi |
-| 🟢 P2 | Admin dashboard | Revenue + usage pregled |
-| 🟢 P2 | Web Push (VAPID) | Notifikacije za zatvorene tabove |
+| Prio | Zadatak | Zašto |
+|------|---------|-------|
+| P0 | Rate limiting | Spriječava abuse (1 korisnik = 100 API poziva/dan) |
+| P0 | Sentry error monitoring | Hvata JS errors u produkciji |
+| P1 | Plausible analytics | Mjerenje konverzijskog funnela |
+| P1 | A/B test cijena 4.99 vs 6.99 | Optimizacija revenue |
+| P2 | Admin dashboard | Revenue + usage pregled |
+| P2 | Više B2B partnera u bazi | Konobe, kampovi, marine |
 
 ---
 
-## POZNATI ISSUES (ne blokiraju launch)
-- App.jsx ima stale 5.99€ cijene (NEVER MODIFY policy)
-- Viator template definiran ali nekorišten (budući partner)
-- Service Worker u self-destruct modu (namjerno)
-- Nema rate limitinga (dodati P0 prvu sedmicu)
+## ŠTA JE ZAVRŠENO DANAS (session 4+5)
+
+- Dynamic Prompt Routing (Lego blocks)
+- Adriatic Skipper Pro + Shore Excursion Time-Master
+- 500+ stringova × 8 jezika (AT Kärntner dijalekt)
+- DHMZ NAVTEX za nautičare
+- Pravi trial (10 poruka, ne lažnih 24h)
+- Cijene: 4.99€/9.99€ (Stripe LIVE)
+- 63 affiliate linka (49 GYG + 9 Viator + 7 Booking)
+- Foto tabovi + foto hero kartica (zlatni sjaj)
+- Social proof blok (2847 korisnika, 47€ ušteda, 4.8 rating)
+- AI guardrails (off-topic + koncijež ton)
+- Icebreaker bez emoji, profesionalan
+- Instant tranzicije (0ms umjesto 450ms)
+- Kompletni SEO (robots, sitemap, hreflang, OG image, structured data)
+- Perf: fontovi u head, SD video, preconnect
+- Region race condition fix
+- Mobile touch fix
+- KRITIČNO: Missing imports fix (MARINAS/ANCHORAGES/CRUISE_PORTS)
