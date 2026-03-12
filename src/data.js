@@ -64,6 +64,21 @@ export const EXPERIENCES = [
     link: GYG("rijeka-l1298/from-rijeka-cres-and-losinj-island-full-day-trip-t632148") },
   { id: 32, name: "Opatija Evening Cruise", emoji: "🌙", price: 45, dur: "2h", rating: 4.8, cat: "premium", region: "kvarner",
     link: GYG("opatija-l1296/opatija-riviera-sunset-boat-tour-t789234") },
+  // ═══ VIATOR — Shore Excursions & Skip-the-Line ═══
+  { id: 40, name: "Dubrovnik Shore Excursion + Cavtat", emoji: "🚢", price: 85, dur: "4h", rating: 4.9, cat: "premium", region: "dubrovnik",
+    link: VIA("Dubrovnik/Dubrovnik-Shore-Excursion-Private-Tour-of-Dubrovnik-and-Cavtat/d904-5360PRTDBVCAVTAT") },
+  { id: 41, name: "GoT Tour + City Walls (Skip Line)", emoji: "🏰", price: 55, dur: "3h", rating: 4.8, cat: "culture", region: "dubrovnik",
+    link: VIA("Dubrovnik/Dubrovnik-Shore-Excursion-Viator-Exclusive-Game-of-Thrones-Tour/d904-5360PRTDBGOT") },
+  { id: 42, name: "Dubrovnik Cable Car + Old Town Tour", emoji: "🚡", price: 65, dur: "3.5h", rating: 4.7, cat: "culture", region: "dubrovnik",
+    link: VIA("Dubrovnik/Dubrovnik-Shore-Excursion-The-Cruise-Ship-Passenger-Tour/d904-100763P6") },
+  { id: 43, name: "Dubrovnik Srđ Panorama + Old Town", emoji: "🏔️", price: 95, dur: "4h", rating: 4.9, cat: "premium", region: "dubrovnik",
+    link: VIA("Dubrovnik/Dubrovnik-Above-and-Beyond-Srdj-hill-panorama-and-guided-Old-Town-SHORE-EXCURSION/d904-71079P8") },
+  { id: 44, name: "Split Walking Tour Shore Excursion", emoji: "🏛️", price: 30, dur: "2h", rating: 4.8, cat: "culture", region: "split",
+    link: VIA("Split/Split-Walking-Tour/d562-5765P1") },
+  { id: 45, name: "Krka Falls from Cruise Port", emoji: "🌊", price: 75, dur: "8h", rating: 4.7, cat: "adventure", region: "zadar",
+    link: VIA("Sibenik/Krka-Waterfalls-Day-Trip/d4400-5158KRKA") },
+  { id: 46, name: "Montenegro Day Trip from Dubrovnik", emoji: "🇲🇪", price: 55, dur: "10h", rating: 4.6, cat: "adventure", region: "dubrovnik",
+    link: VIA("Dubrovnik/Dubrovnik-to-Montenegro-Day-Trip/d904-3658MONTE") },
 ];
 
 export const GEMS = [
