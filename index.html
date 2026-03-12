@@ -84,10 +84,19 @@
   </div>
   <script type="module" src="/src/main.jsx"></script>
   <script>
+    // Force-clear any stale service workers
     if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/sw.js").catch(() => {});
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(r => r.unregister());
       });
+      // Re-register fresh after clearing
+      window.addEventListener("load", () => {
+        setTimeout(() => navigator.serviceWorker.register("/sw.js").catch(() => {}), 3000);
+      });
+    }
+    // Clear old caches
+    if ("caches" in window) {
+      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
     }
   </script>
 </body>

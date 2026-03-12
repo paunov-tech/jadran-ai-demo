@@ -1,5 +1,5 @@
 // JADRAN Service Worker — Offline-first for campers with spotty signal
-const CACHE_NAME = "jadran-v2";
+const CACHE_NAME = "jadran-v3";
 const SHELL = [
   "/",
   "/ai",
