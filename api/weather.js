@@ -6,8 +6,10 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    // Current weather + 7-day forecast + marine data
-    const lat = 43.4917, lon = 16.5531;
+    // Accept region coordinates via query params, default to Split/Podstrana
+    const lat = parseFloat(req.query?.lat) || 43.4917;
+    const lon = parseFloat(req.query?.lon) || 16.5531;
+    const loc = req.query?.loc || "Podstrana-Split";
     const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,pressure_msl,cloud_cover&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=Europe/Zagreb&forecast_days=2`;
     const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=sea_surface_temperature,wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period&hourly=wave_height,wave_period,swell_wave_height&timezone=Europe/Zagreb&forecast_days=1`;
 

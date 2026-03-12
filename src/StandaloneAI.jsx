@@ -62,15 +62,39 @@ export default function StandaloneAI() {
   const scrollBox = useRef(null);
   const scrollAnchor = useRef(null);
   const [weather, setWeather] = useState(null);
+  const [weatherTime, setWeatherTime] = useState(null);
   const [regionImgs, setRegionImgs] = useState({});
 
   useEffect(() => { scrollAnchor.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [msgs, loading]);
-  // Fetch live weather
+  
+  // Region → coordinates (coastal points for accurate marine data)
+  const COORDS = {
+    split: { lat: 43.49, lon: 16.55, loc: "Split-Podstrana" },
+    makarska: { lat: 43.30, lon: 17.02, loc: "Makarska" },
+    dubrovnik: { lat: 42.64, lon: 18.09, loc: "Dubrovnik" },
+    zadar: { lat: 44.12, lon: 15.23, loc: "Zadar" },
+    istra: { lat: 45.08, lon: 13.64, loc: "Rovinj-Istra" },
+    kvarner: { lat: 45.34, lon: 14.31, loc: "Opatija-Kvarner" },
+  };
+  
+  // Fetch weather per region + auto-refresh every 60s
   useEffect(() => {
-    fetch("/api/weather").then(r => r.json()).then(d => {
-      if (d.current?.temp) setWeather(d.current);
-    }).catch(() => {});
-  }, []);
+    const fetchWx = () => {
+      const c = COORDS[region] || COORDS.split;
+      fetch(`/api/weather?lat=${c.lat}&lon=${c.lon}&loc=${c.loc}`)
+        .then(r => r.json())
+        .then(d => { 
+          if (d.current?.temp) { 
+            setWeather({ ...d.current, location: c.loc }); 
+            setWeatherTime(new Date()); 
+          }
+        })
+        .catch(() => {});
+    };
+    fetchWx();
+    const interval = setInterval(fetchWx, 60000); // Every 60 seconds
+    return () => clearInterval(interval);
+  }, [region]);
   // Load region image when region selected
   useEffect(() => {
     if (!region || regionImgs[region]) return;
@@ -584,7 +608,15 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
         {/* ═══ JADRAN VIBE — Maritime Dashboard ═══ */}
         {msgs.length > 0 && weather && (
           <div style={{ flexShrink: 0, borderBottom: `1px solid ${C.bord}` }}>
-            {/* Main row */}
+            {/* LIVE location label */}
+            <div style={{ padding: "6px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 4px rgba(34,197,94,0.5)", animation: "pulse 2s infinite" }} />
+                <span style={{ fontSize: 9, color: "#22c55e", fontWeight: 600, letterSpacing: 2 }}>LIVE</span>
+                <span style={{ fontSize: 9, color: C.mut }}>📍 {weather.location || "Jadran"}</span>
+              </div>
+              <span style={{ fontSize: 9, color: C.mut }}>{weatherTime ? weatherTime.toLocaleTimeString("hr", { hour: "2-digit", minute: "2-digit" }) : ""}</span>
+            </div>
             <div style={{ padding: "10px 16px 6px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 4 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ textAlign: "center" }}>
@@ -635,9 +667,16 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
             {weather ? <div style={{ padding: "0 0 8px" }}>
               {/* Header */}
               <div style={{ padding: "16px 16px 12px", textAlign: "center" }}>
-                <div style={{ fontSize: 9, letterSpacing: 5, color: C.accent, fontWeight: 600, marginBottom: 4 }}>VIBE JADRANA</div>
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 6px rgba(34,197,94,0.6)", animation: "pulse 2s infinite" }} />
+                  <span style={{ fontSize: 9, letterSpacing: 5, color: "#22c55e", fontWeight: 600 }}>LIVE</span>
+                  <span style={{ fontSize: 9, letterSpacing: 3, color: C.accent, fontWeight: 600 }}>VIBE JADRANA</span>
+                </div>
                 <div style={{ fontFamily: "'Playfair Display','DM Serif Display',Georgia,serif", fontSize: 22, fontWeight: 700 }}>
                   {travelMode === "camper" ? "Stanje na cesti i moru" : travelMode === "sailing" ? "Pomorske prilike" : "Trenutno na Jadranu"}
+                </div>
+                <div style={{ fontSize: 11, color: C.mut, marginTop: 4 }}>
+                  📍 {weather.location || "Jadran"} · Ažurirano {weatherTime ? weatherTime.toLocaleTimeString("hr", { hour: "2-digit", minute: "2-digit" }) : "—"}
                 </div>
               </div>
 
@@ -730,7 +769,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
               {/* Lučka kapetanija note */}
               <div style={{ textAlign: "center", padding: "4px 16px 8px" }}>
                 <div style={{ fontSize: 9, color: isNight ? "rgba(255,255,255,0.15)" : "rgba(12,74,110,0.2)", letterSpacing: 1 }}>
-                  Podaci: Open-Meteo Marine API · Lokacija: Podstrana-Split · Osvježavanje svakih 15 min
+                  Podaci: Open-Meteo Marine API · Lokacija: {weather.location || "Jadran"} · Osvježavanje svaku minutu
                 </div>
               </div>
             </div> : <div style={{ padding: 40, textAlign: "center", color: C.mut, fontSize: 13 }}>Učitavam podatke...</div>}
