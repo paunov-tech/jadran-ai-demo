@@ -157,7 +157,7 @@ export default function LandingPage() {
             }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.3)"; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(14,165,233,0.1)"; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.15)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
-              <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 22, flexShrink: 0 }}>🗺️</div>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 22, flexShrink: 0 }}>🚗</div>
               <div>
                 <div style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#f0f4f8" }}>Lokalni vodič</div>
                 <div style={{ fontSize: 12, color: "#7dd3fc", marginTop: 2 }}>Plaže, konobe, izleti</div>

@@ -44,7 +44,9 @@ const T = {
 
 export default function StandaloneAI() {
   const [step, setStep] = useState("setup"); // setup | chat
-  const [niche, setNiche] = useState(null); // "camper" | "local" | null — set from landing CTA
+  const [niche, setNiche] = useState(null);
+  const [camperLen, setCamperLen] = useState("");
+  const [camperHeight, setCamperHeight] = useState(""); // "camper" | "local" | null — set from landing CTA
   const [lang, setLang] = useState("hr");
   const [region, setRegion] = useState(null);
   const [travelMode, setTravelMode] = useState(null);
@@ -125,6 +127,7 @@ export default function StandaloneAI() {
     if (n === "camper" || n === "local") { setNiche(n); if (n === "camper") setTravelMode("camper"); }
     if (n === "sailing") { setNiche(n); setTravelMode("sailing"); }
     if (n === "cruiser") { setNiche(n); setTravelMode("cruiser"); }
+    if (n === "local") { setNiche(n); setTravelMode("apartment"); }
     if (params.get("premium") === "true") {
       setPremium(true);
       try { localStorage.setItem("jadran_ai_premium", "1"); } catch {}
@@ -241,6 +244,8 @@ export default function StandaloneAI() {
         body: JSON.stringify({
           // Dynamic routing — backend assembles prompt from Lego blocks
           mode: travelMode || "default",
+          camperLen: camperLen || undefined,
+          camperHeight: camperHeight || undefined,
           region,
           lang,
           weather: weather || null,
@@ -503,34 +508,83 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
           </div>
         </div>
 
-        {/* Title — matches landing visual DNA */}
-        <div style={{ textAlign: "center", marginBottom: 36 }}>
+        {/* Niche-specific hero */}
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
           <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 14 }}>
             <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 22, fontWeight: 800, color: "#fff" }}>J</div>
             <span style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 20, fontWeight: 700, letterSpacing: 2, color: C.text }}>JADRAN</span>
           </div>
-          <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 28, fontWeight: 700, lineHeight: 1.2, marginBottom: 8 }}>{t.title}</div>
-          <div style={{ fontSize: 14, color: C.mut, lineHeight: 1.5 }}>{t.sub}</div>
+          
+          {niche === "camper" && <>
+            <div style={{ fontSize: 40, marginBottom: 8 }}>🚐</div>
+            <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 26, fontWeight: 700, lineHeight: 1.2, marginBottom: 6 }}>Kamper vodič</div>
+            <div style={{ fontSize: 14, color: C.mut }}>Parking, rute, dump station, upozorenja za kampere</div>
+          </>}
+          {niche === "local" && <>
+            <div style={{ fontSize: 40, marginBottom: 8 }}>🚗</div>
+            <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 26, fontWeight: 700, lineHeight: 1.2, marginBottom: 6 }}>Lokalni vodič</div>
+            <div style={{ fontSize: 14, color: C.mut }}>Plaže, konobe, skrivena mjesta — prilagođeno za automobil</div>
+          </>}
+          {niche === "sailing" && <>
+            <div style={{ fontSize: 40, marginBottom: 8 }}>⛵</div>
+            <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 26, fontWeight: 700, lineHeight: 1.2, marginBottom: 6 }}>Nautički vodič</div>
+            <div style={{ fontSize: 14, color: C.mut }}>Marine, sidrišta, vjetar, konobe s mora</div>
+          </>}
+          {niche === "cruiser" && <>
+            <div style={{ fontSize: 40, marginBottom: 8 }}>🚢</div>
+            <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 26, fontWeight: 700, lineHeight: 1.2, marginBottom: 6 }}>Kruzer vodič</div>
+            <div style={{ fontSize: 14, color: C.mut }}>Maksimum u 8 sati — plan po minutu, skip-the-line</div>
+          </>}
+          {!niche && <>
+            <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 26, fontWeight: 700, lineHeight: 1.2, marginBottom: 6 }}>{t.title}</div>
+            <div style={{ fontSize: 14, color: C.mut }}>{t.sub}</div>
+          </>}
         </div>
 
-        {/* Travel mode */}
-        <div style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 11, color: C.mut, letterSpacing: 3, marginBottom: 12, fontWeight: 500 }}>{t.mode}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
-            {TRAVEL_MODES.filter(m => niche === "camper" ? m.id === "camper" : niche === "cruiser" ? m.id === "cruiser" : niche === "local" ? !["camper","cruiser"].includes(m.id) : true).map(m => (
-              <div key={m.id} onClick={() => setTravelMode(m.id)} style={{
-                padding: "16px 12px", borderRadius: 16, textAlign: "center", cursor: "pointer",
-                background: travelMode === m.id ? "rgba(14,165,233,0.12)" : C.card,
-                border: `1px solid ${travelMode === m.id ? "#0ea5e9" : C.bord}`,
-                transition: "all 0.2s", transform: travelMode === m.id ? "scale(1.03)" : "scale(1)",
-              }}>
-                <div style={{ fontSize: 28, marginBottom: 6 }}>{m.emoji}</div>
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{m.name}</div>
-                <div style={{ fontSize: 10, color: C.mut, marginTop: 2 }}>{m.desc}</div>
+        {/* Camper size picker — only for camper niche */}
+        {niche === "camper" && (
+          <div style={{ marginBottom: 24, padding: "16px", borderRadius: 16, background: "rgba(245,158,11,0.04)", border: "1px solid rgba(245,158,11,0.1)" }}>
+            <div style={{ fontSize: 11, color: C.gold, letterSpacing: 3, marginBottom: 12, fontWeight: 600 }}>GABARITI VOZILA</div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, color: C.mut, marginBottom: 4 }}>Dužina (m)</div>
+                <input value={camperLen} onChange={e => setCamperLen(e.target.value)} placeholder="npr. 7.5"
+                  type="number" step="0.1" min="4" max="15"
+                  style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1px solid ${C.bord}`, background: C.card, color: C.text, fontSize: 16, fontFamily: "inherit", outline: "none" }} />
               </div>
-            ))}
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, color: C.mut, marginBottom: 4 }}>Visina (m)</div>
+                <input value={camperHeight} onChange={e => setCamperHeight(e.target.value)} placeholder="npr. 3.2"
+                  type="number" step="0.1" min="1.5" max="5"
+                  style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1px solid ${C.bord}`, background: C.card, color: C.text, fontSize: 16, fontFamily: "inherit", outline: "none" }} />
+              </div>
+            </div>
+            <div style={{ fontSize: 10, color: C.mut, marginTop: 8, textAlign: "center" }}>
+              {camperLen && camperHeight ? `Vaš kamper: ${camperLen}m × ${camperHeight}m — prilagođavamo preporuke` : "Opcionalno — ali pomaže za preciznije rute i parkinge"}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Travel mode — only if no niche set (direct /ai access) */}
+        {!niche && (
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ fontSize: 11, color: C.mut, letterSpacing: 3, marginBottom: 12, fontWeight: 500 }}>{t.mode}</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
+              {TRAVEL_MODES.map(m => (
+                <div key={m.id} onClick={() => setTravelMode(m.id)} style={{
+                  padding: "16px 12px", borderRadius: 16, textAlign: "center", cursor: "pointer",
+                  background: travelMode === m.id ? "rgba(14,165,233,0.12)" : C.card,
+                  border: `1px solid ${travelMode === m.id ? "#0ea5e9" : C.bord}`,
+                  transition: "all 0.2s", transform: travelMode === m.id ? "scale(1.03)" : "scale(1)",
+                }}>
+                  <div style={{ fontSize: 28, marginBottom: 6 }}>{m.emoji}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{m.name}</div>
+                  <div style={{ fontSize: 10, color: C.mut, marginTop: 2 }}>{m.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Region */}
         <div style={{ marginBottom: 36 }}>

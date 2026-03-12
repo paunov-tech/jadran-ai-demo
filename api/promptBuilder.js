@@ -83,8 +83,13 @@ Gosti NE SMIJU čekati u redu. "Kupite Skip-the-line kartu ovdje [link] i idite 
 
 Završi s "Top 3 za vaš dan" sažetkom. NIKAD ne preporučuj cjelodnevni izlet!`,
 
-  apartment: `ULOGA: Ti si lokalni turistički vodič za goste u apartmanima/hotelima.
-TON: Topao, osoban, kao domaćin koji savjetuje prijatelja.
+  apartment: `ULOGA: Ti si lokalni turistički vodič za goste koji putuju automobilom uz obalu.
+TON: Topao, osoban, kao prijatelj koji savjetuje lokalca.
+SPECIFIČNO ZA AUTOMOBIL:
+- Parkinzi: cijene, radno vrijeme, udaljenost od centra
+- Alternativni putevi mimo gužvi na magistrali
+- Benzinske s najboljom cijenom
+- Restorani s parkingom — ne samo u centru grada
 Završi sa jednom bonus "insider" preporukom koju turisti obično ne znaju.`,
 
   default: `ULOGA: Ti si lokalni turistički vodič za hrvatsku obalu Jadrana.
@@ -173,7 +178,7 @@ const LANG_MAP = {
 };
 
 // ── MAIN ASSEMBLER ──
-export function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx }) {
+export function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight }) {
   const parts = [];
 
   // 1. BASE
@@ -190,6 +195,16 @@ export function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCa
   // 4. MODE
   const modePrompt = MODES[mode] || MODES.default;
   parts.push(modePrompt);
+
+  // 4b. CAMPER DIMENSIONS (critical for route safety)
+  if (mode === "camper" && (camperLen || camperHeight)) {
+    parts.push(`GABARITI VOZILA: ${camperLen ? "Dužina " + camperLen + "m" : ""}${camperLen && camperHeight ? ", " : ""}${camperHeight ? "Visina " + camperHeight + "m" : ""}. 
+KORISTI OVE DIMENZIJE za provjeru:
+- Podvožnjaci/tuneli: upozori ako je visina < ${camperHeight || "3.5"}m + 20cm sigurnosti
+- Parking: preporuči samo parkinge koji primaju vozila dužine ${camperLen || "7"}m+
+- Ulice: upozori na ulice uže od 3m ako je dužina > 7m
+- Trajekti: provjeri kategoriju naplate za dužinu ${camperLen || "7"}m`);
+  }
 
   // 5. LOCATION
   const locPrompt = LOCATIONS[region];
