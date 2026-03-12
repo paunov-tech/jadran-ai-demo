@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /host
+
+Sitemap: https://jadran.ai/sitemap.xml

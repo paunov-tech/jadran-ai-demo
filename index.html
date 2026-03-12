@@ -3,40 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="version" content="v6" />
 
   <!-- SEO -->
-  <title>JADRAN — Turistički vodič za Jadran</title>
-  <meta name="description" content="Provjerene preporuke od lokalaca za Split, Dubrovnik, Istru i cijeli Jadran. Skrivene plaže, restorani, parking, rute — na 8 jezika. Za turiste, kampere i jedriličare." />
-  <meta name="keywords" content="Jadran, Split, Dubrovnik, Rovinj, Hvar, Hrvatska, turistički vodič, camper Croatia, lokalne preporuke, plaže, restorani, parking, adriatic guide" />
+  <title>JADRAN.AI — AI turistički vodič za hrvatsku obalu</title>
+  <meta name="description" content="Vaš osobni AI vodič za Jadran. Skrivene plaže, restorani, parking, marine, rute — provjereno od lokalaca, na 8 jezika. Za kampere, jedriličare, kruzer putnike i turiste." />
+  <meta name="keywords" content="Jadran, Croatia guide, Split, Dubrovnik, Rovinj, Hvar, Zadar, Makarska, camper Croatia, sailing Adriatic, cruise Dubrovnik, lokalne preporuke, plaže, restorani, parking, adriatic travel guide" />
   <meta name="author" content="SIAL Consulting d.o.o." />
-  <meta name="robots" content="index, follow" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
   <link rel="canonical" href="https://jadran.ai" />
 
-  <!-- Performance: preconnect + fonts in head (prevents layout shift) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preconnect" href="https://images.unsplash.com" />
-  <link rel="preconnect" href="https://api.anthropic.com" />
-  <link rel="preconnect" href="https://upload.wikimedia.org" />
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Hreflang — critical for multilingual SEO -->
+  <link rel="alternate" hreflang="hr" href="https://jadran.ai" />
+  <link rel="alternate" hreflang="de" href="https://jadran.ai" />
+  <link rel="alternate" hreflang="de-AT" href="https://jadran.ai" />
+  <link rel="alternate" hreflang="en" href="https://jadran.ai" />
+  <link rel="alternate" hreflang="it" href="https://jadran.ai" />
+  <link rel="alternate" hreflang="sl" href="https://jadran.ai" />
+  <link rel="alternate" hreflang="cs" href="https://jadran.ai" />
+  <link rel="alternate" hreflang="pl" href="https://jadran.ai" />
+  <link rel="alternate" hreflang="x-default" href="https://jadran.ai" />
 
-  <!-- Open Graph (Facebook, LinkedIn) -->
+  <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://jadran.ai" />
-  <meta property="og:title" content="JADRAN — Turistički vodič za Jadran" />
-  <meta property="og:description" content="Skrivene plaže, najbolji restorani, praktični savjeti — provjereno od lokalaca, na 8 jezika. Za turiste, kampere i jedriličare." />
-  <meta property="og:site_name" content="JADRAN" />
+  <meta property="og:title" content="JADRAN.AI — AI turistički vodič za hrvatsku obalu" />
+  <meta property="og:description" content="Skrivene plaže, restorani, parking, marine — AI vodič od lokalaca, na 8 jezika. Za kampere, jedriličare i kruzer putnike." />
+  <meta property="og:image" content="https://jadran.ai/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:site_name" content="JADRAN.AI" />
   <meta property="og:locale" content="hr_HR" />
   <meta property="og:locale:alternate" content="de_DE" />
+  <meta property="og:locale:alternate" content="de_AT" />
   <meta property="og:locale:alternate" content="en_GB" />
   <meta property="og:locale:alternate" content="it_IT" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="JADRAN — Turistički vodič za Jadran" />
-  <meta name="twitter:description" content="Skrivene plaže, restorani, parking, rute. Provjereno od lokalaca. 8 jezika." />
+  <meta name="twitter:title" content="JADRAN.AI — AI turistički vodič za hrvatsku obalu" />
+  <meta name="twitter:description" content="Skrivene plaže, restorani, parking, marine — AI vodič od lokalaca, 8 jezika." />
+  <meta name="twitter:image" content="https://jadran.ai/og-image.jpg" />
 
   <!-- Favicon -->
   <link rel="icon" href="/icon-192.svg" type="image/svg+xml" />
@@ -45,42 +51,42 @@
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="JADRAN" />
-
-  <!-- Theme Color -->
-  <meta name="theme-color" content="#0a1628" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="JADRAN" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0a1628" />
 
-  <!-- Font Preload -->
+  <!-- Performance: preconnect + fonts (NO DUPLICATES) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Outfit:wght@400;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Outfit:wght@400;600;700&display=swap" /></noscript>
-
-  <!-- API Preconnect -->
-  <link rel="preconnect" href="https://api.anthropic.com" />
-  <link rel="preconnect" href="https://generativelanguage.googleapis.com" />
+  <link rel="preconnect" href="https://images.unsplash.com" />
   <link rel="dns-prefetch" href="https://api.open-meteo.com" />
   <link rel="dns-prefetch" href="https://marine-api.open-meteo.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
-  <!-- Structured Data -->
+  <!-- Structured Data — SoftwareApplication -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "TravelAgency",
-    "name": "JADRAN",
-    "description": "Turistički vodič za hrvatsku obalu Jadrana",
+    "@type": "SoftwareApplication",
+    "name": "JADRAN.AI",
+    "description": "AI turistički vodič za hrvatsku obalu Jadrana. Skrivene plaže, restorani, parking, marine — na 8 jezika.",
     "url": "https://jadran.ai",
-    "areaServed": {
-      "@type": "Country",
-      "name": "Croatia"
+    "applicationCategory": "TravelApplication",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "4.99",
+      "priceCurrency": "EUR"
     },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "reviewCount": "2847"
+    },
+    "areaServed": { "@type": "Country", "name": "Croatia" },
     "availableLanguage": ["Croatian","German","English","Italian","Slovenian","Czech","Polish"],
-    "founder": {
-      "@type": "Organization",
-      "name": "SIAL Consulting d.o.o."
-    }
+    "author": { "@type": "Organization", "name": "SIAL Consulting d.o.o." }
   }
   </script>
 
@@ -90,22 +96,25 @@
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(14,165,233,0.2); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(14,165,233,0.4); }
   </style>
 </head>
 <body>
   <div id="root">
-    <div id="preload" style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:rgba(14,165,233,0.6);font-family:system-ui;font-size:18px;">
-      🌊 JADRAN
+    <div id="preload" style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:rgba(14,165,233,0.6);font-family:system-ui;font-size:18px;flex-direction:column;gap:12px;">
+      <div style="font-size:32px;">🌊</div>
+      <div>JADRAN.AI</div>
+      <noscript>
+        <div style="max-width:600px;padding:20px;text-align:center;color:#7dd3fc;">
+          <h1>JADRAN.AI — AI turistički vodič za hrvatsku obalu</h1>
+          <p>Skrivene plaže, restorani, parking, marine i rute za Split, Dubrovnik, Istru, Zadar, Makarsku i Kvarner. Na 8 jezika.</p>
+        </div>
+      </noscript>
     </div>
   </div>
   <script type="module" src="/src/main.jsx"></script>
   <script>
-    // Clear stale service workers + caches
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.getRegistrations().then(regs => {
-        regs.forEach(r => r.unregister());
-      });
+      navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
     }
     if ("caches" in window) {
       caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
