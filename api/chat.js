@@ -12,10 +12,10 @@ export default async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
 
   try {
-    const { system, messages, mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight } = req.body;
+    const { system, messages, mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode } = req.body;
 
     const systemPrompt = mode && region 
-      ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight })
+      ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode })
       : (system || '');
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 600, // Reduced from 1000 — prompts are more focused now
+        max_tokens: walkieMode ? 200 : 600, // Walkie: ultra-short for TTS
         temperature: 0.4, // Lower = less hallucination, more precise
         system: systemPrompt,
         messages: messages || [],

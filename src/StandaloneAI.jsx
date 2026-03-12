@@ -46,6 +46,9 @@ export default function StandaloneAI() {
   const [step, setStep] = useState("setup"); // setup | chat
   const [niche, setNiche] = useState(null);
   const [camperLen, setCamperLen] = useState("");
+  const [walkieMode, setWalkieMode] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [wakeLock, setWakeLock] = useState(null);
   const [camperHeight, setCamperHeight] = useState(""); // "camper" | "local" | null — set from landing CTA
   const [lang, setLang] = useState("hr");
   const [region, setRegion] = useState(null);
@@ -146,41 +149,90 @@ export default function StandaloneAI() {
   const t = T[lang] || T.en;
 
   // ─── STRIPE CHECKOUT ───
-  // ═══ VISION SCAN ═══
+  // ═══ JADRAN LENS — compressed vision ═══
+  const compressImage = (file, maxSize = 1024) => new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      let w = img.width, h = img.height;
+      if (w > maxSize || h > maxSize) {
+        const ratio = Math.min(maxSize / w, maxSize / h);
+        w = Math.round(w * ratio); h = Math.round(h * ratio);
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+      resolve({ base64: dataUrl.split(",")[1], thumbUrl: dataUrl, mimeType: "image/jpeg" });
+    };
+    img.src = URL.createObjectURL(file);
+  });
+
   const handlePhoto = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    e.target.value = ""; // reset for re-use
+    e.target.value = "";
     
-    // Read as base64
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64 = reader.result.split(",")[1];
-      const mimeType = file.type || "image/jpeg";
-      const thumbUrl = reader.result;
-      
-      // Add photo message to chat
-      setMsgs(p => [...p, { role: "user", text: "📷 Fotografija za analizu", image: thumbUrl }]);
-      setLoading(true);
-      
-      try {
-        const regionName = REGIONS.find(r => r.id === region)?.name || "Jadran";
-        const res = await fetch("/api/vision", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            image: base64, mimeType, lang,
-            context: `Gost je u regiji ${regionName}. ${travelMode === "camper" ? "Putuje kamperom." : ""}`
-          }),
-        });
-        const data = await res.json();
-        setMsgs(p => [...p, { role: "assistant", text: data.text || "Nisam uspio analizirati sliku." }]);
-      } catch {
-        setMsgs(p => [...p, { role: "assistant", text: "Greška pri analizi slike. Pokušajte ponovno. 📷" }]);
-      }
-      setLoading(false);
+    const { base64, thumbUrl, mimeType } = await compressImage(file);
+    setMsgs(p => [...p, { role: "user", text: "📸 Jadran Lens", image: thumbUrl }]);
+    setLoading(true);
+    
+    try {
+      const regionName = REGIONS.find(r => r.id === region)?.name || "Jadran";
+      const modeCtx = travelMode === "camper" ? `Putuje kamperom${camperLen ? " (" + camperLen + "m)" : ""}.` : travelMode === "sailing" ? "Nautičar." : travelMode === "cruiser" ? "Putnik s kruzera — ograničeno vrijeme!" : "";
+      const res = await fetch("/api/vision", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64, mimeType, lang, context: `Gost u regiji ${regionName}. ${modeCtx}` }),
+      });
+      const data = await res.json();
+      const text = data.text || "Nisam uspio analizirati sliku.";
+      setMsgs(p => [...p, { role: "assistant", text }]);
+      if (walkieMode) speak(text);
+    } catch {
+      setMsgs(p => [...p, { role: "assistant", text: "Greška pri analizi. Pokušajte ponovno." }]);
+    }
+    setLoading(false);
+  };
+
+  // ═══ WALKIE-TALKIE — hands-free mode ═══
+  const speak = (text) => {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text.replace(/\[.*?\]\(.*?\)/g, "").replace(/[*#🔥⚠️📸🚨💎🌊⛵🚐🚢🏖️🍽️⛽🅿️💧🌅]/g, ""));
+    u.lang = lang === "de" || lang === "at" ? "de-DE" : lang === "en" ? "en-US" : lang === "it" ? "it-IT" : "hr-HR";
+    u.rate = 0.95;
+    window.speechSynthesis.speak(u);
+  };
+
+  const toggleWalkie = async () => {
+    if (walkieMode) {
+      setWalkieMode(false);
+      if (wakeLock) { try { wakeLock.release(); } catch {} setWakeLock(null); }
+      return;
+    }
+    setWalkieMode(true);
+    // Screen Wake Lock — keep screen on while driving
+    if ("wakeLock" in navigator) {
+      try { const wl = await navigator.wakeLock.request("screen"); setWakeLock(wl); } catch {}
+    }
+  };
+
+  const startVoiceInput = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    setIsRecording(true);
+    const r = new SR();
+    r.lang = lang === "de" || lang === "at" ? "de-DE" : lang === "en" ? "en-US" : lang === "it" ? "it-IT" : lang === "hr" ? "hr-HR" : "hr-HR";
+    r.onresult = (e) => {
+      const text = e.results[0][0].transcript;
+      setIsRecording(false);
+      setInput(text);
+      // Auto-send in walkie mode
+      if (walkieMode) { setTimeout(() => document.querySelector("[data-send]")?.click(), 100); }
     };
-    reader.readAsDataURL(file);
+    r.onerror = () => setIsRecording(false);
+    r.onend = () => setIsRecording(false);
+    r.start();
   };
 
   const startCheckout = async (plan = "week") => {
@@ -244,6 +296,7 @@ export default function StandaloneAI() {
         body: JSON.stringify({
           // Dynamic routing — backend assembles prompt from Lego blocks
           mode: travelMode || "default",
+          walkieMode: walkieMode || undefined,
           camperLen: camperLen || undefined,
           camperHeight: camperHeight || undefined,
           region,
@@ -257,7 +310,9 @@ export default function StandaloneAI() {
         }),
       });
       const data = await res.json();
-      setMsgs(p => [...p, { role: "assistant", text: data.content?.map(c => c.text || "").join("") || "..." }]);
+      const aiText = data.content?.map(c => c.text || "").join("") || "...";
+      setMsgs(p => [...p, { role: "assistant", text: aiText }]);
+      if (walkieMode) speak(aiText);
     } catch {
       setMsgs(p => [...p, { role: "assistant", text: "Veza nije dostupna. Pokušajte ponovno. 🌊" }]);
     }
@@ -648,7 +703,12 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
           <span style={{ fontSize: 13, fontWeight: 600 }}>{REGIONS.find(r => r.id === region)?.name}</span>
           {weather && <span style={{ fontSize: 12, color: C.mut, marginLeft: 4 }}>{weather.icon} {weather.temp}° · 🌊 {weather.sea}°</span>}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {(travelMode === "camper" || travelMode === "sailing") && (
+            <button onClick={toggleWalkie} style={{ padding: "4px 10px", borderRadius: 10, background: walkieMode ? "rgba(34,197,94,0.12)" : "transparent", border: `1px solid ${walkieMode ? "rgba(34,197,94,0.2)" : C.bord}`, color: walkieMode ? "#22c55e" : C.mut, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+              {walkieMode ? "📻 ON" : "📻"}
+            </button>
+          )}
           {premium
             ? <span style={{ padding: "4px 12px", borderRadius: 12, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.12)", color: C.gold, fontSize: 10, fontWeight: 600 }}>⭐ {premiumPlan?.plan === "season" ? "SEZONA" : "TJEDAN"} {premiumPlan ? Math.ceil((premiumPlan.expiresAt - Date.now()) / 86400000) + "d" : ""}</span>
             : <button onClick={() => trialExpired && setShowPaywall(true)} style={{ padding: "4px 12px", borderRadius: 12, background: trialExpired ? "rgba(239,68,68,0.08)" : "rgba(52,211,153,0.08)", border: `1px solid ${trialExpired ? "rgba(239,68,68,0.12)" : "rgba(52,211,153,0.12)"}`, color: trialExpired ? "#f87171" : "#34d399", fontSize: 10, fontWeight: 600, cursor: trialExpired ? "pointer" : "default", fontFamily: "inherit" }}>
@@ -1268,6 +1328,25 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
         </div>
       )}
 
+      {/* ═══ WALKIE-TALKIE PTT (Push-to-Talk) ═══ */}
+      {walkieMode && (
+        <div style={{ padding: "12px 16px", display: "flex", justifyContent: "center", alignItems: "center", gap: 16, borderTop: `1px solid ${C.bord}`, flexShrink: 0, background: isNight ? "rgba(34,197,94,0.03)" : "rgba(34,197,94,0.04)" }}>
+          <button onClick={startVoiceInput} disabled={loading}
+            style={{ width: 120, height: 120, borderRadius: "50%", border: `3px solid ${isRecording ? "#ef4444" : "#22c55e"}`, background: isRecording ? "rgba(239,68,68,0.12)" : "rgba(34,197,94,0.08)", color: isRecording ? "#ef4444" : "#22c55e", fontSize: 40, cursor: loading ? "not-allowed" : "pointer", display: "grid", placeItems: "center", transition: "all 0.3s", animation: isRecording ? "pulse 1s infinite" : "none", boxShadow: isRecording ? "0 0 40px rgba(239,68,68,0.2)" : "0 0 30px rgba(34,197,94,0.1)" }}>
+            {loading ? "⏳" : isRecording ? "⏺️" : "🎙️"}
+          </button>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: isRecording ? "#ef4444" : "#22c55e", marginBottom: 4 }}>
+              {loading ? "Odgovaram..." : isRecording ? "Slušam..." : "Pritisnite za govor"}
+            </div>
+            <div style={{ fontSize: 10, color: C.mut }}>📻 Hands-free · Ekran neće se ugasiti</div>
+            <button onClick={() => { if (cameraRef.current) cameraRef.current.click(); }} style={{ marginTop: 8, padding: "6px 14px", borderRadius: 8, border: `1px solid ${C.bord}`, background: "transparent", color: C.mut, fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
+              📸 Slikaj
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <div style={{ padding: "12px 16px", paddingBottom: "max(12px, env(safe-area-inset-bottom, 12px))", borderTop: `1px solid ${C.bord}`, display: "flex", gap: 8, flexShrink: 0, background: isNight ? "transparent" : "rgba(255,255,255,0.3)" }}>
         <input value={input} onChange={e => setInput(e.target.value)}
@@ -1278,12 +1357,8 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
         {/* Hidden camera input */}
         <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} style={{ display: "none" }} />
         <button onClick={() => cameraRef.current?.click()} style={{ width: 52, height: 52, borderRadius: 16, border: `1px solid ${C.bord}`, background: C.inputBg, color: C.accent, fontSize: 22, cursor: "pointer", display: "grid", placeItems: "center", flexShrink: 0 }}>📷</button>
-        {"webkitSpeechRecognition" in window || "SpeechRecognition" in window ? <button onClick={() => {
-          const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-          const r = new SR(); r.lang = lang === "de" || lang === "at" ? "de-DE" : lang === "en" ? "en-US" : lang === "it" ? "it-IT" : lang === "hr" ? "hr-HR" : lang === "si" ? "sl-SI" : lang === "cz" ? "cs-CZ" : lang === "pl" ? "pl-PL" : "hr-HR";
-          r.onresult = (e) => { const t = e.results[0][0].transcript; setInput(prev => prev + t); };
-          r.start();
-        }} style={{ width: 52, height: 52, borderRadius: 16, border: `1px solid ${C.bord}`, background: C.inputBg, color: C.accent, fontSize: 22, cursor: "pointer", display: "grid", placeItems: "center", flexShrink: 0 }}>🎙️</button> : null}
+        {"webkitSpeechRecognition" in window || "SpeechRecognition" in window ? <button onClick={startVoiceInput}
+          style={{ width: 52, height: 52, borderRadius: 16, border: `1px solid ${isRecording ? "#ef4444" : C.bord}`, background: isRecording ? "rgba(239,68,68,0.1)" : C.inputBg, color: isRecording ? "#ef4444" : C.accent, fontSize: 22, cursor: "pointer", display: "grid", placeItems: "center", flexShrink: 0, transition: "all 0.2s", animation: isRecording ? "pulse 1s infinite" : "none" }}>{isRecording ? "⏺️" : "🎙️"}</button> : null}
         <button data-send onClick={sendMsg} disabled={loading || !input.trim()}
           style={{
             width: 52, height: 52, borderRadius: 16, border: "none",

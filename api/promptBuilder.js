@@ -179,11 +179,16 @@ const LANG_MAP = {
 };
 
 // ── MAIN ASSEMBLER ──
-export function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight }) {
+export function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode }) {
   const parts = [];
 
   // 1. BASE
   parts.push(BASE);
+
+  // 1b. WALKIE MODE — ultra-short responses for TTS
+  if (walkieMode) {
+    parts.push(`HANDS-FREE MOD: Korisnik VOZI. Tvoj odgovor mora biti IZUZETNO kratak (2-3 rečenice MAX), direktan i jasan jer će ga telefon pročitati naglas. BEZ dugih uvoda, odmah na stvar. BEZ linkova u ovom modu. BEZ emoji-ja (čita se naglas). Koristi jednostavne riječi.`);
+  }
 
   // 2. LANGUAGE
   const langName = LANG_MAP[lang] || LANG_MAP.hr;
