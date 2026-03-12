@@ -29,6 +29,18 @@ const DEMO_CHAT = [
   { role: "cta", text: "Konoba Batelina \u2014 svježa riba, ravan parking" },
 ];
 
+
+const DESTINATIONS = [
+  { name: "Split & Podstrana", emoji: "🏛️", desc: "Dioklecijanova palača, Bačvice, Marjan", link: BKG("Split, Croatia"), region: "Dalmacija", city: "Split" },
+  { name: "Makarska rivijera", emoji: "🏖️", desc: "Najljepše plaže Jadrana", link: BKG("Makarska, Croatia"), region: "Dalmacija", city: "Makarska" },
+  { name: "Hvar", emoji: "🌿", desc: "Lavanda, glamur, noćni život", link: BKG("Hvar, Croatia"), region: "Otoci", city: "Hvar" },
+  { name: "Rovinj", emoji: "⛪", desc: "Najromantičniji grad Istre", link: BKG("Rovinj, Croatia"), region: "Istra", city: "Rovinj" },
+  { name: "Pula", emoji: "🏟️", desc: "Rimska arena, obiteljske plaže", link: BKG("Pula, Croatia"), region: "Istra", city: "Pula" },
+  { name: "Opatija", emoji: "⚓", desc: "Elegancija Kvarnera", link: BKG("Opatija, Croatia"), region: "Kvarner", city: "Opatija" },
+  { name: "Dubrovnik", emoji: "🏰", desc: "Biser Jadrana, gradske zidine", link: BKG("Dubrovnik, Croatia"), region: "Dalmacija", city: "Dubrovnik" },
+  { name: "Zadar", emoji: "🌅", desc: "Morske orgulje, najljepši zalazak", link: BKG("Zadar, Croatia"), region: "Dalmacija", city: "Zadar" },
+];
+
 const DESTS = ["Rovinj","Split","Dubrovnik","Zadar","Pula","Makarska","Hvar","Opatija"];
 
 export default function LandingPage() {
@@ -40,6 +52,7 @@ export default function LandingPage() {
   const [roomInput, setRoomInput] = useState("");
   const [chatStep, setChatStep] = useState(0);
   const [trendImgs, setTrendImgs] = useState({});
+  const [cityImgs, setCityImgs] = useState({});
   const [carouselIdx, setCarouselIdx] = useState(0);
 
   useEffect(() => { setTimeout(() => setAnim(true), 200); }, []);
@@ -49,6 +62,16 @@ export default function LandingPage() {
       return () => clearTimeout(t);
     }
   }, [chatStep]);
+
+  // Load destination city images
+  useEffect(() => {
+    DESTINATIONS.forEach(d => {
+      fetch(`/api/cityimg?city=${encodeURIComponent(d.city)}`)
+        .then(r => r.json())
+        .then(data => { if (data.url) setCityImgs(prev => ({ ...prev, [d.city]: data.url })); })
+        .catch(() => {});
+    });
+  }, []);
 
   // Load trending images
   useEffect(() => {
@@ -204,47 +227,69 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ═══ TRENDING ═══ */}
+      {/* ═══ DESTINATIONS + AFFILIATE ═══ */}
       <section style={{ padding: "72px 24px", background: "#0a1628" }}>
-        <div style={{ maxWidth: 960, margin: "0 auto" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+          {/* Destination cards with photos */}
           <div style={{ textAlign: "center", marginBottom: 32 }}>
-            <div style={{ fontSize: 9, color: "#f59e0b", letterSpacing: 5, fontWeight: 600, marginBottom: 8 }}>{"🔥"} POPULARNO</div>
-            <h2 style={{ fontFamily: F, fontSize: "clamp(20px, 3.5vw, 28px)", fontWeight: 700 }}>{tx("trendTitle")}</h2>
+            <div style={{ fontSize: 9, color: "#f59e0b", letterSpacing: 5, fontWeight: 600, marginBottom: 8 }}>DESTINACIJE</div>
+            <h2 style={{ fontFamily: F, fontSize: "clamp(20px, 3.5vw, 28px)", fontWeight: 700 }}>Otkrijte Jadran</h2>
           </div>
-          <div style={{ position: "relative" }}>
-          <div id="trend-scroll" style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 16, scrollSnapType: "x mandatory", scrollBehavior: "smooth" }}>
-            {TRENDING.map((t, i) => (
-              <a key={i} href={t.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit", scrollSnapAlign: "start" }}>
-                <div style={{ minWidth: 280, borderRadius: 18, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden", transition: "all 0.3s" }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.15)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"; e.currentTarget.style.transform = ""; }}>
-                  <div style={{ height: 160, background: "linear-gradient(135deg, #0c2d48, #0e3a5c)", position: "relative", overflow: "hidden" }}>
-                    {trendImgs[t.city] && <img src={trendImgs[t.city]} alt={t.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.7 }} />}
-                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, transparent 40%, rgba(10,22,40,0.9) 100%)" }} />
-                    <div style={{ position: "absolute", top: 12, left: 12, fontSize: 28 }}>{t.emoji}</div>
-                    <span style={{ position: "absolute", top: 8, left: 8, padding: "2px 8px", borderRadius: 6, background: "rgba(14,165,233,0.12)", color: "#38bdf8", fontSize: 9, fontWeight: 600, letterSpacing: 1 }}>{t.tag}</span>
-                  </div>
-                  <div style={{ padding: "14px 16px" }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 3 }}>{t.title}</div>
-                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 10 }}>{t.sub}</div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: 18, fontWeight: 700, color: "#22c55e" }}>{t.price}</span>
-                      <span style={{ padding: "6px 12px", borderRadius: 8, background: "rgba(14,165,233,0.08)", color: "#38bdf8", fontSize: 11, fontWeight: 600 }}>Pitaj AI {"\u2192"}</span>
-                    </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14, marginBottom: 48 }}>
+            {DESTINATIONS.map((d, i) => (
+              <a key={i} href={d.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
+                <div style={{
+                  borderRadius: 18, overflow: "hidden", position: "relative",
+                  background: "#0c2d48", border: "1px solid rgba(14,165,233,0.06)",
+                  cursor: "pointer", transition: "all 0.3s", minHeight: 200,
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.2)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(0,0,0,0.3)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.06)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
+                  {cityImgs[d.city] && <div style={{
+                    position: "absolute", inset: 0,
+                    backgroundImage: `url(${cityImgs[d.city]})`,
+                    backgroundSize: "cover", backgroundPosition: "center",
+                    transition: "transform 0.5s",
+                  }} className="dest-img" />}
+                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(0deg, rgba(6,14,28,0.92) 0%, rgba(6,14,28,0.4) 50%, rgba(6,14,28,0.2) 100%)" }} />
+                  <div style={{ position: "relative", padding: 18, display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: 200 }}>
+                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.7)", padding: "2px 8px", borderRadius: 8, background: "rgba(14,165,233,0.15)", alignSelf: "flex-start", marginBottom: 8 }}>{d.region}</span>
+                    <div style={{ fontFamily: F, fontSize: 19, fontWeight: 700, marginBottom: 3, textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>{d.name}</div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 8 }}>{d.desc}</div>
+                    <div style={{ fontSize: 12, color: "#0ea5e9", fontWeight: 600 }}>Booking.com →</div>
                   </div>
                 </div>
               </a>
             ))}
           </div>
-          {/* Carousel dots */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 8 }}>
-            {TRENDING.map((_, i) => (
-              <button key={i} onClick={() => {
-                setCarouselIdx(i);
-                document.getElementById("trend-scroll")?.scrollTo({ left: i * 254, behavior: "smooth" });
-              }} style={{ width: carouselIdx === i ? 20 : 8, height: 8, borderRadius: 4, border: "none", background: carouselIdx === i ? "#0ea5e9" : "rgba(255,255,255,0.15)", cursor: "pointer", transition: "all 0.3s", padding: 0 }} />
-            ))}
+
+          {/* Affiliate carousel */}
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <div style={{ fontSize: 9, color: "#0ea5e9", letterSpacing: 5, fontWeight: 600, marginBottom: 8 }}>🔥 POPULARNO</div>
+            <h2 style={{ fontFamily: F, fontSize: "clamp(18px, 3vw, 24px)", fontWeight: 700 }}>Aktivnosti i izleti</h2>
           </div>
+          <div style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 12, scrollSnapType: "x mandatory" }}>
+            {TRENDING.map((t, i) => (
+              <a key={i} href={t.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit", scrollSnapAlign: "start" }}>
+                <div style={{ minWidth: 260, borderRadius: 16, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden", transition: "all 0.3s" }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.15)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"; e.currentTarget.style.transform = ""; }}>
+                  <div style={{ height: 100, background: "linear-gradient(135deg, #0c2d48, #134e6f)", position: "relative", overflow: "hidden", display: "grid", placeItems: "center" }}>
+                    {trendImgs[t.city] && <img src={trendImgs[t.city]} alt={t.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.5 }} />}
+                    <span style={{ position: "relative", fontSize: 32 }}>{t.emoji}</span>
+                    <span style={{ position: "absolute", top: 8, left: 8, padding: "2px 8px", borderRadius: 6, background: "rgba(14,165,233,0.15)", color: "#38bdf8", fontSize: 9, fontWeight: 600, letterSpacing: 1 }}>{t.tag}</span>
+                  </div>
+                  <div style={{ padding: "12px 14px" }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{t.title}</div>
+                    <div style={{ fontSize: 11, color: "#64748b", marginBottom: 8 }}>{t.sub}</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: 18, fontWeight: 700, color: "#22c55e" }}>{t.price}</span>
+                      <span style={{ padding: "6px 12px", borderRadius: 8, background: "rgba(14,165,233,0.08)", color: "#38bdf8", fontSize: 11, fontWeight: 600 }}>Rezerviraj →</span>
+                    </div>
+                  </div>
+                </div>
+              </a>
+            ))}
           </div>
         </div>
       </section>
@@ -287,6 +332,8 @@ export default function LandingPage() {
         select option { background: #1e293b; color: #f0f4f8; }
         ::-webkit-scrollbar { height: 4px; }
         ::-webkit-scrollbar-thumb { background: rgba(14,165,233,0.2); border-radius: 2px; }
+        .dest-img { transition: transform 0.5s ease !important; }
+        a:hover .dest-img { transform: scale(1.08) !important; }
       `}</style>
     </div>
   );
