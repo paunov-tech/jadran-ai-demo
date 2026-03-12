@@ -61,6 +61,7 @@ export default function StandaloneAI() {
   const [loading, setLoading] = useState(false);
   const scrollBox = useRef(null);
   const scrollAnchor = useRef(null);
+  const cameraRef = useRef(null);
   const [weather, setWeather] = useState(null);
   const [weatherTime, setWeatherTime] = useState(null);
   const [regionImgs, setRegionImgs] = useState({});
@@ -128,6 +129,43 @@ export default function StandaloneAI() {
   const t = T[lang] || T.en;
 
   // ─── STRIPE CHECKOUT ───
+  // ═══ VISION SCAN ═══
+  const handlePhoto = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = ""; // reset for re-use
+    
+    // Read as base64
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result.split(",")[1];
+      const mimeType = file.type || "image/jpeg";
+      const thumbUrl = reader.result;
+      
+      // Add photo message to chat
+      setMsgs(p => [...p, { role: "user", text: "📷 Fotografija za analizu", image: thumbUrl }]);
+      setLoading(true);
+      
+      try {
+        const regionName = REGIONS.find(r => r.id === region)?.name || "Jadran";
+        const res = await fetch("/api/vision", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            image: base64, mimeType, lang,
+            context: `Gost je u regiji ${regionName}. ${travelMode === "camper" ? "Putuje kamperom." : ""}`
+          }),
+        });
+        const data = await res.json();
+        setMsgs(p => [...p, { role: "assistant", text: data.text || "Nisam uspio analizirati sliku." }]);
+      } catch {
+        setMsgs(p => [...p, { role: "assistant", text: "Greška pri analizi slike. Pokušajte ponovno. 📷" }]);
+      }
+      setLoading(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const startCheckout = async (plan = "week") => {
     setPayLoading(true);
     try {
@@ -824,6 +862,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
         <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 10 }}>
         {msgs.map((m, i) => (
           <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", padding: "0 16px" }}>
+            {m.image && <img src={m.image} alt="foto" style={{ width: 60, height: 60, borderRadius: 12, objectFit: "cover", marginRight: 8, alignSelf: "flex-end" }} />}
             <div style={{
               maxWidth: "85%", padding: "12px 16px", borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
               background: m.role === "user" ? (isNight ? "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(2,132,199,0.1))" : "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(2,132,199,0.12))") : C.card,
@@ -1203,6 +1242,9 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
           placeholder={t.placeholder}
           style={{ flex: 1, padding: "16px 18px", borderRadius: 16, border: `1px solid ${C.bord}`, background: C.inputBg, color: C.text, fontSize: 17, outline: "none", fontFamily: "inherit" }}
         />
+        {/* Hidden camera input */}
+        <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} style={{ display: "none" }} />
+        <button onClick={() => cameraRef.current?.click()} style={{ width: 52, height: 52, borderRadius: 16, border: `1px solid ${C.bord}`, background: C.inputBg, color: C.accent, fontSize: 22, cursor: "pointer", display: "grid", placeItems: "center", flexShrink: 0 }}>📷</button>
         {"webkitSpeechRecognition" in window || "SpeechRecognition" in window ? <button onClick={() => {
           const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
           const r = new SR(); r.lang = lang === "de" || lang === "at" ? "de-DE" : lang === "en" ? "en-US" : lang === "it" ? "it-IT" : lang === "hr" ? "hr-HR" : lang === "si" ? "sl-SI" : lang === "cz" ? "cs-CZ" : lang === "pl" ? "pl-PL" : "hr-HR";
