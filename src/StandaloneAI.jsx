@@ -834,18 +834,21 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
 
         {/* Niche photo hero — always visible when niche set */}
         {niche && (
-          <div onClick={() => !premium && startCheckout("season")} style={{
-            borderRadius: 18, position: "relative", overflow: "hidden",
-            cursor: premium ? "default" : "pointer",
-            border: premium ? `1px solid rgba(34,197,94,0.25)` : "1px solid rgba(245,158,11,0.25)", marginBottom: 24,
-            boxShadow: premium ? "0 0 20px rgba(34,197,94,0.08)" : "0 0 20px rgba(245,158,11,0.08), 0 0 60px rgba(245,158,11,0.04)",
-            transition: "all 0.3s",
-          }}
-            onMouseEnter={e => { if (!premium) { e.currentTarget.style.boxShadow = "0 0 30px rgba(245,158,11,0.15), 0 0 80px rgba(245,158,11,0.08)"; e.currentTarget.style.borderColor = "rgba(245,158,11,0.4)"; }}}
-            onMouseLeave={e => { if (!premium) { e.currentTarget.style.boxShadow = "0 0 20px rgba(245,158,11,0.08), 0 0 60px rgba(245,158,11,0.04)"; e.currentTarget.style.borderColor = "rgba(245,158,11,0.25)"; }}}>
+          <div 
+            onClick={() => { if (!premium) startCheckout("season"); }}
+            onTouchEnd={(e) => { if (!premium) { e.preventDefault(); startCheckout("season"); } }}
+            role="button" tabIndex={0}
+            style={{
+              borderRadius: 18, position: "relative", overflow: "hidden",
+              cursor: premium ? "default" : "pointer",
+              WebkitTapHighlightColor: "rgba(245,158,11,0.2)",
+              border: premium ? "1px solid rgba(34,197,94,0.25)" : "1px solid rgba(245,158,11,0.25)", marginBottom: 24,
+              boxShadow: premium ? "0 0 20px rgba(34,197,94,0.08)" : "0 0 20px rgba(245,158,11,0.08), 0 0 60px rgba(245,158,11,0.04)",
+              transition: "all 0.3s", zIndex: 1,
+            }}>
             <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${niche === "camper" ? "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?w=600&q=75" : niche === "sailing" ? "https://images.unsplash.com/photo-1540946485063-a40da27545f8?w=600&q=75" : niche === "cruiser" ? "https://images.unsplash.com/photo-1548574505-5e239809ee19?w=600&q=75" : "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&q=75"})`, backgroundSize: "cover", backgroundPosition: "center", pointerEvents: "none" }} />
             <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${niche === "camper" ? "rgba(245,158,11,0.7)" : niche === "sailing" ? "rgba(6,182,212,0.65)" : niche === "cruiser" ? "rgba(168,85,247,0.65)" : "rgba(14,165,233,0.65)"} 0%, rgba(15,23,42,0.88) 100%)`, pointerEvents: "none" }} />
-            <div style={{ position: "relative", padding: "20px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ position: "relative", padding: "20px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", pointerEvents: "none" }}>
               <div>
                 <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 20, fontWeight: 700, color: "#fff" }}>
                   {niche === "camper" ? t.nicCamper : niche === "sailing" ? t.nicSailing : niche === "cruiser" ? t.nicCruiser : t.nicLocal}
@@ -856,7 +859,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
               </div>
               {premium
                 ? <div style={{ padding: "8px 14px", borderRadius: 10, background: "linear-gradient(135deg, #22c55e, #16a34a)", color: "#fff", fontWeight: 700, fontSize: 11, flexShrink: 0 }}>⭐ PREMIUM</div>
-                : <div style={{ padding: "8px 14px", borderRadius: 10, background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#0f172a", fontWeight: 800, fontSize: 12, flexShrink: 0, boxShadow: "0 2px 8px rgba(245,158,11,0.3)" }}>⭐ PREMIUM</div>
+                : <div style={{ padding: "8px 14px", borderRadius: 10, background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#0f172a", fontWeight: 800, fontSize: 12, flexShrink: 0, boxShadow: "0 2px 8px rgba(245,158,11,0.3)" }}>9.99€ →</div>
               }
             </div>
           </div>
