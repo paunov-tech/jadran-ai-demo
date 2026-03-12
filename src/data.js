@@ -61,9 +61,9 @@ export const EXPERIENCES = [
   { id: 30, name: "Kvarner Bay Tour", emoji: "⚓", price: 55, dur: "5h", rating: 4.8, cat: "culture", region: "kvarner",
     link: GYG("opatija-l1296/from-opatija-kvarner-bay-islands-boat-tour-t651847") },
   { id: 31, name: "Cres Island Boat", emoji: "🚢", price: 120, dur: "8h", rating: 4.9, cat: "premium", region: "kvarner",
-    link: GYG("opatija-l1296?q=cres+island+boat") },
+    link: GYG("rijeka-l1298/from-rijeka-cres-and-losinj-island-full-day-trip-t632148") },
   { id: 32, name: "Opatija Evening Cruise", emoji: "🌙", price: 45, dur: "2h", rating: 4.8, cat: "premium", region: "kvarner",
-    link: GYG("opatija-l1296?q=evening+cruise+kvarner") },
+    link: GYG("opatija-l1296/opatija-riviera-sunset-boat-tour-t789234") },
 ];
 
 export const GEMS = [
@@ -150,7 +150,7 @@ export const CAMPER_WARNINGS = [
   { id: "stiniva", name: "Plaža Stiniva (Vis)", region: "split", emoji: "🏖️", severity: "medium",
     danger: "Put je strm i završava bez okretnice. Kamperom nećete doći do plaže.",
     advice: "Ostavite kamper kod skretanja za 'Marine Zemlje'. Stiniva je 20 min pješice. Ponijeti vodu!",
-    link: GYG("vis-l4764?q=stiniva+boat") },
+    link: GYG("split-l268/from-split-blue-cave-mamma-mia-vis-hvar-5-islands-tour-t326676") },
   { id: "cres", name: "Porozina–Dragozetići (Cres)", region: "kvarner", emoji: "⚠️", severity: "high",
     danger: "Put širok za jedno i pol vozilo, provalija bez bankine sa strane.",
     advice: "Pustite lokalce da prođu. Vozite sredinom, koristite proširenja. Pauza: Kamp Kovačine u Cresu.",

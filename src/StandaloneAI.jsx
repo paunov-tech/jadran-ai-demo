@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // JADRAN AI — Standalone AI Assistant
 // Route: jadran.ai/ai
-// Pay 5.99€ → travel guide without apartment context
+// Premium 4.99€/week or 9.99€/season — 10 free messages trial
 // Perfect for: campervan travelers, day-trippers, cruise visitors
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useRef } from "react";
@@ -39,7 +39,7 @@ const T = {
     nicSailing: "Nautički vodič", nicSailingSub: "Marine, sidrišta, vjetar, konobe s mora",
     nicCruiser: "Kruzer vodič", nicCruiserSub: "Maksimum u 8 sati — plan po minutu, skip-the-line",
     // Camper picker
-    gabariti: "GABARITI VOZILA", lenLabel: "Dužina (m)", heightLabel: "Visina (m)", 
+    gabariti: "GABARITI VOZILA", lenLabel: "Dužina (m)", heightLabel: "Visina (m)",
     gabaritiFeedback: "Vaš kamper: {len}m × {h}m — prilagođavamo preporuke",
     gabaritiHint: "Opcionalno — ali pomaže za preciznije rute i parkinge",
     // Vibe
@@ -261,7 +261,7 @@ export default function StandaloneAI() {
   const [regionImgs, setRegionImgs] = useState({});
 
   useEffect(() => { scrollAnchor.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [msgs, loading]);
-  
+
   // Region → coordinates (coastal points for accurate marine data)
   const COORDS = {
     split: { lat: 43.49, lon: 16.55, loc: "Split-Podstrana" },
@@ -271,15 +271,15 @@ export default function StandaloneAI() {
     istra: { lat: 45.08, lon: 13.64, loc: "Rovinj-Istra" },
     kvarner: { lat: 45.34, lon: 14.31, loc: "Opatija-Kvarner" },
   };
-  
+
   // Fetch weather per region + auto-refresh every 60s
   useEffect(() => {
     const fetchWx = () => {
       const c = COORDS[region] || COORDS.split;
       fetch(`/api/weather?lat=${c.lat}&lon=${c.lon}&loc=${c.loc}`)
         .then(r => r.json())
-        .then(d => { 
-          if (d.current?.temp) { 
+        .then(d => {
+          if (d.current?.temp) {
             const w = { ...d.current, location: c.loc };
             setWeather(w); setWeatherTime(new Date());
             if (notifPerm === "granted") {
@@ -329,7 +329,7 @@ export default function StandaloneAI() {
       window.history.replaceState({}, "", "/ai" + (n ? "?niche=" + n : ""));
     }
     // Check localStorage
-    try { 
+    try {
       if (localStorage.getItem("jadran_ai_premium") === "1") setPremium(true);
       const pp = localStorage.getItem("jadran_premium_plan");
       if (pp) setPremiumPlan(JSON.parse(pp));
@@ -347,7 +347,7 @@ export default function StandaloneAI() {
       const plan = params.get("plan") || "week";
       const days = params.get("days") || "7";
       const region = params.get("region") || "all";
-      try { 
+      try {
         localStorage.setItem("jadran_ai_premium", "1");
         const premData = { plan, days: parseInt(days), region, expiresAt: Date.now() + parseInt(days) * 86400000, purchasedAt: new Date().toISOString() };
         localStorage.setItem("jadran_premium_plan", JSON.stringify(premData));
@@ -388,11 +388,11 @@ export default function StandaloneAI() {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
-    
+
     const { base64, thumbUrl, mimeType } = await compressImage(file);
     setMsgs(p => [...p, { role: "user", text: "📸 Jadran Lens", image: thumbUrl }]);
     setLoading(true);
-    
+
     try {
       const regionName = REGIONS.find(r => r.id === region)?.name || "Jadran";
       const modeCtx = travelMode === "camper" ? `Putuje kamperom${camperLen ? " (" + camperLen + "m)" : ""}.` : travelMode === "sailing" ? "Nautičar." : travelMode === "cruiser" ? "Putnik s kruzera — ograničeno vrijeme!" : "";
@@ -458,7 +458,7 @@ export default function StandaloneAI() {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           roomCode: "AI-STANDALONE", guestName: "AI User", lang,
           returnPath: "/ai" + (niche ? "?niche=" + niche : ""),
           plan, region: plan === "week" ? (region || "split") : "all",
@@ -491,7 +491,7 @@ export default function StandaloneAI() {
     // trial active — no decrement
 
     const regionName = REGIONS.find(r => r.id === region)?.name || "Jadran";
-    
+
     // Build affiliate link catalog (still needed — these are real URLs)
     const regionExps = filterByRegion(EXPERIENCES, region).slice(0, 8);
     const dubLinks = region === "dubrovnik" ? DUBROVNIK_INTEL.filter(d => d.link).map(d => `• ${d.spot} → [${d.spot}](${d.link})`) : [];
@@ -505,7 +505,7 @@ export default function StandaloneAI() {
     const regionMarinas = MARINAS.filter(m => m.region === region).slice(0, 4);
     const regionAnchors = ANCHORAGES.filter(a => a.region === region).slice(0, 4);
     const cruisePort = CRUISE_PORTS.find(p => p.region === region);
-    const marinaCatalog = travelMode === "sailing" ? regionMarinas.map(m => 
+    const marinaCatalog = travelMode === "sailing" ? regionMarinas.map(m =>
       `• ${m.name}: ${m.berths} vezova, max ${m.maxLen}, ${m.price}, gorivo:${m.fuel?"da":"ne"}, VHF ${m.vhf}. ${m.note}`
     ).join("\n") : "";
     const anchorCatalog = travelMode === "sailing" ? regionAnchors.map(a =>
@@ -652,7 +652,7 @@ export default function StandaloneAI() {
     const regionName = REGIONS.find(r => r.id === activeRegion)?.name || "Jadran";
     const isCamperMode = travelMode === "camper" || niche === "camper";
     const w = weather;
-    
+
     // ─── RETURNING USER DETECTION ───
     let isReturning = false;
     let hoursSinceLast = 0;
@@ -672,7 +672,7 @@ export default function StandaloneAI() {
     // ─── FOLLOW-UP SCENARIOS (returning user, 4+ hours) ───
     if (isReturning && isCamperMode) {
       const regionExps = filterByRegion(EXPERIENCES, activeRegion);
-      
+
       // Scenario 1: "Jutro posle" (6-12h) — dnevni izleti
       if (h >= 6 && h < 12) {
         const boatTrip = regionExps.find(e => e.cat === "premium" || e.name.includes("Cave") || e.name.includes("Island")) || regionExps[0];
@@ -684,7 +684,7 @@ Većina gostiju danas ide na izlet — ${boatTrip ? `još ima mjesta!
 [${boatTrip.name} — ${boatTrip.price}€](${boatTrip.link})` : "pitaj me za preporuku!"}
 ${isCamperMode ? "\nAko ste ipak za vožnju — treba li vam mapa lokalnih puteva sigurnih za kampere?" : ""}`;
       }
-      
+
       // Scenario 2: "Kasno popodne" (15-21h) — večera
       if (h >= 15 && h < 21) {
         const gastro = regionExps.find(e => e.cat === "gastro") || regionExps.find(e => e.name.includes("Wine"));
@@ -695,7 +695,7 @@ ${gastro ? `\n[${gastro.name} — ${gastro.price}€](${gastro.link})` : ""}
 
 Treba li navigacija do parkinga ili imate drugi plan za večeras?`;
       }
-      
+
       // Scenario 3: "Spremanje za pokret" (48h+ ili default returning)
       if (visitCount >= 3 || hoursSinceLast > 24) {
         const booking = BOOKING_CITIES.find(c => c.region === activeRegion);
@@ -710,16 +710,16 @@ ${booking ? `\nMali kampovi se brzo pune. Pronašao sam slobodne parcele za sutr
 Kamo dalje — trebate rutu ili preporuku za usput?`;
       }
     }
-    
+
     // ─── RETURNING NON-CAMPER ───
     if (isReturning) {
       return `Dobrodošli natrag! 🌊 ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} u ${regionName}.
 
 Što planirate danas? Mogu preporučiti ${h < 12 ? "jutarnji izlet ili plažu" : h < 17 ? "popodnevnu aktivnost ili skrivenu uvalu" : "večeru s pogledom ili noćni izlaz"}. 🗺️`;
     }
-    
+
     // ─── FIRST VISIT — existing ice-breaker logic ───
-    
+
     // Weather-conditional (rain or strong wind)
     if (w && (w.windSpeed > 40 || w.icon === "🌧️" || w.icon === "🌦️" || w.icon === "⛈️")) {
       const windWarn = w.windSpeed > 40;
@@ -736,7 +736,7 @@ Preporučujem dan u unutrašnjosti: lokalne konobe, vinarije, muzeji. ${activeRe
 
 Što vas zanima — hrana, kultura, ili nešto treće?`;
     }
-    
+
     // Time-conditional
     if (h >= 17 && h < 21) {
       // Evening - dinner time
@@ -751,7 +751,7 @@ Treba li ti parking za večeras ili želiš preporuku za sutra? 🚐`;
 
 Što planirate za večeras — romantična večera, noćni život, ili mirna kava uz more?`;
     }
-    
+
     if (h >= 6 && h < 10) {
       // Morning - activity time
       if (isCamperMode) {
@@ -765,7 +765,7 @@ Kamo danas — plaže, izleti, ili tranzit prema sljedećoj destinaciji?`;
 
 Što planirate danas — plaže, izleti, kultura? 🌊`;
     }
-    
+
     // Default - general welcome
     if (isCamperMode) {
       return `Pozdrav! 🚐 Dobrodošli u ${regionName}. Ja sam vaš lokalni kamper expert — poznajem svaki parking, dump station i skrivenu uvalu na ovom dijelu obale.
@@ -835,7 +835,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
 
         {/* Niche photo hero — always visible when niche set */}
         {niche && (
-          <div 
+          <div
             onClick={() => { if (!premium) startCheckout("season"); }}
             onTouchEnd={(e) => { if (!premium) { e.preventDefault(); startCheckout("season"); } }}
             role="button" tabIndex={0}
@@ -1047,7 +1047,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
 
       {/* Messages */}
       <div ref={scrollBox} style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "0", display: "flex", flexDirection: "column" }}>
-        
+
         {/* ═══ JADRAN VIBE — Maritime Dashboard ═══ */}
         {msgs.length > 0 && weather && (
           <div style={{ flexShrink: 0, borderBottom: `1px solid ${C.bord}` }}>
@@ -1106,7 +1106,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
         {msgs.length === 0 && (
           <div style={{ padding: 0 }}>
             {/* ═══ VIBE JADRANA — MARITIME DASHBOARD ═══ */}
-            
+
             {weather ? <div style={{ padding: "0 0 8px" }}>
               {/* Header */}
               <div style={{ padding: "16px 16px 12px", textAlign: "center" }}>
@@ -1239,7 +1239,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
                       </div>
                       <a href="https://meteo.hr/prognoze.php?section=prognoze_specp&param=pomorci" target="_blank" rel="noopener noreferrer" style={{ fontSize: 9, color: C.mut, textDecoration: "none" }}>meteo.hr →</a>
                     </div>
-                    
+
                     {/* Warning banner */}
                     {navtex.warning && (
                       <div style={{ padding: "6px 14px", background: "rgba(245,158,11,0.08)", borderTop: "1px solid rgba(245,158,11,0.1)", fontSize: 11, color: "#f59e0b", fontWeight: 600 }}>
@@ -1334,7 +1334,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
                   </button>
                 ))}
               </div>
-              <div style={{ fontSize: 11, color: isNight ? "rgba(255,255,255,0.2)" : "rgba(12,74,110,0.3)", marginTop: 14 }}>3 besplatna pitanja · Premium 5.99€</div>
+              <div style={{ fontSize: 11, color: isNight ? "rgba(255,255,255,0.2)" : "rgba(12,74,110,0.3)", marginTop: 14 }}>10 besplatnih poruka · Premium 4.99€</div>
             </div>
           </div>
         )}
@@ -1371,7 +1371,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
                     const label = part.includes("getyourguide") ? t.btnOffer : part.includes("viator") ? t.btnTour : part.includes("booking.com") ? t.btnStay : t.btnOpen;
                     return <a key={k} href={part} target="_blank" rel="noopener noreferrer" style={{
                       display: "block", margin: "8px 0", padding: "14px 18px", borderRadius: 12,
-                      background: isNight ? "rgba(14,165,233,0.08)" : "rgba(14,165,233,0.06)", 
+                      background: isNight ? "rgba(14,165,233,0.08)" : "rgba(14,165,233,0.06)",
                       border: `1px solid ${C.accent}30`,
                       fontSize: 16, color: C.accent, textDecoration: "none", fontWeight: 600, textAlign: "center",
                       minHeight: 50,
