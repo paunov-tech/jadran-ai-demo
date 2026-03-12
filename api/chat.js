@@ -1,5 +1,6 @@
+import { buildPrompt } from "./promptBuilder.js";
+
 export default async function handler(req, res) {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -11,7 +12,13 @@ export default async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
 
   try {
-    const { system, messages } = req.body;
+    const { system, messages, mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx } = req.body;
+
+    // Dynamic routing: if mode+region provided, build prompt from Lego blocks
+    // Otherwise fall back to legacy system param (backward compat)
+    const systemPrompt = mode && region 
+      ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx })
+      : (system || '');
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -22,8 +29,9 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: system || '',
+        max_tokens: 600, // Reduced from 1000 — prompts are more focused now
+        temperature: 0.4, // Lower = less hallucination, more precise
+        system: systemPrompt,
         messages: messages || [],
       }),
     });
