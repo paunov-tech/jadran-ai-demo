@@ -144,10 +144,10 @@ export default function LandingPage() {
               </span>
           </h1>
           <p style={{ fontSize: "clamp(14px, 2.2vw, 17px)", color: "#94a3b8", lineHeight: 1.6, maxWidth: 520, margin: "0 auto 28px" }}>{tx("sub")}</p>
-          {/* Two CTA Buttons */}
-          <div style={{ display: "flex", gap: 14, maxWidth: 480, margin: "0 auto", flexWrap: "wrap", justifyContent: "center" }}>
+          {/* 4 CTA Cards — 2x2 grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, maxWidth: 520, margin: "0 auto" }}>
             <a href="/ai?niche=camper" style={{
-              flex: "1 1 200px", padding: "20px 24px", borderRadius: 18, textDecoration: "none",
+              padding: "16px 14px", borderRadius: 16, textDecoration: "none",
               background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)",
               display: "flex", alignItems: "center", gap: 14, transition: "all 0.3s",
             }}
@@ -160,7 +160,7 @@ export default function LandingPage() {
               </div>
             </a>
             <a href="/ai?niche=local" style={{
-              flex: "1 1 200px", padding: "20px 24px", borderRadius: 18, textDecoration: "none",
+              padding: "16px 14px", borderRadius: 16, textDecoration: "none",
               background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)",
               display: "flex", alignItems: "center", gap: 14, transition: "all 0.3s",
             }}
@@ -173,7 +173,7 @@ export default function LandingPage() {
               </div>
             </a>
             <a href="/ai?niche=sailing" style={{
-              flex: "1 1 200px", padding: "20px 24px", borderRadius: 18, textDecoration: "none",
+              padding: "16px 14px", borderRadius: 16, textDecoration: "none",
               background: "rgba(14,165,233,0.04)", border: "1px solid rgba(14,165,233,0.1)",
               display: "flex", alignItems: "center", gap: 14, transition: "all 0.3s",
             }}
@@ -186,7 +186,7 @@ export default function LandingPage() {
               </div>
             </a>
             <a href="/ai?niche=cruiser" style={{
-              flex: "1 1 200px", padding: "20px 24px", borderRadius: 18, textDecoration: "none",
+              padding: "16px 14px", borderRadius: 16, textDecoration: "none",
               background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.1)",
               display: "flex", alignItems: "center", gap: 14, transition: "all 0.3s",
             }}
@@ -359,18 +359,20 @@ export default function LandingPage() {
         <div style={{ fontSize: 11, color: "#1e293b" }}>JADRAN {"\u00B7"} SIAL Consulting d.o.o. {"\u00B7"} 2026</div>
       </footer>
 
-      {/* ═══ STICKY BUY BAR — DIRECT TO STRIPE ═══ */}
+      {/* ═══ STICKY BUY BAR — PREMIUM DESIGN ═══ */}
       <div onClick={() => goToStripe("season", lang)} style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99, cursor: "pointer", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-        <div style={{ padding: "10px 16px", background: "linear-gradient(135deg, #ef4444, #dc2626)", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 -4px 20px rgba(239,68,68,0.4)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ color: "#fff", fontSize: 22 }}>🚐</span>
-            <span style={{ color: "#fff", fontSize: 22 }}>🚗</span>
-            <span style={{ color: "#fff", fontSize: 22 }}>⛵</span>
-            <span style={{ color: "#fff", fontSize: 22 }}>🚢</span>
+        <div style={{ position: "relative", overflow: "hidden", padding: "12px 20px", background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)", borderTop: "1px solid rgba(245,158,11,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 -8px 32px rgba(0,0,0,0.5)" }}>
+          {/* Shimmer accent line */}
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, transparent, #f59e0b, #fbbf24, #f59e0b, transparent)" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #f59e0b, #d97706)", display: "grid", placeItems: "center", fontSize: 16, boxShadow: "0 2px 8px rgba(245,158,11,0.3)" }}>⭐</div>
+            <div>
+              <div style={{ color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: F }}>{tx("stickyBuy") || "KUPI ODMAH"}</div>
+              <div style={{ color: "#94a3b8", fontSize: 10 }}>{tx("sticky")}</div>
+            </div>
           </div>
-          <div style={{ textAlign: "right" }}>
-            <div style={{ color: "#fff", fontSize: 16, fontWeight: 800, fontFamily: F, letterSpacing: 1 }}>{tx("stickyBuy") || "KUPI ODMAH"}</div>
-            <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 10 }}>{tx("sticky")}</div>
+          <div style={{ padding: "10px 20px", borderRadius: 12, background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#0f172a", fontWeight: 800, fontSize: 14, fontFamily: F, boxShadow: "0 4px 16px rgba(245,158,11,0.3)", letterSpacing: 0.5 }}>
+            7.99€ →
           </div>
         </div>
       </div>

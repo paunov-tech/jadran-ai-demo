@@ -241,6 +241,7 @@ export default function StandaloneAI() {
   const [trialHoursLeft, setTrialHoursLeft] = useState(24);
   const [trialExpired, setTrialExpired] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [showCards, setShowCards] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
 
@@ -320,12 +321,25 @@ export default function StandaloneAI() {
       window.history.replaceState({}, "", "/ai");
     }
     // Check localStorage
-    try { if (localStorage.getItem("jadran_ai_premium") === "1") setPremium(true); } catch {}
+    try { 
+      if (localStorage.getItem("jadran_ai_premium") === "1") setPremium(true);
+      const pp = localStorage.getItem("jadran_premium_plan");
+      if (pp) setPremiumPlan(JSON.parse(pp));
+    } catch {}
     // Also check ?payment=success from Stripe redirect
     if (params.get("payment") === "success") {
       setPremium(true);
-      try { localStorage.setItem("jadran_ai_premium", "1"); } catch {}
-      window.history.replaceState({}, "", "/ai");
+      const plan = params.get("plan") || "week";
+      const days = params.get("days") || "7";
+      const region = params.get("region") || "all";
+      try { 
+        localStorage.setItem("jadran_ai_premium", "1");
+        const premData = { plan, days: parseInt(days), region, expiresAt: Date.now() + parseInt(days) * 86400000, purchasedAt: new Date().toISOString() };
+        localStorage.setItem("jadran_premium_plan", JSON.stringify(premData));
+        setPremiumPlan(premData);
+      } catch {}
+      setShowSuccess(true);
+      window.history.replaceState({}, "", "/ai" + (niche ? "?niche=" + niche : ""));
     }
     // Auto-open paywall from landing "KUPI ODMAH"
     if (params.get("buy") === "true") {
@@ -567,6 +581,34 @@ export default function StandaloneAI() {
           <div style={{ fontSize: 9, color: C.mut }}>🔒 {t.paySecure}</div>
         </div>
         <button onClick={() => setShowPaywall(false)} style={{ width: "100%", background: "none", border: "none", color: C.mut, fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: 8 }}>{t.payLater}</button>
+      </div>
+    </div>
+  );
+
+  // ═══ POST-PURCHASE SUCCESS MODAL ═══
+  const SuccessModal = () => showSuccess && (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)", zIndex: 400, display: "grid", placeItems: "center", padding: 24 }}
+      onClick={() => setShowSuccess(false)}>
+      <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "32px 24px", maxWidth: 440, width: "100%", border: "1px solid rgba(34,197,94,0.15)", textAlign: "center" }}>
+        <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(34,197,94,0.1)", display: "grid", placeItems: "center", margin: "0 auto 16px", fontSize: 32 }}>✅</div>
+        <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 6 }}>{t.upgraded || "Premium otključan!"}</div>
+        <div style={{ fontSize: 13, color: "#22c55e", fontWeight: 600, marginBottom: 16 }}>⭐ {premiumPlan?.plan === "season" ? t.paySeason : t.payWeek} · {premiumPlan?.days || 30} {lang === "en" ? "days" : lang === "de" || lang === "at" ? "Tage" : "dana"}</div>
+        <div style={{ padding: "14px 16px", borderRadius: 14, background: isNight ? "rgba(34,197,94,0.04)" : "rgba(34,197,94,0.06)", marginBottom: 16, fontSize: 13, lineHeight: 2, color: C.text, textAlign: "left" }}>
+          ✅ {(t.payFeatures || "").split("|")[0]}<br/>
+          ✅ {(t.payFeatures || "").split("|")[1]}<br/>
+          ✅ {(t.payFeatures || "").split("|")[2]}<br/>
+          ✅ {(t.payFeatures || "").split("|")[3]}
+        </div>
+        <div style={{ padding: "12px 16px", borderRadius: 12, background: isNight ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)", border: `1px solid ${C.bord}`, marginBottom: 16, fontSize: 11, color: C.mut, textAlign: "left" }}>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>🧾 {lang === "en" ? "Payment details" : lang === "de" || lang === "at" ? "Zahlungsdetails" : lang === "it" ? "Dettagli pagamento" : "Detalji plaćanja"}</div>
+          <div>Stripe · {premiumPlan?.plan === "season" ? "7.99€" : "3.99€"}</div>
+          <div>{premiumPlan?.purchasedAt ? new Date(premiumPlan.purchasedAt).toLocaleDateString(lang === "de" || lang === "at" ? "de-AT" : lang === "en" ? "en-GB" : "hr-HR", { day: "numeric", month: "long", year: "numeric" }) : ""}</div>
+          <div style={{ marginTop: 4, fontSize: 10 }}>{lang === "en" ? "Receipt sent to your email by Stripe" : lang === "de" || lang === "at" ? "Rechnung per E-Mail von Stripe" : lang === "it" ? "Ricevuta inviata da Stripe via email" : "Račun poslan na email putem Stripe"}</div>
+        </div>
+        <button onClick={() => { setShowSuccess(false); if (step === "setup") { setStep("chat"); setTimeout(() => setMsgs([{ role: "assistant", text: generateIcebreaker() }]), 300); } }}
+          style={{ width: "100%", padding: "16px", borderRadius: 16, border: "none", background: "linear-gradient(135deg, #22c55e, #16a34a)", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "'Playfair Display',Georgia,serif", boxShadow: "0 4px 16px rgba(34,197,94,0.3)" }}>
+          {lang === "en" ? "Start exploring →" : lang === "de" ? "Los geht's →" : lang === "at" ? "Los geht's! →" : lang === "it" ? "Inizia a esplorare →" : "Započnite istraživanje →"}
+        </button>
       </div>
     </div>
   );
@@ -1579,6 +1621,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
       </div>
 
       <Paywall />
+      <SuccessModal />
 
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
