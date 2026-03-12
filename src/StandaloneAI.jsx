@@ -343,7 +343,7 @@ Format: [Tekst](URL). Nikad ne izmišljaj linkove.`;
       <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "32px 24px", maxWidth: 440, width: "100%", border: "1px solid rgba(245,158,11,0.1)" }}>
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <div style={{ fontSize: 10, color: C.accent, letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>BESPLATNI DAN JE ISTEKAO</div>
-          <div style={{ fontFamily: "'DM Serif Display',Georgia,serif", fontSize: 24, color: C.text }}>Otključajte svog vodiča</div>
+          <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 24, color: C.text }}>Otključajte svog vodiča</div>
         </div>
         <div style={{ padding: "14px 16px", borderRadius: 14, background: isNight ? "rgba(14,165,233,0.04)" : "rgba(14,165,233,0.06)", marginBottom: 20, fontSize: 13, lineHeight: 2, color: C.text }}>
           ✅ Neograničena AI pitanja 24/7<br/>
@@ -541,12 +541,12 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
   // ═══ SETUP SCREEN ═══
   if (step === "setup") return (
     <div style={{ minHeight: "100vh", background: C.heroBg, fontFamily: "'Outfit',system-ui,sans-serif", color: C.text }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
       <div style={{ maxWidth: 540, margin: "0 auto", padding: "40px 24px" }}>
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 40 }}>
-          <a href="/" style={{ color: C.mut, fontSize: 13, textDecoration: "none" }}>{t.back}</a>
+          <a href="/" style={{ display: "flex", alignItems: "center", gap: 4, color: C.mut, fontSize: 13, textDecoration: "none", padding: "6px 0" }}>← {t.back}</a>
           <div style={{ display: "flex", gap: 2, background: isNight ? "rgba(12,28,50,0.5)" : "rgba(255,255,255,0.5)", borderRadius: 12, padding: 3 }}>
             {LANGS.map(l => (
               <button key={l.code} onClick={() => setLang(l.code)}
@@ -557,11 +557,14 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
           </div>
         </div>
 
-        {/* Title */}
+        {/* Title — matches landing visual DNA */}
         <div style={{ textAlign: "center", marginBottom: 36 }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>🌊</div>
-          <div style={{ fontFamily: "'DM Serif Display',Georgia,serif", fontSize: 32, marginBottom: 6 }}>{t.title}</div>
-          <div style={{ fontSize: 14, color: C.mut }}>{t.sub}</div>
+          <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 14 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 22, fontWeight: 800, color: "#fff" }}>J</div>
+            <span style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 20, fontWeight: 700, letterSpacing: 2, color: C.text }}>JADRAN</span>
+          </div>
+          <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 28, fontWeight: 700, lineHeight: 1.2, marginBottom: 8 }}>{t.title}</div>
+          <div style={{ fontSize: 14, color: C.mut, lineHeight: 1.5 }}>{t.sub}</div>
         </div>
 
         {/* Travel mode */}
@@ -612,7 +615,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
             background: region && travelMode ? "linear-gradient(135deg, #0ea5e9, #0284c7)" : (isNight ? "rgba(255,255,255,0.06)" : "rgba(12,74,110,0.08)"),
             color: "#fff", fontSize: 17, fontWeight: 600, cursor: region && travelMode ? "pointer" : "not-allowed",
             opacity: region && travelMode ? 1 : 0.4,
-            fontFamily: "'DM Serif Display',Georgia,serif",
+            fontFamily: "'Playfair Display',Georgia,serif",
             boxShadow: region && travelMode ? "0 6px 24px rgba(14,165,233,0.25)" : "none",
           }}>
           {t.start} →
@@ -630,7 +633,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
   // ═══ CHAT SCREEN ═══
   return (
     <div style={{ height: "100dvh", display: "flex", flexDirection: "column", background: C.chatBg, fontFamily: "'Outfit',system-ui,sans-serif", color: C.text }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
       {/* Header */}
       <div style={{ padding: "14px 20px", paddingTop: "max(14px, env(safe-area-inset-top, 14px))", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.bord}`, flexShrink: 0, background: isNight ? "transparent" : "rgba(255,255,255,0.4)" }}>
@@ -721,7 +724,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
                   <span style={{ fontSize: 9, letterSpacing: 5, color: "#22c55e", fontWeight: 600 }}>LIVE</span>
                   <span style={{ fontSize: 9, letterSpacing: 3, color: C.accent, fontWeight: 600 }}>VIBE JADRANA</span>
                 </div>
-                <div style={{ fontFamily: "'Playfair Display','DM Serif Display',Georgia,serif", fontSize: 22, fontWeight: 700 }}>
+                <div style={{ fontFamily: "'Playfair Display','Playfair Display',Georgia,serif", fontSize: 22, fontWeight: 700 }}>
                   {travelMode === "camper" ? "Stanje na cesti i moru" : travelMode === "sailing" ? "Pomorske prilike" : "Trenutno na Jadranu"}
                 </div>
                 <div style={{ fontSize: 11, color: C.mut, marginTop: 4 }}>

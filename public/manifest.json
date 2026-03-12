@@ -2,7 +2,7 @@
   "name": "JADRAN — Lokalni vodič za Jadran",
   "short_name": "JADRAN",
   "description": "AI turistički vodič za hrvatsku obalu Jadrana. Kamperi, jedriličari, turisti.",
-  "start_url": "/ai",
+  "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0a1628",
