@@ -48,7 +48,9 @@ export default function StandaloneAI() {
   const [region, setRegion] = useState(null);
   const [travelMode, setTravelMode] = useState(null);
   const [premium, setPremium] = useState(false);
-  const [freeLeft, setFreeLeft] = useState(3);
+  const [premiumPlan, setPremiumPlan] = useState(null);
+  const [trialHoursLeft, setTrialHoursLeft] = useState(24);
+  const [trialExpired, setTrialExpired] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
 
@@ -100,13 +102,17 @@ export default function StandaloneAI() {
   const t = T[lang] || T.en;
 
   // ─── STRIPE CHECKOUT ───
-  const startCheckout = async () => {
+  const startCheckout = async (plan = "week") => {
     setPayLoading(true);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roomCode: "AI-STANDALONE", guestName: "AI User", lang, returnPath: "/ai" }),
+        body: JSON.stringify({ 
+          roomCode: "AI-STANDALONE", guestName: "AI User", lang,
+          returnPath: "/ai" + (niche ? "?niche=" + niche : ""),
+          plan, region: plan === "week" ? (region || "split") : "all",
+        }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
@@ -119,13 +125,13 @@ export default function StandaloneAI() {
   // ─── AI CHAT ───
   const sendMsg = async () => {
     if (!input.trim() || loading) return;
-    if (!premium && freeLeft <= 0) { setShowPaywall(true); return; }
+    if (!premium && trialExpired) { setShowPaywall(true); return; }
 
     const msg = input.trim();
     setInput("");
     setMsgs(p => [...p, { role: "user", text: msg }]);
     setLoading(true);
-    if (!premium) setFreeLeft(f => f - 1);
+    // trial active — no decrement
 
     const regionName = REGIONS.find(r => r.id === region)?.name || "Jadran";
     const modeName = TRAVEL_MODES.find(m => m.id === travelMode)?.name || "";
@@ -228,17 +234,40 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
   const Paywall = () => showPaywall && (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)", zIndex: 300, display: "grid", placeItems: "center", padding: 24 }}
       onClick={() => setShowPaywall(false)}>
-      <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.95)" : "rgba(255,255,255,0.95)", borderRadius: 24, padding: 36, maxWidth: 400, width: "100%", textAlign: "center", border: "1px solid rgba(245,158,11,0.1)" }}>
-        <div style={{ fontSize: 48, marginBottom: 12 }}>⭐</div>
-        <div style={{ fontFamily: "'DM Serif Display',Georgia,serif", fontSize: 26, marginBottom: 8 }}>Premium AI</div>
-        <div style={{ fontSize: 40, fontWeight: 300, color: C.gold, marginBottom: 8 }}>5.99€</div>
-        <div style={{ fontSize: 13, color: C.mut, marginBottom: 24, lineHeight: 1.6 }}>
-          Neograničena pitanja, lokalni savjeti, personalizirane preporuke{travelMode === "camper" ? ", kamper parking & voda" : ""}.
+      <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "32px 24px", maxWidth: 440, width: "100%", border: "1px solid rgba(245,158,11,0.1)" }}>
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <div style={{ fontSize: 10, color: C.accent, letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>BESPLATNI DAN JE ISTEKAO</div>
+          <div style={{ fontFamily: "'DM Serif Display',Georgia,serif", fontSize: 24, color: C.text }}>Otključajte svog vodiča</div>
         </div>
-        <button onClick={startCheckout} style={{ width: "100%", padding: "16px", borderRadius: 16, border: "none", background: "linear-gradient(135deg, #0ea5e9, #0284c7)", color: "#fff", fontSize: 16, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", boxShadow: "0 6px 24px rgba(14,165,233,0.25)" }}>
-          {payLoading ? "⏳..." : t.unlock}
-        </button>
-        <button onClick={() => setShowPaywall(false)} style={{ marginTop: 12, background: "none", border: "none", color: C.mut, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>Možda kasnije</button>
+        <div style={{ padding: "14px 16px", borderRadius: 14, background: isNight ? "rgba(14,165,233,0.04)" : "rgba(14,165,233,0.06)", marginBottom: 20, fontSize: 13, lineHeight: 2, color: C.text }}>
+          ✅ Neograničena AI pitanja 24/7<br/>
+          ✅ Svi savjeti na upozorenjima otključani<br/>
+          ✅ 8+ skrivenih plaža i konoba<br/>
+          {(travelMode === "camper" || niche === "camper") && <>✅ Kamper parking, dump station, voda<br/></>}
+          {region === "istra" && <>✅ Istra Insider — sezonski savjeti<br/></>}
+          ✅ Personalizirana ruta za danas
+        </div>
+        <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+          <button onClick={() => startCheckout("week")} disabled={payLoading}
+            style={{ flex: 1, padding: "16px 12px", borderRadius: 16, border: `1px solid ${C.bord}`, background: isNight ? C.card : "rgba(255,255,255,0.8)", cursor: "pointer", fontFamily: "inherit", textAlign: "center", transition: "all 0.2s" }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = C.accent}
+            onMouseLeave={e => e.currentTarget.style.borderColor = C.bord}>
+            <div style={{ fontSize: 28, fontWeight: 300, color: C.accent }}>3.99€</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginTop: 4 }}>Tjedan</div>
+            <div style={{ fontSize: 11, color: C.mut, marginTop: 2 }}>7 dana · 1 regija</div>
+          </button>
+          <button onClick={() => startCheckout("season")} disabled={payLoading}
+            style={{ flex: 1, padding: "16px 12px", borderRadius: 16, border: "1px solid rgba(245,158,11,0.2)", background: isNight ? "rgba(245,158,11,0.04)" : "rgba(245,158,11,0.08)", cursor: "pointer", fontFamily: "inherit", textAlign: "center", position: "relative", overflow: "hidden", transition: "all 0.2s" }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(245,158,11,0.4)"}
+            onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(245,158,11,0.2)"}>
+            <div style={{ position: "absolute", top: 0, right: 0, padding: "2px 10px", background: C.gold, color: "#fff", fontSize: 9, fontWeight: 700, borderRadius: "0 14px 0 8px" }}>BEST</div>
+            <div style={{ fontSize: 28, fontWeight: 300, color: C.gold }}>7.99€</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginTop: 4 }}>Sezona</div>
+            <div style={{ fontSize: 11, color: C.mut, marginTop: 2 }}>30 dana · sve regije</div>
+          </button>
+        </div>
+        {payLoading && <div style={{ textAlign: "center", fontSize: 13, color: C.accent, marginBottom: 8 }}>⏳ Preusmjeravanje na plaćanje...</div>}
+        <button onClick={() => setShowPaywall(false)} style={{ width: "100%", background: "none", border: "none", color: C.mut, fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: 8 }}>Možda kasnije</button>
       </div>
     </div>
   );
@@ -351,7 +380,7 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
 
         {/* Free tier note */}
         <div style={{ textAlign: "center", marginTop: 16, fontSize: 12, color: isNight ? "rgba(255,255,255,0.3)" : "rgba(12,74,110,0.4)" }}>
-          {t.free3} · Premium {t.unlock.split("—")[1]}
+          24h besplatno · zatim od 3.99€/tjedan
         </div>
       </div>
       <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } ::selection { background: rgba(14,165,233,0.3); }`}</style>
@@ -374,9 +403,9 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {premium
-            ? <span style={{ padding: "4px 12px", borderRadius: 12, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.12)", color: C.gold, fontSize: 10, fontWeight: 600 }}>⭐ PREMIUM</span>
-            : <button onClick={() => setShowPaywall(true)} style={{ padding: "4px 12px", borderRadius: 12, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.12)", color: C.gold, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                {freeLeft > 0 ? `${freeLeft}/3 ${t.remaining}` : t.unlock}
+            ? <span style={{ padding: "4px 12px", borderRadius: 12, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.12)", color: C.gold, fontSize: 10, fontWeight: 600 }}>⭐ {premiumPlan?.plan === "season" ? "SEZONA" : "TJEDAN"} {premiumPlan ? Math.ceil((premiumPlan.expiresAt - Date.now()) / 86400000) + "d" : ""}</span>
+            : <button onClick={() => trialExpired && setShowPaywall(true)} style={{ padding: "4px 12px", borderRadius: 12, background: trialExpired ? "rgba(239,68,68,0.08)" : "rgba(52,211,153,0.08)", border: `1px solid ${trialExpired ? "rgba(239,68,68,0.12)" : "rgba(52,211,153,0.12)"}`, color: trialExpired ? "#f87171" : "#34d399", fontSize: 10, fontWeight: 600, cursor: trialExpired ? "pointer" : "default", fontFamily: "inherit" }}>
+                {trialExpired ? "⏰ Isteklo" : `✅ ${trialHoursLeft}h besplatno`}
               </button>
           }
         </div>
@@ -590,7 +619,7 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
                               }}>{w.severity === "critical" ? "KRITIČNO" : w.severity === "high" ? "OPASNO" : "PAŽNJA"}</span>
                             </div>
                             <div style={{ fontSize: 12, color: isNight ? "#fca5a5" : "#b91c1c", lineHeight: 1.4, marginBottom: 6 }}>{w.danger}</div>
-                            <div style={{ fontSize: 12, color: C.accent, lineHeight: 1.4 }}>💡 {w.advice}</div>
+                            {(premium || w.severity === "medium") ? <div style={{ fontSize: 12, color: C.accent, lineHeight: 1.4 }}>💡 {w.advice}</div> : <div onClick={() => setShowPaywall(true)} style={{ fontSize: 12, color: C.gold, cursor: "pointer" }}>🔒 Otključaj savjet — Premium</div>}
                             {w.link && <a href={w.link} target="_blank" rel="noopener noreferrer" style={{
                               display: "inline-block", marginTop: 8, padding: "5px 14px", borderRadius: 10,
                               background: isNight ? "rgba(14,165,233,0.1)" : "rgba(14,165,233,0.08)", border: `1px solid ${C.bord}`,
@@ -716,10 +745,10 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
       </div>
 
       {/* Free questions warning */}
-      {!premium && freeLeft <= 0 && (
+      {!premium && trialExpired && (
         <div style={{ padding: "10px 20px", background: isNight ? "rgba(245,158,11,0.06)" : "rgba(245,158,11,0.1)", borderTop: "1px solid rgba(245,158,11,0.15)", textAlign: "center", flexShrink: 0 }}>
           <button onClick={() => setShowPaywall(true)} style={{ background: "none", border: "none", color: C.gold, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-            ⭐ Besplatna pitanja potrošena — {t.unlock}
+            ⏰ Besplatni dan istekao — {t.unlock}
           </button>
         </div>
       )}

@@ -12,23 +12,36 @@ export default async function handler(req, res) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
   try {
-    const { roomCode, guestName, lang, returnPath } = req.body;
+    const { roomCode, guestName, lang, returnPath, plan, region } = req.body;
     const origin = req.headers.origin || "https://jadran-ai-demo.vercel.app";
+
+    // Plan pricing: week (7 days, 1 region) or season (30 days, all regions)
+    const plans = {
+      week:   { name: "JADRAN Vodič — Tjedan (7 dana)", amount: 399, days: 7 },
+      season: { name: "JADRAN Vodič — Sezona (30 dana)", amount: 799, days: 30 },
+    };
+    const p = plans[plan] || plans.week;
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [{
         price_data: {
           currency: "eur",
-          product_data: { name: "JADRAN AI Premium Concierge" },
-          unit_amount: 599,
+          product_data: { name: p.name },
+          unit_amount: p.amount,
         },
         quantity: 1,
       }],
       mode: "payment",
-      success_url: origin + (returnPath || "") + "?payment=success&session_id={CHECKOUT_SESSION_ID}",
+      success_url: origin + (returnPath || "") + `?payment=success&plan=${plan || "week"}&days=${p.days}&region=${region || "all"}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: origin + (returnPath || "") + "?payment=cancelled",
-      metadata: { roomCode: roomCode || "DEMO", guestName: guestName || "Guest" },
+      metadata: {
+        roomCode: roomCode || "AI-STANDALONE",
+        guestName: guestName || "Guest",
+        plan: plan || "week",
+        region: region || "all",
+        days: String(p.days),
+      },
     });
 
     return res.status(200).json({ sessionId: session.id, url: session.url });
