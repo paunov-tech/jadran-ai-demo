@@ -347,7 +347,7 @@ export default function LandingPage() {
       </footer>
 
       {/* ═══ STICKY BUY BAR ═══ */}
-      <a href="/ai" style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99, textDecoration: "none", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+      <a href="/ai?buy=true" style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99, textDecoration: "none", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
         <div style={{ padding: "10px 16px", background: "linear-gradient(135deg, #ef4444, #dc2626)", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 -4px 20px rgba(239,68,68,0.4)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ color: "#fff", fontSize: 22 }}>🚐</span>

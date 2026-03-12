@@ -327,6 +327,11 @@ export default function StandaloneAI() {
       try { localStorage.setItem("jadran_ai_premium", "1"); } catch {}
       window.history.replaceState({}, "", "/ai");
     }
+    // Auto-open paywall from landing "KUPI ODMAH"
+    if (params.get("buy") === "true") {
+      setShowPaywall(true);
+      window.history.replaceState({}, "", "/ai");
+    }
   }, []);
 
   const t = T[lang] || T.en;
