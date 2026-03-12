@@ -57,6 +57,7 @@ export default function StandaloneAI() {
   const [loading, setLoading] = useState(false);
   const chatEnd = useRef(null);
   const [weather, setWeather] = useState(null);
+  const [regionImgs, setRegionImgs] = useState({});
 
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
   // Fetch live weather
@@ -65,6 +66,15 @@ export default function StandaloneAI() {
       if (d.current?.temp) setWeather(d.current);
     }).catch(() => {});
   }, []);
+  // Load region image when region selected
+  useEffect(() => {
+    if (!region || regionImgs[region]) return;
+    const cityMap = { split: "Split", makarska: "Makarska", dubrovnik: "Dubrovnik", zadar: "Zadar", istra: "Rovinj", kvarner: "Opatija" };
+    const city = cityMap[region];
+    if (city) fetch(`/api/cityimg?city=${encodeURIComponent(city)}`)
+      .then(r => r.json()).then(d => { if (d.url) setRegionImgs(prev => ({ ...prev, [region]: d.url })); })
+      .catch(() => {});
+  }, [region]);
 
   // Check premium from URL (after Stripe redirect)
   useEffect(() => {
@@ -156,16 +166,27 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
     setLoading(false);
   };
 
-  const C = {
+  const hour = new Date().getHours();
+  const isNight = hour >= 19 || hour < 6;
+  const C = isNight ? {
     bg: "#0a1628", accent: "#0ea5e9", gold: "#f59e0b", text: "#f0f9ff",
     mut: "#7dd3fc", bord: "rgba(14,165,233,0.08)", card: "rgba(12,28,50,0.7)",
+    heroBg: "linear-gradient(160deg, #0a1628, #0e3a5c 50%, #134e6f)",
+    chatBg: "linear-gradient(160deg, #0a1628, #0e3a5c)",
+    inputBg: "rgba(255,255,255,0.04)",
+  } : {
+    bg: "#e8f4fc", accent: "#0284c7", gold: "#d97706", text: "#0c2d48",
+    mut: "#4b7a99", bord: "rgba(12,74,110,0.1)", card: "rgba(255,255,255,0.7)",
+    heroBg: "linear-gradient(160deg, #dbeef9 0%, #b8dff5 30%, #87ceeb 60%, #e0f2fe 100%)",
+    chatBg: "linear-gradient(160deg, #e0f2fe, #bae6fd 50%, #dbeef9)",
+    inputBg: "rgba(12,74,110,0.04)",
   };
 
   // ═══ PAYWALL MODAL ═══
   const Paywall = () => showPaywall && (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)", zIndex: 300, display: "grid", placeItems: "center", padding: 24 }}
       onClick={() => setShowPaywall(false)}>
-      <div onClick={e => e.stopPropagation()} style={{ background: "rgba(12,28,50,0.95)", borderRadius: 24, padding: 36, maxWidth: 400, width: "100%", textAlign: "center", border: "1px solid rgba(245,158,11,0.1)" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.95)" : "rgba(255,255,255,0.95)", borderRadius: 24, padding: 36, maxWidth: 400, width: "100%", textAlign: "center", border: "1px solid rgba(245,158,11,0.1)" }}>
         <div style={{ fontSize: 48, marginBottom: 12 }}>⭐</div>
         <div style={{ fontFamily: "'DM Serif Display',Georgia,serif", fontSize: 26, marginBottom: 8 }}>Premium AI</div>
         <div style={{ fontSize: 40, fontWeight: 300, color: C.gold, marginBottom: 8 }}>5.99€</div>
@@ -208,14 +229,14 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
 
   // ═══ SETUP SCREEN ═══
   if (step === "setup") return (
-    <div style={{ minHeight: "100vh", background: `linear-gradient(160deg, ${C.bg}, #0e3a5c 50%, #134e6f)`, fontFamily: "'Outfit',system-ui,sans-serif", color: C.text }}>
+    <div style={{ minHeight: "100vh", background: C.heroBg, fontFamily: "'Outfit',system-ui,sans-serif", color: C.text }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
       <div style={{ maxWidth: 540, margin: "0 auto", padding: "40px 24px" }}>
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 40 }}>
           <a href="/" style={{ color: C.mut, fontSize: 13, textDecoration: "none" }}>{t.back}</a>
-          <div style={{ display: "flex", gap: 2, background: "rgba(12,28,50,0.5)", borderRadius: 12, padding: 3 }}>
+          <div style={{ display: "flex", gap: 2, background: isNight ? "rgba(12,28,50,0.5)" : "rgba(255,255,255,0.5)", borderRadius: 12, padding: 3 }}>
             {LANGS.map(l => (
               <button key={l.code} onClick={() => setLang(l.code)}
                 style={{ padding: "4px 6px", background: lang === l.code ? "rgba(14,165,233,0.12)" : "transparent", border: lang === l.code ? "1px solid rgba(14,165,233,0.15)" : "1px solid transparent", borderRadius: 9, cursor: "pointer", fontSize: 14, lineHeight: 1 }}>
@@ -297,7 +318,7 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
 
   // ═══ CHAT SCREEN ═══
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: `linear-gradient(160deg, ${C.bg}, #0e3a5c)`, fontFamily: "'Outfit',system-ui,sans-serif", color: C.text }}>
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: C.chatBg, fontFamily: "'Outfit',system-ui,sans-serif", color: C.text }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
       {/* Header */}
@@ -326,9 +347,12 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
             {/* ═══ VIBE JADRANA — SHOWROOM ═══ */}
 
             {/* Ambient Adriatic Scene */}
-            <div style={{ position: "relative", minHeight: 280, overflow: "hidden", background: "linear-gradient(180deg, #0f2b3d 0%, #0c4a6e 30%, #0ea5e9 65%, #38bdf8 80%, #7dd3fc 100%)" }}>
+            <div style={{ position: "relative", minHeight: 280, overflow: "hidden", background: isNight
+              ? "linear-gradient(180deg, #0f2b3d 0%, #0c4a6e 30%, #0ea5e9 65%, #38bdf8 80%, #7dd3fc 100%)"
+              : "linear-gradient(180deg, #60a5fa 0%, #38bdf8 25%, #0ea5e9 50%, #0284c7 75%, #0369a1 100%)"
+            }}>
               {/* Sun/Moon */}
-              <div style={{ position: "absolute", top: "18%", left: "50%", transform: "translateX(-50%)", width: 60, height: 60, borderRadius: "50%", background: "radial-gradient(circle, #fbbf24 30%, rgba(251,191,36,0.3) 60%, transparent 100%)", boxShadow: "0 0 60px rgba(251,191,36,0.4), 0 0 120px rgba(251,191,36,0.15)", animation: "sunGlow 4s ease-in-out infinite" }} />
+              <div style={{ position: "absolute", top: "18%", left: "50%", transform: "translateX(-50%)", width: 60, height: 60, borderRadius: "50%", background: isNight ? "radial-gradient(circle, #fbbf24 30%, rgba(251,191,36,0.3) 60%, transparent 100%)" : "radial-gradient(circle, #fef08a 20%, #fbbf24 40%, rgba(251,191,36,0.2) 70%, transparent 100%)", boxShadow: "0 0 60px rgba(251,191,36,0.4), 0 0 120px rgba(251,191,36,0.15)", animation: "sunGlow 4s ease-in-out infinite" }} />
               {/* Horizon glow */}
               <div style={{ position: "absolute", top: "55%", left: 0, right: 0, height: 80, background: "radial-gradient(ellipse 80% 100% at 50% 0%, rgba(251,191,36,0.15), transparent)", pointerEvents: "none" }} />
               {/* Animated sea */}
@@ -339,19 +363,27 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
                   <path fill="rgba(12,74,110,0.7)" style={{ animation: "seaV1 5s ease-in-out infinite reverse" }} d="M0,38 C80,30 140,42 200,34 C260,26 320,40 400,34 L400,80 L0,80 Z" />
                 </svg>
               </div>
-              {/* Live weather overlay */}
-              {weather && <div style={{ position: "absolute", bottom: 16, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 6, padding: "0 12px", flexWrap: "wrap" }}>
-                {[
-                  { v: `${weather.temp}°`, l: "ZRAK", bg: "rgba(240,249,255,0.12)" },
-                  { v: `${weather.sea}°`, l: "MORE", bg: "rgba(14,165,233,0.2)" },
-                  { v: `UV ${weather.uv}`, l: weather.uv >= 8 ? "VISOK" : weather.uv >= 5 ? "UMJEREN" : "NIZAK", bg: weather.uv >= 8 ? "rgba(248,113,113,0.15)" : "rgba(240,249,255,0.1)" },
-                  { v: `🌅 ${weather.sunset}`, l: "ZALAZAK", bg: "rgba(251,191,36,0.12)" },
-                ].map((d, i) => (
-                  <div key={i} style={{ padding: "8px 14px", borderRadius: 12, background: d.bg, backdropFilter: "blur(12px)", textAlign: "center", border: "1px solid rgba(255,255,255,0.08)" }}>
-                    <div style={{ fontSize: 15, fontWeight: 500, color: "#f0f9ff", lineHeight: 1 }}>{d.v}</div>
-                    <div style={{ fontSize: 8, color: "rgba(240,249,255,0.5)", letterSpacing: 2, marginTop: 3 }}>{d.l}</div>
-                  </div>
-                ))}
+              {/* Live marine data overlay */}
+              {weather && <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "32px 12px 14px", background: "linear-gradient(transparent, rgba(0,0,0,0.5))" }}>
+                <div style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 4 }}>
+                  {[
+                    { v: `${weather.temp}°`, sub: `${weather.icon} osjeća ${weather.feelsLike || weather.temp}°`, l: "ZRAK" },
+                    { v: `${weather.sea}°`, sub: "površina mora", l: "MORE" },
+                    { v: `${weather.windDir || "—"} ${weather.windSpeed || "—"}`, sub: `udari ${weather.gusts || "—"} km/h`, l: "VJETAR" },
+                    { v: weather.waveHeight ? `${weather.waveHeight}m` : "mirno", sub: weather.wavePeriod ? `period ${weather.wavePeriod}s` : "valovi", l: "VALOVI" },
+                    { v: `UV ${weather.uv}`, sub: weather.uv >= 8 ? "⚠️ zaštita!" : weather.uv >= 5 ? "SPF 30+" : "nizak", l: "UV INDEX" },
+                    { v: `🌅 ${weather.sunset}`, sub: `izlazak ${weather.sunrise || "06:00"}`, l: "SUNCE" },
+                  ].map((d, i) => (
+                    <div key={i} style={{ textAlign: "center", minWidth: 52, padding: "4px 6px" }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#f0f9ff", lineHeight: 1.1 }}>{d.v}</div>
+                      <div style={{ fontSize: 8, color: "rgba(240,249,255,0.5)", letterSpacing: 1, marginTop: 2 }}>{d.l}</div>
+                      <div style={{ fontSize: 9, color: "rgba(240,249,255,0.4)", marginTop: 1 }}>{d.sub}</div>
+                    </div>
+                  ))}
+                </div>
+                {weather.pressure && <div style={{ textAlign: "center", marginTop: 6, fontSize: 9, color: "rgba(240,249,255,0.3)" }}>
+                  Tlak {weather.pressure} hPa {weather.pressure < 1010 ? "↓ pad — moguća promjena" : weather.pressure > 1020 ? "↑ stabilan" : "— umjeren"} · Vlažnost {weather.humidity}%
+                </div>}
               </div>}
               {/* VIBE label */}
               <div style={{ position: "absolute", top: 16, left: "50%", transform: "translateX(-50%)", fontSize: 9, letterSpacing: 6, color: "rgba(255,255,255,0.3)", fontWeight: 600 }}>JADRAN · LIVE</div>
@@ -374,11 +406,11 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
                   <div key={i} style={{ animation: `fadeSlide 0.6s ${0.3 + i * 0.2}s both` }}>
                     {/* User question */}
                     <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 6 }}>
-                      <div style={{ padding: "10px 14px", borderRadius: "16px 16px 4px 16px", background: "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(2,132,199,0.08))", border: "1px solid rgba(14,165,233,0.15)", fontSize: 13, color: "#bae6fd", maxWidth: "75%" }}>{conv.q}</div>
+                      <div style={{ padding: "10px 14px", borderRadius: "16px 16px 4px 16px", background: "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(2,132,199,0.08))", border: "1px solid rgba(14,165,233,0.15)", fontSize: 13, color: isNight ? "#bae6fd" : "#0c4a6e", maxWidth: "75%" }}>{conv.q}</div>
                     </div>
                     {/* AI answer */}
                     <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 4 }}>
-                      <div style={{ padding: "10px 14px", borderRadius: "16px 16px 16px 4px", background: C.card, border: `1px solid ${C.bord}`, fontSize: 13, color: "rgba(240,249,255,0.85)", maxWidth: "85%", lineHeight: 1.6 }}>{conv.a}</div>
+                      <div style={{ padding: "10px 14px", borderRadius: "16px 16px 16px 4px", background: C.card, border: `1px solid ${C.bord}`, fontSize: 13, color: C.text, maxWidth: "85%", lineHeight: 1.6 }}>{conv.a}</div>
                     </div>
                   </div>
                 ))}
@@ -407,7 +439,7 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
           <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
             <div style={{
               maxWidth: "85%", padding: "12px 16px", borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-              background: m.role === "user" ? "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(2,132,199,0.1))" : C.card,
+              background: m.role === "user" ? (isNight ? "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(2,132,199,0.1))" : "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(2,132,199,0.12))") : C.card,
               border: `1px solid ${m.role === "user" ? "rgba(14,165,233,0.2)" : C.bord}`,
               fontSize: 14, lineHeight: 1.7, whiteSpace: "pre-wrap",
             }}>
@@ -447,20 +479,25 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
                     {acts.map(a => (
                       <a key={a.id} href={a.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit", scrollSnapAlign: "start" }}>
                         <div style={{
-                          minWidth: 180, padding: "14px 16px", borderRadius: 18,
+                          minWidth: 180, minHeight: 140, padding: 0, borderRadius: 18,
                           background: C.card, border: `1px solid ${C.bord}`,
-                          transition: "all 0.2s", cursor: "pointer",
+                          transition: "all 0.2s", cursor: "pointer", position: "relative", overflow: "hidden",
                         }}
                           onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.2)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
                           onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.transform = ""; }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                            <span style={{ fontSize: 22 }}>{a.emoji}</span>
-                            <span style={{ fontSize: 11, color: C.gold, fontWeight: 600 }}>{a.price}€</span>
-                          </div>
-                          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{a.name}</div>
-                          <div style={{ display: "flex", gap: 6, fontSize: 10, color: C.mut }}>
-                            <span>⏱ {a.dur}</span>
-                            <span>⭐ {a.rating}</span>
+                          {/* Region photo */}
+                          {regionImgs[region] && <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${regionImgs[region]})`, backgroundSize: "cover", backgroundPosition: "center", opacity: 0.25 }} />}
+                          <div style={{ position: "absolute", inset: 0, background: isNight ? "linear-gradient(180deg, rgba(10,22,40,0.3) 0%, rgba(10,22,40,0.85) 100%)" : "linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.8) 100%)" }} />
+                          <div style={{ position: "relative", padding: "14px 16px", display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: 140 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                              <span style={{ fontSize: 22 }}>{a.emoji}</span>
+                              <span style={{ fontSize: 12, color: C.gold, fontWeight: 700, background: isNight ? "rgba(245,158,11,0.1)" : "rgba(245,158,11,0.15)", padding: "3px 10px", borderRadius: 10 }}>{a.price}€</span>
+                            </div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 2 }}>{a.name}</div>
+                            <div style={{ display: "flex", gap: 6, fontSize: 10, color: C.mut }}>
+                              <span>⏱ {a.dur}</span>
+                              <span>⭐ {a.rating}</span>
+                            </div>
                           </div>
                         </div>
                       </a>
@@ -566,7 +603,7 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
         <input value={input} onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); } }}
           placeholder={t.placeholder}
-          style={{ flex: 1, padding: "14px 18px", borderRadius: 16, border: `1px solid ${C.bord}`, background: "rgba(255,255,255,0.04)", color: "#fff", fontSize: 14, outline: "none", fontFamily: "inherit" }}
+          style={{ flex: 1, padding: "14px 18px", borderRadius: 16, border: `1px solid ${C.bord}`, background: C.inputBg, color: C.text, fontSize: 14, outline: "none", fontFamily: "inherit" }}
         />
         <button onClick={sendMsg} disabled={loading || !input.trim()}
           style={{
