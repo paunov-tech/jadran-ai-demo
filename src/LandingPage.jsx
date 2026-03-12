@@ -160,7 +160,7 @@ export default function LandingPage() {
               <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 22, flexShrink: 0 }}>🚗</div>
               <div>
                 <div style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#f0f4f8" }}>Lokalni vodič</div>
-                <div style={{ fontSize: 12, color: "#7dd3fc", marginTop: 2 }}>Plaže, konobe, izleti</div>
+                <div style={{ fontSize: 12, color: "#7dd3fc", marginTop: 2 }}>Apartman, hotel ili auto — plaže, konobe</div>
               </div>
             </a>
             <a href="/ai?niche=sailing" style={{
