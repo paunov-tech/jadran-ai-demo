@@ -5,7 +5,7 @@
 // Perfect for: campervan travelers, day-trippers, cruise visitors
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useRef } from "react";
-import { EXPERIENCES, GEMS, BOOKING_CITIES, CAMPER_WARNINGS, ISTRA_CAMPER_INTEL, DEEP_LOCAL, DUBROVNIK_INTEL, filterByRegion } from "./data.js";
+import { EXPERIENCES, GEMS, BOOKING_CITIES, CAMPER_WARNINGS, ISTRA_CAMPER_INTEL, DEEP_LOCAL, DUBROVNIK_INTEL, MARINAS, ANCHORAGES, CRUISE_PORTS, filterByRegion } from "./data.js";
 
 const REGIONS = [
   { id: "split", name: "Split & okolica", emoji: "🏛️", desc: "Dioklecijanova palača, Podstrana, Omiš" },
