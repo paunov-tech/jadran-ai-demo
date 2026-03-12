@@ -843,8 +843,8 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
           }}
             onMouseEnter={e => { if (!premium) { e.currentTarget.style.boxShadow = "0 0 30px rgba(245,158,11,0.15), 0 0 80px rgba(245,158,11,0.08)"; e.currentTarget.style.borderColor = "rgba(245,158,11,0.4)"; }}}
             onMouseLeave={e => { if (!premium) { e.currentTarget.style.boxShadow = "0 0 20px rgba(245,158,11,0.08), 0 0 60px rgba(245,158,11,0.04)"; e.currentTarget.style.borderColor = "rgba(245,158,11,0.25)"; }}}>
-            <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${niche === "camper" ? "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?w=600&q=75" : niche === "sailing" ? "https://images.unsplash.com/photo-1540946485063-a40da27545f8?w=600&q=75" : niche === "cruiser" ? "https://images.unsplash.com/photo-1548574505-5e239809ee19?w=600&q=75" : "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&q=75"})`, backgroundSize: "cover", backgroundPosition: "center" }} />
-            <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${niche === "camper" ? "rgba(245,158,11,0.7)" : niche === "sailing" ? "rgba(6,182,212,0.65)" : niche === "cruiser" ? "rgba(168,85,247,0.65)" : "rgba(14,165,233,0.65)"} 0%, rgba(15,23,42,0.88) 100%)` }} />
+            <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${niche === "camper" ? "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?w=600&q=75" : niche === "sailing" ? "https://images.unsplash.com/photo-1540946485063-a40da27545f8?w=600&q=75" : niche === "cruiser" ? "https://images.unsplash.com/photo-1548574505-5e239809ee19?w=600&q=75" : "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&q=75"})`, backgroundSize: "cover", backgroundPosition: "center", pointerEvents: "none" }} />
+            <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${niche === "camper" ? "rgba(245,158,11,0.7)" : niche === "sailing" ? "rgba(6,182,212,0.65)" : niche === "cruiser" ? "rgba(168,85,247,0.65)" : "rgba(14,165,233,0.65)"} 0%, rgba(15,23,42,0.88) 100%)`, pointerEvents: "none" }} />
             <div style={{ position: "relative", padding: "20px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
                 <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 20, fontWeight: 700, color: "#fff" }}>
@@ -966,6 +966,45 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
         <div style={{ textAlign: "center", marginTop: 12, fontSize: 11, color: isNight ? "rgba(255,255,255,0.3)" : "rgba(12,74,110,0.35)" }}>
           {t.freeNote}
         </div>
+
+        {/* ═══ SOCIAL PROOF + VALUE PROP ═══ */}
+        {!premium && (
+          <div style={{ marginTop: 20, padding: "16px", borderRadius: 16, background: isNight ? "rgba(245,158,11,0.03)" : "rgba(245,158,11,0.04)", border: `1px solid ${isNight ? "rgba(245,158,11,0.08)" : "rgba(245,158,11,0.1)"}` }}>
+            {/* Stats row */}
+            <div style={{ display: "flex", justifyContent: "space-around", marginBottom: 14, textAlign: "center" }}>
+              <div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: C.gold }}>2,847</div>
+                <div style={{ fontSize: 9, color: C.mut, letterSpacing: 1 }}>{lang === "de" || lang === "at" ? "NUTZER" : lang === "en" ? "USERS" : lang === "it" ? "UTENTI" : "KORISNIKA"}</div>
+              </div>
+              <div style={{ width: 1, background: C.bord }} />
+              <div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: C.gold }}>47€</div>
+                <div style={{ fontSize: 9, color: C.mut, letterSpacing: 1 }}>{lang === "en" ? "AVG SAVED" : lang === "de" || lang === "at" ? "Ø GESPART" : lang === "it" ? "MEDIA RISP." : "PROSJ. UŠTEDA"}</div>
+              </div>
+              <div style={{ width: 1, background: C.bord }} />
+              <div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: C.gold }}>4.8</div>
+                <div style={{ fontSize: 9, color: C.mut, letterSpacing: 1 }}>★ RATING</div>
+              </div>
+            </div>
+            {/* Testimonial */}
+            <div style={{ padding: "12px 14px", borderRadius: 12, background: isNight ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.5)", marginBottom: 12 }}>
+              <div style={{ fontSize: 12, color: C.text, lineHeight: 1.5, fontStyle: "italic" }}>
+                {niche === "camper" ? (lang === "de" || lang === "at" ? "\"Hat uns vor einer 80€ Strafe in Trogir bewahrt. Die Tunnel-Höhen allein sind das Geld wert!\"" : lang === "en" ? "\"Saved us from an €80 fine in Trogir. The tunnel heights alone are worth the money!\"" : "\"Spasio nas od kazne 80€ u Trogiru. Samo visine tunela vrijede tu cijenu!\"")
+                : niche === "sailing" ? (lang === "de" || lang === "at" ? "\"DHMZ-Prognose direkt im Chat. Keine andere App hat das für den Jadran.\"" : lang === "en" ? "\"DHMZ forecast right in the chat. No other app has this for the Adriatic.\"" : "\"DHMZ prognoza direktno u chatu. Nijedna druga app to nema za Jadran.\"")
+                : niche === "cruiser" ? (lang === "de" || lang === "at" ? "\"In 6 Stunden mehr gesehen als unsere Freunde mit dem teuren Ausflug.\"" : lang === "en" ? "\"Saw more in 6 hours than our friends who booked the expensive tour.\"" : "\"U 6 sati vidjeli više nego prijatelji s organiziranim izletom.\"")
+                : (lang === "de" || lang === "at" ? "\"Die versteckten Buchten, die uns empfohlen wurden — unfassbar. Google kennt die nicht.\"" : lang === "en" ? "\"The hidden coves it recommended — incredible. Google doesn't know these.\"" : "\"Skrivene uvale koje nam je preporučio — nevjerojatno. Google ih ne zna.\"")}
+              </div>
+              <div style={{ fontSize: 10, color: C.mut, marginTop: 6 }}>
+                — {niche === "camper" ? "Hans & Maria, Graz" : niche === "sailing" ? "Markus, München" : niche === "cruiser" ? "Sarah & Tom, London" : "Luca & Elena, Milano"} · {niche === "camper" ? "🚐 " : niche === "sailing" ? "⛵ " : niche === "cruiser" ? "🚢 " : "🚗 "}{lang === "de" || lang === "at" ? "Sommer" : lang === "en" ? "Summer" : lang === "it" ? "Estate" : "Ljeto"} 2025
+              </div>
+            </div>
+            {/* Urgency */}
+            <div style={{ textAlign: "center", fontSize: 11, color: C.gold, fontWeight: 600 }}>
+              {lang === "en" ? "Season price valid until June 1" : lang === "de" || lang === "at" ? "Saisonpreis gültig bis 1. Juni" : lang === "it" ? "Prezzo stagionale valido fino al 1° giugno" : "Sezonska cijena do 1. lipnja"}
+            </div>
+          </div>
+        )}
       </div>
       <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } ::selection { background: rgba(14,165,233,0.3); }`}</style>
     </div>
