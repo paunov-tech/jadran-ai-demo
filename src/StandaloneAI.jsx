@@ -577,7 +577,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
       </div>
 
       {/* Messages */}
-      <div ref={chatEnd} style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "0", display: "flex", flexDirection: "column", gap: 10 }}>
+      <div ref={chatEnd} style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "0", display: "flex", flexDirection: "column", gap: 10, justifyContent: msgs.length > 0 ? "flex-end" : "flex-start" }}>
         {msgs.length === 0 && (
           <div style={{ padding: 0 }}>
             {/* ═══ VIBE JADRANA — SHOWROOM ═══ */}
@@ -686,7 +686,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
         )}
 
         {msgs.map((m, i) => (
-          <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
+          <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", padding: "0 16px" }}>
             <div style={{
               maxWidth: "85%", padding: "12px 16px", borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
               background: m.role === "user" ? (isNight ? "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(2,132,199,0.1))" : "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(2,132,199,0.12))") : C.card,
@@ -726,6 +726,26 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
             </div>
           </div>
         ))}
+
+        {/* Quick reply chips after last AI message */}
+        {msgs.length > 0 && !loading && msgs[msgs.length - 1]?.role === "assistant" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "4px 16px 8px" }}>
+            {(travelMode === "camper" || niche === "camper" ? [
+              "🅿️ Gdje parkirati kamper?",
+              "🍽️ Večera s parkingom?",
+              "⛽ Benzinska / LPG?",
+            ] : [
+              "🏖️ Najbolja plaža u blizini?",
+              "🍽️ Preporuka za ručak?",
+              "🗺️ Što posjetiti danas?",
+            ]).map(q => (
+              <button key={q} onClick={() => { setInput(q); setTimeout(() => document.querySelector("[data-send]")?.click(), 50); }}
+                style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: `1px solid ${C.bord}`, background: C.card, color: C.text, fontSize: 15, cursor: "pointer", fontFamily: "inherit", textAlign: "left", minHeight: 48, transition: "all 0.2s" }}>
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
 
         {loading && (
           <div style={{ display: "flex", justifyContent: "flex-start" }}>
