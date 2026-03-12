@@ -5,7 +5,7 @@
 // Perfect for: campervan travelers, day-trippers, cruise visitors
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useRef } from "react";
-import { EXPERIENCES, GEMS, BOOKING_CITIES, CAMPER_WARNINGS, ISTRA_CAMPER_INTEL, DEEP_LOCAL, filterByRegion } from "./data.js";
+import { EXPERIENCES, GEMS, BOOKING_CITIES, CAMPER_WARNINGS, ISTRA_CAMPER_INTEL, DEEP_LOCAL, DUBROVNIK_INTEL, filterByRegion } from "./data.js";
 
 const REGIONS = [
   { id: "split", name: "Split & okolica", emoji: "🏛️", desc: "Dioklecijanova palača, Podstrana, Omiš" },
@@ -176,6 +176,10 @@ ${region === "istra" ? `
 🏕️ ISTRA CAMPING EXPERT v2.1 — Specifično znanje za Istru:
 ${ISTRA_CAMPER_INTEL.map(i => `• ${i.name} [${i.severity.toUpperCase()}]: ${i.danger} → ${i.advice}`).join("\n")}
 PRAVILO ZA ISTRU: Ako je predsezona (april/maj), UVIJEK upozori na zatvorene usluge u kampovima, slabu amperažu i blato nakon kiše. Ako je padala kiša u zadnja 24h — odmah savjetuj šljunčane parcele. Za Pulu NIKAD ne šalji na parking Karolina.` : ""}
+${region === "dubrovnik" ? `
+🏰 DUBROVNIK & PELJEŠAC SURVIVAL GUIDE:
+${DUBROVNIK_INTEL.map(d => `• ${d.spot} [${d.severity.toUpperCase()}]: ${d.intel}`).join("\n")}
+PRAVILO ZA DUBROVNIK: NIKADA ne šalji kamper prema Starom gradu. Za Srđ UVIJEK žičara, nikad kamperom. Prije ulaska u Dubrovnik UVIJEK provjeri buru (Most Tuđmana). Na Pelješcu UVIJEK preporuči vino + kamenice.` : ""}
 ${DEEP_LOCAL[region] ? `
 🗺️ DEEP-LOCAL ZNANJE za tvoju regiju — informacije koje NEMA na Google Mapsu:
 ${DEEP_LOCAL[region].map(d => `• ${d.spot}: ${d.intel}`).join("\n")}
@@ -658,6 +662,47 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
                           </div>
                           <div style={{ fontSize: 11, color: C.mut, lineHeight: 1.4, marginBottom: 4 }}>{tip.danger}</div>
                           <div style={{ fontSize: 11, color: "#34d399", lineHeight: 1.4 }}>💡 {tip.advice}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 🏰 Dubrovnik & Pelješac Intel */}
+            {region === "dubrovnik" && (travelMode === "camper" || niche === "camper") && (
+              <div style={{ marginBottom: 20, padding: "0 4px" }}>
+                <div style={{ fontSize: 10, color: "#f59e0b", letterSpacing: 3, fontWeight: 600, marginBottom: 10 }}>🏰 DUBROVNIK SURVIVAL</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {DUBROVNIK_INTEL.map(tip => (
+                    <div key={tip.id} style={{
+                      padding: "12px 14px", borderRadius: 14,
+                      background: isNight ? "rgba(245,158,11,0.04)" : "rgba(245,158,11,0.06)",
+                      border: `1px solid ${tip.severity === "critical" ? "rgba(239,68,68,0.25)" : tip.severity === "high" ? "rgba(248,113,113,0.15)" : "rgba(245,158,11,0.1)"}`,
+                    }}>
+                      <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                        <span style={{ fontSize: 18 }}>{tip.emoji}</span>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{tip.spot}</span>
+                            {tip.severity !== "low" && <span style={{ fontSize: 9, padding: "2px 8px", borderRadius: 8,
+                              background: tip.severity === "critical" ? "rgba(239,68,68,0.15)" : "rgba(248,113,113,0.1)",
+                              color: tip.severity === "critical" ? "#ef4444" : "#f87171",
+                              fontWeight: 700, letterSpacing: 1,
+                            }}>{tip.severity === "critical" ? "KRITIČNO" : "OPASNO"}</span>}
+                          </div>
+                          {premium
+                            ? <>
+                                <div style={{ fontSize: 11, color: C.mut, lineHeight: 1.5 }}>{tip.intel}</div>
+                                {tip.link && <a href={tip.link} target="_blank" rel="noopener noreferrer" style={{
+                                  display: "inline-block", marginTop: 6, padding: "4px 12px", borderRadius: 8,
+                                  background: isNight ? "rgba(14,165,233,0.08)" : "rgba(14,165,233,0.06)", border: `1px solid ${C.bord}`,
+                                  fontSize: 10, color: C.accent, textDecoration: "none", fontWeight: 500,
+                                }}>Rezerviraj →</a>}
+                              </>
+                            : <div onClick={() => setShowPaywall(true)} style={{ fontSize: 11, color: C.gold, cursor: "pointer" }}>🔒 Otključaj savjet — Premium</div>
+                          }
                         </div>
                       </div>
                     </div>

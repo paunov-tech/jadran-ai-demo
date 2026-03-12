@@ -231,3 +231,22 @@ export const DEEP_LOCAL = {
       intel: "Bočni vjetar na prevoju Dubci — kamperi s ceradom sporo, 40 km/h max." },
   ],
 };
+
+// ═══════════════════════════════════════════════════════════════
+// DUBROVNIK & PELJEŠAC — Survival Guide for Campers
+// ═══════════════════════════════════════════════════════════════
+export const DUBROVNIK_INTEL = [
+  { id: "stari-grad", spot: "Stari grad Dubrovnik (Pile/Ploče)", emoji: "🚫", severity: "critical",
+    intel: "NIKADA ne pokušavaj prići zidinama kamperom. Kazne astronomske, okretanje nemoguće. Koristi Kamp Solitudo (Babin Kuk) ili Kamp Kate (Župa Dubrovačka), pa Libertas bus ili brodski transfer do Starog grada." },
+  { id: "srdj", spot: "Brdo Srđ — pogled na grad", emoji: "⛰️", severity: "high",
+    intel: "NE vozi kamperom preko sela Bosanka do Srđa! Put širok za jedno vozilo, pun taksista. Parkiraj u Gružu i uzmi Dubrovačku žičaru (Cable Car) — bolji pogled, bez stresa.",
+    link: GYG("dubrovnik-l518/dubrovnik-cable-car-ride-ticket-t419614") },
+  { id: "tudman-most", spot: "Most dr. Franje Tuđmana", emoji: "🌬️", severity: "high",
+    intel: "Ovaj most se PRVI zatvara za kampere i prikolice na prve udare bure. Uvijek provjeri meteo prije ulaska u Dubrovnik. Alternativa: stari put kroz Rijeku Dubrovačku (Mokošica)." },
+  { id: "peljesac-most", spot: "Pelješki most — sloboda od granice", emoji: "🌉", severity: "low",
+    intel: "Više ne moraš kroz Neum (BiH) — nema gubitka vremena na pasoškoj kontroli! Most je BESPLATAN. Na Pelješcu obavezno: degustacija Mali Plavac + stonske kamenice.",
+    link: GYG("ston-l4159/ston-oyster-and-wine-tasting-tour-t197562") },
+  { id: "mljet-trajekt", spot: "Trajekt za Mljet (Prapratno)", emoji: "⛴️", severity: "medium",
+    intel: "NP Mljet je hit ali trajekt ljeti krcat. Ostavi kamper na parkingu na Pelješcu, idi kao pješak (jeftinije i brže). Na Mljetu — najam bicikala za obilazak jezera.",
+    link: GYG("dubrovnik-l518/dubrovnik-mljet-national-park-full-day-tour-t97898") },
+];
