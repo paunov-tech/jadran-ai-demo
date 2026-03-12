@@ -17,8 +17,8 @@ export default async function handler(req, res) {
 
     // Plan pricing: week (7 days, 1 region) or season (30 days, all regions)
     const plans = {
-      week:   { name: "JADRAN Vodič — Tjedan (7 dana)", amount: 399, days: 7 },
-      season: { name: "JADRAN Vodič — Sezona (30 dana)", amount: 799, days: 30 },
+      week:   { name: "JADRAN Vodič — Tjedan (7 dana)", amount: 499, days: 7 },
+      season: { name: "JADRAN Vodič — Sezona (30 dana)", amount: 999, days: 30 },
     };
     const p = plans[plan] || plans.week;
 
