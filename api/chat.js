@@ -250,9 +250,15 @@ export default async function handler(req, res) {
   try {
     const { system, messages, mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode } = req.body;
 
-    const systemPrompt = mode && region 
-      ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode })
-      : (system || '');
+    let systemPrompt = '';
+    try {
+      systemPrompt = mode && region 
+        ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode })
+        : (system || '');
+    } catch (promptErr) {
+      // If prompt building fails, use minimal fallback
+      systemPrompt = 'Ti si Jadran.ai, lokalni turistički vodič za hrvatsku obalu Jadrana. Kratki, korisni odgovori.';
+    }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -263,17 +269,24 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: walkieMode ? 200 : 600, // Walkie: ultra-short for TTS
-        temperature: 0.4, // Lower = less hallucination, more precise
+        max_tokens: walkieMode ? 200 : 600,
+        temperature: 0.4,
         system: systemPrompt,
         messages: messages || [],
       }),
     });
 
     const data = await response.json();
+    
+    // If Anthropic returns error, forward it transparently
+    if (data.error) {
+      console.error('Anthropic error:', JSON.stringify(data.error));
+      return res.status(200).json({ content: [{ type: "text", text: `⚠️ AI greška: ${data.error.message || 'Pokušajte ponovno.'}` }] });
+    }
+    
     return res.status(200).json(data);
   } catch (err) {
     console.error('Anthropic API error:', err);
-    return res.status(500).json({ error: 'AI service unavailable' });
+    return res.status(500).json({ content: [{ type: "text", text: "⚠️ Veza s AI servisom nije dostupna. Pokušajte ponovno." }] });
   }
 }

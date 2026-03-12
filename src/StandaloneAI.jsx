@@ -512,7 +512,7 @@ export default function StandaloneAI() {
         }),
       });
       const data = await res.json();
-      const aiText = data.content?.map(c => c.text || "").join("") || "...";
+      const aiText = data.content?.map(c => c.text || "").join("") || data.error?.message || "⚠️ Pokušajte ponovno.";
       setMsgs(p => [...p, { role: "assistant", text: aiText }]);
       if (walkieMode) speak(aiText);
     } catch {
