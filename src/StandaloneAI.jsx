@@ -62,7 +62,7 @@ export default function StandaloneAI() {
   const [weather, setWeather] = useState(null);
   const [regionImgs, setRegionImgs] = useState({});
 
-  useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
+  useEffect(() => { if (msgs.length > 0) setTimeout(() => chatEnd.current?.scrollTo({ top: chatEnd.current.scrollHeight, behavior: "smooth" }), 100); }, [msgs]);
   // Fetch live weather
   useEffect(() => {
     fetch("/api/weather").then(r => r.json()).then(d => {
@@ -554,13 +554,13 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
 
   // ═══ CHAT SCREEN ═══
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: C.chatBg, fontFamily: "'Outfit',system-ui,sans-serif", color: C.text }}>
+    <div style={{ height: "100dvh", display: "flex", flexDirection: "column", background: C.chatBg, fontFamily: "'Outfit',system-ui,sans-serif", color: C.text }}>
       <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
 
       {/* Header */}
-      <div style={{ padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.bord}`, flexShrink: 0, background: isNight ? "transparent" : "rgba(255,255,255,0.4)" }}>
+      <div style={{ padding: "14px 20px", paddingTop: "max(14px, env(safe-area-inset-top, 14px))", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.bord}`, flexShrink: 0, background: isNight ? "transparent" : "rgba(255,255,255,0.4)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <button onClick={() => setStep("setup")} style={{ background: "none", border: "none", color: C.mut, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>{t.back}</button>
+          <button onClick={() => setStep("setup")} style={{ background: "none", border: "none", color: C.mut, fontSize: 15, cursor: "pointer", fontFamily: "inherit", padding: "8px 12px 8px 0", minHeight: 44, display: "flex", alignItems: "center" }}>{t.back}</button>
           <div style={{ width: 1, height: 20, background: C.bord }} />
           <span style={{ fontSize: 18 }}>{TRAVEL_MODES.find(m => m.id === travelMode)?.emoji}</span>
           <span style={{ fontSize: 13, fontWeight: 600 }}>{REGIONS.find(r => r.id === region)?.name}</span>
@@ -577,7 +577,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "0", display: "flex", flexDirection: "column", gap: 10 }}>
+      <div ref={chatEnd} style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "0", display: "flex", flexDirection: "column", gap: 10 }}>
         {msgs.length === 0 && (
           <div style={{ padding: 0 }}>
             {/* ═══ VIBE JADRANA — SHOWROOM ═══ */}
@@ -737,7 +737,6 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
             </div>
           </div>
         )}
-        <div ref={chatEnd} />
 
         {/* ═══ CONTENT CARDS — filtered by region ═══ */}
         {region && (
@@ -1019,7 +1018,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
       )}
 
       {/* Input */}
-      <div style={{ padding: "12px 16px", borderTop: `1px solid ${C.bord}`, display: "flex", gap: 8, flexShrink: 0, background: isNight ? "transparent" : "rgba(255,255,255,0.3)" }}>
+      <div style={{ padding: "12px 16px", paddingBottom: "max(12px, env(safe-area-inset-bottom, 12px))", borderTop: `1px solid ${C.bord}`, display: "flex", gap: 8, flexShrink: 0, background: isNight ? "transparent" : "rgba(255,255,255,0.3)" }}>
         <input value={input} onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); } }}
           placeholder={t.placeholder}
@@ -1044,6 +1043,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
 
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        @supports not (height: 100dvh) { .jadran-chat { height: 100vh !important; } }
         ::selection { background: rgba(14,165,233,0.3); }
         @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
         @keyframes seaV1 { 0%,100% { d: path('M0,20 C60,10 120,30 180,18 C240,6 300,28 360,15 C380,12 400,20 400,20 L400,80 L0,80 Z'); } 50% { d: path('M0,25 C60,32 120,14 180,26 C240,34 300,16 360,28 C380,30 400,22 400,22 L400,80 L0,80 Z'); } }
