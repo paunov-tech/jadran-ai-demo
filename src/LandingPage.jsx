@@ -337,31 +337,11 @@ export default function LandingPage() {
 
       {/* FOOTER */}
       <footer style={{ padding: "32px 24px", paddingBottom: "calc(32px + 52px)", textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.03)", background: "#080e1a" }}>
-        {/* Payment methods — official brand SVGs */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 9, color: "#475569", letterSpacing: 2, marginBottom: 12 }}>🔒 SECURE PAYMENTS</div>
-          <div style={{ display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
-            {/* Visa — official */}
-            <div style={{ padding: "8px 14px", borderRadius: 8, background: "#fff", display: "flex", alignItems: "center" }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="16" viewBox="0 0 750 471"><g fill="none"><path d="M0 40C0 17.9 17.9 0 40 0h670c22.1 0 40 17.9 40 40v391c0 22.1-17.9 40-40 40H40c-22.1 0-40-17.9-40-40V40z" fill="#fff"/><path d="M278.2 334.2h-60.4l37.8-233.9h60.4L278.2 334.2zM524.5 105c-12-4.8-30.8-9.9-54.3-9.9-59.9 0-102.1 31.9-102.4 77.5-.3 33.7 30.1 52.5 53.1 63.7 23.6 11.5 31.5 18.8 31.4 29.1-.2 15.7-18.8 22.9-36.2 22.9-24.2 0-37.1-3.5-57-12.2l-7.8-3.7-8.5 52.4c14.1 6.6 40.3 12.3 67.5 12.6 63.7 0 105.1-31.5 105.5-80.2.2-26.7-15.9-47.1-50.9-63.9-21.2-10.9-34.2-18.1-34.1-29.1 0-9.8 11-20.2 34.8-20.2 19.9-.3 34.3 4.2 45.5 9l5.5 2.7 8.3-51.7zM661.6 100.3h-46.8c-14.5 0-25.4 4.2-31.7 19.5L489.6 334.2h63.6s10.4-28.9 12.7-35.2h77.8c1.8 8.2 7.4 35.2 7.4 35.2h56.2l-45.7-233.9zm-74.8 150.6c5-13.6 24.4-66 24.4-66-.4.6 5-13.8 8.1-22.8l4.1 20.6s11.7 56.8 14.2 68.2h-50.8zM232.8 100.3L173.3 261l-6.4-32.6c-11-37.5-45.4-78.2-83.9-98.5l54.3 204.2h64.1l95.3-233.8h-63.9z" fill="#1434CB"/><path d="M111.9 100.3H12.7L11.8 105c76 19.4 126.3 66.3 147.1 122.6L137.5 120c-3.5-14.9-14.2-19.3-25.6-19.7z" fill="#F9A533"/></g></svg>
-            </div>
-            {/* Mastercard — official */}
-            <div style={{ padding: "8px 14px", borderRadius: 8, background: "#fff", display: "flex", alignItems: "center" }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="25" viewBox="0 0 131.39 86.9"><circle cx="41.94" cy="43.45" r="41.94" fill="#EB001B"/><circle cx="89.45" cy="43.45" r="41.94" fill="#F79E1B"/><path d="M65.7 11.07a41.8 41.8 0 0 0-15.75 32.38A41.8 41.8 0 0 0 65.7 75.83a41.8 41.8 0 0 0 15.75-32.38A41.8 41.8 0 0 0 65.7 11.07z" fill="#FF5F00"/></svg>
-            </div>
-            {/* Apple Pay — official Apple silhouette */}
-            <div style={{ padding: "8px 14px", borderRadius: 8, background: "#000", display: "flex", alignItems: "center", gap: 2 }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="38" height="16" viewBox="0 0 165.52 105.97" fill="#fff"><path d="M150.7 0H14.8C6.6 0 0 6.6 0 14.8v76.3c0 8.2 6.6 14.8 14.8 14.8h135.9c8.2 0 14.8-6.6 14.8-14.8V14.8c0-8.2-6.6-14.8-14.8-14.8z" fill="#000"/><path d="M43.6 34c1.4-1.8 2.4-4.2 2.1-6.6-2.1.1-4.6 1.4-6.1 3.1-1.3 1.5-2.5 4-2.2 6.4 2.3.2 4.7-1.2 6.2-2.9zm2.1 1.5c-3.4-.2-6.3 1.9-7.9 1.9s-4.1-1.8-6.8-1.8c-3.5.1-6.7 2-8.5 5.2-3.6 6.3-1 15.6 2.6 20.7 1.7 2.5 3.8 5.3 6.5 5.2 2.6-.1 3.6-1.7 6.7-1.7s4 1.7 6.8 1.6c2.8-.1 4.6-2.5 6.3-5.1 2-2.9 2.8-5.7 2.8-5.8 0-.1-5.4-2.1-5.5-8.3 0-5.1 4.2-7.6 4.4-7.7-2.4-3.6-6.2-4-7.4-4.2zm28.3-7.3v37.2h5.7v-12.7h7.9c7.2 0 12.3-5 12.3-12.3S94.8 28.2 87.7 28.2H74zm5.7 4.8h6.6c5 0 7.8 2.6 7.8 7.4s-2.9 7.5-7.9 7.5h-6.5V33zm31.3 32.7c3.6 0 6.9-1.8 8.4-4.7h.1v4.4h5.3V46.1c0-5.3-4.3-8.8-10.8-8.8-6.1 0-10.6 3.5-10.8 8.3h5.1c.4-2.3 2.5-3.8 5.4-3.8 3.5 0 5.5 1.6 5.5 4.6v2l-7.2.4c-6.7.4-10.3 3.2-10.3 7.9 0 4.9 3.7 8.1 9.3 8.1zm1.5-4.4c-3.1 0-5-1.5-5-3.7 0-3 1.9-4 5.6-4.2l6.4-.4v2.1c0 3.6-3 6.2-7 6.2zm20.2 15.7c5.5 0 8.1-2.1 10.4-8.6l10-27.7h-5.8l-6.7 21.5h-.1l-6.7-21.5h-6l9.6 26.7-.5 1.6c-.9 2.8-2.3 3.9-4.8 3.9-.5 0-1.3-.1-1.6-.1v4.5c.3.1 1.5.2 2.2.2z" fill="#fff"/></svg>
-            </div>
-            {/* Google Pay — official */}
-            <div style={{ padding: "8px 14px", borderRadius: 8, background: "#fff", border: "1px solid #dadce0", display: "flex", alignItems: "center" }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="52" height="20" viewBox="0 0 435.97 173.13"><path d="M206.2 84.6v50.4h-16V8.8h42.4c10.2 0 18.9 3.4 26.1 10.2a33.4 33.4 0 0 1 10.8 25.2 33 33 0 0 1-10.8 25l-.2.2c-7.2 6.6-15.8 9.8-25.9 9.8h-26.4v5.4zm0-59.8v38.4h26.8c6 0 11.2-2.2 15.2-6.4a21 21 0 0 0 0-25.8c-4.2-4.4-9.2-6.4-15.2-6.4h-26.8v.2z" fill="#3C4043"/><path d="M300.7 44.4c11.8 0 21.1 3.2 28 9.4 6.8 6.2 10.2 14.8 10.2 25.6v51.6h-15.2v-11.6h-.7c-6.6 9.6-15.4 14.4-26.4 14.4-9.4 0-17.2-2.8-23.6-8.4-6.4-5.6-9.6-12.6-9.6-20.8 0-8.8 3.4-15.8 10-21s15.6-7.8 27-7.8c9.8 0 17.8 1.8 24.2 5.4v-3.8c0-5.8-2.4-10.6-7-14.6s-10-6-15.8-6c-9.2 0-16.4 3.8-21.8 11.6l-14-8.8c8-11.4 19.8-17.2 35.4-17.2h-.7zm-20.8 60.4c0 4.4 1.8 8 5.6 10.8 3.6 2.8 8 4.2 12.6 4.2 6.8 0 12.8-2.6 18-7.6 5.2-5 7.8-10.8 7.8-17.4-5.2-4.2-12.4-6.2-21.8-6.2-6.8 0-12.4 1.6-17 5s-5.2 7.4-5.2 11.2z" fill="#3C4043"/><path d="M436 47.2l-52.8 121.4h-16.4l19.6-42.4-34.8-79h17.2l25.2 60.8h.4l24.6-60.8h17z" fill="#3C4043"/><path d="M142.1 73.6c0-4.6-.4-9.2-1.1-13.6H72.5v25.8h39c-1.7 9-6.8 16.6-14.4 21.8v18h23.2c13.6-12.4 21.4-30.8 21.4-52h.4z" fill="#4285F4"/><path d="M72.5 131.8c19.4 0 35.8-6.4 47.7-17.4l-23.2-18c-6.4 4.4-14.8 6.8-24.4 6.8-18.8 0-34.6-12.6-40.4-29.8H8.1v18.6c12 23.6 36.4 39.8 64.4 39.8z" fill="#34A853"/><path d="M32.1 73.4c-1.4-4.4-2.2-9-2.2-13.8s.8-9.4 2.2-13.8V27.2H8.1A94.5 94.5 0 0 0 8.1 86l24-12.6z" fill="#FBBC04"/><path d="M72.5 16c10.6 0 20.2 3.6 27.6 10.8l20.8-20.8C108.1 2.2 91.7-4.2 72.5-4.2c-28 0-52.4 16.2-64.4 39.8L32.1 54c5.8-17.2 21.6-29.8 40.4-38z" fill="#EA4335"/></svg>
-            </div>
-          </div>
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 6, marginBottom: 4 }}>
-            <span style={{ fontSize: 10, color: "#475569" }}>Powered by</span>
-            <span style={{ color: "#635BFF", fontSize: 15, fontWeight: 700, fontFamily: "'Outfit',system-ui,sans-serif", letterSpacing: -0.5 }}>stripe</span>
-          </div>
+        {/* Payment trust — minimal */}
+        <div style={{ marginBottom: 16, display: "flex", justifyContent: "center", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 13, color: "#475569" }}>🛡️</span>
+          <span style={{ fontSize: 11, color: "#475569" }}>Secure payments by</span>
+          <span style={{ color: "#635BFF", fontSize: 14, fontWeight: 700, fontFamily: "'Outfit',system-ui,sans-serif" }}>stripe</span>
         </div>
         <div style={{ fontSize: 11, color: "#1e293b" }}>JADRAN {"\u00B7"} SIAL Consulting d.o.o. {"\u00B7"} 2026</div>
       </footer>
