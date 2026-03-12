@@ -202,6 +202,7 @@ PRAVILA ODGOVORA:
 - Uvijek: jedan emoji po ključnoj informaciji
 - Uvijek: završi sa jednim bonus savjetom ili ponudom ("Dok si u tom kraju...")
 - Nikad: "Preporučujem da posjetite..." — umjesto toga: "Kreni 15 min južnije ka..."
+- PRAVOPIS: Korisnici pišu na telefonu u hodu — UVIJEK toleriraj greške u kucanju. "Rovjnm" = Rovinj, "plitvicr" = Plitvice, "dubrovnk" = Dubrovnik, "brac" = Brač. NIKAD ne pitaj "Jeste li mislili...?" — odmah odgovori na ono što su očito htjeli pitati. Ako nisi siguran, odgovori na najvjerojatniju interpretaciju.
 - Nikad: generički TripAdvisor stil — ti si lokalni čovjek koji živi tu
 - LINKOVI: KORISTI ISKLJUČIVO linkove iz ovog kataloga. NIKAD ne izmišljaj URL-ove!
 Format: [Tekst](URL) — prikazuje se kao dugme u chatu.
@@ -671,9 +672,9 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
               <div style={{ fontSize: 10, color: C.gold, letterSpacing: 3, fontWeight: 600, marginBottom: 12 }}>VAŠA PITANJA</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
                 {quickQs.map(q => (
-                  <button key={q} onClick={() => { setInput(q); }}
-                    style={{ padding: "10px 16px", borderRadius: 14, border: `1px solid ${C.bord}`, background: C.card, color: C.mut, fontSize: 12, cursor: "pointer", fontFamily: "inherit", transition: "all 0.25s" }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.25)"; e.currentTarget.style.background = "rgba(14,165,233,0.06)"; }}
+                  <button key={q} onClick={() => { setInput(q); setTimeout(() => document.querySelector("[data-send]")?.click(), 50); }}
+                    style={{ width: "100%", padding: "14px 18px", borderRadius: 14, border: `1px solid ${C.bord}`, background: C.card, color: C.text, fontSize: 16, cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s", textAlign: "left", minHeight: 50 }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = C.accent + "40"; e.currentTarget.style.background = C.accent + "08"; }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.background = C.card; }}>
                     {q}
                   </button>
@@ -690,7 +691,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
               maxWidth: "85%", padding: "12px 16px", borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
               background: m.role === "user" ? (isNight ? "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(2,132,199,0.1))" : "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(2,132,199,0.12))") : C.card,
               border: `1px solid ${m.role === "user" ? "rgba(14,165,233,0.2)" : C.bord}`,
-              fontSize: 14, lineHeight: 1.7, whiteSpace: "pre-wrap",
+              fontSize: 18, lineHeight: 1.5, whiteSpace: "pre-wrap",
             }}>
               {m.role === "assistant" ? m.text.split("\n").map((line, j) => {
                 // Parse [label](url) into rich buttons AND plain URLs into links
@@ -699,21 +700,24 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
                   const linkMatch = part.match(/\[([^\]]+)\]\(([^)]+)\)/);
                   if (linkMatch) {
                     return <a key={k} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" style={{
-                      display: "inline-block", margin: "6px 4px 2px 0", padding: "8px 16px", borderRadius: 12,
+                      display: "block", margin: "10px 0", padding: "16px 20px", borderRadius: 14,
                       background: "linear-gradient(135deg, #0ea5e9, #0284c7)", color: "#fff",
-                      fontSize: 12, fontWeight: 600, textDecoration: "none",
-                      boxShadow: "0 2px 8px rgba(14,165,233,0.2)", transition: "all 0.2s",
+                      fontSize: 17, fontWeight: 700, textDecoration: "none", textAlign: "center",
+                      minHeight: 56, lineHeight: "24px",
+                      boxShadow: "0 4px 12px rgba(14,165,233,0.3)", transition: "all 0.2s",
                     }}
-                      onMouseEnter={e => e.currentTarget.style.transform = "translateY(-1px)"}
+                      onMouseEnter={e => e.currentTarget.style.transform = "translateY(-2px)"}
                       onMouseLeave={e => e.currentTarget.style.transform = ""}
                     >{linkMatch[1]} →</a>;
                   }
                   if (/^https?:\/\//.test(part)) {
                     const label = part.includes("getyourguide") ? "Pogledaj ponudu" : part.includes("viator") ? "Pogledaj turu" : part.includes("booking.com") ? "Pogledaj smještaj" : "Otvori link";
                     return <a key={k} href={part} target="_blank" rel="noopener noreferrer" style={{
-                      display: "inline-block", margin: "6px 4px 2px 0", padding: "6px 14px", borderRadius: 10,
-                      background: isNight ? "rgba(14,165,233,0.1)" : "rgba(14,165,233,0.08)", border: `1px solid ${C.bord}`,
-                      fontSize: 11, color: C.accent, textDecoration: "none", fontWeight: 500,
+                      display: "block", margin: "8px 0", padding: "14px 18px", borderRadius: 12,
+                      background: isNight ? "rgba(14,165,233,0.08)" : "rgba(14,165,233,0.06)", 
+                      border: `1px solid ${C.accent}30`,
+                      fontSize: 16, color: C.accent, textDecoration: "none", fontWeight: 600, textAlign: "center",
+                      minHeight: 50,
                     }}>{label} →</a>;
                   }
                   return <span key={k}>{part}</span>;
@@ -1019,14 +1023,20 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
         <input value={input} onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); } }}
           placeholder={t.placeholder}
-          style={{ flex: 1, padding: "14px 18px", borderRadius: 16, border: `1px solid ${C.bord}`, background: C.inputBg, color: C.text, fontSize: 14, outline: "none", fontFamily: "inherit" }}
+          style={{ flex: 1, padding: "16px 18px", borderRadius: 16, border: `1px solid ${C.bord}`, background: C.inputBg, color: C.text, fontSize: 17, outline: "none", fontFamily: "inherit" }}
         />
-        <button onClick={sendMsg} disabled={loading || !input.trim()}
+        {"webkitSpeechRecognition" in window || "SpeechRecognition" in window ? <button onClick={() => {
+          const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+          const r = new SR(); r.lang = lang === "de" || lang === "at" ? "de-DE" : lang === "en" ? "en-US" : lang === "it" ? "it-IT" : lang === "hr" ? "hr-HR" : lang === "si" ? "sl-SI" : lang === "cz" ? "cs-CZ" : lang === "pl" ? "pl-PL" : "hr-HR";
+          r.onresult = (e) => { const t = e.results[0][0].transcript; setInput(prev => prev + t); };
+          r.start();
+        }} style={{ width: 52, height: 52, borderRadius: 16, border: `1px solid ${C.bord}`, background: C.inputBg, color: C.accent, fontSize: 22, cursor: "pointer", display: "grid", placeItems: "center", flexShrink: 0 }}>🎙️</button> : null}
+        <button data-send onClick={sendMsg} disabled={loading || !input.trim()}
           style={{
-            width: 48, height: 48, borderRadius: 16, border: "none",
+            width: 52, height: 52, borderRadius: 16, border: "none",
             background: input.trim() && !loading ? "linear-gradient(135deg, #0ea5e9, #0284c7)" : (isNight ? "rgba(255,255,255,0.06)" : "rgba(12,74,110,0.08)"),
-            color: "#fff", fontSize: 18, cursor: input.trim() && !loading ? "pointer" : "not-allowed",
-            display: "grid", placeItems: "center",
+            color: "#fff", fontSize: 20, cursor: input.trim() && !loading ? "pointer" : "not-allowed",
+            display: "grid", placeItems: "center", flexShrink: 0,
           }}>↑</button>
       </div>
 
