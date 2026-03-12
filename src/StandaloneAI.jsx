@@ -832,38 +832,45 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
           </div>
         </div>
 
-        {/* Niche-specific hero */}
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 14 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 22, fontWeight: 800, color: "#fff" }}>J</div>
-            <span style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 20, fontWeight: 700, letterSpacing: 2, color: C.text }}>JADRAN</span>
+        {/* Niche-specific hero — photo card with golden glow, clickable → Stripe */}
+        {niche && !premium && (
+          <div onClick={() => startCheckout("season")} style={{
+            borderRadius: 18, position: "relative", overflow: "hidden", cursor: "pointer",
+            border: "1px solid rgba(245,158,11,0.25)", marginBottom: 24,
+            boxShadow: "0 0 20px rgba(245,158,11,0.08), 0 0 60px rgba(245,158,11,0.04)",
+            transition: "all 0.3s",
+          }}
+            onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 0 30px rgba(245,158,11,0.15), 0 0 80px rgba(245,158,11,0.08)"; e.currentTarget.style.borderColor = "rgba(245,158,11,0.4)"; }}
+            onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 0 20px rgba(245,158,11,0.08), 0 0 60px rgba(245,158,11,0.04)"; e.currentTarget.style.borderColor = "rgba(245,158,11,0.25)"; }}>
+            <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${niche === "camper" ? "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?w=600&q=75" : niche === "sailing" ? "https://images.unsplash.com/photo-1540946485063-a40da27545f8?w=600&q=75" : niche === "cruiser" ? "https://images.unsplash.com/photo-1548574505-5e239809ee19?w=600&q=75" : "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&q=75"})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+            <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${niche === "camper" ? "rgba(245,158,11,0.7)" : niche === "sailing" ? "rgba(6,182,212,0.65)" : niche === "cruiser" ? "rgba(168,85,247,0.65)" : "rgba(14,165,233,0.65)"} 0%, rgba(15,23,42,0.88) 100%)` }} />
+            <div style={{ position: "relative", padding: "20px 18px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 20, fontWeight: 700, color: "#fff" }}>
+                  {niche === "camper" ? t.nicCamper : niche === "sailing" ? t.nicSailing : niche === "cruiser" ? t.nicCruiser : t.nicLocal}
+                </div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 3 }}>
+                  {niche === "camper" ? t.nicCamperSub : niche === "sailing" ? t.nicSailingSub : niche === "cruiser" ? t.nicCruiserSub : t.nicLocalSub}
+                </div>
+              </div>
+              <div style={{ padding: "8px 14px", borderRadius: 10, background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#0f172a", fontWeight: 800, fontSize: 12, flexShrink: 0, boxShadow: "0 2px 8px rgba(245,158,11,0.3)" }}>
+                ⭐ PREMIUM
+              </div>
+            </div>
           </div>
-          
-          {niche === "camper" && <>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>🚐</div>
-            <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 26, fontWeight: 700, lineHeight: 1.2, marginBottom: 6 }}>Kamper vodič</div>
-            <div style={{ fontSize: 14, color: C.mut }}>Parking, rute, dump station, upozorenja za kampere</div>
-          </>}
-          {niche === "local" && <>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>🚗</div>
-            <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 26, fontWeight: 700, lineHeight: 1.2, marginBottom: 6 }}>Lokalni vodič</div>
-            <div style={{ fontSize: 14, color: C.mut }}>Apartman, hotel ili automobilom uz obalu — plaže, konobe, skrivena mjesta</div>
-          </>}
-          {niche === "sailing" && <>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>⛵</div>
-            <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 26, fontWeight: 700, lineHeight: 1.2, marginBottom: 6 }}>Nautički vodič</div>
-            <div style={{ fontSize: 14, color: C.mut }}>Marine, sidrišta, vjetar, konobe s mora</div>
-          </>}
-          {niche === "cruiser" && <>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>🚢</div>
-            <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 26, fontWeight: 700, lineHeight: 1.2, marginBottom: 6 }}>Kruzer vodič</div>
-            <div style={{ fontSize: 14, color: C.mut }}>Maksimum u 8 sati — plan po minutu, skip-the-line</div>
-          </>}
-          {!niche && <>
+        )}
+
+        {/* J logo + title for non-niche or premium */}
+        {(!niche || premium) && (
+          <div style={{ textAlign: "center", marginBottom: 32 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 14 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 22, fontWeight: 800, color: "#fff" }}>J</div>
+              <span style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 20, fontWeight: 700, letterSpacing: 2, color: C.text }}>JADRAN</span>
+            </div>
             <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 26, fontWeight: 700, lineHeight: 1.2, marginBottom: 6 }}>{t.title}</div>
             <div style={{ fontSize: 14, color: C.mut }}>{t.sub}</div>
-          </>}
-        </div>
+          </div>
+        )}
 
         {/* Camper size picker — only for camper niche */}
         {niche === "camper" && (
@@ -910,12 +917,18 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
           </div>
         )}
 
-        {/* Region */}
-        <div style={{ marginBottom: 36 }}>
+        {/* Region — click to start chat immediately */}
+        <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 11, color: C.mut, letterSpacing: 3, marginBottom: 12, fontWeight: 500 }}>{t.region}</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
             {REGIONS.map(r => (
-              <div key={r.id} onClick={() => setRegion(r.id)} style={{
+              <div key={r.id} onClick={() => {
+                setRegion(r.id);
+                // Auto-start chat if travel mode is set (niche auto-sets it)
+                if (travelMode) {
+                  setTimeout(() => { setStep("chat"); setTimeout(() => setMsgs([{ role: "assistant", text: generateIcebreaker() }]), 300); }, 150);
+                }
+              }} style={{
                 padding: "14px 16px", borderRadius: 16, cursor: "pointer",
                 background: region === r.id ? "rgba(14,165,233,0.12)" : C.card,
                 border: `1px solid ${region === r.id ? "#0ea5e9" : C.bord}`,
@@ -931,39 +944,25 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
           </div>
         </div>
 
-        {/* Start */}
-        <button onClick={() => { if (region && travelMode) { setStep("chat"); setTimeout(() => setMsgs([{ role: "assistant", text: generateIcebreaker() }]), 300); } }}
-          disabled={!region || !travelMode}
-          style={{
-            width: "100%", padding: "18px", borderRadius: 18, border: "none",
-            background: region && travelMode ? "linear-gradient(135deg, #0ea5e9, #0284c7)" : (isNight ? "rgba(255,255,255,0.06)" : "rgba(12,74,110,0.08)"),
-            color: "#fff", fontSize: 17, fontWeight: 600, cursor: region && travelMode ? "pointer" : "not-allowed",
-            opacity: region && travelMode ? 1 : 0.4,
-            fontFamily: "'Playfair Display',Georgia,serif",
-            boxShadow: region && travelMode ? "0 6px 24px rgba(14,165,233,0.25)" : "none",
-          }}>
-          {t.start} →
-        </button>
-
-        {/* BUY PREMIUM — direct to Stripe */}
-        <button onClick={() => startCheckout("season")} disabled={payLoading}
-          style={{
-            width: "100%", padding: "14px", borderRadius: 18, border: "none", marginTop: 10,
-            background: "linear-gradient(135deg, #ef4444, #dc2626)",
-            color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer",
-            fontFamily: "'Playfair Display',Georgia,serif",
-            boxShadow: "0 4px 16px rgba(239,68,68,0.3)",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-          }}>
-          <span>⭐</span> {t.buyNow || "KUPI PREMIUM"} <span style={{ fontSize: 12, opacity: 0.8 }}>— 9.99€</span>
-        </button>
+        {/* Start — only shows if no niche (direct /ai access, mode not auto-set) */}
+        {!niche && (
+          <button onClick={() => { if (region && travelMode) { setStep("chat"); setTimeout(() => setMsgs([{ role: "assistant", text: generateIcebreaker() }]), 300); } }}
+            disabled={!region || !travelMode}
+            style={{
+              width: "100%", padding: "18px", borderRadius: 18, border: "none",
+              background: region && travelMode ? "linear-gradient(135deg, #0ea5e9, #0284c7)" : (isNight ? "rgba(255,255,255,0.06)" : "rgba(12,74,110,0.08)"),
+              color: "#fff", fontSize: 17, fontWeight: 600, cursor: region && travelMode ? "pointer" : "not-allowed",
+              opacity: region && travelMode ? 1 : 0.4,
+              fontFamily: "'Playfair Display',Georgia,serif",
+              boxShadow: region && travelMode ? "0 6px 24px rgba(14,165,233,0.25)" : "none",
+            }}>
+            {t.start} →
+          </button>
+        )}
 
         {/* Free tier note */}
-        <div style={{ textAlign: "center", marginTop: 12, fontSize: 12, color: isNight ? "rgba(255,255,255,0.3)" : "rgba(12,74,110,0.4)" }}>
+        <div style={{ textAlign: "center", marginTop: 12, fontSize: 11, color: isNight ? "rgba(255,255,255,0.3)" : "rgba(12,74,110,0.35)" }}>
           {t.freeNote}
-        </div>
-        <div style={{ textAlign: "center", marginTop: 4, fontSize: 10, color: isNight ? "rgba(255,255,255,0.2)" : "rgba(12,74,110,0.25)" }}>
-          🛡️ Stripe · {t.paySecure?.split("·")[1]?.trim() || "Bez skrivenih troškova"}
         </div>
       </div>
       <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } ::selection { background: rgba(14,165,233,0.3); }`}</style>
