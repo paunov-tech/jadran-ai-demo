@@ -581,94 +581,159 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
       {/* Messages */}
       <div ref={scrollBox} style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "0", display: "flex", flexDirection: "column" }}>
         
-        {/* ═══ VIBE JADRANA MINI — always visible ═══ */}
+        {/* ═══ JADRAN VIBE — Maritime Dashboard ═══ */}
         {msgs.length > 0 && weather && (
-          <div style={{ padding: "10px 16px", background: isNight ? "rgba(12,45,72,0.5)" : "rgba(14,165,233,0.04)", borderBottom: `1px solid ${C.bord}`, flexShrink: 0 }}>
-            <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 16, fontWeight: 500 }}>{weather.icon} {weather.temp}°</div>
-                <div style={{ fontSize: 8, color: C.mut, letterSpacing: 1 }}>ZRAK</div>
+          <div style={{ flexShrink: 0, borderBottom: `1px solid ${C.bord}` }}>
+            {/* Main row */}
+            <div style={{ padding: "10px 16px 6px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 22, fontWeight: 300 }}>{weather.icon} {weather.temp}°</div>
+                  <div style={{ fontSize: 8, color: C.mut }}>osjeća {weather.feelsLike}°</div>
+                </div>
+                <div style={{ width: 1, height: 28, background: C.bord }} />
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 16, fontWeight: 500, color: C.accent }}>🌊 {weather.sea}°</div>
+                  <div style={{ fontSize: 8, color: C.mut }}>{weather.seaEmoji} {weather.seaState || "more"}</div>
+                </div>
               </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 16, fontWeight: 500, color: C.accent }}>🌊 {weather.sea}°</div>
-                <div style={{ fontSize: 8, color: C.mut, letterSpacing: 1 }}>MORE</div>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 16, fontWeight: 500 }}>{weather.windDir} {weather.windSpeed}</div>
-                <div style={{ fontSize: 8, color: C.mut, letterSpacing: 1 }}>VJETAR</div>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 16, fontWeight: 500, color: weather.uv >= 8 ? "#f87171" : weather.uv >= 5 ? C.gold : "#4ade80" }}>UV {weather.uv}</div>
-                <div style={{ fontSize: 8, color: C.mut, letterSpacing: 1 }}>{weather.uv >= 8 ? "VISOK" : weather.uv >= 5 ? "SPF30+" : "NIZAK"}</div>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 16, fontWeight: 500, color: C.gold }}>🌅 {weather.sunset}</div>
-                <div style={{ fontSize: 8, color: C.mut, letterSpacing: 1 }}>ZALAZAK</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: weather.windSpeed > 40 ? "#f87171" : C.text }}>{weather.windName || weather.windDir}</div>
+                  <div style={{ fontSize: 8, color: weather.windSpeed > 40 ? "#fca5a5" : C.mut }}>{weather.windSpeed} km/h{weather.gusts > weather.windSpeed + 10 ? ` (${weather.gusts})` : ""}</div>
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: weather.uv >= 8 ? "#f87171" : weather.uv >= 5 ? C.gold : "#4ade80" }}>UV {weather.uv}</div>
+                  <div style={{ fontSize: 8, color: C.mut }}>{weather.uv >= 8 ? "zaštita!" : weather.uv >= 5 ? "SPF 30+" : "nizak"}</div>
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: C.gold }}>🌅 {weather.sunset}</div>
+                  <div style={{ fontSize: 8, color: C.mut }}>zalazak</div>
+                </div>
               </div>
             </div>
+            {/* Maritime detail row */}
+            <div style={{ padding: "2px 16px 8px", display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
+              {weather.waveHeight > 0 && <span style={{ fontSize: 10, color: C.mut }}>🌊 valovi {weather.waveHeight}m {weather.wavePeriod ? `/ ${weather.wavePeriod}s` : ""}</span>}
+              <span style={{ fontSize: 10, color: C.mut }}>💨 tlak {weather.pressure} hPa {weather.pressure < 1010 ? "↓" : weather.pressure > 1020 ? "↑" : "—"}</span>
+              <span style={{ fontSize: 10, color: C.mut }}>💧 vlaga {weather.humidity}%</span>
+              {weather.swellHeight > 0.1 && <span style={{ fontSize: 10, color: C.mut }}>🌊 swell {weather.swellHeight}m</span>}
+            </div>
+            {/* Warning bar if dangerous conditions */}
+            {(weather.windSpeed > 35 || weather.seaLevel >= 4 || weather.uv >= 9) && (
+              <div style={{ padding: "6px 16px", background: "rgba(239,68,68,0.08)", borderTop: "1px solid rgba(239,68,68,0.1)", fontSize: 11, color: "#f87171", fontWeight: 600, textAlign: "center" }}>
+                ⚠️ {weather.windSpeed > 35 ? `${weather.windName} ${weather.windSpeed} km/h — oprez za kampere!` : ""} {weather.seaLevel >= 4 ? `More ${weather.seaState}!` : ""} {weather.uv >= 9 ? "UV ekstreman — zaštita obavezna!" : ""}
+              </div>
+            )}
           </div>
         )}
 
         {msgs.length === 0 && (
           <div style={{ padding: 0 }}>
-            {/* ═══ VIBE JADRANA — SHOWROOM ═══ */}
-
-            {/* Ambient Adriatic Scene */}
-            <div style={{ position: "relative", minHeight: 280, overflow: "hidden", background: isNight
-              ? "linear-gradient(180deg, #0f2b3d 0%, #0c4a6e 30%, #0ea5e9 65%, #38bdf8 80%, #7dd3fc 100%)"
-              : "linear-gradient(180deg, #60a5fa 0%, #38bdf8 25%, #0ea5e9 50%, #0284c7 75%, #0369a1 100%)"
-            }}>
-              {/* Sun or Moon based on time */}
-              {isNight ? (
-                <div style={{ position: "absolute", top: "15%", left: "50%", transform: "translateX(-50%)" }}>
-                  <div style={{ width: 50, height: 50, borderRadius: "50%", background: "radial-gradient(circle at 35% 35%, #e2e8f0 0%, #94a3b8 50%, #64748b 100%)", boxShadow: "0 0 40px rgba(148,163,184,0.3), 0 0 80px rgba(148,163,184,0.1)", animation: "sunGlow 6s ease-in-out infinite" }} />
-                  {[{t:8,l:42,s:2},{t:14,l:55,s:1.5},{t:6,l:60,s:1},{t:18,l:38,s:1.5},{t:3,l:48,s:1}].map((st,i) => (
-                    <div key={i} style={{ position:"absolute", top:st.t, left:st.l, width:st.s, height:st.s, borderRadius:"50%", background:"rgba(255,255,255,0.6)" }} />
-                  ))}
+            {/* ═══ VIBE JADRANA — MARITIME DASHBOARD ═══ */}
+            
+            {weather ? <div style={{ padding: "0 0 8px" }}>
+              {/* Header */}
+              <div style={{ padding: "16px 16px 12px", textAlign: "center" }}>
+                <div style={{ fontSize: 9, letterSpacing: 5, color: C.accent, fontWeight: 600, marginBottom: 4 }}>VIBE JADRANA</div>
+                <div style={{ fontFamily: "'Playfair Display','DM Serif Display',Georgia,serif", fontSize: 22, fontWeight: 700 }}>
+                  {travelMode === "camper" ? "Stanje na cesti i moru" : travelMode === "sailing" ? "Pomorske prilike" : "Trenutno na Jadranu"}
                 </div>
-              ) : (
-                <div style={{ position: "absolute", top: "12%", left: "50%", transform: "translateX(-50%)", width: 70, height: 70, borderRadius: "50%", background: "radial-gradient(circle, #fef9c3 15%, #fde047 35%, #fbbf24 55%, rgba(251,191,36,0.2) 75%, transparent 100%)", boxShadow: "0 0 80px rgba(251,191,36,0.5), 0 0 160px rgba(251,191,36,0.2)", animation: "sunGlow 4s ease-in-out infinite" }}>
-                  {/* Sun rays */}
-                  {[0,45,90,135,180,225,270,315].map(deg => (
-                    <div key={deg} style={{ position:"absolute", top:"50%", left:"50%", width:2, height:12, background:"rgba(251,191,36,0.3)", transformOrigin:"center -12px", transform:`rotate(${deg}deg)`, borderRadius:1 }} />
-                  ))}
+              </div>
+
+              {/* Main cards grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, padding: "0 12px", marginBottom: 8 }}>
+                {/* SEA STATE — big card */}
+                <div style={{ gridColumn: "1 / -1", padding: "16px", borderRadius: 16, background: `linear-gradient(135deg, ${weather.seaLevel <= 1 ? "rgba(34,197,94,0.08)" : weather.seaLevel <= 3 ? "rgba(250,204,21,0.08)" : "rgba(239,68,68,0.08)"}, transparent)`, border: `1px solid ${weather.seaLevel <= 1 ? "rgba(34,197,94,0.15)" : weather.seaLevel <= 3 ? "rgba(250,204,21,0.12)" : "rgba(239,68,68,0.2)"}` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div style={{ fontSize: 9, color: C.mut, letterSpacing: 2, marginBottom: 4 }}>STANJE MORA</div>
+                      <div style={{ fontSize: 22, fontWeight: 700, color: weather.seaLevel <= 1 ? "#22c55e" : weather.seaLevel <= 3 ? "#facc15" : "#ef4444" }}>
+                        {weather.seaEmoji} {weather.seaState}
+                      </div>
+                      <div style={{ fontSize: 12, color: C.mut, marginTop: 2 }}>
+                        Valovi {weather.waveHeight}m · period {weather.wavePeriod}s · smjer {weather.waveDir}
+                      </div>
+                      {weather.swellHeight > 0.1 && <div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>Swell {weather.swellHeight}m iz {weather.swellDir || "—"} ({weather.swellPeriod || "—"}s)</div>}
+                    </div>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: 36, fontWeight: 300, color: C.accent }}>{weather.sea}°</div>
+                      <div style={{ fontSize: 9, color: C.mut }}>MORE</div>
+                      <div style={{ fontSize: 10, color: weather.sea >= 24 ? "#22c55e" : weather.sea >= 20 ? "#facc15" : C.mut, marginTop: 2 }}>
+                        {weather.sea >= 24 ? "☀️ savršeno" : weather.sea >= 20 ? "👍 ugodno" : weather.sea >= 16 ? "🥶 svježe" : "❄️ hladno"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* WIND — with Adriatic name */}
+                <div style={{ padding: "14px", borderRadius: 14, background: C.card, border: `1px solid ${weather.windSpeed > 35 ? "rgba(239,68,68,0.2)" : C.bord}` }}>
+                  <div style={{ fontSize: 9, color: C.mut, letterSpacing: 2, marginBottom: 6 }}>VJETAR</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: weather.windSpeed > 35 ? "#f87171" : C.text }}>{weather.windName || "—"}</div>
+                  <div style={{ fontSize: 12, color: C.mut }}>{weather.windDir} {weather.windSpeed} km/h</div>
+                  <div style={{ fontSize: 11, color: C.mut }}>udari {weather.gusts} km/h</div>
+                  <div style={{ fontSize: 10, color: weather.windSpeed > 35 ? "#fca5a5" : C.accent, marginTop: 4 }}>
+                    Bf {weather.beaufort || Math.round(weather.windSpeed / 8)} · {weather.windDesc || ""}
+                  </div>
+                </div>
+
+                {/* TEMPERATURE */}
+                <div style={{ padding: "14px", borderRadius: 14, background: C.card, border: `1px solid ${C.bord}` }}>
+                  <div style={{ fontSize: 9, color: C.mut, letterSpacing: 2, marginBottom: 6 }}>TEMPERATURA</div>
+                  <div style={{ fontSize: 28, fontWeight: 300, color: C.text }}>{weather.icon} {weather.temp}°</div>
+                  <div style={{ fontSize: 11, color: C.mut }}>osjeća se {weather.feelsLike}°</div>
+                  <div style={{ fontSize: 11, color: C.mut }}>oblačnost {weather.cloudCover || "—"}%</div>
+                </div>
+
+                {/* UV + SUN */}
+                <div style={{ padding: "14px", borderRadius: 14, background: C.card, border: `1px solid ${C.bord}` }}>
+                  <div style={{ fontSize: 9, color: C.mut, letterSpacing: 2, marginBottom: 6 }}>UV INDEX</div>
+                  <div style={{ fontSize: 24, fontWeight: 700, color: weather.uv >= 8 ? "#ef4444" : weather.uv >= 5 ? "#f59e0b" : "#22c55e" }}>
+                    {weather.uv}
+                  </div>
+                  <div style={{ fontSize: 11, color: C.mut }}>
+                    {weather.uv >= 8 ? "🛡️ zaštita obavezna!" : weather.uv >= 5 ? "SPF 30+ preporučen" : "😎 nizak rizik"}
+                  </div>
+                  <div style={{ fontSize: 10, color: C.mut, marginTop: 2 }}>
+                    opeklina za {weather.uv >= 8 ? "~15 min" : weather.uv >= 5 ? "~25 min" : "45+ min"}
+                  </div>
+                </div>
+
+                {/* PRESSURE + HUMIDITY */}
+                <div style={{ padding: "14px", borderRadius: 14, background: C.card, border: `1px solid ${C.bord}` }}>
+                  <div style={{ fontSize: 9, color: C.mut, letterSpacing: 2, marginBottom: 6 }}>BAROMETAR</div>
+                  <div style={{ fontSize: 18, fontWeight: 500, color: C.text }}>
+                    {weather.pressure} <span style={{ fontSize: 10, color: C.mut }}>hPa</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: weather.pressure < 1010 ? "#f59e0b" : "#22c55e" }}>
+                    {weather.pressure < 1008 ? "↓ pad — promjena" : weather.pressure < 1013 ? "↓ blagi pad" : weather.pressure > 1020 ? "↑ stabilno" : "— normalan"}
+                  </div>
+                  <div style={{ fontSize: 11, color: C.mut, marginTop: 3 }}>💧 vlaga {weather.humidity}%</div>
+                </div>
+              </div>
+
+              {/* Sunrise/Sunset bar */}
+              <div style={{ display: "flex", justifyContent: "center", gap: 20, padding: "8px 16px 4px" }}>
+                <span style={{ fontSize: 12, color: C.mut }}>🌅 izlazak {weather.sunrise}</span>
+                <span style={{ fontSize: 12, color: C.gold }}>🌇 zalazak {weather.sunset}</span>
+              </div>
+
+              {/* Warning banner if conditions are dangerous */}
+              {(weather.windSpeed > 35 || weather.seaLevel >= 4 || weather.uv >= 9) && (
+                <div style={{ margin: "8px 12px", padding: "10px 14px", borderRadius: 12, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.15)", textAlign: "center" }}>
+                  <div style={{ fontSize: 13, color: "#f87171", fontWeight: 700 }}>
+                    ⚠️ {weather.windSpeed > 35 ? `${weather.windName} ${weather.windSpeed} km/h — oprez za kampere!` : ""} {weather.seaLevel >= 4 ? `More ${weather.seaState}!` : ""} {weather.uv >= 9 ? "UV ekstreman!" : ""}
+                  </div>
                 </div>
               )}
-              {/* Horizon glow */}
-              <div style={{ position: "absolute", top: "55%", left: 0, right: 0, height: 80, background: "radial-gradient(ellipse 80% 100% at 50% 0%, rgba(251,191,36,0.15), transparent)", pointerEvents: "none" }} />
-              {/* Animated sea */}
-              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "45%" }}>
-                <svg width="100%" height="100%" viewBox="0 0 400 80" preserveAspectRatio="none" style={{ position: "absolute", top: 0 }}>
-                  <path fill="rgba(14,165,233,0.4)" style={{ animation: "seaV1 6s ease-in-out infinite" }} d="M0,20 C60,10 120,30 180,18 C240,6 300,28 360,15 C380,12 400,20 400,20 L400,80 L0,80 Z" />
-                  <path fill="rgba(8,145,210,0.5)" style={{ animation: "seaV2 8s ease-in-out infinite" }} d="M0,30 C50,22 100,35 160,25 C220,15 280,32 340,22 C370,18 400,28 400,28 L400,80 L0,80 Z" />
-                  <path fill="rgba(12,74,110,0.7)" style={{ animation: "seaV1 5s ease-in-out infinite reverse" }} d="M0,38 C80,30 140,42 200,34 C260,26 320,40 400,34 L400,80 L0,80 Z" />
-                </svg>
-              </div>
-              {/* Live marine data overlay */}
-              {weather && <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "32px 12px 14px", background: "linear-gradient(transparent, rgba(0,0,0,0.5))" }}>
-                <div style={{ display: "flex", justifyContent: "space-around", flexWrap: "wrap", gap: 4 }}>
-                  {[
-                    { v: `${weather.temp}°`, sub: `${weather.icon} osjeća ${weather.feelsLike || weather.temp}°`, l: "ZRAK" },
-                    { v: `${weather.sea}°`, sub: "površina mora", l: "MORE" },
-                    { v: `${weather.windDir || "—"} ${weather.windSpeed || "—"}`, sub: `udari ${weather.gusts || "—"} km/h`, l: "VJETAR" },
-                    { v: weather.waveHeight ? `${weather.waveHeight}m` : "mirno", sub: weather.wavePeriod ? `period ${weather.wavePeriod}s` : "valovi", l: "VALOVI" },
-                    { v: `UV ${weather.uv}`, sub: weather.uv >= 8 ? "⚠️ zaštita!" : weather.uv >= 5 ? "SPF 30+" : "nizak", l: "UV INDEX" },
-                    { v: `🌅 ${weather.sunset}`, sub: `izlazak ${weather.sunrise || "06:00"}`, l: "SUNCE" },
-                  ].map((d, i) => (
-                    <div key={i} style={{ textAlign: "center", minWidth: 52, padding: "4px 6px" }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "#f0f9ff", lineHeight: 1.1 }}>{d.v}</div>
-                      <div style={{ fontSize: 8, color: "rgba(240,249,255,0.5)", letterSpacing: 1, marginTop: 2 }}>{d.l}</div>
-                      <div style={{ fontSize: 9, color: "rgba(240,249,255,0.4)", marginTop: 1 }}>{d.sub}</div>
-                    </div>
-                  ))}
+
+              {/* Lučka kapetanija note */}
+              <div style={{ textAlign: "center", padding: "4px 16px 8px" }}>
+                <div style={{ fontSize: 9, color: isNight ? "rgba(255,255,255,0.15)" : "rgba(12,74,110,0.2)", letterSpacing: 1 }}>
+                  Podaci: Open-Meteo Marine API · Lokacija: Podstrana-Split · Osvježavanje svakih 15 min
                 </div>
-                {weather.pressure && <div style={{ textAlign: "center", marginTop: 6, fontSize: 9, color: "rgba(240,249,255,0.3)" }}>
-                  Tlak {weather.pressure} hPa {weather.pressure < 1010 ? "↓ pad — moguća promjena" : weather.pressure > 1020 ? "↑ stabilan" : "— umjeren"} · Vlažnost {weather.humidity}%
-                </div>}
-              </div>}
-              {/* VIBE label */}
-              <div style={{ position: "absolute", top: 16, left: "50%", transform: "translateX(-50%)", fontSize: 9, letterSpacing: 6, color: "rgba(255,255,255,0.3)", fontWeight: 600 }}>JADRAN · LIVE</div>
-            </div>
+              </div>
+            </div> : <div style={{ padding: 40, textAlign: "center", color: C.mut, fontSize: 13 }}>Učitavam podatke...</div>}
 
             {/* Floating conversation previews — shows what the AI can do */}
             <div style={{ padding: "20px 16px 8px", position: "relative", overflow: "hidden" }}>
