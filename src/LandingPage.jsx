@@ -16,16 +16,16 @@ const L = {
 };
 
 const TRENDING = [
-  { emoji: "\U0001F6A4", title: "Limski kanal \u2014 tura brodom", sub: "Samo 12 mjesta", price: "45\u20AC", link: GYG("rovinj-l1299/from-rovinj-rovinj-motovun-and-groznjan-day-tour-t132468"), tag: "ISTRA" },
-  { emoji: "\U0001F377", title: "Degustacija na Pelješcu", sub: "Parking za kampere", price: "35\u20AC", link: GYG("ston-l4159/ston-oyster-and-wine-tasting-tour-t197562"), tag: "DUBROVNIK" },
-  { emoji: "\U0001F3DD\uFE0F", title: "Blue Cave & 5 otoka", sub: "Cijeli dan na moru", price: "110\u20AC", link: GYG("split-l268/from-split-blue-cave-mamma-mia-vis-hvar-5-islands-tour-t326676"), tag: "SPLIT" },
-  { emoji: "\U0001F344", title: "Lov na tartufe \u2014 Motovun", sub: "Pravi lovac i pas", price: "45\u20AC", link: GYG("istria-county-l1297/livade-guided-truffle-hunting-walking-tour-t413975"), tag: "ISTRA" },
-  { emoji: "\U0001F3F0", title: "Dubrovnik zidine", sub: "Bez \u010Dekanja", price: "45\u20AC", link: GYG("dubrovnik-l518/dubrovnik-old-town-and-city-walls-walking-tour-t50564"), tag: "DUBROVNIK" },
+  { emoji: "🚤", title: "Limski kanal \u2014 tura brodom", sub: "Samo 12 mjesta", price: "45\u20AC", link: GYG("rovinj-l1299/from-rovinj-rovinj-motovun-and-groznjan-day-tour-t132468"), tag: "ISTRA" },
+  { emoji: "🍷", title: "Degustacija na Pelješcu", sub: "Parking za kampere", price: "35\u20AC", link: GYG("ston-l4159/ston-oyster-and-wine-tasting-tour-t197562"), tag: "DUBROVNIK" },
+  { emoji: "🏝️", title: "Blue Cave & 5 otoka", sub: "Cijeli dan na moru", price: "110\u20AC", link: GYG("split-l268/from-split-blue-cave-mamma-mia-vis-hvar-5-islands-tour-t326676"), tag: "SPLIT" },
+  { emoji: "🍄", title: "Lov na tartufe \u2014 Motovun", sub: "Pravi lovac i pas", price: "45\u20AC", link: GYG("istria-county-l1297/livade-guided-truffle-hunting-walking-tour-t413975"), tag: "ISTRA" },
+  { emoji: "🏰", title: "Dubrovnik zidine", sub: "Bez \u010Dekanja", price: "45\u20AC", link: GYG("dubrovnik-l518/dubrovnik-old-town-and-city-walls-walking-tour-t50564"), tag: "DUBROVNIK" },
 ];
 
 const DEMO_CHAT = [
   { role: "user", text: "Mogu li kamperom do centra Pule?" },
-  { role: "ai", text: "Nikako! \U0001F6A8 Pauk oko Arene cilja kampere \u2014 kazna 60\u20AC. Parkiraj na Gregovici, besplatno. Bolt do centra 5 min." },
+  { role: "ai", text: "Nikako! 🚨 Pauk oko Arene cilja kampere \u2014 kazna 60\u20AC. Parkiraj na Gregovici, besplatno. Bolt do centra 5 min." },
   { role: "cta", text: "Konoba Batelina \u2014 svježa riba, ravan parking" },
 ];
 
@@ -66,7 +66,7 @@ export default function LandingPage() {
         </div>
         <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
           <div style={{ display: "flex", gap: 1, background: "rgba(255,255,255,0.05)", borderRadius: 8, padding: 2 }}>
-            {[["hr","\U0001F1ED\U0001F1F7"],["de","\U0001F1E9\U0001F1EA"],["at","\U0001F1E6\U0001F1F9"],["en","\U0001F1EC\U0001F1E7"],["it","\U0001F1EE\U0001F1F9"]].map(([c,f]) => (
+            {[["hr","🇭🇷"],["de","🇩🇪"],["at","🇦🇹"],["en","🇬🇧"],["it","🇮🇹"],["si","🇸🇮"],["cz","🇨🇿"],["pl","🇵🇱"]].map(([c,f]) => (
               <button key={c} onClick={() => setLang(c)} style={{ padding: "2px 4px", background: lang === c ? "rgba(14,165,233,0.2)" : "transparent", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, lineHeight: 1 }}>{f}</button>
             ))}
           </div>
@@ -126,8 +126,8 @@ export default function LandingPage() {
         <div style={{ maxWidth: 960, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
           {[
             { icon: "\u26D4", t: tx("pain1t"), d: tx("pain1d"), c: "#ef4444" },
-            { icon: "\U0001F32C\uFE0F", t: tx("pain2t"), d: tx("pain2d"), c: "#f59e0b" },
-            { icon: "\U0001F48E", t: tx("pain3t"), d: tx("pain3d"), c: "#0ea5e9" },
+            { icon: "🌬️", t: tx("pain2t"), d: tx("pain2d"), c: "#f59e0b" },
+            { icon: "💎", t: tx("pain3t"), d: tx("pain3d"), c: "#0ea5e9" },
           ].map((p, i) => (
             <div key={i} style={{ padding: 28, borderRadius: 18, background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.04)", border: "1px solid #e2e8f0" }}>
               <div style={{ width: 48, height: 48, borderRadius: 14, background: p.c + "10", display: "grid", placeItems: "center", fontSize: 24, marginBottom: 14 }}>{p.icon}</div>
@@ -158,7 +158,7 @@ export default function LandingPage() {
                   <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", animation: "fadeSlide 0.5s both" }}>
                     {m.role === "cta" ? (
                       <div style={{ width: "88%", padding: "10px 12px", borderRadius: 12, background: "linear-gradient(135deg, #ef4444, #dc2626)", color: "#fff", fontSize: 12, fontWeight: 600, textAlign: "center" }}>
-                        {"\U0001F37D\uFE0F"} {m.text} {"\u2192"}
+                        {"🍽️"} {m.text} {"\u2192"}
                       </div>
                     ) : (
                       <div style={{ maxWidth: "80%", padding: "8px 12px", borderRadius: m.role === "user" ? "12px 12px 3px 12px" : "12px 12px 12px 3px", background: m.role === "user" ? "rgba(14,165,233,0.12)" : "rgba(255,255,255,0.05)", fontSize: 12, lineHeight: 1.5 }}>
@@ -187,7 +187,7 @@ export default function LandingPage() {
       <section style={{ padding: "72px 24px", background: "#0a1628" }}>
         <div style={{ maxWidth: 960, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 32 }}>
-            <div style={{ fontSize: 9, color: "#f59e0b", letterSpacing: 5, fontWeight: 600, marginBottom: 8 }}>{"\U0001F525"} POPULARNO</div>
+            <div style={{ fontSize: 9, color: "#f59e0b", letterSpacing: 5, fontWeight: 600, marginBottom: 8 }}>{"🔥"} POPULARNO</div>
             <h2 style={{ fontFamily: F, fontSize: "clamp(20px, 3.5vw, 28px)", fontWeight: 700 }}>{tx("trendTitle")}</h2>
           </div>
           <div style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 12, scrollSnapType: "x mandatory" }}>
@@ -238,7 +238,7 @@ export default function LandingPage() {
 
       {/* ═══ STICKY BAR ═══ */}
       <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99, padding: "8px 16px", paddingBottom: "max(8px, env(safe-area-inset-bottom, 8px))", background: "linear-gradient(135deg, #16a34a, #15803d)", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 -4px 16px rgba(0,0,0,0.3)" }}>
-        <span style={{ color: "#fff", fontSize: 13, fontWeight: 500 }}>{"\U0001F4AC"} {tx("sticky")}</span>
+        <span style={{ color: "#fff", fontSize: 13, fontWeight: 500 }}>{"💬"} {tx("sticky")}</span>
         <div style={{ display: "flex", gap: 6 }}>
           <a href="/ai?niche=camper" style={{ padding: "8px 14px", borderRadius: 8, background: "#fff", color: "#15803d", fontSize: 12, fontWeight: 800, textDecoration: "none", fontFamily: F }}>{"🚜"} Kamper</a>
           <a href="/ai?niche=local" style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(255,255,255,0.2)", color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none", fontFamily: F }}>{"🗺️"} Vodič</a>
