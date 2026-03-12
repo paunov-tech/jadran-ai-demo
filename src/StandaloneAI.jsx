@@ -58,17 +58,12 @@ export default function StandaloneAI() {
   const [msgs, setMsgs] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const chatEnd = useRef(null);
+  const scrollBox = useRef(null);
+  const scrollAnchor = useRef(null);
   const [weather, setWeather] = useState(null);
   const [regionImgs, setRegionImgs] = useState({});
 
-  useEffect(() => { 
-    if (msgs.length > 0) {
-      requestAnimationFrame(() => {
-        chatEnd.current?.scrollTo({ top: chatEnd.current.scrollHeight, behavior: "smooth" });
-      });
-    }
-  }, [msgs, loading]);
+  useEffect(() => { scrollAnchor.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [msgs, loading]);
   // Fetch live weather
   useEffect(() => {
     fetch("/api/weather").then(r => r.json()).then(d => {
@@ -583,7 +578,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
       </div>
 
       {/* Messages */}
-      <div ref={chatEnd} style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "0", display: "flex", flexDirection: "column", gap: 10 }}>
+      <div ref={scrollBox} style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "0", display: "flex", flexDirection: "column" }}>
         {msgs.length === 0 && (
           <div style={{ padding: 0 }}>
             {/* ═══ VIBE JADRANA — SHOWROOM ═══ */}
@@ -691,9 +686,8 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
           </div>
         )}
 
-        {/* Spacer pushes messages to bottom when few */}
-        {msgs.length > 0 && <div style={{ flex: 1 }} />}
-
+        {/* Messages pushed to bottom via margin-top:auto */}
+        <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 10 }}>
         {msgs.map((m, i) => (
           <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", padding: "0 16px" }}>
             <div style={{
@@ -735,6 +729,10 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
             </div>
           </div>
         ))}
+
+        </div>
+        {/* Scroll anchor — always at bottom of messages */}
+        <div ref={scrollAnchor} />
 
         {/* Quick reply chips after last AI message */}
         {msgs.length > 0 && !loading && msgs[msgs.length - 1]?.role === "assistant" && (
