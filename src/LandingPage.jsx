@@ -6,6 +6,7 @@
 import { useState, useEffect } from "react";
 
 const GYG = (id) => `https://www.getyourguide.com/${id}/?partner_id=9OEGOYI&utm_medium=local_partners`;
+const BKG = (city) => `https://www.booking.com/searchresults.html?aid=101704203&ss=${encodeURIComponent(city)}&lang=en`;
 
 const L = {
   hr: { badge: "Bez skidanja aplikacije. Radi odmah.", h1a: "Jadran ne oprašta", h1b: "uske ulice i visoke kazne.", h1c: "Tvoj lokalni AI vodič je tu.", sub: "Od Istre do Dalmacije. Unesi gabarite svog vozila i odmah dobij sigurne rute, tajne parkinge i popuste za skrivene konobe.", destLabel: "Kamo ideš?", lenLabel: "Dužina vozila?", cta: "Započni Chat", pain1t: "Zaboravi na kazne", pain1d: "Naš AI zna visinu svakog podvožnjaka i širinu svakog starog grada. Ne rizikuj zaglavljivanje kampera na usponima Biokova ili uličicama Trogira.", pain2t: "Bura te neće iznenaditi", pain2d: "Povezani smo sa lokalnim meteo-stanicama. Ako udari vjetar opasan za tvoju tendu, dobijaš upozorenje i lokaciju najbližeg zaklona.", pain3t: "Mjesta koja Google ne zna", pain3d: "Otkrij OPG-ove, vinarije s besplatnim parkingom i prazne uvale koje samo lokalci čuvaju za sebe.", demoTitle: "Pametnije od mape. Brže od recepcije.", trendTitle: "Što se traži na Jadranu?", b2bTitle: "Vlasnik ste apartmana, kampa ili konobe?", b2bDesc: "Prestanite odgovarati na ista pitanja 50 puta dnevno. Podijelite naš QR kod gostima — oni dobijaju 24/7 vodiča na svom jeziku, a vi mirnu recepciju.", b2bBtn: "Generiraj besplatan QR kod", sticky: "Spremio si se za put?", stickyBtn: "POKRENI JADRAN.AI" },
