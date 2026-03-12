@@ -52,6 +52,7 @@ export default function StandaloneAI() {
   const [trialHoursLeft, setTrialHoursLeft] = useState(24);
   const [trialExpired, setTrialExpired] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [showCards, setShowCards] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
 
   // Chat
@@ -765,11 +766,29 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
           </div>
         )}
 
-        {/* ═══ CONTENT CARDS — filtered by region ═══ */}
+        {/* ═══ CONTENT CARDS — collapsible when chatting ═══ */}
         {region && (
           <div style={{ padding: "8px 0 20px" }}>
-            {/* Separator */}
-            {msgs.length > 0 && <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${C.bord}, transparent)`, margin: "16px 0 20px" }} />}
+            {/* When chatting: show toggle button instead of full cards */}
+            {msgs.length > 0 && !showCards && (
+              <button onClick={() => setShowCards(true)} style={{
+                width: "calc(100% - 32px)", margin: "8px 16px", padding: "12px 16px", borderRadius: 14,
+                border: `1px solid ${C.bord}`, background: C.card, color: C.text,
+                fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+              }}>
+                <span>🗺️ Aktivnosti, plaže, ponude</span>
+                <span style={{ fontSize: 12, color: C.accent }}>Prikaži ▼</span>
+              </button>
+            )}
+            {msgs.length > 0 && showCards && (
+              <button onClick={() => setShowCards(false)} style={{
+                width: "calc(100% - 32px)", margin: "8px 16px 12px", padding: "10px 16px", borderRadius: 12,
+                border: `1px solid ${C.bord}`, background: "transparent", color: C.mut,
+                fontSize: 12, cursor: "pointer", fontFamily: "inherit", textAlign: "center",
+              }}>Sakrij ponude ▲</button>
+            )}
+            {(msgs.length === 0 || showCards) && <>
 
             {/* Activities — affiliate, always visible */}
             {(() => {
@@ -1031,6 +1050,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
                 </div>
               );
             })()}
+            </>}
           </div>
         )}
         <div style={{ minHeight: 8, flexShrink: 0 }} />
