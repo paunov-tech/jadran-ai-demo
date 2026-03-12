@@ -187,12 +187,6 @@ export default function LandingPage() {
             </a>
           </div>
           <div style={{ marginTop: 16, fontSize: 11, color: "#334155" }}>{tx("freeInfo")}</div>
-          <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
-            {["VISA","Mastercard","Apple Pay","Google Pay"].map(m => (
-              <span key={m} style={{ padding: "3px 8px", borderRadius: 6, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", fontSize: 9, color: "#64748b" }}>{m}</span>
-            ))}
-          </div>
-          <div style={{ fontSize: 9, color: "#334155", marginTop: 6 }}>🔒 Stripe secure payments</div>
         </div>
       </section>
 
@@ -342,8 +336,36 @@ export default function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer style={{ padding: "20px", paddingBottom: "calc(20px + 52px)", textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.03)" }}>
-        <div style={{ fontSize: 11, color: "#0c4a6e" }}>JADRAN {"\u00B7"} SIAL Consulting d.o.o. {"\u00B7"} 2026</div>
+      <footer style={{ padding: "32px 24px", paddingBottom: "calc(32px + 52px)", textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.03)", background: "#080e1a" }}>
+        {/* Payment methods with icons */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 9, color: "#334155", letterSpacing: 2, marginBottom: 12 }}>🔒 SECURE PAYMENTS</div>
+          <div style={{ display: "flex", justifyContent: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
+            {/* Visa */}
+            <div style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <svg width="40" height="14" viewBox="0 0 40 14"><path d="M16.1 0.5L13.4 13.5H10.6L13.3 0.5H16.1ZM26.6 8.8L28.1 4.6L28.9 8.8H26.6ZM29.7 13.5H32.3L30 0.5H27.7C27.1 0.5 26.6 0.9 26.4 1.4L22.3 13.5H25.1L25.6 12H29L29.7 13.5ZM22.8 9.1C22.8 5.5 17.8 5.3 17.8 3.7C17.8 3.2 18.3 2.6 19.4 2.5C19.9 2.4 21.4 2.4 23 3.1L23.5 0.8C22.7 0.5 21.6 0.2 20.3 0.2C17.7 0.2 15.8 1.6 15.8 3.8C15.8 5.4 17.2 6.3 18.2 6.8C19.3 7.4 19.7 7.8 19.7 8.3C19.6 9.1 18.7 9.4 17.8 9.4C16.3 9.5 15.4 9.1 14.7 8.7L14.1 11.1C14.8 11.5 16.1 11.8 17.5 11.8C20.2 11.8 22.8 10.5 22.8 9.1ZM10.2 0.5L5.9 13.5H3.1L1 2.5C0.9 2 0.7 1.7 0.3 1.4C-0.4 1 -0.1 1 0 0.9L0 0.5H4.5C5.1 0.5 5.6 1 5.7 1.6L6.7 7.5L9.4 0.5H10.2Z" fill="#1434CB"/></svg>
+            </div>
+            {/* Mastercard */}
+            <div style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <svg width="32" height="20" viewBox="0 0 32 20"><circle cx="12" cy="10" r="9" fill="#EB001B" opacity="0.9"/><circle cx="20" cy="10" r="9" fill="#F79E1B" opacity="0.9"/><path d="M16 3.5c2.2 1.7 3.6 4.3 3.6 7.2s-1.4 5.5-3.6 7.2c-2.2-1.7-3.6-4.3-3.6-7.2s1.4-5.5 3.6-7.2z" fill="#FF5F00" opacity="0.9"/></svg>
+            </div>
+            {/* Apple Pay */}
+            <div style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 4 }}>
+              <svg width="14" height="17" viewBox="0 0 14 17"><path d="M13.2 5.7c-.1.1-2 1.2-2 3.6 0 2.8 2.5 3.8 2.5 3.8 0 .1-.4 1.3-1.3 2.6-.8 1.2-1.6 2.3-2.9 2.3-1.3 0-1.6-.7-3.1-.7-1.4 0-1.9.7-3.1.7C2 18.1 1 16.8.2 15.6-1 13.7-1.9 10.5-1.9 7.5c0-3 2-4.6 3.9-4.6 1.2 0 2.2.8 3 .8.7 0 1.9-.9 3.3-.9.5 0 2.4.1 3.6 1.5l.3-.6zM9.5 1.9C10.1 1.2 10.5.2 10.5-.8c-.9 0-2 .6-2.7 1.4-.6.7-1.1 1.6-1.1 2.7 1 .1 2-.5 2.8-1.4z" transform="translate(1.9 0.8)" fill="#fff"/></svg>
+              <span style={{ color: "#fff", fontSize: 11, fontWeight: 500 }}>Pay</span>
+            </div>
+            {/* Google Pay */}
+            <div style={{ padding: "8px 14px", borderRadius: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 4 }}>
+              <svg width="16" height="16" viewBox="0 0 16 16"><path d="M8.2 6.9v2.5h3.5c-.1.9-.5 1.6-1 2.1l1.6 1.3c1-.9 1.5-2.2 1.5-3.8 0-.4 0-.7-.1-1h-5.5z" fill="#4285F4"/><path d="M3.6 9.5l-.4.3L1.7 11c1.1 2.2 3.4 3.7 6 3.7 1.8 0 3.3-.6 4.5-1.6l-1.6-1.3c-.6.4-1.4.7-2.4.7-1.8 0-3.4-1.2-3.9-2.9l-.7-.1z" fill="#34A853"/><path d="M1.7 5c-.3.6-.5 1.3-.5 2s.2 1.4.5 2c0 0 1.5-1.2 1.9-1.5-.1-.3-.2-.7-.2-1s.1-.7.2-1L1.7 5z" fill="#FBBC05"/><path d="M7.7 3.3c1 0 1.9.4 2.6 1l2-2C11 1.1 9.5.3 7.7.3c-2.6 0-4.9 1.5-6 3.7l1.9 1.5c.5-1.7 2.1-2.9 3.9-2.9l.2-.3z" fill="#EA4335"/></svg>
+              <span style={{ color: "#fff", fontSize: 11, fontWeight: 500 }}>Pay</span>
+            </div>
+          </div>
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 6 }}>
+            <span style={{ fontSize: 10, color: "#475569" }}>Powered by</span>
+            <svg width="42" height="18" viewBox="0 0 42 18"><path d="M6.5 4.7C6.5 3.5 7.3 2.7 8.5 2.7c.7 0 1.2.3 1.5.7l1-1.1C10.3 1.5 9.5 1 8.4 1 6.3 1 4.7 2.6 4.7 4.7s1.6 3.7 3.7 3.7c1.1 0 1.9-.5 2.6-1.3l-1-1c-.4.5-.9.7-1.5.7-1.2 0-2-.8-2-2zm5.7-1.5h-1v5h1.8v-2c0-1.1.5-1.6 1.3-1.6.2 0 .4 0 .6.1l.1-1.6c-.2-.1-.4-.1-.6-.1-.6 0-1.1.3-1.4.8V3.2h-.8zm4.6 3.2c0 .6.5 1 1.2 1 .5 0 .9-.2 1.2-.5v.4h1.6V4.7c0-1.2-.9-1.7-2-1.7-.8 0-1.5.3-2 .8l.6.9c.4-.3.7-.5 1.2-.5.5 0 .8.2.8.6v.3c-.3-.2-.7-.3-1.2-.3-1 0-1.8.5-1.8 1.5l.4.1zm1.6-.1c-.4 0-.6-.2-.6-.5 0-.3.3-.5.7-.5.3 0 .6.1.9.3v.4c-.3.2-.6.3-1 .3zm4.2-3.1c-.6 0-1 .3-1.3.7V1h-1.8v7.2h1.8V5.1c0-.7.3-1 .7-1 .4 0 .7.3.7.9v3.2h1.8V4.7c0-1.2-.7-1.7-1.6-1.7l-.3.2zm5.2.2c-.3-.3-.8-.4-1.3-.4-1.2 0-2 .8-2 1.9 0 1.2.8 1.9 2 1.9.5 0 1-.1 1.3-.5v.4c0 .7-.4 1-1.1 1-.5 0-.9-.1-1.3-.4l-.6 1.1c.6.4 1.3.5 2 .5 1.5 0 2.7-.7 2.7-2.4V3.2h-1.7v.2zm-.1 1.5c0 .5-.4.8-.9.8s-.9-.3-.9-.8.4-.8.9-.8.9.3.9.8zm3.4-1.5c-.6 0-1.1.3-1.4.7V3.2H28v5h1.8V5.1c0-.7.3-1 .8-1 .5 0 .7.3.7 1v3.1h1.8V4.7c0-1.2-.7-1.7-1.6-1.7l-.3.2zm4.5-.2H34v1.3h1.5V7c0 1.2.7 1.7 1.7 1.7.5 0 .9-.1 1.2-.3l-.4-1.2c-.2.1-.3.1-.5.1-.3 0-.5-.2-.5-.6V4.5H38V3.2h-1V1.8l-1.8.4v1h-.5z" fill="#635BFF"/></svg>
+          </div>
+        </div>
+        <div style={{ fontSize: 11, color: "#1e293b" }}>JADRAN {"\u00B7"} SIAL Consulting d.o.o. {"\u00B7"} 2026</div>
       </footer>
 
       {/* ═══ STICKY BAR ═══ */}
