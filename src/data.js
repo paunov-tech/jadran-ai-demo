@@ -1,0 +1,115 @@
+// ═══════════════════════════════════════════════════════════════
+// JADRAN — Shared data for both Guest App and Standalone AI
+// NOTE: App.jsx keeps its own copy for safety. This is for StandaloneAI.
+// ═══════════════════════════════════════════════════════════════
+
+const GYG = (id) => `https://www.getyourguide.com/${id}/?partner_id=9OEGOYI&utm_medium=local_partners`;
+const VIA = (id) => `https://www.viator.com/tours/${id}?pid=P00292197&mcid=42383&medium=link`;
+const BKG = (city, params="") => `https://www.booking.com/searchresults.html?aid=101704203&ss=${encodeURIComponent(city)}&lang=en${params}`;
+
+export const EXPERIENCES = [
+  // Split & Dalmacija
+  { id: 1, name: "Rafting Cetina", emoji: "🚣", price: 35, dur: "3h", rating: 4.9, cat: "adventure", region: "split",
+    link: GYG("omis-l2096/rafting-on-cetina-river-from-omis-t35592") },
+  { id: 2, name: "Kajak Night Glow", emoji: "🛶", price: 55, dur: "3h", rating: 4.9, cat: "adventure", region: "split",
+    link: GYG("split-l268/split-kayak-night-glow-tour-t438836") },
+  { id: 3, name: "ATV Quad + Waterfall", emoji: "🏍️", price: 65, dur: "5h", rating: 4.9, cat: "adventure", region: "split",
+    link: GYG("split-l268/split-atv-quad-tour-adventure-with-waterfall-swimming-t445566") },
+  { id: 4, name: "Split Walking Tour", emoji: "🏛️", price: 25, dur: "2h", rating: 4.7, cat: "culture", region: "split",
+    link: GYG("split-l268/split-walking-tour-t54976") },
+  { id: 5, name: "Game of Thrones", emoji: "🐉", price: 60, dur: "2h", rating: 4.9, cat: "culture", region: "split",
+    link: GYG("split-l268/split-private-game-of-thrones-tour-t899804") },
+  { id: 6, name: "Blue Cave 5 Islands", emoji: "🏝️", price: 110, dur: "10h", rating: 4.8, cat: "premium", region: "split",
+    link: GYG("split-l268/from-split-blue-cave-mamma-mia-vis-hvar-5-islands-tour-t326676") },
+  { id: 7, name: "Hvar + Pakleni Catamaran", emoji: "⛵", price: 89, dur: "10h", rating: 4.8, cat: "premium", region: "split",
+    link: GYG("split-l268/split-full-day-boat-trip-to-3-islands-w-lunch-snorkeling-t412889") },
+  { id: 8, name: "Sunset Cruise", emoji: "🌅", price: 65, dur: "2h", rating: 5.0, cat: "premium", region: "split",
+    link: GYG("split-l268/split-riviera-sunset-cruise-with-summer-vibes-t399715") },
+  { id: 9, name: "Krka + Wine Tasting", emoji: "🍷", price: 65, dur: "8h", rating: 4.8, cat: "gastro", region: "split",
+    link: GYG("split-l268/day-tour-from-split-krka-waterfalls-tour-wine-tasting-t251842") },
+  { id: 10, name: "Plitvice Lakes", emoji: "🌊", price: 75, dur: "12h", rating: 4.8, cat: "nature", region: "split",
+    link: GYG("split-l268/from-split-plitvice-lakes-guided-tour-with-entry-tickets-t411976") },
+  // Zadar & Šibenik
+  { id: 11, name: "Krka Waterfalls", emoji: "💦", price: 55, dur: "8h", rating: 4.8, cat: "nature", region: "zadar",
+    link: GYG("sibenik-l2091/krka-waterfalls-day-trip-from-sibenik-t75621") },
+  { id: 12, name: "Kornati Islands", emoji: "🏝️", price: 85, dur: "10h", rating: 4.9, cat: "premium", region: "zadar",
+    link: GYG("zadar-l936/zadar-kornati-national-park-full-day-boat-tour-t389218") },
+  { id: 13, name: "Zadar Sunset Tour", emoji: "🌅", price: 35, dur: "2h", rating: 4.8, cat: "culture", region: "zadar",
+    link: GYG("zadar-l936/zadar-old-town-sunset-walking-tour-t226044") },
+  // Dubrovnik
+  { id: 14, name: "Dubrovnik Walls Walk", emoji: "🏰", price: 45, dur: "2h", rating: 4.9, cat: "culture", region: "dubrovnik",
+    link: GYG("dubrovnik-l518/dubrovnik-old-town-and-city-walls-walking-tour-t50564") },
+  { id: 15, name: "Elafiti Islands", emoji: "⛵", price: 55, dur: "8h", rating: 4.8, cat: "premium", region: "dubrovnik",
+    link: GYG("dubrovnik-l518/dubrovnik-elafiti-3-island-cruise-with-lunch-t97898") },
+  { id: 16, name: "Mostar Day Trip", emoji: "🌉", price: 45, dur: "10h", rating: 4.7, cat: "culture", region: "dubrovnik",
+    link: GYG("dubrovnik-l518/dubrovnik-full-day-tour-of-mostar-t15584") },
+  // Makarska
+  { id: 17, name: "Biokovo Skywalk", emoji: "🏔️", price: 35, dur: "3h", rating: 4.8, cat: "nature", region: "makarska",
+    link: GYG("makarska-l2098/biokovo-skywalk-guided-tour-t535283") },
+  { id: 18, name: "Brač Island Ferry", emoji: "🏖️", price: 25, dur: "8h", rating: 4.7, cat: "adventure", region: "makarska",
+    link: GYG("makarska-l2098?q=brac+island") },
+  // Istra
+  { id: 20, name: "Truffle Hunting", emoji: "🍄", price: 45, dur: "2h", rating: 4.9, cat: "gastro", region: "istra",
+    link: GYG("istria-county-l1297/livade-guided-truffle-hunting-walking-tour-t413975") },
+  { id: 21, name: "Istria in 1 Day", emoji: "🏰", price: 55, dur: "9h", rating: 4.7, cat: "culture", region: "istra",
+    link: GYG("rovinj-l1299/from-rovinj-rovinj-motovun-and-groznjan-day-tour-t132468") },
+  { id: 22, name: "Inner Istria + Food", emoji: "🫒", price: 65, dur: "8h", rating: 4.8, cat: "gastro", region: "istra",
+    link: GYG("pula-l344/istria-guided-tour-of-inner-istria-with-food-tasting-t408255") },
+  { id: 23, name: "Pula Arena + Wine", emoji: "🏟️", price: 50, dur: "6h", rating: 4.7, cat: "culture", region: "istra",
+    link: GYG("pula-l344/3-istrian-wineries-tour-t102866") },
+  // Kvarner
+  { id: 30, name: "Kvarner Bay Tour", emoji: "⚓", price: 55, dur: "5h", rating: 4.8, cat: "culture", region: "kvarner",
+    link: GYG("opatija-l1296/best-of-kvarner-bay-half-day-tour-from-rijeka-or-opatija-t977515") },
+  { id: 31, name: "Cres Island Boat", emoji: "🚢", price: 120, dur: "8h", rating: 4.9, cat: "premium", region: "kvarner",
+    link: GYG("opatija-l1296?q=cres+island+boat") },
+  { id: 32, name: "Opatija Evening Cruise", emoji: "🌙", price: 45, dur: "2h", rating: 4.8, cat: "premium", region: "kvarner",
+    link: GYG("opatija-l1296?q=evening+cruise+kvarner") },
+];
+
+export const GEMS = [
+  // Split area
+  { name: "Uvala Vruja", emoji: "🏝️", region: "split", premium: false, type: "Tajna plaža", desc: "Između Omiša i Makarske, dostupna samo pješice. Kristalno more.", tip: "Ponesite vode i cipele za hodanje!" },
+  { name: "Marjan špilje", emoji: "🕳️", region: "split", premium: false, type: "Šetnja", desc: "Starokršćanske špilje iz 5. st. Kašjuni → vrh Marjana.", tip: "Krenite u 17h za zalazak sunca." },
+  { name: "Konoba Stari Mlin", emoji: "🍷", region: "split", premium: true, type: "Lokalna tajna", desc: "Srinjine, 15min. Nema jelovnika — domaćin kuha što ima. ~80€/4 osobe.", tip: "Nazovite dan ranije." },
+  { name: "Klis", emoji: "🏰", region: "split", premium: true, type: "Iskustvo", desc: "GoT tvrđava u zoru. Nema turista. Pogled na Split i otoke.", tip: "Dođite u 5:15, parking besplatan prije 8h." },
+  { name: "Cetina", emoji: "🌊", region: "split", premium: true, type: "Kupanje", desc: "3km od Omiša, skriven prirodni bazen.", tip: "Skrenite desno kod mosta." },
+  // Makarska
+  { name: "Nugal", emoji: "🏖️", region: "makarska", premium: false, type: "Divlja plaža", desc: "Najljepša skrivena plaža Makarske rivijere. Strma staza 15min.", tip: "Obavezno sportske cipele, ne japanke!" },
+  { name: "Biokovo svitanje", emoji: "🌄", region: "makarska", premium: true, type: "Iskustvo", desc: "Vožnja na Sveti Jure (1762m) za izlazak sunca. Pogled na Italiju.", tip: "Krenite u 4h, ponijeti jaknu." },
+  // Zadar
+  { name: "Saharun", emoji: "🏝️", region: "zadar", premium: false, type: "Rajska plaža", desc: "Dugi Otok — karipski pijesak usred Jadrana. Ferry iz Zadra.", tip: "Dođite ranim ferryjem, popodne gužva." },
+  { name: "Telašćica", emoji: "🌊", region: "zadar", premium: true, type: "Priroda", desc: "Slano jezero + litice 150m. Dugi Otok, najdramatičniji pejzaž.", tip: "Kombinirajte sa Saharunom u isti dan." },
+  // Dubrovnik
+  { name: "Lokrum", emoji: "🏝️", region: "dubrovnik", premium: false, type: "Otok", desc: "10min brodom. Mrtvom more, botanički vrt, GoT Željezni Tron.", tip: "Zadnji brod u 18h — ne zakasnite!" },
+  { name: "Buža Bar", emoji: "🍸", region: "dubrovnik", premium: true, type: "Bar na litici", desc: "Skriven u gradskim zidinama, ulaz kroz rupu u zidu. Kokteli nad morem.", tip: "Tražite malu rupu u zidu kod Sv. Stjepana." },
+  // Istra
+  { name: "Kamenjak", emoji: "🦕", region: "istra", premium: false, type: "Rt", desc: "Safari bar, skokovi u more, tragovi dinosaura. Južni vrh Istre.", tip: "Ulaz 6€/auto. Dođite prije 10h ljeti." },
+  { name: "Motovun šuma", emoji: "🍄", region: "istra", premium: true, type: "Iskustvo", desc: "Najveća šuma tartufa u Europi. Mirisi, tišina, magla.", tip: "Najbolje u listopadu s lovcem na tartufe." },
+  // Kvarner
+  { name: "Lubenice", emoji: "🏖️", region: "kvarner", premium: false, type: "Plaža s pogledom", desc: "Cres — srednjovjekovno selo na litici 378m. Plaža dolje, raj gore.", tip: "Silazak 45min, vrijedi svake kapi znoja." },
+  { name: "Vela Luka Krk", emoji: "🕳️", region: "kvarner", premium: true, type: "Špilja", desc: "Prastara špilja sa pogledom na more. Arheološko nalazište 20000 god.", tip: "Plaža odmah ispod špilje — kupanje poslije razgledanja." },
+];
+
+export const BOOKING_CITIES = [
+  { region: "split", name: "Split & okolica", link: BKG("Split, Croatia") },
+  { region: "makarska", name: "Makarska rivijera", link: BKG("Makarska, Croatia") },
+  { region: "zadar", name: "Zadar & Šibenik", link: BKG("Zadar, Croatia") },
+  { region: "dubrovnik", name: "Dubrovnik", link: BKG("Dubrovnik, Croatia") },
+  { region: "istra", name: "Istra", link: BKG("Rovinj, Croatia") },
+  { region: "kvarner", name: "Kvarner", link: BKG("Opatija, Croatia") },
+];
+
+// Region mapping: StandaloneAI region IDs → data region tags
+export const REGION_MAP = {
+  split: ["split"],
+  makarska: ["makarska", "split"],   // Makarska also shows Split activities
+  dubrovnik: ["dubrovnik"],
+  zadar: ["zadar", "split"],          // Zadar also shows nearby Split
+  istra: ["istra"],
+  kvarner: ["kvarner"],
+};
+
+export const filterByRegion = (items, regionId) => {
+  const regions = REGION_MAP[regionId] || [regionId];
+  return items.filter(it => regions.includes(it.region));
+};

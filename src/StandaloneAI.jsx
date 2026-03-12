@@ -5,6 +5,7 @@
 // Perfect for: campervan travelers, day-trippers, cruise visitors
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useRef } from "react";
+import { EXPERIENCES, GEMS, BOOKING_CITIES, filterByRegion } from "./data.js";
 
 const REGIONS = [
   { id: "split", name: "Split & okolica", emoji: "🏛️", desc: "Dioklecijanova palača, Podstrana, Omiš" },
@@ -426,6 +427,129 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
           </div>
         )}
         <div ref={chatEnd} />
+
+        {/* ═══ CONTENT CARDS — filtered by region ═══ */}
+        {region && (
+          <div style={{ padding: "8px 0 20px" }}>
+            {/* Separator */}
+            {msgs.length > 0 && <div style={{ height: 1, background: `linear-gradient(90deg, transparent, ${C.bord}, transparent)`, margin: "16px 0 20px" }} />}
+
+            {/* Activities — affiliate, always visible */}
+            {(() => {
+              const acts = filterByRegion(EXPERIENCES, region).slice(0, 6);
+              return acts.length > 0 && (
+                <div style={{ marginBottom: 20, padding: "0 4px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <div style={{ fontSize: 10, color: C.accent, letterSpacing: 3, fontWeight: 600 }}>AKTIVNOSTI</div>
+                    <div style={{ fontSize: 10, color: C.mut }}>{acts.length} dostupno</div>
+                  </div>
+                  <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 8, scrollSnapType: "x mandatory" }}>
+                    {acts.map(a => (
+                      <a key={a.id} href={a.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit", scrollSnapAlign: "start" }}>
+                        <div style={{
+                          minWidth: 180, padding: "14px 16px", borderRadius: 18,
+                          background: C.card, border: `1px solid ${C.bord}`,
+                          transition: "all 0.2s", cursor: "pointer",
+                        }}
+                          onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.2)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                          onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.transform = ""; }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                            <span style={{ fontSize: 22 }}>{a.emoji}</span>
+                            <span style={{ fontSize: 11, color: C.gold, fontWeight: 600 }}>{a.price}€</span>
+                          </div>
+                          <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{a.name}</div>
+                          <div style={{ display: "flex", gap: 6, fontSize: 10, color: C.mut }}>
+                            <span>⏱ {a.dur}</span>
+                            <span>⭐ {a.rating}</span>
+                          </div>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Hidden Gems */}
+            {(() => {
+              const gems = filterByRegion(GEMS, region);
+              const freeGems = gems.filter(g => !g.premium);
+              const premGems = gems.filter(g => g.premium);
+              return gems.length > 0 && (
+                <div style={{ marginBottom: 20, padding: "0 4px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <div style={{ fontSize: 10, color: C.gold, letterSpacing: 3, fontWeight: 600 }}>💎 SKRIVENA MJESTA</div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {freeGems.map((g, i) => (
+                      <div key={i} style={{ padding: "14px 16px", borderRadius: 16, background: C.card, border: `1px solid ${C.bord}` }}>
+                        <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                          <span style={{ fontSize: 22 }}>{g.emoji}</span>
+                          <div>
+                            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{g.name} <span style={{ fontSize: 10, color: C.mut, fontWeight: 400 }}>{g.type}</span></div>
+                            <div style={{ fontSize: 12, color: C.mut, lineHeight: 1.5 }}>{g.desc}</div>
+                            <div style={{ fontSize: 11, color: C.accent, marginTop: 4 }}>💡 {g.tip}</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {premGems.length > 0 && (
+                      <div onClick={() => !premium && setShowPaywall(true)} style={{
+                        padding: "14px 16px", borderRadius: 16, cursor: premium ? "default" : "pointer",
+                        background: "linear-gradient(135deg, rgba(245,158,11,0.04), rgba(251,191,36,0.02))",
+                        border: "1px solid rgba(245,158,11,0.1)",
+                      }}>
+                        {premium ? premGems.map((g, i) => (
+                          <div key={i} style={{ padding: "8px 0", borderBottom: i < premGems.length - 1 ? `1px solid ${C.bord}` : "none" }}>
+                            <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                              <span style={{ fontSize: 20 }}>{g.emoji}</span>
+                              <div>
+                                <div style={{ fontSize: 13, fontWeight: 600 }}>{g.name}</div>
+                                <div style={{ fontSize: 12, color: C.mut, lineHeight: 1.4 }}>{g.desc}</div>
+                                <div style={{ fontSize: 11, color: C.accent, marginTop: 3 }}>💡 {g.tip}</div>
+                              </div>
+                            </div>
+                          </div>
+                        )) : (
+                          <div style={{ textAlign: "center", padding: "8px 0" }}>
+                            <div style={{ fontSize: 11, color: C.gold, fontWeight: 600, marginBottom: 4 }}>🔒 Još {premGems.length} skrivenih mjesta</div>
+                            <div style={{ fontSize: 11, color: C.mut }}>Premium · {premGems.map(g => g.name).join(", ")}</div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Booking.com */}
+            {(() => {
+              const city = BOOKING_CITIES.find(c => c.region === region);
+              return city && (
+                <div style={{ padding: "0 4px" }}>
+                  <a href={city.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
+                    <div style={{
+                      padding: "16px 20px", borderRadius: 18, display: "flex", justifyContent: "space-between", alignItems: "center",
+                      background: "rgba(0,53,128,0.08)", border: "1px dashed rgba(0,85,166,0.15)",
+                      transition: "all 0.2s", cursor: "pointer",
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(0,85,166,0.3)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(0,85,166,0.15)"; }}>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 500 }}>🏨 Smještaj — {city.name}</div>
+                        <div style={{ fontSize: 11, color: C.mut, marginTop: 2 }}>Booking.com · Najbolje cijene</div>
+                      </div>
+                      <div style={{ padding: "8px 14px", background: "linear-gradient(135deg, #003580, #0055A6)", borderRadius: 12, color: "#fff", fontSize: 12, fontWeight: 600, whiteSpace: "nowrap" }}>
+                        Pogledaj →
+                      </div>
+                    </div>
+                  </a>
+                </div>
+              );
+            })()}
+          </div>
+        )}
       </div>
 
       {/* Free questions warning */}
