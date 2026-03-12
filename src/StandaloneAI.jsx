@@ -5,7 +5,7 @@
 // Perfect for: campervan travelers, day-trippers, cruise visitors
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useRef } from "react";
-import { EXPERIENCES, GEMS, BOOKING_CITIES, CAMPER_WARNINGS, filterByRegion } from "./data.js";
+import { EXPERIENCES, GEMS, BOOKING_CITIES, CAMPER_WARNINGS, ISTRA_CAMPER_INTEL, filterByRegion } from "./data.js";
 
 const REGIONS = [
   { id: "split", name: "Split & okolica", emoji: "🏛️", desc: "Dioklecijanova palača, Podstrana, Omiš" },
@@ -166,6 +166,10 @@ PRIORITETI U SVAKOM ODGOVORU (ovim redom):
 
 ⚠️ KRITIČNA UPOZORENJA — ODMAH upozori kad gost spomene ove lokacije:
 ${CAMPER_WARNINGS.map(w => `• ${w.name} [${w.severity.toUpperCase()}]: ${w.danger} → ${w.advice}`).join("\n")}
+${region === "istra" ? `
+🏕️ ISTRA CAMPING EXPERT v2.1 — Specifično znanje za Istru:
+${ISTRA_CAMPER_INTEL.map(i => `• ${i.name} [${i.severity.toUpperCase()}]: ${i.danger} → ${i.advice}`).join("\n")}
+PRAVILO ZA ISTRU: Ako je predsezona (april/maj), UVIJEK upozori na zatvorene usluge u kampovima, slabu amperažu i blato nakon kiše. Ako je padala kiša u zadnja 24h — odmah savjetuj šljunčane parcele. Za Pulu NIKAD ne šalji na parking Karolina.` : ""}
 
 PRAVILA ODGOVORA:
 - Dužina: 3-5 rečenica za jednostavna pitanja, do 8 za složena
@@ -600,6 +604,34 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
                 </div>
               );
             })()}
+
+            {/* 🏕️ Istra Camping Intel — seasonal tips */}
+            {region === "istra" && (travelMode === "camper" || niche === "camper") && (
+              <div style={{ marginBottom: 20, padding: "0 4px" }}>
+                <div style={{ fontSize: 10, color: "#34d399", letterSpacing: 3, fontWeight: 600, marginBottom: 10 }}>🏕️ ISTRA INSIDER</div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {ISTRA_CAMPER_INTEL.map(tip => (
+                    <div key={tip.id} style={{
+                      padding: "12px 14px", borderRadius: 14,
+                      background: isNight ? "rgba(52,211,153,0.04)" : "rgba(52,211,153,0.06)",
+                      border: `1px solid ${tip.severity === "critical" ? "rgba(239,68,68,0.2)" : tip.severity === "high" ? "rgba(251,191,36,0.15)" : "rgba(52,211,153,0.12)"}`,
+                    }}>
+                      <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                        <span style={{ fontSize: 18 }}>{tip.emoji}</span>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 2 }}>
+                            {tip.name}
+                            {tip.season === "pre" && <span style={{ fontSize: 9, marginLeft: 6, padding: "1px 6px", borderRadius: 6, background: "rgba(251,191,36,0.1)", color: C.gold }}>PREDSEZONA</span>}
+                          </div>
+                          <div style={{ fontSize: 11, color: C.mut, lineHeight: 1.4, marginBottom: 4 }}>{tip.danger}</div>
+                          <div style={{ fontSize: 11, color: "#34d399", lineHeight: 1.4 }}>💡 {tip.advice}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Hidden Gems */}
             {(() => {

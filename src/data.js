@@ -160,3 +160,31 @@ export const CAMPER_WARNINGS = [
     advice: "Idite na ulaz Lozovac — ogroman besplatan parking za kampere + direktan bus do slapova.",
     link: GYG("sibenik-l2091/krka-waterfalls-day-trip-from-sibenik-t75621") },
 ];
+
+// ═══════════════════════════════════════════════════════════════
+// ISTRA CAMPER INTELLIGENCE — Season-specific insider knowledge
+// v2.1 — Based on experienced camper forum analysis
+// ═══════════════════════════════════════════════════════════════
+export const ISTRA_CAMPER_INTEL = [
+  { id: "empty-camps", name: "Prazni kampovi — zatvorene usluge", emoji: "🏪", season: "pre", severity: "high",
+    danger: "Veliki kampovi (Poreč, Umag) otvaraju 1. aprila, ali restorani, prodavnice i bazeni ne rade do maja.",
+    advice: "Kamp je otvoren, ali najbliža prodavnica je 2km. Obavi nabavku PRIJE ulaska u kamp." },
+  { id: "amperage", name: "Problem struje — amperaža", emoji: "⚡", season: "pre", severity: "medium",
+    danger: "Stariji kampovi u unutrašnjosti Istre imaju limit 6A ili 10A. Grejalice izbijaju osigurače.",
+    advice: "Provjeri jačinu osigurača na parceli. U predsezoni koristi plinsko grijanje (Truma) — ne preopterećuj mrežu." },
+  { id: "mud", name: "Blato — terra rossa", emoji: "🌧️", season: "pre", severity: "high",
+    danger: "Istarska crljenica postaje klizava i ljepljiva. Kamperi preko 3.5t tonu na travnatim parcelama.",
+    advice: "Ako je padala kiša u zadnja 24h — traži ISKLJUČIVO šljunčane (gravel) parcele, pogotovo oko Umaga i Savudrije." },
+  { id: "ypsilon", name: "Istarski Ipsilon — vjetar na vijaduktu", emoji: "🌬️", season: "all", severity: "medium",
+    danger: "Mostovi na Ipsilonu (Limska draga) osjetljivi na bočni vjetar. Kategorizacija vozila zbunjuje na naplati.",
+    advice: "Pazi na bočni vjetar na vijaduktu Limska draga. Tvoj kamper je vjerovatno III kategorija (viši od 1.9m + dvoosovina) — pripremi karticu." },
+  { id: "pula-parking", name: "Pula Arena — parking zamka", emoji: "🅿️", season: "all", severity: "medium",
+    danger: "Parking 'Karolina' kod Arene često zabranjen za kampere. Kazna 60€.",
+    advice: "NE idi na Karolinu! Koristi parking 'Gregovica' (besplatan, prostran) ili 'Pula Gate'. Bolje Bolt do Arene nego kazna." },
+  { id: "water-fill", name: "Dopuna vode — fontane", emoji: "💧", season: "pre", severity: "low",
+    danger: "U aprilu neki kampovi još nisu pustili vodu na svaku parcelu zbog straha od mraza.",
+    advice: "Javne česme u unutrašnjosti: Svetvinčenat, Grožnjan, Motovun — besplatna tehnička voda za kanistere." },
+  { id: "wild-camping", name: "Divlji kamp — stroge kontrole", emoji: "🚨", season: "all", severity: "critical",
+    danger: "Istra ima NAJSTROŽE kontrole u Hrvatskoj. Kazne do 400€. Policija i komunalni aktivni čak na pustim plažama.",
+    advice: "Strogo zabranjeno spavanje van kampa! Radije izaberi mali OPG (obiteljsko gospodarstvo) koji nudi parking — jeftinije i legalno." },
+];
