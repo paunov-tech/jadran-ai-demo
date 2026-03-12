@@ -5,6 +5,19 @@
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect } from "react";
 
+// Direct Stripe checkout
+const goToStripe = async (plan = "season", lang = "en") => {
+  try {
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roomCode: "AI-STANDALONE", guestName: "AI User", lang, returnPath: "/ai", plan, region: "all" }),
+    });
+    const data = await res.json();
+    if (data.url) window.location.href = data.url;
+  } catch (e) { console.error("Checkout error:", e); }
+};
+
 const GYG = (id) => `https://www.getyourguide.com/${id}/?partner_id=9OEGOYI&utm_medium=local_partners`;
 const BKG = (city) => `https://www.booking.com/searchresults.html?aid=101704203&ss=${encodeURIComponent(city)}&lang=en`;
 
@@ -346,8 +359,8 @@ export default function LandingPage() {
         <div style={{ fontSize: 11, color: "#1e293b" }}>JADRAN {"\u00B7"} SIAL Consulting d.o.o. {"\u00B7"} 2026</div>
       </footer>
 
-      {/* ═══ STICKY BUY BAR ═══ */}
-      <a href="/ai?buy=true" style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99, textDecoration: "none", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+      {/* ═══ STICKY BUY BAR — DIRECT TO STRIPE ═══ */}
+      <div onClick={() => goToStripe("season", lang)} style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99, cursor: "pointer", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
         <div style={{ padding: "10px 16px", background: "linear-gradient(135deg, #ef4444, #dc2626)", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 -4px 20px rgba(239,68,68,0.4)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ color: "#fff", fontSize: 22 }}>🚐</span>
@@ -360,7 +373,7 @@ export default function LandingPage() {
             <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 10 }}>{tx("sticky")}</div>
           </div>
         </div>
-      </a>
+      </div>
 
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }

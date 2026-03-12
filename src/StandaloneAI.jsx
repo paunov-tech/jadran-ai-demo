@@ -872,8 +872,8 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
           {t.start} →
         </button>
 
-        {/* BUY PREMIUM — prominent */}
-        <button onClick={() => setShowPaywall(true)}
+        {/* BUY PREMIUM — direct to Stripe */}
+        <button onClick={() => startCheckout("season")} disabled={payLoading}
           style={{
             width: "100%", padding: "14px", borderRadius: 18, border: "none", marginTop: 10,
             background: "linear-gradient(135deg, #ef4444, #dc2626)",
@@ -882,7 +882,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
             boxShadow: "0 4px 16px rgba(239,68,68,0.3)",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
           }}>
-          <span>⭐</span> {t.buyNow || "KUPI PREMIUM"} <span style={{ fontSize: 12, opacity: 0.8 }}>— {t.buyPrice || "od 3.99€"}</span>
+          <span>⭐</span> {t.buyNow || "KUPI PREMIUM"} <span style={{ fontSize: 12, opacity: 0.8 }}>— 7.99€</span>
         </button>
 
         {/* Free tier note */}
@@ -921,7 +921,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
           )}
           {premium
             ? <span style={{ padding: "4px 12px", borderRadius: 12, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.12)", color: C.gold, fontSize: 10, fontWeight: 600 }}>⭐ {premiumPlan?.plan === "season" ? "SEZONA" : "TJEDAN"} {premiumPlan ? Math.ceil((premiumPlan.expiresAt - Date.now()) / 86400000) + "d" : ""}</span>
-            : <button onClick={() => trialExpired ? setShowPaywall(true) : null} style={{ padding: trialExpired ? "6px 14px" : "4px 12px", borderRadius: 12, background: trialExpired ? "linear-gradient(135deg, #ef4444, #dc2626)" : "rgba(52,211,153,0.08)", border: trialExpired ? "none" : "1px solid rgba(52,211,153,0.12)", color: trialExpired ? "#fff" : "#34d399", fontSize: trialExpired ? 11 : 10, fontWeight: trialExpired ? 700 : 600, cursor: trialExpired ? "pointer" : "default", fontFamily: "inherit", boxShadow: trialExpired ? "0 2px 8px rgba(239,68,68,0.3)" : "none" }}>
+            : <button onClick={() => trialExpired ? startCheckout("season") : null} disabled={payLoading} style={{ padding: trialExpired ? "6px 14px" : "4px 12px", borderRadius: 12, background: trialExpired ? "linear-gradient(135deg, #ef4444, #dc2626)" : "rgba(52,211,153,0.08)", border: trialExpired ? "none" : "1px solid rgba(52,211,153,0.12)", color: trialExpired ? "#fff" : "#34d399", fontSize: trialExpired ? 11 : 10, fontWeight: trialExpired ? 700 : 600, cursor: trialExpired ? "pointer" : "default", fontFamily: "inherit", boxShadow: trialExpired ? "0 2px 8px rgba(239,68,68,0.3)" : "none" }}>
                 {trialExpired ? `⭐ ${t.buyNow || "KUPI"}` : `✅ ${trialHoursLeft}h`}
               </button>
           }
@@ -1532,8 +1532,8 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
       </div>
       {!premium && trialExpired && (
         <div style={{ flexShrink: 0 }}>
-          <button onClick={() => setShowPaywall(true)} style={{ width: "100%", padding: "14px 20px", background: "linear-gradient(135deg, #ef4444, #dc2626)", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "'Playfair Display',Georgia,serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 -2px 12px rgba(239,68,68,0.3)" }}>
-            ⭐ {t.buyNow || "KUPI PREMIUM"} <span style={{ fontSize: 12, opacity: 0.8 }}>— {t.buyPrice || "od 3.99€"}</span>
+          <button onClick={() => startCheckout("season")} disabled={payLoading} style={{ width: "100%", padding: "14px 20px", background: "linear-gradient(135deg, #ef4444, #dc2626)", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "'Playfair Display',Georgia,serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 -2px 12px rgba(239,68,68,0.3)" }}>
+            ⭐ {t.buyNow || "KUPI PREMIUM"} <span style={{ fontSize: 12, opacity: 0.8 }}>— 7.99€</span>
           </button>
         </div>
       )}
