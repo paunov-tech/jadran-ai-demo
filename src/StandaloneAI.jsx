@@ -5,7 +5,7 @@
 // Perfect for: campervan travelers, day-trippers, cruise visitors
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useRef } from "react";
-import { EXPERIENCES, GEMS, BOOKING_CITIES, CAMPER_WARNINGS, ISTRA_CAMPER_INTEL, filterByRegion } from "./data.js";
+import { EXPERIENCES, GEMS, BOOKING_CITIES, CAMPER_WARNINGS, ISTRA_CAMPER_INTEL, DEEP_LOCAL, filterByRegion } from "./data.js";
 
 const REGIONS = [
   { id: "split", name: "Split & okolica", emoji: "🏛️", desc: "Dioklecijanova palača, Podstrana, Omiš" },
@@ -176,6 +176,10 @@ ${region === "istra" ? `
 🏕️ ISTRA CAMPING EXPERT v2.1 — Specifično znanje za Istru:
 ${ISTRA_CAMPER_INTEL.map(i => `• ${i.name} [${i.severity.toUpperCase()}]: ${i.danger} → ${i.advice}`).join("\n")}
 PRAVILO ZA ISTRU: Ako je predsezona (april/maj), UVIJEK upozori na zatvorene usluge u kampovima, slabu amperažu i blato nakon kiše. Ako je padala kiša u zadnja 24h — odmah savjetuj šljunčane parcele. Za Pulu NIKAD ne šalji na parking Karolina.` : ""}
+${DEEP_LOCAL[region] ? `
+🗺️ DEEP-LOCAL ZNANJE za tvoju regiju — informacije koje NEMA na Google Mapsu:
+${DEEP_LOCAL[region].map(d => `• ${d.spot}: ${d.intel}`).join("\n")}
+Koristi ove podatke PROAKTIVNO — kad gost spomene bilo koju od ovih lokacija, odmah ubaci insider savjet.` : ""}
 
 PRAVILA ODGOVORA:
 - Dužina: 3-5 rečenica za jednostavna pitanja, do 8 za složena
@@ -661,6 +665,36 @@ PRAVILA: Kratko (4-6 rečenica), toplo, konkretno s cijenama i udaljenostima. Ko
                 </div>
               </div>
             )}
+
+            {/* 🗺️ Deep Local Intel — region-specific */}
+            {(() => {
+              const locals = DEEP_LOCAL[region];
+              return locals && locals.length > 0 && (travelMode === "camper" || niche === "camper") && (
+                <div style={{ marginBottom: 20, padding: "0 4px" }}>
+                  <div style={{ fontSize: 10, color: "#a78bfa", letterSpacing: 3, fontWeight: 600, marginBottom: 10 }}>🗺️ LOKALNO ZNANJE</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {locals.map(d => (
+                      <div key={d.id} style={{
+                        padding: "12px 14px", borderRadius: 14,
+                        background: isNight ? "rgba(167,139,250,0.04)" : "rgba(167,139,250,0.06)",
+                        border: `1px solid rgba(167,139,250,0.1)`,
+                      }}>
+                        <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                          <span style={{ fontSize: 16 }}>{d.emoji}</span>
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 2 }}>{d.spot}</div>
+                            {premium
+                              ? <div style={{ fontSize: 11, color: C.mut, lineHeight: 1.5 }}>{d.intel}</div>
+                              : <div onClick={() => setShowPaywall(true)} style={{ fontSize: 11, color: C.gold, cursor: "pointer" }}>🔒 Insider savjet — Premium</div>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Hidden Gems */}
             {(() => {

@@ -188,3 +188,46 @@ export const ISTRA_CAMPER_INTEL = [
     danger: "Istra ima NAJSTROŽE kontrole u Hrvatskoj. Kazne do 400€. Policija i komunalni aktivni čak na pustim plažama.",
     advice: "Strogo zabranjeno spavanje van kampa! Radije izaberi mali OPG (obiteljsko gospodarstvo) koji nudi parking — jeftinije i legalno." },
 ];
+
+// ═══════════════════════════════════════════════════════════════
+// REGIONAL DEEP-LOCAL INTELLIGENCE — Pro-Camper Expert
+// Knowledge not available on standard maps
+// ═══════════════════════════════════════════════════════════════
+export const DEEP_LOCAL = {
+  istra: [
+    { id: "limski", spot: "Kanfanar – Limski kanal", emoji: "🛣️", 
+      intel: "Ako planiraš silazak u Limski kanal sa vozilom dužim od 7m, kreni isključivo rano ujutru. Mimoilaženje sa turističkim autobusima na lakat-krivinama je nemoguće bez rikverca na usponu." },
+    { id: "bale", spot: "Bale – Mon Perin", emoji: "💧",
+      intel: "Parking kod kampa Mon Perin ima odličan pritisak vode za brzo punjenje rezervoara — retkost u regiji." },
+    { id: "kamenjak-dust", spot: "Rt Kamenjak – prašina", emoji: "💨",
+      intel: "U aprilu/maju ako je suho, 'istarska prašina' (sitni pesak) ulazi u otvore frižidera i ventilacije. Zatvori spoljne otvore PRIJE ulaska na makadam." },
+  ],
+  kvarner: [
+    { id: "krk-bura", spot: "Krk – Draga Baščanska", emoji: "🌬️",
+      intel: "Nikada ne koristi stari put kroz Dragu Bašćansku ako je najavljena bura preko 40 km/h. Udari su bočni i mogu prevrnuti visoki kamper (H3/L4). Koristi isključivo glavni pravac." },
+    { id: "cres-ferry", spot: "Cres – trajekt rampa", emoji: "⛴️",
+      intel: "Na trajektu Porozina–Brestova, rampe su strme. Ako imaš niski zadnji prepust (kamper s garažom), ulazi dijagonalno da ne oštetiš šasiju." },
+    { id: "rijeka-delta", spot: "Rijeka – parking Delta", emoji: "🅿️",
+      intel: "Jedini siguran parking za kampere blizu centra je Delta. Ali ulaz je uzak i automati često ne prihvataju strane kartice — imaj keš (eura) spreman." },
+  ],
+  split: [
+    { id: "dubci", spot: "Omiška rivijera – prevoj Dubci", emoji: "🌬️",
+      intel: "Prevoj Dubci (magistrala → autoput) je točka gdje vjetar ubrzava. Ako voziš kamper s ceradom, uspori na 40 km/h." },
+    { id: "brac-vidova", spot: "Brač – Vidova Gora uspon", emoji: "⛰️",
+      intel: "Uspon je asfaltiran, ali zadnjih 500m je usko. Ako vidiš drugi kamper da se spušta, stani na prvom proširenju. Nema mjesta za dvoje." },
+    { id: "split-marjan", spot: "Split – Marjan parking", emoji: "🚫",
+      intel: "Nikako ne pokušavaj parkirati oko Marjana — pauk služba u Splitu ciljano podiže kampere! Koristi kamp Stobreč, pa Uberom do Dioklecijanove palače." },
+    { id: "makarska-vruja", spot: "Makarska – vidikovac Vruja", emoji: "👮",
+      intel: "Na vidikovcu Vruja često stoji policija koja zabranjuje zadržavanje duže od 15 min. Za kavu s pogledom, koristi parking iznad Brela." },
+  ],
+  zadar: [
+    { id: "dubci-zadar", spot: "Omiška rivijera – prevoj Dubci", emoji: "🌬️",
+      intel: "Prevoj Dubci: vjetar ubrzava na spoju magistrale i autoputa. Kamperi s ceradom — uspori na 40 km/h." },
+  ],
+  makarska: [
+    { id: "makarska-vruja2", spot: "Vidikovac Vruja", emoji: "👮",
+      intel: "Policija na Vruji zabranjuje zadržavanje duže od 15 min. Za pauzu s pogledom — parking iznad Brela." },
+    { id: "dubci-mak", spot: "Prevoj Dubci", emoji: "🌬️",
+      intel: "Bočni vjetar na prevoju Dubci — kamperi s ceradom sporo, 40 km/h max." },
+  ],
+};
