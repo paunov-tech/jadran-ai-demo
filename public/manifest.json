@@ -1,0 +1,31 @@
+{
+  "name": "JADRAN — Lokalni vodič za Jadran",
+  "short_name": "JADRAN",
+  "description": "AI turistički vodič za hrvatsku obalu Jadrana. Kamperi, jedriličari, turisti.",
+  "start_url": "/ai",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a1628",
+  "theme_color": "#0ea5e9",
+  "lang": "hr",
+  "categories": ["travel", "navigation", "lifestyle"],
+  "icons": [
+    { "src": "/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Kamper vodič",
+      "url": "/ai?niche=camper",
+      "description": "Parking, dump station, legalna noćenja",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Lokalni vodič",
+      "url": "/ai?niche=local",
+      "description": "Plaže, restorani, skrivena mjesta",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    }
+  ]
+}
