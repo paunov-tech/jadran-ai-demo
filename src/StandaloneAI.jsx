@@ -32,14 +32,197 @@ const LANGS = [
 ];
 
 const T = {
-  hr: { title: "Jadran Vodič", sub: "Lokalni savjeti za savršen odmor", start: "Započni razgovor", send: "Pošalji", placeholder: "Pitajte me o Jadranu...", region: "Gdje ste?", mode: "Kako putujete?", unlock: "Otključaj vodič — 5.99€", free3: "3 besplatna pitanja", remaining: "preostalo", upgraded: "Premium otključan!", back: "← Natrag", typing: "razmišljam..." },
-  en: { title: "Jadran Guide", sub: "Local tips for the perfect Adriatic trip", start: "Start chatting", send: "Send", placeholder: "Ask me about the Adriatic...", region: "Where are you?", mode: "How are you traveling?", unlock: "Unlock guide — 5.99€", free3: "3 free questions", remaining: "remaining", upgraded: "Premium unlocked!", back: "← Back", typing: "thinking..." },
-  de: { title: "Jadran Reiseführer", sub: "Geprüfte Tipps von Einheimischen für Ihren Adria-Urlaub", start: "Gespräch starten", send: "Senden", placeholder: "Fragen Sie mich über die Adria...", region: "Wo befinden Sie sich?", mode: "Wie reisen Sie?", unlock: "Freischalten — 5.99€", free3: "3 kostenlose Fragen", remaining: "übrig", upgraded: "Premium freigeschaltet!", back: "← Zurück", typing: "einen Moment..." },
-  it: { title: "Guida Jadran", sub: "Consigli locali per la vacanza perfetta", start: "Inizia a chattare", send: "Invia", placeholder: "Chiedimi dell'Adriatico...", region: "Dove siete?", mode: "Come viaggiate?", unlock: "Sblocca guida — 5.99€", free3: "3 domande gratuite", remaining: "rimanenti", upgraded: "Premium sbloccato!", back: "← Indietro", typing: "penso..." },
-  at: { title: "Jadran Urlaubsguide", sub: "Insider-Tipps von Einheimischen für deinen Adria-Urlaub", start: "Los geht's", send: "Abschicken", placeholder: "Frag mich was über die Adria...", region: "Wo bist du gerade?", mode: "Wie bist du unterwegs?", unlock: "Freischalten — 5.99€", free3: "3 Fragen gratis", remaining: "übrig", upgraded: "Premium freigeschaltet!", back: "← Zurück", typing: "Moment..." },
-  si: { title: "Jadran vodič", sub: "Lokalni nasveti za popoln Jadran", start: "Začni pogovor", send: "Pošlji", placeholder: "Vprašajte me o Jadranu...", region: "Kje ste?", mode: "Kako potujete?", unlock: "Odkleni vodič — 5.99€", free3: "3 brezplačna vprašanja", remaining: "preostalo", upgraded: "Premium odklenjen!", back: "← Nazaj", typing: "razmišljam..." },
-  cz: { title: "Jadran průvodce", sub: "Místní tipy pro perfektní Jadran", start: "Začít konverzaci", send: "Odeslat", placeholder: "Zeptejte se na Jadran...", region: "Kde jste?", mode: "Jak cestujete?", unlock: "Odemknout průvodce — 5.99€", free3: "3 otázky zdarma", remaining: "zbývá", upgraded: "Premium odemčen!", back: "← Zpět", typing: "přemýšlím..." },
-  pl: { title: "Jadran przewodnik", sub: "Lokalne wskazówki na Adriatyk", start: "Zacznij rozmowę", send: "Wyślij", placeholder: "Zapytaj o Adriatyk...", region: "Gdzie jesteś?", mode: "Jak podróżujesz?", unlock: "Odblokuj przewodnik — 5.99€", free3: "3 pytania za darmo", remaining: "pozostało", upgraded: "Premium odblokowany!", back: "← Wstecz", typing: "myślę..." },
+  hr: { title: "Jadran Vodič", sub: "Lokalni savjeti za savršen odmor", start: "Započnite razgovor", send: "Pošalji", placeholder: "Pitajte me o Jadranu...", region: "Odaberite regiju", mode: "Kako putujete?", unlock: "Otključaj — od 3.99€", free3: "3 besplatna pitanja", remaining: "preostalo", upgraded: "Premium otključan!", back: "Natrag", typing: "razmišljam...",
+    // Niche setup
+    nicCamper: t.nicCamper, nicCamperSub: t.nicCamperSub,
+    nicLocal: t.nicLocal, nicLocalSub: t.nicLocalSub,
+    nicSailing: t.nicSailing, nicSailingSub: t.nicSailingSub,
+    nicCruiser: t.nicCruiser, nicCruiserSub: t.nicCruiserSub,
+    // Camper picker
+    gabariti: "GABARITI VOZILA", lenLabel: "Dužina (m)", heightLabel: "Visina (m)", 
+    gabaritiFeedback: "Vaš kamper: {len}m × {h}m — prilagođavamo preporuke",
+    gabaritiHint: "Opcionalno — ali pomaže za preciznije rute i parkinge",
+    // Vibe
+    vibeTitle: t.vibeTitle, vibeCamper: t.vibeCamper, vibeSailing: t.vibeSailing,
+    notifBtn: "Dozvoli obavijesti za vrijeme", notifOn: "Obavijesti aktivne", loading: "Učitavam podatke...",
+    // Quick chips
+    qParking: "Gdje parkirati kamper?", qDinner: "Večera s parkingom?", qFuel: "Benzinska / LPG?",
+    qMarina: "Najbliža marina s vezom?", qSea: "Stanje mora i vjetar?", qKonoba: "Konoba dostupna s mora?",
+    qPlan: "Plan dana za 8 sati?", qLunch: "Lokalni ručak bez turističke cijene?", qPhoto: "Fotogenična lokacija?",
+    qBeach: "Najbolja plaža u blizini?", qFood: "Preporuka za ručak?", qVisit: "Što posjetiti danas?",
+    // Buttons
+    showOffers: "Aktivnosti, plaže, ponude", showBtn: "{t.showBtn}", hideBtn: "{t.hideBtn}",
+    available: "dostupno", activities: "AKTIVNOSTI",
+    btnOffer: t.btnOffer, btnTour: t.btnTour, btnStay: t.btnStay, btnOpen: t.btnOpen,
+    bookBest: "Najbolje cijene",
+    // Walkie
+    walkieTalk: t.walkieTalk, walkieListen: t.walkieListen, walkieAnswer: t.walkieAnswer,
+    walkieInfo: "Hands-free · Ekran ne gasi se", walkieSnap: "Slikaj",
+    // Errors & status
+    errVision: t.errVision, errConnection: "Veza nije dostupna. Pokušajte ponovno.",
+    freeNote: "{t.freeNote}", trialExpired: "{t.trialExpired}",
+  },
+  en: { title: "Jadran Guide", sub: "Local tips for the perfect Adriatic trip", start: "Start chatting", send: "Send", placeholder: "Ask me about the Adriatic...", region: "Choose region", mode: "How are you traveling?", unlock: "Unlock — from €3.99", free3: "3 free questions", remaining: "remaining", upgraded: "Premium unlocked!", back: "Back", typing: "thinking...",
+    nicCamper: "Camper Guide", nicCamperSub: "Parking, routes, dump stations, camper warnings",
+    nicLocal: "Local Guide", nicLocalSub: "Apartment, hotel or by car — beaches, restaurants, hidden gems",
+    nicSailing: "Nautical Guide", nicSailingSub: "Marinas, anchorages, wind, waterfront restaurants",
+    nicCruiser: "Cruise Guide", nicCruiserSub: "Max in 8 hours — minute-by-minute plan, skip-the-line",
+    gabariti: "VEHICLE SIZE", lenLabel: "Length (m)", heightLabel: "Height (m)",
+    gabaritiFeedback: "Your camper: {len}m × {h}m — tailoring recommendations",
+    gabaritiHint: "Optional — but helps for precise routes & parking",
+    vibeTitle: "Right now on the Adriatic", vibeCamper: "Road & sea conditions", vibeSailing: "Maritime conditions",
+    notifBtn: "Enable weather alerts", notifOn: "Alerts active", loading: "Loading data...",
+    qParking: "Where to park the camper?", qDinner: "Dinner with parking?", qFuel: "Gas / LPG nearby?",
+    qMarina: "Nearest marina with berth?", qSea: "Sea conditions & wind?", qKonoba: "Restaurant from the sea?",
+    qPlan: "Day plan for 8 hours?", qLunch: "Local lunch, no tourist prices?", qPhoto: "Best photo spot?",
+    qBeach: "Best beach nearby?", qFood: "Lunch recommendation?", qVisit: "What to see today?",
+    showOffers: "Activities, beaches, deals", showBtn: "Show ▼", hideBtn: "Hide offers ▲",
+    available: "available", activities: "ACTIVITIES",
+    btnOffer: "View offer", btnTour: "View tour", btnStay: "View accommodation", btnOpen: "Open link",
+    bookBest: "Best prices",
+    walkieTalk: "Press to talk", walkieListen: "Listening...", walkieAnswer: "Responding...",
+    walkieInfo: "Hands-free · Screen stays on", walkieSnap: "Snap photo",
+    errVision: "Analysis failed. Please try again.", errConnection: "Connection unavailable. Please try again.",
+    freeNote: "24h free · then from €3.99/week", trialExpired: "Free day expired",
+  },
+  de: { title: "Jadran Reiseführer", sub: "Geprüfte Insider-Tipps für Ihren Adria-Urlaub", start: "Gespräch starten", send: "Senden", placeholder: "Fragen Sie mich zur Adria...", region: "Wählen Sie Ihre Region", mode: "Wie reisen Sie?", unlock: "Freischalten — ab 3,99€", free3: "3 kostenlose Fragen", remaining: "übrig", upgraded: "Premium freigeschaltet!", back: "Zurück", typing: "einen Moment...",
+    nicCamper: "Camper-Reiseführer", nicCamperSub: "Stellplätze, Routen, Ver-/Entsorgung, Warnungen",
+    nicLocal: "Lokaler Reiseführer", nicLocalSub: "Ferienwohnung, Hotel oder mit dem Auto — Strände, Restaurants",
+    nicSailing: "Nautischer Reiseführer", nicSailingSub: "Marinas, Ankerplätze, Wind, Küstenrestaurants",
+    nicCruiser: "Kreuzfahrt-Reiseführer", nicCruiserSub: "Maximum in 8 Stunden — Minutenplan, ohne Anstehen",
+    gabariti: "FAHRZEUGMAßE", lenLabel: "Länge (m)", heightLabel: "Höhe (m)",
+    gabaritiFeedback: "Ihr Camper: {len}m × {h}m — Empfehlungen werden angepasst",
+    gabaritiHint: "Optional — aber hilfreich für präzise Routen und Parkplätze",
+    vibeTitle: "Aktuell an der Adria", vibeCamper: "Straßen- & Seebedingungen", vibeSailing: "Seebedingungen",
+    notifBtn: "Wetterwarnungen aktivieren", notifOn: "Warnungen aktiv", loading: "Daten werden geladen...",
+    qParking: "Wo kann ich den Camper parken?", qDinner: "Abendessen mit Parkplatz?", qFuel: "Tankstelle / LPG?",
+    qMarina: "Nächste Marina mit Liegeplatz?", qSea: "Seezustand & Wind?", qKonoba: "Restaurant vom Meer aus?",
+    qPlan: "Tagesplan für 8 Stunden?", qLunch: "Lokales Mittagessen, keine Touristenpreise?", qPhoto: "Bester Foto-Spot?",
+    qBeach: "Bester Strand in der Nähe?", qFood: "Empfehlung zum Mittagessen?", qVisit: "Was gibt es heute zu sehen?",
+    showOffers: "Aktivitäten, Strände, Angebote", showBtn: "Anzeigen ▼", hideBtn: "Angebote verbergen ▲",
+    available: "verfügbar", activities: "AKTIVITÄTEN",
+    btnOffer: "Angebot ansehen", btnTour: "Tour ansehen", btnStay: "Unterkunft ansehen", btnOpen: "Link öffnen",
+    bookBest: "Beste Preise",
+    walkieTalk: "Zum Sprechen drücken", walkieListen: "Ich höre zu...", walkieAnswer: "Antwort wird erstellt...",
+    walkieInfo: "Freisprechanlage · Display bleibt an", walkieSnap: "Foto aufnehmen",
+    errVision: "Analyse fehlgeschlagen. Bitte erneut versuchen.", errConnection: "Verbindung nicht verfügbar. Bitte erneut versuchen.",
+    freeNote: "24h kostenlos · danach ab 3,99€/Woche", trialExpired: "Kostenloser Tag abgelaufen",
+  },
+  it: { title: "Guida Jadran", sub: "Consigli verificati per la vacanza perfetta sull'Adriatico", start: "Inizia a chattare", send: "Invia", placeholder: "Chiedimi dell'Adriatico...", region: "Scegliete la regione", mode: "Come viaggiate?", unlock: "Sblocca — da 3,99€", free3: "3 domande gratuite", remaining: "rimanenti", upgraded: "Premium sbloccato!", back: "Indietro", typing: "penso...",
+    nicCamper: "Guida camper", nicCamperSub: "Parcheggi, percorsi, scarico, avvertenze per camper",
+    nicLocal: "Guida locale", nicLocalSub: "Appartamento, hotel o in auto — spiagge, ristoranti, gemme nascoste",
+    nicSailing: "Guida nautica", nicSailingSub: "Porti turistici, ancoraggi, vento, ristoranti sul mare",
+    nicCruiser: "Guida crociera", nicCruiserSub: "Massimo in 8 ore — piano al minuto, salta la fila",
+    gabariti: "DIMENSIONI VEICOLO", lenLabel: "Lunghezza (m)", heightLabel: "Altezza (m)",
+    gabaritiFeedback: "Il vostro camper: {len}m × {h}m — adattiamo i consigli",
+    gabaritiHint: "Facoltativo — ma utile per percorsi e parcheggi precisi",
+    vibeTitle: "In questo momento sull'Adriatico", vibeCamper: "Condizioni stradali e marittime", vibeSailing: "Condizioni marittime",
+    notifBtn: "Attiva avvisi meteo", notifOn: "Avvisi attivi", loading: "Caricamento dati...",
+    qParking: "Dove parcheggiare il camper?", qDinner: "Cena con parcheggio?", qFuel: "Distributore / GPL?",
+    qMarina: "Porto turistico più vicino?", qSea: "Condizioni del mare e vento?", qKonoba: "Ristorante dal mare?",
+    qPlan: "Piano giornaliero per 8 ore?", qLunch: "Pranzo locale, no prezzi turistici?", qPhoto: "Miglior punto foto?",
+    qBeach: "Spiaggia migliore nelle vicinanze?", qFood: "Consiglio per il pranzo?", qVisit: "Cosa vedere oggi?",
+    showOffers: "Attività, spiagge, offerte", showBtn: "Mostra ▼", hideBtn: "Nascondi offerte ▲",
+    available: "disponibili", activities: "ATTIVITÀ",
+    btnOffer: "Vedi offerta", btnTour: "Vedi tour", btnStay: "Vedi alloggio", btnOpen: "Apri link",
+    bookBest: "Prezzi migliori",
+    walkieTalk: "Premi per parlare", walkieListen: "Ascolto...", walkieAnswer: "Rispondo...",
+    walkieInfo: "Vivavoce · Schermo sempre acceso", walkieSnap: "Scatta foto",
+    errVision: "Analisi fallita. Riprovare.", errConnection: "Connessione non disponibile. Riprovare.",
+    freeNote: "24h gratis · poi da 3,99€/settimana", trialExpired: "Giorno gratuito scaduto",
+  },
+  at: { title: "Jadran Urlaubsguide", sub: "Insider-Tipps für deinen Adria-Urlaub — direkt von Einheimischen", start: "Los geht's!", send: "Abschicken", placeholder: "Frag mich was über die Adria...", region: "Wo geht's hin?", mode: "Wie bist du unterwegs?", unlock: "Freischalten — ab 3,99€", free3: "3 Fragen gratis", remaining: "übrig", upgraded: "Premium freigeschaltet!", back: "Zurück", typing: "Moment...",
+    nicCamper: "Camper-Guide", nicCamperSub: "Stellplätze, Routen, Ver-/Entsorgung, Warnungen für Camper",
+    nicLocal: "Dein Urlaubsguide", nicLocalSub: "Ferienwohnung, Hotel oder mit dem Auto — Strände, Beisln, Geheimtipps",
+    nicSailing: "Nautik-Guide", nicSailingSub: "Marinas, Ankerplätze, Wind, Schmankerln am Wasser",
+    nicCruiser: "Kreuzfahrt-Guide", nicCruiserSub: "Maximales Erlebnis in 8 Stunden — ohne Anstehen",
+    gabariti: "FAHRZEUGGRÖßE", lenLabel: "Länge (m)", heightLabel: "Höhe (m)",
+    gabaritiFeedback: "Dein Camper: {len}m × {h}m — wir passen die Tipps an",
+    gabaritiHint: "Freiwillig — hilft aber für genaue Routen und Parkplätze",
+    vibeTitle: "Gerade an der Adria", vibeCamper: "Straßen- & Meerlage", vibeSailing: "Seebedingungen",
+    notifBtn: "Wetterwarnungen aktivieren", notifOn: "Warnungen aktiv", loading: "Daten laden...",
+    qParking: "Wo kann ich den Camper hinstellen?", qDinner: "Abendessen mit Parkplatz?", qFuel: "Tankstelle / LPG?",
+    qMarina: "Nächste Marina mit Liegeplatz?", qSea: "Wie schaut's am Meer aus?", qKonoba: "Beisl direkt am Wasser?",
+    qPlan: "Tagesplan für 8 Stunden?", qLunch: "Wo gibt's a gschmackige Jause?", qPhoto: "Bester Platz fürs Foto?",
+    qBeach: "Bester Strand in der Nähe?", qFood: "Wo gibt's was Gutes zum Essen?", qVisit: "Was schaut man sich heut an?",
+    showOffers: "Aktivitäten, Strände, Angebote", showBtn: "Anzeigen ▼", hideBtn: "Angebote verbergen ▲",
+    available: "verfügbar", activities: "AKTIVITÄTEN",
+    btnOffer: "Angebot anschauen", btnTour: "Tour anschauen", btnStay: "Unterkunft anschauen", btnOpen: "Link öffnen",
+    bookBest: "Beste Preise",
+    walkieTalk: "Zum Reden drücken", walkieListen: "I hör zu...", walkieAnswer: "Antwort kommt...",
+    walkieInfo: "Freisprechanlage · Display bleibt an", walkieSnap: "Foto machen",
+    errVision: "Analyse fehlgeschlagen. Bitte nochmal probieren.", errConnection: "Verbindung nicht verfügbar. Bitte nochmal probieren.",
+    freeNote: "24h gratis · dann ab 3,99€/Woche", trialExpired: "Gratis-Tag abgelaufen",
+  },
+  si: { title: "Jadran vodič", sub: "Lokalni nasveti za popoln oddih na Jadranu", start: "Začni pogovor", send: "Pošlji", placeholder: "Vprašajte me o Jadranu...", region: "Izberite regijo", mode: "Kako potujete?", unlock: "Odkleni — od 3,99€", free3: "3 brezplačna vprašanja", remaining: "preostalo", upgraded: "Premium odklenjen!", back: "Nazaj", typing: "razmišljam...",
+    nicCamper: "Vodič za kamper", nicCamperSub: "Parkirišča, poti, opozorila za kamper",
+    nicLocal: t.nicLocal, nicLocalSub: "Apartma, hotel ali z avtom — plaže, restavracije",
+    nicSailing: "Navtični vodič", nicSailingSub: "Marine, sidrišča, veter, restavracije ob morju",
+    nicCruiser: "Vodič za križarke", nicCruiserSub: "Maksimum v 8 urah — načrt po minutah",
+    gabariti: "VELIKOST VOZILA", lenLabel: "Dolžina (m)", heightLabel: "Višina (m)",
+    gabaritiFeedback: "Vaš kamper: {len}m × {h}m — prilagajamo priporočila",
+    gabaritiHint: "Neobvezno — a pomaga za natančne poti",
+    vibeTitle: t.vibeTitle, vibeCamper: "Stanje na cesti in morju", vibeSailing: "Pomorske razmere",
+    notifBtn: "Vklopi vremenska opozorila", notifOn: "Opozorila aktivna", loading: "Nalagam podatke...",
+    qParking: "Kje parkirati kamper?", qDinner: "Večerja s parkiriščem?", qFuel: "Bencinska / LPG?",
+    qMarina: "Najbližja marina?", qSea: "Stanje morja in veter?", qKonoba: "Restavracija ob morju?",
+    qPlan: "Dnevni načrt za 8 ur?", qLunch: "Lokalno kosilo?", qPhoto: "Najboljša točka za fotografijo?",
+    qBeach: "Najboljša plaža v bližini?", qFood: "Priporočilo za kosilo?", qVisit: "Kaj si ogledati danes?",
+    showOffers: "Aktivnosti, plaže, ponudbe", showBtn: "{t.showBtn}", hideBtn: "Skrij ponudbe ▲",
+    available: "na voljo", activities: "AKTIVNOSTI",
+    btnOffer: "Poglej ponudbo", btnTour: "Poglej izlet", btnStay: "Poglej nastanitev", btnOpen: "Odpri povezavo",
+    bookBest: "Najboljše cene",
+    walkieTalk: "Pritisni za govor", walkieListen: "Poslušam...", walkieAnswer: "Odgovarjam...",
+    walkieInfo: "Prostoročno · Zaslon ne ugasne", walkieSnap: "Fotografiraj",
+    errVision: "Analiza ni uspela. Poskusite znova.", errConnection: "Povezava ni na voljo. Poskusite znova.",
+    freeNote: "24h brezplačno · nato od 3,99€/teden", trialExpired: "Brezplačni dan je potekel",
+  },
+  cz: { title: "Jadran průvodce", sub: "Místní tipy pro perfektní dovolenou na Jadranu", start: "Začít konverzaci", send: "Odeslat", placeholder: "Zeptejte se na Jadran...", region: "Vyberte region", mode: "Jak cestujete?", unlock: "Odemknout — od 3,99€", free3: "3 otázky zdarma", remaining: "zbývá", upgraded: "Premium odemčen!", back: "Zpět", typing: "přemýšlím...",
+    nicCamper: "Průvodce pro karavany", nicCamperSub: "Parkování, trasy, služby, varování pro karavany",
+    nicLocal: "Místní průvodce", nicLocalSub: "Apartmán, hotel nebo autem — pláže, restaurace, skryté klenoty",
+    nicSailing: "Námořní průvodce", nicSailingSub: "Přístavy, kotviště, vítr, restaurace u moře",
+    nicCruiser: "Průvodce pro výletní lodě", nicCruiserSub: "Maximum za 8 hodin — plán po minutách",
+    gabariti: "ROZMĚRY VOZIDLA", lenLabel: "Délka (m)", heightLabel: "Výška (m)",
+    gabaritiFeedback: "Váš karavan: {len}m × {h}m — přizpůsobujeme doporučení",
+    gabaritiHint: "Nepovinné — ale pomáhá pro přesné trasy",
+    vibeTitle: "Právě teď na Jadranu", vibeCamper: "Silniční a mořské podmínky", vibeSailing: "Mořské podmínky",
+    notifBtn: "Zapnout upozornění na počasí", notifOn: "Upozornění aktivní", loading: "Načítám data...",
+    qParking: "Kde zaparkovat karavan?", qDinner: "Večeře s parkováním?", qFuel: "Benzínka / LPG?",
+    qMarina: "Nejbližší přístav?", qSea: "Stav moře a vítr?", qKonoba: "Restaurace u moře?",
+    qPlan: "Denní plán na 8 hodin?", qLunch: "Místní oběd za dobré ceny?", qPhoto: "Nejlepší místo na fotku?",
+    qBeach: "Nejlepší pláž v okolí?", qFood: "Doporučení na oběd?", qVisit: "Co vidět dnes?",
+    showOffers: "Aktivity, pláže, nabídky", showBtn: "Zobrazit ▼", hideBtn: "Skrýt nabídky ▲",
+    available: "dostupné", activities: "AKTIVITY",
+    btnOffer: "Zobrazit nabídku", btnTour: "Zobrazit výlet", btnStay: "Zobrazit ubytování", btnOpen: "Otevřít odkaz",
+    bookBest: "Nejlepší ceny",
+    walkieTalk: "Stiskněte pro mluvení", walkieListen: "Poslouchám...", walkieAnswer: "Odpovídám...",
+    walkieInfo: "Hlasité ovládání · Displej zůstává zapnutý", walkieSnap: "Vyfotit",
+    errVision: "Analýza selhala. Zkuste to znovu.", errConnection: "Připojení není k dispozici. Zkuste to znovu.",
+    freeNote: "24h zdarma · poté od 3,99€/týden", trialExpired: "Bezplatný den vypršel",
+  },
+  pl: { title: "Jadran przewodnik", sub: "Lokalne wskazówki na idealny urlop nad Adriatykiem", start: "Zacznij rozmowę", send: "Wyślij", placeholder: "Zapytaj o Adriatyk...", region: "Wybierz region", mode: "Jak podróżujesz?", unlock: "Odblokuj — od 3,99€", free3: "3 pytania za darmo", remaining: "pozostało", upgraded: "Premium odblokowany!", back: "Wstecz", typing: "myślę...",
+    nicCamper: "Przewodnik kamperowy", nicCamperSub: "Parkingi, trasy, stacje serwisowe, ostrzeżenia",
+    nicLocal: "Lokalny przewodnik", nicLocalSub: "Apartament, hotel lub samochodem — plaże, restauracje",
+    nicSailing: "Przewodnik żeglarski", nicSailingSub: "Mariny, kotwicowiska, wiatr, restauracje nad wodą",
+    nicCruiser: "Przewodnik wycieczkowy", nicCruiserSub: "Maksimum w 8 godzin — plan co do minuty",
+    gabariti: "WYMIARY POJAZDU", lenLabel: "Długość (m)", heightLabel: "Wysokość (m)",
+    gabaritiFeedback: "Twój kamper: {len}m × {h}m — dostosowujemy rekomendacje",
+    gabaritiHint: "Opcjonalne — ale pomaga w doborze tras i parkingów",
+    vibeTitle: "Teraz na Adriatyku", vibeCamper: "Warunki drogowe i morskie", vibeSailing: "Warunki morskie",
+    notifBtn: "Włącz alerty pogodowe", notifOn: "Alerty aktywne", loading: "Ładowanie danych...",
+    qParking: "Gdzie zaparkować kamper?", qDinner: "Kolacja z parkingiem?", qFuel: "Stacja / LPG?",
+    qMarina: "Najbliższa marina?", qSea: "Stan morza i wiatr?", qKonoba: "Restauracja nad wodą?",
+    qPlan: "Plan dnia na 8 godzin?", qLunch: "Lokalny obiad w dobrej cenie?", qPhoto: "Najlepsze miejsce na zdjęcie?",
+    qBeach: "Najlepsza plaża w pobliżu?", qFood: "Polecenie na obiad?", qVisit: "Co zobaczyć dziś?",
+    showOffers: "Aktywności, plaże, oferty", showBtn: "Pokaż ▼", hideBtn: "Ukryj oferty ▲",
+    available: "dostępne", activities: "AKTYWNOŚCI",
+    btnOffer: "Zobacz ofertę", btnTour: "Zobacz wycieczkę", btnStay: "Zobacz noclegi", btnOpen: "Otwórz link",
+    bookBest: "Najlepsze ceny",
+    walkieTalk: "Naciśnij, aby mówić", walkieListen: "Słucham...", walkieAnswer: "Odpowiadam...",
+    walkieInfo: "Tryb głośnomówiący · Ekran nie gaśnie", walkieSnap: "Zrób zdjęcie",
+    errVision: "Analiza nie powiodła się. Spróbuj ponownie.", errConnection: "Brak połączenia. Spróbuj ponownie.",
+    freeNote: "24h za darmo · potem od 3,99€/tydzień", trialExpired: "Darmowy dzień wygasł",
+  },
 };
 
 export default function StandaloneAI() {
@@ -189,7 +372,7 @@ export default function StandaloneAI() {
       setMsgs(p => [...p, { role: "assistant", text }]);
       if (walkieMode) speak(text);
     } catch {
-      setMsgs(p => [...p, { role: "assistant", text: "Greška pri analizi. Pokušajte ponovno." }]);
+      setMsgs(p => [...p, { role: "assistant", text: t.errVision }]);
     }
     setLoading(false);
   };
@@ -314,7 +497,7 @@ export default function StandaloneAI() {
       setMsgs(p => [...p, { role: "assistant", text: aiText }]);
       if (walkieMode) speak(aiText);
     } catch {
-      setMsgs(p => [...p, { role: "assistant", text: "Veza nije dostupna. Pokušajte ponovno. 🌊" }]);
+      setMsgs(p => [...p, { role: "assistant", text: t.errConnection }]);
     }
     setLoading(false);
   };
@@ -522,7 +705,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
   ] : travelMode === "sailing" ? [
     "⚓ Najbolja marina u blizini?",
     "🌬️ Kakav je vjetar danas?",
-    "🍽️ Konoba dostupna s mora?",
+    `🍽️ ${t.qKonoba}`,
     "⛽ Gdje napuniti gorivo?",
     "🏝️ Zaštićeno sidrište?",
     "🌊 Stanje mora i prognoze?",
@@ -536,9 +719,9 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
   ] : [];
 
   const defaultQuick = [
-    "🏖️ Najbolja plaža u blizini?",
+    `🏖️ ${t.qBeach}`,
     "🍽️ Lokalna konoba za večeru?",
-    "🗺️ Što posjetiti danas?",
+    `🗺️ ${t.qVisit}`,
     "☀️ Kakvo je vrijeme?",
   ];
 
@@ -601,7 +784,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
         {/* Camper size picker — only for camper niche */}
         {niche === "camper" && (
           <div style={{ marginBottom: 24, padding: "16px", borderRadius: 16, background: "rgba(245,158,11,0.04)", border: "1px solid rgba(245,158,11,0.1)" }}>
-            <div style={{ fontSize: 11, color: C.gold, letterSpacing: 3, marginBottom: 12, fontWeight: 600 }}>GABARITI VOZILA</div>
+            <div style={{ fontSize: 11, color: C.gold, letterSpacing: 3, marginBottom: 12, fontWeight: 600 }}>{t.gabariti}</div>
             <div style={{ display: "flex", gap: 10 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 10, color: C.mut, marginBottom: 4 }}>Dužina (m)</div>
@@ -617,7 +800,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
               </div>
             </div>
             <div style={{ fontSize: 10, color: C.mut, marginTop: 8, textAlign: "center" }}>
-              {camperLen && camperHeight ? `Vaš kamper: ${camperLen}m × ${camperHeight}m — prilagođavamo preporuke` : "Opcionalno — ali pomaže za preciznije rute i parkinge"}
+              {camperLen && camperHeight ? t.gabaritiFeedback.replace("{len}",camperLen).replace("{h}",camperHeight) : t.gabaritiHint}
             </div>
           </div>
         )}
@@ -680,7 +863,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
 
         {/* Free tier note */}
         <div style={{ textAlign: "center", marginTop: 16, fontSize: 12, color: isNight ? "rgba(255,255,255,0.3)" : "rgba(12,74,110,0.4)" }}>
-          24h besplatno · zatim od 3.99€/tjedan
+          {t.freeNote}
         </div>
       </div>
       <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } ::selection { background: rgba(14,165,233,0.3); }`}</style>
@@ -789,7 +972,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
                   <span style={{ fontSize: 9, letterSpacing: 3, color: C.accent, fontWeight: 600 }}>VIBE JADRANA</span>
                 </div>
                 <div style={{ fontFamily: "'Playfair Display','Playfair Display',Georgia,serif", fontSize: 22, fontWeight: 700 }}>
-                  {travelMode === "camper" ? "Stanje na cesti i moru" : travelMode === "sailing" ? "Pomorske prilike" : "Trenutno na Jadranu"}
+                  {travelMode === "camper" ? t.vibeCamper : travelMode === "sailing" ? t.vibeSailing : t.vibeTitle}
                 </div>
                 <div style={{ fontSize: 11, color: C.mut, marginTop: 4 }}>
                   📍 {weather.location || "Jadran"} · Ažurirano {weatherTime ? weatherTime.toLocaleTimeString("hr", { hour: "2-digit", minute: "2-digit" }) : "—"}
@@ -797,10 +980,10 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
                 {notifPerm === "default" && "Notification" in window && (
                   <button onClick={async () => { const p = await Notification.requestPermission(); setNotifPerm(p); if (p === "granted") new Notification("✅ JADRAN", { body: "Upozorenja za vjetar i more su aktivna.", icon: "/icon-192.svg" }); }}
                     style={{ marginTop: 8, padding: "8px 16px", borderRadius: 10, border: `1px solid ${C.accent}30`, background: "transparent", color: C.accent, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-                    🔔 Dozvoli obavijesti za vrijeme
+                    🔔 {t.notifBtn}
                   </button>
                 )}
-                {notifPerm === "granted" && <div style={{ marginTop: 6, fontSize: 10, color: "#22c55e" }}>🔔 Obavijesti aktivne</div>}
+                {notifPerm === "granted" && <div style={{ marginTop: 6, fontSize: 10, color: "#22c55e" }}>🔔 {t.notifOn}</div>}
               </div>
 
               {/* Main cards grid */}
@@ -895,7 +1078,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
                   Podaci: Open-Meteo Marine API · Lokacija: {weather.location || "Jadran"} · Osvježavanje svaku minutu
                 </div>
               </div>
-            </div> : <div style={{ padding: 40, textAlign: "center", color: C.mut, fontSize: 13 }}>Učitavam podatke...</div>}
+            </div> : <div style={{ padding: 40, textAlign: "center", color: C.mut, fontSize: 13 }}>{t.loading}</div>}
 
             {/* Floating conversation previews — shows what the AI can do */}
             <div style={{ padding: "20px 16px 8px", position: "relative", overflow: "hidden" }}>
@@ -972,7 +1155,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
                     >{linkMatch[1]} →</a>;
                   }
                   if (/^https?:\/\//.test(part)) {
-                    const label = part.includes("getyourguide") ? "Pogledaj ponudu" : part.includes("viator") ? "Pogledaj turu" : part.includes("booking.com") ? "Pogledaj smještaj" : "Otvori link";
+                    const label = part.includes("getyourguide") ? t.btnOffer : part.includes("viator") ? t.btnTour : part.includes("booking.com") ? t.btnStay : t.btnOpen;
                     return <a key={k} href={part} target="_blank" rel="noopener noreferrer" style={{
                       display: "block", margin: "8px 0", padding: "14px 18px", borderRadius: 12,
                       background: isNight ? "rgba(14,165,233,0.08)" : "rgba(14,165,233,0.06)", 
@@ -996,21 +1179,21 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
         {msgs.length > 0 && !loading && msgs[msgs.length - 1]?.role === "assistant" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "4px 16px 8px" }}>
             {(travelMode === "camper" || niche === "camper" ? [
-              "🅿️ Gdje parkirati kamper?",
-              "🍽️ Večera s parkingom?",
-              "⛽ Benzinska / LPG?",
+              `🅿️ ${t.qParking}`,
+              `🍽️ ${t.qDinner}`,
+              `⛽ ${t.qFuel}`,
             ] : travelMode === "sailing" || niche === "sailing" ? [
-              "⚓ Najbliža marina s vezom?",
-              "🌊 Stanje mora i vjetar?",
-              "🍽️ Konoba dostupna s mora?",
+              `⚓ ${t.qMarina}`,
+              `🌊 ${t.qSea}`,
+              `🍽️ ${t.qKonoba}`,
             ] : travelMode === "cruiser" || niche === "cruiser" ? [
-              "🗺️ Plan dana za 8 sati?",
-              "🍽️ Lokalni ručak bez turističke cijene?",
-              "📸 Fotogenična lokacija?",
+              `🗺️ ${t.qPlan}`,
+              `🍽️ ${t.qLunch}`,
+              `📸 ${t.qPhoto}`,
             ] : [
-              "🏖️ Najbolja plaža u blizini?",
-              "🍽️ Preporuka za ručak?",
-              "🗺️ Što posjetiti danas?",
+              `🏖️ ${t.qBeach}`,
+              `🍽️ ${t.qFood}`,
+              `🗺️ ${t.qVisit}`,
             ]).map(q => (
               <button key={q} onClick={() => { setInput(q); setTimeout(() => document.querySelector("[data-send]")?.click(), 50); }}
                 style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: `1px solid ${C.bord}`, background: C.card, color: C.text, fontSize: 15, cursor: "pointer", fontFamily: "inherit", textAlign: "left", minHeight: 48, transition: "all 0.2s" }}>
@@ -1042,8 +1225,8 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
                 fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
                 display: "flex", justifyContent: "space-between", alignItems: "center",
               }}>
-                <span>🗺️ Aktivnosti, plaže, ponude</span>
-                <span style={{ fontSize: 12, color: C.accent }}>Prikaži ▼</span>
+                <span>{`🗺️ ${t.showOffers}`}</span>
+                <span style={{ fontSize: 12, color: C.accent }}>{t.showBtn}</span>
               </button>
             )}
             {msgs.length > 0 && showCards && (
@@ -1051,7 +1234,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
                 width: "calc(100% - 32px)", margin: "8px 16px 12px", padding: "10px 16px", borderRadius: 12,
                 border: `1px solid ${C.bord}`, background: "transparent", color: C.mut,
                 fontSize: 12, cursor: "pointer", fontFamily: "inherit", textAlign: "center",
-              }}>Sakrij ponude ▲</button>
+              }}>{t.hideBtn}</button>
             )}
             {(msgs.length === 0 || showCards) && <>
 
@@ -1062,8 +1245,8 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
               return acts.length > 0 && (
                 <div style={{ marginBottom: 20, padding: "0 4px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                    <div style={{ fontSize: 10, color: C.accent, letterSpacing: 3, fontWeight: 600 }}>AKTIVNOSTI</div>
-                    <div style={{ fontSize: 10, color: C.mut }}>{acts.length} dostupno</div>
+                    <div style={{ fontSize: 10, color: C.accent, letterSpacing: 3, fontWeight: 600 }}>{t.activities}</div>
+                    <div style={{ fontSize: 10, color: C.mut }}>{acts.length} {t.available}</div>
                   </div>
                   <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 8, scrollSnapType: "x mandatory" }}>
                     {acts.map(a => (
@@ -1305,7 +1488,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
                       onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(0,85,166,0.15)"; }}>
                       <div>
                         <div style={{ fontSize: 14, fontWeight: 500 }}>🏨 Smještaj — {city.name}</div>
-                        <div style={{ fontSize: 11, color: C.mut, marginTop: 2 }}>Booking.com · Najbolje cijene</div>
+                        <div style={{ fontSize: 11, color: C.mut, marginTop: 2 }}>{`Booking.com · ${t.bookBest}`}</div>
                       </div>
                       <div style={{ padding: "8px 14px", background: "linear-gradient(135deg, #003580, #0055A6)", borderRadius: 12, color: "#fff", fontSize: 12, fontWeight: 600, whiteSpace: "nowrap" }}>
                         Pogledaj →
@@ -1323,7 +1506,7 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
       {!premium && trialExpired && (
         <div style={{ padding: "10px 20px", background: isNight ? "rgba(245,158,11,0.06)" : "rgba(245,158,11,0.1)", borderTop: "1px solid rgba(245,158,11,0.15)", textAlign: "center", flexShrink: 0 }}>
           <button onClick={() => setShowPaywall(true)} style={{ background: "none", border: "none", color: C.gold, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-            ⏰ Besplatni dan istekao — {t.unlock}
+            ⏰ {t.trialExpired} — {t.unlock}
           </button>
         </div>
       )}
@@ -1337,11 +1520,11 @@ ${w ? w.icon + " " + w.temp + "°C, more " + w.sea + "°C" : ""} Što vas zanima
           </button>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: isRecording ? "#ef4444" : "#22c55e", marginBottom: 4 }}>
-              {loading ? "Odgovaram..." : isRecording ? "Slušam..." : "Pritisnite za govor"}
+              {loading ? t.walkieAnswer : isRecording ? t.walkieListen : t.walkieTalk}
             </div>
-            <div style={{ fontSize: 10, color: C.mut }}>📻 Hands-free · Ekran neće se ugasiti</div>
+            <div style={{ fontSize: 10, color: C.mut }}>📻 {t.walkieInfo}</div>
             <button onClick={() => { if (cameraRef.current) cameraRef.current.click(); }} style={{ marginTop: 8, padding: "6px 14px", borderRadius: 8, border: `1px solid ${C.bord}`, background: "transparent", color: C.mut, fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
-              📸 Slikaj
+              📸 {t.walkieSnap}
             </button>
           </div>
         </div>
