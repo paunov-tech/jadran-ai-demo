@@ -62,7 +62,9 @@
   <link rel="preconnect" href="https://images.unsplash.com" />
   <link rel="dns-prefetch" href="https://api.open-meteo.com" />
   <link rel="dns-prefetch" href="https://marine-api.open-meteo.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="dns-prefetch" href="https://plausible.io" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" /></noscript>
 
   <!-- Structured Data — SoftwareApplication -->
   <script type="application/ld+json">
@@ -99,23 +101,27 @@
   </style>
 
   <!-- Privacy-friendly analytics by Plausible -->
-  <script async src="https://plausible.io/js/pa-4H3Ddppp-5YkZGFcHR_iz.js"></script>
+  <script defer src="https://plausible.io/js/pa-4H3Ddppp-5YkZGFcHR_iz.js"></script>
   <script>
     window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
     plausible.init()
   </script>
 
-  <!-- Sentry Error Monitoring -->
-  <script src="https://browser.sentry-cdn.com/8.46.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
+  <!-- Sentry Error Monitoring — deferred to not block FCP -->
   <script>
-    if (window.Sentry) {
-      Sentry.init({
-        dsn: "https://b8ba4e4d1d8abe17da9f96bc8442744b@o4510969565413376.ingest.de.sentry.io/4511037604298832",
-        tracesSampleRate: 0.1,
-        environment: "production",
-        ignoreErrors: ["ResizeObserver loop", "Loading chunk", "Network request failed"],
-      });
-    }
+    window.addEventListener('load', function() {
+      var s = document.createElement('script');
+      s.src = 'https://browser.sentry-cdn.com/8.46.0/bundle.tracing.min.js';
+      s.crossOrigin = 'anonymous';
+      s.onload = function() {
+        if (window.Sentry) Sentry.init({
+          dsn: "https://b8ba4e4d1d8abe17da9f96bc8442744b@o4510969565413376.ingest.de.sentry.io/4511037604298832",
+          tracesSampleRate: 0.1, environment: "production",
+          ignoreErrors: ["ResizeObserver loop", "Loading chunk", "Network request failed"],
+        });
+      };
+      document.head.appendChild(s);
+    });
   </script>
 </head>
 <body>
