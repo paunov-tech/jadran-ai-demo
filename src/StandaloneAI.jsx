@@ -782,14 +782,7 @@ export default function StandaloneAI() {
           <a href="/" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 12, border: `1px solid ${C.bord}`, background: C.card, color: C.text, textDecoration: "none", fontSize: 18, transition: "all 0.2s" }}
               onMouseEnter={e => e.currentTarget.style.borderColor = C.accent}
               onMouseLeave={e => e.currentTarget.style.borderColor = C.bord}>‹</a>
-          <div style={{ display: "flex", gap: 2, background: isNight ? "rgba(12,28,50,0.5)" : "rgba(255,255,255,0.5)", borderRadius: 12, padding: 3 }}>
-            {LANGS.map(l => (
-              <button key={l.code} onClick={() => setLang(l.code)}
-                style={{ padding: "4px 6px", background: lang === l.code ? "rgba(14,165,233,0.12)" : "transparent", border: lang === l.code ? `1px solid ${C.accent}40` : "1px solid transparent", borderRadius: 9, cursor: "pointer", fontSize: 14, lineHeight: 1 }}>
-                {l.flag}
-              </button>
-            ))}
-          </div>
+          <div style={{ width: 40 }} />
         </div>
 
         {/* Niche photo hero — always visible when niche set */}
