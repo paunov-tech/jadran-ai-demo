@@ -67,6 +67,7 @@ export default function LandingPage() {
     return "hr";
   });
   const [langOpen, setLangOpen] = useState(false);
+  const [legalPage, setLegalPage] = useState(null); // "impressum" | "privacy" | null
   // Persist language + close popover on outside click
   useEffect(() => { try { localStorage.setItem("jadran_lang", lang); } catch {} }, [lang]);
   const FLAGS = [["hr","🇭🇷"],["de","🇩🇪"],["at","🇦🇹"],["en","🇬🇧"],["it","🇮🇹"],["si","🇸🇮"],["cz","🇨🇿"],["pl","🇵🇱"]];
@@ -403,6 +404,81 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
+
+      {/* ═══ LEGAL OVERLAY ═══ */}
+      {legalPage && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)", overflowY: "auto", WebkitOverflowScrolling: "touch" }} onClick={() => setLegalPage(null)}>
+          <div style={{ maxWidth: 640, margin: "0 auto", padding: "60px 24px 100px", color: "#e2e8f0", fontFamily: B, fontSize: 13, lineHeight: 1.8 }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setLegalPage(null)} style={{ position: "fixed", top: 16, right: 20, background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", fontSize: 20, width: 36, height: 36, borderRadius: "50%", cursor: "pointer", zIndex: 10000 }}>×</button>
+            {legalPage === "impressum" ? (<>
+              <div style={{ fontSize: 9, color: "#0ea5e9", letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>RECHTLICHES</div>
+              <h2 style={{ fontFamily: F, fontSize: 28, fontWeight: 700, marginBottom: 24, color: "#fff" }}>Impressum</h2>
+              <p><strong>Angaben gemäß § 5 ECG (Österreich) / § 5 TMG (Deutschland):</strong></p>
+              <p style={{ margin: "16px 0" }}>
+                <strong>SIAL Consulting d.o.o.</strong><br/>
+                Bizeljska cesta 5<br/>
+                8250 Brežice<br/>
+                Slovenija / Slowenien
+              </p>
+              <p><strong>Identifikationsnummer:</strong> SI97117765</p>
+              <p><strong>Verantwortlich:</strong> Miroslav Paunov</p>
+              <p style={{ margin: "16px 0" }}>
+                <strong>Kontakt:</strong><br/>
+                E-Mail: info@sialconsulting.com<br/>
+                Telefon: +386 40 564 940
+              </p>
+              <p style={{ margin: "16px 0" }}>
+                <strong>Umsatzsteuer-Identifikationsnummer:</strong> SI97117765<br/>
+                <strong>Handelsregister:</strong> Okrožno sodišče v Krškem, Slovenija
+              </p>
+              <p style={{ color: "#64748b", marginTop: 24, fontSize: 11 }}>
+                Plattform der EU-Kommission zur Online-Streitbeilegung:<br/>
+                <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener noreferrer" style={{ color: "#0ea5e9" }}>https://ec.europa.eu/consumers/odr</a>
+              </p>
+              <p style={{ color: "#64748b", fontSize: 11, marginTop: 8 }}>
+                Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.
+              </p>
+              <p style={{ color: "#64748b", fontSize: 11, marginTop: 16 }}>
+                <strong>Haftungshinweis:</strong> Trotz sorgfältiger Kontrolle übernehmen wir keine Haftung für die Inhalte externer Links. Für den Inhalt der verlinkten Seiten sind ausschließlich deren Betreiber verantwortlich. Die auf dieser Plattform bereitgestellten Informationen und Empfehlungen dienen ausschließlich zu Informationszwecken und stellen keine rechtsverbindliche Beratung dar.
+              </p>
+            </>) : (<>
+              <div style={{ fontSize: 9, color: "#0ea5e9", letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>RECHTLICHES</div>
+              <h2 style={{ fontFamily: F, fontSize: 28, fontWeight: 700, marginBottom: 24, color: "#fff" }}>Datenschutzerklärung</h2>
+              <p><strong>Verantwortlicher:</strong><br/>SIAL Consulting d.o.o., Bizeljska cesta 5, 8250 Brežice, Slovenija<br/>E-Mail: info@sialconsulting.com</p>
+
+              <h3 style={{ fontFamily: F, fontSize: 16, fontWeight: 700, color: "#fff", margin: "24px 0 8px" }}>1. Erhobene Daten</h3>
+              <p>Wir erheben so wenig Daten wie möglich:</p>
+              <p style={{ margin: "8px 0" }}>
+                <strong>Automatisch:</strong> Anonymisierte Seitenaufrufe über Plausible Analytics (cookielos, DSGVO-konform, keine personenbezogenen Daten, keine Cookies, kein Tracking über Websites hinweg). Server-Logs (IP-Adresse, Browser-Typ) werden nicht gespeichert.
+              </p>
+              <p style={{ margin: "8px 0" }}>
+                <strong>Bei Nutzung des AI-Guides:</strong> Ihre Chat-Nachrichten werden an den AI-Dienst (Anthropic Claude / Google Gemini) zur Verarbeitung gesendet. Nachrichten werden nicht dauerhaft gespeichert. Nutzungspräferenzen (Sprache, Region, Reiseart) werden lokal in Ihrem Browser gespeichert (localStorage) und nie an unsere Server übertragen.
+              </p>
+              <p style={{ margin: "8px 0" }}>
+                <strong>Bei Zahlung:</strong> Zahlungen werden über Stripe Inc. abgewickelt. Wir erhalten Ihre E-Mail-Adresse für die Kaufbestätigung. Kreditkartendaten werden ausschließlich von Stripe verarbeitet und nie auf unseren Servern gespeichert. Stripe Datenschutz: <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "#0ea5e9" }}>stripe.com/privacy</a>
+              </p>
+
+              <h3 style={{ fontFamily: F, fontSize: 16, fontWeight: 700, color: "#fff", margin: "24px 0 8px" }}>2. Cookies</h3>
+              <p>Diese Website verwendet <strong>keine Cookies</strong>. Weder eigene noch von Drittanbietern. Alle Nutzerdaten werden ausschließlich im localStorage Ihres Browsers gespeichert und verlassen Ihr Gerät nicht.</p>
+
+              <h3 style={{ fontFamily: F, fontSize: 16, fontWeight: 700, color: "#fff", margin: "24px 0 8px" }}>3. Ihre Rechte (DSGVO Art. 15-21)</h3>
+              <p>Sie haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch. Da wir keine personenbezogenen Daten auf unseren Servern speichern, können Sie Ihre lokalen Daten jederzeit selbst löschen, indem Sie den Browser-Cache leeren.</p>
+              <p style={{ margin: "8px 0" }}>Für Anfragen: <a href="mailto:info@sialconsulting.com" style={{ color: "#0ea5e9" }}>info@sialconsulting.com</a></p>
+
+              <h3 style={{ fontFamily: F, fontSize: 16, fontWeight: 700, color: "#fff", margin: "24px 0 8px" }}>4. Drittanbieter</h3>
+              <p style={{ margin: "8px 0" }}><strong>Plausible Analytics</strong> — cookielose, DSGVO-konforme Webanalyse. Keine personenbezogenen Daten. <a href="https://plausible.io/data-policy" target="_blank" rel="noopener noreferrer" style={{ color: "#0ea5e9" }}>Datenschutz</a></p>
+              <p style={{ margin: "8px 0" }}><strong>Stripe</strong> — Zahlungsabwicklung. PCI DSS Level 1 zertifiziert. <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "#0ea5e9" }}>Datenschutz</a></p>
+              <p style={{ margin: "8px 0" }}><strong>Anthropic (Claude AI)</strong> — AI-Chatverarbeitung. Nachrichten werden nicht für Training verwendet. <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: "#0ea5e9" }}>Datenschutz</a></p>
+              <p style={{ margin: "8px 0" }}><strong>Sentry</strong> — Fehlerbericht-Dienst. Erfasst technische Fehler (keine Chatinhalte). <a href="https://sentry.io/privacy/" target="_blank" rel="noopener noreferrer" style={{ color: "#0ea5e9" }}>Datenschutz</a></p>
+
+              <h3 style={{ fontFamily: F, fontSize: 16, fontWeight: 700, color: "#fff", margin: "24px 0 8px" }}>5. Kontakt & Aufsichtsbehörde</h3>
+              <p>Bei Fragen: info@sialconsulting.com</p>
+              <p style={{ margin: "8px 0", color: "#64748b", fontSize: 11 }}>Zuständige Aufsichtsbehörde: Informacijski pooblaščenec Republike Slovenije, Dunajska cesta 22, 1000 Ljubljana, Slovenija. <a href="https://www.ip-rs.si" target="_blank" rel="noopener noreferrer" style={{ color: "#0ea5e9" }}>www.ip-rs.si</a></p>
+              <p style={{ color: "#64748b", fontSize: 11, marginTop: 8 }}>Stand: März 2026</p>
+            </>)}
+          </div>
+        </div>
+      )}
 
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
