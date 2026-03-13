@@ -42,6 +42,7 @@ export default async function handler(req, res) {
           product_data: {
             name: p.name,
             description: lang === "de" || lang === "at" ? "AI Reiseführer für die kroatische Küste" : lang === "en" ? "AI travel guide for Croatian coast" : lang === "it" ? "Guida AI per la costa croata" : "AI turistički vodič za hrvatsku obalu",
+            tax_code: "txcd_10000000", // Electronically Supplied Services — enables Stripe Tax for EU digital B2C
           },
           unit_amount: p.amount,
         },
