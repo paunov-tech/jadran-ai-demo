@@ -1439,7 +1439,7 @@ const [lang, setLang] = useState(() => {
                 const parts = line.split(/(\[[^\]]+\]\([^)]+\))|(https?:\/\/[^\s)]+)/g).filter(Boolean);
                 return <div key={j} style={{ marginBottom: line === "" ? 4 : 0 }}>{parts.map((part, k) => {
                   const linkMatch = part.match(/\[([^\]]+)\]\(([^)]+)\)/);
-                  if (linkMatch) {
+                  if (linkMatch && /^https?:\/\//.test(linkMatch[2])) {
                     return <a key={k} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" style={{
                       display: "block", margin: "10px 0", padding: "16px 20px", borderRadius: 14,
                       background: "linear-gradient(135deg, #0ea5e9, #0284c7)", color: "#fff",

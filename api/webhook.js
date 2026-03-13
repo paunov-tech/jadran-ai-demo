@@ -16,12 +16,9 @@ export default async function handler(req, res) {
 
   let event;
   try {
-    if (webhookSecret) {
-      const sig = req.headers["stripe-signature"];
-      event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
-    } else {
-      event = JSON.parse(rawBody);
-    }
+    if (!webhookSecret) return res.status(500).json({ error: "Webhook secret not configured" });
+    const sig = req.headers["stripe-signature"];
+    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err) {
     console.error("Webhook signature failed:", err.message);
     return res.status(400).json({ error: "Webhook verification failed" });
@@ -30,7 +27,7 @@ export default async function handler(req, res) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
     const meta = session.metadata || {};
-    console.log(`✅ Payment: ${meta.plan} for device ${meta.deviceId}, email: ${session.customer_details?.email}`);
+    console.log(`✅ Payment: ${meta.plan} for device ${meta.deviceId}`); // email redacted from logs (GDPR)
     
     // TODO: Write to Firebase for cross-device persistence
     // const { initializeApp } = await import("firebase-admin/app");

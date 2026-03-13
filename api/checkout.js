@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   try {
     const { roomCode, guestName, lang, returnPath, plan, region, deviceId } = req.body || {};
     if (!plan || !["week", "season"].includes(plan)) return res.status(400).json({ error: "Invalid plan" });
-    const origin = req.headers.origin || "https://jadran.ai";
+    const origin = "https://jadran.ai"; // Hardcoded — prevents open redirect via forged Origin header
 
     const plans = {
       week:   { name: "JADRAN Vodič — Tjedan (7 dana)", amount: 499, days: 7 },
