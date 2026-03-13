@@ -66,6 +66,11 @@ export default function LandingPage() {
     } catch {}
     return "hr";
   });
+  const [langOpen, setLangOpen] = useState(false);
+  // Persist language + close popover on outside click
+  useEffect(() => { try { localStorage.setItem("jadran_lang", lang); } catch {} }, [lang]);
+  const FLAGS = [["hr","🇭🇷"],["de","🇩🇪"],["at","🇦🇹"],["en","🇬🇧"],["it","🇮🇹"],["si","🇸🇮"],["cz","🇨🇿"],["pl","🇵🇱"]];
+  const curFlag = (FLAGS.find(f => f[0] === lang) || FLAGS[0])[1];
   const tx = (k) => (L[lang] || L.hr)[k] || L.hr[k];
   const [dest, setDest] = useState("");
   const [vLen, setVLen] = useState("");
@@ -128,7 +133,22 @@ export default function LandingPage() {
           <div style={{ width: 32, height: 32, borderRadius: 9, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 14, fontWeight: 800, color: "#fff" }}>J</div>
           <span style={{ fontFamily: F, fontSize: 16, fontWeight: 700, letterSpacing: 2 }}>JADRAN</span>
         </div>
-        <a href="/host" style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)", color: "#64748b", fontSize: 11, textDecoration: "none" }}>Host</a>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ position: "relative" }}>
+            <button onClick={() => setLangOpen(!langOpen)} style={{ padding: "4px 8px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, cursor: "pointer", fontSize: 16, lineHeight: 1, display: "flex", alignItems: "center", gap: 4 }}>
+              {curFlag}<span style={{ fontSize: 9, color: "#64748b" }}>▾</span>
+            </button>
+            {langOpen && <>
+              <div onClick={() => setLangOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 998 }} />
+              <div style={{ position: "absolute", top: "110%", right: 0, zIndex: 999, display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 2, padding: 6, background: "rgba(10,22,40,0.95)", backdropFilter: "blur(20px)", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
+                {FLAGS.map(([c,f]) => (
+                  <button key={c} onClick={() => { setLang(c); setLangOpen(false); }} style={{ padding: "6px 8px", background: lang === c ? "rgba(14,165,233,0.15)" : "transparent", border: lang === c ? "1px solid rgba(14,165,233,0.3)" : "1px solid transparent", borderRadius: 8, cursor: "pointer", fontSize: 18, lineHeight: 1, transition: "all 0.15s" }}>{f}</button>
+                ))}
+              </div>
+            </>}
+          </div>
+          <a href="/host" style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)", color: "#64748b", fontSize: 11, textDecoration: "none" }}>Host</a>
+        </div>
       </nav>
 
       {/* ═══ HERO ═══ */}

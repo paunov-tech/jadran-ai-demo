@@ -284,6 +284,8 @@ export default function StandaloneAI() {
 
   // Plausible analytics helper
   const track = (event, props) => { try { window.plausible?.(event, { props }); } catch {} };
+  const [langOpen, setLangOpen] = useState(false);
+  const curFlag = (LANGS.find(l => l.code === lang) || LANGS[0]).flag;
   const [showSuccess, setShowSuccess] = useState(false);
   const [showCards, setShowCards] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
@@ -788,7 +790,19 @@ export default function StandaloneAI() {
           <a href="/" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 12, border: `1px solid ${C.bord}`, background: C.card, color: C.text, textDecoration: "none", fontSize: 18, transition: "all 0.2s" }}
               onMouseEnter={e => e.currentTarget.style.borderColor = C.accent}
               onMouseLeave={e => e.currentTarget.style.borderColor = C.bord}>‹</a>
-          <div style={{ width: 40 }} />
+          <div style={{ position: "relative" }}>
+            <button onClick={() => setLangOpen(!langOpen)} style={{ padding: "5px 8px", background: isNight ? "rgba(12,28,50,0.5)" : "rgba(255,255,255,0.5)", border: `1px solid ${C.bord}`, borderRadius: 10, cursor: "pointer", fontSize: 18, lineHeight: 1, display: "flex", alignItems: "center", gap: 3 }}>
+              {curFlag}<span style={{ fontSize: 9, color: C.mut }}>▾</span>
+            </button>
+            {langOpen && <>
+              <div onClick={() => setLangOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 998 }} />
+              <div style={{ position: "absolute", top: "110%", right: 0, zIndex: 999, display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 2, padding: 6, background: isNight ? "rgba(10,22,40,0.95)" : "rgba(255,255,255,0.95)", backdropFilter: "blur(20px)", borderRadius: 10, border: `1px solid ${C.bord}`, boxShadow: "0 8px 32px rgba(0,0,0,0.3)" }}>
+                {LANGS.map(l => (
+                  <button key={l.code} onClick={() => { setLang(l.code); setLangOpen(false); }} style={{ padding: "6px 8px", background: lang === l.code ? `${C.accent}18` : "transparent", border: lang === l.code ? `1px solid ${C.accent}40` : "1px solid transparent", borderRadius: 8, cursor: "pointer", fontSize: 18, lineHeight: 1, transition: "all 0.15s" }}>{l.flag}</button>
+                ))}
+              </div>
+            </>}
+          </div>
         </div>
 
         {/* Niche photo hero — always visible when niche set */}
