@@ -965,7 +965,12 @@ const [lang, setLang] = useState(() => {
       <div style={{ maxWidth: 540, margin: "0 auto", padding: "40px 24px" }}>
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 40 }}>
-          <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 16, fontWeight: 700, color: C.accent, letterSpacing: 2 }}>JADRAN.AI</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button onClick={() => window.location.href = "/"} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 10, border: `1px solid ${C.bord}`, background: C.card, color: C.mut, fontSize: 16, cursor: "pointer", transition: "all 0.15s", flexShrink: 0 }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.color = C.text; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.color = C.mut; }}>‹</button>
+            <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 16, fontWeight: 700, color: C.accent, letterSpacing: 2 }}>JADRAN.AI</div>
+          </div>
           <div style={{ position: "relative" }}>
             <button onClick={() => setLangOpen(!langOpen)} style={{ padding: "5px 8px", background: isNight ? "rgba(12,28,50,0.5)" : "rgba(255,255,255,0.5)", border: `1px solid ${C.bord}`, borderRadius: 10, cursor: "pointer", fontSize: 18, lineHeight: 1, display: "flex", alignItems: "center", gap: 3 }}>
               {curFlag}<span style={{ fontSize: 9, color: C.mut }}>▾</span>
@@ -1120,6 +1125,34 @@ const [lang, setLang] = useState(() => {
         <div style={{ textAlign: "center", marginTop: 12, fontSize: 11, color: isNight ? "rgba(255,255,255,0.3)" : "rgba(12,74,110,0.35)" }}>
           {t.freeNote}
         </div>
+
+        {/* ═══ NICHE QUICK TIPS — fills empty space on non-camper guides ═══ */}
+        {niche && niche !== "camper" && (
+          <div style={{ marginTop: 20, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            {(niche === "local" ? [
+              { ic: "🏖️", t: lang === "en" ? "Hidden beaches" : lang === "de" || lang === "at" ? "Geheime Strände" : lang === "it" ? "Spiagge segrete" : "Skrivene plaže", s: lang === "en" ? "Locals-only spots" : lang === "de" || lang === "at" ? "Nur Einheimische" : lang === "it" ? "Solo per locali" : "Samo za lokalne" },
+              { ic: "🍷", t: lang === "en" ? "Family restaurants" : lang === "de" || lang === "at" ? "Familienrestaurants" : lang === "it" ? "Ristoranti familiari" : "Obiteljske konobe", s: lang === "en" ? "No tourist traps" : lang === "de" || lang === "at" ? "Keine Touristenfallen" : lang === "it" ? "Niente trappole" : "Bez turističkih zamki" },
+              { ic: "🅿️", t: lang === "en" ? "Free parking" : lang === "de" || lang === "at" ? "Gratis parken" : lang === "it" ? "Parcheggio gratis" : "Besplatan parking", s: lang === "en" ? "Save €20+/day" : lang === "de" || lang === "at" ? "20€+/Tag sparen" : lang === "it" ? "Risparmia 20€+" : "Uštedi 20€+/dan" },
+              { ic: "🌅", t: lang === "en" ? "Day trip routes" : lang === "de" || lang === "at" ? "Tagesausflüge" : lang === "it" ? "Gite giornaliere" : "Jednodnevni izleti", s: lang === "en" ? "Optimized timing" : lang === "de" || lang === "at" ? "Optimierte Zeiten" : lang === "it" ? "Tempi ottimizzati" : "Optimizirano vrijeme" },
+            ] : niche === "sailing" ? [
+              { ic: "⚓", t: lang === "en" ? "Safe anchorages" : lang === "de" || lang === "at" ? "Sichere Ankerplätze" : lang === "it" ? "Ancoraggi sicuri" : "Sigurna sidrišta", s: lang === "en" ? "Wind-protected" : lang === "de" || lang === "at" ? "Windgeschützt" : lang === "it" ? "Protetti dal vento" : "Zaštita od vjetra" },
+              { ic: "🌊", t: "DHMZ NAVTEX", s: lang === "en" ? "Live wind & sea data" : lang === "de" || lang === "at" ? "Live Wind & See" : lang === "it" ? "Vento e mare live" : "Vjetar i more uživo" },
+              { ic: "⛽", t: lang === "en" ? "Fuel & water" : lang === "de" || lang === "at" ? "Treibstoff & Wasser" : lang === "it" ? "Carburante e acqua" : "Gorivo i voda", s: lang === "en" ? "Marina services" : lang === "de" || lang === "at" ? "Marina-Dienste" : lang === "it" ? "Servizi marina" : "Usluge marina" },
+              { ic: "🍽️", t: lang === "en" ? "Waterfront dining" : lang === "de" || lang === "at" ? "Am Wasser speisen" : lang === "it" ? "Ristoranti sul mare" : "Konobe uz more", s: lang === "en" ? "Boat-accessible" : lang === "de" || lang === "at" ? "Per Boot erreichbar" : lang === "it" ? "Accesso barca" : "Pristup brodom" },
+            ] : [
+              { ic: "⏱️", t: lang === "en" ? "Minute-by-minute" : lang === "de" || lang === "at" ? "Minutenplan" : lang === "it" ? "Minuto per minuto" : "Plan po minutu", s: lang === "en" ? "6h optimized" : lang === "de" || lang === "at" ? "6h optimiert" : lang === "it" ? "6h ottimizzate" : "6h optimizirano" },
+              { ic: "🚶", t: lang === "en" ? "Walking routes" : lang === "de" || lang === "at" ? "Gehrouten" : lang === "it" ? "Percorsi a piedi" : "Pješačke rute", s: lang === "en" ? "Skip tourist crowds" : lang === "de" || lang === "at" ? "Massen umgehen" : lang === "it" ? "Evita la folla" : "Izbjegni gužvu" },
+              { ic: "💰", t: lang === "en" ? "Save vs. excursions" : lang === "de" || lang === "at" ? "Günstiger als Ausflüge" : lang === "it" ? "Meglio delle escursioni" : "Bolje od izleta", s: lang === "en" ? "Same sights, -70%" : lang === "de" || lang === "at" ? "Gleiche Orte, -70%" : lang === "it" ? "Stessi luoghi, -70%" : "Isti lokaliteti, -70%" },
+              { ic: "🍦", t: lang === "en" ? "Local food spots" : lang === "de" || lang === "at" ? "Lokale Küche" : lang === "it" ? "Cucina locale" : "Lokalna hrana", s: lang === "en" ? "Port area gems" : lang === "de" || lang === "at" ? "Hafen-Geheimtipps" : lang === "it" ? "Gemme del porto" : "Dragulji iz luke" },
+            ]).map((tip, i) => (
+              <div key={i} style={{ padding: "14px 12px", borderRadius: 14, background: C.card, border: `1px solid ${C.bord}`, textAlign: "center" }}>
+                <div style={{ fontSize: 22, marginBottom: 6 }}>{tip.ic}</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{tip.t}</div>
+                <div style={{ fontSize: 10, color: C.mut, marginTop: 2 }}>{tip.s}</div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* ═══ SOCIAL PROOF + VALUE PROP ═══ */}
         {!premium && (
