@@ -233,7 +233,7 @@ const FORECAST_DEFAULT = [
 const PRACTICAL = {
   parking: { icon: "🅿️", tk: "parking", items: [
     { n: "Parking ispred vile", d: "0m", note: {hr:"Vaše mjesto: #7",de:"Ihr Platz: #7",en:"Your spot: #7",it:"Il vostro posto: #7",si:"Vaše mesto: #7",cz:"Vaše místo: #7",pl:"Wasze miejsce: #7"}, free: true, mapKey: "villa_parking" },
-    { n: "Podstrana centar", d: "400m", note: {hr:"8 kn/h · SMS plaćanje",de:"8 kn/h · SMS-Zahlung",en:"8 kn/h · SMS payment",it:"8 kn/h · Pagamento SMS",si:"8 kn/h · SMS plačilo",cz:"8 kn/h · SMS platba",pl:"8 kn/h · Płatność SMS"}, price: "8kn/h", mapKey: "podstrana_centar" },
+    { n: "Podstrana centar", d: "400m", note: {hr:"1€/h · SMS plaćanje",de:"1€/h · SMS-Zahlung",en:"1€/h · SMS payment",it:"1€/h · Pagamento SMS",si:"1€/h · SMS plačilo",cz:"1€/h · SMS platba",pl:"1€/h · Płatność SMS"}, price: "1€/h", mapKey: "podstrana_centar" },
     { n: "Garaža Lora (Split)", d: "8km", note: {hr:"Natkrivena garaža, 24/7",de:"Überdachte Garage, 24/7",en:"Covered garage, 24/7",it:"Garage coperto, 24/7",si:"Pokrita garaža, 24/7",cz:"Krytá garáž, 24/7",pl:"Garaż kryty, 24/7"}, price: "10€/dan", mapKey: "garaza_lora" },
   ]},
   beach: { icon: "🏖️", tk: "beaches", items: [

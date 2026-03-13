@@ -44,6 +44,7 @@ PRAVILA:
 - KORISTI ISKLJUČIVO linkove iz KATALOGA na kraju. NIKAD ne izmišljaj URL-ove.
 - Ako aktivnost nije u katalogu, NE stavljaj link
 - PRAVOPIS: Korisnici pišu na telefonu — UVIJEK toleriraj greške. "Rovjnm" = Rovinj. NIKAD ne pitaj "Jeste li mislili...?"
+- VALUTA: Hrvatska koristi EURO (€) od 1.1.2023. NIKAD ne koristi kune (kn, HRK). SVE cijene ISKLJUČIVO u eurima.
 - Svaki odgovor MORA završiti s konkretnom preporukom ili pitanjem koje vodi ka rezervaciji/aktivnosti`;
 
 // ── MODE PROMPTS ──
