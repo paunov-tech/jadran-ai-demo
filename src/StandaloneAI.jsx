@@ -5,8 +5,6 @@
 // Perfect for: campervan travelers, day-trippers, cruise visitors
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useRef } from "react";
-import { db } from "./firebase.js";
-import { doc, getDoc } from "firebase/firestore";
 import { EXPERIENCES, GEMS, BOOKING_CITIES, CAMPER_WARNINGS, ISTRA_CAMPER_INTEL, DEEP_LOCAL, DUBROVNIK_INTEL, MARINAS, ANCHORAGES, CRUISE_PORTS, filterByRegion } from "./data.js";
 
 const REGIONS = [
@@ -491,21 +489,24 @@ const [lang, setLang] = useState(() => {
       if (localStorage.getItem("jadran_ai_premium") !== "1") {
         const deviceId = localStorage.getItem("jadran_device_id");
         if (deviceId) {
-          getDoc(doc(db, "jadran_premium", deviceId)).then(snap => {
-            if (snap.exists()) {
-              const d = snap.data();
-              const expiresAt = d.expiresAt?.toDate ? d.expiresAt.toDate().getTime() : parseInt(d.expiresAt || "0");
-              if (expiresAt > Date.now()) {
-                setPremium(true); setTrialExpired(false); setMsgCount(0);
-                try {
-                  localStorage.setItem("jadran_ai_premium", "1");
-                  localStorage.removeItem("jadran_msg_count");
-                  const premData = { plan: d.plan, days: parseInt(d.days || "7"), region: d.region || "all", expiresAt, purchasedAt: d.paidAt?.toDate ? d.paidAt.toDate().toISOString() : new Date().toISOString() };
-                  localStorage.setItem("jadran_premium_plan", JSON.stringify(premData));
-                  setPremiumPlan(premData);
-                } catch {}
+          // Lazy load Firebase only when needed (saves 345KB on initial load)
+          Promise.all([import("./firebase.js"), import("firebase/firestore")]).then(([fbMod, fsMod]) => {
+            fsMod.getDoc(fsMod.doc(fbMod.db, "jadran_premium", deviceId)).then(snap => {
+              if (snap.exists()) {
+                const d = snap.data();
+                const expiresAt = d.expiresAt?.toDate ? d.expiresAt.toDate().getTime() : parseInt(d.expiresAt || "0");
+                if (expiresAt > Date.now()) {
+                  setPremium(true); setTrialExpired(false); setMsgCount(0);
+                  try {
+                    localStorage.setItem("jadran_ai_premium", "1");
+                    localStorage.removeItem("jadran_msg_count");
+                    const premData = { plan: d.plan, days: parseInt(d.days || "7"), region: d.region || "all", expiresAt, purchasedAt: d.paidAt?.toDate ? d.paidAt.toDate().toISOString() : new Date().toISOString() };
+                    localStorage.setItem("jadran_premium_plan", JSON.stringify(premData));
+                    setPremiumPlan(premData);
+                  } catch {}
+                }
               }
-            }
+            }).catch(() => {});
           }).catch(() => {});
         }
       }
@@ -962,7 +963,7 @@ const [lang, setLang] = useState(() => {
   if (step === "setup") return (
     <div style={{ minHeight: "100vh", background: C.heroBg, fontFamily: "'Outfit',system-ui,sans-serif", color: C.text }}>
 
-      <div style={{ maxWidth: 540, margin: "0 auto", padding: "40px 24px" }}>
+      <div style={{ maxWidth: 540, margin: "0 auto", padding: "24px 24px", paddingTop: "max(24px, calc(env(safe-area-inset-top, 0px) + 16px))" }}>
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 40 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -993,7 +994,7 @@ const [lang, setLang] = useState(() => {
             onTouchEnd={(e) => { if (!premium) { e.preventDefault(); startCheckout("season"); } }}
             role="button" tabIndex={0}
             style={{
-              borderRadius: 18, position: "relative", overflow: "hidden",
+              borderRadius: 18, position: "relative", overflow: "hidden", minHeight: 80,
               cursor: premium ? "default" : "pointer",
               WebkitTapHighlightColor: "rgba(245,158,11,0.2)",
               border: premium ? "1px solid rgba(34,197,94,0.25)" : "1px solid rgba(245,158,11,0.25)", marginBottom: 24,
@@ -1126,34 +1127,6 @@ const [lang, setLang] = useState(() => {
           {t.freeNote}
         </div>
 
-        {/* ═══ NICHE QUICK TIPS — fills empty space on non-camper guides ═══ */}
-        {niche && niche !== "camper" && (
-          <div style={{ marginTop: 20, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            {(niche === "local" ? [
-              { ic: "🏖️", t: lang === "en" ? "Hidden beaches" : lang === "de" || lang === "at" ? "Geheime Strände" : lang === "it" ? "Spiagge segrete" : "Skrivene plaže", s: lang === "en" ? "Locals-only spots" : lang === "de" || lang === "at" ? "Nur Einheimische" : lang === "it" ? "Solo per locali" : "Samo za lokalne" },
-              { ic: "🍷", t: lang === "en" ? "Family restaurants" : lang === "de" || lang === "at" ? "Familienrestaurants" : lang === "it" ? "Ristoranti familiari" : "Obiteljske konobe", s: lang === "en" ? "No tourist traps" : lang === "de" || lang === "at" ? "Keine Touristenfallen" : lang === "it" ? "Niente trappole" : "Bez turističkih zamki" },
-              { ic: "🅿️", t: lang === "en" ? "Free parking" : lang === "de" || lang === "at" ? "Gratis parken" : lang === "it" ? "Parcheggio gratis" : "Besplatan parking", s: lang === "en" ? "Save €20+/day" : lang === "de" || lang === "at" ? "20€+/Tag sparen" : lang === "it" ? "Risparmia 20€+" : "Uštedi 20€+/dan" },
-              { ic: "🌅", t: lang === "en" ? "Day trip routes" : lang === "de" || lang === "at" ? "Tagesausflüge" : lang === "it" ? "Gite giornaliere" : "Jednodnevni izleti", s: lang === "en" ? "Optimized timing" : lang === "de" || lang === "at" ? "Optimierte Zeiten" : lang === "it" ? "Tempi ottimizzati" : "Optimizirano vrijeme" },
-            ] : niche === "sailing" ? [
-              { ic: "⚓", t: lang === "en" ? "Safe anchorages" : lang === "de" || lang === "at" ? "Sichere Ankerplätze" : lang === "it" ? "Ancoraggi sicuri" : "Sigurna sidrišta", s: lang === "en" ? "Wind-protected" : lang === "de" || lang === "at" ? "Windgeschützt" : lang === "it" ? "Protetti dal vento" : "Zaštita od vjetra" },
-              { ic: "🌊", t: "DHMZ NAVTEX", s: lang === "en" ? "Live wind & sea data" : lang === "de" || lang === "at" ? "Live Wind & See" : lang === "it" ? "Vento e mare live" : "Vjetar i more uživo" },
-              { ic: "⛽", t: lang === "en" ? "Fuel & water" : lang === "de" || lang === "at" ? "Treibstoff & Wasser" : lang === "it" ? "Carburante e acqua" : "Gorivo i voda", s: lang === "en" ? "Marina services" : lang === "de" || lang === "at" ? "Marina-Dienste" : lang === "it" ? "Servizi marina" : "Usluge marina" },
-              { ic: "🍽️", t: lang === "en" ? "Waterfront dining" : lang === "de" || lang === "at" ? "Am Wasser speisen" : lang === "it" ? "Ristoranti sul mare" : "Konobe uz more", s: lang === "en" ? "Boat-accessible" : lang === "de" || lang === "at" ? "Per Boot erreichbar" : lang === "it" ? "Accesso barca" : "Pristup brodom" },
-            ] : [
-              { ic: "⏱️", t: lang === "en" ? "Minute-by-minute" : lang === "de" || lang === "at" ? "Minutenplan" : lang === "it" ? "Minuto per minuto" : "Plan po minutu", s: lang === "en" ? "6h optimized" : lang === "de" || lang === "at" ? "6h optimiert" : lang === "it" ? "6h ottimizzate" : "6h optimizirano" },
-              { ic: "🚶", t: lang === "en" ? "Walking routes" : lang === "de" || lang === "at" ? "Gehrouten" : lang === "it" ? "Percorsi a piedi" : "Pješačke rute", s: lang === "en" ? "Skip tourist crowds" : lang === "de" || lang === "at" ? "Massen umgehen" : lang === "it" ? "Evita la folla" : "Izbjegni gužvu" },
-              { ic: "💰", t: lang === "en" ? "Save vs. excursions" : lang === "de" || lang === "at" ? "Günstiger als Ausflüge" : lang === "it" ? "Meglio delle escursioni" : "Bolje od izleta", s: lang === "en" ? "Same sights, -70%" : lang === "de" || lang === "at" ? "Gleiche Orte, -70%" : lang === "it" ? "Stessi luoghi, -70%" : "Isti lokaliteti, -70%" },
-              { ic: "🍦", t: lang === "en" ? "Local food spots" : lang === "de" || lang === "at" ? "Lokale Küche" : lang === "it" ? "Cucina locale" : "Lokalna hrana", s: lang === "en" ? "Port area gems" : lang === "de" || lang === "at" ? "Hafen-Geheimtipps" : lang === "it" ? "Gemme del porto" : "Dragulji iz luke" },
-            ]).map((tip, i) => (
-              <div key={i} style={{ padding: "14px 12px", borderRadius: 14, background: C.card, border: `1px solid ${C.bord}`, textAlign: "center" }}>
-                <div style={{ fontSize: 22, marginBottom: 6 }}>{tip.ic}</div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: C.text }}>{tip.t}</div>
-                <div style={{ fontSize: 10, color: C.mut, marginTop: 2 }}>{tip.s}</div>
-              </div>
-            ))}
-          </div>
-        )}
-
         {/* ═══ SOCIAL PROOF + VALUE PROP ═══ */}
         {!premium && (
           <div style={{ marginTop: 20, padding: "16px", borderRadius: 16, background: isNight ? "rgba(245,158,11,0.03)" : "rgba(245,158,11,0.04)", border: `1px solid ${isNight ? "rgba(245,158,11,0.08)" : "rgba(245,158,11,0.1)"}` }}>
@@ -1192,6 +1165,64 @@ const [lang, setLang] = useState(() => {
             </div>
           </div>
         )}
+
+        {/* ═══ PICK OF THE DAY — daily rotating tip, starts chat on click ═══ */}
+        {niche && (() => {
+          const day = Math.floor(Date.now() / 86400000);
+          const picks = niche === "camper" ? [
+            { q: lang === "en" ? "Where can I park overnight near Split for free?" : lang === "de" || lang === "at" ? "Wo kann ich in der Nähe von Split kostenlos übernachten?" : lang === "it" ? "Dove posso parcheggiare gratis vicino a Spalato?" : "Gdje mogu besplatno prenoćiti blizu Splita?", ic: "🅿️" },
+            { q: lang === "en" ? "Which tunnels should I avoid with a tall camper?" : lang === "de" || lang === "at" ? "Welche Tunnel sollte ich mit einem hohen Camper meiden?" : lang === "it" ? "Quali tunnel evitare con un camper alto?" : "Koje tunele izbjegavati s visokim kamperom?", ic: "🚇" },
+            { q: lang === "en" ? "Best camper-friendly beach today?" : lang === "de" || lang === "at" ? "Bester Camper-Strand heute?" : lang === "it" ? "Miglior spiaggia camper-friendly oggi?" : "Najbolja plaža za kamper danas?", ic: "🏖️" },
+            { q: lang === "en" ? "Where to fill fresh water near the coast?" : lang === "de" || lang === "at" ? "Wo kann ich Frischwasser in Küstennähe auffüllen?" : lang === "it" ? "Dove riempire acqua dolce vicino alla costa?" : "Gdje napuniti svježu vodu blizu obale?", ic: "💧" },
+            { q: lang === "en" ? "Cheapest fuel station on the route south?" : lang === "de" || lang === "at" ? "Günstigste Tankstelle Richtung Süden?" : lang === "it" ? "Distributore più economico andando verso sud?" : "Najjeftinija pumpa prema jugu?", ic: "⛽" },
+          ] : niche === "sailing" ? [
+            { q: lang === "en" ? "Wind forecast for today — safe to sail?" : lang === "de" || lang === "at" ? "Windvorhersage heute — sicher zum Segeln?" : lang === "it" ? "Previsioni vento oggi — sicuro per navigare?" : "Prognoza vjetra danas — sigurno za plovidbu?", ic: "🌬️" },
+            { q: lang === "en" ? "Best sheltered anchorage near me tonight?" : lang === "de" || lang === "at" ? "Bester geschützter Ankerplatz heute Nacht?" : lang === "it" ? "Miglior ancoraggio riparato stasera?" : "Najbolje zaštićeno sidrište za večeras?", ic: "⚓" },
+            { q: lang === "en" ? "Which marina has the best price per meter?" : lang === "de" || lang === "at" ? "Welche Marina hat den besten Meterpreis?" : lang === "it" ? "Quale marina ha il miglior prezzo al metro?" : "Koja marina ima najbolju cijenu po metru?", ic: "🏗️" },
+            { q: lang === "en" ? "Secret cove for swimming — locals only?" : lang === "de" || lang === "at" ? "Geheime Bucht zum Schwimmen — nur Einheimische?" : lang === "it" ? "Cala segreta per nuotare — solo locali?" : "Tajna uvala za kupanje — samo lokalci?", ic: "🏊" },
+            { q: lang === "en" ? "Where to eat fresh fish right on the dock?" : lang === "de" || lang === "at" ? "Wo frischen Fisch direkt am Kai essen?" : lang === "it" ? "Dove mangiare pesce fresco in banchina?" : "Gdje jesti svježu ribu na rivi?", ic: "🐟" },
+          ] : niche === "cruiser" ? [
+            { q: lang === "en" ? "6-hour plan from the port — what to see first?" : lang === "de" || lang === "at" ? "6-Stunden-Plan ab Hafen — was zuerst sehen?" : lang === "it" ? "Piano 6 ore dal porto — cosa vedere prima?" : "Plan za 6 sati od luke — što vidjeti prvo?", ic: "⏱️" },
+            { q: lang === "en" ? "Where to eat near the port — not a tourist trap?" : lang === "de" || lang === "at" ? "Wo essen nahe dem Hafen — keine Touristenfalle?" : lang === "it" ? "Dove mangiare vicino al porto — non turistico?" : "Gdje jesti blizu luke — bez turističke zamke?", ic: "🍽️" },
+            { q: lang === "en" ? "Quick souvenir shopping — best local products?" : lang === "de" || lang === "at" ? "Schnell Souvenirs — beste lokale Produkte?" : lang === "it" ? "Shopping veloce souvenir — prodotti locali?" : "Brzi suveniri — najbolji lokalni proizvodi?", ic: "🎁" },
+            { q: lang === "en" ? "How to get from port to old town cheaply?" : lang === "de" || lang === "at" ? "Wie komme ich günstig vom Hafen zur Altstadt?" : lang === "it" ? "Come arrivare dal porto al centro in economia?" : "Kako jeftino od luke do starog grada?", ic: "🚶" },
+            { q: lang === "en" ? "Hidden viewpoint for the best photo?" : lang === "de" || lang === "at" ? "Versteckter Aussichtspunkt für das beste Foto?" : lang === "it" ? "Punto panoramico nascosto per la foto migliore?" : "Skriveni vidikovac za najbolju fotku?", ic: "📸" },
+          ] : [
+            { q: lang === "en" ? "Best hidden beach near me today?" : lang === "de" || lang === "at" ? "Bester Geheimstrand in meiner Nähe heute?" : lang === "it" ? "Miglior spiaggia segreta vicino a me oggi?" : "Najbolja skrivena plaža u blizini danas?", ic: "🏖️" },
+            { q: lang === "en" ? "Where to eat like a local tonight?" : lang === "de" || lang === "at" ? "Wo heute Abend wie ein Einheimischer essen?" : lang === "it" ? "Dove mangiare da locale stasera?" : "Gdje večeras jesti kao lokalac?", ic: "🍷" },
+            { q: lang === "en" ? "Free parking near the old town?" : lang === "de" || lang === "at" ? "Gratis parken in Altstadtnähe?" : lang === "it" ? "Parcheggio gratis vicino al centro storico?" : "Besplatan parking blizu starog grada?", ic: "🅿️" },
+            { q: lang === "en" ? "Day trip idea — what's worth seeing nearby?" : lang === "de" || lang === "at" ? "Tagesausflug-Idee — was lohnt sich in der Nähe?" : lang === "it" ? "Idea gita — cosa vedere nelle vicinanze?" : "Ideja za izlet — što vrijedi vidjeti u blizini?", ic: "🌅" },
+            { q: lang === "en" ? "Where to watch the sunset with a drink?" : lang === "de" || lang === "at" ? "Wo den Sonnenuntergang mit Drink genießen?" : lang === "it" ? "Dove guardare il tramonto con un drink?" : "Gdje gledati zalazak uz piće?", ic: "🌇" },
+          ];
+          const pick = picks[day % picks.length];
+          return (
+            <div onClick={() => {
+              if (!region) return;
+              setInput(pick.q);
+              const ice = generateIcebreaker();
+              setMsgs([{ role: "assistant", text: ice }]);
+              setStep("chat");
+              window.scrollTo(0, 0);
+              setTimeout(() => { setInput(pick.q); }, 100);
+            }} style={{
+              marginTop: 20, padding: "16px 18px", borderRadius: 16, cursor: region ? "pointer" : "default",
+              background: isNight ? "rgba(14,165,233,0.04)" : "rgba(14,165,233,0.06)",
+              border: `1px solid ${isNight ? "rgba(14,165,233,0.1)" : "rgba(14,165,233,0.12)"}`,
+              transition: "all 0.2s", opacity: region ? 1 : 0.5,
+            }}>
+              <div style={{ fontSize: 9, color: C.accent, letterSpacing: 3, fontWeight: 600, marginBottom: 8 }}>
+                {lang === "en" ? "ASK OF THE DAY" : lang === "de" || lang === "at" ? "FRAGE DES TAGES" : lang === "it" ? "DOMANDA DEL GIORNO" : "PITANJE DANA"}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ fontSize: 28, flexShrink: 0 }}>{pick.ic}</div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: C.text, lineHeight: 1.4 }}>{pick.q}</div>
+              </div>
+              {region && <div style={{ fontSize: 10, color: C.accent, marginTop: 8, textAlign: "right", fontWeight: 600 }}>
+                {lang === "en" ? "Tap to ask →" : lang === "de" || lang === "at" ? "Tippen zum Fragen →" : lang === "it" ? "Tocca per chiedere →" : "Klikni za pitanje →"}
+              </div>}
+            </div>
+          );
+        })()}
       </div>
       <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } ::selection { background: rgba(14,165,233,0.3); }`}</style>
     </div>
