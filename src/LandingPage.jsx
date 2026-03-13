@@ -86,6 +86,19 @@ export default function LandingPage() {
   const [isPremium, setIsPremium] = useState(() => {
     try { return localStorage.getItem("jadran_ai_premium") === "1"; } catch { return false; }
   });
+  const [premDays, setPremDays] = useState(null);
+  const [premLabel, setPremLabel] = useState("");
+  useEffect(() => {
+    try {
+      const pp = localStorage.getItem("jadran_premium_plan");
+      if (pp) {
+        const d = JSON.parse(pp);
+        const left = Math.ceil((d.expiresAt - Date.now()) / 86400000);
+        setPremDays(left > 0 ? left : 0);
+        setPremLabel(d.plan === "season" ? (lang === "en" ? "SEASON" : lang === "de" || lang === "at" ? "SAISON" : lang === "it" ? "STAGIONE" : "SEZONA") : (lang === "en" ? "WEEK" : lang === "de" || lang === "at" ? "WOCHE" : lang === "it" ? "SETTIMANA" : "TJEDAN"));
+      }
+    } catch {}
+  }, [lang]);
 
   useEffect(() => { setTimeout(() => setAnim(true), 200); }, []);
   useEffect(() => {
@@ -394,18 +407,21 @@ export default function LandingPage() {
 
       {/* ═══ STICKY BUY BAR — PREMIUM DESIGN ═══ */}
       <div onClick={() => isPremium ? (window.location.href = "/ai") : goToStripe("season", lang)} style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99, cursor: "pointer", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-        <div style={{ position: "relative", overflow: "hidden", padding: "12px 20px", background: isPremium ? "linear-gradient(135deg, #042f2e 0%, #0f3d38 50%, #042f2e 100%)" : "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)", borderTop: `1px solid ${isPremium ? "rgba(34,197,94,0.25)" : "rgba(245,158,11,0.2)"}`, display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 -8px 32px rgba(0,0,0,0.5)" }}>
+        <div style={{ position: "relative", overflow: "hidden", padding: "12px 20px", background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)", borderTop: "1px solid rgba(245,158,11,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 -8px 32px rgba(0,0,0,0.5)" }}>
           {/* Shimmer accent line */}
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: isPremium ? "linear-gradient(90deg, transparent, #22c55e, #4ade80, #22c55e, transparent)" : "linear-gradient(90deg, transparent, #f59e0b, #fbbf24, #f59e0b, transparent)" }} />
+          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, transparent, #f59e0b, #fbbf24, #f59e0b, transparent)" }} />
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: isPremium ? "linear-gradient(135deg, #22c55e, #16a34a)" : "linear-gradient(135deg, #f59e0b, #d97706)", display: "grid", placeItems: "center", fontSize: 16, boxShadow: isPremium ? "0 2px 8px rgba(34,197,94,0.3)" : "0 2px 8px rgba(245,158,11,0.3)" }}>{isPremium ? "✅" : "⭐"}</div>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #f59e0b, #d97706)", display: "grid", placeItems: "center", fontSize: 16, boxShadow: "0 2px 8px rgba(245,158,11,0.3)" }}>⭐</div>
             <div>
-              <div style={{ color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: F }}>{isPremium ? "PREMIUM" : (tx("stickyBuy") || "KUPI ODMAH")}</div>
-              <div style={{ color: "#94a3b8", fontSize: 10 }}>{isPremium ? (lang === "en" ? "Your guide is ready" : lang === "de" || lang === "at" ? "Ihr Guide ist bereit" : lang === "it" ? "La guida è pronta" : "Vaš vodič je spreman") : tx("sticky")}</div>
+              {isPremium
+                ? <div style={{ color: "#f59e0b", fontSize: 14, fontWeight: 700, fontFamily: F }}>⭐ {premLabel} {premDays !== null ? premDays + "d" : ""}</div>
+                : <div style={{ color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: F }}>{tx("stickyBuy") || "KUPI ODMAH"}</div>
+              }
+              <div style={{ color: "#94a3b8", fontSize: 10 }}>{isPremium ? "JADRAN.AI PREMIUM" : tx("sticky")}</div>
             </div>
           </div>
-          <div style={{ padding: "10px 20px", borderRadius: 12, background: isPremium ? "linear-gradient(135deg, #22c55e, #16a34a)" : "linear-gradient(135deg, #f59e0b, #d97706)", color: isPremium ? "#fff" : "#0f172a", fontWeight: 800, fontSize: 14, fontFamily: F, boxShadow: isPremium ? "0 4px 16px rgba(34,197,94,0.3)" : "0 4px 16px rgba(245,158,11,0.3)", letterSpacing: 0.5 }}>
-            {isPremium ? (lang === "en" ? "Open →" : lang === "de" || lang === "at" ? "Öffnen →" : lang === "it" ? "Apri →" : "Otvori →") : "9.99€ →"}
+          <div style={{ padding: "10px 20px", borderRadius: 12, background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#0f172a", fontWeight: 800, fontSize: 14, fontFamily: F, boxShadow: "0 4px 16px rgba(245,158,11,0.3)", letterSpacing: 0.5 }}>
+            {isPremium ? "→" : "9.99€ →"}
           </div>
         </div>
       </div>
