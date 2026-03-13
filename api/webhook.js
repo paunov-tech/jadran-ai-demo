@@ -3,6 +3,26 @@ import Stripe from "stripe";
 // Vercel config: disable body parsing for raw webhook body
 export const config = { api: { bodyParser: false } };
 
+// Firestore REST API write — zero dependencies, uses public API key
+async function writePremium(deviceId, data) {
+  const projectId = "molty-portal";
+  const apiKey = process.env.FIREBASE_API_KEY || "AIzaSyDertBFBwHCgf_iiucApWtlhB66va1OvYM";
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/jadran_premium/${deviceId}?key=${apiKey}`;
+  const fields = {};
+  for (const [k, v] of Object.entries(data)) {
+    if (v === null || v === undefined) continue;
+    if (typeof v === "number") fields[k] = { integerValue: String(v) };
+    else if (typeof v === "string") fields[k] = { stringValue: v };
+    else if (v instanceof Date) fields[k] = { timestampValue: v.toISOString() };
+    else fields[k] = { stringValue: String(v) };
+  }
+  try {
+    const resp = await fetch(url, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fields }) });
+    if (!resp.ok) console.error("Firestore write failed:", resp.status, await resp.text());
+    else console.log(`✅ Firebase: jadran_premium/${deviceId} written`);
+  } catch (err) { console.error("Firestore write error:", err.message); }
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
@@ -27,17 +47,22 @@ export default async function handler(req, res) {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
     const meta = session.metadata || {};
-    console.log(`✅ Payment: ${meta.plan} for device ${meta.deviceId}`); // email redacted from logs (GDPR)
-    
-    // TODO: Write to Firebase for cross-device persistence
-    // const { initializeApp } = await import("firebase-admin/app");
-    // const { getFirestore } = await import("firebase-admin/firestore");
-    // await db.collection("premium").doc(meta.deviceId).set({
-    //   plan: meta.plan, days: meta.days, region: meta.region,
-    //   email: session.customer_details?.email,
-    //   paidAt: new Date(), expiresAt: new Date(Date.now() + meta.days * 86400000),
-    //   sessionId: session.id, amount: session.amount_total,
-    // });
+    const days = parseInt(meta.days || "7");
+    console.log(`✅ Payment: ${meta.plan} for device ${meta.deviceId}`);
+
+    // Persist to Firestore for cross-device/cross-session recovery
+    if (meta.deviceId && meta.deviceId !== "unknown") {
+      await writePremium(meta.deviceId, {
+        plan: meta.plan || "week",
+        days,
+        region: meta.region || "all",
+        lang: meta.lang || "hr",
+        paidAt: new Date(),
+        expiresAt: new Date(Date.now() + days * 86400000),
+        sessionId: session.id,
+        amount: session.amount_total,
+      });
+    }
   }
 
   return res.status(200).json({ received: true });

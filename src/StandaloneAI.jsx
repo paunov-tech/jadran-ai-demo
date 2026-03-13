@@ -5,6 +5,8 @@
 // Perfect for: campervan travelers, day-trippers, cruise visitors
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useRef } from "react";
+import { db } from "./firebase.js";
+import { doc, getDoc } from "firebase/firestore";
 import { EXPERIENCES, GEMS, BOOKING_CITIES, CAMPER_WARNINGS, ISTRA_CAMPER_INTEL, DEEP_LOCAL, DUBROVNIK_INTEL, MARINAS, ANCHORAGES, CRUISE_PORTS, filterByRegion } from "./data.js";
 
 const REGIONS = [
@@ -392,6 +394,7 @@ const [lang, setLang] = useState(() => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [showCards, setShowCards] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
+  const [verifyingPayment, setVerifyingPayment] = useState(false);
 
   // Chat
   const [msgs, setMsgs] = useState([]);
@@ -484,24 +487,66 @@ const [lang, setLang] = useState(() => {
       const mc = parseInt(localStorage.getItem("jadran_msg_count") || "0");
       setMsgCount(mc);
       if (mc >= 10) setTrialExpired(true);
+      // Firebase fallback — recover premium if localStorage was cleared
+      if (localStorage.getItem("jadran_ai_premium") !== "1") {
+        const deviceId = localStorage.getItem("jadran_device_id");
+        if (deviceId) {
+          getDoc(doc(db, "jadran_premium", deviceId)).then(snap => {
+            if (snap.exists()) {
+              const d = snap.data();
+              const expiresAt = d.expiresAt?.toDate ? d.expiresAt.toDate().getTime() : parseInt(d.expiresAt || "0");
+              if (expiresAt > Date.now()) {
+                setPremium(true); setTrialExpired(false); setMsgCount(0);
+                try {
+                  localStorage.setItem("jadran_ai_premium", "1");
+                  localStorage.removeItem("jadran_msg_count");
+                  const premData = { plan: d.plan, days: parseInt(d.days || "7"), region: d.region || "all", expiresAt, purchasedAt: d.paidAt?.toDate ? d.paidAt.toDate().toISOString() : new Date().toISOString() };
+                  localStorage.setItem("jadran_premium_plan", JSON.stringify(premData));
+                  setPremiumPlan(premData);
+                } catch {}
+              }
+            }
+          }).catch(() => {});
+        }
+      }
     } catch {}
-    // Also check ?payment=success from Stripe redirect
+    // Also check ?payment=success from Stripe redirect — VERIFY server-side
     if (params.get("payment") === "success") {
-      setPremium(true);
-      setTrialExpired(false);
-      setMsgCount(0);
-      try { localStorage.removeItem("jadran_msg_count"); } catch {}
+      const sessionId = params.get("session_id");
       const plan = params.get("plan") || "week";
       const days = params.get("days") || "7";
       const region = params.get("region") || "all";
-      try {
-        localStorage.setItem("jadran_ai_premium", "1");
-        const premData = { plan, days: parseInt(days), region, expiresAt: Date.now() + parseInt(days) * 86400000, purchasedAt: new Date().toISOString() };
-        localStorage.setItem("jadran_premium_plan", JSON.stringify(premData));
-        setPremiumPlan(premData);
-      } catch {}
-      setShowSuccess(true);
       window.history.replaceState({}, "", "/ai" + (n ? "?niche=" + n : ""));
+      if (sessionId) {
+        setVerifyingPayment(true);
+        fetch("/api/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sessionId }) })
+          .then(r => r.json())
+          .then(data => {
+            if (data.paid) {
+              setPremium(true);
+              setTrialExpired(false);
+              setMsgCount(0);
+              try { localStorage.removeItem("jadran_msg_count"); } catch {}
+              try {
+                localStorage.setItem("jadran_ai_premium", "1");
+                const premData = { plan, days: parseInt(days), region, expiresAt: Date.now() + parseInt(days) * 86400000, purchasedAt: new Date().toISOString(), sessionId };
+                localStorage.setItem("jadran_premium_plan", JSON.stringify(premData));
+                setPremiumPlan(premData);
+              } catch {}
+              setShowSuccess(true);
+            } else {
+              console.error("Payment verification failed:", data);
+              setShowPaywall(true);
+            }
+            setVerifyingPayment(false);
+          })
+          .catch(err => { console.error("Verify error:", err); setVerifyingPayment(false); setShowPaywall(true); });
+      }
+    }
+    // Handle payment cancellation — reopen paywall
+    if (params.get("payment") === "cancelled") {
+      window.history.replaceState({}, "", "/ai" + (n ? "?niche=" + n : ""));
+      setShowPaywall(true);
     }
     // Auto-open paywall from landing "KUPI ODMAH"
     if (params.get("buy") === "true") {
@@ -772,6 +817,20 @@ const [lang, setLang] = useState(() => {
           <div style={{ fontSize: 9, color: C.mut }}>🔒 {t.paySecure}</div>
         </div>
         <button onClick={() => setShowPaywall(false)} style={{ width: "100%", background: "none", border: "none", color: C.mut, fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: 8 }}>{t.payLater}</button>
+      </div>
+    </div>
+  );
+
+  // ═══ PAYMENT VERIFICATION OVERLAY ═══
+  const VerifyingOverlay = () => verifyingPayment && (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)", zIndex: 350, display: "grid", placeItems: "center", padding: 24 }}>
+      <div style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "40px 32px", maxWidth: 360, width: "100%", textAlign: "center", border: `1px solid ${C.bord}` }}>
+        <div style={{ width: 48, height: 48, borderRadius: "50%", border: `3px solid ${C.accent}`, borderTopColor: "transparent", margin: "0 auto 20px", animation: "spin 0.8s linear infinite" }}></div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 8 }}>
+          {lang === "en" ? "Verifying payment..." : lang === "de" || lang === "at" ? "Zahlung wird überprüft..." : lang === "it" ? "Verifica pagamento..." : "Provjeravamo uplatu..."}
+        </div>
+        <div style={{ fontSize: 12, color: C.mut }}>Stripe</div>
       </div>
     </div>
   );
@@ -1849,6 +1908,7 @@ const [lang, setLang] = useState(() => {
       </div>
 
       <Paywall />
+      <VerifyingOverlay />
       <SuccessModal />
 
       <style>{`
