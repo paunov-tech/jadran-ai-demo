@@ -1,3 +1,17 @@
+// ── RATE LIMITER (in-memory, per warm instance) ──
+const _rl = new Map();
+const RL_MAX = 100, RL_WIN = 86400000; // 100 req/day per IP
+function rateOk(ip) {
+  const now = Date.now();
+  // Lazy cleanup: purge stale entries (max 50 per call)
+  let cleaned = 0;
+  for (const [k, v] of _rl) { if (now > v.r) { _rl.delete(k); if (++cleaned > 50) break; } }
+  const e = _rl.get(ip);
+  if (!e || now > e.r) { _rl.set(ip, { c: 1, r: now + RL_WIN }); return true; }
+  if (e.c >= RL_MAX) return false;
+  e.c++; return true;
+}
+
 // Vision API — Gemini 2.0 Flash multimodal
 // Analyzes photos: menus, signs, ferry schedules, landscapes
 export default async function handler(req, res) {
@@ -6,6 +20,13 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
+
+  // Rate limit check
+  const clientIp = (req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown').split(',')[0].trim();
+  if (!rateOk(clientIp)) {
+    return res.status(429).json({ content: [{ type: "text", text: "Dnevni limit dosegnut. Pokušajte sutra ili nadogradite na Premium." }] });
+  }
+
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const apiKey = process.env.GEMINI_API_KEY;

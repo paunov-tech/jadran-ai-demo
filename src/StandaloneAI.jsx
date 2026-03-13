@@ -281,6 +281,9 @@ export default function StandaloneAI() {
   const FREE_MSGS = 10;
   const [trialExpired, setTrialExpired] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+
+  // Plausible analytics helper
+  const track = (event, props) => { try { window.plausible?.(event, { props }); } catch {} };
   const [showSuccess, setShowSuccess] = useState(false);
   const [showCards, setShowCards] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
@@ -492,6 +495,7 @@ export default function StandaloneAI() {
   };
 
   const startCheckout = async (plan = "week") => {
+    track("checkout_click", { plan, lang, region, niche });
     setPayLoading(true);
     try {
       // Generate/retrieve device ID for subscription binding
@@ -521,12 +525,14 @@ export default function StandaloneAI() {
   // ─── AI CHAT ───
   const sendMsg = async () => {
     if (!input.trim() || loading) return;
-    if (!premium && trialExpired) { setShowPaywall(true); return; }
+    if (!premium && trialExpired) { setShowPaywall(true); track("paywall_shown", { lang, region, niche }); return; }
     // Increment message counter for free users
     if (!premium) {
       const newCount = msgCount + 1;
       setMsgCount(newCount);
       try { localStorage.setItem("jadran_msg_count", String(newCount)); } catch {}
+      if (newCount === 1) track("chat_start", { lang, region, niche });
+      track("msg_sent", { msg_number: newCount, lang, niche });
       if (newCount >= FREE_MSGS) { setTrialExpired(true); }
     }
 

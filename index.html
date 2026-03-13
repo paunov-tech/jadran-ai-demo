@@ -97,6 +97,23 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(14,165,233,0.2); border-radius: 3px; }
   </style>
+
+  <!-- Plausible Analytics (GDPR-compliant, no cookies) -->
+  <script defer data-domain="jadran.ai" src="https://plausible.io/js/script.js"></script>
+  <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+
+  <!-- Sentry Error Monitoring -->
+  <script src="https://browser.sentry-cdn.com/8.46.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
+  <script>
+    if (window.Sentry && window.SENTRY_DSN) {
+      Sentry.init({
+        dsn: window.SENTRY_DSN,
+        tracesSampleRate: 0.1,
+        environment: "production",
+        ignoreErrors: ["ResizeObserver loop", "Loading chunk", "Network request failed"],
+      });
+    }
+  </script>
 </head>
 <body>
   <div id="root">
