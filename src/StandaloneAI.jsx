@@ -249,7 +249,110 @@ export default function StandaloneAI() {
   const [isRecording, setIsRecording] = useState(false);
   const [wakeLock, setWakeLock] = useState(null);
   const [camperHeight, setCamperHeight] = useState(""); // "camper" | "local" | null — set from landing CTA
-  const [lang, setLang] = useState(() => {
+  // ═══ SELF-LEARNING USER PROFILE ═══
+const SIGNAL_RULES = [
+  // Group detection
+  { patterns: [/kinder|djec|deca|bambini|kids|family|obitelj|porodic|enfants/i], field: "group", value: "obitelj s djecom" },
+  { patterns: [/partner|žen|muž|wife|husband|couple|zu zweit|coppia|par\b/i], field: "group", value: "par" },
+  { patterns: [/sam\b|solo|allein|alone|jedan/i], field: "group", value: "solo" },
+  { patterns: [/gruppe|group|grupa|ekipa|prijatelji|friends|amici/i], field: "group", value: "grupa prijatelja" },
+  // Budget detection
+  { patterns: [/jeftin|günstig|cheap|budget|economico|besplatn|gratis|free|kostenlos/i], field: "budget", value: "budget" },
+  { patterns: [/luksuz|luxury|premium|exklusiv|5\s?star|fine.?dining|upscale/i], field: "budget", value: "premium" },
+  // Diet detection
+  { patterns: [/vegetari|vegan/i], field: "diet", value: "vegetarijanac" },
+  { patterns: [/rib[aeu]|fish|fisch|pesce|seafood|morsk/i], field: "interest_add", value: "morska hrana" },
+  // Interest detection (additive)
+  { patterns: [/plaž|beach|strand|spiaggia|kupan|swim|baden/i], field: "interest_add", value: "plaže" },
+  { patterns: [/konob|restoran|restaurant|essen|mangiare|food|hrana|ručak|večer|lunch|dinner/i], field: "interest_add", value: "gastronomija" },
+  { patterns: [/vino|wine|wein|degustac|tasting/i], field: "interest_add", value: "vino" },
+  { patterns: [/povijest|history|geschicht|storia|museum|muzej/i], field: "interest_add", value: "povijest" },
+  { patterns: [/ronjenje|diving|tauchen|schnorchel|snorkel/i], field: "interest_add", value: "ronjenje" },
+  { patterns: [/kayak|kanu|SUP|paddle|surf/i], field: "interest_add", value: "vodeni sportovi" },
+  { patterns: [/pješač|hiking|wander|trek|planin|mountain|brdo/i], field: "interest_add", value: "pješačenje" },
+  { patterns: [/noćni|nightlife|nachtleben|party|klub|club|bar\b/i], field: "interest_add", value: "noćni život" },
+  { patterns: [/tartufi|truffle|trüffel|maslin|olive|öl/i], field: "interest_add", value: "lokalni proizvodi" },
+  // Avoidance detection
+  { patterns: [/ne.*gužv|keine.*massen|no.*crowd|izbjeg.*turist|avoid.*tourist|ohne.*touristen/i], field: "avoid_add", value: "gužve" },
+  { patterns: [/ne.*skup|nicht.*teuer|not.*expensive|ne.*skupo/i], field: "avoid_add", value: "skupi objekti" },
+];
+
+function extractSignals(text) {
+  const signals = {};
+  for (const rule of SIGNAL_RULES) {
+    for (const pat of rule.patterns) {
+      if (pat.test(text)) {
+        if (rule.field === "interest_add") {
+          if (!signals._interests) signals._interests = [];
+          if (!signals._interests.includes(rule.value)) signals._interests.push(rule.value);
+        } else if (rule.field === "avoid_add") {
+          if (!signals._avoided) signals._avoided = [];
+          if (!signals._avoided.includes(rule.value)) signals._avoided.push(rule.value);
+        } else {
+          signals[rule.field] = rule.value;
+        }
+        break; // First match per rule wins
+      }
+    }
+  }
+  return signals;
+}
+
+// Place name extraction (from user messages mentioning Croatian places)
+const PLACES = ["Rovinj","Split","Dubrovnik","Zadar","Pula","Makarska","Hvar","Korčula","Brač","Vis","Mljet","Rab","Krk","Cres","Lošinj","Opatija","Rijeka","Šibenik","Trogir","Ston","Pelješac","Motovun","Poreč","Umag","Novigrad","Biograd","Primošten","Bol","Cavtat","Lokrum","Bačvice","Kašjuni","Zlatni Rat"];
+
+function extractPlaces(text) {
+  return PLACES.filter(p => text.toLowerCase().includes(p.toLowerCase()));
+}
+
+function loadProfile() {
+  try {
+    return JSON.parse(localStorage.getItem("jadran_user_profile") || "{}");
+  } catch { return {}; }
+}
+
+function saveProfile(profile) {
+  try { localStorage.setItem("jadran_user_profile", JSON.stringify(profile)); } catch {}
+}
+
+function updateProfile(userMsg, aiMsg) {
+  const profile = loadProfile();
+  // Update visit/message counts
+  profile.totalMsgs = (profile.totalMsgs || 0) + 1;
+  profile.lastActive = Date.now();
+  // Extract signals from user message
+  const signals = extractSignals(userMsg);
+  if (signals.group) profile.group = signals.group;
+  if (signals.budget) profile.budget = signals.budget;
+  if (signals.diet) profile.diet = signals.diet;
+  // Add interests (deduplicate)
+  if (signals._interests) {
+    profile.interests = [...new Set([...(profile.interests || []), ...signals._interests])].slice(-15);
+  }
+  // Add avoidances
+  if (signals._avoided) {
+    profile.avoided = [...new Set([...(profile.avoided || []), ...signals._avoided])].slice(-10);
+  }
+  // Extract places mentioned
+  const places = extractPlaces(userMsg + " " + (aiMsg || ""));
+  if (places.length) {
+    profile.visited = [...new Set([...(profile.visited || []), ...places])].slice(-20);
+  }
+  // Track what got positive reaction (simple heuristic: if user asks follow-up about same topic)
+  if (userMsg.length < 40 && (userMsg.includes("?") || /više|more|mehr|altro|ešte|więcej/i.test(userMsg))) {
+    // Short follow-up = user liked previous recommendation
+    if (aiMsg) {
+      const aiPlaces = extractPlaces(aiMsg);
+      if (aiPlaces.length) {
+        profile.liked = [...new Set([...(profile.liked || []), ...aiPlaces])].slice(-10);
+      }
+    }
+  }
+  saveProfile(profile);
+  return profile;
+}
+
+const [lang, setLang] = useState(() => {
     // Priority: URL param > localStorage > landing cookie > browser > default
     try {
       const params = new URLSearchParams(window.location.search);
@@ -593,12 +696,15 @@ export default function StandaloneAI() {
             if (st) parts.push(`POSTAJA ${st.place}: vjetar ${st.wind} čv, more ${st.sea}, vidljivost ${st.visibility} km, tlak ${st.pressure} hPa, ${st.conditions}`);
             return parts.join("\n");
           })() : undefined,
+          userProfile: (() => { const p = loadProfile(); p.niche = travelMode || niche; p.region = region; return p; })(),
           messages: [...msgs.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })), { role: "user", content: msg }],
         }),
       });
       const data = await res.json();
       const aiText = data.content?.map(c => c.text || "").join("") || data.error?.message || "⚠️ Pokušajte ponovno.";
       setMsgs(p => [...p, { role: "assistant", text: aiText }]);
+      // Self-learning: extract signals and update profile
+      updateProfile(msg, aiText);
       if (walkieMode) speak(aiText);
     } catch {
       setMsgs(p => [...p, { role: "assistant", text: t.errConnection }]);
@@ -715,6 +821,11 @@ export default function StandaloneAI() {
       const lastVisit = localStorage.getItem("jadran_last_chat");
       const vc = parseInt(localStorage.getItem("jadran_visit_count") || "0");
       localStorage.setItem("jadran_visit_count", String(vc + 1));
+      // Update profile visit count
+      const prof = loadProfile();
+      prof.visits = vc + 1;
+      if (!prof.firstVisit) prof.firstVisit = Date.now();
+      saveProfile(prof);
       localStorage.setItem("jadran_last_chat", Date.now().toString());
       if (lastVisit && (Date.now() - parseInt(lastVisit)) / 3600000 >= 4) isReturning = true;
     } catch {}

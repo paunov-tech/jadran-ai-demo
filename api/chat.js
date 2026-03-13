@@ -212,7 +212,7 @@ const LANG_MAP = {
 };
 
 // ── MAIN ASSEMBLER ──
-function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData }) {
+function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile }) {
   const parts = [];
 
   // 1. BASE
@@ -265,7 +265,33 @@ KORISTI OVE DIMENZIJE za provjeru:
     parts.push(cruiseCtx);
   }
 
-  // 8. AFFILIATE LINKS (always last — most important for revenue)
+  // 8. USER PROFILE (self-learning personalization)
+  if (userProfile && typeof userProfile === 'object') {
+    const up = userProfile;
+    const profileParts = [];
+    if (up.visits > 1) profileParts.push(`Ovo je ${up.visits}. posjeta ovog korisnika.`);
+    if (up.interests?.length) profileParts.push(`Interesi: ${up.interests.join(', ')}.`);
+    if (up.group) profileParts.push(`Putuje: ${up.group}.`);
+    if (up.budget) profileParts.push(`Budget: ${up.budget}.`);
+    if (up.diet) profileParts.push(`Prehrana: ${up.diet}.`);
+    if (up.visited?.length) profileParts.push(`Već posjetio: ${up.visited.slice(-10).join(', ')}.`);
+    if (up.liked?.length) profileParts.push(`Svidjelo mu se: ${up.liked.slice(-5).join(', ')}.`);
+    if (up.avoided?.length) profileParts.push(`Izbjegava: ${up.avoided.slice(-5).join(', ')}.`);
+    if (up.totalMsgs > 5) profileParts.push(`Ukupno ${up.totalMsgs} poruka — iskusni korisnik.`);
+    if (profileParts.length > 0) {
+      parts.push(`PROFIL KORISNIKA (pamti ovo za personalizaciju):
+${profileParts.join('\n')}
+PRAVILA PERSONALIZACIJE:
+- NE ponavljaj preporuke iz "Već posjetio" osim ako pita specifično
+- Prilagodi stil budgetu (${up.budget || 'nepoznat'})
+- Ako je obitelj (${up.group || 'nepoznato'}), prioritiziraj dječje aktivnosti
+- Ako se vraća (${up.visits || 1}. posjet), ponudi NOVE lokacije
+- Ako nešto izbjegava, NE preporučuj to
+- Ton prilagodi: novi korisnik = više objašnjenja, iskusni = samo činjenice`);
+    }
+  }
+
+  // 9. AFFILIATE LINKS (always last — most important for revenue)
   if (linkCatalog) {
     parts.push(`KATALOG LINKOVA — koristi ISKLJUČIVO ove. NIKAD ne izmišljaj URL-ove!\n${linkCatalog}\nFormat: [Tekst](URL). Ako aktivnost nije u katalogu, NE stavljaj link.`);
   }
@@ -297,12 +323,12 @@ export default async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
 
   try {
-    const { system, messages, mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData } = req.body;
+    const { system, messages, mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile } = req.body;
 
     let systemPrompt = '';
     try {
       systemPrompt = mode && region 
-        ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData })
+        ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile })
         : (system || '');
     } catch (promptErr) {
       // If prompt building fails, use minimal fallback
