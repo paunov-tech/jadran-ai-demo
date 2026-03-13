@@ -12,10 +12,9 @@ export default async function handler(req, res) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
   try {
-    const { roomCode, guestName, lang, returnPath, plan, region } = req.body;
-    const origin = req.headers.origin || "https://jadran-ai-demo.vercel.app";
+    const { roomCode, guestName, lang, returnPath, plan, region, deviceId } = req.body;
+    const origin = req.headers.origin || "https://jadran.ai";
 
-    // Plan pricing: week (7 days, 1 region) or season (30 days, all regions)
     const plans = {
       week:   { name: "JADRAN Vodič — Tjedan (7 dana)", amount: 499, days: 7 },
       season: { name: "JADRAN Vodič — Sezona (30 dana)", amount: 999, days: 30 },
@@ -24,24 +23,37 @@ export default async function handler(req, res) {
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
+      // Collect email — enables Stripe auto-receipt
+      customer_creation: "always",
+      payment_intent_data: {
+        receipt_email: undefined, // Will be set from customer email
+      },
       line_items: [{
         price_data: {
           currency: "eur",
-          product_data: { name: p.name },
+          product_data: {
+            name: p.name,
+            description: lang === "de" || lang === "at" ? "AI Reiseführer für die kroatische Küste" : lang === "en" ? "AI travel guide for Croatian coast" : lang === "it" ? "Guida AI per la costa croata" : "AI turistički vodič za hrvatsku obalu",
+          },
           unit_amount: p.amount,
         },
         quantity: 1,
       }],
       mode: "payment",
-      success_url: origin + (returnPath || "") + `?payment=success&plan=${plan || "week"}&days=${p.days}&region=${region || "all"}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: origin + (returnPath || "") + "?payment=cancelled",
+      // Auto-send Stripe receipt to customer email
+      invoice_creation: { enabled: true },
+      success_url: origin + (returnPath || "/ai") + `?payment=success&plan=${plan || "week"}&days=${p.days}&region=${region || "all"}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: origin + (returnPath || "/ai") + "?payment=cancelled",
       metadata: {
         roomCode: roomCode || "AI-STANDALONE",
         guestName: guestName || "Guest",
         plan: plan || "week",
         region: region || "all",
         days: String(p.days),
+        deviceId: deviceId || "unknown",
+        lang: lang || "hr",
       },
+      locale: lang === "de" || lang === "at" ? "de" : lang === "en" ? "en" : lang === "it" ? "it" : lang === "hr" ? "hr" : "auto",
     });
 
     return res.status(200).json({ sessionId: session.id, url: session.url });

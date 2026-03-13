@@ -54,7 +54,18 @@ const DESTINATIONS = [
 const DESTS = ["Rovinj","Split","Dubrovnik","Zadar","Pula","Makarska","Hvar","Opatija"];
 
 export default function LandingPage() {
-  const [lang, setLang] = useState("hr");
+  const [lang, setLang] = useState(() => {
+    try {
+      const saved = localStorage.getItem("jadran_lang");
+      if (saved) return saved;
+      const nav = (navigator.language || "hr").toLowerCase();
+      if (nav.startsWith("de") && nav.includes("at")) return "at";
+      if (nav.startsWith("de")) return "de";
+      if (nav.startsWith("en")) return "en";
+      if (nav.startsWith("it")) return "it";
+    } catch {}
+    return "hr";
+  });
   const tx = (k) => (L[lang] || L.hr)[k] || L.hr[k];
   const [dest, setDest] = useState("");
   const [vLen, setVLen] = useState("");
@@ -146,7 +157,7 @@ export default function LandingPage() {
           {/* 4 CTA Cards — 2x2 grid */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, maxWidth: 520, margin: "0 auto" }}>
             {/* Camper */}
-            <a href="/ai?niche=camper" aria-label="Kamper vodič" style={{
+            <a href={`/ai?niche=camper&lang=${lang}`} aria-label="Kamper vodič" style={{
               borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
               border: "1px solid rgba(245,158,11,0.2)", transition: "all 0.3s", display: "block", minHeight: 90,
             }}
@@ -160,7 +171,7 @@ export default function LandingPage() {
               </div>
             </a>
             {/* Local / Auto */}
-            <a href="/ai?niche=local" aria-label="Lokalni vodič" style={{
+            <a href={`/ai?niche=local&lang=${lang}`} aria-label="Lokalni vodič" style={{
               borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
               border: "1px solid rgba(14,165,233,0.15)", transition: "all 0.3s", display: "block", minHeight: 90,
             }}
@@ -174,7 +185,7 @@ export default function LandingPage() {
               </div>
             </a>
             {/* Sailing / Yacht */}
-            <a href="/ai?niche=sailing" aria-label="Nautički vodič" style={{
+            <a href={`/ai?niche=sailing&lang=${lang}`} aria-label="Nautički vodič" style={{
               borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
               border: "1px solid rgba(6,182,212,0.15)", transition: "all 0.3s", display: "block", minHeight: 90,
             }}
@@ -188,7 +199,7 @@ export default function LandingPage() {
               </div>
             </a>
             {/* Cruise */}
-            <a href="/ai?niche=cruiser" aria-label="Kruzer vodič" style={{
+            <a href={`/ai?niche=cruiser&lang=${lang}`} aria-label="Kruzer vodič" style={{
               borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
               border: "1px solid rgba(168,85,247,0.15)", transition: "all 0.3s", display: "block", minHeight: 90,
             }}
@@ -260,7 +271,7 @@ export default function LandingPage() {
                 Hans pita: <em>"Mogu li kamperom do centra Pule?"</em><br/><br/>
                 Vodič odmah upozorava na pauka, daje besplatan parking, i rezervira sto u konobi {"\u2014"} sa popustom. Sve u 3 sekunde.
               </p>
-              <a href="/ai?niche=camper" aria-label="Kamper vodič" style={{ display: "inline-block", padding: "13px 28px", borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", color: "#fff", fontSize: 15, fontWeight: 700, textDecoration: "none", fontFamily: F }}>
+              <a href={`/ai?niche=camper&lang=${lang}`} aria-label="Kamper vodič" style={{ display: "inline-block", padding: "13px 28px", borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", color: "#fff", fontSize: 15, fontWeight: 700, textDecoration: "none", fontFamily: F }}>
                 {tx("demoTry")} {"\u2192"}
               </a>
             </div>
