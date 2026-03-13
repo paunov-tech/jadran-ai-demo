@@ -394,6 +394,9 @@ const [lang, setLang] = useState(() => {
   const [payLoading, setPayLoading] = useState(false);
   const [verifyingPayment, setVerifyingPayment] = useState(false);
   const [dailyNews, setDailyNews] = useState(null);
+  const [invitedBy, setInvitedBy] = useState(() => { try { return localStorage.getItem("jadran_invited_by"); } catch { return null; } });
+  const [referralToast, setReferralToast] = useState(null);
+  const [showInviteWelcome, setShowInviteWelcome] = useState(false);
 
   // Chat
   const [msgs, setMsgs] = useState([]);
@@ -475,6 +478,14 @@ const [lang, setLang] = useState(() => {
     if (params.get("premium") === "true") {
       setPremium(true);
       try { localStorage.setItem("jadran_ai_premium", "1"); } catch {}
+      window.history.replaceState({}, "", "/ai" + (n ? "?niche=" + n : ""));
+    }
+    // Detect invite link: jadran.ai/ai?invite=DEVICE_ID
+    const inviteParam = params.get("invite");
+    if (inviteParam && inviteParam.startsWith("jd_")) {
+      try { localStorage.setItem("jadran_invited_by", inviteParam); } catch {}
+      setInvitedBy(inviteParam);
+      setShowInviteWelcome(true);
       window.history.replaceState({}, "", "/ai" + (n ? "?niche=" + n : ""));
     }
     // Check localStorage
@@ -693,7 +704,26 @@ const [lang, setLang] = useState(() => {
       const newCount = msgCount + 1;
       setMsgCount(newCount);
       try { localStorage.setItem("jadran_msg_count", String(newCount)); } catch {}
-      if (newCount === 1) track("chat_start", { lang, region, niche });
+      if (newCount === 1) {
+        track("chat_start", { lang, region, niche });
+        // Referral conversion: invited user asked first question → reward both
+        const ib = invitedBy || localStorage.getItem("jadran_invited_by");
+        if (ib) {
+          let did = localStorage.getItem("jadran_device_id");
+          if (!did) { did = "jd_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8); localStorage.setItem("jadran_device_id", did); }
+          fetch("/api/referral", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "convert", deviceId: did, invitedBy: ib }) })
+            .then(r => r.json()).then(d => {
+              if (d.ok && !d.already) {
+                // Reward this user too
+                setPremium(true); setTrialExpired(false); setMsgCount(0);
+                try { localStorage.removeItem("jadran_msg_count"); localStorage.setItem("jadran_ai_premium", "1");
+                  localStorage.setItem("jadran_premium_plan", JSON.stringify({ plan: "referral", days: 2, region: "all", expiresAt: Date.now() + 48*3600000, purchasedAt: new Date().toISOString() }));
+                  localStorage.removeItem("jadran_invited_by");
+                } catch {}
+              }
+            }).catch(() => {});
+        }
+      }
       track("msg_sent", { msg_number: newCount, lang, niche });
       if (newCount >= FREE_MSGS) { setTrialExpired(true); }
     }
@@ -830,10 +860,63 @@ const [lang, setLang] = useState(() => {
           <div style={{ fontSize: 9, color: C.mut }}>🔒 {t.paySecure}</div>
           <div style={{ fontSize: 8, color: C.mut, marginTop: 4 }}>{lang === "en" ? "Prices incl. VAT" : lang === "de" || lang === "at" ? "Preise inkl. MwSt." : lang === "it" ? "Prezzi IVA inclusa" : "Cijene uklj. PDV"} · SIAL Consulting d.o.o.</div>
         </div>
+
+        {/* ═══ REFERRAL SHARE — Smart Exit ═══ */}
+        {(() => {
+          let did; try { did = localStorage.getItem("jadran_device_id"); } catch {} if (!did) return null;
+          const inviteUrl = `https://jadran.ai/ai?invite=${did}`;
+          const shareText = lang === "de" || lang === "at"
+            ? `Leute, hab eine geniale KI für Kroatien gefunden. Löst Camper-Parkplätze, Fähren und findet versteckte Konobas ohne Touristenpreise. Über meinen Link habt ihr 48h Premium kostenlos: ${inviteUrl}`
+            : lang === "en"
+            ? `Found an amazing AI for Croatia trips. Solves camper parking, ferries and finds hidden restaurants without tourist prices. Via my link you get 48h Premium free: ${inviteUrl}`
+            : lang === "it"
+            ? `Ho trovato un'IA geniale per la Croazia. Risolve parcheggi camper, traghetti e trova ristoranti nascosti. Con il mio link avete 48h Premium gratis: ${inviteUrl}`
+            : `Ljudi, našao sam genijalan AI za Hrvatsku. Rješava parkinge za kampere, trajekte i nalazi skrivene konobe bez turističkih cijena. Preko mog linka imate 48h Premium besplatno: ${inviteUrl}`;
+          return (
+            <div style={{ marginTop: 16, padding: "16px", borderRadius: 14, background: isNight ? "rgba(34,197,94,0.04)" : "rgba(34,197,94,0.06)", border: `1px solid ${isNight ? "rgba(34,197,94,0.12)" : "rgba(34,197,94,0.15)"}` }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#22c55e", marginBottom: 6 }}>
+                🎁 {lang === "en" ? "Don't want to pay? Unlock 48h free!" : lang === "de" || lang === "at" ? "Nicht zahlen? 48h gratis freischalten!" : lang === "it" ? "Non vuoi pagare? Sblocca 48h gratis!" : "Ne želiš platiti? Otključaj 48h besplatno!"}
+              </div>
+              <div style={{ fontSize: 11, color: C.mut, lineHeight: 1.5, marginBottom: 12 }}>
+                {lang === "en" ? "Share JADRAN with a friend. When they ask their first question, you both get 48h Premium." : lang === "de" || lang === "at" ? "Teile JADRAN mit einem Freund. Wenn er seine erste Frage stellt, bekommt ihr beide 48h Premium." : lang === "it" ? "Condividi JADRAN con un amico. Quando fa la prima domanda, entrambi ricevete 48h Premium." : "Podijeli JADRAN s prijateljem. Kada postavi prvo pitanje, oboje dobivate 48h Premium."}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <button onClick={() => { window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank"); track("referral_share", { channel: "whatsapp" }); }} style={{ padding: "12px 16px", borderRadius: 12, border: "none", background: "#25D366", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  🟢 {lang === "en" ? "Send via WhatsApp" : lang === "de" || lang === "at" ? "Per WhatsApp senden" : lang === "it" ? "Invia su WhatsApp" : "Pošalji na WhatsApp"}
+                </button>
+                <button onClick={() => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(inviteUrl)}&quote=${encodeURIComponent(shareText)}`, "_blank"); track("referral_share", { channel: "facebook" }); }} style={{ padding: "12px 16px", borderRadius: 12, border: "none", background: "#1877F2", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  🔵 {lang === "en" ? "Share in Facebook group" : lang === "de" || lang === "at" ? "In Facebook-Gruppe teilen" : lang === "it" ? "Condividi nel gruppo Facebook" : "Podijeli u Facebook grupu"}
+                </button>
+                <button onClick={() => { navigator.clipboard?.writeText(inviteUrl).then(() => { setReferralToast(lang === "en" ? "Link copied!" : lang === "de" || lang === "at" ? "Link kopiert!" : lang === "it" ? "Link copiato!" : "Link kopiran!"); setTimeout(() => setReferralToast(null), 2000); }); track("referral_share", { channel: "copy" }); }} style={{ padding: "12px 16px", borderRadius: 12, border: `1px solid ${C.bord}`, background: "transparent", color: C.text, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  🔗 {referralToast || (lang === "en" ? "Copy your secret link" : lang === "de" || lang === "at" ? "Deinen geheimen Link kopieren" : lang === "it" ? "Copia il tuo link segreto" : "Kopiraj svoj tajni link")}
+                </button>
+              </div>
+            </div>
+          );
+        })()}
         <button onClick={() => setShowPaywall(false)} style={{ width: "100%", background: "none", border: "none", color: C.mut, fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: 8 }}>{t.payLater}</button>
         <div style={{ textAlign: "center", marginTop: 4 }}>
           <a href="/" target="_blank" rel="noopener" style={{ fontSize: 8, color: C.mut, opacity: 0.6, textDecoration: "none" }}>{lang === "en" ? "Terms & Privacy" : lang === "de" || lang === "at" ? "Impressum & Datenschutz" : lang === "it" ? "Termini e Privacy" : "Uvjeti i privatnost"}</a>
         </div>
+      </div>
+    </div>
+  );
+
+  // ═══ INVITE WELCOME — what the referred friend sees ═══
+  const InviteWelcome = () => showInviteWelcome && (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)", zIndex: 280, display: "grid", placeItems: "center", padding: 24 }}
+      onClick={() => setShowInviteWelcome(false)}>
+      <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "32px 24px", maxWidth: 420, width: "100%", border: "1px solid rgba(34,197,94,0.15)", textAlign: "center" }}>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>🍻</div>
+        <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 20, fontWeight: 700, color: C.text, marginBottom: 8 }}>
+          {lang === "en" ? "Your friend gifted you 48h Premium!" : lang === "de" || lang === "at" ? "Dein Freund schenkt dir 48h Premium!" : lang === "it" ? "Il tuo amico ti regala 48h Premium!" : "Prijatelj ti poklanja 48h Premium!"}
+        </div>
+        <div style={{ fontSize: 13, color: C.mut, lineHeight: 1.5, marginBottom: 20 }}>
+          {lang === "en" ? "No installation. No credit card. Just ask your digital co-pilot anything about the perfect Adriatic holiday." : lang === "de" || lang === "at" ? "Keine Installation. Keine Kreditkarte. Frag deinen digitalen Copiloten alles über den perfekten Adria-Urlaub." : lang === "it" ? "Nessuna installazione. Nessuna carta di credito. Chiedi tutto sulla vacanza perfetta in Adriatico." : "Nema instalacije. Nema kreditne kartice. Pitaj svog digitalnog suvozača što god ti treba za savršen odmor na Jadranu."}
+        </div>
+        <button onClick={() => setShowInviteWelcome(false)} style={{ width: "100%", padding: "16px", borderRadius: 16, border: "none", background: "linear-gradient(135deg, #22c55e, #16a34a)", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: "'Playfair Display',Georgia,serif", boxShadow: "0 4px 16px rgba(34,197,94,0.3)" }}>
+          {lang === "en" ? "Start exploring" : lang === "de" || lang === "at" ? "Los geht's!" : lang === "it" ? "Inizia a esplorare" : "Započni istraživanje"}
+        </button>
       </div>
     </div>
   );
@@ -1951,6 +2034,7 @@ const [lang, setLang] = useState(() => {
       </div>
 
       <Paywall />
+      <InviteWelcome />
       <VerifyingOverlay />
       <SuccessModal />
 
