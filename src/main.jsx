@@ -16,7 +16,7 @@ const route = isHost ? "host" : isAI ? "ai" : hasRoom ? "app" : "landing";
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null }; }
   static getDerivedStateFromError(error) { return { error }; }
-  componentDidCatch(error, info) { console.error("Error:", error, info); }
+  componentDidCatch(error, info) { console.error("Error:", error, info); try { window.Sentry?.captureException(error, { extra: { componentStack: info?.componentStack } }); } catch {} }
   render() {
     if (this.state.error) return (
       <div style={{ padding: 40, color: "#7dd3fc", background: "#0a1628", minHeight: "100vh", fontFamily: "'Outfit', system-ui, sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>

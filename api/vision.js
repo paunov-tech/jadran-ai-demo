@@ -15,7 +15,7 @@ function rateOk(ip) {
 // Vision API — Gemini 2.0 Flash multimodal
 // Analyzes photos: menus, signs, ferry schedules, landscapes
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', req.headers.origin === 'https://jadran.ai' ? 'https://jadran.ai' : req.headers.origin || '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
@@ -33,7 +33,9 @@ export default async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: 'Gemini API key not configured' });
 
   try {
-    const { image, mimeType, lang, context } = req.body;
+    const { image, mimeType, lang, context } = req.body || {};
+    if (!image || typeof image !== 'string') return res.status(400).json({ error: 'Image required' });
+    if (image.length > 5000000) return res.status(413).json({ error: 'Image too large (max 5MB base64)' });
     // image = base64 string (no prefix), mimeType = "image/jpeg" etc.
 
     if (!image) return res.status(400).json({ error: 'No image provided' });

@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Origin", req.headers.origin === "https://jadran.ai" ? "https://jadran.ai" : req.headers.origin || "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
@@ -12,7 +12,8 @@ export default async function handler(req, res) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
   try {
-    const { roomCode, guestName, lang, returnPath, plan, region, deviceId } = req.body;
+    const { roomCode, guestName, lang, returnPath, plan, region, deviceId } = req.body || {};
+    if (!plan || !["week", "season"].includes(plan)) return res.status(400).json({ error: "Invalid plan" });
     const origin = req.headers.origin || "https://jadran.ai";
 
     const plans = {
