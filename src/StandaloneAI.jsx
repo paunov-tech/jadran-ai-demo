@@ -1194,6 +1194,9 @@ const [lang, setLang] = useState(() => {
           </div>
         )}
       </div>
+      <div style={{ textAlign: "center", padding: "20px 24px 32px", opacity: 0.3 }}>
+        <div style={{ fontSize: 9, color: C.mut, letterSpacing: 0.5 }}>{"\u00A9"} 2026 SIAL Consulting d.o.o. {"\u00B7"} All rights reserved.</div>
+      </div>
       <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } ::selection { background: rgba(14,165,233,0.3); }`}</style>
     </div>
   );

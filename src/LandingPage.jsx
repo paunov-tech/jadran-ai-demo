@@ -403,6 +403,11 @@ export default function LandingPage() {
           <span style={{ color: "#635BFF", fontSize: 14, fontWeight: 700, fontFamily: "'Outfit',system-ui,sans-serif" }}>stripe</span>
         </div>
         <div style={{ fontSize: 11, color: "#1e293b" }}>JADRAN {"\u00B7"} SIAL Consulting d.o.o. {"\u00B7"} 2026</div>
+        <div style={{ fontSize: 9, color: "#0f172a", marginTop: 6, letterSpacing: 0.5 }}>{"\u00A9"} 2026 SIAL Consulting d.o.o. All rights reserved.</div>
+        <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 8 }}>
+          <span onClick={() => setLegalPage("impressum")} style={{ fontSize: 9, color: "#1e293b", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 2 }}>Impressum</span>
+          <span onClick={() => setLegalPage("privacy")} style={{ fontSize: 9, color: "#1e293b", cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 2 }}>Privacy</span>
+        </div>
       </footer>
 
       {/* ═══ STICKY BUY BAR — PREMIUM DESIGN ═══ */}
