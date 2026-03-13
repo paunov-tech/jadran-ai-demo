@@ -41,6 +41,8 @@ export default async function handler(req, res) {
         quantity: 1,
       }],
       mode: "payment",
+      // Stripe Tax — automatic DDV calculation per buyer country
+      automatic_tax: { enabled: true },
       // Auto-send Stripe receipt to customer email
       invoice_creation: { enabled: true },
       success_url: origin + (returnPath || "/ai") + `?payment=success&plan=${plan || "week"}&days=${p.days}&region=${region || "all"}&session_id={CHECKOUT_SESSION_ID}`,

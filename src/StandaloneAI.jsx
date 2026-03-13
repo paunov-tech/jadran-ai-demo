@@ -541,6 +541,9 @@ const [lang, setLang] = useState(() => {
             setVerifyingPayment(false);
           })
           .catch(err => { console.error("Verify error:", err); setVerifyingPayment(false); setShowPaywall(true); });
+      } else {
+        // No session_id = forged URL, reject
+        console.error("Payment URL without session_id — rejected");
       }
     }
     // Handle payment cancellation — reopen paywall
