@@ -105,9 +105,9 @@
   <!-- Sentry Error Monitoring -->
   <script src="https://browser.sentry-cdn.com/8.46.0/bundle.tracing.min.js" crossorigin="anonymous"></script>
   <script>
-    if (window.Sentry && window.SENTRY_DSN) {
+    if (window.Sentry) {
       Sentry.init({
-        dsn: window.SENTRY_DSN,
+        dsn: "https://b8ba4e4d1d8abe17da9f96bc8442744b@o4510969565413376.ingest.de.sentry.io/4511037604298832",
         tracesSampleRate: 0.1,
         environment: "production",
         ignoreErrors: ["ResizeObserver loop", "Loading chunk", "Network request failed"],
