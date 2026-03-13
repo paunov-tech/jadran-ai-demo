@@ -782,7 +782,8 @@ const [lang, setLang] = useState(() => {
       onClick={() => setShowPaywall(false)}>
       <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "32px 24px", maxWidth: 440, width: "100%", border: "1px solid rgba(245,158,11,0.1)" }}>
         <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <div style={{ fontSize: 10, color: C.accent, letterSpacing: 4, fontWeight: 600, marginBottom: 8 }}>{t.payExpired}</div>
+          <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 16, fontWeight: 700, color: C.accent, letterSpacing: 2, marginBottom: 6 }}>JADRAN.AI</div>
+          <div style={{ fontSize: 10, color: C.mut, letterSpacing: 3, fontWeight: 600, marginBottom: 8 }}>{t.payExpired}</div>
           <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 24, color: C.text }}>{t.payTitle}</div>
         </div>
         <div style={{ padding: "14px 16px", borderRadius: 14, background: isNight ? "rgba(14,165,233,0.04)" : "rgba(14,165,233,0.06)", marginBottom: 20, fontSize: 13, lineHeight: 2, color: C.text }}>
@@ -818,8 +819,12 @@ const [lang, setLang] = useState(() => {
             ))}
           </div>
           <div style={{ fontSize: 9, color: C.mut }}>🔒 {t.paySecure}</div>
+          <div style={{ fontSize: 8, color: C.mut, marginTop: 4 }}>{lang === "en" ? "Prices incl. VAT" : lang === "de" || lang === "at" ? "Preise inkl. MwSt." : lang === "it" ? "Prezzi IVA inclusa" : "Cijene uklj. PDV"} · SIAL Consulting d.o.o.</div>
         </div>
         <button onClick={() => setShowPaywall(false)} style={{ width: "100%", background: "none", border: "none", color: C.mut, fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: 8 }}>{t.payLater}</button>
+        <div style={{ textAlign: "center", marginTop: 4 }}>
+          <a href="/" target="_blank" rel="noopener" style={{ fontSize: 8, color: C.mut, opacity: 0.6, textDecoration: "none" }}>{lang === "en" ? "Terms & Privacy" : lang === "de" || lang === "at" ? "Impressum & Datenschutz" : lang === "it" ? "Termini e Privacy" : "Uvjeti i privatnost"}</a>
+        </div>
       </div>
     </div>
   );

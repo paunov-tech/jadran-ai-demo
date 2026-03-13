@@ -8,10 +8,12 @@ import { useState, useEffect } from "react";
 // Direct Stripe checkout
 const goToStripe = async (plan = "season", lang = "en") => {
   try {
+    let deviceId;
+    try { deviceId = localStorage.getItem("jadran_device_id"); if (!deviceId) { deviceId = "jd_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8); localStorage.setItem("jadran_device_id", deviceId); } } catch { deviceId = "unknown"; }
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roomCode: "AI-STANDALONE", guestName: "AI User", lang, returnPath: "/ai", plan, region: "all" }),
+      body: JSON.stringify({ roomCode: "AI-STANDALONE", guestName: "AI User", lang, returnPath: "/ai", plan, region: "all", deviceId }),
     });
     const data = await res.json();
     if (data.url) window.location.href = data.url;

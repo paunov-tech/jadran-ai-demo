@@ -22,12 +22,19 @@ export default async function handler(req, res) {
     };
     const p = plans[plan] || plans.week;
 
-    const session = await stripe.checkout.sessions.create({
+    // CRITICAL: Build success/cancel URLs properly — returnPath may contain "?" already
+    // Strip any query params from returnPath (they are recovered from localStorage on reload)
+    const basePath = (returnPath || "/ai").split("?")[0];
+    const successParams = `payment=success&plan=${plan}&days=${p.days}&region=${region || "all"}&session_id={CHECKOUT_SESSION_ID}`;
+    const successUrl = `${origin}${basePath}?${successParams}`;
+    const cancelUrl = `${origin}${basePath}?payment=cancelled`;
+
+    // Build session config
+    const sessionConfig = {
       payment_method_types: ["card"],
-      // Collect email — enables Stripe auto-receipt
       customer_creation: "always",
       payment_intent_data: {
-        receipt_email: undefined, // Will be set from customer email
+        statement_descriptor_suffix: "JADRAN",
       },
       line_items: [{
         price_data: {
@@ -41,12 +48,10 @@ export default async function handler(req, res) {
         quantity: 1,
       }],
       mode: "payment",
-      // Stripe Tax — automatic DDV calculation per buyer country
-      automatic_tax: { enabled: true },
-      // Auto-send Stripe receipt to customer email
+      // Invoice = receipt email to customer (legally required)
       invoice_creation: { enabled: true },
-      success_url: origin + (returnPath || "/ai") + `?payment=success&plan=${plan || "week"}&days=${p.days}&region=${region || "all"}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: origin + (returnPath || "/ai") + "?payment=cancelled",
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       metadata: {
         roomCode: roomCode || "AI-STANDALONE",
         guestName: guestName || "Guest",
@@ -57,10 +62,44 @@ export default async function handler(req, res) {
         lang: lang || "hr",
       },
       locale: lang === "de" || lang === "at" ? "de" : lang === "en" ? "en" : lang === "it" ? "it" : lang === "hr" ? "hr" : "auto",
-    });
+    };
+
+    // Stripe Tax — only if configured (fails gracefully if not enabled in Dashboard)
+    try {
+      sessionConfig.automatic_tax = { enabled: true };
+      sessionConfig.line_items[0].price_data.tax_behavior = "inclusive";
+    } catch {}
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     return res.status(200).json({ sessionId: session.id, url: session.url });
   } catch (err) {
+    console.error("Checkout error:", err.message);
+    // If automatic_tax fails, retry without it
+    if (err.message?.includes("tax") || err.message?.includes("Tax")) {
+      try {
+        const { roomCode, guestName, lang, returnPath, plan, region, deviceId } = req.body || {};
+        const plans = { week: { name: "JADRAN Vodič — Tjedan (7 dana)", amount: 499, days: 7 }, season: { name: "JADRAN Vodič — Sezona (30 dana)", amount: 999, days: 30 } };
+        const p = plans[plan] || plans.week;
+        const basePath = (returnPath || "/ai").split("?")[0];
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ["card"],
+          customer_creation: "always",
+          payment_intent_data: { statement_descriptor_suffix: "JADRAN" },
+          line_items: [{ price_data: { currency: "eur", product_data: { name: p.name, description: "AI turistički vodič za hrvatsku obalu" }, unit_amount: p.amount }, quantity: 1 }],
+          mode: "payment",
+          invoice_creation: { enabled: true },
+          success_url: `${origin}${basePath}?payment=success&plan=${plan}&days=${p.days}&region=${region || "all"}&session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${origin}${basePath}?payment=cancelled`,
+          metadata: { roomCode: roomCode || "AI-STANDALONE", guestName: guestName || "Guest", plan: plan || "week", region: region || "all", days: String(p.days), deviceId: deviceId || "unknown", lang: lang || "hr" },
+          locale: lang === "de" || lang === "at" ? "de" : lang === "en" ? "en" : lang === "it" ? "it" : lang === "hr" ? "hr" : "auto",
+        });
+        console.log("Checkout created without Tax (fallback)");
+        return res.status(200).json({ sessionId: session.id, url: session.url });
+      } catch (err2) {
+        return res.status(500).json({ error: err2.message });
+      }
+    }
     return res.status(500).json({ error: err.message });
   }
 }
