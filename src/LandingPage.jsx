@@ -406,25 +406,31 @@ export default function LandingPage() {
       </footer>
 
       {/* ═══ STICKY BUY BAR — PREMIUM DESIGN ═══ */}
-      <div onClick={() => isPremium ? (window.location.href = "/ai") : goToStripe("season", lang)} style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99, cursor: "pointer", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-        <div style={{ position: "relative", overflow: "hidden", padding: "12px 20px", background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)", borderTop: "1px solid rgba(245,158,11,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 -8px 32px rgba(0,0,0,0.5)" }}>
-          {/* Shimmer accent line */}
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, transparent, #f59e0b, #fbbf24, #f59e0b, transparent)" }} />
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #f59e0b, #d97706)", display: "grid", placeItems: "center", fontSize: 16, boxShadow: "0 2px 8px rgba(245,158,11,0.3)" }}>⭐</div>
-            <div>
-              {isPremium
-                ? <div style={{ color: "#f59e0b", fontSize: 14, fontWeight: 700, fontFamily: F }}>⭐ {premLabel} {premDays !== null ? premDays + "d" : ""}</div>
-                : <div style={{ color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: F }}>{tx("stickyBuy") || "KUPI ODMAH"}</div>
-              }
-              <div style={{ color: "#94a3b8", fontSize: 10 }}>{isPremium ? "JADRAN.AI PREMIUM" : tx("sticky")}</div>
-            </div>
-          </div>
-          <div style={{ padding: "10px 20px", borderRadius: 12, background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#0f172a", fontWeight: 800, fontSize: 14, fontFamily: F, boxShadow: "0 4px 16px rgba(245,158,11,0.3)", letterSpacing: 0.5 }}>
-            {isPremium ? "→" : "9.99€ →"}
+      {isPremium ? (
+        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99, paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+          <div style={{ padding: "10px 20px", background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)", borderTop: "1px solid rgba(245,158,11,0.15)", display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}>
+            <span style={{ padding: "4px 14px", borderRadius: 12, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.12)", color: "#f59e0b", fontSize: 11, fontWeight: 600 }}>⭐ {premLabel} {premDays !== null ? premDays + "d" : ""}</span>
+            <span style={{ color: "#475569", fontSize: 10 }}>JADRAN.AI PREMIUM</span>
           </div>
         </div>
-      </div>
+      ) : (
+        <div onClick={() => goToStripe("season", lang)} style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99, cursor: "pointer", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+          <div style={{ position: "relative", overflow: "hidden", padding: "12px 20px", background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)", borderTop: "1px solid rgba(245,158,11,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 -8px 32px rgba(0,0,0,0.5)" }}>
+            {/* Shimmer accent line */}
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, transparent, #f59e0b, #fbbf24, #f59e0b, transparent)" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #f59e0b, #d97706)", display: "grid", placeItems: "center", fontSize: 16, boxShadow: "0 2px 8px rgba(245,158,11,0.3)" }}>⭐</div>
+              <div>
+                <div style={{ color: "#fff", fontSize: 14, fontWeight: 700, fontFamily: F }}>{tx("stickyBuy") || "KUPI ODMAH"}</div>
+                <div style={{ color: "#94a3b8", fontSize: 10 }}>{tx("sticky")}</div>
+              </div>
+            </div>
+            <div style={{ padding: "10px 20px", borderRadius: 12, background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#0f172a", fontWeight: 800, fontSize: 14, fontFamily: F, boxShadow: "0 4px 16px rgba(245,158,11,0.3)", letterSpacing: 0.5 }}>
+              9.99€
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ═══ LEGAL OVERLAY ═══ */}
       {legalPage && (

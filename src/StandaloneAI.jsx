@@ -965,9 +965,7 @@ const [lang, setLang] = useState(() => {
       <div style={{ maxWidth: 540, margin: "0 auto", padding: "40px 24px" }}>
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 40 }}>
-          <a href="/" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 12, border: `1px solid ${C.bord}`, background: C.card, color: C.text, textDecoration: "none", fontSize: 18, transition: "all 0.2s" }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = C.accent}
-              onMouseLeave={e => e.currentTarget.style.borderColor = C.bord}>‹</a>
+          <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 16, fontWeight: 700, color: C.accent, letterSpacing: 2 }}>JADRAN.AI</div>
           <div style={{ position: "relative" }}>
             <button onClick={() => setLangOpen(!langOpen)} style={{ padding: "5px 8px", background: isNight ? "rgba(12,28,50,0.5)" : "rgba(255,255,255,0.5)", border: `1px solid ${C.bord}`, borderRadius: 10, cursor: "pointer", fontSize: 18, lineHeight: 1, display: "flex", alignItems: "center", gap: 3 }}>
               {curFlag}<span style={{ fontSize: 9, color: C.mut }}>▾</span>
