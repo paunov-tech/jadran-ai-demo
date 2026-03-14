@@ -8,6 +8,9 @@ import { useState, useEffect } from "react";
 // Direct Stripe checkout
 const goToStripe = async (plan = "season", lang = "en") => {
   try {
+    // Analytics
+    try { window.plausible?.("checkout_click", { props: { plan, source: "landing" } }); } catch {}
+    try { window.fbq?.("track", "AddPaymentInfo", { content_name: plan, currency: "EUR", value: plan === "season" ? 9.99 : 4.99 }); } catch {}
     let deviceId;
     try { deviceId = localStorage.getItem("jadran_device_id"); if (!deviceId) { deviceId = "jd_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8); localStorage.setItem("jadran_device_id", deviceId); } } catch { deviceId = "unknown"; }
     let utmData = {};
@@ -88,8 +91,22 @@ export default function LandingPage() {
   const [cityImgs, setCityImgs] = useState({});
   const [carouselIdx, setCarouselIdx] = useState(0);
   const [showPlanPicker, setShowPlanPicker] = useState(false);
+  useEffect(() => {
+    if (!showPlanPicker) return;
+    const h = e => { if (e.key === "Escape") setShowPlanPicker(false); };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [showPlanPicker]);
   const [isPremium, setIsPremium] = useState(() => {
-    try { return localStorage.getItem("jadran_ai_premium") === "1"; } catch { return false; }
+    try {
+      if (localStorage.getItem("jadran_ai_premium") !== "1") return false;
+      const pp = localStorage.getItem("jadran_premium_plan");
+      if (pp) {
+        const d = JSON.parse(pp);
+        if (d.expiresAt && d.expiresAt < Date.now()) { localStorage.removeItem("jadran_ai_premium"); return false; }
+      }
+      return true;
+    } catch { return false; }
   });
   const [premDays, setPremDays] = useState(null);
   const [premLabel, setPremLabel] = useState("");

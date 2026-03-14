@@ -248,6 +248,15 @@ export default function StandaloneAI() {
       const isPrem = localStorage.getItem("jadran_ai_premium") === "1";
       const hasRegion = !!localStorage.getItem("jadran_region");
       const hasMode = !!localStorage.getItem("jadran_travelMode");
+      // Check if premium actually expired
+      const pp = localStorage.getItem("jadran_premium_plan");
+      if (pp) {
+        const plan = JSON.parse(pp);
+        if (plan.expiresAt && plan.expiresAt < Date.now()) {
+          localStorage.removeItem("jadran_ai_premium");
+          return "setup"; // expired
+        }
+      }
       // Don't auto-skip if coming from Stripe (payment=success/cancelled in URL)
       const params = new URLSearchParams(window.location.search);
       const isPaymentRedirect = params.get("payment") === "success" || params.get("payment") === "cancelled";
@@ -541,9 +550,24 @@ const [lang, setLang] = useState(() => {
     }
     // Check localStorage
     try {
-      if (localStorage.getItem("jadran_ai_premium") === "1") setPremium(true);
-      const pp = localStorage.getItem("jadran_premium_plan");
-      if (pp) setPremiumPlan(JSON.parse(pp));
+      if (localStorage.getItem("jadran_ai_premium") === "1") {
+        // Verify not expired
+        const pp = localStorage.getItem("jadran_premium_plan");
+        if (pp) {
+          const plan = JSON.parse(pp);
+          setPremiumPlan(plan);
+          if (plan.expiresAt && plan.expiresAt < Date.now()) {
+            // Premium expired — clean up
+            localStorage.removeItem("jadran_ai_premium");
+            setPremium(false);
+            setTrialExpired(true);
+          } else {
+            setPremium(true);
+          }
+        } else {
+          setPremium(true); // no plan data = trust the flag
+        }
+      }
       // Load message count
       const mc = parseInt(localStorage.getItem("jadran_msg_count") || "0");
       setMsgCount(mc);
