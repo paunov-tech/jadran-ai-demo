@@ -553,6 +553,15 @@ const [lang, setLang] = useState(() => {
     } catch {}
     // Also check ?payment=success from Stripe redirect — VERIFY server-side
     if (params.get("payment") === "success") {
+      // Restore session state saved before Stripe redirect
+      try {
+        const sess = JSON.parse(localStorage.getItem("jadran_session") || "{}");
+        if (sess.region) setRegion(sess.region);
+        if (sess.travelMode) setTravelMode(sess.travelMode);
+        if (sess.lang) setLang(sess.lang);
+        if (sess.niche) setNiche(sess.niche);
+        localStorage.removeItem("jadran_session");
+      } catch {}
       const sessionId = params.get("session_id");
       const plan = params.get("plan") || "week";
       const days = params.get("days") || "7";
@@ -576,6 +585,11 @@ const [lang, setLang] = useState(() => {
                 setPremiumPlan(premData);
               } catch {}
               setShowSuccess(true);
+              // Auto-enter chat after payment (user was in setup before Stripe redirect)
+              try {
+                const sess = JSON.parse(localStorage.getItem("jadran_session") || "{}");
+                const ice = generateIcebreaker(sess.region || region); setMsgs([{ role: "assistant", text: ice }]); setStep("chat");
+              } catch { setStep("chat"); }
             } else {
               console.error("Payment verification failed:", data);
               setShowPaywall(true);
@@ -590,6 +604,16 @@ const [lang, setLang] = useState(() => {
     }
     // Handle payment cancellation — reopen paywall
     if (params.get("payment") === "cancelled") {
+      // Restore session state saved before Stripe redirect
+      try {
+        const sess = JSON.parse(localStorage.getItem("jadran_session") || "{}");
+        if (sess.region) setRegion(sess.region);
+        if (sess.travelMode) setTravelMode(sess.travelMode);
+        if (sess.lang) setLang(sess.lang);
+        if (sess.niche) setNiche(sess.niche);
+        localStorage.removeItem("jadran_session");
+        if (sess.region && sess.travelMode) { const ice = generateIcebreaker(sess.region); setMsgs([{ role: "assistant", text: ice }]); setStep("chat"); }
+      } catch {}
       window.history.replaceState({}, "", "/ai" + (n ? "?niche=" + n : ""));
       setShowPaywall(true);
     }
@@ -699,6 +723,8 @@ const [lang, setLang] = useState(() => {
   const startCheckout = async (plan = "week") => {
     track("checkout_click", { plan, lang, region, niche });
     try { window.fbq?.("track", "AddPaymentInfo", { content_name: plan, currency: "EUR", value: plan === "season" ? 9.99 : 4.99 }); } catch {}
+    // Persist session state so it survives Stripe redirect
+    try { localStorage.setItem("jadran_session", JSON.stringify({ region, travelMode, lang, niche })); } catch {}
     setPayLoading(true);
     try {
       // Generate/retrieve device ID for subscription binding
