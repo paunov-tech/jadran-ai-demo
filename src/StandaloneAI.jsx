@@ -1282,6 +1282,40 @@ const [lang, setLang] = useState(() => {
           {t.freeNote}
         </div>
 
+        {/* ═══ DIRECT BUY — skip trial, buy premium immediately ═══ */}
+        {!premium && (
+          <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
+            <button onClick={() => startCheckout("week")}
+              style={{
+                flex: 1, padding: "14px 10px", borderRadius: 14, border: `1px solid ${C.accent}40`,
+                background: isNight ? "rgba(14,165,233,0.08)" : "rgba(14,165,233,0.06)",
+                cursor: "pointer", textAlign: "center", transition: "all 0.2s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.transform = "scale(1.02)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = `${C.accent}40`; e.currentTarget.style.transform = "scale(1)"; }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: C.accent }}>4.99€</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: C.text, marginTop: 2 }}>{lang === "en" ? "1 Week" : lang === "de" || lang === "at" ? "1 Woche" : lang === "it" ? "1 Settimana" : "1 Tjedan"}</div>
+              <div style={{ fontSize: 9, color: C.mut, marginTop: 2 }}>{lang === "en" ? "One region" : lang === "de" || lang === "at" ? "Eine Region" : lang === "it" ? "Una regione" : "Jedna regija"}</div>
+            </button>
+            <button onClick={() => startCheckout("season")}
+              style={{
+                flex: 1, padding: "14px 10px", borderRadius: 14,
+                border: "1px solid rgba(245,158,11,0.4)",
+                background: isNight ? "rgba(245,158,11,0.08)" : "rgba(245,158,11,0.06)",
+                cursor: "pointer", textAlign: "center", position: "relative", overflow: "hidden", transition: "all 0.2s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = C.gold; e.currentTarget.style.transform = "scale(1.02)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(245,158,11,0.4)"; e.currentTarget.style.transform = "scale(1)"; }}>
+              <div style={{ position: "absolute", top: 6, right: 6, fontSize: 8, fontWeight: 700, color: "#0f172a", background: C.gold, padding: "2px 6px", borderRadius: 6 }}>
+                {lang === "en" ? "BEST VALUE" : lang === "de" || lang === "at" ? "BEST PREIS" : lang === "it" ? "MIGLIORE" : "NAJBOLJE"}
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: C.gold }}>9.99€</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: C.text, marginTop: 2 }}>{lang === "en" ? "Full Season" : lang === "de" || lang === "at" ? "Ganze Saison" : lang === "it" ? "Tutta Stagione" : "Cijela Sezona"}</div>
+              <div style={{ fontSize: 9, color: C.mut, marginTop: 2 }}>{lang === "en" ? "All regions · 30 days" : lang === "de" || lang === "at" ? "Alle Regionen · 30 Tage" : lang === "it" ? "Tutte regioni · 30 giorni" : "Sve regije · 30 dana"}</div>
+            </button>
+          </div>
+        )}
+
         {/* ═══ SOCIAL PROOF + VALUE PROP ═══ */}
         {!premium && (
           <div style={{ marginTop: 20, padding: "16px", borderRadius: 16, background: isNight ? "rgba(245,158,11,0.03)" : "rgba(245,158,11,0.04)", border: `1px solid ${isNight ? "rgba(245,158,11,0.08)" : "rgba(245,158,11,0.1)"}` }}>
