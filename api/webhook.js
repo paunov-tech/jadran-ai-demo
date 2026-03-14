@@ -50,6 +50,16 @@ export default async function handler(req, res) {
     const days = parseInt(meta.days || "7");
     console.log(`✅ Payment: ${meta.plan} for device ${meta.deviceId}`);
 
+    // Send receipt email — Checkout doesn't auto-set receipt_email on PaymentIntent
+    try {
+      const email = session.customer_details?.email || session.customer_email;
+      const piId = session.payment_intent;
+      if (email && piId) {
+        await stripe.paymentIntents.update(piId, { receipt_email: email });
+        console.log(`📧 Receipt email set: ${email} on ${piId}`);
+      }
+    } catch (err) { console.error("Receipt email error:", err.message); }
+
     // Persist to Firestore for cross-device/cross-session recovery
     if (meta.deviceId && meta.deviceId !== "unknown") {
       await writePremium(meta.deviceId, {

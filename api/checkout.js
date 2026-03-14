@@ -35,6 +35,18 @@ export default async function handler(req, res) {
       customer_creation: "always",
       payment_intent_data: {
         statement_descriptor_suffix: "JADRAN",
+        metadata: {
+          roomCode: roomCode || "AI-STANDALONE",
+          guestName: guestName || "Guest",
+          plan: plan || "week",
+          region: region || "all",
+          days: String(p.days),
+          deviceId: deviceId || "unknown",
+          lang: lang || "hr",
+          utm_source: utm_source || "",
+          utm_medium: utm_medium || "",
+          utm_campaign: utm_campaign || "",
+        },
       },
       line_items: [{
         price_data: {
@@ -89,7 +101,7 @@ export default async function handler(req, res) {
         const session = await stripe.checkout.sessions.create({
           payment_method_types: ["card"],
           customer_creation: "always",
-          payment_intent_data: { statement_descriptor_suffix: "JADRAN" },
+          payment_intent_data: { statement_descriptor_suffix: "JADRAN", metadata: { roomCode: roomCode || "AI-STANDALONE", guestName: guestName || "Guest", plan: plan || "week", region: region || "all", days: String(p.days), deviceId: deviceId || "unknown", lang: lang || "hr", utm_source: utm_source || "", utm_medium: utm_medium || "", utm_campaign: utm_campaign || "" } },
           line_items: [{ price_data: { currency: "eur", product_data: { name: p.name, description: "AI turistički vodič za hrvatsku obalu" }, unit_amount: p.amount }, quantity: 1 }],
           mode: "payment",
           invoice_creation: { enabled: true },
