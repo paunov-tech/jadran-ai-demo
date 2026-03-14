@@ -24,7 +24,7 @@ export default async function handler(req, res) {
   // Rate limit check
   const clientIp = (req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown').split(',')[0].trim();
   if (!rateOk(clientIp)) {
-    return res.status(429).json({ content: [{ type: "text", text: "Dnevni limit dosegnut. Pokušajte sutra ili nadogradite na Premium." }] });
+    return res.status(429).json({ content: [{ type: "text", text: "Daily limit reached. Try again tomorrow or upgrade to Premium." }] });
   }
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -46,28 +46,40 @@ export default async function handler(req, res) {
     };
     const langName = langMap[lang] || "Hrvatski";
 
-    const systemPrompt = `Ti si "Jadran Lens" — instant vizualni asistent za turiste na Jadranu.
+    const userMsg = {
+      hr: "Analiziraj ovu fotografiju i daj praktične informacije za turista.",
+      de: "Analysiere dieses Foto und gib praktische Informationen für Touristen.",
+      at: "Analysier dieses Foto und gib praktische Infos für Touristen.",
+      en: "Analyze this photo and give practical information for a tourist.",
+      it: "Analizza questa foto e dai informazioni pratiche per un turista.",
+      si: "Analiziraj to fotografijo in podaj praktične informacije za turista.",
+      cz: "Analyzuj tuto fotografii a poskytni praktické informace pro turistu.",
+      pl: "Przeanalizuj to zdjęcie i podaj praktyczne informacje dla turysty.",
+    };
 
-JEZIK: ${langName}
-KONTEKST: Turista/${context || "na jadranskoj obali"}.
+    const systemPrompt = `You are "Jadran Lens" — an instant visual assistant for tourists on the Adriatic coast.
 
-PREPOZNAJ šta je na slici i daj BRZ, spasonosan savjet:
-- PARKING TABLA: Smije li kamper/auto tu? Koliko košta? Radno vrijeme?
-- JELOVNIK/MENI: Prevedi jela, preporuči best value, upozori ako nešto nije sezonsko ("Tartufi su vjerojatno iz konzerve — uzmi šparoge")
-- RAČUN: Je li cijena fer za tu lokaciju? Upozori na turistički markup.
-- SAOBRAĆAJNI ZNAK: Prevedi, objasni ograničenja (visina, širina, zabrana)
-- RED VOŽNJE: Prevedi, istakni sljedeći polazak, upozori na detalje.
-- ZGRADA/LOKACIJA: Prepoznaj ako možeš, daj insider tip.
-- CJENIK: Prevedi, usporedi s prosjekom.
-- PROIZVOD/HRANA: Identificiraj, je li lokalni specijalitet?
+CRITICAL: Respond EXCLUSIVELY in ${langName}. Every word of your response must be in ${langName}.
+CONTEXT: Tourist/${context || "on the Adriatic coast"}.
 
-PRAVILO: Odgovori u MAKSIMALNO 3-4 rečenice. Budi konkretan — cijene, alternative, upozorenja. Bez uvoda.`;
+Identify what's in the image and give QUICK, actionable advice:
+- PARKING SIGN: Can a camper/car park here? Cost? Hours?
+- MENU: Translate dishes, recommend best value, warn if not seasonal
+- RECEIPT: Is the price fair for this location? Warn about tourist markup.
+- ROAD SIGN: Translate, explain restrictions (height, width, prohibition)
+- TIMETABLE: Translate, highlight next departure, warn about details.
+- BUILDING/LOCATION: Identify if possible, give insider tip.
+- PRICE LIST: Translate, compare with average.
+- PRODUCT/FOOD: Identify, is it a local specialty?
+
+RULE: Respond in MAXIMUM 3-4 sentences. Be concrete — prices, alternatives, warnings. No introductions.
+LANGUAGE RULE: Your ENTIRE response must be in ${langName}. Do NOT mix languages.`;
 
     const body = {
       contents: [{
         parts: [
           { inlineData: { mimeType: mimeType || "image/jpeg", data: image } },
-          { text: "Analiziraj ovu fotografiju i daj praktične informacije za turista." }
+          { text: userMsg[lang] || userMsg.en }
         ]
       }],
       systemInstruction: { parts: [{ text: systemPrompt }] },
@@ -82,11 +94,11 @@ PRAVILO: Odgovori u MAKSIMALNO 3-4 rečenice. Budi konkretan — cijene, alterna
     });
 
     const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Nisam uspio analizirati sliku. Pokušajte ponovno.";
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || (lang === "de" || lang === "at" ? "Konnte das Bild nicht analysieren. Bitte versuchen Sie es erneut." : lang === "en" ? "Could not analyze the image. Please try again." : lang === "it" ? "Non sono riuscito ad analizzare l'immagine. Riprova." : "Nisam uspio analizirati sliku. Pokušajte ponovno.");
     
     return res.status(200).json({ text });
   } catch (err) {
     console.error('[VISION] Error:', err.message);
-    return res.status(500).json({ error: err.message, text: "Greška pri analizi slike." });
+    return res.status(500).json({ error: err.message, text: "Image analysis error." });
   }
 }
