@@ -554,12 +554,13 @@ const [lang, setLang] = useState(() => {
     // Also check ?payment=success from Stripe redirect — VERIFY server-side
     if (params.get("payment") === "success") {
       // Restore session state saved before Stripe redirect
+      let savedSession = {};
       try {
-        const sess = JSON.parse(localStorage.getItem("jadran_session") || "{}");
-        if (sess.region) setRegion(sess.region);
-        if (sess.travelMode) setTravelMode(sess.travelMode);
-        if (sess.lang) setLang(sess.lang);
-        if (sess.niche) setNiche(sess.niche);
+        savedSession = JSON.parse(localStorage.getItem("jadran_session") || "{}");
+        if (savedSession.region) setRegion(savedSession.region);
+        if (savedSession.travelMode) setTravelMode(savedSession.travelMode);
+        if (savedSession.lang) setLang(savedSession.lang);
+        if (savedSession.niche) setNiche(savedSession.niche);
         localStorage.removeItem("jadran_session");
       } catch {}
       const sessionId = params.get("session_id");
@@ -587,8 +588,7 @@ const [lang, setLang] = useState(() => {
               setShowSuccess(true);
               // Auto-enter chat after payment (user was in setup before Stripe redirect)
               try {
-                const sess = JSON.parse(localStorage.getItem("jadran_session") || "{}");
-                const ice = generateIcebreaker(sess.region || region); setMsgs([{ role: "assistant", text: ice }]); setStep("chat");
+                const ice = generateIcebreaker(savedSession.region || region); setMsgs([{ role: "assistant", text: ice }]); setStep("chat");
               } catch { setStep("chat"); }
             } else {
               console.error("Payment verification failed:", data);

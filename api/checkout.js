@@ -11,10 +11,11 @@ export default async function handler(req, res) {
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
+  const origin = "https://jadran.ai"; // Hardcoded — prevents open redirect via forged Origin header
+
   try {
     const { roomCode, guestName, lang, returnPath, plan, region, deviceId, utm_source, utm_medium, utm_campaign } = req.body || {};
     if (!plan || !["week", "season"].includes(plan)) return res.status(400).json({ error: "Invalid plan" });
-    const origin = "https://jadran.ai"; // Hardcoded — prevents open redirect via forged Origin header
 
     const plans = {
       week:   { name: "JADRAN Vodič — Tjedan (7 dana)", amount: 499, days: 7 },
