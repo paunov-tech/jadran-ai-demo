@@ -512,19 +512,9 @@ export default function JadranUnified() {
       if (data.forecast?.length >= 5) setForecast(data.forecast);
     }).catch(() => {});
   }, []);
-  // ─── ADMIN: Secret unlock for testing (?unlock=sial) ───
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('unlock') === 'sial') {
-      setPremium(true);
-      setSplash(false);
-      setPhase('kiosk');
-      setSubScreen('home');
-      updateGuest(roomCode.current, { premium: true, premiumSource: 'admin_unlock' });
-      const roomParam = params.get('room');
-      window.history.replaceState({}, '', window.location.pathname + (roomParam ? `?room=${roomParam}` : ''));
-    }
-  }, []);
+  // ─── ADMIN: Secret unlock DISABLED in production ───
+  // To test premium: use Stripe test mode or set jadran_ai_premium in Firebase console
+  // useEffect(() => { ... }, []);
 
   // ─── STRIPE: Detect payment redirect ───
   useEffect(() => {
@@ -589,16 +579,13 @@ export default function JadranUnified() {
       if (data.url) {
         window.location.href = data.url; // Redirect to Stripe
       } else {
-        // Fallback: unlock in demo mode
-        setPremium(true);
-        setShowPaywall(false);
-        updateGuest(roomCode.current, { premium: true, premiumSource: "demo_fallback" });
+        // Stripe returned no URL — show error
+        console.error("Checkout failed: no URL returned", data);
+        alert(lang === "de" ? "Zahlung derzeit nicht verfügbar. Bitte versuchen Sie es später." : lang === "it" ? "Pagamento non disponibile. Riprovare più tardi." : lang === "en" ? "Payment currently unavailable. Please try again later." : "Plaćanje trenutno nedostupno. Pokušajte kasnije.");
       }
-    } catch {
-      // Stripe not configured — demo mode unlock
-      setPremium(true);
-      setShowPaywall(false);
-      updateGuest(roomCode.current, { premium: true, premiumSource: "demo_fallback" });
+    } catch (err) {
+      console.error("Checkout error:", err);
+      alert(lang === "de" ? "Verbindungsfehler. Bitte versuchen Sie es später." : lang === "it" ? "Errore di connessione. Riprovare più tardi." : lang === "en" ? "Connection error. Please try again later." : "Greška u povezivanju. Pokušajte kasnije.");
     }
     setPayLoading(false);
   };
@@ -620,16 +607,12 @@ export default function JadranUnified() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        // Fallback demo mode
-        setBooked(p => new Set([...p, exp.id]));
-        setShowConfirm(exp.name);
-        setSelectedExp(null);
+        console.error("Booking checkout failed: no URL", data);
+        alert(lang === "de" ? "Buchung derzeit nicht verfügbar." : lang === "en" ? "Booking currently unavailable." : "Rezervacija trenutno nedostupna.");
       }
-    } catch {
-      // Stripe not configured — demo mode
-      setBooked(p => new Set([...p, exp.id]));
-      setShowConfirm(exp.name);
-      setSelectedExp(null);
+    } catch (err) {
+      console.error("Booking checkout error:", err);
+      alert(lang === "de" ? "Verbindungsfehler." : lang === "en" ? "Connection error." : "Greška u povezivanju.");
     }
     setPayLoading(false);
   };

@@ -403,6 +403,7 @@ const [lang, setLang] = useState(() => {
   const [premiumPlan, setPremiumPlan] = useState(null);
   const [msgCount, setMsgCount] = useState(0);
   const FREE_MSGS = 10;
+  const PREMIUM_DAILY_LIMIT = 100; // Cost control: ~2€/day max API spend per user
   const [trialExpired, setTrialExpired] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
 
@@ -814,6 +815,26 @@ const [lang, setLang] = useState(() => {
   const sendMsg = async () => {
     if (!input.trim() || loading) return;
     if (!premium && trialExpired) { setShowPaywall(true); track("paywall_shown", { lang, region, niche }); return; }
+    // Premium daily limit — cost control
+    if (premium) {
+      try {
+        const today = new Date().toISOString().slice(0, 10);
+        const dailyKey = "jadran_daily_" + today;
+        const dailyCount = parseInt(localStorage.getItem(dailyKey) || "0") + 1;
+        localStorage.setItem(dailyKey, String(dailyCount));
+        // Clean old daily keys
+        try { const yd = new Date(Date.now() - 86400000).toISOString().slice(0, 10); localStorage.removeItem("jadran_daily_" + yd); } catch {}
+        if (dailyCount >= PREMIUM_DAILY_LIMIT) {
+          setGlobalToast(lang === "en" ? "Daily message limit reached. Come back tomorrow!" : lang === "de" || lang === "at" ? "Tageslimit erreicht. Morgen geht's weiter!" : lang === "it" ? "Limite giornaliero raggiunto. Torna domani!" : "Dnevni limit poruka dosegnut. Vratite se sutra!");
+          setTimeout(() => setGlobalToast(null), 4000);
+          return;
+        }
+        if (dailyCount === Math.floor(PREMIUM_DAILY_LIMIT * 0.8)) {
+          setGlobalToast(lang === "en" ? `${PREMIUM_DAILY_LIMIT - dailyCount} messages left today` : lang === "de" || lang === "at" ? `Noch ${PREMIUM_DAILY_LIMIT - dailyCount} Nachrichten heute` : `Još ${PREMIUM_DAILY_LIMIT - dailyCount} poruka danas`);
+          setTimeout(() => setGlobalToast(null), 3000);
+        }
+      } catch {}
+    }
     // Increment message counter for free users
     if (!premium) {
       const newCount = msgCount + 1;
@@ -1372,33 +1393,33 @@ const [lang, setLang] = useState(() => {
         {/* ═══ SOCIAL PROOF + VALUE PROP ═══ */}
         {!premium && (
           <div style={{ marginTop: 20, padding: "16px", borderRadius: 16, background: isNight ? "rgba(245,158,11,0.03)" : "rgba(245,158,11,0.04)", border: `1px solid ${isNight ? "rgba(245,158,11,0.08)" : "rgba(245,158,11,0.1)"}` }}>
-            {/* Stats row */}
+            {/* Stats row — verifiable market data */}
             <div style={{ display: "flex", justifyContent: "space-around", marginBottom: 14, textAlign: "center" }}>
               <div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: C.gold }}>2,847</div>
-                <div style={{ fontSize: 9, color: C.mut, letterSpacing: 1 }}>{lang === "de" || lang === "at" ? "NUTZER" : lang === "en" ? "USERS" : lang === "it" ? "UTENTI" : "KORISNIKA"}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: C.gold }}>6</div>
+                <div style={{ fontSize: 9, color: C.mut, letterSpacing: 1 }}>{lang === "de" || lang === "at" ? "REGIONEN" : lang === "en" ? "REGIONS" : lang === "it" ? "REGIONI" : "REGIJA"}</div>
               </div>
               <div style={{ width: 1, background: C.bord }} />
               <div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: C.gold }}>47€</div>
-                <div style={{ fontSize: 9, color: C.mut, letterSpacing: 1 }}>{lang === "en" ? "AVG SAVED" : lang === "de" || lang === "at" ? "Ø GESPART" : lang === "it" ? "MEDIA RISP." : "PROSJ. UŠTEDA"}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: C.gold }}>8</div>
+                <div style={{ fontSize: 9, color: C.mut, letterSpacing: 1 }}>{lang === "de" || lang === "at" ? "SPRACHEN" : lang === "en" ? "LANGUAGES" : lang === "it" ? "LINGUE" : "JEZIKA"}</div>
               </div>
               <div style={{ width: 1, background: C.bord }} />
               <div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: C.gold }}>4.8</div>
-                <div style={{ fontSize: 9, color: C.mut, letterSpacing: 1 }}>★ RATING</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: C.gold }}>24/7</div>
+                <div style={{ fontSize: 9, color: C.mut, letterSpacing: 1 }}>{lang === "de" || lang === "at" ? "VERFÜGBAR" : lang === "en" ? "AVAILABLE" : lang === "it" ? "DISPONIBILE" : "DOSTUPNO"}</div>
               </div>
             </div>
-            {/* Testimonial */}
+            {/* Use case example */}
             <div style={{ padding: "12px 14px", borderRadius: 12, background: isNight ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.5)", marginBottom: 12 }}>
-              <div style={{ fontSize: 12, color: C.text, lineHeight: 1.5, fontStyle: "italic" }}>
-                {niche === "camper" ? (lang === "de" || lang === "at" ? "\"Hat uns vor einer 80€ Strafe in Trogir bewahrt. Die Tunnel-Höhen allein sind das Geld wert!\"" : lang === "en" ? "\"Saved us from an €80 fine in Trogir. The tunnel heights alone are worth the money!\"" : "\"Spasio nas od kazne 80€ u Trogiru. Samo visine tunela vrijede tu cijenu!\"")
-                : niche === "sailing" ? (lang === "de" || lang === "at" ? "\"DHMZ-Prognose direkt im Chat. Keine andere App hat das für den Jadran.\"" : lang === "en" ? "\"DHMZ forecast right in the chat. No other app has this for the Adriatic.\"" : "\"DHMZ prognoza direktno u chatu. Nijedna druga app to nema za Jadran.\"")
-                : niche === "cruiser" ? (lang === "de" || lang === "at" ? "\"In 6 Stunden mehr gesehen als unsere Freunde mit dem teuren Ausflug.\"" : lang === "en" ? "\"Saw more in 6 hours than our friends who booked the expensive tour.\"" : "\"U 6 sati vidjeli više nego prijatelji s organiziranim izletom.\"")
-                : (lang === "de" || lang === "at" ? "\"Die versteckten Buchten, die uns empfohlen wurden — unfassbar. Google kennt die nicht.\"" : lang === "en" ? "\"The hidden coves it recommended — incredible. Google doesn't know these.\"" : "\"Skrivene uvale koje nam je preporučio — nevjerojatno. Google ih ne zna.\"")}
+              <div style={{ fontSize: 10, color: C.gold, fontWeight: 600, letterSpacing: 1, marginBottom: 6 }}>
+                {lang === "de" || lang === "at" ? "DAS KANN IHR GUIDE" : lang === "en" ? "WHAT YOUR GUIDE DOES" : lang === "it" ? "COSA FA LA GUIDA" : "ŠTO VAŠ VODIČ RADI"}
               </div>
-              <div style={{ fontSize: 10, color: C.mut, marginTop: 6 }}>
-                — {niche === "camper" ? "Hans & Maria, Graz" : niche === "sailing" ? "Markus, München" : niche === "cruiser" ? "Sarah & Tom, London" : "Luca & Elena, Milano"} · {niche === "camper" ? "🚐 " : niche === "sailing" ? "⛵ " : niche === "cruiser" ? "🚢 " : "🚗 "}{lang === "de" || lang === "at" ? "Sommer" : lang === "en" ? "Summer" : lang === "it" ? "Estate" : "Ljeto"} 2025
+              <div style={{ fontSize: 12, color: C.text, lineHeight: 1.5 }}>
+                {niche === "camper" ? (lang === "de" || lang === "at" ? "Tunnel-Höhen, Camper-Stellplätze, Dump-Stations, Bura-Warnungen — alles in Echtzeit." : lang === "en" ? "Tunnel heights, camper parking, dump stations, Bura warnings — all in real-time." : "Visine tunela, kamper parkinge, dump statione, upozorenja na buru — sve u realnom vremenu.")
+                : niche === "sailing" ? (lang === "de" || lang === "at" ? "DHMZ-Prognose, NAVTEX, Marinas, Ankerplätze, Windvorhersage — direkt im Chat." : lang === "en" ? "DHMZ forecast, NAVTEX, marinas, anchorages, wind forecast — right in the chat." : "DHMZ prognoza, NAVTEX, marine, sidrišta, prognoza vjetra — direktno u chatu.")
+                : niche === "cruiser" ? (lang === "de" || lang === "at" ? "Minutengenauer Plan für Ihren Hafentag. Restaurants, Sehenswürdigkeiten, Rückweg zum Schiff." : lang === "en" ? "Minute-by-minute plan for your port day. Restaurants, sights, route back to ship." : "Plan po minutu za vaš dan u luci. Restorani, znamenitosti, povratak na brod.")
+                : (lang === "de" || lang === "at" ? "Versteckte Buchten, lokale Konobas, Parkplätze, Wetter — alles was Google nicht weiß." : lang === "en" ? "Hidden coves, local konobas, parking, weather — everything Google doesn't know." : "Skrivene uvale, lokalne konobe, parking, vrijeme — sve što Google ne zna.")}
               </div>
             </div>
             {/* Urgency */}
