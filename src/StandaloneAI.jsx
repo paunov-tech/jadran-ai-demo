@@ -257,10 +257,11 @@ export default function StandaloneAI() {
           return "setup"; // expired
         }
       }
-      // Don't auto-skip if coming from Stripe (payment=success/cancelled in URL)
+      // Don't auto-skip if coming from Stripe or from landing with niche
       const params = new URLSearchParams(window.location.search);
       const isPaymentRedirect = params.get("payment") === "success" || params.get("payment") === "cancelled";
-      if (isPrem && hasRegion && hasMode && !isPaymentRedirect) return "chat";
+      const hasNiche = !!params.get("niche"); // From landing page — user needs to pick region
+      if (isPrem && hasRegion && hasMode && !isPaymentRedirect && !hasNiche) return "chat";
     } catch {}
     return "setup";
   }); // setup | chat
