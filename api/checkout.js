@@ -15,11 +15,12 @@ export default async function handler(req, res) {
 
   try {
     const { roomCode, guestName, lang, returnPath, plan, region, deviceId, utm_source, utm_medium, utm_campaign } = req.body || {};
-    if (!plan || !["week", "season"].includes(plan)) return res.status(400).json({ error: "Invalid plan" });
+    if (!plan || !["week", "season", "vip"].includes(plan)) return res.status(400).json({ error: "Invalid plan" });
 
     const plans = {
-      week:   { name: "JADRAN Vodič — Tjedan (7 dana)", amount: 499, days: 7 },
-      season: { name: "JADRAN Vodič — Sezona (30 dana)", amount: 999, days: 30 },
+      week:   { name: "JADRAN Vodič — Explorer (7 dana)", amount: 999, days: 7 },
+      season: { name: "JADRAN Vodič — Sezona (30 dana)", amount: 1999, days: 30 },
+      vip:    { name: "JADRAN Vodič — VIP Sezona (30 dana)", amount: 4999, days: 30 },
     };
     const p = plans[plan] || plans.week;
 
@@ -96,7 +97,7 @@ export default async function handler(req, res) {
     if (err.message?.includes("tax") || err.message?.includes("Tax")) {
       try {
         const { roomCode, guestName, lang, returnPath, plan, region, deviceId, utm_source, utm_medium, utm_campaign } = req.body || {};
-        const plans = { week: { name: "JADRAN Vodič — Tjedan (7 dana)", amount: 499, days: 7 }, season: { name: "JADRAN Vodič — Sezona (30 dana)", amount: 999, days: 30 } };
+        const plans = { week: { name: "JADRAN Vodič — Explorer (7 dana)", amount: 999, days: 7 }, season: { name: "JADRAN Vodič — Sezona (30 dana)", amount: 1999, days: 30 }, vip: { name: "JADRAN Vodič — VIP Sezona (30 dana)", amount: 4999, days: 30 } };
         const p = plans[plan] || plans.week;
         const basePath = (returnPath || "/ai").split("?")[0];
         const session = await stripe.checkout.sessions.create({
