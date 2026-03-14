@@ -386,7 +386,24 @@ const [lang, setLang] = useState(() => {
   const [showPaywall, setShowPaywall] = useState(false);
 
   // Plausible analytics helper
-  const track = (event, props) => { try { window.plausible?.(event, { props }); } catch {} };
+  // Dual analytics: Plausible (privacy) + Meta Pixel (ads)
+  const track = (event, props) => {
+    try { window.plausible?.(event, { props }); } catch {}
+    try {
+      const pixelMap = {
+        checkout_click: "InitiateCheckout",
+        paywall_shown: "ViewContent",
+        chat_start: "ViewContent",
+        msg_sent: "ViewContent",
+        referral_share: "Lead",
+      };
+      if (pixelMap[event] && window.fbq) fbq("track", pixelMap[event], props || {});
+    } catch {}
+  };
+  const trackPurchase = (plan, amount, currency = "EUR") => {
+    try { window.plausible?.("purchase", { props: { plan, amount, currency } }); } catch {}
+    try { window.fbq?.("track", "Purchase", { value: amount, currency, content_name: plan }); } catch {}
+  };
   const [langOpen, setLangOpen] = useState(false);
   const curFlag = (LANGS.find(l => l.code === lang) || LANGS[0]).flag;
   const [showSuccess, setShowSuccess] = useState(false);
@@ -539,6 +556,7 @@ const [lang, setLang] = useState(() => {
               setPremium(true);
               setTrialExpired(false);
               setMsgCount(0);
+              trackPurchase(plan, plan === "season" ? 9.99 : 4.99);
               try { localStorage.removeItem("jadran_msg_count"); } catch {}
               try {
                 localStorage.setItem("jadran_ai_premium", "1");
@@ -669,6 +687,7 @@ const [lang, setLang] = useState(() => {
 
   const startCheckout = async (plan = "week") => {
     track("checkout_click", { plan, lang, region, niche });
+    try { window.fbq?.("track", "AddPaymentInfo", { content_name: plan, currency: "EUR", value: plan === "season" ? 9.99 : 4.99 }); } catch {}
     setPayLoading(true);
     try {
       // Generate/retrieve device ID for subscription binding
@@ -677,6 +696,9 @@ const [lang, setLang] = useState(() => {
         deviceId = "jd_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
         localStorage.setItem("jadran_device_id", deviceId);
       }
+      // Retrieve UTM params for Stripe metadata
+      let utmData = {};
+      try { utmData = JSON.parse(localStorage.getItem("jadran_utm") || "{}"); } catch {}
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -685,6 +707,9 @@ const [lang, setLang] = useState(() => {
           returnPath: "/ai" + (niche ? "?niche=" + niche + "&lang=" + lang : "?lang=" + lang),
           plan, region: plan === "week" ? (region || "split") : "all",
           deviceId,
+          utm_source: utmData.utm_source || "",
+          utm_medium: utmData.utm_medium || "",
+          utm_campaign: utmData.utm_campaign || "",
         }),
       });
       const data = await res.json();

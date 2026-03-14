@@ -100,6 +100,22 @@
     ::-webkit-scrollbar-thumb { background: rgba(14,165,233,0.2); border-radius: 3px; }
   </style>
 
+  <!-- Meta Pixel — base code (replace PIXEL_ID_PLACEHOLDER when created in Meta Business Suite) -->
+  <script>
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+    document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', 'PIXEL_ID_PLACEHOLDER');
+    fbq('track', 'PageView');
+  </script>
+
+  <!-- UTM capture — persist 7 params for 30 days -->
+  <script>
+    (function(){try{var p=new URLSearchParams(location.search);var k=['utm_source','utm_medium','utm_campaign','utm_term','utm_content','utm_id','fbclid'];var d={};var any=false;k.forEach(function(u){var v=p.get(u);if(v){d[u]=v;any=true;}});if(any){d._ts=Date.now();localStorage.setItem('jadran_utm',JSON.stringify(d));}else{var s=localStorage.getItem('jadran_utm');if(s){var o=JSON.parse(s);if(Date.now()-o._ts>30*86400000)localStorage.removeItem('jadran_utm');}}}catch(e){}})();
+  </script>
+
   <!-- Privacy-friendly analytics by Plausible -->
   <script defer src="https://plausible.io/js/pa-4H3Ddppp-5YkZGFcHR_iz.js"></script>
   <script>
@@ -125,6 +141,9 @@
   </script>
 </head>
 <body>
+  <!-- Meta Pixel noscript fallback -->
+  <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=PIXEL_ID_PLACEHOLDER&ev=PageView&noscript=1" /></noscript>
+
   <div id="root">
     <div id="preload" style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:rgba(14,165,233,0.6);font-family:system-ui;font-size:18px;flex-direction:column;gap:12px;">
       <div style="font-size:32px;">🌊</div>

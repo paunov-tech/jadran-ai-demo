@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
   try {
-    const { roomCode, guestName, lang, returnPath, plan, region, deviceId } = req.body || {};
+    const { roomCode, guestName, lang, returnPath, plan, region, deviceId, utm_source, utm_medium, utm_campaign } = req.body || {};
     if (!plan || !["week", "season"].includes(plan)) return res.status(400).json({ error: "Invalid plan" });
     const origin = "https://jadran.ai"; // Hardcoded — prevents open redirect via forged Origin header
 
@@ -61,6 +61,9 @@ export default async function handler(req, res) {
         days: String(p.days),
         deviceId: deviceId || "unknown",
         lang: lang || "hr",
+        utm_source: utm_source || "",
+        utm_medium: utm_medium || "",
+        utm_campaign: utm_campaign || "",
       },
       locale: lang === "de" || lang === "at" ? "de" : lang === "en" ? "en" : lang === "it" ? "it" : lang === "hr" ? "hr" : "auto",
     };
@@ -79,7 +82,7 @@ export default async function handler(req, res) {
     // If automatic_tax fails, retry without it
     if (err.message?.includes("tax") || err.message?.includes("Tax")) {
       try {
-        const { roomCode, guestName, lang, returnPath, plan, region, deviceId } = req.body || {};
+        const { roomCode, guestName, lang, returnPath, plan, region, deviceId, utm_source, utm_medium, utm_campaign } = req.body || {};
         const plans = { week: { name: "JADRAN Vodič — Tjedan (7 dana)", amount: 499, days: 7 }, season: { name: "JADRAN Vodič — Sezona (30 dana)", amount: 999, days: 30 } };
         const p = plans[plan] || plans.week;
         const basePath = (returnPath || "/ai").split("?")[0];
@@ -92,7 +95,7 @@ export default async function handler(req, res) {
           invoice_creation: { enabled: true },
           success_url: `${origin}${basePath}?payment=success&plan=${plan}&days=${p.days}&region=${region || "all"}&session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${origin}${basePath}?payment=cancelled`,
-          metadata: { roomCode: roomCode || "AI-STANDALONE", guestName: guestName || "Guest", plan: plan || "week", region: region || "all", days: String(p.days), deviceId: deviceId || "unknown", lang: lang || "hr" },
+          metadata: { roomCode: roomCode || "AI-STANDALONE", guestName: guestName || "Guest", plan: plan || "week", region: region || "all", days: String(p.days), deviceId: deviceId || "unknown", lang: lang || "hr", utm_source: utm_source || "", utm_medium: utm_medium || "", utm_campaign: utm_campaign || "" },
           locale: lang === "de" || lang === "at" ? "de" : lang === "en" ? "en" : lang === "it" ? "it" : lang === "hr" ? "hr" : "auto",
         });
         console.log("Checkout created without Tax (fallback)");
