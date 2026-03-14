@@ -10,10 +10,14 @@ const goToStripe = async (plan = "season", lang = "en") => {
   try {
     let deviceId;
     try { deviceId = localStorage.getItem("jadran_device_id"); if (!deviceId) { deviceId = "jd_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8); localStorage.setItem("jadran_device_id", deviceId); } } catch { deviceId = "unknown"; }
+    let utmData = {};
+    try { utmData = JSON.parse(localStorage.getItem("jadran_utm") || "{}"); } catch {}
+    // Save session so post-payment redirect enters chat
+    try { localStorage.setItem("jadran_session", JSON.stringify({ region: plan === "week" ? "split" : "split", travelMode: "apartment", lang })); } catch {}
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roomCode: "AI-STANDALONE", guestName: "AI User", lang, returnPath: "/ai", plan, region: "all", deviceId }),
+      body: JSON.stringify({ roomCode: "AI-STANDALONE", guestName: "AI User", lang, returnPath: "/ai", plan, region: plan === "week" ? "split" : "all", deviceId, utm_source: utmData.utm_source || "", utm_medium: utmData.utm_medium || "", utm_campaign: utmData.utm_campaign || "" }),
     });
     const data = await res.json();
     if (data.url) window.location.href = data.url;
@@ -83,6 +87,7 @@ export default function LandingPage() {
   const [trendImgs, setTrendImgs] = useState({});
   const [cityImgs, setCityImgs] = useState({});
   const [carouselIdx, setCarouselIdx] = useState(0);
+  const [showPlanPicker, setShowPlanPicker] = useState(false);
   const [isPremium, setIsPremium] = useState(() => {
     try { return localStorage.getItem("jadran_ai_premium") === "1"; } catch { return false; }
   });
@@ -419,7 +424,7 @@ export default function LandingPage() {
           </div>
         </div>
       ) : (
-        <div onClick={() => goToStripe("season", lang)} style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99, cursor: "pointer", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+        <div onClick={() => setShowPlanPicker(true)} style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99, cursor: "pointer", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
           <div style={{ position: "relative", overflow: "hidden", padding: "12px 20px", background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)", borderTop: "1px solid rgba(245,158,11,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 -8px 32px rgba(0,0,0,0.5)" }}>
             {/* Shimmer accent line */}
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, transparent, #f59e0b, #fbbf24, #f59e0b, transparent)" }} />
@@ -431,7 +436,60 @@ export default function LandingPage() {
               </div>
             </div>
             <div style={{ padding: "10px 20px", borderRadius: 12, background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#0f172a", fontWeight: 800, fontSize: 14, fontFamily: F, boxShadow: "0 4px 16px rgba(245,158,11,0.3)", letterSpacing: 0.5 }}>
-              9.99€
+              {tx("sticky") || "Od 4.99€"} →
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ PLAN PICKER MODAL ═══ */}
+      {showPlanPicker && (
+        <div onClick={() => setShowPlanPicker(false)} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", display: "grid", placeItems: "center", padding: 20 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#0f172a", borderRadius: 24, padding: "32px 24px", maxWidth: 380, width: "100%", border: "1px solid rgba(245,158,11,0.15)", boxShadow: "0 24px 64px rgba(0,0,0,0.5)" }}>
+            <div style={{ textAlign: "center", marginBottom: 24 }}>
+              <div style={{ fontSize: 11, color: "#f59e0b", letterSpacing: 3, fontWeight: 600, marginBottom: 8 }}>
+                {lang === "en" ? "CHOOSE YOUR PLAN" : lang === "de" || lang === "at" ? "WÄHLE DEIN PAKET" : lang === "it" ? "SCEGLI IL TUO PIANO" : "ODABERI PAKET"}
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", fontFamily: "'Playfair Display',Georgia,serif" }}>
+                {lang === "en" ? "Unlock your guide" : lang === "de" || lang === "at" ? "Guide freischalten" : lang === "it" ? "Sblocca la guida" : "Otključaj vodiča"}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+              {/* Week */}
+              <div onClick={() => { setShowPlanPicker(false); goToStripe("week", lang); }}
+                style={{ flex: 1, padding: "20px 14px", borderRadius: 16, border: "1px solid rgba(14,165,233,0.3)", background: "rgba(14,165,233,0.06)", cursor: "pointer", textAlign: "center", transition: "all 0.2s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "#0ea5e9"; e.currentTarget.style.transform = "scale(1.03)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.3)"; e.currentTarget.style.transform = "scale(1)"; }}>
+                <div style={{ fontSize: 28, fontWeight: 800, color: "#0ea5e9" }}>4.99€</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", marginTop: 4 }}>
+                  {lang === "en" ? "1 Week" : lang === "de" || lang === "at" ? "1 Woche" : lang === "it" ? "1 Settimana" : "1 Tjedan"}
+                </div>
+                <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 4 }}>
+                  {lang === "en" ? "7 days · 1 region" : lang === "de" || lang === "at" ? "7 Tage · 1 Region" : lang === "it" ? "7 giorni · 1 regione" : "7 dana · 1 regija"}
+                </div>
+              </div>
+              {/* Season */}
+              <div onClick={() => { setShowPlanPicker(false); goToStripe("season", lang); }}
+                style={{ flex: 1, padding: "20px 14px", borderRadius: 16, border: "1px solid rgba(245,158,11,0.3)", background: "rgba(245,158,11,0.06)", cursor: "pointer", textAlign: "center", position: "relative", transition: "all 0.2s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "#f59e0b"; e.currentTarget.style.transform = "scale(1.03)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(245,158,11,0.3)"; e.currentTarget.style.transform = "scale(1)"; }}>
+                <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", fontSize: 9, fontWeight: 700, color: "#0f172a", background: "linear-gradient(135deg, #f59e0b, #fbbf24)", padding: "3px 10px", borderRadius: 8, whiteSpace: "nowrap" }}>
+                  {lang === "en" ? "BEST VALUE" : lang === "de" || lang === "at" ? "BEST PREIS" : lang === "it" ? "MIGLIORE" : "NAJBOLJE"}
+                </div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: "#f59e0b" }}>9.99€</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", marginTop: 4 }}>
+                  {lang === "en" ? "Full Season" : lang === "de" || lang === "at" ? "Ganze Saison" : lang === "it" ? "Tutta Stagione" : "Cijela Sezona"}
+                </div>
+                <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 4 }}>
+                  {lang === "en" ? "30 days · all regions" : lang === "de" || lang === "at" ? "30 Tage · alle Regionen" : lang === "it" ? "30 giorni · tutte regioni" : "30 dana · sve regije"}
+                </div>
+              </div>
+            </div>
+            <div style={{ textAlign: "center", fontSize: 10, color: "#64748b" }}>
+              {lang === "en" ? "Secure payment via Stripe · No hidden fees" : lang === "de" || lang === "at" ? "Sichere Zahlung über Stripe · Keine versteckten Kosten" : lang === "it" ? "Pagamento sicuro via Stripe · Nessun costo nascosto" : "Sigurno plaćanje putem Stripe · Bez skrivenih troškova"}
+            </div>
+            <div onClick={() => setShowPlanPicker(false)} style={{ textAlign: "center", marginTop: 16, fontSize: 12, color: "#475569", cursor: "pointer" }}>
+              {lang === "en" ? "Maybe later" : lang === "de" || lang === "at" ? "Vielleicht später" : lang === "it" ? "Forse dopo" : "Možda kasnije"}
             </div>
           </div>
         </div>
