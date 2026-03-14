@@ -407,7 +407,7 @@ const S = {
     minHeight: "100vh", fontFamily: "'Outfit', system-ui, sans-serif", color: "#f0f9ff",
   },
   loginCard: {
-    position: "relative", zIndex: 10, textAlign: "center",
+    zIndex: 10, textAlign: "center",
     width: "min(380px, 90vw)", padding: "40px 32px",
     background: "rgba(12,28,50,0.85)", backdropFilter: "blur(40px)",
     border: "1px solid rgba(14,165,233,0.1)", borderRadius: 24,

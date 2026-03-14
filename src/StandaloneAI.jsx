@@ -413,6 +413,7 @@ const [lang, setLang] = useState(() => {
   const [dailyNews, setDailyNews] = useState(null);
   const [invitedBy, setInvitedBy] = useState(() => { try { return localStorage.getItem("jadran_invited_by"); } catch { return null; } });
   const [referralToast, setReferralToast] = useState(null);
+  const [globalToast, setGlobalToast] = useState(null);
   const [showInviteWelcome, setShowInviteWelcome] = useState(false);
 
   // Chat
@@ -430,6 +431,15 @@ const [lang, setLang] = useState(() => {
   const [regionImgs, setRegionImgs] = useState({});
 
   useEffect(() => { scrollAnchor.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [msgs, loading]);
+
+  // iOS keyboard: scroll input into view when virtual keyboard opens
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () => { if (document.activeElement?.tagName === "INPUT") setTimeout(() => document.activeElement?.scrollIntoView?.({ block: "nearest" }), 100); };
+    vv.addEventListener("resize", onResize);
+    return () => vv.removeEventListener("resize", onResize);
+  }, []);
 
   // Region → coordinates (coastal points for accurate marine data)
   const COORDS = {
@@ -523,13 +533,14 @@ const [lang, setLang] = useState(() => {
             fsMod.getDoc(fsMod.doc(fbMod.db, "jadran_premium", deviceId)).then(snap => {
               if (snap.exists()) {
                 const d = snap.data();
-                const expiresAt = d.expiresAt?.toDate ? d.expiresAt.toDate().getTime() : parseInt(d.expiresAt || "0");
+                const rawExp = d.expiresAt;
+                const expiresAt = rawExp?.toDate ? rawExp.toDate().getTime() : (typeof rawExp === "string" && rawExp.includes("T") ? new Date(rawExp).getTime() : parseInt(rawExp || "0"));
                 if (expiresAt > Date.now()) {
                   setPremium(true); setTrialExpired(false); setMsgCount(0);
                   try {
                     localStorage.setItem("jadran_ai_premium", "1");
                     localStorage.removeItem("jadran_msg_count");
-                    const premData = { plan: d.plan, days: parseInt(d.days || "7"), region: d.region || "all", expiresAt, purchasedAt: d.paidAt?.toDate ? d.paidAt.toDate().toISOString() : new Date().toISOString() };
+                    const premData = { plan: d.plan, days: parseInt(d.days || "7"), region: d.region || "all", expiresAt, purchasedAt: d.paidAt?.toDate ? d.paidAt.toDate().toISOString() : (typeof d.paidAt === "string" ? d.paidAt : new Date().toISOString()) };
                     localStorage.setItem("jadran_premium_plan", JSON.stringify(premData));
                     setPremiumPlan(premData);
                   } catch {}
@@ -741,6 +752,8 @@ const [lang, setLang] = useState(() => {
               if (d.ok && !d.already) {
                 // Reward this user too
                 setPremium(true); setTrialExpired(false); setMsgCount(0);
+                setGlobalToast(lang === "en" ? "🎉 48h Premium unlocked!" : lang === "de" || lang === "at" ? "🎉 48h Premium freigeschaltet!" : lang === "it" ? "🎉 48h Premium sbloccato!" : "🎉 48h Premium otključan!");
+                setTimeout(() => setGlobalToast(null), 4000);
                 try { localStorage.removeItem("jadran_msg_count"); localStorage.setItem("jadran_ai_premium", "1");
                   localStorage.setItem("jadran_premium_plan", JSON.stringify({ plan: "referral", days: 2, region: "all", expiresAt: Date.now() + 48*3600000, purchasedAt: new Date().toISOString() }));
                   localStorage.removeItem("jadran_invited_by");
@@ -844,7 +857,7 @@ const [lang, setLang] = useState(() => {
   const Paywall = () => showPaywall && (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)", zIndex: 300, display: "grid", placeItems: "center", padding: 24 }}
       onClick={() => setShowPaywall(false)}>
-      <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "32px 24px", maxWidth: 440, width: "100%", border: "1px solid rgba(245,158,11,0.1)" }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "32px 24px", maxWidth: 440, width: "100%", border: "1px solid rgba(245,158,11,0.1)", maxHeight: "90dvh", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 16, fontWeight: 700, color: C.accent, letterSpacing: 2, marginBottom: 6 }}>JADRAN.AI</div>
           <div style={{ fontSize: 10, color: C.mut, letterSpacing: 3, fontWeight: 600, marginBottom: 8 }}>{t.payExpired}</div>
@@ -1315,16 +1328,16 @@ const [lang, setLang] = useState(() => {
 
       {/* Header */}
       <div style={{ padding: "14px 20px", paddingTop: "max(14px, env(safe-area-inset-top, 14px))", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.bord}`, flexShrink: 0, background: isNight ? "transparent" : "rgba(255,255,255,0.4)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
           <button onClick={() => { setStep("setup"); window.scrollTo(0, 0); }} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 10, border: `1px solid ${C.bord}`, background: "transparent", color: C.text, fontSize: 16, cursor: "pointer", transition: "all 0.2s", flexShrink: 0 }}
               onMouseEnter={e => e.currentTarget.style.borderColor = C.accent}
               onMouseLeave={e => e.currentTarget.style.borderColor = C.bord}>‹</button>
-          <div style={{ width: 1, height: 20, background: C.bord }} />
-          <span style={{ fontSize: 18 }}>{TRAVEL_MODES.find(m => m.id === travelMode)?.emoji}</span>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>{REGIONS.find(r => r.id === region)?.name}</span>
-          {weather && <span style={{ fontSize: 12, color: C.mut, marginLeft: 4 }}>{weather.icon} {weather.temp}° · 🌊 {weather.sea}°</span>}
+          <div style={{ width: 1, height: 20, background: C.bord, flexShrink: 0 }} />
+          <span style={{ fontSize: 18, flexShrink: 0 }}>{TRAVEL_MODES.find(m => m.id === travelMode)?.emoji}</span>
+          <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{REGIONS.find(r => r.id === region)?.name}</span>
+          {weather && <span style={{ fontSize: 12, color: C.mut, marginLeft: 4, whiteSpace: "nowrap", flexShrink: 0 }}>{weather.icon} {weather.temp}° · 🌊 {weather.sea}°</span>}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
           {(travelMode === "camper" || travelMode === "sailing") && (
             <button onClick={toggleWalkie} style={{ padding: "4px 10px", borderRadius: 10, background: walkieMode ? "rgba(34,197,94,0.12)" : "transparent", border: `1px solid ${walkieMode ? "rgba(34,197,94,0.2)" : C.bord}`, color: walkieMode ? "#22c55e" : C.mut, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
               {walkieMode ? "📻 ON" : "📻"}
@@ -2062,6 +2075,7 @@ const [lang, setLang] = useState(() => {
       <InviteWelcome />
       <VerifyingOverlay />
       <SuccessModal />
+      {globalToast && <div style={{ position: "fixed", top: 24, left: "50%", transform: "translateX(-50%)", zIndex: 500, background: "linear-gradient(135deg, #22c55e, #16a34a)", color: "#fff", padding: "14px 28px", borderRadius: 16, fontSize: 15, fontWeight: 700, fontFamily: "'Playfair Display',Georgia,serif", boxShadow: "0 8px 32px rgba(34,197,94,0.4)", animation: "fadeInDown 0.3s ease", whiteSpace: "nowrap" }}>{globalToast}</div>}
 
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -2072,6 +2086,7 @@ const [lang, setLang] = useState(() => {
         @keyframes seaV2 { 0%,100% { d: path('M0,30 C50,22 100,35 160,25 C220,15 280,32 340,22 C370,18 400,28 400,28 L400,80 L0,80 Z'); } 50% { d: path('M0,22 C50,32 100,18 160,30 C220,38 280,20 340,32 C370,35 400,24 400,24 L400,80 L0,80 Z'); } }
         @keyframes sunGlow { 0%,100% { box-shadow: 0 0 60px rgba(251,191,36,0.4), 0 0 120px rgba(251,191,36,0.15); } 50% { box-shadow: 0 0 80px rgba(251,191,36,0.5), 0 0 160px rgba(251,191,36,0.2); } }
         @keyframes fadeSlide { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateX(-50%) translateY(-16px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: rgba(14,165,233,0.15); border-radius: 2px; }
       `}</style>
