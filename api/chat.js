@@ -214,7 +214,7 @@ const LANG_MAP = {
 };
 
 // ── MAIN ASSEMBLER ──
-function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts }) {
+function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage }) {
   const parts = [];
 
   // 1. BASE
@@ -222,25 +222,76 @@ function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, 
 
   // ═══ EMERGENCY ALERTS — HIGHEST PRIORITY ═══
   if (emergencyAlerts?.length) {
-    const alertLines = emergencyAlerts.map(a => {
-      const sev = a.severity === "critical" ? "🚨 KRITIČNO" : a.severity === "high" ? "⚠️ VISOKO" : "ℹ️";
-      const type = a.type === "fire" ? "POŽAR" : a.type === "weather" ? "VRIJEME" : "UPOZORENJE";
-      return `${sev} [${type}] ${a.region || ""}: ${a.title || a.description || ""} (${a.count ? a.count + " žarišta" : ""})`;
-    }).join("\n");
-    parts.push(`
-═══ HITNA UPOZORENJA — AKTIVNA UPRAVO SAD ═══
-${alertLines}
+    // Step 1: NLP — extract location from user's last message
+    const lastMsg = (lastUserMessage || "").toLowerCase();
+    const LOCATION_LEXICON = {
+      istra:     ["istra","istri","pula","puli","rovinj","rovinj","poreč","poreču","labin","pazin","umag","novigrad","medulin","fažan","rabac","vrsar","motovun"],
+      kvarner:   ["kvarner","kvarneru","rijeka","rijeci","cres","cresu","lošinj","lošinju","krk","krku","rab","rabu","opatija","opatiji","senj","senju","crikvenica","bakar"],
+      zadar:     ["zadar","zadru","šibenik","šibeniku","biograd","biogradu","nin","ninu","pag","pagu","ugljan","pašman","kornati","murter","vodice","knin","drniš","skradin","tribunj","privlaka"],
+      split:     ["split","splitu","trogir","trogiru","hvar","hvaru","brač","braču","solin","solinu","kaštela","kaštelima","vis","visu","šolta","bol","bolu","supetar","stari grad","jelsa","sinj","sinju","klis","žrnovnica","srinjine","podstrana","stobreč"],
+      makarska:  ["makarska","makarsk","biokovo","biokovu","omiš","omišu","baška voda","brela","brelima","tučepi","podgora","podgori","gradac","gradcu","živogošć","krilo","tucepi"],
+      dubrovnik: ["dubrovnik","dubrovniku","korčula","korčuli","pelješac","pelješcu","mljet","mljetu","lastovo","lastovu","cavtat","cavtatu","ston","stonu","slano","orebić","orebić","metković","ploče","neum","neumu","lopud","elafiti"],
+    };
 
-KRITIČNA PRAVILA ZA HITNA UPOZORENJA:
-1. AKO korisnik pita o bilo čemu u regiji pogođenoj upozorenjem, ODMAH prvo spomeni upozorenje.
-2. Za POŽARE: upozori na dim, zatvorene ceste, moguću evakuaciju. Preporuči praćenje civilne zaštite (112).
-3. Za BURU/OLUJU: upozori na opasnost za kampere, šatore, marine. Preporuči sklonište.
-4. Za TOPLINSKI VAL: upozori na dehidraciju, preporuči izbjegavanje sunca 11-17h.
-5. UVIJEK navedi broj 112 za hitne slučajeve.
-6. NE umanjuj opasnost. Bolje pretjerano upozoriti nego ne upozoriti.
-7. Ako je požar u blizini korisnikove regije, upozori I na dim koji može putovati daleko.
-═══════════════════════════════════════════════
+    // Step 2: Match user's message to regions
+    const mentionedRegions = new Set();
+    for (const [regionId, keywords] of Object.entries(LOCATION_LEXICON)) {
+      for (const kw of keywords) {
+        if (lastMsg.includes(kw)) {
+          mentionedRegions.add(regionId);
+          break;
+        }
+      }
+    }
+    // Also add current session region
+    if (region) mentionedRegions.add(region);
+
+    // Step 3: Find alerts matching mentioned regions
+    const matchedAlerts = emergencyAlerts.filter(a => 
+      a.severity === "critical" || // Critical always shown
+      !a.region || // No region = global
+      mentionedRegions.has(a.region) || // Direct match
+      mentionedRegions.size === 0 // No region detected = show all high+
+    );
+
+    // Step 4: Build ALERT_OVERRIDE injection
+    if (matchedAlerts.length > 0) {
+      const overrideLines = matchedAlerts.map(a => {
+        const sev = a.severity === "critical" ? "🚨 KRITIČNO" : a.severity === "high" ? "⚠️ OPASNO" : "ℹ️ UPOZORENJE";
+        const tipo = a.type === "fire" ? "POŽAR" : a.type === "wind" ? "BURA/VJETAR" : a.type === "heat" ? "TOPLINSKI VAL" : a.type === "storm" ? "OLUJA" : a.type === "flood" ? "POPLAVA" : a.type === "coastal" ? "VALOVI" : "METEO";
+        const loc = a.region ? LOCATION_LEXICON[a.region]?.[0]?.toUpperCase() || a.region.toUpperCase() : "JADRAN";
+        const detail = a.title || a.description || "";
+        return `[${sev}] ${tipo} — ${loc}: ${detail} ${a.count ? `(${a.count} žarišta)` : ""} [Izvor: ${a.source || "N/A"}]`;
+      }).join("\n");
+
+      // ALERT_OVERRIDE goes BEFORE everything else in prompt
+      parts.unshift(`
+[CRITICAL SYSTEM ALERT_OVERRIDE]
+═══════════════════════════════════════════════════════════════
+AKTIVNA UPOZORENJA ZA LOKACIJU KORISNIKA:
+${overrideLines}
+═══════════════════════════════════════════════════════════════
+
+OBAVEZNA PRAVILA (ne smiju se zaobići):
+1. Tvoj odgovor MORA POČETI dramatičnim, kratkim upozorenjem na jeziku korisnika.
+   Primjer: "🔥 UPOZORENJE: Aktivan požar u Makarskoj! Pratite civilnu zaštitu (112)."
+   Primjer: "💨 OPREZ: Bura olujne jačine na Kvarneru! Sklonite kampere i šatore."
+2. TEK NAKON upozorenja, odgovori na korisnikovo pitanje, ali uvijek savjetuj sigurnost.
+3. Za POŽARE: navedi dim, zatvorene ceste, evakuacijske rute, sklonište, 112.
+4. Za BURU: navedi opasnost za kampere, šatore, marine, trajekte. Preporuči sklonište.
+5. Za TOPLINSKI VAL: navedi dehidraciju, sunčanicu, izbjegavaj sunce 11-17h, dovoljno vode.
+6. NIKADA ne umanjuj opasnost. Ljudski život je apsolutni prioritet.
+7. Uvijek navedi: Hitni broj 112 | Civilna zaštita | Provjeri HAK.hr za stanje cesta.
+[END ALERT_OVERRIDE]
 `);
+    } else if (emergencyAlerts.length > 0) {
+      // No direct region match but alerts exist — add as background context
+      const bgLines = emergencyAlerts.slice(0, 3).map(a => {
+        const tipo = a.type === "fire" ? "POŽAR" : "METEO";
+        return `${tipo} u regiji ${a.region || "N/A"}: ${a.title || a.description || ""}`;
+      }).join("; ");
+      parts.push(`\n[POZADINSKI ALARMI]: ${bgLines}. Ako korisnik pita o tim regijama, ODMAH upozori.`);
+    }
   }
 
   // 1b. WALKIE MODE — ultra-short responses for TTS
@@ -350,10 +401,13 @@ export default async function handler(req, res) {
   try {
     const { system, messages, mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts } = req.body;
 
+    // Extract last user message for NLP region-matching against alerts
+    const lastUserMessage = [...(messages || [])].reverse().find(m => m.role === "user")?.content || "";
+
     let systemPrompt = '';
     try {
       systemPrompt = mode && region 
-        ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts })
+        ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage })
         : (system || '');
     } catch (promptErr) {
       // If prompt building fails, use minimal fallback

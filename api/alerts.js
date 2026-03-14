@@ -151,11 +151,86 @@ async function fetchWeatherAlerts() {
   }
 }
 
+// HVZ — Hrvatska vatrogasna zajednica DVOC reports (scrape news page)
+// Source: hvz.gov.hr/vijesti/8 — daily fire intervention reports
+async function fetchHVZ() {
+  try {
+    const url = "https://hvz.gov.hr/vijesti/8";
+    const res = await fetch(url, { 
+      headers: { "User-Agent": "JadranAI/1.0", "Accept": "text/html" },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return [];
+    const html = await res.text();
+    
+    const alerts = [];
+    // Look for DVOC reports with fire keywords in last 3 days
+    const dvocPattern = /DVOC[^<]{0,100}(\d{1,2}\.\s*(?:siječnja|veljače|ožujka|travnja|svibnja|lipnja|srpnja|kolovoza|rujna|listopada|studenoga?|prosinca)\s*\d{4})[^<]*požar/gi;
+    const fireKeywords = /požar\s+(?:otvorenog\s+prostora|raslinja|šume).*?(?:na\s+području|kod|blizu)\s+([^.]{5,80})/gi;
+    
+    // Extract fire locations from recent DVOC titles/summaries
+    const blocks = html.match(/<a[^>]*href="[^"]*vijesti[^"]*"[^>]*>[^<]*(?:požar|DVOC)[^<]*<\/a>/gi) || [];
+    
+    // Also check for inline fire mentions
+    const fireBlocks = html.match(/(?:požar|gori|evakuacij)[^<]{10,300}(?:Dalmacij|Split|Makarska|Dubrovnik|Zadar|Šibenik|Istra|Kvarner|Biokovo|Omiš|Hvar|Brač|Korčula|Pelješac|Trogir)/gi) || [];
+    
+    const regionNames = {
+      istra: ["istra", "istria", "pula", "rovinj", "poreč", "labin", "pazin", "umag", "novigrad"],
+      kvarner: ["kvarner", "rijeka", "cres", "lošinj", "krk", "rab", "opatija", "senj", "crikvenica"],
+      zadar: ["zadar", "šibenik", "biograd", "nin", "pag", "ugljan", "pašman", "kornati", "murter", "vodice", "knin", "drniš", "skradin"],
+      split: ["split", "trogir", "hvar", "brač", "solin", "kaštela", "vis", "šolta", "bol", "supetar", "stari grad", "jelsa", "sinj", "klis", "žrnovnica", "srinjine"],
+      makarska: ["makarska", "biokovo", "omiš", "baška voda", "brela", "tučepi", "podgora", "gradac", "živogošće", "krilo jesenica"],
+      dubrovnik: ["dubrovnik", "korčula", "pelješac", "mljet", "lastovo", "cavtat", "ston", "slano", "orebić", "metković", "ploče", "neum"],
+    };
+    
+    for (const block of [...blocks, ...fireBlocks]) {
+      const text = block.replace(/<[^>]*>/g, "").toLowerCase();
+      
+      // Only care about fire-related content
+      if (!text.includes("požar") && !text.includes("gori") && !text.includes("evakuacij")) continue;
+      
+      // Determine region
+      let region = "";
+      for (const [id, names] of Object.entries(regionNames)) {
+        if (names.some(n => text.includes(n))) {
+          region = id;
+          break;
+        }
+      }
+      
+      // Determine severity from keywords
+      let severity = "medium";
+      if (text.includes("evakuacij") || text.includes("canadair") || text.includes("opasnost za") || text.includes("ugrož")) severity = "critical";
+      else if (text.includes("veliki") || text.includes("širi se") || text.match(/\d{2,}\s*ha/)) severity = "high";
+      
+      const cleanTitle = block.replace(/<[^>]*>/g, "").trim().slice(0, 200);
+      
+      // Avoid duplicates
+      if (alerts.some(a => a.title === cleanTitle)) continue;
+      
+      alerts.push({
+        type: "fire",
+        severity,
+        region,
+        title: cleanTitle,
+        description: `Izvor: HVZ DVOC (Državni vatrogasni operativni centar 193). Provjerite hvz.gov.hr za detalje.`,
+        source: "HVZ",
+        time: new Date().toISOString(),
+      });
+    }
+    return alerts.slice(0, 5); // max 5 HVZ alerts
+  } catch (err) {
+    console.error("[ALERTS] HVZ error:", err.message);
+    return [];
+  }
+}
+
 // Aggregate all sources
 async function aggregateAlerts() {
-  const [fires, weather] = await Promise.all([
+  const [fires, weather, hvz] = await Promise.all([
     fetchFires(),
     fetchWeatherAlerts(),
+    fetchHVZ(),
   ]);
 
   // Deduplicate fires by proximity (cluster within 0.05 degrees ≈ 5km)
@@ -177,13 +252,14 @@ async function aggregateAlerts() {
 
   // Sort by severity
   const severityOrder = { critical: 0, high: 1, medium: 2 };
-  const all = [...clustered, ...weather].sort((a, b) =>
+  const all = [...clustered, ...weather, ...hvz].sort((a, b) =>
     (severityOrder[a.severity] || 3) - (severityOrder[b.severity] || 3)
   );
 
   return {
-    fires: clustered.length,
+    fires: clustered.length + hvz.filter(a => a.type === "fire").length,
     weather: weather.length,
+    hvz: hvz.length,
     total: all.length,
     alerts: all.slice(0, 10), // Max 10 alerts
     updated: new Date().toISOString(),
