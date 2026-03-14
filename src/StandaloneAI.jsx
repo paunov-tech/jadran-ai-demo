@@ -1490,8 +1490,8 @@ const [lang, setLang] = useState(() => {
             </button>
           )}
           {premium
-            ? <span style={{ padding: "4px 12px", borderRadius: 12, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.12)", color: C.gold, fontSize: 10, fontWeight: 600 }}>⭐ {premiumPlan?.plan === "season" ? "SEZONA" : "TJEDAN"} {premiumPlan ? Math.ceil((premiumPlan.expiresAt - Date.now()) / 86400000) + "d" : ""}</span>
-            : <button onClick={() => trialExpired ? startCheckout("season") : null} disabled={payLoading} style={{ padding: trialExpired ? "6px 14px" : "4px 12px", borderRadius: 12, background: trialExpired ? "linear-gradient(135deg, #ef4444, #dc2626)" : "rgba(52,211,153,0.08)", border: trialExpired ? "none" : "1px solid rgba(52,211,153,0.12)", color: trialExpired ? "#fff" : "#34d399", fontSize: trialExpired ? 11 : 10, fontWeight: trialExpired ? 700 : 600, cursor: trialExpired ? "pointer" : "default", fontFamily: "inherit", boxShadow: trialExpired ? "0 2px 8px rgba(239,68,68,0.3)" : "none" }}>
+            ? <span style={{ padding: "4px 12px", borderRadius: 12, background: premiumPlan?.plan === "vip" ? "rgba(168,85,247,0.08)" : "rgba(245,158,11,0.08)", border: `1px solid ${premiumPlan?.plan === "vip" ? "rgba(168,85,247,0.12)" : "rgba(245,158,11,0.12)"}`, color: premiumPlan?.plan === "vip" ? "#a855f7" : C.gold, fontSize: 10, fontWeight: 600 }}>⭐ {premiumPlan?.plan === "vip" ? "VIP" : premiumPlan?.plan === "season" ? "SEZONA" : "EXPLORER"} {premiumPlan ? Math.ceil((premiumPlan.expiresAt - Date.now()) / 86400000) + "d" : ""}</span>
+            : <button onClick={() => trialExpired ? setShowPaywall(true) : null} disabled={payLoading} style={{ padding: trialExpired ? "6px 14px" : "4px 12px", borderRadius: 12, background: trialExpired ? "linear-gradient(135deg, #ef4444, #dc2626)" : "rgba(52,211,153,0.08)", border: trialExpired ? "none" : "1px solid rgba(52,211,153,0.12)", color: trialExpired ? "#fff" : "#34d399", fontSize: trialExpired ? 11 : 10, fontWeight: trialExpired ? 700 : 600, cursor: trialExpired ? "pointer" : "default", fontFamily: "inherit", boxShadow: trialExpired ? "0 2px 8px rgba(239,68,68,0.3)" : "none" }}>
                 {trialExpired ? `⭐ ${t.buyNow || "KUPI"}` : `${FREE_MSGS - msgCount}/${FREE_MSGS}`}
               </button>
           }
@@ -2171,7 +2171,7 @@ const [lang, setLang] = useState(() => {
       </div>
       {!premium && trialExpired && (
         <div style={{ flexShrink: 0 }}>
-          <button onClick={() => startCheckout("season")} disabled={payLoading} style={{ width: "100%", padding: "14px 20px", background: "linear-gradient(135deg, #ef4444, #dc2626)", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "'Playfair Display',Georgia,serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 -2px 12px rgba(239,68,68,0.3)" }}>
+          <button onClick={() => setShowPaywall(true)} disabled={payLoading} style={{ width: "100%", padding: "14px 20px", background: "linear-gradient(135deg, #ef4444, #dc2626)", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "'Playfair Display',Georgia,serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 -2px 12px rgba(239,68,68,0.3)" }}>
             ⭐ {t.buyNow || "KUPI PREMIUM"} <span style={{ fontSize: 12, opacity: 0.8 }}>— 9.99€</span>
           </button>
         </div>

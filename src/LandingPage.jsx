@@ -117,7 +117,7 @@ export default function LandingPage() {
         const d = JSON.parse(pp);
         const left = Math.ceil((d.expiresAt - Date.now()) / 86400000);
         setPremDays(left > 0 ? left : 0);
-        setPremLabel(d.plan === "season" ? (lang === "en" ? "SEASON" : lang === "de" || lang === "at" ? "SAISON" : lang === "it" ? "STAGIONE" : "SEZONA") : (lang === "en" ? "WEEK" : lang === "de" || lang === "at" ? "WOCHE" : lang === "it" ? "SETTIMANA" : "TJEDAN"));
+        setPremLabel(d.plan === "vip" ? "VIP" : d.plan === "season" ? (lang === "en" ? "SEASON" : lang === "de" || lang === "at" ? "SAISON" : lang === "it" ? "STAGIONE" : "SEZONA") : (lang === "en" ? "EXPLORER" : lang === "de" || lang === "at" ? "EXPLORER" : lang === "it" ? "EXPLORER" : "EXPLORER"));
       }
     } catch {}
   }, [lang]);
