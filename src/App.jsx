@@ -68,7 +68,7 @@ const T = {
   // ─── Premium ───
   premiumTitle:{ hr:"JADRAN AI Premium", de:"JADRAN AI Premium", at:"JADRAN AI Premium", en:"JADRAN AI Premium", it:"JADRAN AI Premium", si:"JADRAN AI Premium", cz:"JADRAN AI Premium", pl:"JADRAN AI Premium" },
   premiumDesc: { hr:"Otključajte AI vodič, skrivena mjesta i personalizirane preporuke.", de:"Schalten Sie AI-Guide, versteckte Orte und personalisierte Empfehlungen frei.", at:"Schalten Sie AI-Guide, versteckte Orte und personalisierte Empfehlungen frei.", en:"Unlock AI guide, hidden places, and personalized recommendations.", it:"Sblocca guida AI, luoghi nascosti e consigli personalizzati.", si:"Odklenite AI vodič, skrita mesta in prilagojene priporočila.", cz:"Odemkněte AI průvodce, skrytá místa a personalizovaná doporučení.", pl:"Odblokuj przewodnik AI, ukryte miejsca i spersonalizowane rekomendacje." },
-  unlockPremium:{ hr:"Otključaj Premium — 4.99€ →", de:"Premium freischalten — 4.99€ →", at:"Premium freischalten — 4.99€ →", en:"Unlock Premium — 4.99€ →", it:"Sblocca Premium — 4.99€ →", si:"Odklenite Premium — 4.99€ →", cz:"Odemknout Premium — 4.99€ →", pl:"Odblokuj Premium — 4.99€ →" },
+  unlockPremium:{ hr:"Otključaj Premium — 9.99€ →", de:"Premium freischalten — 9.99€ →", at:"Premium freischalten — 9.99€ →", en:"Unlock Premium — 9.99€ →", it:"Sblocca Premium — 9.99€ →", si:"Odklenite Premium — 9.99€ →", cz:"Odemknout Premium — 9.99€ →", pl:"Odblokuj Premium — 9.99€ →" },
   entireStay: { hr:"za cijeli boravak · jednokratno", de:"für den gesamten Aufenthalt · einmalig", at:"für den gesamten Aufenthalt · einmalig", en:"for entire stay · one-time", it:"per tutto il soggiorno · una tantum", si:"za celotno bivanje · enkratno", cz:"na celý pobyt · jednorázově", pl:"na cały pobyt · jednorazowo" },
 
   // ─── Chat ───
@@ -805,7 +805,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           {t("premiumDesc",lang)}
         </div>
         <div style={{ background: C.goDim, borderRadius: 16, padding: "20px", border: `1px solid rgba(251,191,36,0.12)`, marginBottom: 20 }}>
-          <div style={{ fontSize: 40, fontWeight: 300, color: C.gold }}>4.99€</div>
+          <div style={{ fontSize: 40, fontWeight: 300, color: C.gold }}>9.99€</div>
           <div style={{ ...dm, fontSize: 13, color: C.mut }}>{t("entireStay",lang)}</div>
         </div>
         <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.8, marginBottom: 20, textAlign: "left" }}>
@@ -1097,7 +1097,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           <div>
             <div style={{ ...dm, fontSize: 10, color: C.gold, fontWeight: 700, letterSpacing: 2, marginBottom: 4 }}>{t("aiRec",lang)}</div>
             {premium ? <div style={{ ...dm, fontSize: 15, color: C.text, lineHeight: 1.7, fontWeight: 300 }}>{tip}</div> : <div style={{ ...dm, fontSize: 15, color: C.text, lineHeight: 1.7, fontWeight: 300, filter: "blur(6px)", userSelect: "none" }}>{tip}</div>}
-            {!premium && <div style={{ ...dm, position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,22,40,0.3)", borderRadius: 22 }}><span style={{ background: C.goDim, padding: "8px 18px", borderRadius: 14, fontSize: 13, color: C.gold, fontWeight: 600, border: `1px solid rgba(245,158,11,0.15)` }}>⭐ Premium — 4.99€</span></div>}
+            {!premium && <div style={{ ...dm, position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,22,40,0.3)", borderRadius: 22 }}><span style={{ background: C.goDim, padding: "8px 18px", borderRadius: 14, fontSize: 13, color: C.gold, fontWeight: 600, border: `1px solid rgba(245,158,11,0.15)` }}>⭐ Premium — 9.99€</span></div>}
             {G.kids > 0 && hour >= 12 && hour < 18 && <div style={{ ...dm, fontSize: 13, color: C.accent, marginTop: 6 }}>👨‍👩‍👧‍👦 {({hr:"S djecom: Bačvice (pijesak, plitka voda) je savršena!",de:"Mit Kindern: Bačvice (Sand, flaches Wasser) ist perfekt!",en:"With kids: Bačvice (sand, shallow water) is perfect!",it:"Con bambini: Bačvice (sabbia, acqua bassa) è perfetta!",si:"Z otroki: Bačvice (pesek, plitva voda) je popolna!",cz:"S dětmi: Bačvice (písek, mělká voda) je perfektní!",pl:"Z dziećmi: Bačvice (piasek, płytka woda) jest idealna!"})[lang] || "S djecom: Bačvice (pijesak, plitka voda) je savršena!"}</div>}
           </div>
         </Card>
@@ -1387,7 +1387,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         {isAdmin && <Card>
           <div style={{ ...dm, fontSize: 11, textTransform: "uppercase", letterSpacing: 3, color: C.accent, marginBottom: 8 }}>💰 {t("revenue",lang)} (admin)</div>
           <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 2 }}>
-            Premium: <strong style={{ color: C.green }}>4.99€</strong><br />
+            Premium: <strong style={{ color: C.green }}>9.99–49.99€</strong><br />
             Affiliate: <strong style={{ color: C.green }}>~8-15€</strong><br />
             <span style={{ borderTop: `1px solid ${C.bord}`, display: "block", paddingTop: 4, marginTop: 4 }}>
               UKUPNO: <strong style={{ color: C.gold, fontSize: 18 }}>~20-30€</strong>
@@ -1429,7 +1429,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       {isAdmin && <Card style={{ background: `linear-gradient(135deg,rgba(251,191,36,0.04),rgba(14,165,233,0.03))`, borderColor: "rgba(251,191,36,0.08)" }}>
         <SectionLabel extra="ADMIN">MONETIZACIJA</SectionLabel>
         <div style={{ ...dm, fontSize: 14, color: C.mut, lineHeight: 1.8 }}>
-          1. Premium (4.99€) · 2. Affiliate (~8-15€) · 3. Host fee<br />
+          1. Premium (9.99€) · 2. Affiliate (~8-15€) · 3. Host fee<br />
           <span style={{ color: C.gold }}>📊 ~20-30€/gost</span>
         </div>
       </Card>}

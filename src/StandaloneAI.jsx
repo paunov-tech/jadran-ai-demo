@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // JADRAN AI — Standalone AI Assistant
 // Route: jadran.ai/ai
-// Premium 9.99€/week or 9.99€/season — 10 free messages trial
+// Explorer 9.99€ | Season 19.99€ | VIP 49.99€ — 10 free messages trial
 // Perfect for: campervan travelers, day-trippers, cruise visitors
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useRef } from "react";
@@ -405,6 +405,7 @@ const [lang, setLang] = useState(() => {
   const [msgCount, setMsgCount] = useState(0);
   const FREE_MSGS = 10;
   const PREMIUM_DAILY_LIMIT = 100; // Cost control: ~2€/day max API spend per user
+  const VIP_DAILY_LIMIT = 300; // VIP gets 3x more messages
   const [trialExpired, setTrialExpired] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
 
@@ -825,13 +826,15 @@ const [lang, setLang] = useState(() => {
         localStorage.setItem(dailyKey, String(dailyCount));
         // Clean old daily keys
         try { const yd = new Date(Date.now() - 86400000).toISOString().slice(0, 10); localStorage.removeItem("jadran_daily_" + yd); } catch {}
-        if (dailyCount >= PREMIUM_DAILY_LIMIT) {
+        const isVip = premiumPlan?.plan === "vip";
+        const dailyLimit = isVip ? VIP_DAILY_LIMIT : PREMIUM_DAILY_LIMIT;
+        if (dailyCount >= dailyLimit) {
           setGlobalToast(lang === "en" ? "Daily message limit reached. Come back tomorrow!" : lang === "de" || lang === "at" ? "Tageslimit erreicht. Morgen geht's weiter!" : lang === "it" ? "Limite giornaliero raggiunto. Torna domani!" : "Dnevni limit poruka dosegnut. Vratite se sutra!");
           setTimeout(() => setGlobalToast(null), 4000);
           return;
         }
-        if (dailyCount === Math.floor(PREMIUM_DAILY_LIMIT * 0.8)) {
-          setGlobalToast(lang === "en" ? `${PREMIUM_DAILY_LIMIT - dailyCount} messages left today` : lang === "de" || lang === "at" ? `Noch ${PREMIUM_DAILY_LIMIT - dailyCount} Nachrichten heute` : `Još ${PREMIUM_DAILY_LIMIT - dailyCount} poruka danas`);
+        if (dailyCount === Math.floor(dailyLimit * 0.8)) {
+          setGlobalToast(lang === "en" ? `${dailyLimit - dailyCount} messages left today` : lang === "de" || lang === "at" ? `Noch ${dailyLimit - dailyCount} Nachrichten heute` : `Još ${dailyLimit - dailyCount} poruka danas`);
           setTimeout(() => setGlobalToast(null), 3000);
         }
       } catch {}
@@ -1098,7 +1101,7 @@ const [lang, setLang] = useState(() => {
         </div>
         <div style={{ padding: "12px 16px", borderRadius: 12, background: isNight ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)", border: `1px solid ${C.bord}`, marginBottom: 16, fontSize: 11, color: C.mut, textAlign: "left" }}>
           <div style={{ fontWeight: 600, marginBottom: 4 }}>🧾 {lang === "en" ? "Payment details" : lang === "de" || lang === "at" ? "Zahlungsdetails" : lang === "it" ? "Dettagli pagamento" : "Detalji plaćanja"}</div>
-          <div>Stripe · {premiumPlan?.plan === "season" ? "19.99€" : "9.99€"}</div>
+          <div>Stripe · {premiumPlan?.plan === "vip" ? "49.99€" : premiumPlan?.plan === "season" ? "19.99€" : "9.99€"}</div>
           <div>{premiumPlan?.purchasedAt ? new Date(premiumPlan.purchasedAt).toLocaleDateString(lang === "de" || lang === "at" ? "de-AT" : lang === "en" ? "en-GB" : "hr-HR", { day: "numeric", month: "long", year: "numeric" }) : ""}</div>
           <div style={{ marginTop: 4, fontSize: 10 }}>{lang === "en" ? "Receipt sent to your email by Stripe" : lang === "de" || lang === "at" ? "Rechnung per E-Mail von Stripe" : lang === "it" ? "Ricevuta inviata da Stripe via email" : "Račun poslan na email putem Stripe"}</div>
         </div>
@@ -1784,7 +1787,7 @@ const [lang, setLang] = useState(() => {
                   </button>
                 ))}
               </div>
-              <div style={{ fontSize: 11, color: isNight ? "rgba(255,255,255,0.2)" : "rgba(12,74,110,0.3)", marginTop: 14 }}>10 besplatnih poruka · Premium 9.99€</div>
+              <div style={{ fontSize: 11, color: isNight ? "rgba(255,255,255,0.2)" : "rgba(12,74,110,0.3)", marginTop: 14 }}>10 besplatnih poruka · od 9.99€</div>
             </div>
           </div>
         )}
