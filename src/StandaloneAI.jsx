@@ -242,7 +242,19 @@ const T = {
 };
 
 export default function StandaloneAI() {
-  const [step, setStep] = useState("setup"); // setup | chat
+  const [step, setStep] = useState(() => {
+    // Premium user with saved choices → skip setup on return
+    try {
+      const isPrem = localStorage.getItem("jadran_ai_premium") === "1";
+      const hasRegion = !!localStorage.getItem("jadran_region");
+      const hasMode = !!localStorage.getItem("jadran_travelMode");
+      // Don't auto-skip if coming from Stripe (payment=success/cancelled in URL)
+      const params = new URLSearchParams(window.location.search);
+      const isPaymentRedirect = params.get("payment") === "success" || params.get("payment") === "cancelled";
+      if (isPrem && hasRegion && hasMode && !isPaymentRedirect) return "chat";
+    } catch {}
+    return "setup";
+  }); // setup | chat
   const [niche, setNiche] = useState(null);
   const [camperLen, setCamperLen] = useState("");
   const [walkieMode, setWalkieMode] = useState(false);
@@ -376,8 +388,8 @@ const [lang, setLang] = useState(() => {
   useEffect(() => {
     try { localStorage.setItem("jadran_lang", lang); } catch {}
   }, [lang]);
-  const [region, setRegion] = useState(null);
-  const [travelMode, setTravelMode] = useState(null);
+  const [region, setRegion] = useState(() => { try { return localStorage.getItem("jadran_region") || null; } catch { return null; } });
+  const [travelMode, setTravelMode] = useState(() => { try { return localStorage.getItem("jadran_travelMode") || null; } catch { return null; } });
   const [premium, setPremium] = useState(false);
   const [premiumPlan, setPremiumPlan] = useState(null);
   const [msgCount, setMsgCount] = useState(0);
@@ -450,6 +462,18 @@ const [lang, setLang] = useState(() => {
     istra: { lat: 45.08, lon: 13.64, loc: "Rovinj-Istra" },
     kvarner: { lat: 45.34, lon: 14.31, loc: "Opatija-Kvarner" },
   };
+
+  // Persist region + travelMode to localStorage on every change
+  useEffect(() => { try { if (region) localStorage.setItem("jadran_region", region); } catch {} }, [region]);
+  useEffect(() => { try { if (travelMode) localStorage.setItem("jadran_travelMode", travelMode); } catch {} }, [travelMode]);
+
+  // Auto-generate icebreaker when entering chat with no messages (e.g. premium auto-skip)
+  useEffect(() => {
+    if (step === "chat" && msgs.length === 0 && region) {
+      const ice = generateIcebreaker(region);
+      setMsgs([{ role: "assistant", text: ice }]);
+    }
+  }, []); // only on mount
 
   // Fetch weather per region + auto-refresh every 60s
   useEffect(() => {
@@ -557,16 +581,19 @@ const [lang, setLang] = useState(() => {
       let savedSession = {};
       try {
         savedSession = JSON.parse(localStorage.getItem("jadran_session") || "{}");
-        if (savedSession.region) setRegion(savedSession.region);
-        if (savedSession.travelMode) setTravelMode(savedSession.travelMode);
-        if (savedSession.lang) setLang(savedSession.lang);
-        if (savedSession.niche) setNiche(savedSession.niche);
         localStorage.removeItem("jadran_session");
       } catch {}
+      // Fallback chain: savedSession → localStorage → defaults
+      const restoredRegion = savedSession.region || localStorage.getItem("jadran_region") || "split";
+      const restoredMode = savedSession.travelMode || localStorage.getItem("jadran_travelMode") || "apartment";
+      setRegion(restoredRegion);
+      setTravelMode(restoredMode);
+      if (savedSession.lang) setLang(savedSession.lang);
+      if (savedSession.niche) setNiche(savedSession.niche);
       const sessionId = params.get("session_id");
       const plan = params.get("plan") || "week";
       const days = params.get("days") || "7";
-      const region = params.get("region") || "all";
+      const planRegion = params.get("region") || "all";
       window.history.replaceState({}, "", "/ai" + (n ? "?niche=" + n : ""));
       if (sessionId) {
         setVerifyingPayment(true);
@@ -581,14 +608,14 @@ const [lang, setLang] = useState(() => {
               try { localStorage.removeItem("jadran_msg_count"); } catch {}
               try {
                 localStorage.setItem("jadran_ai_premium", "1");
-                const premData = { plan, days: parseInt(days), region, expiresAt: Date.now() + parseInt(days) * 86400000, purchasedAt: new Date().toISOString(), sessionId };
+                const premData = { plan, days: parseInt(days), region: planRegion, expiresAt: Date.now() + parseInt(days) * 86400000, purchasedAt: new Date().toISOString(), sessionId };
                 localStorage.setItem("jadran_premium_plan", JSON.stringify(premData));
                 setPremiumPlan(premData);
               } catch {}
               setShowSuccess(true);
-              // Auto-enter chat after payment (user was in setup before Stripe redirect)
+              // Auto-enter chat after payment — guaranteed, with fallback region
               try {
-                const ice = generateIcebreaker(savedSession.region || region); setMsgs([{ role: "assistant", text: ice }]); setStep("chat");
+                const ice = generateIcebreaker(restoredRegion); setMsgs([{ role: "assistant", text: ice }]); setStep("chat");
               } catch { setStep("chat"); }
             } else {
               console.error("Payment verification failed:", data);
@@ -604,15 +631,17 @@ const [lang, setLang] = useState(() => {
     }
     // Handle payment cancellation — reopen paywall
     if (params.get("payment") === "cancelled") {
-      // Restore session state saved before Stripe redirect
+      // Restore session state — same fallback chain as success
       try {
         const sess = JSON.parse(localStorage.getItem("jadran_session") || "{}");
-        if (sess.region) setRegion(sess.region);
-        if (sess.travelMode) setTravelMode(sess.travelMode);
+        localStorage.removeItem("jadran_session");
+        const cRegion = sess.region || localStorage.getItem("jadran_region") || "split";
+        const cMode = sess.travelMode || localStorage.getItem("jadran_travelMode") || "apartment";
+        setRegion(cRegion);
+        setTravelMode(cMode);
         if (sess.lang) setLang(sess.lang);
         if (sess.niche) setNiche(sess.niche);
-        localStorage.removeItem("jadran_session");
-        if (sess.region && sess.travelMode) { const ice = generateIcebreaker(sess.region); setMsgs([{ role: "assistant", text: ice }]); setStep("chat"); }
+        const ice = generateIcebreaker(cRegion); setMsgs([{ role: "assistant", text: ice }]); setStep("chat");
       } catch {}
       window.history.replaceState({}, "", "/ai" + (n ? "?niche=" + n : ""));
       setShowPaywall(true);
