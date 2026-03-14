@@ -225,12 +225,76 @@ async function fetchHVZ() {
   }
 }
 
+// Auswärtiges Amt — German Federal Foreign Office travel advisories (RSS)
+// "Sveto pismo" za nemce. THE trusted source for DE/AT tourists.
+// Covers: Kroatien, Slowenien (transit), Montenegro (expansion)
+async function fetchAuswaertigesAmt() {
+  try {
+    const url = "https://www.auswaertiges-amt.de/SiteGlobals/Functions/RSSFeed/DE/RSSNewsfeed/RSS_Reisehinweise.xml";
+    const res = await fetch(url, {
+      headers: { "User-Agent": "JadranAI/1.0", "Accept": "application/rss+xml,application/xml,text/xml" },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return [];
+    const xml = await res.text();
+
+    const alerts = [];
+    const targetCountries = ["kroatien", "slowenien", "montenegro", "bosnien"];
+    
+    const items = xml.split("<item>").slice(1);
+    for (const item of items) {
+      const title = (item.match(/<title[^>]*>([\s\S]*?)<\/title>/)?.[1] || "").replace(/<!\[CDATA\[|\]\]>/g, "").trim();
+      const desc = (item.match(/<description[^>]*>([\s\S]*?)<\/description>/)?.[1] || "").replace(/<!\[CDATA\[|\]\]>/g, "").replace(/<[^>]*>/g, "").trim();
+      const pubDate = item.match(/<pubDate>(.*?)<\/pubDate>/)?.[1] || "";
+      const link = (item.match(/<link[^>]*>([\s\S]*?)<\/link>/)?.[1] || "").trim();
+
+      const combined = (title + " " + desc).toLowerCase();
+      const matchedCountry = targetCountries.find(c => combined.includes(c));
+      if (!matchedCountry) continue;
+
+      // Severity from warning keywords
+      let severity = "medium";
+      if (/reisewarnung|warnt? dringend|nicht reisen|ausreise|evakuierung/i.test(combined)) severity = "critical";
+      else if (/teilreisewarnung|warnung|gefahr|waldbrände?|überschwemmung|grenzschließung|grenzkontrollen|erdbeben|unruhen/i.test(combined)) severity = "high";
+      
+      // Only actionable warnings
+      const hasWarning = /warnung|gefahr|brand|feuer|sturm|überschwemmung|erdbeben|grenz|terror|streik|demonstrat|evakuier|krise|minen/i.test(combined);
+      if (!hasWarning && severity === "medium") continue;
+
+      let region = "";
+      if (matchedCountry === "kroatien") {
+        if (/dalmat|split|dubrovnik|makarska/i.test(combined)) region = "split";
+        else if (/istr/i.test(combined)) region = "istra";
+        else if (/kvarner|rijeka/i.test(combined)) region = "kvarner";
+        else if (/zadar|šibenik|sibenik/i.test(combined)) region = "zadar";
+      }
+
+      alerts.push({
+        type: "travel_advisory",
+        severity,
+        region,
+        title: `🇩🇪 ${title.slice(0, 150)}`,
+        description: desc.slice(0, 400),
+        source: "Auswärtiges Amt",
+        time: pubDate,
+        url: link || "https://www.auswaertiges-amt.de/de/service/laender/kroatien-node/kroatiensicherheit/210072",
+        country: matchedCountry,
+      });
+    }
+    return alerts.slice(0, 3);
+  } catch (err) {
+    console.error("[ALERTS] Auswärtiges Amt error:", err.message);
+    return [];
+  }
+}
+
 // Aggregate all sources
 async function aggregateAlerts() {
-  const [fires, weather, hvz] = await Promise.all([
+  const [fires, weather, hvz, aa] = await Promise.all([
     fetchFires(),
     fetchWeatherAlerts(),
     fetchHVZ(),
+    fetchAuswaertigesAmt(),
   ]);
 
   // Deduplicate fires by proximity (cluster within 0.05 degrees ≈ 5km)
@@ -252,7 +316,7 @@ async function aggregateAlerts() {
 
   // Sort by severity
   const severityOrder = { critical: 0, high: 1, medium: 2 };
-  const all = [...clustered, ...weather, ...hvz].sort((a, b) =>
+  const all = [...clustered, ...weather, ...hvz, ...aa].sort((a, b) =>
     (severityOrder[a.severity] || 3) - (severityOrder[b.severity] || 3)
   );
 
@@ -260,6 +324,7 @@ async function aggregateAlerts() {
     fires: clustered.length + hvz.filter(a => a.type === "fire").length,
     weather: weather.length,
     hvz: hvz.length,
+    aa: aa.length,
     total: all.length,
     alerts: all.slice(0, 10), // Max 10 alerts
     updated: new Date().toISOString(),

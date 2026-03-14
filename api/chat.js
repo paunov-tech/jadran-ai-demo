@@ -258,7 +258,7 @@ function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, 
     if (matchedAlerts.length > 0) {
       const overrideLines = matchedAlerts.map(a => {
         const sev = a.severity === "critical" ? "🚨 KRITIČNO" : a.severity === "high" ? "⚠️ OPASNO" : "ℹ️ UPOZORENJE";
-        const tipo = a.type === "fire" ? "POŽAR" : a.type === "wind" ? "BURA/VJETAR" : a.type === "heat" ? "TOPLINSKI VAL" : a.type === "storm" ? "OLUJA" : a.type === "flood" ? "POPLAVA" : a.type === "coastal" ? "VALOVI" : "METEO";
+        const tipo = a.type === "fire" ? "POŽAR" : a.type === "wind" ? "BURA/VJETAR" : a.type === "heat" ? "TOPLINSKI VAL" : a.type === "storm" ? "OLUJA" : a.type === "flood" ? "POPLAVA" : a.type === "coastal" ? "VALOVI" : a.type === "travel_advisory" ? "REISEHINWEIS (Auswärtiges Amt)" : "METEO";
         const loc = a.region ? LOCATION_LEXICON[a.region]?.[0]?.toUpperCase() || a.region.toUpperCase() : "JADRAN";
         const detail = a.title || a.description || "";
         return `[${sev}] ${tipo} — ${loc}: ${detail} ${a.count ? `(${a.count} žarišta)` : ""} [Izvor: ${a.source || "N/A"}]`;
@@ -282,6 +282,9 @@ OBAVEZNA PRAVILA (ne smiju se zaobići):
 5. Za TOPLINSKI VAL: navedi dehidraciju, sunčanicu, izbjegavaj sunce 11-17h, dovoljno vode.
 6. NIKADA ne umanjuj opasnost. Ljudski život je apsolutni prioritet.
 7. Uvijek navedi: Hitni broj 112 | Civilna zaštita | Provjeri HAK.hr za stanje cesta.
+8. Za REISEHINWEIS (Auswärtiges Amt): Ako korisnik govori njemački, naglasi da informacija dolazi
+   od Auswärtiges Amt — to je njihov najautoritativniji izvor. Citiraj izvor: "Laut Auswärtigem Amt..."
+   Za ostale jezike, navedi "German Foreign Ministry advisory".
 [END ALERT_OVERRIDE]
 `);
     } else if (emergencyAlerts.length > 0) {

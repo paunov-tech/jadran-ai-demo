@@ -947,7 +947,7 @@ const [lang, setLang] = useState(() => {
             return parts.join("\n");
           })() : undefined,
           userProfile: (() => { const p = loadProfile(); p.niche = travelMode || niche; p.region = region; return p; })(),
-          emergencyAlerts: emergencyAlerts.length ? emergencyAlerts.map(a => ({ type: a.type, severity: a.severity, region: a.region, title: a.title, description: a.description, count: a.count })).slice(0, 5) : undefined,
+          emergencyAlerts: emergencyAlerts.length ? emergencyAlerts.map(a => ({ type: a.type, severity: a.severity, region: a.region, title: a.title, description: a.description, count: a.count, source: a.source, url: a.url })).slice(0, 5) : undefined,
           messages: [...msgs.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })), { role: "user", content: msg }],
         }),
       });
@@ -1101,7 +1101,7 @@ const [lang, setLang] = useState(() => {
     const isCritical = top.severity === "critical";
     const isHigh = top.severity === "high";
     const bgColor = isCritical ? "rgba(220,38,38,0.95)" : isHigh ? "rgba(245,158,11,0.95)" : "rgba(14,165,233,0.9)";
-    const icon = top.type === "fire" ? "🔥" : top.type === "wind" ? "💨" : top.type === "heat" ? "🌡️" : top.type === "storm" ? "⛈️" : top.type === "flood" ? "🌊" : top.type === "snow" ? "❄️" : top.type === "coastal" ? "🌊" : "⚠️";
+    const icon = top.type === "fire" ? "🔥" : top.type === "wind" ? "💨" : top.type === "heat" ? "🌡️" : top.type === "storm" ? "⛈️" : top.type === "flood" ? "🌊" : top.type === "snow" ? "❄️" : top.type === "coastal" ? "🌊" : top.type === "travel_advisory" ? "🇩🇪" : "⚠️";
     const regionName = REGIONS.find(r => r.id === top.region)?.name || top.region || "";
 
     const alertText = top.type === "fire"
