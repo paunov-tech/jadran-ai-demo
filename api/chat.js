@@ -214,11 +214,34 @@ const LANG_MAP = {
 };
 
 // ── MAIN ASSEMBLER ──
-function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile }) {
+function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts }) {
   const parts = [];
 
   // 1. BASE
   parts.push(BASE);
+
+  // ═══ EMERGENCY ALERTS — HIGHEST PRIORITY ═══
+  if (emergencyAlerts?.length) {
+    const alertLines = emergencyAlerts.map(a => {
+      const sev = a.severity === "critical" ? "🚨 KRITIČNO" : a.severity === "high" ? "⚠️ VISOKO" : "ℹ️";
+      const type = a.type === "fire" ? "POŽAR" : a.type === "weather" ? "VRIJEME" : "UPOZORENJE";
+      return `${sev} [${type}] ${a.region || ""}: ${a.title || a.description || ""} (${a.count ? a.count + " žarišta" : ""})`;
+    }).join("\n");
+    parts.push(`
+═══ HITNA UPOZORENJA — AKTIVNA UPRAVO SAD ═══
+${alertLines}
+
+KRITIČNA PRAVILA ZA HITNA UPOZORENJA:
+1. AKO korisnik pita o bilo čemu u regiji pogođenoj upozorenjem, ODMAH prvo spomeni upozorenje.
+2. Za POŽARE: upozori na dim, zatvorene ceste, moguću evakuaciju. Preporuči praćenje civilne zaštite (112).
+3. Za BURU/OLUJU: upozori na opasnost za kampere, šatore, marine. Preporuči sklonište.
+4. Za TOPLINSKI VAL: upozori na dehidraciju, preporuči izbjegavanje sunca 11-17h.
+5. UVIJEK navedi broj 112 za hitne slučajeve.
+6. NE umanjuj opasnost. Bolje pretjerano upozoriti nego ne upozoriti.
+7. Ako je požar u blizini korisnikove regije, upozori I na dim koji može putovati daleko.
+═══════════════════════════════════════════════
+`);
+  }
 
   // 1b. WALKIE MODE — ultra-short responses for TTS
   if (walkieMode) {
@@ -325,12 +348,12 @@ export default async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
 
   try {
-    const { system, messages, mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile } = req.body;
+    const { system, messages, mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts } = req.body;
 
     let systemPrompt = '';
     try {
       systemPrompt = mode && region 
-        ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile })
+        ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts })
         : (system || '');
     } catch (promptErr) {
       // If prompt building fails, use minimal fallback

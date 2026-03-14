@@ -448,6 +448,7 @@ const [lang, setLang] = useState(() => {
   const scrollAnchor = useRef(null);
   const cameraRef = useRef(null);
   const [weather, setWeather] = useState(null);
+  const [emergencyAlerts, setEmergencyAlerts] = useState([]);
   const [weatherTime, setWeatherTime] = useState(null);
   const [navtex, setNavtex] = useState(null);
   const [notifPerm, setNotifPerm] = useState("default");
@@ -512,6 +513,26 @@ const [lang, setLang] = useState(() => {
     };
     fetchWx();
     const interval = setInterval(fetchWx, 60000); // Every 60 seconds
+    return () => clearInterval(interval);
+  }, [region]);
+
+  // Fetch emergency alerts (fires, weather warnings) — every 5 min
+  useEffect(() => {
+    const fetchAlerts = () => {
+      fetch("/api/alerts").then(r => r.json()).then(d => {
+        if (d.alerts?.length) {
+          // Filter to user's region if set
+          const relevant = region
+            ? d.alerts.filter(a => !a.region || a.region === region || a.severity === "critical")
+            : d.alerts.filter(a => a.severity === "critical" || a.severity === "high");
+          setEmergencyAlerts(relevant);
+        } else {
+          setEmergencyAlerts([]);
+        }
+      }).catch(() => {});
+    };
+    fetchAlerts();
+    const interval = setInterval(fetchAlerts, 300000); // 5 min
     return () => clearInterval(interval);
   }, [region]);
 
@@ -926,6 +947,7 @@ const [lang, setLang] = useState(() => {
             return parts.join("\n");
           })() : undefined,
           userProfile: (() => { const p = loadProfile(); p.niche = travelMode || niche; p.region = region; return p; })(),
+          emergencyAlerts: emergencyAlerts.length ? emergencyAlerts.map(a => ({ type: a.type, severity: a.severity, region: a.region, title: a.title, description: a.description, count: a.count })).slice(0, 5) : undefined,
           messages: [...msgs.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })), { role: "user", content: msg }],
         }),
       });
@@ -1072,6 +1094,31 @@ const [lang, setLang] = useState(() => {
   );
 
   // ═══ PAYMENT VERIFICATION OVERLAY ═══
+  // ═══ EMERGENCY ALERT BANNER ═══
+  const AlertBanner = () => {
+    if (!emergencyAlerts.length) return null;
+    const top = emergencyAlerts[0];
+    const isCritical = top.severity === "critical";
+    const isHigh = top.severity === "high";
+    const bgColor = isCritical ? "rgba(220,38,38,0.95)" : isHigh ? "rgba(245,158,11,0.95)" : "rgba(14,165,233,0.9)";
+    const icon = top.type === "fire" ? "🔥" : top.type === "wind" ? "💨" : top.type === "heat" ? "🌡️" : top.type === "storm" ? "⛈️" : top.type === "flood" ? "🌊" : top.type === "snow" ? "❄️" : top.type === "coastal" ? "🌊" : "⚠️";
+    const regionName = REGIONS.find(r => r.id === top.region)?.name || top.region || "";
+
+    const alertText = top.type === "fire"
+      ? (lang === "de" || lang === "at" ? `Waldbrand ${regionName} — ${top.count || 1} Herd(e) erkannt` : lang === "en" ? `Wildfire ${regionName} — ${top.count || 1} hotspot(s) detected` : lang === "it" ? `Incendio ${regionName} — ${top.count || 1} focolaio(i)` : `Požar ${regionName} — ${top.count || 1} žarište(a) detektirano`)
+      : (top.title || (lang === "en" ? "Weather warning active" : lang === "de" || lang === "at" ? "Wetterwarnung aktiv" : lang === "it" ? "Allerta meteo attiva" : "Vremensko upozorenje aktivno"));
+
+    return (
+      <div style={{ background: bgColor, color: "#fff", padding: "8px 16px", display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", animation: isCritical ? "alertPulse 2s infinite" : "none" }}
+        onClick={() => { if (top.type === "fire") window.open("https://firms.modaps.eosdis.nasa.gov/map/#d:24hrs;@" + (top.lon || 16) + "," + (top.lat || 43) + ",9z", "_blank"); else window.open("https://www.meteoalarm.org/en/live/region/HR", "_blank"); }}>
+        <span style={{ fontSize: 16 }}>{icon}</span>
+        <span style={{ flex: 1 }}>{alertText}</span>
+        {emergencyAlerts.length > 1 && <span style={{ opacity: 0.7, fontSize: 10 }}>+{emergencyAlerts.length - 1}</span>}
+        <span style={{ fontSize: 10, opacity: 0.7 }}>112</span>
+      </div>
+    );
+  };
+
   const VerifyingOverlay = () => verifyingPayment && (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)", zIndex: 350, display: "grid", placeItems: "center", padding: 24 }}>
       <div style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "40px 32px", maxWidth: 360, width: "100%", textAlign: "center", border: `1px solid ${C.bord}` }}>
@@ -1497,6 +1544,10 @@ const [lang, setLang] = useState(() => {
           }
         </div>
       </div>
+
+      {/* Emergency Alert Banner */}
+      <AlertBanner />
+      <style>{`@keyframes alertPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }`}</style>
 
       {/* Messages */}
       <div ref={scrollBox} style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "0", display: "flex", flexDirection: "column" }}>
