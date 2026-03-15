@@ -459,60 +459,73 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* ═══ PLAN PICKER MODAL ═══ */}
+      {/* ═══ PLAN PICKER MODAL — Decoy Psychology ═══ */}
       {showPlanPicker && (
-        <div onClick={() => setShowPlanPicker(false)} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", display: "grid", placeItems: "center", padding: 20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ background: "#0f172a", borderRadius: 24, padding: "32px 24px", maxWidth: 380, width: "100%", border: "1px solid rgba(245,158,11,0.15)", boxShadow: "0 24px 64px rgba(0,0,0,0.5)" }}>
-            <div style={{ textAlign: "center", marginBottom: 24 }}>
-              <div style={{ fontSize: 11, color: "#f59e0b", letterSpacing: 3, fontWeight: 600, marginBottom: 8 }}>
-                {lang === "en" ? "CHOOSE YOUR PLAN" : lang === "de" || lang === "at" ? "WÄHLE DEIN PAKET" : lang === "it" ? "SCEGLI IL TUO PIANO" : "ODABERI PAKET"}
+        <div onClick={() => setShowPlanPicker(false)} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", display: "grid", placeItems: "center", padding: 16 }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: "#0f172a", borderRadius: 24, padding: "28px 18px", maxWidth: 480, width: "100%", border: "1px solid rgba(245,158,11,0.15)", boxShadow: "0 24px 64px rgba(0,0,0,0.5)", maxHeight: "90dvh", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+            <div style={{ textAlign: "center", marginBottom: 16 }}>
+              <div style={{ fontSize: 28, marginBottom: 6 }}>🔒</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", fontFamily: "'Playfair Display',Georgia,serif", marginBottom: 6 }}>
+                {lang === "de" || lang === "at" ? "Sichere deinen Urlaub" : lang === "en" ? "Secure your holiday" : lang === "it" ? "Proteggi la tua vacanza" : "Osiguraj svoj odmor"}
               </div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", fontFamily: "'Playfair Display',Georgia,serif" }}>
-                {lang === "en" ? "Unlock your guide" : lang === "de" || lang === "at" ? "Guide freischalten" : lang === "it" ? "Sblocca la guida" : "Otključaj vodiča"}
+              <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.5 }}>
+                {lang === "de" || lang === "at" ? "Vermeide Strafen, Staus und Stürme bis Ende der Saison." : lang === "en" ? "Avoid fines, traffic jams and storms until end of season." : lang === "it" ? "Evita multe, code e tempeste fino a fine stagione." : "Izbjegni kazne, gužve i oluje do kraja sezone."}
               </div>
             </div>
-            <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-              {/* Explorer */}
+            {/* ── 3-TIER DECOY CARDS ── */}
+            <div style={{ display: "flex", gap: 6, marginBottom: 16, alignItems: "stretch" }}>
+              {/* EXPLORER — anchor low */}
               <div onClick={() => { setShowPlanPicker(false); goToStripe("week", lang); }}
-                style={{ flex: 1, padding: "18px 10px", borderRadius: 16, border: "1px solid rgba(14,165,233,0.3)", background: "rgba(14,165,233,0.06)", cursor: "pointer", textAlign: "center", transition: "all 0.2s" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "#0ea5e9"; e.currentTarget.style.transform = "scale(1.03)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.3)"; e.currentTarget.style.transform = "scale(1)"; }}>
-                <div style={{ fontSize: 24, fontWeight: 800, color: "#0ea5e9" }}>9.99€</div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "#fff", marginTop: 4 }}>Explorer</div>
-                <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 4 }}>
-                  {lang === "en" ? "7 days · 1 region" : lang === "de" || lang === "at" ? "7 Tage · 1 Region" : lang === "it" ? "7 giorni · 1 regione" : "7 dana · 1 regija"}
+                style={{ flex: 1, padding: "14px 8px 12px", borderRadius: 16, border: "1px solid rgba(14,165,233,0.2)", background: "rgba(14,165,233,0.04)", cursor: "pointer", textAlign: "center", transition: "all 0.2s", display: "flex", flexDirection: "column", opacity: 0.85 }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.5)"; e.currentTarget.style.opacity = "1"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.2)"; e.currentTarget.style.opacity = "0.85"; }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#0ea5e9", letterSpacing: 1, marginBottom: 4 }}>EXPLORER</div>
+                <div style={{ fontSize: 22, fontWeight: 300, color: "#0ea5e9" }}>9.99€</div>
+                <div style={{ fontSize: 9, fontWeight: 600, color: "#64748b", marginBottom: 6 }}>{lang === "de" || lang === "at" ? "pro Woche" : lang === "en" ? "per week" : lang === "it" ? "a settimana" : "tjedno"}</div>
+                <div style={{ fontSize: 8, color: "#475569", marginBottom: 6, fontStyle: "italic" }}>{lang === "de" || lang === "at" ? "Nur Basisinformationen" : lang === "en" ? "Basic info only" : lang === "it" ? "Solo info base" : "Samo osnovne info"}</div>
+                <div style={{ fontSize: 9, color: "#94a3b8", lineHeight: 1.9, textAlign: "left", flex: 1 }}>
+                  ✅ {lang === "de" || lang === "at" ? "Chat mit AI" : lang === "en" ? "AI chat" : lang === "it" ? "Chat AI" : "AI chat"}<br/>
+                  ✅ {lang === "de" || lang === "at" ? "Restaurants & Strände" : lang === "en" ? "Restaurants & beaches" : lang === "it" ? "Ristoranti e spiagge" : "Restorani i plaže"}<br/>
+                  <span style={{ color: "rgba(239,68,68,0.5)" }}>❌ {lang === "de" || lang === "at" ? "Kein Sturmwarner" : lang === "en" ? "No storm alerts" : lang === "it" ? "No allerte" : "Bez upozorenja"}</span><br/>
+                  <span style={{ color: "rgba(239,68,68,0.5)" }}>❌ {lang === "de" || lang === "at" ? "Kein Walkie-Talkie" : lang === "en" ? "No Walkie-Talkie" : lang === "it" ? "No Walkie-Talkie" : "Bez Walkie-Talkie"}</span><br/>
+                  <span style={{ color: "rgba(239,68,68,0.5)" }}>❌ {lang === "de" || lang === "at" ? "Kein Jadran Lens" : lang === "en" ? "No Jadran Lens" : lang === "it" ? "No Jadran Lens" : "Bez Jadran Lens"}</span>
                 </div>
               </div>
-              {/* Season */}
+              {/* SEASON PASS — the golden goose */}
               <div onClick={() => { setShowPlanPicker(false); goToStripe("season", lang); }}
-                style={{ flex: 1.1, padding: "18px 10px", borderRadius: 16, border: "1px solid rgba(245,158,11,0.3)", background: "rgba(245,158,11,0.06)", cursor: "pointer", textAlign: "center", position: "relative", transition: "all 0.2s" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "#f59e0b"; e.currentTarget.style.transform = "scale(1.03)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(245,158,11,0.3)"; e.currentTarget.style.transform = "scale(1)"; }}>
-                <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", fontSize: 8, fontWeight: 700, color: "#0f172a", background: "linear-gradient(135deg, #f59e0b, #fbbf24)", padding: "3px 8px", borderRadius: 8, whiteSpace: "nowrap" }}>
-                  {lang === "en" ? "BEST VALUE" : lang === "de" || lang === "at" ? "BEST PREIS" : lang === "it" ? "MIGLIORE" : "NAJBOLJE"}
+                style={{ flex: 1.3, padding: "16px 10px 14px", borderRadius: 18, border: "2px solid rgba(245,158,11,0.6)", background: "linear-gradient(180deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.03) 100%)", cursor: "pointer", textAlign: "center", position: "relative", overflow: "hidden", transition: "all 0.2s", display: "flex", flexDirection: "column", transform: "scale(1.04)", boxShadow: "0 6px 24px rgba(245,158,11,0.2)", zIndex: 1 }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(245,158,11,0.9)"; e.currentTarget.style.transform = "scale(1.06)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(245,158,11,0.3)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(245,158,11,0.6)"; e.currentTarget.style.transform = "scale(1.04)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(245,158,11,0.2)"; }}>
+                <div style={{ position: "absolute", top: 0, left: 0, right: 0, padding: "4px 0", background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#fff", fontSize: 9, fontWeight: 800, letterSpacing: 2, textAlign: "center" }}>
+                  ⭐ {lang === "de" || lang === "at" ? "AM BELIEBTESTEN" : lang === "en" ? "MOST POPULAR" : lang === "it" ? "PIÙ POPOLARE" : "NAJPOPULARNIJE"}
                 </div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: "#f59e0b" }}>19.99€</div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "#fff", marginTop: 4 }}>
-                  {lang === "en" ? "Season" : lang === "de" || lang === "at" ? "Saison" : lang === "it" ? "Stagione" : "Sezona"}
-                </div>
-                <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 4 }}>
-                  {lang === "en" ? "30 days · all regions" : lang === "de" || lang === "at" ? "30 Tage · alle Regionen" : lang === "it" ? "30 giorni · tutte" : "30 dana · sve regije"}
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#f59e0b", letterSpacing: 1, marginTop: 18, marginBottom: 4 }}>SEASON PASS</div>
+                <div style={{ fontSize: 32, fontWeight: 800, color: "#f59e0b" }}>19.99€</div>
+                <div style={{ fontSize: 9, fontWeight: 600, color: "#f59e0b", marginBottom: 6 }}>{lang === "de" || lang === "at" ? "bis Oktober · alle Regionen" : lang === "en" ? "until October · all regions" : lang === "it" ? "fino a ottobre · tutte" : "do oktobra · sve regije"}</div>
+                <div style={{ fontSize: 9, color: "#e2e8f0", lineHeight: 1.9, textAlign: "left", flex: 1, fontWeight: 500 }}>
+                  ✅ {lang === "de" || lang === "at" ? "Alles aus Explorer" : lang === "en" ? "Everything in Explorer" : lang === "it" ? "Tutto da Explorer" : "Sve iz Explorera"}<br/>
+                  🛡️ <strong style={{ color: "#f59e0b" }}>Travel Guardian</strong>: {lang === "de" || lang === "at" ? "Sturm · Feuer · Grenze" : lang === "en" ? "storms · fires · borders" : lang === "it" ? "tempeste · incendi" : "oluje · požari · granica"}<br/>
+                  📸 <strong>Jadran Lens</strong>: {lang === "de" || lang === "at" ? "Strafen vermeiden" : lang === "en" ? "avoid €60 fines" : lang === "it" ? "evita multe €60" : "izbjegni kaznu 60€"}<br/>
+                  🎙️ <strong>Walkie-Talkie</strong>: {lang === "de" || lang === "at" ? "Freihändig fahren" : lang === "en" ? "hands-free driving" : lang === "it" ? "guida a mani libere" : "vozi bez ruku"}
                 </div>
               </div>
-              {/* VIP */}
+              {/* VIP — price anchor decoy */}
               <div onClick={() => { setShowPlanPicker(false); goToStripe("vip", lang); }}
-                style={{ flex: 1, padding: "18px 10px", borderRadius: 16, border: "1px solid rgba(168,85,247,0.3)", background: "rgba(168,85,247,0.06)", cursor: "pointer", textAlign: "center", transition: "all 0.2s" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "#a855f7"; e.currentTarget.style.transform = "scale(1.03)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.3)"; e.currentTarget.style.transform = "scale(1)"; }}>
-                <div style={{ fontSize: 24, fontWeight: 800, color: "#a855f7" }}>49.99€</div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "#fff", marginTop: 4 }}>VIP</div>
-                <div style={{ fontSize: 9, color: "#94a3b8", marginTop: 4 }}>
-                  {lang === "en" ? "30d · priority" : lang === "de" || lang === "at" ? "30T · Priorität" : lang === "it" ? "30g · priorità" : "30d · prioritet"}
+                style={{ flex: 1, padding: "14px 8px 12px", borderRadius: 16, border: "1px solid rgba(168,85,247,0.12)", background: "rgba(168,85,247,0.03)", cursor: "pointer", textAlign: "center", transition: "all 0.2s", display: "flex", flexDirection: "column", opacity: 0.75 }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.35)"; e.currentTarget.style.opacity = "0.95"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.12)"; e.currentTarget.style.opacity = "0.75"; }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#a855f7", letterSpacing: 1, marginBottom: 4 }}>VIP PRIORITY</div>
+                <div style={{ fontSize: 22, fontWeight: 300, color: "#a855f7" }}>49.99€</div>
+                <div style={{ fontSize: 9, color: "#64748b", marginBottom: 6 }}>{lang === "de" || lang === "at" ? "bis Oktober · Priorität" : lang === "en" ? "until October · priority" : lang === "it" ? "fino a ottobre · priorità" : "do oktobra · prioritet"}</div>
+                <div style={{ fontSize: 9, color: "#64748b", lineHeight: 1.9, textAlign: "left", flex: 1 }}>
+                  ✅ {lang === "de" || lang === "at" ? "Alles aus Season" : lang === "en" ? "Everything in Season" : lang === "it" ? "Tutto da Season" : "Sve iz Season Passa"}<br/>
+                  ⚡ {lang === "de" || lang === "at" ? "300 Nachrichten/Tag" : lang === "en" ? "300 messages/day" : lang === "it" ? "300 msg/giorno" : "300 poruka/dan"}<br/>
+                  🏆 {lang === "de" || lang === "at" ? "Detailliertere Tipps" : lang === "en" ? "More detailed tips" : lang === "it" ? "Consigli dettagliati" : "Detaljniji savjeti"}
                 </div>
               </div>
             </div>
             <div style={{ textAlign: "center", fontSize: 10, color: "#64748b" }}>
-              {lang === "en" ? "Secure payment via Stripe · No hidden fees" : lang === "de" || lang === "at" ? "Sichere Zahlung über Stripe · Keine versteckten Kosten" : lang === "it" ? "Pagamento sicuro via Stripe · Nessun costo nascosto" : "Sigurno plaćanje putem Stripe · Bez skrivenih troškova"}
+              🔒 {lang === "en" ? "Secure payment via Stripe · No hidden fees" : lang === "de" || lang === "at" ? "Sichere Zahlung über Stripe · Keine versteckten Kosten" : lang === "it" ? "Pagamento sicuro via Stripe · Nessun costo nascosto" : "Sigurno plaćanje putem Stripe · Bez skrivenih troškova"}
             </div>
             <div onClick={() => setShowPlanPicker(false)} style={{ textAlign: "center", marginTop: 16, fontSize: 12, color: "#475569", cursor: "pointer" }}>
               {lang === "en" ? "Maybe later" : lang === "de" || lang === "at" ? "Vielleicht später" : lang === "it" ? "Forse dopo" : "Možda kasnije"}
