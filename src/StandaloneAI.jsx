@@ -1016,7 +1016,7 @@ const [lang, setLang] = useState(() => {
     const dubLinks = region === "dubrovnik" ? DUBROVNIK_INTEL.filter(d => d.link).map(d => `• ${d.spot} → [${d.spot}](${d.link})`) : [];
     const warnLinks = filterByRegion(CAMPER_WARNINGS, region).filter(w => w.link).map(w => `• ${w.name} → [${w.name}](${w.link})`);
     const linkCatalog = [
-      ...regionExps.map(e => `• ${e.name} (${e.price}€, ${e.dur}) → [${e.name} — ${e.price}€](${e.link})`),
+      ...regionExps.map(e => `• ${e.name} (~${e.price}€, ${e.dur}) → [${e.name} — od ${e.price}€](${e.link})`),
       ...dubLinks, ...warnLinks,
     ].join("\n");
 
@@ -2165,12 +2165,12 @@ const [lang, setLang] = useState(() => {
                           <div style={{ position: "relative", padding: "14px 16px", display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: 140 }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                               <span style={{ fontSize: 22 }}>{a.emoji}</span>
-                              <span style={{ fontSize: 12, color: C.gold, fontWeight: 700, background: isNight ? "rgba(245,158,11,0.1)" : "rgba(245,158,11,0.15)", padding: "3px 10px", borderRadius: 10 }}>{a.price}€</span>
+                              <span style={{ fontSize: 12, color: C.gold, fontWeight: 700, background: isNight ? "rgba(245,158,11,0.1)" : "rgba(245,158,11,0.15)", padding: "3px 10px", borderRadius: 10 }}>~{a.price}€</span>
                             </div>
                             <div style={{ fontSize: 13, fontWeight: 600, color: C.text, marginBottom: 2 }}>{a.name}</div>
                             <div style={{ display: "flex", gap: 6, fontSize: 10, color: C.mut }}>
                               <span>⏱ {a.dur}</span>
-                              <span>⭐ {a.rating}</span>
+                              {a.rating > 0 && <span>⭐ {a.rating}</span>}
                             </div>
                           </div>
                         </div>
