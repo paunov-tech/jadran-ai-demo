@@ -705,7 +705,7 @@ export default async function handler(req, res) {
 
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
+  if (!apiKey) return res.status(500).json({ error: 'Service temporarily unavailable' });
 
   try {
     const { system, messages, mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, plan, deviceId } = req.body;

@@ -20,7 +20,7 @@ export default async function handler(req, res) {
   const clientIp = (req.headers['x-forwarded-for'] || 'unknown').split(',')[0].trim();
   if (!checkoutRateOk(clientIp)) return res.status(429).json({ error: "Too many attempts. Try again later." });
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-  if (!process.env.STRIPE_SECRET_KEY) return res.status(500).json({ error: "Stripe not configured" });
+  if (!process.env.STRIPE_SECRET_KEY) return res.status(500).json({ error: "Service temporarily unavailable" });
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -29,6 +29,8 @@ export default async function handler(req, res) {
   try {
     const { roomCode, guestName, lang, returnPath, plan, region, deviceId, utm_source, utm_medium, utm_campaign, partnerRef } = req.body || {};
     if (!plan || !["week", "season", "vip"].includes(plan)) return res.status(400).json({ error: "Invalid plan" });
+    // Sanitize partnerRef: only allow JAD-XXX-NNN format (e.g. JAD-RAB-001), strip anything else
+    const sanitizedPartnerRef = (typeof partnerRef === "string" && /^JAD-[A-Z]{2,5}-\d{3}$/.test(partnerRef)) ? partnerRef : "";
 
     const plans = {
       week:   { name: "JADRAN Vodič — Explorer (7 dana)", amount: 999, days: 7 },
@@ -61,7 +63,7 @@ export default async function handler(req, res) {
           utm_source: utm_source || "",
           utm_medium: utm_medium || "",
           utm_campaign: utm_campaign || "",
-          partnerRef: partnerRef || "",
+          partnerRef: sanitizedPartnerRef,
         },
       },
       line_items: [{
@@ -92,7 +94,7 @@ export default async function handler(req, res) {
         utm_source: utm_source || "",
         utm_medium: utm_medium || "",
         utm_campaign: utm_campaign || "",
-        partnerRef: partnerRef || "",
+        partnerRef: sanitizedPartnerRef,
       },      locale: lang === "de" || lang === "at" ? "de" : lang === "en" ? "en" : lang === "it" ? "it" : lang === "hr" ? "hr" : "auto",
     };
 
@@ -111,19 +113,20 @@ export default async function handler(req, res) {
     if (err.message?.includes("tax") || err.message?.includes("Tax")) {
       try {
         const { roomCode, guestName, lang, returnPath, plan, region, deviceId, utm_source, utm_medium, utm_campaign, partnerRef } = req.body || {};
+        const sanitizedPartnerRef = (typeof partnerRef === "string" && /^JAD-[A-Z]{2,5}-\d{3}$/.test(partnerRef)) ? partnerRef : "";
         const plans = { week: { name: "JADRAN Vodič — Explorer (7 dana)", amount: 999, days: 7 }, season: { name: "JADRAN Vodič — Sezona (30 dana)", amount: 1999, days: 30 }, vip: { name: "JADRAN Vodič — VIP Sezona (30 dana)", amount: 4999, days: 30 } };
         const p = plans[plan] || plans.week;
         const basePath = (returnPath || "/ai").split("?")[0];
         const session = await stripe.checkout.sessions.create({
           payment_method_types: ["card"],
           customer_creation: "always",
-          payment_intent_data: { statement_descriptor_suffix: "JADRAN", metadata: { roomCode: roomCode || "AI-STANDALONE", guestName: guestName || "Guest", plan: plan || "week", region: region || "all", days: String(p.days), deviceId: deviceId || "unknown", lang: lang || "hr", utm_source: utm_source || "", utm_medium: utm_medium || "", utm_campaign: utm_campaign || "", partnerRef: partnerRef || "" } },
+          payment_intent_data: { statement_descriptor_suffix: "JADRAN", metadata: { roomCode: roomCode || "AI-STANDALONE", guestName: guestName || "Guest", plan: plan || "week", region: region || "all", days: String(p.days), deviceId: deviceId || "unknown", lang: lang || "hr", utm_source: utm_source || "", utm_medium: utm_medium || "", utm_campaign: utm_campaign || "", partnerRef: sanitizedPartnerRef } },
           line_items: [{ price_data: { currency: "eur", product_data: { name: p.name, description: "AI turistički vodič za hrvatsku obalu" }, unit_amount: p.amount }, quantity: 1 }],
           mode: "payment",
           invoice_creation: { enabled: true },
           success_url: `${origin}${basePath}?payment=success&plan=${plan}&days=${p.days}&region=${region || "all"}&session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${origin}${basePath}?payment=cancelled`,
-          metadata: { roomCode: roomCode || "AI-STANDALONE", guestName: guestName || "Guest", plan: plan || "week", region: region || "all", days: String(p.days), deviceId: deviceId || "unknown", lang: lang || "hr", utm_source: utm_source || "", utm_medium: utm_medium || "", utm_campaign: utm_campaign || "", partnerRef: partnerRef || "" },
+          metadata: { roomCode: roomCode || "AI-STANDALONE", guestName: guestName || "Guest", plan: plan || "week", region: region || "all", days: String(p.days), deviceId: deviceId || "unknown", lang: lang || "hr", utm_source: utm_source || "", utm_medium: utm_medium || "", utm_campaign: utm_campaign || "", partnerRef: sanitizedPartnerRef },
           locale: lang === "de" || lang === "at" ? "de" : lang === "en" ? "en" : lang === "it" ? "it" : lang === "hr" ? "hr" : "auto",
         });
         console.log("Checkout created without Tax (fallback)");
