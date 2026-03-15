@@ -506,7 +506,7 @@ export default function LandingPage() {
                   ✅ {lang === "de" || lang === "at" ? "Alles aus Explorer" : lang === "en" ? "Everything in Explorer" : lang === "it" ? "Tutto da Explorer" : "Sve iz Explorera"}<br/>
                   🛡️ <strong style={{ color: "#f59e0b" }}>Travel Guardian</strong>: {lang === "de" || lang === "at" ? "Sturm · Feuer · Grenze" : lang === "en" ? "storms · fires · borders" : lang === "it" ? "tempeste · incendi" : "oluje · požari · granica"}<br/>
                   📸 <strong>Jadran Lens</strong>: {lang === "de" || lang === "at" ? "Strafen vermeiden" : lang === "en" ? "avoid €60 fines" : lang === "it" ? "evita multe €60" : "izbjegni kaznu 60€"}<br/>
-                  🎙️ <strong>Walkie-Talkie</strong>: {lang === "de" || lang === "at" ? "Freihändig fahren" : lang === "en" ? "hands-free driving" : lang === "it" ? "guida a mani libere" : "vozi bez ruku"}
+                  🎙️ <strong>Walkie-Talkie</strong>: {lang === "de" || lang === "at" ? "Sicher nutzen beim Fahren" : lang === "en" ? "use safely while driving" : lang === "it" ? "usa in sicurezza alla guida" : "bezbedno koristi u vožnji"}
                 </div>
               </div>
               {/* VIP — price anchor decoy */}
