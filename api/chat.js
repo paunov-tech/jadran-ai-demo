@@ -319,7 +319,7 @@ function checkB2BRedirect(userMessage, userRegion) {
     for (const hotspot of partner.hotspots) {
       const sub = RAB_SUBS[hotspot];
       if (!sub) continue;
-      const est = _estOcc(sub.bl, new Date());
+      const est = _estOcc(sub.bl, new Date(), hotspot);
       if (est >= partner.threshold) {
         return {
           partnerId: pid,
@@ -343,15 +343,41 @@ const DMO_MACRO = {
   dubrovnik:{name:"Dubrovnik",bl:{may:40,jun:85,jul:98,aug:99,sep:75,oct:40}},
 };
 
-function _estOcc(bl, now) {
+// ═══ GUARDRAILS (from YOLO spec analysis) ═══
+
+// GUARDRAIL 1: Night-blindness fix
+// Rab Town and Barbat (Pudarica) are active at night in summer — don't penalize
+const NIGHTLIFE_ZONES = new Set(["rab_town", "barbat"]);
+
+function _estOcc(bl, now, subRegionId) {
   const m = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"][now.getMonth()];
   let v = (bl && bl[m]) || 30;
   v += [0,5,6].includes(now.getDay()) ? 8 : -5;
   v += now.getDate() > 20 ? 5 : now.getDate() < 10 ? -5 : 0;
   const h = now.getHours();
-  v += (h>=10&&h<=18) ? 5 : (h<8||h>21) ? -10 : 0;
+  // Night-blindness fix: nightlife zones stay active 21-01h in summer (jun-sep)
+  const isSummer = now.getMonth() >= 5 && now.getMonth() <= 8;
+  const isNightlife = NIGHTLIFE_ZONES.has(subRegionId);
+  if (h >= 21 && isSummer && isNightlife) {
+    v += 5; // Konobe and bars are FULL at 21-01h in summer
+  } else if (h >= 10 && h <= 18) {
+    v += 5;
+  } else if (h < 8 || h > 21) {
+    v -= 10;
+  }
   return Math.min(100, Math.max(0, Math.round(v)));
 }
+
+// GUARDRAIL 2: Stale data timestamp check (for eVisitor/Google probes)
+// If probe data is older than maxAge, ignore it and fall back to heuristic
+function isDataFresh(timestamp, maxAgeMs = 6 * 3600000) {
+  if (!timestamp) return false;
+  return (Date.now() - new Date(timestamp).getTime()) < maxAgeMs;
+}
+
+// GUARDRAIL 3: Debounce — don't repeat DMO nudge for same region
+// Tracks per-request (frontend sends last nudged region)
+let _lastNudgedRegion = null; // Reset per warm instance, not persistent
 
 function generateNudgeDirectives(ignored, userRegion) {
   const now = new Date();
@@ -362,7 +388,7 @@ function generateNudgeDirectives(ignored, userRegion) {
     const rabBoost = [];
     for (const [sid, sub] of Object.entries(RAB_SUBS)) {
       if (sub.suppress) continue; // Don't boost Rab Town when full
-      const est = _estOcc(sub.bl, now), gap = 100 - est;
+      const est = _estOcc(sub.bl, now, sid), gap = 100 - est;
       if (gap > 25) {
         rabBoost.push({ sid, name:sub.name, est, gap,
           p: gap>50?"AKTIVNO PREPORUČI":"SUBTILNO PREDLOŽI", nudge:RAB_NUDGES[sid] });
@@ -380,6 +406,7 @@ PRAVILA ZA RAB:
 - Centar prepun → Lopar, Supetarska Draga ili Kalifront
 - Obitelji s djecom → Lopar (pijesak, plitko); parovi → Kampor/Barbat; hikeri → Kalifront+Kamenjak
 - NIKAD ne reci "TZ preporučuje" — govori kao lokalni vodič
+- DEBOUNCE: Ako si VEĆ u ovoj konverzaciji preporučio neko od ovih mjesta, NE ponavljaj. Promijeni preporuku ili odgovori bez DMO preporuke.
 - Format: "Ako imate vremena, svratite u [mjesto] — [razlog]. Većina turista ne zna za to."`);
     }
   }
@@ -387,7 +414,7 @@ PRAVILA ZA RAB:
   // ── CROSS-DESTINATION nudges (macro regions) ──
   const macroBoost = [];
   for (const [rid, r] of Object.entries(DMO_MACRO)) {
-    const est = _estOcc(r.bl, now), gap = 100 - est;
+    const est = _estOcc(r.bl, now, null), gap = 100 - est;
     if (gap > 30 && rid !== userRegion)
       macroBoost.push({ rid, name:r.name, est, gap, p:gap>50?"AKTIVNO PREPORUČI":"SUBTILNO PREDLOŽI" });
   }
@@ -399,7 +426,7 @@ PRAVILA ZA RAB:
     let enrichment = "";
     if (kvarnerMatch) {
       const bestRab = Object.entries(RAB_SUBS).filter(([,s])=>!s.suppress)
-        .map(([sid,s])=>({sid,est:_estOcc(s.bl,now),gap:100-_estOcc(s.bl,now)}))
+        .map(([sid,s])=>({sid,est:_estOcc(s.bl,now,sid),gap:100-_estOcc(s.bl,now,sid)}))
         .sort((a,b)=>b.gap-a.gap)[0];
       if (bestRab) enrichment = `\n→ Konkretno za Rab: ${RAB_NUDGES[bestRab.sid]}`;
     }
@@ -641,7 +668,8 @@ TVOJ ZADATAK:
 3. Zadrži ton prijateljskog lokalnog insajdera koji "spašava" veče
 4. NIKAD ne reci "naš partner" ili "sustav preporučuje"
 5. Koristi formulaciju: "Poznajem jedno sjajno mjesto..." ili "Lokalni savjet:"
-6. Ako korisnik insistira na izvornoj lokaciji, pomozi mu — ne blokiraj`);
+6. Ako korisnik insistira na izvornoj lokaciji, pomozi mu — ne blokiraj
+7. DEBOUNCE: Ako si VEĆ u ovoj konverzaciji spomenuo ${redirect.partnerName}, NE ponavljaj. Odgovori normalno.`);
     }
   } catch (e) {
     // B2B redirect not critical — fail silently

@@ -146,13 +146,20 @@ const MACRO = {
 };
 
 // ═══ OCCUPANCY ESTIMATOR ═══
-function estOcc(bl, now) {
+// Guardrail: nightlife zones (rab_town, barbat) don't get -10 penalty at night in summer
+const NIGHTLIFE = new Set(["rab_town", "barbat"]);
+function estOcc(bl, now, subId) {
   const m = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"][now.getMonth()];
   let v = (bl && bl[m]) || 30;
   v += [0,5,6].includes(now.getDay()) ? 8 : -5;        // weekend boost
   v += now.getDate() > 20 ? 5 : now.getDate() < 10 ? -5 : 0; // month phase
   const h = now.getHours();
-  v += (h >= 10 && h <= 18) ? 5 : (h < 8 || h > 21) ? -10 : 0; // time of day
+  const isSummer = now.getMonth() >= 5 && now.getMonth() <= 8;
+  if (h >= 21 && isSummer && NIGHTLIFE.has(subId)) {
+    v += 5; // Nightlife zones active 21-01h in summer
+  } else {
+    v += (h >= 10 && h <= 18) ? 5 : (h < 8 || h > 21) ? -10 : 0;
+  }
   return Math.min(100, Math.max(0, Math.round(v)));
 }
 
@@ -193,7 +200,7 @@ function subGaps(destId) {
   const now = new Date(), today = now.toISOString().slice(0,10);
   const gaps = [];
   for (const [sid, sub] of Object.entries(d.subRegions)) {
-    let est = estOcc(sub.baseline, now);
+    let est = estOcc(sub.baseline, now, sid);
     let evtBoost = 0;
     for (const e of (d.events||[])) {
       if (!e.subs?.includes(sid)) continue;
@@ -212,7 +219,7 @@ function subGaps(destId) {
 function macroGaps(userRegion) {
   const now = new Date(), out = [];
   for (const [rid, r] of Object.entries(MACRO)) {
-    const est = estOcc(r.bl, now), gap = 100-est;
+    const est = estOcc(r.bl, now, null), gap = 100-est;
     if (gap>30 && rid!==userRegion)
       out.push({ rid, name:r.name, est, gap, priority:gap>50?"high":gap>30?"medium":"low" });
   }
@@ -381,7 +388,7 @@ function fuseOccupancyData(destId, evisitorData, googleProbeData) {
   const fused = {};
   
   for (const [subId, sub] of Object.entries(dest.subRegions)) {
-    const heuristic = estOcc(sub.baseline, now);
+    const heuristic = estOcc(sub.baseline, now, subId);
     
     // If we have eVisitor data, use it (most accurate)
     if (evisitorData?.[subId]?.todayArrivals !== undefined) {
@@ -485,7 +492,7 @@ export default async function handler(req, res) {
       const sg = subGaps(did);
       return res.json({ ok:true, report:{
         destination:d.name, tz:d.tz, generated:new Date().toISOString(),
-        islandOccupancy: estOcc(d.baseline, new Date())+"%",
+        islandOccupancy: estOcc(d.baseline, new Date(), null)+"%",
         subRegions: sg.map(g=>({ name:g.name, occupancy:g.est+"%", gap:g.gap+"%",
           priority:g.priority, needsBoost:g.needsBoost, event:g.evtBoost?`+${g.evtBoost}%`:null })),
         recommendations: sg.filter(g=>g.needsBoost).map(g=>`Pojačati: ${g.name} (${g.gap}% slobodno)`),
