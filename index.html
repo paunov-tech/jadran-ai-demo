@@ -11,6 +11,10 @@
   <meta name="author" content="SIAL Consulting d.o.o." />
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
   <link rel="canonical" href="https://jadran.ai" />
+  <meta name="geo.region" content="HR" />
+  <meta name="geo.placename" content="Croatian Adriatic Coast" />
+  <meta name="geo.position" content="43.508;16.440" />
+  <meta name="ICBM" content="43.508, 16.440" />
 
   <!-- Hreflang — critical for multilingual SEO -->
   <link rel="alternate" hreflang="hr" href="https://jadran.ai" />
@@ -21,6 +25,7 @@
   <link rel="alternate" hreflang="sl" href="https://jadran.ai" />
   <link rel="alternate" hreflang="cs" href="https://jadran.ai" />
   <link rel="alternate" hreflang="pl" href="https://jadran.ai" />
+  <link rel="alternate" hreflang="fr" href="https://jadran.ai" />
   <link rel="alternate" hreflang="x-default" href="https://jadran.ai" />
 
   <!-- Open Graph -->
@@ -31,6 +36,8 @@
   <meta property="og:image" content="https://jadran.ai/og-image.jpg" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="JADRAN.AI — AI tourist guide for the Croatian Adriatic coast showing Split, Dubrovnik, and island scenery" />
+  <meta property="og:image:type" content="image/jpeg" />
   <meta property="og:site_name" content="JADRAN.AI" />
   <meta property="og:locale" content="hr_HR" />
   <meta property="og:locale:alternate" content="de_DE" />
@@ -40,13 +47,17 @@
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@jadran_ai" />
+  <meta name="twitter:creator" content="@jadran_ai" />
   <meta name="twitter:title" content="JADRAN.AI — AI turistički vodič za hrvatsku obalu" />
   <meta name="twitter:description" content="Skrivene plaže, restorani, parking, marine — AI vodič od lokalaca, 8 jezika." />
   <meta name="twitter:image" content="https://jadran.ai/og-image.jpg" />
 
   <!-- Favicon -->
   <link rel="icon" href="/icon-192.svg" type="image/svg+xml" />
-  <link rel="apple-touch-icon" href="/icon-192.svg" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/icon-192.svg" />
+  <link rel="icon" type="image/svg+xml" href="/icon-192.svg" />
+  <link rel="icon" type="image/svg+xml" sizes="512x512" href="/icon-512.svg" />
 
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json" />
@@ -57,6 +68,7 @@
   <meta name="theme-color" content="#0a1628" />
 
   <!-- Performance: preconnect + fonts (NO DUPLICATES) -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" as="style" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preconnect" href="https://images.unsplash.com" />
@@ -81,14 +93,122 @@
       "price": "9.99",
       "priceCurrency": "EUR"
     },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.8",
-      "reviewCount": "2847"
-    },
     "areaServed": { "@type": "Country", "name": "Croatia" },
     "availableLanguage": ["Croatian","German","English","Italian","Slovenian","Czech","Polish"],
     "author": { "@type": "Organization", "name": "SIAL Consulting d.o.o." }
+  }
+  </script>
+
+  <!-- Structured Data — Organization -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "JADRAN.AI",
+    "url": "https://jadran.ai",
+    "logo": "https://jadran.ai/icon-512.svg",
+    "description": "AI-powered tourist concierge for the Croatian Adriatic coast",
+    "foundingDate": "2026",
+    "founder": { "@type": "Organization", "name": "SIAL Consulting d.o.o." },
+    "areaServed": { "@type": "Country", "name": "Croatia" },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "customer support",
+      "email": "info@jadran.ai",
+      "availableLanguage": ["Croatian","German","English","Italian","Slovenian","Czech","Polish","French"]
+    },
+    "sameAs": ["https://www.facebook.com/jadran.ai", "https://www.instagram.com/jadran.ai"]
+  }
+  </script>
+
+  <!-- Structured Data — FAQPage (SEO gold for featured snippets) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is JADRAN.AI?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "JADRAN.AI is an AI-powered tourist guide for the Croatian Adriatic coast. It provides real-time recommendations for beaches, restaurants, parking, marinas, and activities across Split, Dubrovnik, Istria, Zadar, Makarska, and Kvarner — in 9 languages."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is JADRAN.AI free to use?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, JADRAN.AI offers 10 free messages to try the service. Premium plans start at €9.99/week for unlimited access to all features including camper parking tips, sailing conditions, and exclusive local recommendations."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Which regions does JADRAN.AI cover?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "JADRAN.AI covers the entire Croatian Adriatic coast: Split & surroundings, Makarska Riviera, Dubrovnik, Zadar & Šibenik, Istria (Rovinj, Pula, Poreč), and Kvarner (Opatija, Krk, Cres, Lošinj)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can JADRAN.AI help with camper van travel in Croatia?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes! JADRAN.AI has a dedicated camper mode with legal overnight parking spots, dump stations, height-restricted road warnings, and beach recommendations accessible by camper van."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does JADRAN.AI provide real-time weather and sea conditions?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes, JADRAN.AI displays live weather data from DHMZ including air and sea temperature, wind speed, UV index, wave height, and maritime conditions — updated every minute."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "In which languages is JADRAN.AI available?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "JADRAN.AI is available in 9 languages: Croatian, German, Austrian German, English, Italian, Slovenian, Czech, Polish, and French."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <!-- Structured Data — BreadcrumbList -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "JADRAN.AI", "item": "https://jadran.ai" },
+      { "@type": "ListItem", "position": 2, "name": "AI Guide", "item": "https://jadran.ai/ai" }
+    ]
+  }
+  </script>
+
+  <!-- Structured Data — TouristAttraction (for region discoverability) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TouristDestination",
+    "name": "Croatian Adriatic Coast",
+    "description": "1,200 km of stunning coastline with over 1,000 islands, crystal-clear waters, and UNESCO World Heritage sites",
+    "url": "https://jadran.ai",
+    "geo": { "@type": "GeoCoordinates", "latitude": 43.508, "longitude": 16.440 },
+    "touristType": ["Beach", "Sailing", "Camping", "Cultural Tourism", "Cruise"],
+    "includesAttraction": [
+      { "@type": "TouristAttraction", "name": "Diocletian's Palace, Split", "url": "https://jadran.ai/ai?region=split" },
+      { "@type": "TouristAttraction", "name": "Dubrovnik Old Town", "url": "https://jadran.ai/ai?region=dubrovnik" },
+      { "@type": "TouristAttraction", "name": "Rovinj, Istria", "url": "https://jadran.ai/ai?region=istra" },
+      { "@type": "TouristAttraction", "name": "Krka National Park", "url": "https://jadran.ai/ai?region=zadar" },
+      { "@type": "TouristAttraction", "name": "Zlatni Rat Beach, Brač", "url": "https://jadran.ai/ai?region=makarska" },
+      { "@type": "TouristAttraction", "name": "Opatija Riviera", "url": "https://jadran.ai/ai?region=kvarner" }
+    ]
   }
   </script>
 
@@ -182,9 +302,25 @@
       <div style="font-size:32px;">🌊</div>
       <div>JADRAN.AI</div>
       <noscript>
-        <div style="max-width:600px;padding:20px;text-align:center;color:#7dd3fc;">
-          <h1>JADRAN.AI — AI turistički vodič za hrvatsku obalu</h1>
-          <p>Skrivene plaže, restorani, parking, marine i rute za Split, Dubrovnik, Istru, Zadar, Makarsku i Kvarner. Na 8 jezika.</p>
+        <div style="max-width:700px;padding:24px;text-align:center;color:#7dd3fc;">
+          <h1>JADRAN.AI — AI Tourist Guide for the Croatian Adriatic Coast</h1>
+          <p style="margin:12px 0;">Your personal AI concierge for Croatia. Hidden beaches, authentic restaurants, camper parking, marinas, sailing conditions, and local tips — verified by locals, available in 9 languages.</p>
+          <h2 style="font-size:18px;margin:20px 0 8px;">Regions We Cover</h2>
+          <ul style="list-style:none;text-align:left;max-width:500px;margin:0 auto;">
+            <li style="margin:6px 0;"><a href="/ai?region=split" style="color:#0ea5e9;">Split & Surroundings</a> — Diocletian's Palace, Podstrana, Omiš</li>
+            <li style="margin:6px 0;"><a href="/ai?region=makarska" style="color:#0ea5e9;">Makarska Riviera</a> — Brela, Baška Voda, Tučepi</li>
+            <li style="margin:6px 0;"><a href="/ai?region=dubrovnik" style="color:#0ea5e9;">Dubrovnik</a> — Old Town, Elaphiti Islands, Cavtat</li>
+            <li style="margin:6px 0;"><a href="/ai?region=zadar" style="color:#0ea5e9;">Zadar & Šibenik</a> — Sea Organ, Krka, Kornati</li>
+            <li style="margin:6px 0;"><a href="/ai?region=istra" style="color:#0ea5e9;">Istria</a> — Rovinj, Pula, Poreč, Motovun</li>
+            <li style="margin:6px 0;"><a href="/ai?region=kvarner" style="color:#0ea5e9;">Kvarner</a> — Opatija, Krk, Cres, Lošinj</li>
+          </ul>
+          <h2 style="font-size:18px;margin:20px 0 8px;">Travel Modes</h2>
+          <p><a href="/ai?niche=camper" style="color:#0ea5e9;">Camper Van Guide</a> | <a href="/ai?niche=sailing" style="color:#0ea5e9;">Sailing Guide</a> | <a href="/ai?niche=cruiser" style="color:#0ea5e9;">Cruise Guide</a></p>
+          <h2 style="font-size:18px;margin:20px 0 8px;">Frequently Asked Questions</h2>
+          <p><strong>What is JADRAN.AI?</strong> An AI-powered tourist guide for Croatia's Adriatic coast with real-time weather, beach conditions, and local recommendations.</p>
+          <p><strong>Is it free?</strong> 10 free messages, then premium from €9.99/week.</p>
+          <p><strong>Languages?</strong> Croatian, German, English, Italian, Slovenian, Czech, Polish, French, Austrian German.</p>
+          <p style="margin-top:20px;font-size:12px;color:#4b7a99;">© 2026 SIAL Consulting d.o.o. — jadran.ai</p>
         </div>
       </noscript>
     </div>

@@ -1,6 +1,24 @@
+# JADRAN.AI — AI Tourist Guide for Croatian Adriatic
+# https://jadran.ai
+
 User-agent: *
 Allow: /
+Allow: /ai
 Disallow: /api/
 Disallow: /host
+Disallow: /host/
+
+# Block aggressive crawlers
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: SemrushBot
+Crawl-delay: 10
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
 
 Sitemap: https://jadran.ai/sitemap.xml
