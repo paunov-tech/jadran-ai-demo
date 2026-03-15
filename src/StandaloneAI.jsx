@@ -61,7 +61,7 @@ const T = {
     // Errors & status
     errVision: "Greška pri analizi. Pokušajte ponovno.", errConnection: "Veza nije dostupna. Pokušajte ponovno.",
     iceWelcome: "Dobrodošli u", iceBack: "Dobrodošli natrag", iceMorning: "Dobro jutro.", iceEvening: "Dobra večer.", iceWhat: "Što planirate danas", iceBeach: "plaže, izleti, kultura", iceDinner: "večeru s pogledom", iceActivity: "popodnevnu aktivnost", iceCamperIntro: "Poznajem svaki parking, dump station i skrivenu uvalu na ovom dijelu obale.", iceSailIntro: "Poznajem svaku marinu, sidrište i konubu do koje se dolazi s mora.", iceCruiseIntro: "Imate ograničeno vrijeme — napravit ćemo plan po minutu.", iceCruiseQ: "U koliko sati se morate vratiti na brod?", iceGenericIntro: "Poznajem svaku skrivenu plažu i konubu na ovom dijelu obale.", iceWhatFirst: "Što vam prvo treba", iceParkingQ: "siguran parking za noćas, preporuka za plažu pristupačnu kamperom, ili nešto treće?", iceMarinaQ: "Trebate preporuku za vez, sigurno sidrište ili večeru na obali?", iceWhatInterest: "Što vas zanima?",
-    wxFeels: "osjeća", wxWaves: "valovi", wxPressure: "tlak", wxHumidity: "vlaga", wxSunset: "zalazak", wxProtection: "zaštita obavezna", wxSpf: "SPF 30+ preporučen", wxLowRisk: "nizak rizik", wxData: "Podaci", wxLocation: "Lokacija", wxRefresh: "Osvježava se svake minute", wxCalm: "mirno", wxForecast: "Prognoza vrijedi do", wxSource: "Izvor: DHMZ", wxWind: "vjetar", wxSea: "more", wxVisibility: "vidljivost", wxSeeAll: "POGLEDAJTE ŠTO SVE MOGU",
+    wxFeels: "osjeća", wxWaves: "valovi", wxPressure: "tlak", wxHumidity: "vlaga", wxSunset: "zalazak", wxProtection: "zaštita obavezna", wxSpf: "SPF 30+ preporučen", wxLowRisk: "nizak rizik", wxData: "Podaci", wxLocation: "Lokacija", wxRefresh: "Osvježava se svake minute", wxCalm: "mirno", wxForecast: "Prognoza vrijedi do", wxSource: "Izvor: DHMZ", wxWind: "vjetar", wxSea: "more", wxVisibility: "vidljivost", wxSeeAll: "POGLEDAJTE ŠTO SVE MOGU", wxCloud: "oblačnost", wxDays: "dana", tierSeason: "SEZONA", tierExplorer: "EXPLORER", tierVip: "VIP", preseason: "PREDSEZONA", wxTemp: "TEMPERATURA",
     freeNote: "10 poruka besplatno · zatim 9.99€/tjedan", trialExpired: "Besplatni dan istekao", payExpired: "BESPLATNI DAN JE ISTEKAO", payTitle: "Otključajte svog vodiča", payFeatures: "Neograničena pitanja 24/7|Svi savjeti otključani|8+ skrivenih plaža i konoba|Personalizirana ruta za danas", payCamper: "Kamper parking, dump station, voda", payIstra: "Istra Insider — sezonski savjeti", payWeek: "Tjedan", payWeekSub: "7 dana · 1 regija", paySeason: "Sezona", paySeasonSub: "30 dana · sve regije", payLoading: "Preusmjeravanje na plaćanje...", paySecure: "Sigurno plaćanje putem Stripe · Nema skrivenih troškova · Jednokratno plaćanje · bez pretplate", payLater: "Možda kasnije", buyNow: "KUPI PREMIUM", buyPrice: "od 9.99€",
   },
   en: { title: "Jadran Guide", sub: "Local tips for the perfect Adriatic trip", start: "Start chatting", send: "Send", placeholder: "Ask me about the Adriatic...", region: "Choose region", mode: "How are you traveling?", unlock: "Unlock — from €9.99", free3: "3 free questions", remaining: "remaining", upgraded: "Premium unlocked!", back: "Back", typing: "thinking...",
@@ -86,7 +86,7 @@ const T = {
     walkieInfo: "Hands-free · Screen stays on", walkieSnap: "Snap photo",
     errVision: "Analysis failed. Please try again.", errConnection: "Connection unavailable. Please try again.",
     iceWelcome: "Welcome to", iceBack: "Welcome back", iceMorning: "Good morning.", iceEvening: "Good evening.", iceWhat: "What are you planning today", iceBeach: "beaches, trips, culture", iceDinner: "dinner with a view", iceActivity: "an afternoon activity", iceCamperIntro: "I know every parking spot, dump station and hidden cove on this part of the coast.", iceSailIntro: "I know every marina, anchorage and waterfront restaurant on this coast.", iceCruiseIntro: "You have limited time — we will make a plan by the minute.", iceCruiseQ: "What time do you need to be back on board?", iceGenericIntro: "I know every hidden beach and restaurant on this part of the coast.", iceWhatFirst: "What do you need first", iceParkingQ: "safe parking for tonight, a camper-friendly beach, or something else?", iceMarinaQ: "Need a berth recommendation, safe anchorage, or dinner on shore?", iceWhatInterest: "What are you interested in?",
-    wxFeels: "feels", wxWaves: "waves", wxPressure: "pressure", wxHumidity: "humidity", wxSunset: "sunset", wxProtection: "protection required", wxSpf: "SPF 30+ recommended", wxLowRisk: "low risk", wxData: "Data", wxLocation: "Location", wxRefresh: "Refreshes every minute", wxCalm: "calm", wxForecast: "Forecast valid until", wxSource: "Source: DHMZ", wxWind: "wind", wxSea: "sea", wxVisibility: "visibility", wxSelectRegion: "Select your region", wxSeeAll: "SEE WHAT I CAN DO",
+    wxFeels: "feels", wxWaves: "waves", wxPressure: "pressure", wxHumidity: "humidity", wxSunset: "sunset", wxProtection: "protection required", wxSpf: "SPF 30+ recommended", wxLowRisk: "low risk", wxData: "Data", wxLocation: "Location", wxRefresh: "Refreshes every minute", wxCalm: "calm", wxForecast: "Forecast valid until", wxSource: "Source: DHMZ", wxWind: "wind", wxSea: "sea", wxVisibility: "visibility", wxSelectRegion: "Select your region", wxSeeAll: "SEE WHAT I CAN DO", wxCloud: "cloud cover", wxDays: "days", tierSeason: "SEASON", tierExplorer: "EXPLORER", tierVip: "VIP", preseason: "PRE-SEASON", wxTemp: "TEMPERATURE",
     freeNote: "10 messages free · then from €9.99/week", trialExpired: "Free day expired", payExpired: "FREE DAY EXPIRED", payTitle: "Unlock your guide", payFeatures: "Unlimited questions 24/7|All tips unlocked|8+ hidden beaches & restaurants|Personalized route for today", payCamper: "Camper parking, dump stations, water", payIstra: "Istria Insider — seasonal tips", payWeek: "Week", payWeekSub: "7 days · 1 region", paySeason: "Season", paySeasonSub: "30 days · all regions", payLoading: "Redirecting to payment...", paySecure: "Secure payment via Stripe · No hidden costs · One-time payment · no subscription", payLater: "Maybe later", buyNow: "BUY PREMIUM", buyPrice: "from €9.99",
   },
   de: { title: "Jadran Reiseführer", sub: "Geprüfte Insider-Tipps für Ihren Adria-Urlaub", start: "Gespräch starten", send: "Senden", placeholder: "Fragen Sie mich zur Adria...", region: "Wählen Sie Ihre Region", mode: "Wie reisen Sie?", unlock: "Freischalten — ab 9,99€", free3: "3 kostenlose Fragen", remaining: "übrig", upgraded: "Premium freigeschaltet!", back: "Zurück", typing: "einen Moment...",
@@ -161,7 +161,7 @@ const T = {
     walkieInfo: "Freisprechanlage · Display bleibt an", walkieSnap: "Foto machen",
     errVision: "Analyse fehlgeschlagen. Bitte nochmal probieren.", errConnection: "Verbindung nicht verfügbar. Bitte nochmal probieren.",
     iceWelcome: "Willkommen in", iceBack: "Willkommen zruck", iceMorning: "Guten Morgen.", iceEvening: "Guten Abend.", iceWhat: "Was plant's heute", iceBeach: "Strände, Ausflüge, Kultur", iceDinner: "Abendessen mit Aussicht", iceActivity: "a Nachmittagsaktivität", iceCamperIntro: "I kenn jeden Stellplatz, jede Entsorgungsstation und versteckte Bucht an dem Küstenabschnitt.", iceSailIntro: "I kenn jeden Hafen, Ankerplatz und jedes Beisl am Wasser.", iceCruiseIntro: "Ihr habt's wenig Zeit — mir machen an minutengenauen Plan.", iceCruiseQ: "Um wie viel Uhr müsst's zruck an Bord sein?", iceGenericIntro: "I kenn jeden versteckten Strand und jedes Beisl an dem Küstenabschnitt.", iceWhatFirst: "Was braucht's zuerst", iceParkingQ: "sicheren Stellplatz für heut Nacht, an Camper-freundlichen Strand oder was anderes?", iceMarinaQ: "Braucht's a Liegeplatz-Empfehlung, sicheren Ankerplatz oder Abendessen an Land?", iceWhatInterest: "Was interessiert euch?",
-    wxFeels: "g'fühlt", wxWaves: "Wellen", wxPressure: "Druck", wxHumidity: "Feuchtigkeit", wxSunset: "Sonnenuntergang", wxProtection: "Schutz nötig", wxSpf: "SPF 30+ empfohlen", wxLowRisk: "wenig Risiko", wxData: "Daten", wxLocation: "Standort", wxRefresh: "Aktualisierung jede Minute", wxCalm: "ruhig", wxForecast: "Prognose gültig bis", wxSource: "Quelle: DHMZ", wxWind: "Wind", wxSea: "Meer", wxVisibility: "Sicht", wxSeeAll: "SCHAU WAS I ALLES KANN",
+    wxFeels: "g'fühlt", wxWaves: "Wellen", wxPressure: "Druck", wxHumidity: "Feuchtigkeit", wxSunset: "Sonnenuntergang", wxProtection: "Schutz nötig", wxSpf: "SPF 30+ empfohlen", wxLowRisk: "wenig Risiko", wxData: "Daten", wxLocation: "Standort", wxRefresh: "Aktualisierung jede Minute", wxCalm: "ruhig", wxForecast: "Prognose gültig bis", wxSource: "Quelle: DHMZ", wxWind: "Wind", wxSea: "Meer", wxVisibility: "Sicht", wxSeeAll: "SCHAU WAS I ALLES KANN", wxCloud: "Bewölkung", wxDays: "Tage", tierSeason: "SAISON", tierExplorer: "EXPLORER", tierVip: "VIP", preseason: "VORSAISON", wxTemp: "TEMPERATUR",
     freeNote: "10 Nachrichten gratis · dann ab 9,99€/Woche", trialExpired: "Gratis-Tag abgelaufen", payExpired: "GRATIS-TAG ABGELAUFEN", payTitle: "Schalt deinen Guide frei", payFeatures: "Unbegrenzt Fragen 24/7|Alle Tipps freigeschaltet|8+ versteckte Strände und Beisln|Personalisierte Route für heute", payCamper: "Camper-Stellplätze, Entsorgung, Wasser", payIstra: "Istrien Insider — Tipps zur Saison", payWeek: "Woche", payWeekSub: "7 Tage · 1 Region", paySeason: "Saison", paySeasonSub: "30 Tage · alle Regionen", payLoading: "Weiterleitung zur Zahlung...", paySecure: "Sichere Zahlung via Stripe · Keine versteckten Kosten · Einmalzahlung · kein Abo", payLater: "Vielleicht später", buyNow: "PREMIUM KAUFEN", buyPrice: "ab 9,99€",
   },
   si: { title: "Jadran vodič", sub: "Lokalni nasveti za popoln oddih na Jadranu", start: "Začni pogovor", send: "Pošlji", placeholder: "Vprašajte me o Jadranu...", region: "Izberite regijo", mode: "Kako potujete?", unlock: "Odkleni — od 9,99€", free3: "3 brezplačna vprašanja", remaining: "preostalo", upgraded: "Premium odklenjen!", back: "Nazaj", typing: "razmišljam...",
@@ -186,7 +186,7 @@ const T = {
     walkieInfo: "Prostoročno · Zaslon ne ugasne", walkieSnap: "Fotografiraj",
     errVision: "Analiza ni uspela. Poskusite znova.", errConnection: "Povezava ni na voljo. Poskusite znova.",
     iceWelcome: "Dobrodošli v", iceBack: "Dobrodošli nazaj", iceMorning: "Dobro jutro.", iceEvening: "Dober večer.", iceWhat: "Kaj načrtujete danes", iceBeach: "plaže, izleti, kultura", iceDinner: "večerjo z razgledom", iceActivity: "popoldansko aktivnost", iceCamperIntro: "Poznam vsako parkirišče in skrito zatlino na tem delu obale.", iceSailIntro: "Poznam vsako marino in sidrišče na tej obali.", iceCruiseIntro: "Imate omejen čas — naredili bomo načrt po minutah.", iceCruiseQ: "Ob kateri uri se morate vrniti na ladjo?", iceGenericIntro: "Poznam vsako skrito plažo in restavracijo na tem delu obale.", iceWhatFirst: "Kaj najprej potrebujete", iceParkingQ: "varno parkirišče za nocoj, plažo za kamper ali kaj drugega?", iceMarinaQ: "Potrebujete priporočilo za privez ali večerjo na obali?", iceWhatInterest: "Kaj vas zanima?",
-    wxFeels: "občutek", wxWaves: "valovi", wxPressure: "tlak", wxHumidity: "vlaga", wxSunset: "zahod", wxProtection: "zaščita obvezna", wxSpf: "SPF 30+ priporočen", wxLowRisk: "nizko tveganje", wxData: "Podatki", wxLocation: "Lokacija", wxRefresh: "Posodobitev vsako minuto", wxCalm: "mirno", wxForecast: "Napoved velja do", wxSource: "Vir: DHMZ", wxWind: "veter", wxSea: "morje", wxVisibility: "vidljivost", wxSelectRegion: "Izberite regijo", wxSeeAll: "POGLEJTE KAJ VSE ZNAM",
+    wxFeels: "občutek", wxWaves: "valovi", wxPressure: "tlak", wxHumidity: "vlaga", wxSunset: "zahod", wxProtection: "zaščita obvezna", wxSpf: "SPF 30+ priporočen", wxLowRisk: "nizko tveganje", wxData: "Podatki", wxLocation: "Lokacija", wxRefresh: "Posodobitev vsako minuto", wxCalm: "mirno", wxForecast: "Napoved velja do", wxSource: "Vir: DHMZ", wxWind: "veter", wxSea: "morje", wxVisibility: "vidljivost", wxSelectRegion: "Izberite regijo", wxSeeAll: "POGLEJTE KAJ VSE ZNAM", wxCloud: "oblačnost", wxDays: "dni", tierSeason: "SEZONA", tierExplorer: "EXPLORER", tierVip: "VIP", preseason: "PREDSEZONA", wxTemp: "TEMPERATURA",
     freeNote: "10 sporočil brezplačno · nato 9,99€/teden", trialExpired: "Brezplačni dan je potekel", payExpired: "BREZPLAČNI DAN JE POTEKEL", payTitle: "Odkleni vodič", payFeatures: "Neomejeno vprašanj 24/7|Vsi nasveti odklenjeni|8+ skritih plaž|Personalizirana pot za danes", payCamper: "Parkirišča za kamper, voda", payIstra: "Istra Insider", payWeek: "Teden", payWeekSub: "7 dni · 1 regija", paySeason: "Sezona", paySeasonSub: "30 dni · vse regije", payLoading: "Preusmerjanje na plačilo...", paySecure: "Varno plačilo prek Stripe · Brez skritih stroškov · Enkratno plačilo · brez naročnine", payLater: "Mogoče pozneje", buyNow: "KUPI PREMIUM", buyPrice: "od 9,99€",
   },
   cz: { title: "Jadran průvodce", sub: "Místní tipy pro perfektní dovolenou na Jadranu", start: "Začít konverzaci", send: "Odeslat", placeholder: "Zeptejte se na Jadran...", region: "Vyberte region", mode: "Jak cestujete?", unlock: "Odemknout — od 9,99€", free3: "3 otázky zdarma", remaining: "zbývá", upgraded: "Premium odemčen!", back: "Zpět", typing: "přemýšlím...",
@@ -211,7 +211,7 @@ const T = {
     walkieInfo: "Hlasité ovládání · Displej zůstává zapnutý", walkieSnap: "Vyfotit",
     errVision: "Analýza selhala. Zkuste to znovu.", errConnection: "Připojení není k dispozici. Zkuste to znovu.",
     iceWelcome: "Vítejte v", iceBack: "Vítejte zpět", iceMorning: "Dobré ráno.", iceEvening: "Dobrý večer.", iceWhat: "Co dnes plánujete", iceBeach: "pláže, výlety, kultura", iceDinner: "večeři s výhledem", iceActivity: "odpolední aktivitu", iceCamperIntro: "Znám každé parkoviště a skrytou zátoku na tomto pobřeží.", iceSailIntro: "Znám každý přístav a kotviště na tomto pobřeží.", iceCruiseIntro: "Máte omezený čas — vytvoříme plán po minutách.", iceCruiseQ: "V kolik hodin se musíte vrátit na loď?", iceGenericIntro: "Znám každou skrytou pláž a restauraci na tomto pobřeží.", iceWhatFirst: "Co potřebujete nejdříve", iceParkingQ: "bezpečné parkování na noc, pláž pro karavan nebo něco jiného?", iceMarinaQ: "Potřebujete doporučení kotviště nebo večeři na břehu?", iceWhatInterest: "Co vás zajímá?",
-    wxFeels: "pocitově", wxWaves: "vlny", wxPressure: "tlak", wxHumidity: "vlhkost", wxSunset: "západ", wxProtection: "ochrana nutná", wxSpf: "SPF 30+ doporučeno", wxLowRisk: "nízké riziko", wxData: "Data", wxLocation: "Poloha", wxRefresh: "Aktualizace každou minutu", wxCalm: "klidné", wxForecast: "Předpověď platí do", wxSource: "Zdroj: DHMZ", wxWind: "vítr", wxSea: "moře", wxVisibility: "viditelnost", wxSelectRegion: "Vyberte region", wxSeeAll: "PODÍVEJTE SE CO UMÍM",
+    wxFeels: "pocitově", wxWaves: "vlny", wxPressure: "tlak", wxHumidity: "vlhkost", wxSunset: "západ", wxProtection: "ochrana nutná", wxSpf: "SPF 30+ doporučeno", wxLowRisk: "nízké riziko", wxData: "Data", wxLocation: "Poloha", wxRefresh: "Aktualizace každou minutu", wxCalm: "klidné", wxForecast: "Předpověď platí do", wxSource: "Zdroj: DHMZ", wxWind: "vítr", wxSea: "moře", wxVisibility: "viditelnost", wxSelectRegion: "Vyberte region", wxSeeAll: "PODÍVEJTE SE CO UMÍM", wxCloud: "oblačnost", wxDays: "dní", tierSeason: "SEZÓNA", tierExplorer: "EXPLORER", tierVip: "VIP", preseason: "PŘEDSEZÓNA", wxTemp: "TEPLOTA",
     freeNote: "10 zpráv zdarma · poté 9,99€/týden", trialExpired: "Bezplatný den vypršel", payExpired: "BEZPLATNÝ DEN VYPRŠEL", payTitle: "Odemkněte průvodce", payFeatures: "Neomezené dotazy 24/7|Všechny tipy odemčeny|8+ skrytých pláží|Personalizovaná trasa na dnes", payCamper: "Parkování pro karavany, voda", payIstra: "Istrie Insider", payWeek: "Týden", payWeekSub: "7 dní · 1 region", paySeason: "Sezóna", paySeasonSub: "30 dní · všechny regiony", payLoading: "Přesměrování na platbu...", paySecure: "Bezpečná platba přes Stripe · Žádné skryté poplatky · Jednorázová platba · bez předplatného", payLater: "Možná později", buyNow: "KOUPIT PREMIUM", buyPrice: "od 9,99€",
   },
   pl: { title: "Jadran przewodnik", sub: "Lokalne wskazówki na idealny urlop nad Adriatykiem", start: "Zacznij rozmowę", send: "Wyślij", placeholder: "Zapytaj o Adriatyk...", region: "Wybierz region", mode: "Jak podróżujesz?", unlock: "Odblokuj — od 9,99€", free3: "3 pytania za darmo", remaining: "pozostało", upgraded: "Premium odblokowany!", back: "Wstecz", typing: "myślę...",
@@ -236,7 +236,7 @@ const T = {
     walkieInfo: "Tryb głośnomówiący · Ekran nie gaśnie", walkieSnap: "Zrób zdjęcie",
     errVision: "Analiza nie powiodła się. Spróbuj ponownie.", errConnection: "Brak połączenia. Spróbuj ponownie.",
     iceWelcome: "Witamy w", iceBack: "Witamy ponownie", iceMorning: "Dzień dobry.", iceEvening: "Dobry wieczór.", iceWhat: "Co planujecie dziś", iceBeach: "plaże, wycieczki, kultura", iceDinner: "kolację z widokiem", iceActivity: "popołudniową aktywność", iceCamperIntro: "Znam każdy parking i ukrytą zatokę na tym odcinku wybrzeża.", iceSailIntro: "Znam każdą marinę i kotwicowisko na tym wybrzeżu.", iceCruiseIntro: "Macie ograniczony czas — stworzymy plan co do minuty.", iceCruiseQ: "O której musicie wrócić na statek?", iceGenericIntro: "Znam każdą ukrytą plażę i restaurację na tym wybrzeżu.", iceWhatFirst: "Czego potrzebujecie najpierw", iceParkingQ: "bezpieczny parking na noc, plażę dla kampera czy coś innego?", iceMarinaQ: "Potrzebujecie rekomendacji cumowania lub kolacji na brzegu?", iceWhatInterest: "Co was interesuje?",
-    wxFeels: "odczuwalna", wxWaves: "fale", wxPressure: "ciśnienie", wxHumidity: "wilgotność", wxSunset: "zachód", wxProtection: "ochrona wymagana", wxSpf: "SPF 30+ zalecany", wxLowRisk: "niskie ryzyko", wxData: "Dane", wxLocation: "Lokalizacja", wxRefresh: "Aktualizacja co minutę", wxCalm: "spokojne", wxForecast: "Prognoza ważna do", wxSource: "Źródło: DHMZ", wxWind: "wiatr", wxSea: "morze", wxVisibility: "widoczność", wxSelectRegion: "Wybierz region", wxSeeAll: "ZOBACZ CO POTRAFIĘ",
+    wxFeels: "odczuwalna", wxWaves: "fale", wxPressure: "ciśnienie", wxHumidity: "wilgotność", wxSunset: "zachód", wxProtection: "ochrona wymagana", wxSpf: "SPF 30+ zalecany", wxLowRisk: "niskie ryzyko", wxData: "Dane", wxLocation: "Lokalizacja", wxRefresh: "Aktualizacja co minutę", wxCalm: "spokojne", wxForecast: "Prognoza ważna do", wxSource: "Źródło: DHMZ", wxWind: "wiatr", wxSea: "morze", wxVisibility: "widoczność", wxSelectRegion: "Wybierz region", wxSeeAll: "ZOBACZ CO POTRAFIĘ", wxCloud: "zachmurzenie", wxDays: "dni", tierSeason: "SEZON", tierExplorer: "EXPLORER", tierVip: "VIP", preseason: "PRZEDSEZON", wxTemp: "TEMPERATURA",
     freeNote: "10 wiadomości za darmo · potem 9,99€/tydzień", trialExpired: "Darmowy dzień wygasł", payExpired: "DARMOWY DZIEŃ WYGASŁ", payTitle: "Odblokuj przewodnik", payFeatures: "Nieograniczone pytania 24/7|Wszystkie wskazówki odblokowane|8+ ukrytych plaż|Spersonalizowana trasa na dziś", payCamper: "Parkingi dla kamperów, woda", payIstra: "Istria Insider", payWeek: "Tydzień", payWeekSub: "7 dni · 1 region", paySeason: "Sezon", paySeasonSub: "30 dni · wszystkie regiony", payLoading: "Przekierowanie do płatności...", paySecure: "Bezpieczna płatność przez Stripe · Brak ukrytych kosztów · Jednorazowa płatność · bez subskrypcji", payLater: "Może później", buyNow: "KUP PREMIUM", buyPrice: "od 9,99€",
   },
 };
@@ -1030,7 +1030,7 @@ const [lang, setLang] = useState(() => {
           </div>
         </div>
         {/* ═══ 3-TIER DECOY PRICING CARDS ═══ */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 12, alignItems: "stretch" }}>
+        <div style={{ display: "flex", gap: 4, marginBottom: 12, alignItems: "stretch", boxSizing: "border-box" }}>
           {/* ── EXPLORER (Anchor Low — designed to feel incomplete) ── */}
           <button onClick={() => startCheckout("week")} disabled={payLoading}
             style={{ flex: 1, padding: "14px 8px 12px", borderRadius: 16, border: `1px solid ${C.bord}`, background: isNight ? C.card : "rgba(255,255,255,0.8)", cursor: "pointer", fontFamily: "inherit", textAlign: "center", transition: "all 0.2s", display: "flex", flexDirection: "column", opacity: 0.9 }}
@@ -1200,7 +1200,7 @@ const [lang, setLang] = useState(() => {
       <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "32px 24px", maxWidth: 440, width: "100%", border: "1px solid rgba(34,197,94,0.15)", textAlign: "center" }}>
         <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(34,197,94,0.1)", display: "grid", placeItems: "center", margin: "0 auto 16px", fontSize: 32 }}>✅</div>
         <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 22, fontWeight: 700, color: C.text, marginBottom: 6 }}>{t.upgraded || "Premium otključan!"}</div>
-        <div style={{ fontSize: 13, color: "#22c55e", fontWeight: 600, marginBottom: 16 }}>⭐ {premiumPlan?.plan === "season" ? t.paySeason : t.payWeek} · {premiumPlan?.days || 30} {lang === "en" ? "days" : lang === "de" || lang === "at" ? "Tage" : "dana"}</div>
+        <div style={{ fontSize: 13, color: "#22c55e", fontWeight: 600, marginBottom: 16 }}>⭐ {premiumPlan?.plan === "season" ? t.paySeason : t.payWeek} · {premiumPlan?.days || 30} {t.wxDays || "dana"}</div>
         <div style={{ padding: "14px 16px", borderRadius: 14, background: isNight ? "rgba(34,197,94,0.04)" : "rgba(34,197,94,0.06)", marginBottom: 16, fontSize: 13, lineHeight: 2, color: C.text, textAlign: "left" }}>
           ✅ {(t.payFeatures || "").split("|")[0]}<br/>
           ✅ {(t.payFeatures || "").split("|")[1]}<br/>
@@ -1588,8 +1588,8 @@ const [lang, setLang] = useState(() => {
               onMouseLeave={e => e.currentTarget.style.borderColor = C.bord}>‹</button>
           <div style={{ width: 1, height: 20, background: C.bord, flexShrink: 0 }} />
           <span style={{ fontSize: 18, flexShrink: 0 }}>{TRAVEL_MODES.find(m => m.id === travelMode)?.emoji}</span>
-          <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{REGIONS.find(r => r.id === region)?.name}</span>
-          {weather && <span style={{ fontSize: 12, color: C.mut, marginLeft: 4, whiteSpace: "nowrap", flexShrink: 0 }}>{weather.icon} {weather.temp}° · 🌊 {weather.sea}°</span>}
+          <span style={{ fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "30vw" }}>{REGIONS.find(r => r.id === region)?.name}</span>
+          {weather && <span style={{ fontSize: 11, color: C.mut, marginLeft: 2, whiteSpace: "nowrap", flexShrink: 1, overflow: "hidden" }}>{weather.icon} {weather.temp}° · 🌊 {weather.sea}°</span>}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
           {(travelMode === "camper" || travelMode === "sailing") && (
@@ -1598,7 +1598,7 @@ const [lang, setLang] = useState(() => {
             </button>
           )}
           {premium
-            ? <span style={{ padding: "4px 12px", borderRadius: 12, background: premiumPlan?.plan === "vip" ? "rgba(168,85,247,0.08)" : "rgba(245,158,11,0.08)", border: `1px solid ${premiumPlan?.plan === "vip" ? "rgba(168,85,247,0.12)" : "rgba(245,158,11,0.12)"}`, color: premiumPlan?.plan === "vip" ? "#a855f7" : C.gold, fontSize: 10, fontWeight: 600 }}>⭐ {premiumPlan?.plan === "vip" ? "VIP" : premiumPlan?.plan === "season" ? "SEZONA" : "EXPLORER"} {premiumPlan ? (() => { const ms = premiumPlan.expiresAt - nowMs; const d = Math.ceil(ms / 86400000); return d > 1 ? d + "d" : d === 1 ? "24h" : Math.max(0, Math.ceil(ms / 3600000)) + "h"; })() : ""}</span>
+            ? <span style={{ padding: "4px 12px", borderRadius: 12, background: premiumPlan?.plan === "vip" ? "rgba(168,85,247,0.08)" : "rgba(245,158,11,0.08)", border: `1px solid ${premiumPlan?.plan === "vip" ? "rgba(168,85,247,0.12)" : "rgba(245,158,11,0.12)"}`, color: premiumPlan?.plan === "vip" ? "#a855f7" : C.gold, fontSize: 10, fontWeight: 600 }}>⭐ {premiumPlan?.plan === "vip" ? (t.tierVip || "VIP") : premiumPlan?.plan === "season" ? (t.tierSeason || "SEZONA") : (t.tierExplorer || "EXPLORER")} {premiumPlan ? (() => { const ms = premiumPlan.expiresAt - nowMs; const d = Math.ceil(ms / 86400000); return d > 1 ? d + "d" : d === 1 ? "24h" : Math.max(0, Math.ceil(ms / 3600000)) + "h"; })() : ""}</span>
             : <button onClick={() => trialExpired ? setShowPaywall(true) : null} disabled={payLoading} style={{ padding: trialExpired ? "6px 14px" : "4px 12px", borderRadius: 12, background: trialExpired ? "linear-gradient(135deg, #ef4444, #dc2626)" : "rgba(52,211,153,0.08)", border: trialExpired ? "none" : "1px solid rgba(52,211,153,0.12)", color: trialExpired ? "#fff" : "#34d399", fontSize: trialExpired ? 11 : 10, fontWeight: trialExpired ? 700 : 600, cursor: trialExpired ? "pointer" : "default", fontFamily: "inherit", boxShadow: trialExpired ? "0 2px 8px rgba(239,68,68,0.3)" : "none" }}>
                 {trialExpired ? `⭐ ${t.buyNow || "KUPI"}` : `${FREE_MSGS - msgCount}/${FREE_MSGS}`}
               </button>
@@ -1625,7 +1625,7 @@ const [lang, setLang] = useState(() => {
               </div>
               <span style={{ fontSize: 9, color: C.mut }}>{weatherTime ? weatherTime.toLocaleTimeString("hr", { hour: "2-digit", minute: "2-digit" }) : ""}</span>
             </div>
-            <div style={{ padding: "10px 16px 6px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 4 }}>
+            <div style={{ padding: "10px 12px 6px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 4, boxSizing: "border-box" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ textAlign: "center" }}>
                   <div style={{ fontSize: 22, fontWeight: 300 }}>{weather.icon} {weather.temp}°</div>
@@ -1634,12 +1634,12 @@ const [lang, setLang] = useState(() => {
                 <div style={{ width: 1, height: 28, background: C.bord }} />
                 <div style={{ textAlign: "center" }}>
                   <div style={{ fontSize: 16, fontWeight: 500, color: C.accent }}>🌊 {weather.sea}°</div>
-                  <div style={{ fontSize: 8, color: C.mut }}>{weather.seaEmoji} {weather.seaState || "more"}</div>
+                  <div style={{ fontSize: 8, color: C.mut }}>{weather.seaEmoji} {weather.seaState || t.wxSea || "more"}</div>
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <div style={{ textAlign: "center" }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: weather.windSpeed > 40 ? "#f87171" : C.text }}>{weather.windName || weather.windDir}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: weather.windSpeed > 40 ? "#f87171" : C.text }}>{weather.windName || weather.windDir}</div>
                   <div style={{ fontSize: 8, color: weather.windSpeed > 40 ? "#fca5a5" : C.mut }}>{weather.windSpeed} km/h{weather.gusts > weather.windSpeed + 10 ? ` (${weather.gusts})` : ""}</div>
                 </div>
                 <div style={{ textAlign: "center" }}>
@@ -1653,7 +1653,7 @@ const [lang, setLang] = useState(() => {
               </div>
             </div>
             {/* Maritime detail row */}
-            <div style={{ padding: "2px 16px 8px", display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
+            <div style={{ padding: "2px 12px 8px", display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap" }}>
               {weather.waveHeight > 0 && <span style={{ fontSize: 10, color: C.mut }}>{t.wxWaves} {weather.waveHeight}m {weather.wavePeriod ? `/ ${weather.wavePeriod}s` : ""}</span>}
               <span style={{ fontSize: 10, color: C.mut }}>{t.wxPressure} {weather.pressure} hPa {weather.pressure < 1010 ? "↓" : weather.pressure > 1020 ? "↑" : "—"}</span>
               <span style={{ fontSize: 10, color: C.mut }}>{t.wxHumidity} {weather.humidity}%</span>
@@ -1733,10 +1733,10 @@ const [lang, setLang] = useState(() => {
 
                 {/* TEMPERATURE */}
                 <div style={{ padding: "14px", borderRadius: 14, background: C.card, border: `1px solid ${C.bord}` }}>
-                  <div style={{ fontSize: 9, color: C.mut, letterSpacing: 2, marginBottom: 6 }}>TEMPERATURA</div>
+                  <div style={{ fontSize: 9, color: C.mut, letterSpacing: 2, marginBottom: 6 }}>{t.wxTemp || 'TEMPERATURA'}</div>
                   <div style={{ fontSize: 28, fontWeight: 300, color: C.text }}>{weather.icon} {weather.temp}°</div>
                   <div style={{ fontSize: 11, color: C.mut }}>{t.wxFeels} {weather.feelsLike}°</div>
-                  <div style={{ fontSize: 11, color: C.mut }}>oblačnost {weather.cloudCover || "—"}%</div>
+                  <div style={{ fontSize: 11, color: C.mut }}>{t.wxCloud} {weather.cloudCover || "—"}%</div>
                 </div>
 
                 {/* UV + SUN */}
@@ -1879,7 +1879,7 @@ const [lang, setLang] = useState(() => {
                     </div>
                     {/* AI answer */}
                     <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 4 }}>
-                      <div style={{ padding: "10px 14px", borderRadius: "16px 16px 16px 4px", background: C.card, border: `1px solid ${C.bord}`, fontSize: 13, color: C.text, maxWidth: "85%", lineHeight: 1.6 }}>{conv.a}</div>
+                      <div style={{ padding: "10px 14px", borderRadius: "16px 16px 16px 4px", background: C.card, border: `1px solid ${C.bord}`, fontSize: 13, color: C.text, maxWidth: "82%", boxSizing: "border-box", lineHeight: 1.6 }}>{conv.a}</div>
                     </div>
                   </div>
                 ))}
@@ -1910,7 +1910,7 @@ const [lang, setLang] = useState(() => {
           <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", padding: "0 16px" }}>
             {m.image && <img src={m.image} alt="foto" style={{ width: 60, height: 60, borderRadius: 12, objectFit: "cover", marginRight: 8, alignSelf: "flex-end" }} />}
             <div style={{
-              maxWidth: "85%", padding: "12px 16px", borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+              maxWidth: "82%", boxSizing: "border-box", padding: "12px 16px", borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
               background: m.role === "user" ? (isNight ? "linear-gradient(135deg, rgba(14,165,233,0.15), rgba(2,132,199,0.1))" : "linear-gradient(135deg, rgba(14,165,233,0.2), rgba(2,132,199,0.12))") : C.card,
               border: `1px solid ${m.role === "user" ? "rgba(14,165,233,0.2)" : C.bord}`,
               fontSize: 18, lineHeight: 1.5, whiteSpace: "pre-wrap",
@@ -2115,7 +2115,7 @@ const [lang, setLang] = useState(() => {
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginBottom: 2 }}>
                             {tip.name}
-                            {tip.season === "pre" && <span style={{ fontSize: 9, marginLeft: 6, padding: "1px 6px", borderRadius: 6, background: "rgba(251,191,36,0.1)", color: C.gold }}>PREDSEZONA</span>}
+                            {tip.season === "pre" && <span style={{ fontSize: 9, marginLeft: 6, padding: "1px 6px", borderRadius: 6, background: "rgba(251,191,36,0.1)", color: C.gold }}>{t.preseason || "PREDSEZONA"}</span>}
                           </div>
                           <div style={{ fontSize: 11, color: C.mut, lineHeight: 1.4, marginBottom: 4 }}>{tip.danger}</div>
                           <div style={{ fontSize: 11, color: "#34d399", lineHeight: 1.4 }}>💡 {tip.advice}</div>
