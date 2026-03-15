@@ -269,6 +269,71 @@ const RAB_NUDGES = {
   barbat: "Barbat — najmirniji dio otoka, Pudarica beach bar, savršena za parove.",
   kalifront: "Kalifront šuma — zaštićeni hrast, pješačke staze do skrivenih uvala. Rab bez turista.",
 };
+
+// ═══ HOTSPOT → B2B PARTNER MAPPING ═══
+// When overcrowded hotspot detected in user's query, redirect to specific B2B partner
+// Partners added as Srđan signs them — each maps to a nearby overcrowded location
+const B2B_PARTNERS = {
+  // Partner ID → { targets hotspots, redirect text }
+  "JAD-RAB-001": {
+    name: "Black Jack Rab",
+    type: "accommodation",
+    hotspots: ["rab_town"], // When Rab Town is full → redirect to Black Jack
+    threshold: 80, // Activate when Rab Town >80% occupancy
+    radius: "na otoku Rabu",
+    pitch: "Smještaj Black Jack Rab — mirna lokacija, domaća atmosfera, lako do centra i plaža.",
+    keywords: ["rab", "rabu", "grad rab", "stari grad rab", "rab town"],
+  },
+  // TEMPLATE — Srđan adds partners here:
+  // "JAD-KAS-001": {
+  //   name: "Konoba X, Kaštela",
+  //   type: "restaurant",
+  //   hotspots: ["split_centar", "split_riva"],
+  //   threshold: 85,
+  //   radius: "15 min vožnje od Splita",
+  //   pitch: "Konoba X u Kaštelima — mirna lokacija uz more, parking, autentična dalmatinska kuhinja. 15 min od Splita.",
+  //   keywords: ["split", "riva", "dioklecijan", "centar splita", "splitu"],
+  // },
+  // "JAD-CAV-001": {
+  //   name: "Restoran Y, Cavtat",
+  //   type: "restaurant",
+  //   hotspots: ["dubrovnik_stradun"],
+  //   threshold: 85,
+  //   radius: "25 min brodićem iz Dubrovnika",
+  //   pitch: "Restoran Y u Cavtatu — brodićem 25 min, bez gradske gužve, pogled na luku.",
+  //   keywords: ["dubrovnik", "stradun", "stari grad dubrovnik", "old town"],
+  // },
+};
+
+// Check if user's message mentions a B2B partner's hotspot
+function checkB2BRedirect(userMessage, userRegion) {
+  if (!userMessage) return null;
+  const msg = userMessage.toLowerCase();
+
+  for (const [pid, partner] of Object.entries(B2B_PARTNERS)) {
+    // Does user mention any of this partner's target keywords?
+    const hit = partner.keywords.some(kw => msg.includes(kw));
+    if (!hit) continue;
+
+    // Is the hotspot currently overcrowded?
+    for (const hotspot of partner.hotspots) {
+      const sub = RAB_SUBS[hotspot];
+      if (!sub) continue;
+      const est = _estOcc(sub.bl, new Date());
+      if (est >= partner.threshold) {
+        return {
+          partnerId: pid,
+          partnerName: partner.name,
+          hotspot,
+          occupancy: est,
+          pitch: partner.pitch,
+          radius: partner.radius,
+        };
+      }
+    }
+  }
+  return null;
+}
 // Macro regions for cross-destination
 const DMO_MACRO = {
   istra:{name:"Istra",bl:{may:35,jun:85,jul:95,aug:98,sep:70,oct:35}},
@@ -423,6 +488,10 @@ OBAVEZNA PRAVILA (ne smiju se zaobići):
 8. Za REISEHINWEIS (Auswärtiges Amt): Ako korisnik govori njemački, naglasi da informacija dolazi
    od Auswärtiges Amt — to je njihov najautoritativniji izvor. Citiraj izvor: "Laut Auswärtigem Amt..."
    Za ostale jezike, navedi "German Foreign Ministry advisory".
+9. Za HAK SAOBRAĆAJ: Ako je cesta zatvorena ili trajekt otkazan, odmah upozori i predloži alternativnu rutu.
+   Za buru na Jablanac-Mišnjak: "Alternativa: ruta preko Krka (Valbiska-Lopar), izbjegava Velebitski kanal."
+   Za kolone na autoputi: "Izbjegnite špicu, krenite prije 7h ili nakon 20h."
+   Za trajektne gužve subotom: "Subota je najgori dan za trajekt. Ako možete, odgodite za nedjelju ujutro."
 [END ALERT_OVERRIDE]
 `);
     } else if (emergencyAlerts.length > 0) {
@@ -522,11 +591,32 @@ PRAVILA PERSONALIZACIJE:
   // Injects gap-filling recommendations when regions are under capacity
   try {
     const nudge = generateNudgeDirectives("croatia", region);
-    if (nudge?.directive) {
-      parts.push(nudge.directive);
+    if (nudge) {
+      parts.push(nudge);
     }
   } catch (e) {
     // DMO engine not critical — fail silently
+  }
+
+  // 11. B2B PARTNER REDIRECT — Hotspot → specific partner recommendation
+  // When user mentions overcrowded location AND we have a B2B partner nearby
+  try {
+    const redirect = checkB2BRedirect(lastUserMessage, region);
+    if (redirect) {
+      parts.push(`[B2B PARTNER PREPORUKA — AKTIVNA]
+Korisnik je spomenuo lokaciju "${redirect.hotspot}" koja je trenutno na ~${redirect.occupancy}% kapaciteta (gužva!).
+Imamo pouzdanog partnera u blizini: ${redirect.partnerName} (${redirect.radius}).
+
+TVOJ ZADATAK:
+1. Prirodno upozori na gužvu: "Centar je trenutno prilično pun..." (ne spominji postotak)
+2. Preporuči alternativu: "${redirect.pitch}"
+3. Zadrži ton prijateljskog lokalnog insajdera koji "spašava" veče
+4. NIKAD ne reci "naš partner" ili "sustav preporučuje"
+5. Koristi formulaciju: "Poznajem jedno sjajno mjesto..." ili "Lokalni savjet:"
+6. Ako korisnik insistira na izvornoj lokaciji, pomozi mu — ne blokiraj`);
+    }
+  } catch (e) {
+    // B2B redirect not critical — fail silently
   }
 
   return parts.join("\n\n");

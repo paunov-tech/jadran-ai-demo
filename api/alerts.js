@@ -288,13 +288,74 @@ async function fetchAuswaertigesAmt() {
   }
 }
 
+// ═══ SOURCE 5: HAK — Hrvatski Autoklub (traffic + road conditions) ═══
+// Free RSS feed with real-time road closures, traffic jams, ferry delays
+async function fetchHAK() {
+  try {
+    const res = await fetch("https://www.hak.hr/info/stanje-na-cestama/", {
+      headers: { "User-Agent": "JADRAN.AI-AlertSystem/1.0" },
+    });
+    if (!res.ok) return [];
+    const html = await res.text();
+    const alerts = [];
+
+    // Extract road events from HAK page
+    // HAK reports: road closures, ferry cancellations, traffic jams, bura closures
+    const patterns = [
+      { regex: /(?:zatvor|zatvoren|blokiran|zabran)[a-zčćšžđ]*\s+[^.]{5,80}/gi, type: "road_closure", severity: "high" },
+      { regex: /(?:trajekt|ferry|kompf?)[a-zčćšžđ]*\s+(?:otkazan|ne prometuje|obustav)[^.]{5,60}/gi, type: "ferry_cancelled", severity: "critical" },
+      { regex: /(?:bura|olujn|orkansk)[a-zčćšžđ]*[^.]{5,80}/gi, type: "bura_closure", severity: "critical" },
+      { regex: /(?:kolona|zastoj|gužva|čekanje)\s+[^.]{5,80}/gi, type: "traffic_jam", severity: "medium" },
+      { regex: /(?:radovi|dionica)[a-zčćšžđ]*\s+[^.]{5,60}/gi, type: "roadworks", severity: "medium" },
+    ];
+
+    for (const { regex, type, severity } of patterns) {
+      const matches = html.match(regex) || [];
+      for (const match of matches.slice(0, 3)) { // Max 3 per type
+        const clean = match.replace(/<[^>]*>/g, "").trim();
+        if (clean.length < 10) continue;
+
+        // Detect affected region from keywords
+        let region = "general";
+        const regionMap = {
+          istra: /istr|pula|pazin|rovinj|poreč|umag|labin/i,
+          kvarner: /kvarner|rijeka|krk|rab|cres|lošinj|senj|jablanac/i,
+          zadar: /zadar|šibenik|biograd|nin|pag|kornati/i,
+          split: /split|trogir|makarska|omiš|kaštela|brač|hvar|vis/i,
+          dubrovnik: /dubrovnik|cavtat|korčula|pelješac|ston|neum/i,
+        };
+        for (const [r, rx] of Object.entries(regionMap)) {
+          if (rx.test(clean)) { region = r; break; }
+        }
+
+        alerts.push({
+          type,
+          severity,
+          region,
+          title: `HAK: ${clean.slice(0, 100)}`,
+          source: "HAK",
+          sourceUrl: "https://www.hak.hr/info/stanje-na-cestama/",
+          detectedAt: new Date().toISOString(),
+        });
+      }
+    }
+
+    console.log(`[ALERTS] HAK: ${alerts.length} traffic events`);
+    return alerts;
+  } catch (err) {
+    console.error("[ALERTS] HAK error:", err.message);
+    return [];
+  }
+}
+
 // Aggregate all sources
 async function aggregateAlerts() {
-  const [fires, weather, hvz, aa] = await Promise.all([
+  const [fires, weather, hvz, aa, hak] = await Promise.all([
     fetchFires(),
     fetchWeatherAlerts(),
     fetchHVZ(),
     fetchAuswaertigesAmt(),
+    fetchHAK(),
   ]);
 
   // Deduplicate fires by proximity (cluster within 0.05 degrees ≈ 5km)
@@ -316,7 +377,7 @@ async function aggregateAlerts() {
 
   // Sort by severity
   const severityOrder = { critical: 0, high: 1, medium: 2 };
-  const all = [...clustered, ...weather, ...hvz, ...aa].sort((a, b) =>
+  const all = [...clustered, ...weather, ...hvz, ...aa, ...hak].sort((a, b) =>
     (severityOrder[a.severity] || 3) - (severityOrder[b.severity] || 3)
   );
 
@@ -325,8 +386,9 @@ async function aggregateAlerts() {
     weather: weather.length,
     hvz: hvz.length,
     aa: aa.length,
+    hak: hak.length,
     total: all.length,
-    alerts: all.slice(0, 10), // Max 10 alerts
+    alerts: all.slice(0, 12), // Max 12 alerts (was 10, +2 for HAK)
     updated: new Date().toISOString(),
   };
 }
