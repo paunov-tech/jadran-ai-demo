@@ -30,6 +30,10 @@ const DESTINATIONS = {
           { name: "Trg Sv. Kristofora", placeId: "ChIJm8WqOrv1b0cRYC5H0g5kbHo", weight: 1.0 },
           { name: "Rab Riva", placeId: "ChIJiQFD_rr1b0cROFniCQFvtrE", weight: 0.9 },
         ],
+        webcams: [
+          "https://www.livecamcroatia.com/en/camera/rab-center-municipium-arba-square",
+          "https://www.livecamcroatia.com/en/camera/rab-municipium-arba-square-port-entrance",
+        ],
         baseline: { may:25, jun:65, jul:88, aug:95, sep:55, oct:20 },
         capacity: { restaurants:45, beds:1200, dailyMax:3000 },
         tzPriority: "suppress_when_full",
@@ -41,6 +45,9 @@ const DESTINATIONS = {
         probes: [
           { name: "Rajska Plaža", placeId: "ChIJ5YSg_N_3b0cR6e-g4JvNkNU", weight: 1.0 },
           { name: "San Marino Resort", placeId: "ChIJYSFCvd_3b0cRuR2DKMP_cQQ", weight: 0.6 },
+        ],
+        webcams: [
+          "https://iloverab.com/webcams", // Lopar Paradise Beach stream
         ],
         baseline: { may:15, jun:55, jul:85, aug:92, sep:45, oct:10 },
         capacity: { restaurants:20, beds:800, dailyMax:5000 },
@@ -92,6 +99,24 @@ const DESTINATIONS = {
       },
     },
     baseline: { may:15, jun:50, jul:80, aug:90, sep:42, oct:12 },
+    // Infrastructure webcams (ferries, panoramas — not tied to sub-region)
+    webcams: {
+      ferry_misnjak: "https://iloverab.com/webcams", // Trajekt Mišnjak (Rab strana)
+      ferry_stinica: "https://iloverab.com/webcams", // Trajekt Stinica (kopno)
+      ferry_valbiska: "https://iloverab.com/webcams", // Trajekt Valbiska (Krk)
+      banjol_panorama: "https://www.livecamcroatia.com/en/camera/rab-banjol-panorama",
+      obala_kresimira: "https://www.whatsupcams.com/en/webcams/croatia/primorje-gorski-kotar/rab/webcam-rab-obala-petra-kresimira/",
+    },
+    // Phase 2: YOLO object detection on webcam frames
+    // Requires dedicated server (~20€/mo) with CRON job
+    // YOLOv8 counts people/cars per frame → real occupancy score
+    // NOT feasible on Vercel serverless (no GPU, 10s timeout)
+    yoloConfig: {
+      enabled: false, // Activate when dedicated server available
+      interval: 900, // 15 min between frame grabs
+      model: "yolov8n", // Nano model, works on CPU
+      targets: ["person", "car", "boat"], // What to count
+    },
     events: [
       { name: "Dan grada Raba", date: "2026-05-09", impact: 15, subs: ["rab_town"] },
       { name: "Dan državnosti", date: "2026-05-30", impact: 10, subs: ["rab_town"] },
@@ -476,3 +501,28 @@ export default async function handler(req, res) {
 }
 
 export { generateNudgeDirectives, subGaps, macroGaps, DESTINATIONS, MACRO, estOcc };
+
+// ═══ FUTURE DATA SOURCES ROADMAP ═══
+// Phase 2 (dedicated server, ~20€/mo):
+//   - YOLO webcam analysis: grab frame every 15min, count people/cars
+//     LiveCamCroatia + iLoveRab + WhatsUpCams = 8+ cameras on Rab alone
+//     YOLOv8n on CPU = ~2-5sec/frame, handles 50 cameras in 15min window
+//     Output: real occupancy 0-100 per sub-region, hardware-verified
+//
+// Phase 3 (TZ partnership required):
+//   - Telco Mobility Data (HT Smart City / A1 / Telemach)
+//     Aggregated, anonymized heatmaps showing foreign SIM card density
+//     Cost: 5,000-50,000€/year — TZ pays, we integrate
+//     100% coverage including tourists without our app
+//
+//   - Smart City Wi-Fi probes (if available in Rab)
+//     Gradski ruteri count MAC addresses of passing devices
+//     Precision: street-level micro-location
+//     Caveat: MAC randomization (iOS 14+) reduces accuracy 50%+
+//     GDPR: MAC = personal data in EU — requires city partnership
+//
+// Phase 4 (scale):
+//   - BestTime.app or Outscraper for non-partner destinations
+//     Live busyness 0-100 for any Google Maps venue
+//     Cost: $50-100/mo for 50 venues
+//     Use case: destinations where we DON'T have TZ partnership yet

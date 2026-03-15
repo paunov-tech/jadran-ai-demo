@@ -587,6 +587,34 @@ PRAVILA PERSONALIZACIJE:
     parts.push(`KATALOG LINKOVA — koristi ISKLJUČIVO ove. NIKAD ne izmišljaj URL-ove!\n${linkCatalog}\nFormat: [Tekst](URL). Ako aktivnost nije u katalogu, NE stavljaj link.`);
   }
 
+  // 9b. LIVE WEBCAM CATALOG — always available for "check before you go"
+  // AI uses these when tourist asks about crowding, parking, weather, or before traveling
+  const WEBCAM_CATALOG = {
+    kvarner: `LIVE KAMERE (Kvarner):
+Rab centar (Trg Municipium Arba): https://www.livecamcroatia.com/en/camera/rab-center-municipium-arba-square
+Rab luka (ulaz u luku): https://www.livecamcroatia.com/en/camera/rab-municipium-arba-square-port-entrance
+Rab Banjol panorama: https://www.livecamcroatia.com/en/camera/rab-banjol-panorama
+Lopar Rajska plaža: https://iloverab.com/webcams
+Rab Obala P. Krešimira: https://www.whatsupcams.com/en/webcams/croatia/primorje-gorski-kotar/rab/webcam-rab-obala-petra-kresimira/
+Trajekt Mišnjak (Rab): https://iloverab.com/webcams
+Trajekt Stinica (kopno): https://iloverab.com/webcams
+Trajekt Valbiska (Krk): https://iloverab.com/webcams`,
+    istra: `LIVE KAMERE (Istra):
+Rovinj riva: https://www.livecamcroatia.com/en/camera/rovinj-valdibora
+Pula Arena: https://www.livecamcroatia.com/en/camera/pula-arena`,
+    split: `LIVE KAMERE (Split):
+Split Riva: https://www.livecamcroatia.com/en/camera/split-riva`,
+    dubrovnik: `LIVE KAMERE (Dubrovnik):
+Stradun: https://www.livecamcroatia.com/en/camera/dubrovnik-stradun`,
+  };
+  const webcams = WEBCAM_CATALOG[region] || WEBCAM_CATALOG.kvarner;
+  parts.push(`${webcams}
+PRAVILA ZA KAMERE:
+- Kad gost pita "kolika je gužva?" ili "ima li mjesta?" → ponudi live kameru link
+- Kad gost planira trajekt → ponudi kameru trajektne luke (vidi se kolona)
+- Format: "Pogledajte live kameru prije nego krenete: [Rab centar](URL)"
+- NIKAD ne govori "vidim na kameri" — ti NE gledaš kameru, samo daješ link gostu`);
+
   // 10. DMO NUDGE — Destination Management directives from TZ partners
   // Injects gap-filling recommendations when regions are under capacity
   try {
