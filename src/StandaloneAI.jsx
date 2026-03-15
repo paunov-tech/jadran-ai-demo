@@ -1461,7 +1461,6 @@ const [lang, setLang] = useState(() => {
                 }} />
                 {/* Content */}
                 <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "10px 10px 12px" }}>
-                  <div style={{ fontSize: 22, marginBottom: 2 }}>{r.emoji}</div>
                   <div style={{ fontSize: 12, fontWeight: 700, color: isSelected ? "#0ea5e9" : C.text, lineHeight: 1.2 }}>{r.name}</div>
                   <div style={{ fontSize: 9, color: C.mut, lineHeight: 1.3, marginTop: 2, opacity: 0.8 }}>{r.desc}</div>
                 </div>
