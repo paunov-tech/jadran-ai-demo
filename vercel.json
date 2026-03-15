@@ -106,8 +106,17 @@
       "destination": "/api/$1"
     },
     {
-      "source": "/(.*)",
+      "source": "/blog",
+      "destination": "/blog/index.html"
+    },
+    {
+      "source": "/blog/",
+      "destination": "/blog/index.html"
+    },
+    {
+      "source": "/((?!blog|api|icon|og-|manifest|sitemap|robots|sw).*)",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "cleanUrls": true
 }
