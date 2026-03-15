@@ -983,42 +983,64 @@ const [lang, setLang] = useState(() => {
   const Paywall = () => showPaywall && (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)", zIndex: 300, display: "grid", placeItems: "center", padding: 24 }}
       onClick={() => setShowPaywall(false)}>
-      <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "32px 24px", maxWidth: 440, width: "100%", border: "1px solid rgba(245,158,11,0.1)", maxHeight: "90dvh", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 16, fontWeight: 700, color: C.accent, letterSpacing: 2, marginBottom: 6 }}>JADRAN.AI</div>
-          <div style={{ fontSize: 10, color: C.mut, letterSpacing: 3, fontWeight: 600, marginBottom: 8 }}>{t.payExpired}</div>
-          <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 24, color: C.text }}>{t.payTitle}</div>
+      <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "28px 20px", maxWidth: 480, width: "100%", border: "1px solid rgba(245,158,11,0.1)", maxHeight: "90dvh", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div style={{ textAlign: "center", marginBottom: 16 }}>
+          <div style={{ fontSize: 28, marginBottom: 6 }}>🔒</div>
+          <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 20, fontWeight: 700, color: C.text, marginBottom: 6 }}>
+            {lang === "de" || lang === "at" ? "Deine kostenlose Testphase ist abgelaufen" : lang === "en" ? "Your free trial has expired" : lang === "it" ? "La tua prova gratuita è scaduta" : lang === "si" ? "Brezplačno obdobje je poteklo" : lang === "cz" ? "Bezplatné období vypršelo" : lang === "pl" ? "Bezpłatny okres próbny wygasł" : "Tvoj besplatni probni period je istekao"}
+          </div>
+          <div style={{ fontSize: 12, color: C.mut, lineHeight: 1.5 }}>
+            {lang === "de" || lang === "at" ? "Sichere deinen Urlaub. Vermeide Strafen, Staus und Stürme bis Ende der Saison." : lang === "en" ? "Secure your holiday. Avoid fines, traffic jams and storms until end of season." : lang === "it" ? "Proteggi la tua vacanza. Evita multe, code e tempeste fino a fine stagione." : "Osiguraj svoj odmor. Izbjegni kazne, gužve i oluje do kraja sezone."}
+          </div>
         </div>
-        <div style={{ padding: "14px 16px", borderRadius: 14, background: isNight ? "rgba(14,165,233,0.04)" : "rgba(14,165,233,0.06)", marginBottom: 20, fontSize: 13, lineHeight: 2, color: C.text }}>
-          {t.payFeatures.split("|").map((f,i) => <span key={i}>✅ {f}<br/></span>)}
-          {(travelMode === "camper" || niche === "camper") && <>✅ {t.payCamper}<br/></>}
-          {region === "istra" && <>✅ {t.payIstra}<br/></>}
-        </div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+        {/* ═══ 3-TIER DECOY PRICING CARDS ═══ */}
+        <div style={{ display: "flex", gap: 6, marginBottom: 12, alignItems: "stretch" }}>
+          {/* ── EXPLORER (Anchor Low) ── */}
           <button onClick={() => startCheckout("week")} disabled={payLoading}
-            style={{ flex: 1, padding: "14px 8px", borderRadius: 16, border: `1px solid ${C.bord}`, background: isNight ? C.card : "rgba(255,255,255,0.8)", cursor: "pointer", fontFamily: "inherit", textAlign: "center", transition: "all 0.2s" }}
+            style={{ flex: 1, padding: "14px 8px 12px", borderRadius: 16, border: `1px solid ${C.bord}`, background: isNight ? C.card : "rgba(255,255,255,0.8)", cursor: "pointer", fontFamily: "inherit", textAlign: "center", transition: "all 0.2s", display: "flex", flexDirection: "column" }}
             onMouseEnter={e => e.currentTarget.style.borderColor = C.accent}
             onMouseLeave={e => e.currentTarget.style.borderColor = C.bord}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: C.accent, letterSpacing: 1, marginBottom: 6 }}>EXPLORER</div>
             <div style={{ fontSize: 24, fontWeight: 300, color: C.accent }}>9.99€</div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginTop: 4 }}>{t.payWeek}</div>
-            <div style={{ fontSize: 10, color: C.mut, marginTop: 2 }}>{t.payWeekSub}</div>
+            <div style={{ fontSize: 9, color: C.mut, marginBottom: 8 }}>{lang === "de" || lang === "at" ? "7 Tage · 1 Region" : lang === "en" ? "7 days · 1 region" : lang === "it" ? "7 giorni · 1 regione" : "7 dana · 1 regija"}</div>
+            <div style={{ fontSize: 9, color: C.mut, lineHeight: 1.8, textAlign: "left", flex: 1 }}>
+              ✅ {lang === "de" || lang === "at" ? "Unbegrenzt Chat" : lang === "en" ? "Unlimited chat" : lang === "it" ? "Chat illimitata" : "Neograničen chat"}<br/>
+              ✅ {lang === "de" || lang === "at" ? "Restaurants & Strände" : lang === "en" ? "Restaurants & beaches" : lang === "it" ? "Ristoranti e spiagge" : "Restorani i plaže"}<br/>
+              <span style={{ opacity: 0.4 }}>❌ {lang === "de" || lang === "at" ? "Kein Sturmwarner" : lang === "en" ? "No storm alerts" : lang === "it" ? "No allerte meteo" : "Bez upozorenja"}</span><br/>
+              <span style={{ opacity: 0.4 }}>❌ {lang === "de" || lang === "at" ? "Kein Walkie-Talkie" : lang === "en" ? "No Walkie-Talkie" : lang === "it" ? "No Walkie-Talkie" : "Bez Walkie-Talkie"}</span>
+            </div>
           </button>
+          {/* ── SEASON PASS (Golden Goose — THE target) ── */}
           <button onClick={() => startCheckout("season")} disabled={payLoading}
-            style={{ flex: 1.2, padding: "14px 8px", borderRadius: 16, border: "1px solid rgba(245,158,11,0.2)", background: isNight ? "rgba(245,158,11,0.04)" : "rgba(245,158,11,0.08)", cursor: "pointer", fontFamily: "inherit", textAlign: "center", position: "relative", overflow: "hidden", transition: "all 0.2s" }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(245,158,11,0.4)"}
-            onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(245,158,11,0.2)"}>
-            <div style={{ position: "absolute", top: 0, right: 0, padding: "2px 8px", background: C.gold, color: "#fff", fontSize: 8, fontWeight: 700, borderRadius: "0 14px 0 8px" }}>BEST</div>
-            <div style={{ fontSize: 24, fontWeight: 300, color: C.gold }}>19.99€</div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginTop: 4 }}>{t.paySeason}</div>
-            <div style={{ fontSize: 10, color: C.mut, marginTop: 2 }}>{t.paySeasonSub}</div>
+            style={{ flex: 1.25, padding: "14px 8px 12px", borderRadius: 16, border: "2px solid rgba(245,158,11,0.5)", background: isNight ? "rgba(245,158,11,0.06)" : "rgba(245,158,11,0.08)", cursor: "pointer", fontFamily: "inherit", textAlign: "center", position: "relative", overflow: "hidden", transition: "all 0.2s", display: "flex", flexDirection: "column", transform: "scale(1.03)", boxShadow: "0 4px 20px rgba(245,158,11,0.15)" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(245,158,11,0.8)"; e.currentTarget.style.transform = "scale(1.05)"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(245,158,11,0.5)"; e.currentTarget.style.transform = "scale(1.03)"; }}>
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, padding: "3px 0", background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#fff", fontSize: 8, fontWeight: 800, letterSpacing: 1.5, textAlign: "center" }}>
+              ⭐ {lang === "de" || lang === "at" ? "AM BELIEBTESTEN" : lang === "en" ? "BESTSELLER" : lang === "it" ? "PIÙ POPOLARE" : "NAJPOPULARNIJE"}
+            </div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: C.gold, letterSpacing: 1, marginTop: 14, marginBottom: 6 }}>SEASON PASS</div>
+            <div style={{ fontSize: 28, fontWeight: 700, color: C.gold }}>19.99€</div>
+            <div style={{ fontSize: 9, color: C.mut, marginBottom: 8 }}>{lang === "de" || lang === "at" ? "Ganze Saison · alle Regionen" : lang === "en" ? "Full season · all regions" : lang === "it" ? "Tutta stagione · tutte" : "Cijela sezona · sve regije"}</div>
+            <div style={{ fontSize: 9, color: C.text, lineHeight: 1.8, textAlign: "left", flex: 1, fontWeight: 500 }}>
+              ✅ {lang === "de" || lang === "at" ? "Alles aus Explorer" : lang === "en" ? "Everything in Explorer" : lang === "it" ? "Tutto da Explorer" : "Sve iz Explorera"}<br/>
+              🛡️ <strong style={{ color: C.gold }}>Travel Guardian</strong>: {lang === "de" || lang === "at" ? "Sturm, Feuer, Grenze" : lang === "en" ? "Storms, fires, borders" : lang === "it" ? "Tempeste, incendi, confini" : "Oluje, požari, granica"}<br/>
+              📸 <strong>Jadran Lens</strong>: {lang === "de" || lang === "at" ? "Parkschild scannen" : lang === "en" ? "Scan parking signs" : lang === "it" ? "Scansiona cartelli" : "Skeniraj tablu"}<br/>
+              🎙️ <strong>Walkie-Talkie</strong>: {lang === "de" || lang === "at" ? "Freihändig fahren" : lang === "en" ? "Hands-free driving" : lang === "it" ? "Guida a mani libere" : "Vozi bez ruku"}
+            </div>
           </button>
+          {/* ── VIP (Price Anchor Decoy) ── */}
           <button onClick={() => startCheckout("vip")} disabled={payLoading}
-            style={{ flex: 1, padding: "14px 8px", borderRadius: 16, border: "1px solid rgba(168,85,247,0.2)", background: isNight ? "rgba(168,85,247,0.04)" : "rgba(168,85,247,0.06)", cursor: "pointer", fontFamily: "inherit", textAlign: "center", transition: "all 0.2s" }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(168,85,247,0.4)"}
-            onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(168,85,247,0.2)"}>
+            style={{ flex: 1, padding: "14px 8px 12px", borderRadius: 16, border: "1px solid rgba(168,85,247,0.15)", background: isNight ? "rgba(168,85,247,0.03)" : "rgba(168,85,247,0.04)", cursor: "pointer", fontFamily: "inherit", textAlign: "center", transition: "all 0.2s", display: "flex", flexDirection: "column", opacity: 0.85 }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.4)"; e.currentTarget.style.opacity = "1"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.15)"; e.currentTarget.style.opacity = "0.85"; }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: "#a855f7", letterSpacing: 1, marginBottom: 6 }}>VIP</div>
             <div style={{ fontSize: 24, fontWeight: 300, color: "#a855f7" }}>49.99€</div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: C.text, marginTop: 4 }}>VIP</div>
-            <div style={{ fontSize: 10, color: C.mut, marginTop: 2 }}>{lang === "en" ? "30d · all · priority" : lang === "de" || lang === "at" ? "30T · alle · Priorität" : lang === "it" ? "30g · tutte · priorità" : "30d · sve · prioritet"}</div>
+            <div style={{ fontSize: 9, color: C.mut, marginBottom: 8 }}>{lang === "de" || lang === "at" ? "Ganze Saison · Priorität" : lang === "en" ? "Full season · priority" : lang === "it" ? "Tutta stagione · priorità" : "Cijela sezona · prioritet"}</div>
+            <div style={{ fontSize: 9, color: C.mut, lineHeight: 1.8, textAlign: "left", flex: 1 }}>
+              ✅ {lang === "de" || lang === "at" ? "Alles aus Season Pass" : lang === "en" ? "Everything in Season" : lang === "it" ? "Tutto da Season" : "Sve iz Season Passa"}<br/>
+              ⚡ {lang === "de" || lang === "at" ? "Null Wartezeit" : lang === "en" ? "Zero wait time" : lang === "it" ? "Zero attesa" : "Bez čekanja"}<br/>
+              📞 {lang === "de" || lang === "at" ? "Insider-Newsletter" : lang === "en" ? "Insider newsletter" : lang === "it" ? "Newsletter insider" : "Insider bilten"}
+            </div>
           </button>
         </div>
         {payLoading && <div style={{ textAlign: "center", fontSize: 13, color: C.accent, marginBottom: 8 }}>⏳ {t.payLoading}</div>}
