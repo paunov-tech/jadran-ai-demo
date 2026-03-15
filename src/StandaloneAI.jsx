@@ -558,15 +558,16 @@ const [lang, setLang] = useState(() => {
     if (travelMode !== "sailing") return;
     fetch("/api/navtex").then(r => r.json()).then(d => { if (d.zones) setNavtex(d); }).catch(() => {});
   }, [travelMode]);
-  // Load region image when region selected
+  // Load ALL region images on mount (for visual picker grid)
   useEffect(() => {
-    if (!region || regionImgs[region]) return;
     const cityMap = { split: "Split", makarska: "Makarska", dubrovnik: "Dubrovnik", zadar: "Zadar", istra: "Rovinj", kvarner: "Opatija" };
-    const city = cityMap[region];
-    if (city) fetch(`/api/cityimg?city=${encodeURIComponent(city)}`)
-      .then(r => r.json()).then(d => { if (d.url) setRegionImgs(prev => ({ ...prev, [region]: d.url })); })
-      .catch(() => {});
-  }, [region]);
+    for (const [rid, city] of Object.entries(cityMap)) {
+      if (regionImgs[rid]) continue;
+      fetch(`/api/cityimg?city=${encodeURIComponent(city)}`)
+        .then(r => r.json()).then(d => { if (d.url) setRegionImgs(prev => ({ ...prev, [rid]: d.url })); })
+        .catch(() => {});
+    }
+  }, []);
 
   // Check URL params: premium + niche mode
   useEffect(() => {
@@ -1426,11 +1427,14 @@ const [lang, setLang] = useState(() => {
           </div>
         )}
 
-        {/* Region — click to start chat immediately */}
+        {/* Region — 3x2 visual grid with Wikipedia images */}
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 11, color: C.mut, letterSpacing: 3, marginBottom: 12, fontWeight: 500 }}>{t.region}</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
-            {REGIONS.map(r => (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+            {REGIONS.map(r => {
+              const isSelected = region === r.id;
+              const hasImg = !!regionImgs[r.id];
+              return (
               <div key={r.id} onClick={() => {
                 setRegion(r.id);
                 if (travelMode) {
@@ -1440,18 +1444,32 @@ const [lang, setLang] = useState(() => {
                   window.scrollTo(0, 0);
                 }
               }} style={{
-                padding: "14px 16px", borderRadius: 16, cursor: "pointer",
-                background: region === r.id ? "rgba(14,165,233,0.12)" : C.card,
-                border: `1px solid ${region === r.id ? "#0ea5e9" : C.bord}`,
-                transition: "all 0.2s", display: "flex", alignItems: "center", gap: 12,
+                borderRadius: 16, cursor: "pointer", position: "relative", overflow: "hidden",
+                aspectRatio: "1 / 1",
+                border: isSelected ? "2px solid #0ea5e9" : `1px solid ${C.bord}`,
+                background: C.card,
+                transition: "all 0.2s",
+                boxShadow: isSelected ? "0 4px 16px rgba(14,165,233,0.25)" : "none",
+                transform: isSelected ? "scale(1.03)" : "scale(1)",
               }}>
-                <span style={{ fontSize: 24 }}>{r.emoji}</span>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{r.name}</div>
-                  <div style={{ fontSize: 11, color: C.mut }}>{r.desc}</div>
+                {/* Background image */}
+                {hasImg && <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${regionImgs[r.id]})`, backgroundSize: "cover", backgroundPosition: "center", opacity: isSelected ? 0.5 : 0.35, transition: "opacity 0.3s" }} />}
+                {/* Gradient overlay */}
+                <div style={{ position: "absolute", inset: 0, background: isNight
+                  ? `linear-gradient(180deg, rgba(10,22,40,${isSelected ? "0.2" : "0.4"}) 0%, rgba(10,22,40,0.85) 70%)`
+                  : `linear-gradient(180deg, rgba(255,255,255,${isSelected ? "0" : "0.1"}) 0%, rgba(255,255,255,${isSelected ? "0.6" : "0.85"}) 70%)`
+                }} />
+                {/* Content */}
+                <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "10px 10px 12px" }}>
+                  <div style={{ fontSize: 22, marginBottom: 2 }}>{r.emoji}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: isSelected ? "#0ea5e9" : C.text, lineHeight: 1.2 }}>{r.name}</div>
+                  <div style={{ fontSize: 9, color: C.mut, lineHeight: 1.3, marginTop: 2, opacity: 0.8 }}>{r.desc}</div>
                 </div>
+                {/* Selected checkmark */}
+                {isSelected && <div style={{ position: "absolute", top: 8, right: 8, width: 22, height: 22, borderRadius: "50%", background: "#0ea5e9", display: "grid", placeItems: "center", fontSize: 12, color: "#fff" }}>✓</div>}
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
