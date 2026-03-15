@@ -1,15 +1,51 @@
-// ── RATE LIMITER (in-memory, per warm instance) ──
-const _rl = new Map();
-const RL_MAX = 100, RL_WIN = 86400000; // 100 req/day per IP
+// ── FAIR USAGE SYSTEM (server-side, per warm instance) ──
+// Three layers: (1) IP rate limit, (2) Tier-aware deviceId limits, (3) Global circuit breaker
+
+const _rl = new Map();      // IP → { c, r }
+const _devRL = new Map();   // deviceId → { c, r, plan }
+const _global = { c: 0, r: 0 }; // Global daily counter
+
+// Tier limits — server-side enforcement (frontend can be bypassed)
+const TIER_LIMITS = {
+  free:     { daily: 12,  maxHistory: 6,  maxTokens: 400 },
+  week:     { daily: 110, maxHistory: 16, maxTokens: 600 },
+  season:   { daily: 110, maxHistory: 20, maxTokens: 600 },
+  vip:      { daily: 320, maxHistory: 30, maxTokens: 800 },
+  referral: { daily: 110, maxHistory: 20, maxTokens: 600 },
+};
+const GLOBAL_DAILY_CAP = 10000; // Emergency kill switch — max 10K requests/day across all users
+const RL_WIN = 86400000; // 24h window
+
 function rateOk(ip) {
   const now = Date.now();
-  // Lazy cleanup: purge stale entries (max 50 per call)
   let cleaned = 0;
   for (const [k, v] of _rl) { if (now > v.r) { _rl.delete(k); if (++cleaned > 50) break; } }
   const e = _rl.get(ip);
   if (!e || now > e.r) { _rl.set(ip, { c: 1, r: now + RL_WIN }); return true; }
-  if (e.c >= RL_MAX) return false;
+  if (e.c >= 500) return false; // Hard IP cap (covers shared WiFi at campsite)
   e.c++; return true;
+}
+
+function tierRateOk(deviceId, plan) {
+  if (!deviceId) return { ok: true, remaining: 999 }; // No deviceId = can't enforce
+  const now = Date.now();
+  const limit = TIER_LIMITS[plan] || TIER_LIMITS.free;
+  // Cleanup stale
+  let cleaned = 0;
+  for (const [k, v] of _devRL) { if (now > v.r) { _devRL.delete(k); if (++cleaned > 30) break; } }
+  const e = _devRL.get(deviceId);
+  if (!e || now > e.r) { _devRL.set(deviceId, { c: 1, r: now + RL_WIN, plan }); return { ok: true, remaining: limit.daily - 1 }; }
+  if (e.c >= limit.daily) return { ok: false, remaining: 0 };
+  e.c++;
+  return { ok: true, remaining: limit.daily - e.c };
+}
+
+function globalOk() {
+  const now = Date.now();
+  if (now > _global.r) { _global.c = 1; _global.r = now + RL_WIN; return true; }
+  if (_global.c >= GLOBAL_DAILY_CAP) return false;
+  _global.c++;
+  return true;
 }
 
 // ═══ DYNAMIC PROMPT ROUTER ═══
@@ -392,10 +428,16 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // Rate limit check
+  // ── FAIR USAGE: Layer 1 — IP rate limit ──
   const clientIp = (req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown').split(',')[0].trim();
   if (!rateOk(clientIp)) {
     return res.status(429).json({ content: [{ type: "text", text: "Dnevni limit dosegnut. Pokušajte sutra ili nadogradite na Premium." }] });
+  }
+
+  // ── FAIR USAGE: Layer 2 — Global circuit breaker ──
+  if (!globalOk()) {
+    console.error("[CIRCUIT BREAKER] Global daily cap reached:", GLOBAL_DAILY_CAP);
+    return res.status(503).json({ content: [{ type: "text", text: "Sustav je trenutno preopterećen. Pokušajte za nekoliko minuta." }] });
   }
 
   // Input validation
@@ -407,7 +449,21 @@ export default async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
 
   try {
-    const { system, messages, mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, plan } = req.body;
+    const { system, messages, mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, plan, deviceId } = req.body;
+
+    // ── FAIR USAGE: Layer 3 — Tier-aware per-device limit ──
+    const tierPlan = plan || "free";
+    const tierCheck = tierRateOk(deviceId, tierPlan);
+    if (!tierCheck.ok) {
+      const upgradeHint = tierPlan === "free" || tierPlan === "week"
+        ? " Nadogradite na Season Pass za više poruka."
+        : "";
+      return res.status(429).json({ content: [{ type: "text", text: `Dnevni limit (${(TIER_LIMITS[tierPlan] || TIER_LIMITS.free).daily} poruka) dosegnut.${upgradeHint} Pokušajte sutra.` }] });
+    }
+
+    // ── FAIR USAGE: Truncate message history by tier ──
+    const maxHistory = (TIER_LIMITS[tierPlan] || TIER_LIMITS.free).maxHistory;
+    const truncatedMessages = (messages || []).slice(-maxHistory);
 
     // Extract last user message for NLP region-matching against alerts
     const lastUserMessage = [...(messages || [])].reverse().find(m => m.role === "user")?.content || "";
@@ -431,10 +487,10 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: walkieMode ? 200 : 600,
+        max_tokens: walkieMode ? 200 : (TIER_LIMITS[tierPlan] || TIER_LIMITS.free).maxTokens,
         temperature: 0.4,
         system: systemPrompt,
-        messages: (messages || []).slice(-20), // Keep last 20 to avoid token overflow
+        messages: truncatedMessages, // Tier-aware: free=6, week=16, season=20, vip=30
       }),
     });
 

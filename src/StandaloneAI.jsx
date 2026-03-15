@@ -760,7 +760,7 @@ const [lang, setLang] = useState(() => {
       const res = await fetch("/api/vision", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64, mimeType, lang, context: `Gost u regiji ${regionName}. ${modeCtx}` }),
+        body: JSON.stringify({ image: base64, mimeType, lang, context: `Gost u regiji ${regionName}. ${modeCtx}`, deviceId: (() => { try { return localStorage.getItem("jadran_device_id") || ""; } catch { return ""; } })(), plan: currentTier }),
       });
       const data = await res.json();
       const text = data.text || "Nisam uspio analizirati sliku.";
@@ -946,6 +946,7 @@ const [lang, setLang] = useState(() => {
           // Dynamic routing — backend assembles prompt from Lego blocks
           mode: travelMode || "default",
           plan: currentTier,
+          deviceId: (() => { try { return localStorage.getItem("jadran_device_id") || ""; } catch { return ""; } })(),
           walkieMode: walkieMode || undefined,
           camperLen: camperLen || undefined,
           camperHeight: camperHeight || undefined,

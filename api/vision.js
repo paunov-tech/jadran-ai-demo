@@ -1,14 +1,29 @@
-// ── RATE LIMITER (in-memory, per warm instance) ──
+// ── RATE LIMITER (IP + device-aware for Gemini cost control) ──
 const _rl = new Map();
-const RL_MAX = 100, RL_WIN = 86400000; // 100 req/day per IP
+const _devRL = new Map();
+const RL_MAX = 50, RL_WIN = 86400000; // 50 vision req/day per IP (tighter than chat)
+const VISION_TIER_LIMITS = { free: 0, week: 0, season: 20, vip: 40, referral: 20 };
+
 function rateOk(ip) {
   const now = Date.now();
-  // Lazy cleanup: purge stale entries (max 50 per call)
   let cleaned = 0;
   for (const [k, v] of _rl) { if (now > v.r) { _rl.delete(k); if (++cleaned > 50) break; } }
   const e = _rl.get(ip);
   if (!e || now > e.r) { _rl.set(ip, { c: 1, r: now + RL_WIN }); return true; }
   if (e.c >= RL_MAX) return false;
+  e.c++; return true;
+}
+
+function visionTierOk(deviceId, plan) {
+  if (!deviceId) return true;
+  const limit = VISION_TIER_LIMITS[plan] || 0;
+  if (limit === 0) return false; // Free/Explorer can't use vision (frontend-gated, backend safety)
+  const now = Date.now();
+  let cleaned = 0;
+  for (const [k, v] of _devRL) { if (now > v.r) { _devRL.delete(k); if (++cleaned > 20) break; } }
+  const e = _devRL.get(deviceId);
+  if (!e || now > e.r) { _devRL.set(deviceId, { c: 1, r: now + RL_WIN }); return true; }
+  if (e.c >= limit) return false;
   e.c++; return true;
 }
 
@@ -28,6 +43,12 @@ export default async function handler(req, res) {
   }
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  // Tier-aware vision limit (Gemini is expensive)
+  const { deviceId, plan } = req.body || {};
+  if (!visionTierOk(deviceId, plan || "free")) {
+    return res.status(429).json({ text: "Jadran Lens daily limit reached. Vision uses are limited to protect service quality." });
+  }
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'Gemini API key not configured' });
