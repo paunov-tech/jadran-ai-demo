@@ -1068,6 +1068,13 @@ const [lang, setLang] = useState(() => {
         }),
       });
       const data = await res.json();
+      // Server-side exhaustion check — triggers paywall even in incognito
+      if (data._exhausted || res.status === 429) {
+        setTrialExpired(true);
+        setMsgCount(10);
+        try { localStorage.setItem("jadran_msg_count", "10"); } catch {}
+        setShowPaywall(true);
+      }
       const aiText = data.content?.map(c => c.text || "").join("") || data.error?.message || "⚠️ Pokušajte ponovno.";
       setMsgs(p => [...p, { role: "assistant", text: aiText }]);
       // Self-learning: extract signals and update profile

@@ -9,6 +9,7 @@ export default async function handler(req, res) {
       anthropic: !!process.env.ANTHROPIC_API_KEY,
       gemini: !!process.env.GEMINI_API_KEY,
       stripe: !!process.env.STRIPE_SECRET_KEY,
+      firebase: !!process.env.FIREBASE_API_KEY,
     },
   });
 }

@@ -724,6 +724,37 @@ export default async function handler(req, res) {
   if (bodySize > 100000) return res.status(413).json({ content: [{ type: "text", text: "Poruka prevelika." }] });
 
 
+
+  // ── FIRESTORE USAGE HELPERS (server-side enforcement) ──
+  const FB_PROJECT = "molty-portal";
+  const FB_KEY = process.env.FIREBASE_API_KEY;
+  async function _fsRead(path) {
+    if (!FB_KEY) return null;
+    try {
+      const r = await fetch(`https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/${path}?key=${FB_KEY}`);
+      if (!r.ok) return null;
+      const d = await r.json();
+      if (!d.fields) return null;
+      const o = {};
+      for (const [k,v] of Object.entries(d.fields)) o[k] = v.integerValue || v.stringValue || v.booleanValue || null;
+      return o;
+    } catch { return null; }
+  }
+  async function _fsWrite(path, fields) {
+    if (!FB_KEY) return false;
+    try {
+      const body = { fields: {} };
+      for (const [k,v] of Object.entries(fields)) {
+        if (v === null || v === undefined) continue;
+        if (typeof v === "number") body.fields[k] = { integerValue: String(v) };
+        else if (typeof v === "boolean") body.fields[k] = { booleanValue: v };
+        else body.fields[k] = { stringValue: String(v) };
+      }
+      const r = await fetch(`https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/${path}?key=${FB_KEY}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      return r.ok;
+    } catch { return false; }
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'Service temporarily unavailable' });
 
@@ -741,6 +772,37 @@ export default async function handler(req, res) {
         ? " Nadogradite na Season Pass za više poruka."
         : "";
       return res.status(429).json({ content: [{ type: "text", text: `Dnevni limit (${(TIER_LIMITS[tierPlan] || TIER_LIMITS.free).daily} poruka) dosegnut.${upgradeHint} Pokušajte sutra.` }] });
+    }
+
+    // ═══ CRITICAL: Firestore usage enforcement (THE source of truth) ═══
+    // Client-side is UX sugar. This is the REAL gate.
+    // Survives: incognito, localStorage clear, cookie clear, Vercel cold start
+    if (tierPlan === "free" && deviceId && FB_KEY) {
+      try {
+        const fpKey = deviceId.startsWith("fp_") ? deviceId : ("ip_" + clientIp);
+        const usageDoc = await _fsRead(`jadran_usage/${fpKey}`);
+        const now = Date.now();
+        let fsCount = parseInt(usageDoc?.count) || 0;
+        const fsReset = parseInt(usageDoc?.resetAt) || 0;
+        // Auto-reset after 24h
+        if (fsReset > 0 && now > fsReset) { fsCount = 0; }
+        if (fsCount >= 10) {
+          const exhaustMsg = lang === "de" || lang === "at"
+            ? "Ihre 10 kostenlosen Nachrichten sind aufgebraucht. Upgraden Sie auf Premium für unbegrenzte Nutzung!"
+            : lang === "en" ? "Your 10 free messages are used up. Upgrade to Premium for unlimited access!"
+            : lang === "it" ? "I tuoi 10 messaggi gratuiti sono esauriti. Passa a Premium per accesso illimitato!"
+            : lang === "fr" ? "Vos 10 messages gratuits sont épuisés. Passez à Premium pour un accès illimité !"
+            : "Vaših 10 besplatnih poruka je iskorišteno. Nadogradite na Premium za neograničen pristup!";
+          return res.status(429).json({ content: [{ type: "text", text: "⭐ " + exhaustMsg }], _exhausted: true });
+        }
+        // Increment — fire and forget (don't slow down response)
+        const newCount = fsCount + 1;
+        const resetAt = fsReset || (now + 86400000);
+        _fsWrite(`jadran_usage/${fpKey}`, { count: newCount, resetAt, lastUse: now, ip: clientIp });
+      } catch (e) {
+        // Firestore failed — fall through to in-memory check (graceful degradation)
+        console.error("Firestore usage check failed:", e.message);
+      }
     }
 
     // ── FAIR USAGE: Truncate message history by tier ──
