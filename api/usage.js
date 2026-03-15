@@ -5,7 +5,7 @@
 
 const PROJECT_ID = "molty-portal";
 const API_KEY = process.env.FIREBASE_API_KEY;
-const FREE_LIMIT = 10;
+const FREE_LIMIT = 3;
 const RESET_HOURS = 24;
 
 async function fsRead(docPath) {

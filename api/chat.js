@@ -7,7 +7,7 @@ const _global = { c: 0, r: 0 }; // Global daily counter
 
 // Tier limits — server-side enforcement (frontend can be bypassed)
 const TIER_LIMITS = {
-  free:     { daily: 12,  maxHistory: 6,  maxTokens: 400 },
+  free:     { daily: 4,  maxHistory: 6,  maxTokens: 400 },
   week:     { daily: 110, maxHistory: 16, maxTokens: 600 },
   season:   { daily: 110, maxHistory: 20, maxTokens: 600 },
   vip:      { daily: 320, maxHistory: 30, maxTokens: 800 },
@@ -802,7 +802,7 @@ export default async function handler(req, res) {
 
         // Block if EITHER is exhausted (catches incognito where fp changes but IP stays)
         const maxCount = Math.max(ipCount, fpCount);
-        if (maxCount >= 10) {
+        if (maxCount >= 3) {
           const exhaustMsg = lang === "de" || lang === "at"
             ? "Ihre 10 kostenlosen Nachrichten sind aufgebraucht. Upgraden Sie auf Premium für unbegrenzte Nutzung!"
             : lang === "en" ? "Your 10 free messages are used up. Upgrade to Premium for unlimited access!"
