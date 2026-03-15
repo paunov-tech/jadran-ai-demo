@@ -6,7 +6,7 @@ export const config = { api: { bodyParser: false } };
 // Firestore REST API write — zero dependencies, uses public API key
 async function writePremium(deviceId, data) {
   const projectId = "molty-portal";
-  const apiKey = process.env.FIREBASE_API_KEY || "AIzaSyDertBFBwHCgf_iiucApWtlhB66va1OvYM";
+  const apiKey = process.env.FIREBASE_API_KEY;
   const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/jadran_premium/${deviceId}?key=${apiKey}`;
   const fields = {};
   for (const [k, v] of Object.entries(data)) {

@@ -100,15 +100,48 @@
     ::-webkit-scrollbar-thumb { background: rgba(14,165,233,0.2); border-radius: 3px; }
   </style>
 
-  <!-- Meta Pixel -->
+  <!-- Meta Pixel — GDPR compliant: consent-first -->
   <script>
     !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
     n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
     n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
     t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
     document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('consent', 'revoke'); // GDPR: revoke by default
     fbq('init', '1284802997089070');
-    fbq('track', 'PageView');
+    // Only fire PageView if user already consented
+    if (localStorage.getItem('jadran_consent') === '1') {
+      fbq('consent', 'grant');
+      fbq('track', 'PageView');
+    }
+  </script>
+
+  <!-- GDPR Cookie Banner -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (localStorage.getItem('jadran_consent')) return; // already decided
+      var bar = document.createElement('div');
+      bar.id = 'gdpr-banner';
+      bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9999;padding:12px 16px;background:rgba(15,23,42,0.97);backdrop-filter:blur(8px);border-top:1px solid rgba(245,158,11,0.15);display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;font-family:system-ui,sans-serif;font-size:12px;color:#94a3b8;';
+      var lang = (navigator.language || '').slice(0,2);
+      var txt = lang === 'de' ? 'Wir nutzen Cookies für Analysen.' : lang === 'it' ? 'Usiamo cookie per le analisi.' : lang === 'hr' ? 'Koristimo kolačiće za analitiku.' : 'We use cookies for analytics.';
+      var accTxt = lang === 'de' ? 'Akzeptieren' : lang === 'it' ? 'Accetta' : lang === 'hr' ? 'Prihvati' : 'Accept';
+      var decTxt = lang === 'de' ? 'Ablehnen' : lang === 'it' ? 'Rifiuta' : lang === 'hr' ? 'Odbij' : 'Decline';
+      bar.innerHTML = '<span style="flex:1;min-width:200px">' + txt + ' <a href="/" style="color:#f59e0b;text-decoration:underline">Privacy</a></span>'
+        + '<button id="gdpr-accept" style="padding:6px 16px;border-radius:8px;border:none;background:#f59e0b;color:#0f172a;font-weight:700;font-size:12px;cursor:pointer">' + accTxt + '</button>'
+        + '<button id="gdpr-decline" style="padding:6px 16px;border-radius:8px;border:1px solid rgba(148,163,184,0.2);background:transparent;color:#94a3b8;font-size:12px;cursor:pointer">' + decTxt + '</button>';
+      document.body.appendChild(bar);
+      document.getElementById('gdpr-accept').onclick = function() {
+        localStorage.setItem('jadran_consent', '1');
+        fbq('consent', 'grant');
+        fbq('track', 'PageView');
+        bar.remove();
+      };
+      document.getElementById('gdpr-decline').onclick = function() {
+        localStorage.setItem('jadran_consent', '0');
+        bar.remove();
+      };
+    });
   </script>
 
   <!-- UTM capture — persist 7 params for 30 days -->

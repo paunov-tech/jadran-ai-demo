@@ -3,7 +3,7 @@
 // Uses Firestore REST API (no firebase-admin dependency)
 
 const PROJECT_ID = "molty-portal";
-const API_KEY = process.env.FIREBASE_API_KEY || "AIzaSyDertBFBwHCgf_iiucApWtlhB66va1OvYM";
+const API_KEY = process.env.FIREBASE_API_KEY;
 const REWARD_HOURS = 48;
 
 async function fsWrite(docPath, fields) {
@@ -32,12 +32,25 @@ async function fsRead(docPath) {
   return out;
 }
 
+// Rate limit: 30 referral calls/hour per IP
+const _refRL = new Map();
+function refRateOk(ip) {
+  const now = Date.now(), WIN = 3600000;
+  for (const [k, v] of _refRL) { if (now > v.r) _refRL.delete(k); }
+  const e = _refRL.get(ip);
+  if (!e || now > e.r) { _refRL.set(ip, { c: 1, r: now + WIN }); return true; }
+  if (e.c >= 30) return false;
+  e.c++; return true;
+}
+
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", req.headers.origin === "https://jadran.ai" ? "https://jadran.ai" : "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  const clientIp = (req.headers['x-forwarded-for'] || 'unknown').split(',')[0].trim();
+  if (!refRateOk(clientIp)) return res.status(429).json({ error: "Too many requests" });
 
   try {
     const { action, deviceId, invitedBy } = req.body || {};

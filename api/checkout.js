@@ -1,11 +1,24 @@
 import Stripe from "stripe";
 
+// Rate limit: 20 checkout attempts/hour per IP
+const _rl = new Map();
+function checkoutRateOk(ip) {
+  const now = Date.now(), WIN = 3600000;
+  for (const [k, v] of _rl) { if (now > v.r) _rl.delete(k); }
+  const e = _rl.get(ip);
+  if (!e || now > e.r) { _rl.set(ip, { c: 1, r: now + WIN }); return true; }
+  if (e.c >= 20) return false;
+  e.c++; return true;
+}
+
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", req.headers.origin === "https://jadran.ai" ? "https://jadran.ai" : req.headers.origin || "*");
+  res.setHeader("Access-Control-Allow-Origin", (["https://jadran.ai","https://monte-negro.ai","https://greek-islands.ai"].includes(req.headers.origin) ? req.headers.origin : "https://jadran.ai"));
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") return res.status(200).end();
+  const clientIp = (req.headers['x-forwarded-for'] || 'unknown').split(',')[0].trim();
+  if (!checkoutRateOk(clientIp)) return res.status(429).json({ error: "Too many attempts. Try again later." });
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
   if (!process.env.STRIPE_SECRET_KEY) return res.status(500).json({ error: "Stripe not configured" });
 
