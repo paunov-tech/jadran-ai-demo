@@ -26,18 +26,38 @@ function rateOk(ip) {
   e.c++; return true;
 }
 
-function tierRateOk(deviceId, plan) {
-  if (!deviceId) return { ok: true, remaining: 999 }; // No deviceId = can't enforce
+const _fpRL = new Map();      // fingerprint → { c, r } (backup enforcement)
+
+function tierRateOk(deviceId, plan, ip) {
   const now = Date.now();
   const limit = TIER_LIMITS[plan] || TIER_LIMITS.free;
-  // Cleanup stale
+  
+  // CRITICAL: If no deviceId (incognito without fingerprint), enforce by IP
+  const key = deviceId || ("ip_" + (ip || "unknown"));
+  const keyLimit = deviceId ? limit.daily : Math.min(limit.daily, 12); // IP-only = max 12
+  
+  // Cleanup stale entries
   let cleaned = 0;
   for (const [k, v] of _devRL) { if (now > v.r) { _devRL.delete(k); if (++cleaned > 30) break; } }
-  const e = _devRL.get(deviceId);
-  if (!e || now > e.r) { _devRL.set(deviceId, { c: 1, r: now + RL_WIN, plan }); return { ok: true, remaining: limit.daily - 1 }; }
-  if (e.c >= limit.daily) return { ok: false, remaining: 0 };
+  
+  const e = _devRL.get(key);
+  if (!e || now > e.r) { _devRL.set(key, { c: 1, r: now + RL_WIN, plan }); return { ok: true, remaining: keyLimit - 1 }; }
+  if (e.c >= keyLimit) return { ok: false, remaining: 0 };
   e.c++;
-  return { ok: true, remaining: limit.daily - e.c };
+  
+  // DOUBLE CHECK: Also enforce by fingerprint prefix if it looks like a fingerprint
+  // This catches users who clear localStorage but keep same browser
+  if (deviceId && deviceId.startsWith("fp_")) {
+    const fpKey = "fp:" + deviceId;
+    const fpE = _fpRL.get(fpKey);
+    if (!fpE || now > fpE.r) { _fpRL.set(fpKey, { c: 1, r: now + RL_WIN }); }
+    else {
+      fpE.c++;
+      if (fpE.c > keyLimit) return { ok: false, remaining: 0 };
+    }
+  }
+  
+  return { ok: true, remaining: keyLimit - e.c };
 }
 
 function globalOk() {
@@ -713,8 +733,9 @@ export default async function handler(req, res) {
     // ── FAIR USAGE: Layer 3 — Tier-aware per-device limit ──
     // SECURITY: Don't trust frontend plan claim without deviceId
     // Without deviceId, default to free (prevents curl spoofing)
+    const clientIp = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "").split(",")[0].trim();
     const tierPlan = deviceId ? (plan || "free") : "free";
-    const tierCheck = tierRateOk(deviceId, tierPlan);
+    const tierCheck = tierRateOk(deviceId, tierPlan, clientIp);
     if (!tierCheck.ok) {
       const upgradeHint = tierPlan === "free" || tierPlan === "week"
         ? " Nadogradite na Season Pass za više poruka."
@@ -771,6 +792,8 @@ export default async function handler(req, res) {
       return res.status(200).json({ content: [{ type: "text", text: `⚠️ AI greška: ${data.error.message || 'Pokušajte ponovno.'}` }] });
     }
     
+    // Send remaining count so client can sync (prevents incognito bypass)
+    res.setHeader("X-Remaining", String(tierCheck.remaining));
     return res.status(200).json(data);
   } catch (err) {
     console.error('Anthropic API error:', err);

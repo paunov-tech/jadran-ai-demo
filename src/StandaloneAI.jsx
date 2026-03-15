@@ -7,6 +7,59 @@
 import { useState, useEffect, useRef } from "react";
 import { EXPERIENCES, GEMS, BOOKING_CITIES, CAMPER_WARNINGS, ISTRA_CAMPER_INTEL, DEEP_LOCAL, DUBROVNIK_INTEL, MARINAS, ANCHORAGES, CRUISE_PORTS, filterByRegion } from "./data.js";
 
+
+// ── DEVICE FINGERPRINT (survives incognito/private browsing) ──
+// Generates a stable hash from browser characteristics that don't change in private mode
+// Canvas rendering, screen geometry, timezone, language, hardware — all persist
+async function getDeviceFingerprint() {
+  try {
+    const components = [];
+    // Canvas fingerprint — GPU renders text uniquely per device
+    try {
+      const c = document.createElement("canvas");
+      c.width = 200; c.height = 50;
+      const ctx = c.getContext("2d");
+      ctx.textBaseline = "top";
+      ctx.font = "14px Arial";
+      ctx.fillStyle = "#f60";
+      ctx.fillRect(100, 1, 62, 20);
+      ctx.fillStyle = "#069";
+      ctx.fillText("Jadran.ai \uD83C\uDF0A", 2, 15);
+      ctx.fillStyle = "rgba(102,204,0,0.7)";
+      ctx.fillText("Jadran.ai \uD83C\uDF0A", 4, 17);
+      components.push(c.toDataURL());
+    } catch { components.push("no-canvas"); }
+    // Screen geometry
+    components.push(screen.width + "x" + screen.height);
+    components.push(String(window.devicePixelRatio || 1));
+    components.push(screen.colorDepth || 24);
+    // Timezone
+    components.push(Intl.DateTimeFormat().resolvedOptions().timeZone || "");
+    components.push(String(new Date().getTimezoneOffset()));
+    // Navigator
+    components.push(navigator.language || "");
+    components.push(navigator.platform || "");
+    components.push(String(navigator.hardwareConcurrency || 0));
+    components.push(String(navigator.maxTouchPoints || 0));
+    // WebGL renderer (GPU-specific)
+    try {
+      const gl = document.createElement("canvas").getContext("webgl");
+      if (gl) {
+        const dbg = gl.getExtension("WEBGL_debug_renderer_info");
+        if (dbg) components.push(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) || "");
+      }
+    } catch { components.push("no-webgl"); }
+    // Hash it
+    const raw = components.join("|");
+    const encoded = new TextEncoder().encode(raw);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return "fp_" + hashArray.slice(0, 12).map(b => b.toString(16).padStart(2, "0")).join("");
+  } catch {
+    return null; // Fallback — can't fingerprint
+  }
+}
+
 const REGIONS = [
   { id: "split", name: "Split & okolica", emoji: "🏛️", desc: "Dioklecijanova palača, Podstrana, Omiš" },
   { id: "makarska", name: "Makarska rivijera", emoji: "🏖️", desc: "Brela, Baška Voda, Tučepi" },
@@ -404,6 +457,7 @@ const [lang, setLang] = useState(() => {
   const [premiumPlan, setPremiumPlan] = useState(null);
   const [nowMs, setNowMs] = useState(Date.now()); // Live countdown timer
   const [msgCount, setMsgCount] = useState(0);
+  const [deviceFp, setDeviceFp] = useState(null);
   const FREE_MSGS = 10;
   const PREMIUM_DAILY_LIMIT = 100; // Cost control: ~2€/day max API spend per user
   const VIP_DAILY_LIMIT = 300; // VIP gets 3x more messages
@@ -619,6 +673,15 @@ const [lang, setLang] = useState(() => {
       // Load message count
       const mc = parseInt(localStorage.getItem("jadran_msg_count") || "0");
       setMsgCount(mc);
+      // Generate device fingerprint (survives incognito)
+      getDeviceFingerprint().then(fp => {
+        if (fp) {
+          setDeviceFp(fp);
+          // Use fingerprint as deviceId if no localStorage one exists
+          let did = localStorage.getItem("jadran_device_id");
+          if (!did) { did = fp; try { localStorage.setItem("jadran_device_id", fp); } catch {} }
+        }
+      });
       if (mc >= 10) setTrialExpired(true);
       // Firebase fallback — recover premium if localStorage was cleared
       if (localStorage.getItem("jadran_ai_premium") !== "1") {
@@ -833,11 +896,11 @@ const [lang, setLang] = useState(() => {
     setPayLoading(true);
     try {
       // Generate/retrieve device ID for subscription binding
-      let deviceId = localStorage.getItem("jadran_device_id");
+      let deviceId = deviceFp || localStorage.getItem("jadran_device_id");
       if (!deviceId) {
         deviceId = "jd_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
-        localStorage.setItem("jadran_device_id", deviceId);
       }
+      try { localStorage.setItem("jadran_device_id", deviceId); } catch {}
       // Retrieve UTM params for Stripe metadata
       let utmData = {};
       try { utmData = JSON.parse(localStorage.getItem("jadran_utm") || "{}"); } catch {}
@@ -953,7 +1016,7 @@ const [lang, setLang] = useState(() => {
           // Dynamic routing — backend assembles prompt from Lego blocks
           mode: travelMode || "default",
           plan: currentTier,
-          deviceId: (() => { try { return localStorage.getItem("jadran_device_id") || ""; } catch { return ""; } })(),
+          deviceId: deviceFp || (() => { try { return localStorage.getItem("jadran_device_id") || ""; } catch { return ""; } })(),
           walkieMode: walkieMode || undefined,
           camperLen: camperLen || undefined,
           camperHeight: camperHeight || undefined,
