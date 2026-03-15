@@ -406,6 +406,20 @@ const [lang, setLang] = useState(() => {
   const FREE_MSGS = 10;
   const PREMIUM_DAILY_LIMIT = 100; // Cost control: ~2€/day max API spend per user
   const VIP_DAILY_LIMIT = 300; // VIP gets 3x more messages
+
+  // ═══ TIER GATES — Lego block feature access ═══
+  // Each feature is a boolean gate. Add new features here, UI checks via can().
+  const TIER_GATES = {
+    free:     { chat: true,  lens: false, walkie: false, guardian: false, priority: false, msgLimit: FREE_MSGS },
+    week:     { chat: true,  lens: false, walkie: false, guardian: false, priority: false, msgLimit: PREMIUM_DAILY_LIMIT },
+    season:   { chat: true,  lens: true,  walkie: true,  guardian: true,  priority: false, msgLimit: PREMIUM_DAILY_LIMIT },
+    vip:      { chat: true,  lens: true,  walkie: true,  guardian: true,  priority: true,  msgLimit: VIP_DAILY_LIMIT },
+    referral: { chat: true,  lens: true,  walkie: true,  guardian: true,  priority: false, msgLimit: PREMIUM_DAILY_LIMIT },
+  };
+  const currentTier = premium ? (premiumPlan?.plan || "week") : "free";
+  const gates = TIER_GATES[currentTier] || TIER_GATES.free;
+  const can = (feature) => gates[feature] === true;
+  const [upsellFeature, setUpsellFeature] = useState(null); // which feature triggered upsell
   const [trialExpired, setTrialExpired] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
 
@@ -730,6 +744,8 @@ const [lang, setLang] = useState(() => {
   });
 
   const handlePhoto = async (e) => {
+    // ── TIER GATE: Lens requires Season+ ──
+    if (!can("lens")) { setUpsellFeature("lens"); setShowPaywall(true); e.target.value = ""; return; }
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
@@ -772,6 +788,8 @@ const [lang, setLang] = useState(() => {
       if (wakeLock) { try { wakeLock.release(); } catch {} setWakeLock(null); }
       return;
     }
+    // ── TIER GATE: Walkie requires Season+ ──
+    if (!can("walkie")) { setUpsellFeature("walkie"); setShowPaywall(true); return; }
     setWalkieMode(true);
     // Screen Wake Lock — keep screen on while driving
     if ("wakeLock" in navigator) {
@@ -848,7 +866,7 @@ const [lang, setLang] = useState(() => {
         // Clean old daily keys
         try { const yd = new Date(Date.now() - 86400000).toISOString().slice(0, 10); localStorage.removeItem("jadran_daily_" + yd); } catch {}
         const isVip = premiumPlan?.plan === "vip";
-        const dailyLimit = isVip ? VIP_DAILY_LIMIT : PREMIUM_DAILY_LIMIT;
+        const dailyLimit = gates.msgLimit;
         if (dailyCount >= dailyLimit) {
           setGlobalToast(lang === "en" ? "Daily message limit reached. Come back tomorrow!" : lang === "de" || lang === "at" ? "Tageslimit erreicht. Morgen geht's weiter!" : lang === "it" ? "Limite giornaliero raggiunto. Torna domani!" : "Dnevni limit poruka dosegnut. Vratite se sutra!");
           setTimeout(() => setGlobalToast(null), 4000);
@@ -927,6 +945,7 @@ const [lang, setLang] = useState(() => {
         body: JSON.stringify({
           // Dynamic routing — backend assembles prompt from Lego blocks
           mode: travelMode || "default",
+          plan: currentTier,
           walkieMode: walkieMode || undefined,
           camperLen: camperLen || undefined,
           camperHeight: camperHeight || undefined,
@@ -947,7 +966,7 @@ const [lang, setLang] = useState(() => {
             return parts.join("\n");
           })() : undefined,
           userProfile: (() => { const p = loadProfile(); p.niche = travelMode || niche; p.region = region; return p; })(),
-          emergencyAlerts: emergencyAlerts.length ? emergencyAlerts.map(a => ({ type: a.type, severity: a.severity, region: a.region, title: a.title, description: a.description, count: a.count, source: a.source, url: a.url })).slice(0, 5) : undefined,
+          emergencyAlerts: (emergencyAlerts.length && can("guardian")) ? emergencyAlerts.map(a => ({ type: a.type, severity: a.severity, region: a.region, title: a.title, description: a.description, count: a.count, source: a.source, url: a.url })).slice(0, 5) : undefined,
           messages: [...msgs.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })), { role: "user", content: msg }],
         }),
       });
@@ -982,10 +1001,20 @@ const [lang, setLang] = useState(() => {
   // ═══ PAYWALL MODAL ═══
   const Paywall = () => showPaywall && (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)", zIndex: 300, display: "grid", placeItems: "center", padding: 24 }}
-      onClick={() => setShowPaywall(false)}>
+      onClick={() => { setShowPaywall(false); setUpsellFeature(null); }}>
       <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "28px 20px", maxWidth: 480, width: "100%", border: "1px solid rgba(245,158,11,0.1)", maxHeight: "90dvh", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         <div style={{ textAlign: "center", marginBottom: 16 }}>
           <div style={{ fontSize: 28, marginBottom: 6 }}>🔒</div>
+          {/* Upsell context — which feature triggered paywall */}
+          {upsellFeature && (() => {
+            const upsellText = {
+              walkie: { de: "🎙️ Walkie-Talkie ist ein Season Pass Feature", en: "🎙️ Walkie-Talkie is a Season Pass feature", it: "🎙️ Walkie-Talkie è una funzione Season Pass", hr: "🎙️ Walkie-Talkie zahtijeva Season Pass" },
+              lens: { de: "📸 Jadran Lens ist ein Season Pass Feature", en: "📸 Jadran Lens is a Season Pass feature", it: "📸 Jadran Lens è una funzione Season Pass", hr: "📸 Jadran Lens zahtijeva Season Pass" },
+              guardian: { de: "🛡️ Travel Guardian ist ein Season Pass Feature", en: "🛡️ Travel Guardian is a Season Pass feature", it: "🛡️ Travel Guardian è una funzione Season Pass", hr: "🛡️ Travel Guardian zahtijeva Season Pass" },
+            }[upsellFeature] || {};
+            const txt = upsellText[lang] || upsellText[lang === "at" ? "de" : "hr"] || upsellText.en || "";
+            return txt ? <div style={{ padding: "8px 14px", borderRadius: 10, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.2)", fontSize: 11, fontWeight: 600, color: C.gold, marginBottom: 12 }}>{txt}</div> : null;
+          })()}
           <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 20, fontWeight: 700, color: C.text, marginBottom: 6 }}>
             {lang === "de" || lang === "at" ? "Deine kostenlose Testphase ist abgelaufen" : lang === "en" ? "Your free trial has expired" : lang === "it" ? "La tua prova gratuita è scaduta" : lang === "si" ? "Brezplačno obdobje je poteklo" : lang === "cz" ? "Bezplatné období vypršelo" : lang === "pl" ? "Bezpłatny okres próbny wygasł" : "Tvoj besplatni probni period je istekao"}
           </div>
@@ -1038,8 +1067,8 @@ const [lang, setLang] = useState(() => {
             <div style={{ fontSize: 9, color: C.mut, marginBottom: 8 }}>{lang === "de" || lang === "at" ? "Ganze Saison · Priorität" : lang === "en" ? "Full season · priority" : lang === "it" ? "Tutta stagione · priorità" : "Cijela sezona · prioritet"}</div>
             <div style={{ fontSize: 9, color: C.mut, lineHeight: 1.8, textAlign: "left", flex: 1 }}>
               ✅ {lang === "de" || lang === "at" ? "Alles aus Season Pass" : lang === "en" ? "Everything in Season" : lang === "it" ? "Tutto da Season" : "Sve iz Season Passa"}<br/>
-              ⚡ {lang === "de" || lang === "at" ? "Null Wartezeit" : lang === "en" ? "Zero wait time" : lang === "it" ? "Zero attesa" : "Bez čekanja"}<br/>
-              📞 {lang === "de" || lang === "at" ? "Insider-Newsletter" : lang === "en" ? "Insider newsletter" : lang === "it" ? "Newsletter insider" : "Insider bilten"}
+              ⚡ {lang === "de" || lang === "at" ? "300 Nachrichten/Tag" : lang === "en" ? "300 messages/day" : lang === "it" ? "300 messaggi/giorno" : "300 poruka/dan"}<br/>
+              🏆 {lang === "de" || lang === "at" ? "Detailliertere Antworten" : lang === "en" ? "More detailed answers" : lang === "it" ? "Risposte più dettagliate" : "Detaljniji odgovori"}
             </div>
           </button>
         </div>
@@ -1088,7 +1117,7 @@ const [lang, setLang] = useState(() => {
             </div>
           );
         })()}
-        <button onClick={() => setShowPaywall(false)} style={{ width: "100%", background: "none", border: "none", color: C.mut, fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: 8 }}>{t.payLater}</button>
+        <button onClick={() => { setShowPaywall(false); setUpsellFeature(null); }} style={{ width: "100%", background: "none", border: "none", color: C.mut, fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: 8 }}>{t.payLater}</button>
         <div style={{ textAlign: "center", marginTop: 4 }}>
           <a href="/" target="_blank" rel="noopener" style={{ fontSize: 8, color: C.mut, opacity: 0.6, textDecoration: "none" }}>{lang === "en" ? "Terms & Privacy" : lang === "de" || lang === "at" ? "Impressum & Datenschutz" : lang === "it" ? "Termini e Privacy" : "Uvjeti i privatnost"}</a>
         </div>
@@ -1132,9 +1161,10 @@ const [lang, setLang] = useState(() => {
 
     return (
       <div style={{ background: bgColor, color: "#fff", padding: "8px 16px", display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", animation: isCritical ? "alertPulse 2s infinite" : "none" }}
-        onClick={() => { if (top.type === "fire") window.open("https://firms.modaps.eosdis.nasa.gov/map/#d:24hrs;@" + (top.lon || 16) + "," + (top.lat || 43) + ",9z", "_blank"); else window.open("https://www.meteoalarm.org/en/live/region/HR", "_blank"); }}>
+        onClick={() => { if (!can("guardian")) { setUpsellFeature("guardian"); setShowPaywall(true); return; } if (top.type === "fire") window.open("https://firms.modaps.eosdis.nasa.gov/map/#d:24hrs;@" + (top.lon || 16) + "," + (top.lat || 43) + ",9z", "_blank"); else window.open("https://www.meteoalarm.org/en/live/region/HR", "_blank"); }}>
         <span style={{ fontSize: 16 }}>{icon}</span>
         <span style={{ flex: 1 }}>{alertText}</span>
+        {!can("guardian") && <span style={{ padding: "2px 6px", borderRadius: 6, background: "rgba(255,255,255,0.2)", fontSize: 9 }}>🛡️ {lang === "de" || lang === "at" ? "Upgrade" : "Upgrade"}</span>}
         {emergencyAlerts.length > 1 && <span style={{ opacity: 0.7, fontSize: 10 }}>+{emergencyAlerts.length - 1}</span>}
         <span style={{ fontSize: 10, opacity: 0.7 }}>112</span>
       </div>
@@ -1555,7 +1585,7 @@ const [lang, setLang] = useState(() => {
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
           {(travelMode === "camper" || travelMode === "sailing") && (
             <button onClick={toggleWalkie} style={{ padding: "4px 10px", borderRadius: 10, background: walkieMode ? "rgba(34,197,94,0.12)" : "transparent", border: `1px solid ${walkieMode ? "rgba(34,197,94,0.2)" : C.bord}`, color: walkieMode ? "#22c55e" : C.mut, fontSize: 10, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-              {walkieMode ? "📻 ON" : "📻"}
+              {walkieMode ? "📻 ON" : can("walkie") ? "📻" : "📻🔒"}
             </button>
           )}
           {premium
@@ -2278,7 +2308,7 @@ const [lang, setLang] = useState(() => {
         />
         {/* Hidden camera input */}
         <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} style={{ display: "none" }} />
-        <button onClick={() => cameraRef.current?.click()} style={{ width: 52, height: 52, borderRadius: 16, border: `1px solid ${C.bord}`, background: C.inputBg, color: C.accent, fontSize: 22, cursor: "pointer", display: "grid", placeItems: "center", flexShrink: 0 }}>📷</button>
+        <button onClick={() => { if (!can("lens")) { setUpsellFeature("lens"); setShowPaywall(true); return; } cameraRef.current?.click(); }} style={{ width: 52, height: 52, borderRadius: 16, border: `1px solid ${C.bord}`, background: C.inputBg, color: can("lens") ? C.accent : C.mut, fontSize: 22, cursor: "pointer", display: "grid", placeItems: "center", flexShrink: 0, position: "relative" }}>{can("lens") ? "📷" : "📷"}{!can("lens") && <span style={{ position: "absolute", bottom: 2, right: 2, fontSize: 10 }}>🔒</span>}</button>
         {"webkitSpeechRecognition" in window || "SpeechRecognition" in window ? <button onClick={startVoiceInput}
           style={{ width: 52, height: 52, borderRadius: 16, border: `1px solid ${isRecording ? "#ef4444" : C.bord}`, background: isRecording ? "rgba(239,68,68,0.1)" : C.inputBg, color: isRecording ? "#ef4444" : C.accent, fontSize: 22, cursor: "pointer", display: "grid", placeItems: "center", flexShrink: 0, transition: "all 0.2s", animation: isRecording ? "pulse 1s infinite" : "none" }}>{isRecording ? "⏺️" : "🎙️"}</button> : null}
         <button data-send onClick={sendMsg} disabled={loading || !input.trim()}

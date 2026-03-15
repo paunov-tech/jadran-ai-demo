@@ -214,7 +214,7 @@ const LANG_MAP = {
 };
 
 // ── MAIN ASSEMBLER ──
-function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage }) {
+function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan }) {
   const parts = [];
 
   // 1. BASE
@@ -300,6 +300,11 @@ OBAVEZNA PRAVILA (ne smiju se zaobići):
   // 1b. WALKIE MODE — ultra-short responses for TTS
   if (walkieMode) {
     parts.push(`HANDS-FREE MOD: Korisnik VOZI. Tvoj odgovor mora biti IZUZETNO kratak (2-3 rečenice MAX), direktan i jasan jer će ga telefon pročitati naglas. BEZ dugih uvoda, odmah na stvar. BEZ linkova u ovom modu. BEZ emoji-ja (čita se naglas). Koristi jednostavne riječi.`);
+  }
+
+  // 1c. VIP PRIORITY — more detailed, richer responses
+  if (plan === "vip") {
+    parts.push(`VIP KORISNIK: Daj detaljnije, bogatije odgovore. Uključi insider savjete, alternativne opcije, i proaktivne preporuke. Koristi 2-3 paragrafa umjesto 1. Dodaj kontekst koji bi lokalni vodič znao. Korisnik je platio premium — tretira ga kao VIP gosta.`);
   }
 
   // 2. LANGUAGE
@@ -402,7 +407,7 @@ export default async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: 'API key not configured' });
 
   try {
-    const { system, messages, mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts } = req.body;
+    const { system, messages, mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, plan } = req.body;
 
     // Extract last user message for NLP region-matching against alerts
     const lastUserMessage = [...(messages || [])].reverse().find(m => m.role === "user")?.content || "";
@@ -410,7 +415,7 @@ export default async function handler(req, res) {
     let systemPrompt = '';
     try {
       systemPrompt = mode && region 
-        ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage })
+        ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan })
         : (system || '');
     } catch (promptErr) {
       // If prompt building fails, use minimal fallback
