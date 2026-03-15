@@ -39,7 +39,7 @@ const T = {
     nicSailing: "Nautički vodič", nicSailingSub: "Marine, sidrišta, vjetar, konobe s mora",
     nicCruiser: "Kruzer vodič", nicCruiserSub: "Maksimum u 8 sati — plan po minutu, skip-the-line",
     // Camper picker
-    gabariti: "GABARITI VOZILA", lenLabel: "Dužina (m)", heightLabel: "Visina (m)",
+    gabariti: "GABARITI VOZILA", camperLength: "Dužina (m)", camperHeight: "Visina (m)", camperPlaceholderLen: "npr. 7.5", camperPlaceholderH: "npr. 3.2", lenLabel: "Dužina (m)", heightLabel: "Visina (m)",
     gabaritiFeedback: "Vaš kamper: {len}m × {h}m — prilagođavamo preporuke",
     gabaritiHint: "Opcionalno — ali pomaže za preciznije rute i parkinge",
     // Vibe
@@ -69,7 +69,7 @@ const T = {
     nicLocal: "Local Guide", nicLocalSub: "Apartment, hotel or by car — beaches, restaurants, hidden gems",
     nicSailing: "Nautical Guide", nicSailingSub: "Marinas, anchorages, wind, waterfront restaurants",
     nicCruiser: "Cruise Guide", nicCruiserSub: "Max in 8 hours — minute-by-minute plan, skip-the-line",
-    gabariti: "VEHICLE SIZE", lenLabel: "Length (m)", heightLabel: "Height (m)",
+    gabariti: "VEHICLE SIZE", camperLength: "Length (m)", camperHeight: "Height (m)", camperPlaceholderLen: "e.g. 7.5", camperPlaceholderH: "e.g. 3.2", lenLabel: "Length (m)", heightLabel: "Height (m)",
     gabaritiFeedback: "Your camper: {len}m × {h}m — tailoring recommendations",
     gabaritiHint: "Optional — but helps for precise routes & parking",
     vibeTitle: "Right now on the Adriatic", vibeCamper: "Road & sea conditions", vibeSailing: "Maritime conditions",
@@ -94,7 +94,7 @@ const T = {
     nicLocal: "Lokaler Reiseführer", nicLocalSub: "Ferienwohnung, Hotel oder mit dem Auto — Strände, Restaurants",
     nicSailing: "Nautischer Reiseführer", nicSailingSub: "Marinas, Ankerplätze, Wind, Küstenrestaurants",
     nicCruiser: "Kreuzfahrt-Reiseführer", nicCruiserSub: "Maximum in 8 Stunden — Minutenplan, ohne Anstehen",
-    gabariti: "FAHRZEUGMAßE", lenLabel: "Länge (m)", heightLabel: "Höhe (m)",
+    gabariti: "FAHRZEUGMAßE", camperLength: "Länge (m)", camperHeight: "Höhe (m)", camperPlaceholderLen: "z.B. 7,5", camperPlaceholderH: "z.B. 3,2", lenLabel: "Länge (m)", heightLabel: "Höhe (m)",
     gabaritiFeedback: "Ihr Camper: {len}m × {h}m — Empfehlungen werden angepasst",
     gabaritiHint: "Optional — aber hilfreich für präzise Routen und Parkplätze",
     vibeTitle: "Aktuell an der Adria", vibeCamper: "Straßen- & Seebedingungen", vibeSailing: "Seebedingungen",
@@ -119,7 +119,7 @@ const T = {
     nicLocal: "Guida locale", nicLocalSub: "Appartamento, hotel o in auto — spiagge, ristoranti, gemme nascoste",
     nicSailing: "Guida nautica", nicSailingSub: "Porti turistici, ancoraggi, vento, ristoranti sul mare",
     nicCruiser: "Guida crociera", nicCruiserSub: "Massimo in 8 ore — piano al minuto, salta la fila",
-    gabariti: "DIMENSIONI VEICOLO", lenLabel: "Lunghezza (m)", heightLabel: "Altezza (m)",
+    gabariti: "DIMENSIONI VEICOLO", camperLength: "Lunghezza (m)", camperHeight: "Altezza (m)", camperPlaceholderLen: "es. 7,5", camperPlaceholderH: "es. 3,2", lenLabel: "Lunghezza (m)", heightLabel: "Altezza (m)",
     gabaritiFeedback: "Il vostro camper: {len}m × {h}m — adattiamo i consigli",
     gabaritiHint: "Facoltativo — ma utile per percorsi e parcheggi precisi",
     vibeTitle: "In questo momento sull'Adriatico", vibeCamper: "Condizioni stradali e marittime", vibeSailing: "Condizioni marittime",
@@ -144,7 +144,7 @@ const T = {
     nicLocal: "Dein Urlaubsguide", nicLocalSub: "Ferienwohnung, Hotel oder mit dem Auto — Strände, Beisln, Geheimtipps",
     nicSailing: "Nautik-Guide", nicSailingSub: "Marinas, Ankerplätze, Wind, Schmankerln am Wasser",
     nicCruiser: "Kreuzfahrt-Guide", nicCruiserSub: "Maximales Erlebnis in 8 Stunden — ohne Anstehen",
-    gabariti: "FAHRZEUGGRÖßE", lenLabel: "Länge (m)", heightLabel: "Höhe (m)",
+    gabariti: "FAHRZEUGGRÖßE", camperLength: "Länge (m)", camperHeight: "Höhe (m)", camperPlaceholderLen: "z.B. 7,5", camperPlaceholderH: "z.B. 3,2", lenLabel: "Länge (m)", heightLabel: "Höhe (m)",
     gabaritiFeedback: "Dein Camper: {len}m × {h}m — wir passen die Tipps an",
     gabaritiHint: "Freiwillig — hilft aber für genaue Routen und Parkplätze",
     vibeTitle: "Gerade an der Adria", vibeCamper: "Straßen- & Meerlage", vibeSailing: "Seebedingungen",
@@ -169,7 +169,7 @@ const T = {
     nicLocal: "Lokalni vodič", nicLocalSub: "Apartma, hotel ali z avtom — plaže, restavracije",
     nicSailing: "Navtični vodič", nicSailingSub: "Marine, sidrišča, veter, restavracije ob morju",
     nicCruiser: "Vodič za križarke", nicCruiserSub: "Maksimum v 8 urah — načrt po minutah",
-    gabariti: "VELIKOST VOZILA", lenLabel: "Dolžina (m)", heightLabel: "Višina (m)",
+    gabariti: "VELIKOST VOZILA", camperLength: "Dolžina (m)", camperHeight: "Višina (m)", camperPlaceholderLen: "npr. 7,5", camperPlaceholderH: "npr. 3,2", lenLabel: "Dolžina (m)", heightLabel: "Višina (m)",
     gabaritiFeedback: "Vaš kamper: {len}m × {h}m — prilagajamo priporočila",
     gabaritiHint: "Neobvezno — a pomaga za natančne poti",
     vibeTitle: "Trenutno na Jadranu", vibeCamper: "Stanje na cesti in morju", vibeSailing: "Pomorske razmere",
@@ -194,7 +194,7 @@ const T = {
     nicLocal: "Místní průvodce", nicLocalSub: "Apartmán, hotel nebo autem — pláže, restaurace, skryté klenoty",
     nicSailing: "Námořní průvodce", nicSailingSub: "Přístavy, kotviště, vítr, restaurace u moře",
     nicCruiser: "Průvodce pro výletní lodě", nicCruiserSub: "Maximum za 8 hodin — plán po minutách",
-    gabariti: "ROZMĚRY VOZIDLA", lenLabel: "Délka (m)", heightLabel: "Výška (m)",
+    gabariti: "ROZMĚRY VOZIDLA", camperLength: "Délka (m)", camperHeight: "Výška (m)", camperPlaceholderLen: "např. 7,5", camperPlaceholderH: "např. 3,2", lenLabel: "Délka (m)", heightLabel: "Výška (m)",
     gabaritiFeedback: "Váš karavan: {len}m × {h}m — přizpůsobujeme doporučení",
     gabaritiHint: "Nepovinné — ale pomáhá pro přesné trasy",
     vibeTitle: "Právě teď na Jadranu", vibeCamper: "Silniční a mořské podmínky", vibeSailing: "Mořské podmínky",
@@ -219,7 +219,7 @@ const T = {
     nicLocal: "Lokalny przewodnik", nicLocalSub: "Apartament, hotel lub samochodem — plaże, restauracje",
     nicSailing: "Przewodnik żeglarski", nicSailingSub: "Mariny, kotwicowiska, wiatr, restauracje nad wodą",
     nicCruiser: "Przewodnik wycieczkowy", nicCruiserSub: "Maksimum w 8 godzin — plan co do minuty",
-    gabariti: "WYMIARY POJAZDU", lenLabel: "Długość (m)", heightLabel: "Wysokość (m)",
+    gabariti: "WYMIARY POJAZDU", camperLength: "Długość (m)", camperHeight: "Wysokość (m)", camperPlaceholderLen: "np. 7,5", camperPlaceholderH: "np. 3,2", lenLabel: "Długość (m)", heightLabel: "Wysokość (m)",
     gabaritiFeedback: "Twój kamper: {len}m × {h}m — dostosowujemy rekomendacje",
     gabaritiHint: "Opcjonalne — ale pomaga w doborze tras i parkingów",
     vibeTitle: "Teraz na Adriatyku", vibeCamper: "Warunki drogowe i morskie", vibeSailing: "Warunki morskie",
@@ -1165,9 +1165,21 @@ const [lang, setLang] = useState(() => {
     const icon = top.type === "fire" ? "🔥" : top.type === "wind" ? "💨" : top.type === "heat" ? "🌡️" : top.type === "storm" ? "⛈️" : top.type === "flood" ? "🌊" : top.type === "snow" ? "❄️" : top.type === "coastal" ? "🌊" : top.type === "travel_advisory" ? "🇩🇪" : "⚠️";
     const regionName = REGIONS.find(r => r.id === top.region)?.name || top.region || "";
 
+    const alertTypeMap = {
+      road_closure: { de: "Straßensperrung", en: "Road closure", it: "Chiusura stradale", hr: "Zatvaranje ceste" },
+      ferry_cancelled: { de: "Fähre gestrichen", en: "Ferry cancelled", it: "Traghetto cancellato", hr: "Trajekt otkazan" },
+      bura_closure: { de: "Bora — Straße gesperrt", en: "Bora wind — road closed", it: "Bora — strada chiusa", hr: "Bura — cesta zatvorena" },
+      traffic_jam: { de: "Stau", en: "Traffic jam", it: "Ingorgo", hr: "Zastoj" },
+      roadworks: { de: "Baustelle", en: "Roadworks", it: "Lavori stradali", hr: "Radovi na cesti" },
+      wind: { de: "Windwarnung", en: "Wind warning", it: "Avviso vento", hr: "Upozorenje na vjetar" },
+      storm: { de: "Sturmwarnung", en: "Storm warning", it: "Avviso tempesta", hr: "Upozorenje na oluju" },
+      heat: { de: "Hitzewarnung", en: "Heat warning", it: "Avviso caldo", hr: "Upozorenje na vrućinu" },
+      flood: { de: "Hochwasserwarnung", en: "Flood warning", it: "Avviso alluvione", hr: "Upozorenje na poplavu" },
+    };
+    const alertLang = (lang === "de" || lang === "at") ? "de" : (lang === "en" ? "en" : lang === "it" ? "it" : "hr");
     const alertText = top.type === "fire"
       ? (lang === "de" || lang === "at" ? `Waldbrand ${regionName} — ${top.count || 1} Herd(e) erkannt` : lang === "en" ? `Wildfire ${regionName} — ${top.count || 1} hotspot(s) detected` : lang === "it" ? `Incendio ${regionName} — ${top.count || 1} focolaio(i)` : `Požar ${regionName} — ${top.count || 1} žarište(a) detektirano`)
-      : (top.title || (lang === "en" ? "Weather warning active" : lang === "de" || lang === "at" ? "Wetterwarnung aktiv" : lang === "it" ? "Allerta meteo attiva" : "Vremensko upozorenje aktivno"));
+      : (alertTypeMap[top.type]?.[alertLang] ? `${alertTypeMap[top.type][alertLang]}${regionName ? " — " + regionName : ""}` : top.title ? top.title : (lang === "en" ? "Weather warning active" : lang === "de" || lang === "at" ? "Wetterwarnung aktiv" : lang === "it" ? "Allerta meteo attiva" : "Vremensko upozorenje aktivno"));
 
     return (
       <div style={{ background: bgColor, color: "#fff", padding: "8px 16px", display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 600, cursor: "pointer", animation: isCritical ? "alertPulse 2s infinite" : "none" }}
@@ -1388,14 +1400,14 @@ const [lang, setLang] = useState(() => {
             <div style={{ fontSize: 11, color: C.gold, letterSpacing: 3, marginBottom: 12, fontWeight: 600 }}>{t.gabariti}</div>
             <div style={{ display: "flex", gap: 10 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, color: C.mut, marginBottom: 4 }}>Dužina (m)</div>
-                <input value={camperLen} onChange={e => setCamperLen(e.target.value)} placeholder="npr. 7.5"
+                <div style={{ fontSize: 10, color: C.mut, marginBottom: 4 }}>{t.camperLength || "Dužina (m)"}</div>
+                <input value={camperLen} onChange={e => setCamperLen(e.target.value)} placeholder={t.camperPlaceholderLen || "npr. 7.5"}
                   type="number" step="0.1" min="4" max="15"
                   style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1px solid ${C.bord}`, background: C.card, color: C.text, fontSize: 16, fontFamily: "inherit", outline: "none" }} />
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, color: C.mut, marginBottom: 4 }}>Visina (m)</div>
-                <input value={camperHeight} onChange={e => setCamperHeight(e.target.value)} placeholder="npr. 3.2"
+                <div style={{ fontSize: 10, color: C.mut, marginBottom: 4 }}>{t.camperHeight || "Visina (m)"}</div>
+                <input value={camperHeight} onChange={e => setCamperHeight(e.target.value)} placeholder={t.camperPlaceholderH || "npr. 3.2"}
                   type="number" step="0.1" min="1.5" max="5"
                   style={{ width: "100%", padding: "12px", borderRadius: 12, border: `1px solid ${C.bord}`, background: C.card, color: C.text, fontSize: 16, fontFamily: "inherit", outline: "none" }} />
               </div>
@@ -1972,7 +1984,7 @@ const [lang, setLang] = useState(() => {
 
         {/* Quick reply chips after last AI message */}
         {msgs.length > 0 && !loading && msgs[msgs.length - 1]?.role === "assistant" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "4px 16px 8px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "4px 12px 8px", overflow: "hidden" }}>
             {(travelMode === "camper" || niche === "camper" ? [
               `🅿️ ${t.qParking}`,
               `🍽️ ${t.qDinner}`,
@@ -1991,7 +2003,7 @@ const [lang, setLang] = useState(() => {
               `🗺️ ${t.qVisit}`,
             ]).map(q => (
               <button key={q} onClick={() => { setInput(q); setTimeout(() => document.querySelector("[data-send]")?.click(), 50); }}
-                style={{ width: "100%", padding: "12px 16px", borderRadius: 12, border: `1px solid ${C.bord}`, background: C.card, color: C.text, fontSize: 15, cursor: "pointer", fontFamily: "inherit", textAlign: "left", minHeight: 48, transition: "all 0.2s" }}>
+                style={{ width: "100%", padding: "10px 14px", borderRadius: 12, border: `1px solid ${C.bord}`, background: C.card, color: C.text, fontSize: 13, cursor: "pointer", fontFamily: "inherit", textAlign: "left", minHeight: 44, transition: "all 0.2s", boxSizing: "border-box", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {q}
               </button>
             ))}
