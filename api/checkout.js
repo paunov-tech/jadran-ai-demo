@@ -27,7 +27,7 @@ export default async function handler(req, res) {
   const origin = "https://jadran.ai"; // Hardcoded — prevents open redirect via forged Origin header
 
   try {
-    const { roomCode, guestName, lang, returnPath, plan, region, deviceId, utm_source, utm_medium, utm_campaign } = req.body || {};
+    const { roomCode, guestName, lang, returnPath, plan, region, deviceId, utm_source, utm_medium, utm_campaign, partnerRef } = req.body || {};
     if (!plan || !["week", "season", "vip"].includes(plan)) return res.status(400).json({ error: "Invalid plan" });
 
     const plans = {
@@ -61,6 +61,7 @@ export default async function handler(req, res) {
           utm_source: utm_source || "",
           utm_medium: utm_medium || "",
           utm_campaign: utm_campaign || "",
+          partnerRef: partnerRef || "",
         },
       },
       line_items: [{
@@ -91,8 +92,8 @@ export default async function handler(req, res) {
         utm_source: utm_source || "",
         utm_medium: utm_medium || "",
         utm_campaign: utm_campaign || "",
-      },
-      locale: lang === "de" || lang === "at" ? "de" : lang === "en" ? "en" : lang === "it" ? "it" : lang === "hr" ? "hr" : "auto",
+        partnerRef: partnerRef || "",
+      },      locale: lang === "de" || lang === "at" ? "de" : lang === "en" ? "en" : lang === "it" ? "it" : lang === "hr" ? "hr" : "auto",
     };
 
     // Stripe Tax — only if configured (fails gracefully if not enabled in Dashboard)
@@ -109,20 +110,20 @@ export default async function handler(req, res) {
     // If automatic_tax fails, retry without it
     if (err.message?.includes("tax") || err.message?.includes("Tax")) {
       try {
-        const { roomCode, guestName, lang, returnPath, plan, region, deviceId, utm_source, utm_medium, utm_campaign } = req.body || {};
+        const { roomCode, guestName, lang, returnPath, plan, region, deviceId, utm_source, utm_medium, utm_campaign, partnerRef } = req.body || {};
         const plans = { week: { name: "JADRAN Vodič — Explorer (7 dana)", amount: 999, days: 7 }, season: { name: "JADRAN Vodič — Sezona (30 dana)", amount: 1999, days: 30 }, vip: { name: "JADRAN Vodič — VIP Sezona (30 dana)", amount: 4999, days: 30 } };
         const p = plans[plan] || plans.week;
         const basePath = (returnPath || "/ai").split("?")[0];
         const session = await stripe.checkout.sessions.create({
           payment_method_types: ["card"],
           customer_creation: "always",
-          payment_intent_data: { statement_descriptor_suffix: "JADRAN", metadata: { roomCode: roomCode || "AI-STANDALONE", guestName: guestName || "Guest", plan: plan || "week", region: region || "all", days: String(p.days), deviceId: deviceId || "unknown", lang: lang || "hr", utm_source: utm_source || "", utm_medium: utm_medium || "", utm_campaign: utm_campaign || "" } },
+          payment_intent_data: { statement_descriptor_suffix: "JADRAN", metadata: { roomCode: roomCode || "AI-STANDALONE", guestName: guestName || "Guest", plan: plan || "week", region: region || "all", days: String(p.days), deviceId: deviceId || "unknown", lang: lang || "hr", utm_source: utm_source || "", utm_medium: utm_medium || "", utm_campaign: utm_campaign || "", partnerRef: partnerRef || "" } },
           line_items: [{ price_data: { currency: "eur", product_data: { name: p.name, description: "AI turistički vodič za hrvatsku obalu" }, unit_amount: p.amount }, quantity: 1 }],
           mode: "payment",
           invoice_creation: { enabled: true },
           success_url: `${origin}${basePath}?payment=success&plan=${plan}&days=${p.days}&region=${region || "all"}&session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${origin}${basePath}?payment=cancelled`,
-          metadata: { roomCode: roomCode || "AI-STANDALONE", guestName: guestName || "Guest", plan: plan || "week", region: region || "all", days: String(p.days), deviceId: deviceId || "unknown", lang: lang || "hr", utm_source: utm_source || "", utm_medium: utm_medium || "", utm_campaign: utm_campaign || "" },
+          metadata: { roomCode: roomCode || "AI-STANDALONE", guestName: guestName || "Guest", plan: plan || "week", region: region || "all", days: String(p.days), deviceId: deviceId || "unknown", lang: lang || "hr", utm_source: utm_source || "", utm_medium: utm_medium || "", utm_campaign: utm_campaign || "", partnerRef: partnerRef || "" },
           locale: lang === "de" || lang === "at" ? "de" : lang === "en" ? "en" : lang === "it" ? "it" : lang === "hr" ? "hr" : "auto",
         });
         console.log("Checkout created without Tax (fallback)");

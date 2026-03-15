@@ -586,6 +586,12 @@ const [lang, setLang] = useState(() => {
       setShowInviteWelcome(true);
       window.history.replaceState({}, "", "/ai" + (n ? "?niche=" + n : ""));
     }
+    // Detect B2B partner QR: jadran.ai/ai?ref=JAD-RAB-001
+    const refParam = params.get("ref");
+    if (refParam && refParam.startsWith("JAD-")) {
+      try { localStorage.setItem("jadran_partner_ref", refParam); } catch {}
+      window.history.replaceState({}, "", "/ai" + (n ? "?niche=" + n : ""));
+    }
     // Check localStorage
     try {
       if (localStorage.getItem("jadran_ai_premium") === "1") {
@@ -842,6 +848,7 @@ const [lang, setLang] = useState(() => {
           utm_source: utmData.utm_source || "",
           utm_medium: utmData.utm_medium || "",
           utm_campaign: utmData.utm_campaign || "",
+          partnerRef: (() => { try { return localStorage.getItem("jadran_partner_ref") || ""; } catch { return ""; } })(),
         }),
       });
       const data = await res.json();
@@ -885,7 +892,7 @@ const [lang, setLang] = useState(() => {
       try { localStorage.setItem("jadran_msg_count", String(newCount)); } catch {}
       if (newCount === 1) {
         track("chat_start", { lang, region, niche });
-        // Referral conversion: invited user asked first question → reward both
+        // Referral conversion: invited user asked first question → reward SHARER only
         const ib = invitedBy || localStorage.getItem("jadran_invited_by");
         if (ib) {
           let did = localStorage.getItem("jadran_device_id");
@@ -893,14 +900,10 @@ const [lang, setLang] = useState(() => {
           fetch("/api/referral", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "convert", deviceId: did, invitedBy: ib }) })
             .then(r => r.json()).then(d => {
               if (d.ok && !d.already) {
-                // Reward this user too
-                setPremium(true); setTrialExpired(false); setMsgCount(0);
-                setGlobalToast(lang === "en" ? "🎉 48h Premium unlocked!" : lang === "de" || lang === "at" ? "🎉 48h Premium freigeschaltet!" : lang === "it" ? "🎉 48h Premium sbloccato!" : "🎉 48h Premium otključan!");
+                // Invited user (Klaus) gets NO premium — just a thank-you toast
+                setGlobalToast(lang === "en" ? "🔗 Link accepted! Enjoy 10 free messages." : lang === "de" || lang === "at" ? "🔗 Link akzeptiert! 10 Nachrichten gratis." : lang === "it" ? "🔗 Link accettato! 10 messaggi gratis." : "🔗 Link prihvaćen! 10 besplatnih poruka.");
                 setTimeout(() => setGlobalToast(null), 4000);
-                try { localStorage.removeItem("jadran_msg_count"); localStorage.setItem("jadran_ai_premium", "1");
-                  localStorage.setItem("jadran_premium_plan", JSON.stringify({ plan: "referral", days: 2, region: "all", expiresAt: Date.now() + 48*3600000, purchasedAt: new Date().toISOString() }));
-                  localStorage.removeItem("jadran_invited_by");
-                } catch {}
+                try { localStorage.removeItem("jadran_invited_by"); } catch {}
               }
             }).catch(() => {});
         }
@@ -1092,19 +1095,19 @@ const [lang, setLang] = useState(() => {
           let did; try { did = localStorage.getItem("jadran_device_id"); } catch {} if (!did) return null;
           const inviteUrl = `https://jadran.ai/ai?invite=${did}`;
           const shareText = lang === "de" || lang === "at"
-            ? `Leute, hab eine geniale KI für Kroatien gefunden. Löst Camper-Parkplätze, Fähren und findet versteckte Konobas ohne Touristenpreise. Über meinen Link habt ihr 48h Premium kostenlos: ${inviteUrl}`
+            ? `Leute, hab eine geniale KI für Kroatien gefunden. Löst Camper-Parkplätze, Fähren und findet versteckte Konobas ohne Touristenpreise. Probiert es kostenlos — 10 Fragen gratis: ${inviteUrl}`
             : lang === "en"
-            ? `Found an amazing AI for Croatia trips. Solves camper parking, ferries and finds hidden restaurants without tourist prices. Via my link you get 48h Premium free: ${inviteUrl}`
+            ? `Found an amazing AI for Croatia trips. Solves camper parking, ferries and finds hidden restaurants without tourist prices. Try it free — 10 questions on the house: ${inviteUrl}`
             : lang === "it"
-            ? `Ho trovato un'IA geniale per la Croazia. Risolve parcheggi camper, traghetti e trova ristoranti nascosti. Con il mio link avete 48h Premium gratis: ${inviteUrl}`
-            : `Ljudi, našao sam genijalan AI za Hrvatsku. Rješava parkinge za kampere, trajekte i nalazi skrivene konobe bez turističkih cijena. Preko mog linka imate 48h Premium besplatno: ${inviteUrl}`;
+            ? `Ho trovato un'IA geniale per la Croazia. Risolve parcheggi camper, traghetti e trova ristoranti nascosti. Provatelo gratis — 10 domande omaggio: ${inviteUrl}`
+            : `Ljudi, našao sam genijalan AI za Hrvatsku. Rješava parkinge za kampere, trajekte i nalazi skrivene konobe bez turističkih cijena. Probajte besplatno — 10 pitanja gratis: ${inviteUrl}`;
           return (
             <div style={{ marginTop: 16, padding: "16px", borderRadius: 14, background: isNight ? "rgba(34,197,94,0.04)" : "rgba(34,197,94,0.06)", border: `1px solid ${isNight ? "rgba(34,197,94,0.12)" : "rgba(34,197,94,0.15)"}` }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: "#22c55e", marginBottom: 6 }}>
-                🎁 {lang === "en" ? "Don't want to pay? Unlock 48h free!" : lang === "de" || lang === "at" ? "Nicht zahlen? 48h gratis freischalten!" : lang === "it" ? "Non vuoi pagare? Sblocca 48h gratis!" : "Ne želiš platiti? Otključaj 48h besplatno!"}
+                🎁 {lang === "en" ? "Share & earn 24h Premium!" : lang === "de" || lang === "at" ? "Teilen & 24h Premium verdienen!" : lang === "it" ? "Condividi & guadagna 24h Premium!" : "Podijeli i osvoji 24h Premium!"}
               </div>
               <div style={{ fontSize: 11, color: C.mut, lineHeight: 1.5, marginBottom: 12 }}>
-                {lang === "en" ? "Share JADRAN with a friend. When they ask their first question, you both get 48h Premium." : lang === "de" || lang === "at" ? "Teile JADRAN mit einem Freund. Wenn er seine erste Frage stellt, bekommt ihr beide 48h Premium." : lang === "it" ? "Condividi JADRAN con un amico. Quando fa la prima domanda, entrambi ricevete 48h Premium." : "Podijeli JADRAN s prijateljem. Kada postavi prvo pitanje, oboje dobivate 48h Premium."}
+                {lang === "en" ? "Share your link. When a friend asks their first question, YOU get 24h Premium free." : lang === "de" || lang === "at" ? "Teile deinen Link. Wenn ein Freund seine erste Frage stellt, bekommst DU 24h Premium gratis." : lang === "it" ? "Condividi il tuo link. Quando un amico fa la prima domanda, TU ricevi 24h Premium gratis." : "Podijeli svoj link. Kada prijatelj postavi prvo pitanje, TI dobivaš 24h Premium besplatno."}
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <button onClick={() => { window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank"); track("referral_share", { channel: "whatsapp" }); }} style={{ padding: "12px 16px", borderRadius: 12, border: "none", background: "#25D366", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
@@ -1135,7 +1138,7 @@ const [lang, setLang] = useState(() => {
       <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "32px 24px", maxWidth: 420, width: "100%", border: "1px solid rgba(34,197,94,0.15)", textAlign: "center" }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>🍻</div>
         <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 20, fontWeight: 700, color: C.text, marginBottom: 8 }}>
-          {lang === "en" ? "Your friend gifted you 48h Premium!" : lang === "de" || lang === "at" ? "Dein Freund schenkt dir 48h Premium!" : lang === "it" ? "Il tuo amico ti regala 48h Premium!" : "Prijatelj ti poklanja 48h Premium!"}
+          {lang === "en" ? "A friend shared this guide with you!" : lang === "de" || lang === "at" ? "Ein Freund hat dir diesen Guide empfohlen!" : lang === "it" ? "Un amico ti ha consigliato questa guida!" : "Prijatelj ti preporučuje ovog vodiča!"}
         </div>
         <div style={{ fontSize: 13, color: C.mut, lineHeight: 1.5, marginBottom: 20 }}>
           {lang === "en" ? "No installation. No credit card. Just ask your digital co-pilot anything about the perfect Adriatic holiday." : lang === "de" || lang === "at" ? "Keine Installation. Keine Kreditkarte. Frag deinen digitalen Copiloten alles über den perfekten Adria-Urlaub." : lang === "it" ? "Nessuna installazione. Nessuna carta di credito. Chiedi tutto sulla vacanza perfetta in Adriatico." : "Nema instalacije. Nema kreditne kartice. Pitaj svog digitalnog suvozača što god ti treba za savršen odmor na Jadranu."}

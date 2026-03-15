@@ -1,10 +1,11 @@
 // /api/referral.js — Viral referral engine
-// When invited user sends first message, rewards BOTH users with 48h premium
+// When invited user sends first message, rewards SHARER (Hans) with 24h premium
+// Invited user (Klaus) gets standard 10-msg trial only — no free premium
 // Uses Firestore REST API (no firebase-admin dependency)
 
 const PROJECT_ID = "molty-portal";
 const API_KEY = process.env.FIREBASE_API_KEY;
-const REWARD_HOURS = 48;
+const REWARD_HOURS = 24; // Sharer gets 24h — enough to see value, not enough for full trip
 
 async function fsWrite(docPath, fields) {
   const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${docPath}?key=${API_KEY}`;
@@ -55,7 +56,7 @@ export default async function handler(req, res) {
   try {
     const { action, deviceId, invitedBy } = req.body || {};
 
-    // ACTION: convert — invited user sent first message, reward both
+    // ACTION: convert — invited user sent first message, reward SHARER only
     if (action === "convert" && deviceId && invitedBy && deviceId !== invitedBy) {
       // Check if this conversion already happened (prevent abuse)
       const existing = await fsRead(`jadran_referrals/${deviceId}`);
@@ -64,16 +65,15 @@ export default async function handler(req, res) {
       }
 
       const now = new Date();
-      const expiresAt = new Date(now.getTime() + REWARD_HOURS * 3600000).toISOString();
 
-      // Record the referral
+      // Record the referral (including partner chain for B2B tracking)
       await fsWrite(`jadran_referrals/${deviceId}`, {
         invitedBy,
         convertedAt: now.toISOString(),
         converted: "true",
       });
 
-      // Reward the INVITER (Hans) — extend or set 48h premium
+      // Reward ONLY the SHARER (Hans) — extend or set 24h premium
       const inviterPrem = await fsRead(`jadran_premium/${invitedBy}`);
       const inviterExpiry = inviterPrem?.expiresAt ? new Date(inviterPrem.expiresAt) : now;
       const inviterNewExpiry = new Date(Math.max(inviterExpiry.getTime(), now.getTime()) + REWARD_HOURS * 3600000);
@@ -86,15 +86,15 @@ export default async function handler(req, res) {
         source: "referral_reward",
       });
 
-      // Reward the INVITED user (Jürgen) — 48h premium
-      await fsWrite(`jadran_premium/${deviceId}`, {
-        plan: "referral",
-        days: String(REWARD_HOURS / 24),
-        region: "all",
-        paidAt: now.toISOString(),
-        expiresAt,
-        source: "referral_invited",
+      // INVITED user (Klaus) gets NOTHING extra — standard 10-msg trial
+      // We DO record the relationship for partner chain tracking:
+      // If Klaus later buys, we can trace Klaus → Hans → Black Jack (partner)
+      await fsWrite(`jadran_referrals/${deviceId}`, {
         invitedBy,
+        convertedAt: now.toISOString(),
+        converted: "true",
+        // Preserve partner ref chain: look up Hans's ref to find B2B partner
+        partnerRef: inviterPrem?.ref || "",
       });
 
       // Track referral count for inviter
