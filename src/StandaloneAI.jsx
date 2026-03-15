@@ -402,6 +402,7 @@ const [lang, setLang] = useState(() => {
   const [travelMode, setTravelMode] = useState(() => { try { return localStorage.getItem("jadran_travelMode") || null; } catch { return null; } });
   const [premium, setPremium] = useState(false);
   const [premiumPlan, setPremiumPlan] = useState(null);
+  const [nowMs, setNowMs] = useState(Date.now()); // Live countdown timer
   const [msgCount, setMsgCount] = useState(0);
   const FREE_MSGS = 10;
   const PREMIUM_DAILY_LIMIT = 100; // Cost control: ~2€/day max API spend per user
@@ -493,6 +494,8 @@ const [lang, setLang] = useState(() => {
   // Persist region + travelMode to localStorage on every change
   useEffect(() => { try { if (region) localStorage.setItem("jadran_region", region); } catch {} }, [region]);
   useEffect(() => { try { if (travelMode) localStorage.setItem("jadran_travelMode", travelMode); } catch {} }, [travelMode]);
+  // Live countdown timer — updates badge every 60s so "29d" → "28d" transitions are visible
+  useEffect(() => { const t = setInterval(() => setNowMs(Date.now()), 60000); return () => clearInterval(t); }, []);
 
   // Auto-generate icebreaker when entering chat with no messages (e.g. premium auto-skip)
   useEffect(() => {
@@ -1595,7 +1598,7 @@ const [lang, setLang] = useState(() => {
             </button>
           )}
           {premium
-            ? <span style={{ padding: "4px 12px", borderRadius: 12, background: premiumPlan?.plan === "vip" ? "rgba(168,85,247,0.08)" : "rgba(245,158,11,0.08)", border: `1px solid ${premiumPlan?.plan === "vip" ? "rgba(168,85,247,0.12)" : "rgba(245,158,11,0.12)"}`, color: premiumPlan?.plan === "vip" ? "#a855f7" : C.gold, fontSize: 10, fontWeight: 600 }}>⭐ {premiumPlan?.plan === "vip" ? "VIP" : premiumPlan?.plan === "season" ? "SEZONA" : "EXPLORER"} {premiumPlan ? Math.ceil((premiumPlan.expiresAt - Date.now()) / 86400000) + "d" : ""}</span>
+            ? <span style={{ padding: "4px 12px", borderRadius: 12, background: premiumPlan?.plan === "vip" ? "rgba(168,85,247,0.08)" : "rgba(245,158,11,0.08)", border: `1px solid ${premiumPlan?.plan === "vip" ? "rgba(168,85,247,0.12)" : "rgba(245,158,11,0.12)"}`, color: premiumPlan?.plan === "vip" ? "#a855f7" : C.gold, fontSize: 10, fontWeight: 600 }}>⭐ {premiumPlan?.plan === "vip" ? "VIP" : premiumPlan?.plan === "season" ? "SEZONA" : "EXPLORER"} {premiumPlan ? (() => { const ms = premiumPlan.expiresAt - nowMs; const d = Math.ceil(ms / 86400000); return d > 1 ? d + "d" : d === 1 ? "24h" : Math.max(0, Math.ceil(ms / 3600000)) + "h"; })() : ""}</span>
             : <button onClick={() => trialExpired ? setShowPaywall(true) : null} disabled={payLoading} style={{ padding: trialExpired ? "6px 14px" : "4px 12px", borderRadius: 12, background: trialExpired ? "linear-gradient(135deg, #ef4444, #dc2626)" : "rgba(52,211,153,0.08)", border: trialExpired ? "none" : "1px solid rgba(52,211,153,0.12)", color: trialExpired ? "#fff" : "#34d399", fontSize: trialExpired ? 11 : 10, fontWeight: trialExpired ? 700 : 600, cursor: trialExpired ? "pointer" : "default", fontFamily: "inherit", boxShadow: trialExpired ? "0 2px 8px rgba(239,68,68,0.3)" : "none" }}>
                 {trialExpired ? `⭐ ${t.buyNow || "KUPI"}` : `${FREE_MSGS - msgCount}/${FREE_MSGS}`}
               </button>

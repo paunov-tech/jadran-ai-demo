@@ -296,7 +296,17 @@ async function fetchHAK() {
       headers: { "User-Agent": "JADRAN.AI-AlertSystem/1.0" },
     });
     if (!res.ok) return [];
-    const html = await res.text();
+    const rawHtml = await res.text();
+    // CRITICAL: Strip ALL HTML tags FIRST, then search clean text
+    // Without this, regex captures HTML attributes like data-category="..." class="..."
+    const html = rawHtml
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")  // Remove scripts
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")     // Remove styles
+      .replace(/<[^>]*>/g, " ")                       // Remove all tags
+      .replace(/&nbsp;/g, " ")                        // HTML entities
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+      .replace(/\s+/g, " ");                          // Collapse whitespace
     const alerts = [];
 
     // Extract road events from HAK page
@@ -312,8 +322,10 @@ async function fetchHAK() {
     for (const { regex, type, severity } of patterns) {
       const matches = html.match(regex) || [];
       for (const match of matches.slice(0, 3)) { // Max 3 per type
-        const clean = match.replace(/<[^>]*>/g, "").trim();
-        if (clean.length < 10) continue;
+        const clean = match.trim();
+        if (clean.length < 10 || clean.length > 200) continue;
+        // Skip if still contains HTML remnants (safety net)
+        if (/[<>"=]/.test(clean)) continue;
 
         // Detect affected region from keywords
         let region = "general";
