@@ -777,16 +777,32 @@ export default async function handler(req, res) {
     // ═══ CRITICAL: Firestore usage enforcement (THE source of truth) ═══
     // Client-side is UX sugar. This is the REAL gate.
     // Survives: incognito, localStorage clear, cookie clear, Vercel cold start
-    if (tierPlan === "free" && deviceId && FB_KEY) {
+    // CRITICAL: Check BOTH fingerprint AND IP — browsers randomize canvas in incognito!
+    if (tierPlan === "free" && FB_KEY) {
       try {
-        const fpKey = deviceId.startsWith("fp_") ? deviceId : ("ip_" + clientIp);
-        const usageDoc = await _fsRead(`jadran_usage/${fpKey}`);
         const now = Date.now();
-        let fsCount = parseInt(usageDoc?.count) || 0;
-        const fsReset = parseInt(usageDoc?.resetAt) || 0;
-        // Auto-reset after 24h
-        if (fsReset > 0 && now > fsReset) { fsCount = 0; }
-        if (fsCount >= 10) {
+        const ipKey = "ip_" + clientIp.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const fpKey = (deviceId && deviceId.startsWith("fp_")) ? deviceId : null;
+        
+        // Read BOTH documents in parallel
+        const [ipDoc, fpDoc] = await Promise.all([
+          _fsRead(`jadran_usage/${ipKey}`),
+          fpKey ? _fsRead(`jadran_usage/${fpKey}`) : Promise.resolve(null),
+        ]);
+
+        // Check IP count
+        let ipCount = parseInt(ipDoc?.count) || 0;
+        const ipReset = parseInt(ipDoc?.resetAt) || 0;
+        if (ipReset > 0 && now > ipReset) ipCount = 0;
+
+        // Check fingerprint count
+        let fpCount = parseInt(fpDoc?.count) || 0;
+        const fpReset = parseInt(fpDoc?.resetAt) || 0;
+        if (fpReset > 0 && now > fpReset) fpCount = 0;
+
+        // Block if EITHER is exhausted (catches incognito where fp changes but IP stays)
+        const maxCount = Math.max(ipCount, fpCount);
+        if (maxCount >= 10) {
           const exhaustMsg = lang === "de" || lang === "at"
             ? "Ihre 10 kostenlosen Nachrichten sind aufgebraucht. Upgraden Sie auf Premium für unbegrenzte Nutzung!"
             : lang === "en" ? "Your 10 free messages are used up. Upgrade to Premium for unlimited access!"
@@ -795,10 +811,14 @@ export default async function handler(req, res) {
             : "Vaših 10 besplatnih poruka je iskorišteno. Nadogradite na Premium za neograničen pristup!";
           return res.status(429).json({ content: [{ type: "text", text: "⭐ " + exhaustMsg }], _exhausted: true });
         }
-        // Increment — fire and forget (don't slow down response)
-        const newCount = fsCount + 1;
-        const resetAt = fsReset || (now + 86400000);
-        _fsWrite(`jadran_usage/${fpKey}`, { count: newCount, resetAt, lastUse: now, ip: clientIp });
+
+        // Increment BOTH IP and fingerprint counters (parallel, fire-and-forget)
+        const ipResetAt = ipReset || (now + 86400000);
+        const fpResetAt = fpReset || (now + 86400000);
+        _fsWrite(`jadran_usage/${ipKey}`, { count: ipCount + 1, resetAt: ipResetAt, lastUse: now, ip: clientIp });
+        if (fpKey) {
+          _fsWrite(`jadran_usage/${fpKey}`, { count: fpCount + 1, resetAt: fpResetAt, lastUse: now, ip: clientIp });
+        }
       } catch (e) {
         // Firestore failed — fall through to in-memory check (graceful degradation)
         console.error("Firestore usage check failed:", e.message);

@@ -673,25 +673,23 @@ const [lang, setLang] = useState(() => {
       // Load message count
       const mc = parseInt(localStorage.getItem("jadran_msg_count") || "0");
       setMsgCount(mc);
-      // Generate device fingerprint (survives incognito)
+      // IMMEDIATE: Check usage by IP (no fingerprint needed — catches incognito)
+      fetch("/api/usage?fp=none").then(r => r.json()).then(d => {
+        if (d && d.exhausted) {
+          setMsgCount(10); setTrialExpired(true);
+          try { localStorage.setItem("jadran_msg_count", "10"); } catch {}
+        } else if (d && d.count > mc) {
+          setMsgCount(d.count);
+          try { localStorage.setItem("jadran_msg_count", String(d.count)); } catch {}
+          if (d.count >= 10) setTrialExpired(true);
+        }
+      }).catch(() => {});
+      // Generate device fingerprint (survives incognito on same browser)
       getDeviceFingerprint().then(fp => {
         if (fp) {
           setDeviceFp(fp);
-          // Use fingerprint as deviceId if no localStorage one exists
           let did = localStorage.getItem("jadran_device_id");
           if (!did) { did = fp; try { localStorage.setItem("jadran_device_id", fp); } catch {} }
-          // CRITICAL: Sync count from server (Firestore) — survives incognito
-          fetch(`/api/usage?fp=${fp}`).then(r => r.json()).then(d => {
-            if (d && typeof d.count === "number") {
-              const serverCount = d.count;
-              // Server count is authoritative — overrides localStorage
-              if (serverCount > mc) {
-                setMsgCount(serverCount);
-                try { localStorage.setItem("jadran_msg_count", String(serverCount)); } catch {}
-                if (serverCount >= 10) setTrialExpired(true);
-              }
-            }
-          }).catch(() => {}); // Fail silently — localStorage fallback still works
         }
       });
       if (mc >= 10) setTrialExpired(true);

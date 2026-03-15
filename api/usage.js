@@ -57,29 +57,33 @@ export default async function handler(req, res) {
 
   if (!API_KEY) return res.status(500).json({ error: "Service unavailable" });
 
-  // GET: check usage
+  // GET: check usage — checks BOTH fingerprint AND IP (incognito changes fp but not IP)
   if (req.method === "GET") {
     const fp = req.query.fp;
-    if (!fp || fp.length < 10) return res.status(400).json({ error: "Missing fingerprint" });
-
-    const doc = await fsRead(`jadran_usage/${fp}`);
-    if (!doc) {
-      return res.status(200).json({ count: 0, limit: FREE_LIMIT, remaining: FREE_LIMIT, resetAt: null });
-    }
-
-    const count = parseInt(doc.count) || 0;
-    const resetAt = parseInt(doc.resetAt) || 0;
     const now = Date.now();
+    const ipKey = "ip_" + ip.replace(/[^a-zA-Z0-9._-]/g, "_");
 
-    // Check if reset period passed
-    if (resetAt > 0 && now > resetAt) {
-      // Reset counter
-      await fsWrite(`jadran_usage/${fp}`, { count: 0, resetAt: 0, lastReset: now, ip });
-      return res.status(200).json({ count: 0, limit: FREE_LIMIT, remaining: FREE_LIMIT, resetAt: null });
-    }
+    // Read both FP and IP docs in parallel
+    const [fpDoc, ipDoc] = await Promise.all([
+      (fp && fp.length >= 10) ? fsRead(`jadran_usage/${fp}`) : Promise.resolve(null),
+      fsRead(`jadran_usage/${ipKey}`),
+    ]);
 
+    // Get counts (with auto-reset)
+    let fpCount = parseInt(fpDoc?.count) || 0;
+    const fpReset = parseInt(fpDoc?.resetAt) || 0;
+    if (fpReset > 0 && now > fpReset) fpCount = 0;
+
+    let ipCount = parseInt(ipDoc?.count) || 0;
+    const ipReset = parseInt(ipDoc?.resetAt) || 0;
+    if (ipReset > 0 && now > ipReset) ipCount = 0;
+
+    // Use the HIGHER count (catches incognito where fp is different but IP same)
+    const count = Math.max(fpCount, ipCount);
     const remaining = Math.max(0, FREE_LIMIT - count);
-    return res.status(200).json({ count, limit: FREE_LIMIT, remaining, resetAt: resetAt || null });
+    const resetAt = fpReset || ipReset || null;
+
+    return res.status(200).json({ count, limit: FREE_LIMIT, remaining, exhausted: remaining <= 0, resetAt });
   }
 
   // POST: increment or check
