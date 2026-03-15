@@ -680,6 +680,18 @@ const [lang, setLang] = useState(() => {
           // Use fingerprint as deviceId if no localStorage one exists
           let did = localStorage.getItem("jadran_device_id");
           if (!did) { did = fp; try { localStorage.setItem("jadran_device_id", fp); } catch {} }
+          // CRITICAL: Sync count from server (Firestore) — survives incognito
+          fetch(`/api/usage?fp=${fp}`).then(r => r.json()).then(d => {
+            if (d && typeof d.count === "number") {
+              const serverCount = d.count;
+              // Server count is authoritative — overrides localStorage
+              if (serverCount > mc) {
+                setMsgCount(serverCount);
+                try { localStorage.setItem("jadran_msg_count", String(serverCount)); } catch {}
+                if (serverCount >= 10) setTrialExpired(true);
+              }
+            }
+          }).catch(() => {}); // Fail silently — localStorage fallback still works
         }
       });
       if (mc >= 10) setTrialExpired(true);
@@ -957,6 +969,20 @@ const [lang, setLang] = useState(() => {
       const newCount = msgCount + 1;
       setMsgCount(newCount);
       try { localStorage.setItem("jadran_msg_count", String(newCount)); } catch {}
+      // CRITICAL: Persist count to Firestore (survives incognito + cold starts)
+      if (deviceFp) {
+        fetch("/api/usage", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fp: deviceFp, action: "increment" })
+        }).then(r => r.json()).then(d => {
+          // If server count is higher (e.g. from other tab), sync up
+          if (d && d.count > newCount) {
+            setMsgCount(d.count);
+            try { localStorage.setItem("jadran_msg_count", String(d.count)); } catch {}
+            if (d.exhausted) setTrialExpired(true);
+          }
+        }).catch(() => {});
+      }
       if (newCount === 1) {
         track("chat_start", { lang, region, niche });
         // Referral conversion: invited user asked first question → reward SHARER only
