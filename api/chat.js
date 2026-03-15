@@ -251,6 +251,54 @@ const LANG_MAP = {
   en: "English", it: "Italiano", si: "Slovenščina", cz: "Čeština", pl: "Polski",
 };
 
+// ── DMO ENGINE (inline) — Destination Management gap-filling ──
+// eVisitor baseline occupancy by month (% of capacity) — from HTZ published statistics
+const DMO_BASELINES = {
+  istra:          { jun: 85, jul: 95, aug: 98, sep: 70, oct: 35 },
+  kvarner:        { jun: 70, jul: 90, aug: 95, sep: 60, oct: 25 },
+  zadar_sibenik:  { jun: 75, jul: 92, aug: 97, sep: 65, oct: 30 },
+  split_makarska: { jun: 80, jul: 95, aug: 99, sep: 72, oct: 35 },
+  dubrovnik:      { jun: 85, jul: 98, aug: 99, sep: 75, oct: 40 },
+};
+const DMO_NAMES = {
+  istra: "Istra", kvarner: "Kvarner (Rab, Krk, Cres)", zadar_sibenik: "Zadar i Šibenik",
+  split_makarska: "Split i Makarska", dubrovnik: "Dubrovnik",
+};
+
+function generateNudgeDirectives(userRegion) {
+  const now = new Date();
+  const m = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"][now.getMonth()];
+  const isWeekend = [0,5,6].includes(now.getDay());
+  const dayInMonth = now.getDate();
+
+  const gaps = [];
+  for (const [rid, baselines] of Object.entries(DMO_BASELINES)) {
+    const base = baselines[m] || 50;
+    let est = base + (isWeekend ? 8 : -5) + (dayInMonth > 20 ? 5 : dayInMonth < 10 ? -5 : 0);
+    est = Math.min(100, Math.max(5, est));
+    const gap = 100 - est;
+    if (gap > 30 && rid !== userRegion) {
+      gaps.push({ rid, name: DMO_NAMES[rid], est, gap, priority: gap > 50 ? "AKTIVNO PREPORUČI" : "SUBTILNO PREDLOŽI" });
+    }
+  }
+  if (!gaps.length) return null;
+
+  gaps.sort((a, b) => b.gap - a.gap);
+  const top = gaps.slice(0, 3);
+  const lines = top.map(g => `${g.priority}: ${g.name} (trenutna popunjenost ~${g.est}%, prostor za ${g.gap}% više gostiju)`);
+
+  return `[DMO DIREKTIVA — PREUSMERAVANJE TURISTA]
+Sljedeće regije imaju slobodnih kapaciteta i TZ partneri traže više gostiju:
+${lines.join("\n")}
+
+PRAVILA:
+- Kad gost pita "što da radim sutra?" ili traži alternativu — predloži gore navedene regije
+- Kad gost kaže da je negdje prepuno — predloži alternativu iz liste
+- NE guraj ako gost ništa ne pita o alternativama
+- NIKAD ne reci "sustav preporučuje" — budi prirodan kao lokalni vodič
+- Format: "Ako tražite manje gužve, [regija] je u ovom periodu idealna — [konkretan razlog]."`;
+}
+
 // ── MAIN ASSEMBLER ──
 function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan }) {
   const parts = [];
@@ -416,6 +464,17 @@ PRAVILA PERSONALIZACIJE:
   // 9. AFFILIATE LINKS (always last — most important for revenue)
   if (linkCatalog) {
     parts.push(`KATALOG LINKOVA — koristi ISKLJUČIVO ove. NIKAD ne izmišljaj URL-ove!\n${linkCatalog}\nFormat: [Tekst](URL). Ako aktivnost nije u katalogu, NE stavljaj link.`);
+  }
+
+  // 10. DMO NUDGE — Destination Management directives from TZ partners
+  // Injects gap-filling recommendations when regions are under capacity
+  try {
+    const nudge = generateNudgeDirectives("croatia", region);
+    if (nudge?.directive) {
+      parts.push(nudge.directive);
+    }
+  } catch (e) {
+    // DMO engine not critical — fail silently
   }
 
   return parts.join("\n\n");
