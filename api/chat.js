@@ -251,52 +251,104 @@ const LANG_MAP = {
   en: "English", it: "Italiano", si: "Slovenščina", cz: "Čeština", pl: "Polski",
 };
 
-// ── DMO ENGINE (inline) — Destination Management gap-filling ──
-// eVisitor baseline occupancy by month (% of capacity) — from HTZ published statistics
-const DMO_BASELINES = {
-  istra:          { jun: 85, jul: 95, aug: 98, sep: 70, oct: 35 },
-  kvarner:        { jun: 70, jul: 90, aug: 95, sep: 60, oct: 25 },
-  zadar_sibenik:  { jun: 75, jul: 92, aug: 97, sep: 65, oct: 30 },
-  split_makarska: { jun: 80, jul: 95, aug: 99, sep: 72, oct: 35 },
-  dubrovnik:      { jun: 85, jul: 98, aug: 99, sep: 75, oct: 40 },
+// ── DMO ENGINE (inline) — Rab LIVE + macro cross-destination ──
+// Rab sub-regions with eVisitor baselines
+const RAB_SUBS = {
+  rab_town:         { name:"Grad Rab",           bl:{may:25,jun:65,jul:88,aug:95,sep:55,oct:20}, suppress:true },
+  lopar:            { name:"Lopar (Rajska plaža)",bl:{may:15,jun:55,jul:85,aug:92,sep:45,oct:10} },
+  supetarska_draga: { name:"Supetarska Draga",   bl:{may:10,jun:40,jul:70,aug:82,sep:35,oct:8} },
+  kampor:           { name:"Kampor",              bl:{may:5,jun:25,jul:55,aug:65,sep:20,oct:5} },
+  barbat:           { name:"Barbat na Rabu",      bl:{may:8,jun:35,jul:65,aug:78,sep:30,oct:8} },
+  kalifront:        { name:"Kalifront šuma",      bl:{may:3,jun:15,jul:40,aug:50,sep:15,oct:3} },
 };
-const DMO_NAMES = {
-  istra: "Istra", kvarner: "Kvarner (Rab, Krk, Cres)", zadar_sibenik: "Zadar i Šibenik",
-  split_makarska: "Split i Makarska", dubrovnik: "Dubrovnik",
+const RAB_NUDGES = {
+  rab_town: "Grad Rab — 4 zvonika, kamene uličice, konobe s pogledom na more.",
+  lopar: "Lopar i Rajska plaža — 1,5 km pijeska, plitko more, savršeno za obitelji.",
+  supetarska_draga: "Supetarska Draga — mirna luka, benediktinski samostan, bez gužve.",
+  kampor: "Kampor — franjevački samostan iz 1458., skrivene uvale. Malo tko zna za ovo.",
+  barbat: "Barbat — najmirniji dio otoka, Pudarica beach bar, savršena za parove.",
+  kalifront: "Kalifront šuma — zaštićeni hrast, pješačke staze do skrivenih uvala. Rab bez turista.",
+};
+// Macro regions for cross-destination
+const DMO_MACRO = {
+  istra:{name:"Istra",bl:{may:35,jun:85,jul:95,aug:98,sep:70,oct:35}},
+  kvarner:{name:"Kvarner",bl:{may:20,jun:70,jul:90,aug:95,sep:60,oct:25}},
+  zadar_sibenik:{name:"Zadar i Šibenik",bl:{may:25,jun:75,jul:92,aug:97,sep:65,oct:30}},
+  split_makarska:{name:"Split i Makarska",bl:{may:30,jun:80,jul:95,aug:99,sep:72,oct:35}},
+  dubrovnik:{name:"Dubrovnik",bl:{may:40,jun:85,jul:98,aug:99,sep:75,oct:40}},
 };
 
-function generateNudgeDirectives(userRegion) {
-  const now = new Date();
+function _estOcc(bl, now) {
   const m = ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"][now.getMonth()];
-  const isWeekend = [0,5,6].includes(now.getDay());
-  const dayInMonth = now.getDate();
+  let v = (bl && bl[m]) || 30;
+  v += [0,5,6].includes(now.getDay()) ? 8 : -5;
+  v += now.getDate() > 20 ? 5 : now.getDate() < 10 ? -5 : 0;
+  const h = now.getHours();
+  v += (h>=10&&h<=18) ? 5 : (h<8||h>21) ? -10 : 0;
+  return Math.min(100, Math.max(0, Math.round(v)));
+}
 
-  const gaps = [];
-  for (const [rid, baselines] of Object.entries(DMO_BASELINES)) {
-    const base = baselines[m] || 50;
-    let est = base + (isWeekend ? 8 : -5) + (dayInMonth > 20 ? 5 : dayInMonth < 10 ? -5 : 0);
-    est = Math.min(100, Math.max(5, est));
-    const gap = 100 - est;
-    if (gap > 30 && rid !== userRegion) {
-      gaps.push({ rid, name: DMO_NAMES[rid], est, gap, priority: gap > 50 ? "AKTIVNO PREPORUČI" : "SUBTILNO PREDLOŽI" });
+function generateNudgeDirectives(ignored, userRegion) {
+  const now = new Date();
+  const parts = [];
+
+  // ── WITHIN-RAB nudges (if user is on Rab / Kvarner) ──
+  if (!userRegion || userRegion === "kvarner" || userRegion === "rab") {
+    const rabBoost = [];
+    for (const [sid, sub] of Object.entries(RAB_SUBS)) {
+      if (sub.suppress) continue; // Don't boost Rab Town when full
+      const est = _estOcc(sub.bl, now), gap = 100 - est;
+      if (gap > 25) {
+        rabBoost.push({ sid, name:sub.name, est, gap,
+          p: gap>50?"AKTIVNO PREPORUČI":"SUBTILNO PREDLOŽI", nudge:RAB_NUDGES[sid] });
+      }
+    }
+    if (rabBoost.length) {
+      rabBoost.sort((a,b) => b.gap - a.gap);
+      const lines = rabBoost.slice(0,3).map(g => `${g.p}: ${g.name} (~${g.est}% puno)\n   → ${g.nudge}`);
+      parts.push(`[DMO — UNUTAROTOČNO (Rab)]
+TZ Grada Raba traži ravnomjerniju raspodjelu turista po otoku:
+${lines.join("\n\n")}
+
+PRAVILA ZA RAB:
+- "Što posjetiti na Rabu?" → uključi bar jedno od gore navedenih mjesta
+- Centar prepun → Lopar, Supetarska Draga ili Kalifront
+- Obitelji s djecom → Lopar (pijesak, plitko); parovi → Kampor/Barbat; hikeri → Kalifront+Kamenjak
+- NIKAD ne reci "TZ preporučuje" — govori kao lokalni vodič
+- Format: "Ako imate vremena, svratite u [mjesto] — [razlog]. Većina turista ne zna za to."`);
     }
   }
-  if (!gaps.length) return null;
 
-  gaps.sort((a, b) => b.gap - a.gap);
-  const top = gaps.slice(0, 3);
-  const lines = top.map(g => `${g.priority}: ${g.name} (trenutna popunjenost ~${g.est}%, prostor za ${g.gap}% više gostiju)`);
-
-  return `[DMO DIREKTIVA — PREUSMERAVANJE TURISTA]
-Sljedeće regije imaju slobodnih kapaciteta i TZ partneri traže više gostiju:
-${lines.join("\n")}
+  // ── CROSS-DESTINATION nudges (macro regions) ──
+  const macroBoost = [];
+  for (const [rid, r] of Object.entries(DMO_MACRO)) {
+    const est = _estOcc(r.bl, now), gap = 100 - est;
+    if (gap > 30 && rid !== userRegion)
+      macroBoost.push({ rid, name:r.name, est, gap, p:gap>50?"AKTIVNO PREPORUČI":"SUBTILNO PREDLOŽI" });
+  }
+  if (macroBoost.length) {
+    macroBoost.sort((a,b) => b.gap - a.gap);
+    const lines = macroBoost.slice(0,3).map(g => `${g.p}: ${g.name} (~${g.est}% puno, ${g.gap}% slobodno)`);
+    // Enrich Kvarner with concrete Rab nudge if applicable
+    const kvarnerMatch = macroBoost.find(g => g.rid==="kvarner");
+    let enrichment = "";
+    if (kvarnerMatch) {
+      const bestRab = Object.entries(RAB_SUBS).filter(([,s])=>!s.suppress)
+        .map(([sid,s])=>({sid,est:_estOcc(s.bl,now),gap:100-_estOcc(s.bl,now)}))
+        .sort((a,b)=>b.gap-a.gap)[0];
+      if (bestRab) enrichment = `\n→ Konkretno za Rab: ${RAB_NUDGES[bestRab.sid]}`;
+    }
+    parts.push(`[DMO — MEĐUREGIONALNO]
+Regije sa slobodnim kapacitetima:
+${lines.join("\n")}${enrichment}
 
 PRAVILA:
-- Kad gost pita "što da radim sutra?" ili traži alternativu — predloži gore navedene regije
-- Kad gost kaže da je negdje prepuno — predloži alternativu iz liste
-- NE guraj ako gost ništa ne pita o alternativama
-- NIKAD ne reci "sustav preporučuje" — budi prirodan kao lokalni vodič
-- Format: "Ako tražite manje gužve, [regija] je u ovom periodu idealna — [konkretan razlog]."`;
+- Predloži kad gost traži alternativu ili pita "što dalje?"
+- NE guraj nepitano
+- Format: "Ako tražite manje gužve, [regija] je idealna — [razlog]."`);
+  }
+
+  return parts.length ? parts.join("\n\n") : null;
 }
 
 // ── MAIN ASSEMBLER ──
