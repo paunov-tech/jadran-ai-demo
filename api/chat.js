@@ -298,6 +298,108 @@ const RAB_NUDGES = {
   kalifront: "Kalifront šuma — zaštićeni hrast, pješačke staze do skrivenih uvala. Rab bez turista.",
 };
 
+// ═══ LIVE YOLO CROWD DATA FROM FIRESTORE ═══
+// Reads real camera detections, caches 5 min, replaces heuristic when available
+let _yoloCache = null;
+let _yoloCacheTime = 0;
+const YOLO_CACHE_MS = 5 * 60 * 1000; // 5 min
+
+// Map YOLO sub_regions to app regions
+const YOLO_TO_APP_REGION = {
+  zagreb: "inland", gorski_kotar: "inland", inland: "inland",
+  kvarner: "kvarner", istra: "istra",
+  zadar: "zadar_sibenik", split: "split_makarska",
+  dubrovnik: "dubrovnik",
+};
+
+async function fetchYoloCrowd() {
+  if (_yoloCache && Date.now() - _yoloCacheTime < YOLO_CACHE_MS) return _yoloCache;
+  const key = process.env.FIREBASE_API_KEY;
+  if (!key) return null;
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const url = `https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_yolo?key=${key}&pageSize=300`;
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const data = await r.json();
+    if (!data.documents) return null;
+
+    const regions = {};
+    let totalObjects = 0;
+    let activeCams = 0;
+
+    for (const doc of data.documents) {
+      const f = doc.fields;
+      if (!f) continue;
+      // Only today's docs
+      const docId = doc.name.split("/").pop();
+      if (!docId.includes(today)) continue;
+
+      const camId = f.camera_id?.stringValue || "";
+      const subRegion = f.sub_region?.stringValue || "other";
+      const rawCount = parseInt(f.raw_count?.integerValue || "0");
+      const busyness = parseInt(f.busyness_percent?.integerValue || "0");
+      const ts = f.timestamp?.stringValue || "";
+      const counts = {};
+      if (f.counts?.mapValue?.fields) {
+        for (const [k, v] of Object.entries(f.counts.mapValue.fields)) {
+          counts[k] = parseInt(v.integerValue || "0");
+        }
+      }
+
+      const appRegion = YOLO_TO_APP_REGION[subRegion] || subRegion;
+      if (!regions[appRegion]) regions[appRegion] = { cameras: [], totalObjects: 0, persons: 0, cars: 0, boats: 0 };
+      regions[appRegion].cameras.push({ camId, rawCount, busyness, counts, ts });
+      regions[appRegion].totalObjects += rawCount;
+      regions[appRegion].persons += (counts.person || 0);
+      regions[appRegion].cars += (counts.car || 0);
+      regions[appRegion].boats += (counts.boat || 0);
+      totalObjects += rawCount;
+      if (rawCount > 0) activeCams++;
+    }
+
+    // Sort cameras by activity within each region
+    for (const r of Object.values(regions)) {
+      r.cameras.sort((a, b) => b.rawCount - a.rawCount);
+      r.activeCameras = r.cameras.filter(c => c.rawCount > 0).length;
+      r.topCamera = r.cameras[0] || null;
+    }
+
+    _yoloCache = { regions, totalObjects, activeCams, timestamp: new Date().toISOString() };
+    _yoloCacheTime = Date.now();
+    return _yoloCache;
+  } catch (e) {
+    console.error("YOLO fetch error:", e.message);
+    return null;
+  }
+}
+
+function generateYoloCrowdPrompt(yoloData, userRegion) {
+  if (!yoloData || !yoloData.regions) return "";
+  const lines = [];
+  lines.push("[LIVE CROWD DATA — YOLO kamera sistem, ažurirano svakih 15 min]");
+  lines.push(`Ukupno: ${yoloData.totalObjects} detekcija na ${yoloData.activeCams} aktivnih kamera\n`);
+
+  // Sort regions by activity
+  const sorted = Object.entries(yoloData.regions).sort((a, b) => b[1].totalObjects - a[1].totalObjects);
+  for (const [region, data] of sorted) {
+    const isUser = (region === userRegion) || (YOLO_TO_APP_REGION[userRegion] === region);
+    const marker = isUser ? " ← KORISNIKOVA REGIJA" : "";
+    const top3 = data.cameras.slice(0, 3).filter(c => c.rawCount > 0).map(c => `${c.camId}:${c.rawCount}`).join(", ");
+    lines.push(`${region}: ${data.totalObjects} obj (${data.persons} osoba, ${data.cars} auta, ${data.boats} brodova) — ${data.activeCameras} aktivnih kamera${marker}`);
+    if (top3) lines.push(`  Top: ${top3}`);
+  }
+
+  lines.push(`\nPRAVILA ZA LIVE PODATKE:`);
+  lines.push(`- Ovo su PRAVI podaci s kamera, NE procjene. Koristi ih kad gost pita o gužvi.`);
+  lines.push(`- "Trenutno je na splitskoj rivi detektovano XX osoba i YY auta — ${yoloData.totalObjects > 100 ? "prilično živo" : yoloData.totalObjects > 30 ? "umjerena aktivnost" : "mirno"}."`);
+  lines.push(`- NE navodi točan broj — zaokruži: "dvadesetak osoba", "pedesetak", "stotinjak"`);
+  lines.push(`- Ako je 0 detekcija → "Trenutno je mirno, idealno vrijeme za posjet."`);
+  lines.push(`- Usporedi regije: ako korisnikova regija ima puno, preporuči mirniju`);
+
+  return lines.join("\n");
+}
+
 // ═══ HOTSPOT → B2B PARTNER MAPPING ═══
 // When overcrowded hotspot detected in user's query, redirect to specific B2B partner
 // Partners added as Srđan signs them — each maps to a nearby overcrowded location
@@ -669,6 +771,16 @@ PRAVILA ZA KAMERE:
 - Kad gost planira trajekt → ponudi kameru trajektne luke (vidi se kolona)
 - Format: "Pogledajte live kameru prije nego krenete: [Rab centar](URL)"
 - NIKAD ne govori "vidim na kameri" — ti NE gledaš kameru, samo daješ link gostu`);
+
+  // 9c. LIVE YOLO CROWD DATA — real camera detections from 147 cameras
+  try {
+    const yoloData = await fetchYoloCrowd();
+    if (yoloData && yoloData.totalObjects > 0) {
+      parts.push(generateYoloCrowdPrompt(yoloData, region));
+    }
+  } catch (e) {
+    // YOLO data not critical — fall back to heuristic
+  }
 
   // 10. DMO NUDGE — Destination Management directives from TZ partners
   // Injects gap-filling recommendations when regions are under capacity
