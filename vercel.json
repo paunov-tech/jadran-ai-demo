@@ -106,6 +106,22 @@
       "destination": "/api/$1"
     },
     {
+      "source": "/blog/croatia-camper-van-guide",
+      "destination": "/blog/croatia-camper-van-guide.html"
+    },
+    {
+      "source": "/blog/hidden-beaches-croatia",
+      "destination": "/blog/hidden-beaches-croatia.html"
+    },
+    {
+      "source": "/blog/croatia-sailing-guide",
+      "destination": "/blog/croatia-sailing-guide.html"
+    },
+    {
+      "source": "/blog/kroatien-wohnmobil-reisefuehrer",
+      "destination": "/blog/kroatien-wohnmobil-reisefuehrer.html"
+    },
+    {
       "source": "/blog",
       "destination": "/blog/index.html"
     },
@@ -114,7 +130,7 @@
       "destination": "/blog/index.html"
     },
     {
-      "source": "/((?!blog|api|icon|og-|manifest|sitemap|robots|sw).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
