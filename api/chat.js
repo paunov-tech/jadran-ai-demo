@@ -791,7 +791,7 @@ OBAVEZNA PRAVILA (ne smiju se zaobići):
 
   // 2. LANGUAGE
   const langName = LANG_MAP[lang] || LANG_MAP.hr;
-  parts.push(`JEZIK ODGOVORA: ${langName}. Odgovaraj ISKLJUČIVO na ovom jeziku.`);
+  parts.push(`JEZIK ODGOVORA: ${langName}. Odgovaraj ISKLJUČIVO na ovom jeziku. KRITIČNO: Svi interni podaci (kampovi, dump stanice, LPG, upozorenja, kamere) su na hrvatskom — UVIJEK ih PREVEDI na jezik korisnika. NIKAD ne kopiraj hrvatske bilješke doslovno ako korisnik nije na hrvatskom.`);
 
   // 3. WEATHER
   const wxCtx = buildWeatherCtx(weather);
