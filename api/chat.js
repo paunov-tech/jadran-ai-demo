@@ -574,7 +574,7 @@ PRAVILA:
 }
 
 // ── MAIN ASSEMBLER ──
-function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan }) {
+function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan, yoloCrowdData }) {
   const parts = [];
 
   // 1. BASE
@@ -772,14 +772,9 @@ PRAVILA ZA KAMERE:
 - Format: "Pogledajte live kameru prije nego krenete: [Rab centar](URL)"
 - NIKAD ne govori "vidim na kameri" — ti NE gledaš kameru, samo daješ link gostu`);
 
-  // 9c. LIVE YOLO CROWD DATA — real camera detections from 147 cameras
-  try {
-    const yoloData = await fetchYoloCrowd();
-    if (yoloData && yoloData.totalObjects > 0) {
-      parts.push(generateYoloCrowdPrompt(yoloData, region));
-    }
-  } catch (e) {
-    // YOLO data not critical — fall back to heuristic
+  // 9c. LIVE YOLO CROWD DATA — injected from handler (async fetch happens there)
+  if (yoloCrowdData && yoloCrowdData.totalObjects > 0) {
+    parts.push(generateYoloCrowdPrompt(yoloCrowdData, region));
   }
 
   // 10. DMO NUDGE — Destination Management directives from TZ partners
@@ -960,10 +955,14 @@ export default async function handler(req, res) {
     // Extract last user message for NLP region-matching against alerts
     const lastUserMessage = [...(messages || [])].reverse().find(m => m.role === "user")?.content || "";
 
+    // Fetch live YOLO crowd data (async, cached 5min)
+    let yoloCrowdData = null;
+    try { yoloCrowdData = await fetchYoloCrowd(); } catch (e) { /* non-critical */ }
+
     let systemPrompt = '';
     try {
       systemPrompt = mode && region 
-        ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan })
+        ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan, yoloCrowdData })
         : (system || '');
     } catch (promptErr) {
       // If prompt building fails, use minimal fallback
