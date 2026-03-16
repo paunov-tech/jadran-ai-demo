@@ -876,11 +876,20 @@ export default async function handler(req, res) {
   try {
     const { system, messages, mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, plan, deviceId } = req.body;
 
+    // ── PROMO CODES — free VIP access for testers ──
+    const PROMO_CODES = {
+      "CALDERYS2026": { plan: "vip", expires: "2026-06-01", note: "Calderys Austria team" },
+      "JADRANTEST":   { plan: "vip", expires: "2026-06-01", note: "Internal beta testers" },
+    };
+
     // ── FAIR USAGE: Layer 3 — Tier-aware per-device limit ──
     // SECURITY: Don't trust frontend plan claim without deviceId
     // Without deviceId, default to free (prevents curl spoofing)
     const clientIp = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "").split(",")[0].trim();
-    const tierPlan = deviceId ? (plan || "free") : "free";
+    const promoCode = req.body.promoCode || "";
+    const promo = PROMO_CODES[promoCode.toUpperCase()];
+    const promoValid = promo && new Date(promo.expires) > new Date();
+    const tierPlan = promoValid ? promo.plan : (deviceId ? (plan || "free") : "free");
     const tierCheck = tierRateOk(deviceId, tierPlan, clientIp);
     if (!tierCheck.ok) {
       const upgradeHint = tierPlan === "free" || tierPlan === "week"

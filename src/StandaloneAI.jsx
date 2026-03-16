@@ -458,6 +458,13 @@ const [lang, setLang] = useState(() => {
   const [nowMs, setNowMs] = useState(Date.now()); // Live countdown timer
   const [msgCount, setMsgCount] = useState(0);
   const [deviceFp, setDeviceFp] = useState(null);
+  const [promoCode] = useState(() => {
+    try {
+      const p = new URLSearchParams(window.location.search).get("promo");
+      if (p) { localStorage.setItem("jadran_promo", p); return p; }
+      return localStorage.getItem("jadran_promo") || "";
+    } catch { return ""; }
+  });
   const FREE_MSGS = 3;
   const PREMIUM_DAILY_LIMIT = 100; // Cost control: ~2€/day max API spend per user
   const VIP_DAILY_LIMIT = 300; // VIP gets 3x more messages
@@ -471,7 +478,7 @@ const [lang, setLang] = useState(() => {
     vip:      { chat: true,  lens: true,  walkie: true,  guardian: true,  priority: true,  msgLimit: VIP_DAILY_LIMIT },
     referral: { chat: true,  lens: true,  walkie: true,  guardian: true,  priority: false, msgLimit: PREMIUM_DAILY_LIMIT },
   };
-  const currentTier = premium ? (premiumPlan?.plan || "week") : "free";
+  const currentTier = promoCode ? "vip" : (premium ? (premiumPlan?.plan || "week") : "free");
   const gates = TIER_GATES[currentTier] || TIER_GATES.free;
   const can = (feature) => gates[feature] === true;
   const [upsellFeature, setUpsellFeature] = useState(null); // which feature triggered upsell
@@ -1040,6 +1047,7 @@ const [lang, setLang] = useState(() => {
           // Dynamic routing — backend assembles prompt from Lego blocks
           mode: travelMode || "default",
           plan: currentTier,
+          promoCode: promoCode || undefined,
           deviceId: deviceFp || (() => { try { return localStorage.getItem("jadran_device_id") || ""; } catch { return ""; } })(),
           walkieMode: walkieMode || undefined,
           camperLen: camperLen || undefined,
