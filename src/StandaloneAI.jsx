@@ -1559,11 +1559,11 @@ const [lang, setLang] = useState(() => {
                 transform: isSelected ? "scale(1.03)" : "scale(1)",
               }}>
                 {/* Background image */}
-                {hasImg && <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${regionImgs[r.id]})`, backgroundSize: "cover", backgroundPosition: "center", opacity: isSelected ? 0.5 : 0.35, transition: "opacity 0.3s" }} />}
+                {hasImg && <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${regionImgs[r.id]})`, backgroundSize: "cover", backgroundPosition: "center", opacity: isSelected ? 0.9 : 0.7, transition: "opacity 0.3s" }} />}
                 {/* Gradient overlay */}
                 <div style={{ position: "absolute", inset: 0, background: isNight
-                  ? `linear-gradient(180deg, rgba(10,22,40,${isSelected ? "0.2" : "0.4"}) 0%, rgba(10,22,40,0.85) 70%)`
-                  : `linear-gradient(180deg, rgba(255,255,255,${isSelected ? "0" : "0.1"}) 0%, rgba(255,255,255,${isSelected ? "0.6" : "0.85"}) 70%)`
+                  ? `linear-gradient(180deg, rgba(10,22,40,${isSelected ? "0.05" : "0.15"}) 0%, rgba(10,22,40,0.82) 65%)`
+                  : `linear-gradient(180deg, rgba(255,255,255,${isSelected ? "0" : "0.05"}) 0%, rgba(255,255,255,${isSelected ? "0.55" : "0.75"}) 65%)`
                 }} />
                 {/* Content */}
                 <div style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "10px 10px 12px" }}>
