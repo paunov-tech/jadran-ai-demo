@@ -392,10 +392,88 @@ function generateYoloCrowdPrompt(yoloData, userRegion) {
 
   lines.push(`\nPRAVILA ZA LIVE PODATKE:`);
   lines.push(`- Ovo su PRAVI podaci s kamera, NE procjene. Koristi ih kad gost pita o gužvi.`);
-  lines.push(`- "Trenutno je na splitskoj rivi detektovano XX osoba i YY auta — ${yoloData.totalObjects > 100 ? "prilično živo" : yoloData.totalObjects > 30 ? "umjerena aktivnost" : "mirno"}."`);
   lines.push(`- NE navodi točan broj — zaokruži: "dvadesetak osoba", "pedesetak", "stotinjak"`);
   lines.push(`- Ako je 0 detekcija → "Trenutno je mirno, idealno vrijeme za posjet."`);
   lines.push(`- Usporedi regije: ako korisnikova regija ima puno, preporuči mirniju`);
+
+  return lines.join("\n");
+}
+
+// ═══ CAMPER-SPECIFIC YOLO INTELLIGENCE ═══
+// Translates raw camera data into actionable camper advice
+function generateCamperYoloPrompt(yoloData) {
+  if (!yoloData || !yoloData.regions) return "";
+
+  // Camera → camper category mapping
+  const CAMPER_CAMS = {
+    highway: {
+      label: "AUTOCESTA / TRANZIT",
+      prefixes: ["buildzagreb","delnice","fuzine","brinje","otocac","rakovica","sisak","koprivnica","pozega"],
+      interpret: (cars, total) => cars > 30 ? "GUST PROMET — očekujte zastoje na naplatama" : cars > 10 ? "umjeren promet" : "promet teče normalno",
+    },
+    ferry: {
+      label: "TRAJEKTNE LUKE",
+      prefixes: ["tkon","drvenik","orebic","milna","sutivan","postira"],
+      interpret: (cars, total) => cars > 15 ? "RED NA TRAJEKTU — dođite 1-2h ranije!" : cars > 5 ? "umjereni red — dođite 30-60 min ranije" : "nema reda, slobodan ukrcaj",
+    },
+    bura: {
+      label: "BURA ZONE (Senj)",
+      prefixes: ["senj"],
+      interpret: (cars, total) => {
+        if (total === 0) return "⚠️ NEMA PROMETA NA SENJU — moguća zabrana zbog bure! Provjerite HAK.hr prije polaska";
+        if (cars > 10) return "promet teče normalno kroz Senj — bura ne puše";
+        return "slab promet — oprez, moguća bura";
+      },
+    },
+    cityParking: {
+      label: "GRADSKI CENTRI (parking)",
+      prefixes: ["split","dubrovnik","pula","rijeka","sibenik","trogir","makarska","omis"],
+      interpret: (cars, total) => total > 40 ? "GRAD PUN — koristite P+R ili kamp izvan centra" : total > 15 ? "umjerena gužva u centru — parkiranje otežano" : "grad miran — parkiranje ne bi trebalo biti problem",
+    },
+    coastal: {
+      label: "OBALA (kampovi/plaže)",
+      prefixes: ["brela","tucepi","bol","jelsa","vrboska","murter","nin","pag","povljana","slano","ploce"],
+      interpret: (cars, total) => total > 20 ? "popularna mjesta aktivna — rano dolazite po parking" : total > 5 ? "umjerena aktivnost" : "mirno — idealno za kampere",
+    },
+  };
+
+  const lines = [];
+  lines.push("[🚐 BIG EYE — KAMPER INTELLIGENCE iz 147 kamera]");
+
+  // Aggregate YOLO data per camper category
+  for (const [catId, cat] of Object.entries(CAMPER_CAMS)) {
+    let totalObj = 0, totalCars = 0, totalPersons = 0, activeCams = 0;
+    const hotCams = [];
+
+    for (const [regionId, regionData] of Object.entries(yoloData.regions)) {
+      for (const cam of regionData.cameras) {
+        const matchesPrefix = cat.prefixes.some(p => cam.camId.includes(p));
+        if (!matchesPrefix) continue;
+        totalObj += cam.rawCount;
+        totalCars += (cam.counts?.car || 0);
+        totalPersons += (cam.counts?.person || 0);
+        if (cam.rawCount > 0) {
+          activeCams++;
+          hotCams.push(cam);
+        }
+      }
+    }
+
+    const status = cat.interpret(totalCars, totalObj);
+    const hotList = hotCams.sort((a,b) => b.rawCount - a.rawCount).slice(0, 3)
+      .map(c => `${c.camId.replace("hr_","").replace("buildzagreb","ZG")}:${c.rawCount}`).join(", ");
+
+    lines.push(`\n${cat.label}: ${status}`);
+    lines.push(`  ${totalObj} objekata (${totalCars} auta, ${totalPersons} osoba) na ${activeCams} kamera`);
+    if (hotList) lines.push(`  Najaktivnije: ${hotList}`);
+  }
+
+  lines.push(`\nKAKO KORISTITI:
+- "Kakav je promet na A1?" → daj podatke iz AUTOCESTA sekcije
+- "Ima li reda na trajektu za Brač?" → daj podatke iz TRAJEKT sekcije
+- "Mogu li voziti kroz Senj?" → daj podatke iz BURA sekcije + "provjerite HAK"
+- "Je li gužva u Splitu?" → daj podatke iz GRADSKI CENTRI sekcije
+- NIKAD ne reci "vidim na kameri" — reci "prema našim podacima" ili "trenutno stanje"`);
 
   return lines.join("\n");
 }
@@ -822,7 +900,11 @@ PRAVILA ZA KAMERE:
 
   // 9c. LIVE YOLO CROWD DATA — injected from handler (async fetch happens there)
   if (yoloCrowdData && yoloCrowdData.totalObjects > 0) {
-    parts.push(generateYoloCrowdPrompt(yoloCrowdData, region));
+    if (mode === "camper") {
+      parts.push(generateCamperYoloPrompt(yoloCrowdData));
+    } else {
+      parts.push(generateYoloCrowdPrompt(yoloCrowdData, region));
+    }
   }
 
   // 10. DMO NUDGE — Destination Management directives from TZ partners
