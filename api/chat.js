@@ -683,14 +683,62 @@ OBAVEZNA PRAVILA (ne smiju se zaobići):
   const modePrompt = MODES[mode] || MODES.default;
   parts.push(modePrompt);
 
-  // 4b. CAMPER DIMENSIONS (critical for route safety)
-  if (mode === "camper" && (camperLen || camperHeight)) {
-    parts.push(`GABARITI VOZILA: ${camperLen ? "Dužina " + camperLen + "m" : ""}${camperLen && camperHeight ? ", " : ""}${camperHeight ? "Visina " + camperHeight + "m" : ""}. 
-KORISTI OVE DIMENZIJE za provjeru:
-- Podvožnjaci/tuneli: upozori ako je visina < ${camperHeight || "3.5"}m + 20cm sigurnosti
-- Parking: preporuči samo parkinge koji primaju vozila dužine ${camperLen || "7"}m+
-- Ulice: upozori na ulice uže od 3m ako je dužina > 7m
-- Trajekti: provjeri kategoriju naplate za dužinu ${camperLen || "7"}m`);
+  // 4b. CAMPER DIMENSIONS + AUTO-CHECKER (critical for route safety)
+  if (mode === "camper") {
+    const h = parseFloat(camperHeight) || 0;
+    const w = parseFloat(camperLen) || 0;
+
+    // PROACTIVE GABARIT WARNINGS — check against known restrictions
+    const RESTRICTIONS = [
+      { name: "Tunel Pitve (Hvar)", maxW: 2.3, maxH: 2.4, region: "split", sev: "KRITIČNO", advice: "NE PROLAZI! Ostavite vozilo u Jelsi, lokalni bus na južne plaže." },
+      { name: "Stari grad Vrbnik (Krk)", maxW: 2.0, maxH: null, region: "kvarner", sev: "OPASNO", advice: "GPS navodi unutra — NEMA povratka! Parking na ulazu, 5 min hoda do vinarije." },
+      { name: "Stari most Trogir", maxW: 2.5, maxH: 3.2, region: "split", sev: "UPOZORENJE", advice: "Koristite Novi most (Most hrvatskih branitelja) da zaobiđete centar." },
+      { name: "Biokovo Skywalk", maxW: 2.2, maxH: null, region: "split", sev: "OPASNO", advice: "Serpentine, dva auta se ne mogu mimoići. Park u podnožju + guided tour." },
+      { name: "Tunel Učka (A8)", maxW: null, maxH: 4.5, region: "istra", sev: "INFO", advice: "Većina kampera prolazi (4.5m limit). Zatvorite prozore — ventilacija!" },
+    ];
+
+    const blocked = [];
+    const warnings = [];
+    for (const r of RESTRICTIONS) {
+      if (h > 0 && r.maxH && h > r.maxH) blocked.push(`⛔ ${r.name}: visina ${r.maxH}m, vaš kamper ${h}m — ${r.sev}! ${r.advice}`);
+      else if (w > 0 && r.maxW && w > r.maxW) blocked.push(`⛔ ${r.name}: širina ${r.maxW}m — ${r.sev}! ${r.advice}`);
+      else if (h > 0 && r.maxH && h > r.maxH - 0.2) warnings.push(`⚠️ ${r.name}: limit ${r.maxH}m, vaš kamper ${h}m — tijesno! ${r.advice}`);
+    }
+
+    let gabaritPrompt = `GABARITI VOZILA: ${w ? "Dužina " + w + "m" : ""}${w && h ? ", " : ""}${h ? "Visina " + h + "m" : ""}.\n`;
+    if (blocked.length) gabaritPrompt += `\n🚫 BLOKIRANE LOKACIJE za vaš kamper:\n${blocked.join("\n")}\n\nAKO KORISNIK PITA ZA BILO KOJU OD OVIH LOKACIJA → ODMAH UPOZORI!\n`;
+    if (warnings.length) gabaritPrompt += `\n⚠️ TIJESNI PROLAZI:\n${warnings.join("\n")}\n`;
+    gabaritPrompt += `\nOPĆENITO:
+- Podvožnjaci/tuneli: upozori ako je visina < ${h || "3.5"}m + 20cm sigurnosti
+- Parking: preporuči samo parkinge koji primaju vozila dužine ${w || "7"}m+
+- Trajekti: provjeri kategoriju naplate za dužinu ${w || "7"}m
+- Krčki most: zatvara se za kampere pri buri >60 km/h
+- Senj magistrala: bočna bura, kamperi s ceradom najugroženiji`;
+    parts.push(gabaritPrompt);
+
+    // DUMP STATION CATALOG — region-specific
+    const DUMP_BY_REGION = {
+      istra: "Camping Zelena Laguna (Poreč, 5€ tranzit) | Camping Polari (Rovinj, 24/7) | Camping Stoja (Pula, 2km od Arene) | Camp Mon Perin (Bale, odličan pritisak vode!)",
+      kvarner: "Camping Omišalj (Krk, odmah nakon mosta) | Camp Kovačine (Cres, PAŽNJA: ljeti ograničavaju vodu!) | Camp Padova III (Rab/Lopar) | Autokamp Preluk (Rijeka/Opatija, bus 32)",
+      zadar: "Camping Borik (Zadar, 3km od centra) | Camping Soline (Biograd) | Camping Solaris (Šibenik, blizu NP Krka) | Camping Jezera (Murter, za Kornate)",
+      split: "Camping Stobreč (Split, bus 25, NON-STOP!) | Camping Seget (Trogir) | Camping Baško Polje (Baška Voda) | Servisna zona Dugopolje (A1, non-stop, 3€)",
+      dubrovnik: "Camping Solitudo (Dubrovnik Babin Kuk, jedini dump!) | Autocamp Murvica (Ploče, zadnji prije BiH!) | Camping Nevio (Orebić)",
+      inland: "Autocamp Zagreb (Lučko, uz A1, non-stop)",
+    };
+    const dumpList = DUMP_BY_REGION[region] || Object.values(DUMP_BY_REGION).join(" | ");
+    parts.push(`DUMP STATION BAZA (crna/siva voda + svježa voda):\n${dumpList}\nPRAVILA: Kad gost pita za dump station, prazne spremnike ili svježu vodu → preporuči KONKRETNU lokaciju iz liste. Navedi cijenu i napomenu.`);
+
+    // LPG / AUTOPLIN CATALOG
+    const LPG_BY_REGION = {
+      istra: "INA Pula (Veruda, non-stop) | Tifon Poreč | INA Pazin (unutrašnjost) | INA Umag (blizu granice)",
+      kvarner: "INA Rijeka (Škurinje) | Crodux Senj (JEDINI između Rijeke i Zadra!)",
+      zadar: "INA Zadar (Gaženica, napunite prije otoka!) | INA Šibenik",
+      split: "INA Split (Kopilica) | Tifon Makarska (jedini Makarska-Omiš) | INA Sinj",
+      dubrovnik: "INA Metković (ZADNJI prije Dubrovnika!) | INA Dubrovnik (Komolac, jedini u regiji)",
+      inland: "INA Zagreb (Lučko) | INA Karlovac",
+    };
+    const lpgList = LPG_BY_REGION[region] || Object.values(LPG_BY_REGION).join(" | ");
+    parts.push(`LPG / AUTOPLIN STANICE:\n${lpgList}\nLPG se u Hrvatskoj zove \"autoplin\". Napomena: NA OTOCIMA NEMA LPG-a! Napunite na kopnu prije trajekta. Cijena: ~0.65€/L.`);
   }
 
   // 5. LOCATION

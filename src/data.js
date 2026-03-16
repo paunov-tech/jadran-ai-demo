@@ -388,3 +388,79 @@ export const DUBROVNIK_INTEL = [
     intel: "NP Mljet je hit ali trajekt ljeti krcat. Ostavi kamper na parkingu na Pelješcu, idi kao pješak (jeftinije i brže). Na Mljetu — najam bicikala za obilazak jezera.",
     link: GYG("dubrovnik-l518/cruises-boat-tours-tc48/?q=mljet+island") },
 ];
+
+// ═══ CAMPER DUMP STATIONS ═══
+// Verified locations for black/grey water disposal and fresh water
+export const DUMP_STATIONS = [
+  // ISTRA
+  { id: "ds_porec", name: "Camping Zelena Laguna", city: "Poreč", region: "istra", lat: 45.19, lon: 13.59, blackWater: true, greyWater: true, freshWater: true, electric: false, price: "Besplatno za goste / 5€ tranzit", hours: "08-20h", note: "Najveći dump point u Istri. Lako pristupačan." },
+  { id: "ds_rovinj", name: "Camping Polari", city: "Rovinj", region: "istra", lat: 45.06, lon: 13.63, blackWater: true, greyWater: true, freshWater: true, electric: true, price: "Besplatno za goste / 7€ tranzit", hours: "Non-stop", note: "Na ulazu u kamp, ne morate unutra. Pitajte na recepciji." },
+  { id: "ds_pula_stoja", name: "Camping Stoja", city: "Pula", region: "istra", lat: 44.85, lon: 13.83, blackWater: true, greyWater: true, freshWater: true, electric: false, price: "5€", hours: "08-20h", note: "2km od Arene. Dump + voda na ulazu." },
+  { id: "ds_umag", name: "Camping Park Umag", city: "Umag", region: "istra", lat: 45.43, lon: 13.52, blackWater: true, greyWater: true, freshWater: true, electric: false, price: "Besplatno za goste / 5€", hours: "08-20h", note: "Blizu granice sa Slovenijom — prvi stop." },
+  { id: "ds_bale", name: "Camp Mon Perin", city: "Bale", region: "istra", lat: 45.03, lon: 13.78, blackWater: true, greyWater: true, freshWater: true, electric: false, price: "5€", hours: "08-22h", note: "Odličan pritisak vode za brzo punjenje! Rijedak u regiji." },
+  // KVARNER
+  { id: "ds_krk_omisalj", name: "Camping Omišalj", city: "Omišalj, Krk", region: "kvarner", lat: 45.21, lon: 14.55, blackWater: true, greyWater: true, freshWater: true, electric: true, price: "Besplatno za goste / 8€", hours: "08-20h", note: "Odmah nakon Krčkog mosta — idealno za prvi stop." },
+  { id: "ds_krk_njivice", name: "Camping Njivice", city: "Njivice, Krk", region: "kvarner", lat: 45.16, lon: 14.53, blackWater: true, greyWater: true, freshWater: true, electric: false, price: "5€", hours: "08-20h", note: "Manji kamp, mirno, dump pristupačan s ceste." },
+  { id: "ds_cres", name: "Camp Kovačine", city: "Cres", region: "kvarner", lat: 44.97, lon: 14.40, blackWater: true, greyWater: true, freshWater: true, electric: false, price: "6€", hours: "08-20h (ljeti do 22h)", note: "PAŽNJA: ljeti ograničavaju vodu! Napunite spremnike na kopnu." },
+  { id: "ds_rab", name: "Camp Padova III", city: "Rab", region: "kvarner", lat: 44.76, lon: 14.76, blackWater: true, greyWater: true, freshWater: true, electric: false, price: "Besplatno za goste / 5€", hours: "08-20h", note: "Blizu Lopar plaže. Dump na ulazu." },
+  { id: "ds_rijeka", name: "Autokamp Preluk", city: "Rijeka/Opatija", region: "kvarner", lat: 45.35, lon: 14.34, blackWater: true, greyWater: true, freshWater: true, electric: true, price: "5€", hours: "Non-stop", note: "3km od centra Opatije. Bus 32 do grada." },
+  // ZADAR / ŠIBENIK
+  { id: "ds_zadar", name: "Camping Borik", city: "Zadar", region: "zadar", lat: 44.14, lon: 15.20, blackWater: true, greyWater: true, freshWater: true, electric: false, price: "5€", hours: "08-20h", note: "Najbliži dump centru Zadra — 3km od Morskih orgulja." },
+  { id: "ds_biograd", name: "Camping Soline", city: "Biograd na Moru", region: "zadar", lat: 43.93, lon: 15.45, blackWater: true, greyWater: true, freshWater: true, electric: true, price: "7€", hours: "08-22h", note: "Veliki kamp, puni servis. Blizu NP Kornati polazišta." },
+  { id: "ds_sibenik", name: "Camping Solaris", city: "Šibenik", region: "zadar", lat: 43.71, lon: 15.87, blackWater: true, greyWater: true, freshWater: true, electric: true, price: "8€", hours: "08-20h", note: "Resort-stil ali ima javni dump. Blizu NP Krka." },
+  { id: "ds_vodice", name: "Camping Imperial", city: "Vodice", region: "zadar", lat: 43.76, lon: 15.78, blackWater: true, greyWater: true, freshWater: true, electric: false, price: "5€", hours: "08-20h", note: "Između Šibenika i Vodica." },
+  { id: "ds_murter", name: "Camping Jezera", city: "Jezera, Murter", region: "zadar", lat: 43.77, lon: 15.66, blackWater: true, greyWater: true, freshWater: true, electric: false, price: "Besplatno za goste", hours: "08-20h", note: "Polazište za Kornate. Dump na ulazu u kamp." },
+  // SPLIT / MAKARSKA
+  { id: "ds_split_stobrec", name: "Camping Stobreč Split", city: "Stobreč", region: "split", lat: 43.50, lon: 16.49, blackWater: true, greyWater: true, freshWater: true, electric: true, price: "7€", hours: "Non-stop", note: "Najbliži dump Splitu! Bus 25 do Dioklecijanove. 24/7 pristup." },
+  { id: "ds_trogir", name: "Camping Seget", city: "Trogir", region: "split", lat: 43.52, lon: 16.20, blackWater: true, greyWater: true, freshWater: true, electric: false, price: "5€", hours: "08-20h", note: "Prekoputa starog grada Trogira." },
+  { id: "ds_makarska", name: "Camping Baško Polje", city: "Baška Voda", region: "split", lat: 43.36, lon: 16.92, blackWater: true, greyWater: true, freshWater: true, electric: false, price: "5€", hours: "08-20h", note: "Rivijera Makarska. Pristup s magistrale." },
+  { id: "ds_omis", name: "Camping Galeb", city: "Omiš", region: "split", lat: 43.44, lon: 16.70, blackWater: true, greyWater: true, freshWater: true, electric: false, price: "5€", hours: "08-20h", note: "Ušće Cetine. Blizu raftinga." },
+  // DUBROVNIK
+  { id: "ds_dubrovnik", name: "Camping Solitudo", city: "Dubrovnik (Babin Kuk)", region: "dubrovnik", lat: 42.66, lon: 18.05, blackWater: true, greyWater: true, freshWater: true, electric: true, price: "8€", hours: "08-20h", note: "Jedini dump blizu Dubrovnika! Bus 6 do Starog grada." },
+  { id: "ds_ploce", name: "Autocamp Murvica", city: "Ploče", region: "dubrovnik", lat: 43.04, lon: 17.42, blackWater: true, greyWater: true, freshWater: true, electric: false, price: "5€", hours: "08-20h", note: "Pred Neum — zadnji dump prije BiH koridora." },
+  { id: "ds_orebic", name: "Camping Nevio", city: "Orebić, Pelješac", region: "dubrovnik", lat: 42.98, lon: 17.18, blackWater: true, greyWater: true, freshWater: true, electric: false, price: "5€", hours: "08-20h", note: "Pelješac poluotok. Trajekt za Korčulu 5 min." },
+  // GORSKI KOTAR / ZAGREB
+  { id: "ds_zagreb", name: "Autocamp Zagreb", city: "Zagreb (Lučko)", region: "inland", lat: 45.76, lon: 15.89, blackWater: true, greyWater: true, freshWater: true, electric: true, price: "5€", hours: "Non-stop", note: "Odmah uz A1 izlaz Lučko. Prvi/zadnji stop iz/za Austriju." },
+  { id: "ds_dugopolje", name: "Servisna zona Dugopolje", city: "Dugopolje (Split)", region: "split", lat: 43.58, lon: 16.56, blackWater: true, greyWater: true, freshWater: true, electric: false, price: "3€", hours: "Non-stop", note: "Odmorište na A1. Brz dump bez skretanja s autoceste." },
+];
+
+// ═══ LPG / AUTOPLIN STATIONS (coastal corridor) ═══
+// Source: mylpg.eu + INA network, verified locations along tourist routes
+export const LPG_STATIONS = [
+  // ISTRA
+  { id: "lpg_pula", name: "INA Pula (Veruda)", city: "Pula", region: "istra", lat: 44.85, lon: 13.85, brand: "INA", note: "Blizu Marine Veruda. Radi non-stop." },
+  { id: "lpg_porec", name: "Tifon Poreč", city: "Poreč", region: "istra", lat: 45.22, lon: 13.60, brand: "Tifon", note: "Ulaz u grad sa istoka." },
+  { id: "lpg_pazin", name: "INA Pazin", city: "Pazin", region: "istra", lat: 45.24, lon: 13.94, brand: "INA", note: "Centar Istre — ako idete u unutrašnjost." },
+  { id: "lpg_umag", name: "INA Umag", city: "Umag", region: "istra", lat: 45.43, lon: 13.52, brand: "INA", note: "Blizu granice. Zadnja šansa za jeftini LPG." },
+  // KVARNER
+  { id: "lpg_rijeka", name: "INA Rijeka (Škurinje)", city: "Rijeka", region: "kvarner", lat: 45.34, lon: 14.41, brand: "INA", note: "Glavni LPG point Kvarnera." },
+  { id: "lpg_senj", name: "Crodux Senj", city: "Senj", region: "kvarner", lat: 45.00, lon: 14.90, brand: "Crodux", note: "Magistrala — jedini LPG između Rijeke i Zadra!" },
+  // ZADAR
+  { id: "lpg_zadar", name: "INA Zadar (Gaženica)", city: "Zadar", region: "zadar", lat: 44.10, lon: 15.25, brand: "INA", note: "Blizu trajektne luke. Napunite prije otoka!" },
+  { id: "lpg_sibenik", name: "INA Šibenik", city: "Šibenik", region: "zadar", lat: 43.73, lon: 15.90, brand: "INA", note: "Na ulazu u grad sa A1." },
+  // SPLIT
+  { id: "lpg_split", name: "INA Split (Kopilica)", city: "Split", region: "split", lat: 43.51, lon: 16.44, brand: "INA", note: "Najbliži LPG centru Splita." },
+  { id: "lpg_sinj", name: "INA Sinj", city: "Sinj", region: "split", lat: 43.70, lon: 16.64, brand: "INA", note: "Unutrašnjost — ako idete za Imotski/BiH." },
+  { id: "lpg_makarska", name: "Tifon Makarska", city: "Makarska", region: "split", lat: 43.30, lon: 17.01, brand: "Tifon", note: "Rivijera. Jedini LPG Makarska-Omiš." },
+  // DUBROVNIK
+  { id: "lpg_metkovic", name: "INA Metković", city: "Metković", region: "dubrovnik", lat: 43.05, lon: 17.65, brand: "INA", note: "Zadnji LPG prije Dubrovnika! Napunite OVDJE." },
+  { id: "lpg_dubrovnik", name: "INA Dubrovnik (Komolac)", city: "Dubrovnik", region: "dubrovnik", lat: 42.67, lon: 18.05, brand: "INA", note: "Jedini LPG u dubrovačkoj regiji." },
+  // ZAGREB / TRANZIT
+  { id: "lpg_zagreb", name: "INA Zagreb (Lučko)", city: "Zagreb", region: "inland", lat: 45.76, lon: 15.91, brand: "INA", note: "A1 čvorište — napunite za put na jug." },
+  { id: "lpg_karlovac", name: "INA Karlovac", city: "Karlovac", region: "inland", lat: 45.49, lon: 15.55, brand: "INA", note: "Između Zagreba i obale." },
+];
+
+// ═══ CAMPER DIMENSION RESTRICTIONS ═══
+// Used by gabarit auto-checker to proactively warn
+export const DIMENSION_RESTRICTIONS = [
+  { id: "restr_pitve", name: "Tunel Pitve (Hvar)", width: 2.3, height: 2.4, region: "split", severity: "critical", advice: "Većina kampera NE PROLAZI! Ostavite vozilo u Jelsi." },
+  { id: "restr_vrbnik", name: "Stari grad Vrbnik (Krk)", width: 2.0, height: null, region: "kvarner", severity: "high", advice: "GPS navodi unutra — NEMA povratka! Parking na ulazu." },
+  { id: "restr_trogir_bridge", name: "Stari most Trogir", width: 2.5, height: 3.2, region: "split", severity: "medium", advice: "Koristite Novi most (Most hrvatskih branitelja)." },
+  { id: "restr_rovinj", name: "Centar Rovinj", width: null, height: null, region: "istra", severity: "medium", maxWeight: 3.5, advice: "Zabrana >3.5t! Parking Valdibora ili Končeta." },
+  { id: "restr_opatija", name: "Centar Opatije", width: null, height: null, region: "kvarner", severity: "medium", maxWeight: 3.5, advice: "Zabrana >3.5t! Camp Preluk (3km) + bus 32." },
+  { id: "restr_ucka", name: "Tunel Učka", width: null, height: 4.5, region: "istra", severity: "low", advice: "Većina kampera prolazi (4.5m limit). Zatvorite prozore!" },
+  { id: "restr_biokovo", name: "Biokovo Skywalk pristup", width: 2.2, height: null, region: "split", severity: "high", advice: "Serpentine, dva auta se teško mimoilaze. Park u podnožju." },
+  { id: "restr_krk_bridge", name: "Krčki most (bura)", width: null, height: null, region: "kvarner", severity: "high", windLimit: 60, advice: "Zatvara se za kampere pri buri >60 km/h! Alternativa: trajekt Crikvenica-Šilo." },
+  { id: "restr_senj", name: "Magistrala Senj (Vratnik)", width: null, height: null, region: "kvarner", severity: "high", windLimit: 60, advice: "Bura udari bočno! Kamperi s ceradom najugroženiji. Pričekajte na Vratniku." },
+  { id: "restr_prizna", name: "Trajekt Prizna-Žigljen (Pag)", width: null, height: null, region: "kvarner", severity: "high", windLimit: 60, advice: "Zabrana za kampere pri buri >60 km/h. Koristite Paški most." },
+];
