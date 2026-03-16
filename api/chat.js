@@ -275,7 +275,7 @@ function buildWeatherCtx(weather) {
 
 // ── LANGUAGE MAP ──
 const LANG_MAP = {
-  hr: "Hrvatski", de: "Deutsch (Sie-Form, formell)", at: "Österreichisches Deutsch (du-Form, Jause statt Brotzeit, Schmankerl, leiwand)",
+  hr: "Hrvatski", de: "Deutsch (Sie-Form, formell)", at: "Österreichisches Deutsch (du-Form, locker, Jause statt Brotzeit, Schmankerl, Beisl/Wirtshaus, fesch, super — kein übertriebener Dialekt, einfach natürliches österreichisches Deutsch)",
   en: "English", it: "Italiano", si: "Slovenščina", cz: "Čeština", pl: "Polski",
 };
 
