@@ -857,6 +857,53 @@ OBAVEZNA PRAVILA (ne smiju se zaobići):
     };
     const lpgList = LPG_BY_REGION[region] || Object.values(LPG_BY_REGION).join(" | ");
     parts.push(`LPG / AUTOPLIN STANICE:\n${lpgList}\nLPG se u Hrvatskoj zove \"autoplin\". Napomena: NA OTOCIMA NEMA LPG-a! Napunite na kopnu prije trajekta. Cijena: ~0.65€/L.`);
+
+    // CAMPSITE CATALOG — region-specific recommendations
+    const CAMPS_BY_REGION = {
+      istra: `KAMPOVI (Istra):
+• Camping Polari, Rovinj ★★★★ 35-55€ — Aqua park, 3.5km centra. maistra.com
+• Camping Veštar, Rovinj ★★★★ 35-55€ — Mirnija uvala. maistra.com
+• Camping Stoja, Pula ★★★ 25-40€ — 2km od Arene! Najjeftiniji.
+• Camping Lanterna, Tar ★★★★ 40-65€ — Mega-resort, 3500 parcela. Aquapark.
+• Camp Mon Perin, Bale ★★★ 25-38€ — Tih, maslinici, odlična voda!
+• Camping Park Umag ★★★★ 35-55€ — Blizu SLO granice, prvi stop iz AT.`,
+      kvarner: `KAMPOVI (Kvarner):
+• Camping Omišalj, Krk ★★★ 28-42€ — Odmah nakon mosta!
+• Valamar Ježevac, Krk ★★★★ 38-58€ — 5 min do starog grada. Premium.
+• Baška Beach, Krk ★★★★ 35-55€ — Plaža Vela. Malo sjene.
+• Padova Premium, Rab ★★★★ 35-52€ — Lopar pijesak 10 min.
+• Autokamp Preluk, Rijeka ★★ 18-28€ — NAJJEFTINIJI! Bus 32 do Opatije.
+• Camp Kovačine, Cres ★★★ 30-45€ — Ljeti ograničavaju vodu!`,
+      zadar: `KAMPOVI (Zadar/Šibenik):
+• Camping Straško, Novalja ★★★ 25-40€ — Blizu Zrće ali miran.
+• Camping Borik, Zadar ★★★ 25-38€ — 3km od Morskih orgulja.
+• Camping Solaris, Šibenik ★★★★ 35-55€ — Aquapark! PIJESAK plaža. NP Krka 15 min.
+• Camping Jezera, Murter ★★★ 22-35€ — Za Kornate. Mali, miran.
+• Camping Soline, Biograd ★★★★ 30-50€ — Baza za Kornate + Paklenica.
+• Camping Šimuni, Pag ★★★★ 30-50€ — Rijedak pijesak na Pagu!`,
+      split: `KAMPOVI (Split/Makarska):
+• Camping Stobreč, Split ★★★★ 35-55€ — Bus 25 do centra. 24/7 dump. NAJBLIŽI!
+• Amadria Camping, Trogir ★★★ 28-45€ — Pogled na stari grad.
+• Camping Baško Polje, Baška Voda ★★★ 25-38€ — Magistrala, plaža 50m.
+• Camping Galeb, Omiš ★★★ 22-35€ — Ušće Cetine. Rafting 5 min!`,
+      dubrovnik: `KAMPOVI (Dubrovnik):
+• Camping Solitudo, Babin Kuk ★★★ 35-55€ — JEDINI blizu Dubrovnika! Bus 6. Obavezna rez. ljeti!
+• Camping Nevio, Orebić ★★★ 22-35€ — Pelješac, trajekt Korčula 5 min.
+• Camping Port 9, Korčula ★★★★ 32-48€ — Grad 10 min hoda. Bazen.`,
+      inland: `KAMPOVI (tranzit):
+• Camping Korana, Plitvice ★★★ 25-40€ — Uz NP! Rijeka za kupanje.
+• Autocamp Zagreb, Lučko ★★ 18-28€ — Uz A1. Non-stop dump. Tranzitni.`,
+    };
+    const campList = CAMPS_BY_REGION[region] || Object.values(CAMPS_BY_REGION).join("\n");
+    parts.push(`${campList}
+PRAVILA ZA KAMPOVE:
+- Cijene su OKVIRNE za visoku sezonu (parcela + 2 odrasle + struja). Van sezone 30-50% manje.
+- Kad gost pita "koji kamp preporučuješ" → pitaj PRVO: budžet, djeca, bazen, blizina grada?
+- Jeftino (<30€): Stoja, Preluk, Galeb, Mon Perin, Zagreb
+- S djecom (bazen): Polari, Lanterna, Ježevac, Solaris, Stobreč
+- Mir i tišina: Mon Perin, Jezera, Galeb, Nevio, Kovačine
+- Blizu grada: Stobreč(Split), Stoja(Pula), Ježevac(Krk), Borik(Zadar), Solitudo(Dubrovnik)
+- NIKAD ne izmišljaj kampove koji nisu na listi. Ako ne znaš, reci "provjerite camping.hr za kompletnu ponudu".`);
   }
 
   // 5. LOCATION
