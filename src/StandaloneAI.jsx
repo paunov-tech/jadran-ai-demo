@@ -1003,7 +1003,7 @@ const [lang, setLang] = useState(() => {
             .then(r => r.json()).then(d => {
               if (d.ok && !d.already) {
                 // Invited user (Klaus) gets NO premium — just a thank-you toast
-                setGlobalToast(lang === "en" ? "🔗 Link accepted! Enjoy 3 free messages." : lang === "de" || lang === "at" ? "🔗 Link akzeptiert! 3 Nachrichten gratis." : lang === "it" ? "🔗 Link accettato! 3 messaggi gratis." : "🔗 Link prihvaćen! 3 besplatne poruke.");
+                setGlobalToast(lang === "en" ? "🔗 Link accepted! Enjoy 3 free messages." : lang === "de" || lang === "at" ? "🔗 Link akzeptiert! 3 Nachrichten gratis." : lang === "it" ? "🔗 Link accettato! 3 messaggi gratis." : lang === "si" ? "🔗 Povezava sprejeta! 3 brezplačna sporočila." : lang === "cz" ? "🔗 Odkaz přijat! 3 zprávy zdarma." : lang === "pl" ? "🔗 Link zaakceptowany! 3 darmowe wiadomości." : "🔗 Link prihvaćen! 3 besplatne poruke.");
                 setTimeout(() => setGlobalToast(null), 4000);
                 try { localStorage.removeItem("jadran_invited_by"); } catch {}
               }

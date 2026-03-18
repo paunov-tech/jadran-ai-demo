@@ -4,6 +4,7 @@ import Stripe from "stripe";
 export const config = { api: { bodyParser: false } };
 
 // Firestore REST API write — zero dependencies, uses public API key
+// NOTE: Intentional duplication — Vercel serverless cannot import sibling files
 async function writePremium(deviceId, data) {
   const projectId = "molty-portal";
   const apiKey = process.env.FIREBASE_API_KEY;

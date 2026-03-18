@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 
 // Firestore REST write — backup persistence (same as webhook.js)
+// NOTE: Intentional duplication — Vercel serverless cannot import sibling files
 async function writePremium(deviceId, data) {
   const projectId = "molty-portal";
   const apiKey = process.env.FIREBASE_API_KEY;

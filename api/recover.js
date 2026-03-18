@@ -12,6 +12,7 @@ function recoverRateOk(ip) {
 }
 
 // Firestore REST write
+// NOTE: Intentional duplication — Vercel serverless cannot import sibling files
 async function writePremium(deviceId, data) {
   const projectId = "molty-portal";
   const apiKey = process.env.FIREBASE_API_KEY;

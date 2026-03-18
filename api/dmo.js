@@ -447,12 +447,25 @@ async function runProbe(destId) {
 }
 
 // ═══ API HANDLER ═══
+// Rate limit: 20 DMO calls/hour per IP (probe = Google Places API credits)
+const _dmoRL = new Map();
+function dmoRateOk(ip) {
+  const now = Date.now(), WIN = 3600000;
+  for (const [k, v] of _dmoRL) { if (now > v.r) _dmoRL.delete(k); }
+  const e = _dmoRL.get(ip);
+  if (!e || now > e.r) { _dmoRL.set(ip, { c: 1, r: now + WIN }); return true; }
+  if (e.c >= 20) return false;
+  e.c++; return true;
+}
+
 export default async function handler(req, res) {
   const OK = ["https://jadran.ai","https://monte-negro.ai","https://greek-islands.ai"];
   res.setHeader("Access-Control-Allow-Origin", OK.includes(req.headers.origin)?req.headers.origin:"https://jadran.ai");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method==="OPTIONS") return res.status(200).end();
+  const clientIp = (req.headers["x-forwarded-for"] || "unknown").split(",")[0].trim();
+  if (!dmoRateOk(clientIp)) return res.status(429).json({ ok: false, error: "Too many requests. Try again later." });
 
   try {
     const p = req.method==="GET" ? req.query : (req.body||{});

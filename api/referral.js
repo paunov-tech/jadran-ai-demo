@@ -1,6 +1,6 @@
 // /api/referral.js — Viral referral engine
 // When invited user sends first message, rewards SHARER (Hans) with 24h premium
-// Invited user (Klaus) gets standard 10-msg trial only — no free premium
+// Invited user (Klaus) gets standard 3-msg trial only — no free premium
 // Uses Firestore REST API (no firebase-admin dependency)
 
 const PROJECT_ID = "molty-portal";
@@ -86,7 +86,7 @@ export default async function handler(req, res) {
         source: "referral_reward",
       });
 
-      // INVITED user (Klaus) gets NOTHING extra — standard 10-msg trial
+      // INVITED user (Klaus) gets NOTHING extra — standard 3-msg trial
       // We DO record the relationship for partner chain tracking:
       // If Klaus later buys, we can trace Klaus → Hans → Black Jack (partner)
       await fsWrite(`jadran_referrals/${deviceId}`, {
