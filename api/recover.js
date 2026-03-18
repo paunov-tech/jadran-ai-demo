@@ -54,9 +54,11 @@ export default async function handler(req, res) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) return res.status(400).json({ error: "Invalid email" });
 
     // Search Stripe for completed checkout sessions by customer email (paginate up to 100)
-    let found = null;
+    // Collect ALL matches, then pick BEST plan (highest tier with latest expiry)
+    const TIER_RANK = { vip: 3, season: 2, week: 1 };
+    const matches = [];
     let startingAfter = undefined;
-    for (let page = 0; page < 5 && !found; page++) {
+    for (let page = 0; page < 5; page++) {
       const params = { limit: 20, status: "complete" };
       if (startingAfter) params.starting_after = startingAfter;
       const sessions = await stripe.checkout.sessions.list(params);
@@ -65,8 +67,12 @@ export default async function handler(req, res) {
         if (sEmail === cleanEmail && s.payment_status === "paid") {
           const meta = s.metadata || {};
           if (meta.plan && ["week", "season", "vip"].includes(meta.plan)) {
-            found = s;
-            break;
+            const days = parseInt(meta.days || "7");
+            const paidAt = new Date(s.created * 1000);
+            const expiresAt = new Date(paidAt.getTime() + days * 86400000);
+            if (expiresAt.getTime() > Date.now()) {
+              matches.push({ session: s, meta, days, paidAt, expiresAt, rank: TIER_RANK[meta.plan] || 0 });
+            }
           }
         }
       }
@@ -74,17 +80,16 @@ export default async function handler(req, res) {
       startingAfter = sessions.data[sessions.data.length - 1]?.id;
     }
 
-    if (!found) return res.status(404).json({ error: "No JADRAN payment found for this email" });
-
-    const meta = found.metadata || {};
-    const days = parseInt(meta.days || "7");
-    const paidAt = new Date(found.created * 1000);
-    const expiresAt = new Date(paidAt.getTime() + days * 86400000);
-
-    // Check if subscription is still valid
-    if (expiresAt.getTime() < Date.now()) {
-      return res.status(410).json({ error: "Subscription expired", plan: meta.plan, expiredAt: expiresAt.toISOString() });
+    if (matches.length === 0) {
+      // Check if there were expired ones
+      // Re-scan for any match to give better error
+      return res.status(404).json({ error: "No active JADRAN payment found for this email" });
     }
+
+    // Pick best: highest tier, then latest expiry
+    matches.sort((a, b) => b.rank - a.rank || b.expiresAt.getTime() - a.expiresAt.getTime());
+    const best = matches[0];
+    const { session: found, meta, days, paidAt, expiresAt } = best;
 
     // Write premium to Firestore under NEW deviceId
     const written = await writePremium(deviceId, {

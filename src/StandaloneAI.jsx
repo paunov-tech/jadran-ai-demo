@@ -1161,7 +1161,7 @@ const [lang, setLang] = useState(() => {
   };
 
   // ═══ PAYWALL MODAL ═══
-  const Paywall = () => showPaywall && (
+  const paywallJsx = showPaywall && (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)", zIndex: 300, display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "min(10dvh, 60px) 24px 24px" }}
       onClick={() => { setShowPaywall(false); setUpsellFeature(null); setShowRecovery(false); setRecoveryStatus(null); setRecoveryEmail(""); }}>
       <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "28px 20px", maxWidth: 480, width: "100%", border: "1px solid rgba(245,158,11,0.1)", maxHeight: "90dvh", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
@@ -1248,58 +1248,28 @@ const [lang, setLang] = useState(() => {
           <div style={{ fontSize: 8, color: C.mut, marginTop: 4 }}>{lang === "en" ? "Prices incl. VAT" : lang === "de" || lang === "at" ? "Preise inkl. MwSt." : lang === "it" ? "Prezzi IVA inclusa" : "Cijene uklj. PDV"} · SIAL Consulting d.o.o.</div>
         </div>
 
-        {/* ═══ REFERRAL SHARE — Smart Exit ═══ */}
-        {(() => {
-          let did; try { did = localStorage.getItem("jadran_device_id"); } catch {} if (!did) return null;
-          const inviteUrl = `https://jadran.ai/ai?invite=${did}`;
-          const shareText = lang === "de" || lang === "at"
-            ? `Leute, hab eine geniale KI für Kroatien gefunden. Löst Camper-Parkplätze, Fähren und findet versteckte Konobas ohne Touristenpreise. Probiert es kostenlos — 10 Fragen gratis: ${inviteUrl}`
-            : lang === "en"
-            ? `Found an amazing AI for Croatia trips. Solves camper parking, ferries and finds hidden restaurants without tourist prices. Try it free — 10 questions on the house: ${inviteUrl}`
-            : lang === "it"
-            ? `Ho trovato un'IA geniale per la Croazia. Risolve parcheggi camper, traghetti e trova ristoranti nascosti. Provatelo gratis — 10 domande omaggio: ${inviteUrl}`
-            : `Ljudi, našao sam genijalan AI za Hrvatsku. Rješava parkinge za kampere, trajekte i nalazi skrivene konobe bez turističkih cijena. Probajte besplatno — 10 pitanja gratis: ${inviteUrl}`;
-          return (
-            <div style={{ marginTop: 16, padding: "16px", borderRadius: 14, background: isNight ? "rgba(34,197,94,0.04)" : "rgba(34,197,94,0.06)", border: `1px solid ${isNight ? "rgba(34,197,94,0.12)" : "rgba(34,197,94,0.15)"}` }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#22c55e", marginBottom: 6 }}>
-                🎁 {lang === "en" ? "Share & earn 24h Premium!" : lang === "de" || lang === "at" ? "Teilen & 24h Premium verdienen!" : lang === "it" ? "Condividi & guadagna 24h Premium!" : "Podijeli i osvoji 24h Premium!"}
-              </div>
-              <div style={{ fontSize: 11, color: C.mut, lineHeight: 1.5, marginBottom: 12 }}>
-                {lang === "en" ? "Share your link. When a friend asks their first question, YOU get 24h Premium free." : lang === "de" || lang === "at" ? "Teile deinen Link. Wenn ein Freund seine erste Frage stellt, bekommst DU 24h Premium gratis." : lang === "it" ? "Condividi il tuo link. Quando un amico fa la prima domanda, TU ricevi 24h Premium gratis." : "Podijeli svoj link. Kada prijatelj postavi prvo pitanje, TI dobivaš 24h Premium besplatno."}
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <button onClick={() => { window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank"); track("referral_share", { channel: "whatsapp" }); }} style={{ padding: "12px 16px", borderRadius: 12, border: "none", background: "#25D366", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                  🟢 {lang === "en" ? "Send via WhatsApp" : lang === "de" || lang === "at" ? "Per WhatsApp senden" : lang === "it" ? "Invia su WhatsApp" : "Pošalji na WhatsApp"}
-                </button>
-                <button onClick={() => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(inviteUrl)}&quote=${encodeURIComponent(shareText)}`, "_blank"); track("referral_share", { channel: "facebook" }); }} style={{ padding: "12px 16px", borderRadius: 12, border: "none", background: "#1877F2", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                  🔵 {lang === "en" ? "Share in Facebook group" : lang === "de" || lang === "at" ? "In Facebook-Gruppe teilen" : lang === "it" ? "Condividi nel gruppo Facebook" : "Podijeli u Facebook grupu"}
-                </button>
-                <button onClick={() => { navigator.clipboard?.writeText(inviteUrl).then(() => { setReferralToast(lang === "en" ? "Link copied!" : lang === "de" || lang === "at" ? "Link kopiert!" : lang === "it" ? "Link copiato!" : "Link kopiran!"); setTimeout(() => setReferralToast(null), 2000); }); track("referral_share", { channel: "copy" }); }} style={{ padding: "12px 16px", borderRadius: 12, border: `1px solid ${C.bord}`, background: "transparent", color: C.text, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                  🔗 {referralToast || (lang === "en" ? "Copy your secret link" : lang === "de" || lang === "at" ? "Deinen geheimen Link kopieren" : lang === "it" ? "Copia il tuo link segreto" : "Kopiraj svoj tajni link")}
-                </button>
-              </div>
-            </div>
-          );
-        })()}
-        <button onClick={() => { setShowPaywall(false); setUpsellFeature(null); setShowRecovery(false); setRecoveryStatus(null); setRecoveryEmail(""); }} style={{ width: "100%", background: "none", border: "none", color: C.mut, fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: 8 }}>{t.payLater}</button>
-        {/* ═══ RECOVERY FLOW ═══ */}
+        {/* ═══ RECOVERY FLOW — above referral, easy to reach ═══ */}
         {!showRecovery ? (
-          <button onClick={() => { setShowRecovery(true); setRecoveryStatus(null); setRecoveryError(""); }} style={{ width: "100%", background: "none", border: "none", color: C.acc, fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: "4px 8px", textDecoration: "underline", opacity: 0.8 }}>{t.payRecover}</button>
+          <div style={{ textAlign: "center", marginTop: 8 }}>
+            <button onClick={() => { setShowRecovery(true); setRecoveryStatus(null); setRecoveryError(""); }} style={{ background: "none", border: "none", color: C.acc, fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: "6px 12px", textDecoration: "underline", opacity: 0.8 }}>{t.payRecover}</button>
+          </div>
         ) : (
-          <div style={{ padding: "12px 0 4px", borderTop: `1px solid ${C.bord}` }}>
+          <div style={{ padding: "12px 16px", marginTop: 8, borderRadius: 12, background: isNight ? "rgba(14,165,233,0.06)" : "rgba(14,165,233,0.04)", border: `1px solid ${isNight ? "rgba(14,165,233,0.15)" : "rgba(14,165,233,0.1)"}` }}>
             {recoveryStatus === "success" ? (
               <div style={{ textAlign: "center", color: "#22c55e", fontSize: 13, fontWeight: 600, padding: 8 }}>{t.payRecoverOk}</div>
             ) : (
               <>
+                <div style={{ fontSize: 11, color: C.mut, marginBottom: 8 }}>{t.payRecoverEmail}</div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <input
                     type="email"
                     inputMode="email"
                     autoComplete="email"
+                    autoFocus
                     value={recoveryEmail}
                     onChange={e => setRecoveryEmail(e.target.value)}
-                    placeholder={t.payRecoverEmail}
-                    style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: `1px solid ${recoveryStatus === "error" || recoveryStatus === "expired" ? "#ef4444" : C.bord}`, background: isNight ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)", color: C.text, fontSize: 16, fontFamily: "inherit", outline: "none" }}
+                    placeholder="email@example.com"
+                    style={{ flex: 1, padding: "12px 14px", borderRadius: 10, border: `1px solid ${recoveryStatus === "error" || recoveryStatus === "expired" ? "#ef4444" : C.bord}`, background: isNight ? "rgba(255,255,255,0.08)" : "#fff", color: C.text, fontSize: 16, fontFamily: "inherit", outline: "none" }}
                     onFocus={e => { setTimeout(() => e.target.scrollIntoView({ behavior: "smooth", block: "center" }), 300); }}
                     onKeyDown={e => { if (e.key === "Enter") document.getElementById("jadran-recover-btn")?.click(); }}
                   />
@@ -1331,7 +1301,7 @@ const [lang, setLang] = useState(() => {
                         })
                         .catch(() => { setRecoveryStatus("error"); setRecoveryError(t.payRecoverFail); });
                     }}
-                    style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: recoveryStatus === "loading" ? C.mut : C.acc, color: "#fff", fontSize: 13, fontWeight: 600, cursor: recoveryStatus === "loading" ? "wait" : "pointer", fontFamily: "inherit", whiteSpace: "nowrap", opacity: !recoveryEmail.includes("@") ? 0.5 : 1 }}
+                    style={{ padding: "12px 18px", borderRadius: 10, border: "none", background: recoveryStatus === "loading" ? C.mut : C.acc, color: "#fff", fontSize: 13, fontWeight: 600, cursor: recoveryStatus === "loading" ? "wait" : "pointer", fontFamily: "inherit", whiteSpace: "nowrap", opacity: !recoveryEmail.includes("@") ? 0.5 : 1 }}
                   >{recoveryStatus === "loading" ? "..." : t.payRecoverBtn}</button>
                 </div>
                 {recoveryError && <div style={{ color: "#ef4444", fontSize: 11, marginTop: 6, textAlign: "center" }}>{recoveryError}</div>}
@@ -1339,6 +1309,41 @@ const [lang, setLang] = useState(() => {
             )}
           </div>
         )}
+
+        {/* ═══ REFERRAL SHARE — Smart Exit ═══ */}
+        {(() => {
+          let did; try { did = localStorage.getItem("jadran_device_id"); } catch {} if (!did) return null;
+          const inviteUrl = `https://jadran.ai/ai?invite=${did}`;
+          const shareText = lang === "de" || lang === "at"
+            ? `Leute, hab eine geniale KI für Kroatien gefunden. Löst Camper-Parkplätze, Fähren und findet versteckte Konobas ohne Touristenpreise. Probiert es kostenlos — 3 Fragen gratis: ${inviteUrl}`
+            : lang === "en"
+            ? `Found an amazing AI for Croatia trips. Solves camper parking, ferries and finds hidden restaurants without tourist prices. Try it free — 3 questions on the house: ${inviteUrl}`
+            : lang === "it"
+            ? `Ho trovato un'IA geniale per la Croazia. Risolve parcheggi camper, traghetti e trova ristoranti nascosti. Provatelo gratis — 3 domande omaggio: ${inviteUrl}`
+            : `Ljudi, našao sam genijalan AI za Hrvatsku. Rješava parkinge za kampere, trajekte i nalazi skrivene konobe bez turističkih cijena. Probajte besplatno — 3 pitanja gratis: ${inviteUrl}`;
+          return (
+            <div style={{ marginTop: 16, padding: "16px", borderRadius: 14, background: isNight ? "rgba(34,197,94,0.04)" : "rgba(34,197,94,0.06)", border: `1px solid ${isNight ? "rgba(34,197,94,0.12)" : "rgba(34,197,94,0.15)"}` }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#22c55e", marginBottom: 6 }}>
+                🎁 {lang === "en" ? "Share & earn 24h Premium!" : lang === "de" || lang === "at" ? "Teilen & 24h Premium verdienen!" : lang === "it" ? "Condividi & guadagna 24h Premium!" : "Podijeli i osvoji 24h Premium!"}
+              </div>
+              <div style={{ fontSize: 11, color: C.mut, lineHeight: 1.5, marginBottom: 12 }}>
+                {lang === "en" ? "Share your link. When a friend asks their first question, YOU get 24h Premium free." : lang === "de" || lang === "at" ? "Teile deinen Link. Wenn ein Freund seine erste Frage stellt, bekommst DU 24h Premium gratis." : lang === "it" ? "Condividi il tuo link. Quando un amico fa la prima domanda, TU ricevi 24h Premium gratis." : "Podijeli svoj link. Kada prijatelj postavi prvo pitanje, TI dobivaš 24h Premium besplatno."}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <button onClick={() => { window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank"); track("referral_share", { channel: "whatsapp" }); }} style={{ padding: "12px 16px", borderRadius: 12, border: "none", background: "#25D366", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  🟢 {lang === "en" ? "Send via WhatsApp" : lang === "de" || lang === "at" ? "Per WhatsApp senden" : lang === "it" ? "Invia su WhatsApp" : "Pošalji na WhatsApp"}
+                </button>
+                <button onClick={() => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(inviteUrl)}&quote=${encodeURIComponent(shareText)}`, "_blank"); track("referral_share", { channel: "facebook" }); }} style={{ padding: "12px 16px", borderRadius: 12, border: "none", background: "#1877F2", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  🔵 {lang === "en" ? "Share in Facebook group" : lang === "de" || lang === "at" ? "In Facebook-Gruppe teilen" : lang === "it" ? "Condividi nel gruppo Facebook" : "Podijeli u Facebook grupu"}
+                </button>
+                <button onClick={() => { navigator.clipboard?.writeText(inviteUrl).then(() => { setReferralToast(lang === "en" ? "Link copied!" : lang === "de" || lang === "at" ? "Link kopiert!" : lang === "it" ? "Link copiato!" : "Link kopiran!"); setTimeout(() => setReferralToast(null), 2000); }); track("referral_share", { channel: "copy" }); }} style={{ padding: "12px 16px", borderRadius: 12, border: `1px solid ${C.bord}`, background: "transparent", color: C.text, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  🔗 {referralToast || (lang === "en" ? "Copy your secret link" : lang === "de" || lang === "at" ? "Deinen geheimen Link kopieren" : lang === "it" ? "Copia il tuo link segreto" : "Kopiraj svoj tajni link")}
+                </button>
+              </div>
+            </div>
+          );
+        })()}
+        <button onClick={() => { setShowPaywall(false); setUpsellFeature(null); setShowRecovery(false); setRecoveryStatus(null); setRecoveryEmail(""); }} style={{ width: "100%", background: "none", border: "none", color: C.mut, fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: 8 }}>{t.payLater}</button>
         <div style={{ textAlign: "center", marginTop: 4 }}>
           <a href="/" target="_blank" rel="noopener" style={{ fontSize: 8, color: C.mut, opacity: 0.6, textDecoration: "none" }}>{lang === "en" ? "Terms & Privacy" : lang === "de" || lang === "at" ? "Impressum & Datenschutz" : lang === "it" ? "Termini e Privacy" : "Uvjeti i privatnost"}</a>
         </div>
@@ -1347,7 +1352,7 @@ const [lang, setLang] = useState(() => {
   );
 
   // ═══ INVITE WELCOME — what the referred friend sees ═══
-  const InviteWelcome = () => showInviteWelcome && (
+  const inviteWelcomeJsx = showInviteWelcome && (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)", zIndex: 280, display: "grid", placeItems: "center", padding: 24 }}
       onClick={() => setShowInviteWelcome(false)}>
       <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "32px 24px", maxWidth: 420, width: "100%", border: "1px solid rgba(34,197,94,0.15)", textAlign: "center" }}>
