@@ -1114,8 +1114,8 @@ const [lang, setLang] = useState(() => {
 
   // ═══ PAYWALL MODAL ═══
   const Paywall = () => showPaywall && (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)", zIndex: 300, display: "grid", placeItems: "center", padding: 24 }}
-      onClick={() => { setShowPaywall(false); setUpsellFeature(null); }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)", zIndex: 300, display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "min(10dvh, 60px) 24px 24px" }}
+      onClick={() => { setShowPaywall(false); setUpsellFeature(null); setShowRecovery(false); setRecoveryStatus(null); setRecoveryEmail(""); }}>
       <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "28px 20px", maxWidth: 480, width: "100%", border: "1px solid rgba(245,158,11,0.1)", maxHeight: "90dvh", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         <div style={{ textAlign: "center", marginBottom: 16 }}>
           <div style={{ fontSize: 28, marginBottom: 6 }}>🔒</div>
@@ -1246,10 +1246,13 @@ const [lang, setLang] = useState(() => {
                 <div style={{ display: "flex", gap: 8 }}>
                   <input
                     type="email"
+                    inputMode="email"
+                    autoComplete="email"
                     value={recoveryEmail}
                     onChange={e => setRecoveryEmail(e.target.value)}
                     placeholder={t.payRecoverEmail}
-                    style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: `1px solid ${recoveryStatus === "error" || recoveryStatus === "expired" ? "#ef4444" : C.bord}`, background: isNight ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)", color: C.text, fontSize: 13, fontFamily: "inherit", outline: "none" }}
+                    style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: `1px solid ${recoveryStatus === "error" || recoveryStatus === "expired" ? "#ef4444" : C.bord}`, background: isNight ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.03)", color: C.text, fontSize: 16, fontFamily: "inherit", outline: "none" }}
+                    onFocus={e => { setTimeout(() => e.target.scrollIntoView({ behavior: "smooth", block: "center" }), 300); }}
                     onKeyDown={e => { if (e.key === "Enter") document.getElementById("jadran-recover-btn")?.click(); }}
                   />
                   <button
