@@ -458,6 +458,7 @@ const [lang, setLang] = useState(() => {
   const [nowMs, setNowMs] = useState(Date.now()); // Live countdown timer
   const [msgCount, setMsgCount] = useState(0);
   const [deviceFp, setDeviceFp] = useState(null);
+  const [isOffline, setIsOffline] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
   const [promoCode] = useState(() => {
     try {
       const p = new URLSearchParams(window.location.search).get("promo");
@@ -561,6 +562,41 @@ const [lang, setLang] = useState(() => {
   useEffect(() => { try { if (travelMode) localStorage.setItem("jadran_travelMode", travelMode); } catch {} }, [travelMode]);
   // Live countdown timer — updates badge every 60s so "29d" → "28d" transitions are visible
   useEffect(() => { const t = setInterval(() => setNowMs(Date.now()), 60000); return () => clearInterval(t); }, []);
+
+  // ── OFFLINE DETECTION ──
+  useEffect(() => {
+    const goOff = () => setIsOffline(true);
+    const goOn = () => setIsOffline(false);
+    window.addEventListener("online", goOn);
+    window.addEventListener("offline", goOff);
+    return () => { window.removeEventListener("online", goOn); window.removeEventListener("offline", goOff); };
+  }, []);
+
+  // ── PREMIUM EXPIRY RE-CHECK on tab focus ──
+  // Catches: expired while away, localStorage cleared by another tab, premium revoked
+  useEffect(() => {
+    const checkPremium = () => {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const raw = localStorage.getItem("jadran_premium_plan");
+        if (!raw) {
+          // No plan data but premium flag set — trust flag (promo code or legacy)
+          if (premium && !promoCode) {
+            const flag = localStorage.getItem("jadran_ai_premium");
+            if (flag !== "1") { setPremium(false); setTrialExpired(true); }
+          }
+          return;
+        }
+        const plan = JSON.parse(raw);
+        if (plan.expiresAt && plan.expiresAt < Date.now()) {
+          setPremium(false); setTrialExpired(true); setPremiumPlan(null);
+          try { localStorage.removeItem("jadran_ai_premium"); localStorage.removeItem("jadran_premium_plan"); } catch {}
+        }
+      } catch {}
+    };
+    document.addEventListener("visibilitychange", checkPremium);
+    return () => document.removeEventListener("visibilitychange", checkPremium);
+  }, [premium, promoCode]);
 
   // Auto-generate icebreaker when entering chat with no messages (e.g. premium auto-skip)
   useEffect(() => {
@@ -950,6 +986,18 @@ const [lang, setLang] = useState(() => {
   // ─── AI CHAT ───
   const sendMsg = async () => {
     if (!input.trim() || loading) return;
+    // ── OFFLINE GUARD — don't burn trial messages on network errors ──
+    if (isOffline) {
+      const offMsg = lang === "en" ? "No internet connection. Please check your signal and try again."
+        : lang === "de" || lang === "at" ? "Keine Internetverbindung. Bitte Signal prüfen."
+        : lang === "it" ? "Nessuna connessione internet. Controlla il segnale."
+        : lang === "si" ? "Ni internetne povezave. Preverite signal."
+        : lang === "cz" ? "Žádné připojení k internetu. Zkontrolujte signál."
+        : lang === "pl" ? "Brak połączenia z internetem. Sprawdź sygnał."
+        : "Nema internet veze. Provjeri signal i pokušaj ponovo.";
+      setMsgs(prev => [...prev, { role: "assistant", text: "📡 " + offMsg }]);
+      return;
+    }
     if (!premium && trialExpired) { setShowPaywall(true); track("paywall_shown", { lang, region, niche }); return; }
     // Premium daily limit — cost control
     if (premium) {
@@ -2497,6 +2545,14 @@ const [lang, setLang] = useState(() => {
               📸 {t.walkieSnap}
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Offline banner */}
+      {isOffline && (
+        <div style={{ padding: "8px 16px", background: "rgba(239,68,68,0.1)", borderTop: `1px solid rgba(239,68,68,0.2)`, display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#ef4444", fontWeight: 600 }}>
+          <span>📡</span>
+          <span>{lang === "en" ? "Offline — check your connection" : lang === "de" || lang === "at" ? "Offline — Verbindung prüfen" : lang === "it" ? "Offline — controlla la connessione" : lang === "si" ? "Brez povezave" : lang === "cz" ? "Offline — zkontrolujte připojení" : lang === "pl" ? "Offline — sprawdź połączenie" : "Offline — provjeri vezu"}</span>
         </div>
       )}
 
