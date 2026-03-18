@@ -52,20 +52,25 @@ export default async function handler(req, res) {
     const cleanEmail = String(email).trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) return res.status(400).json({ error: "Invalid email" });
 
-    // Search Stripe for completed checkout sessions by customer email
-    const sessions = await stripe.checkout.sessions.list({ limit: 20, status: "complete" });
-    
+    // Search Stripe for completed checkout sessions by customer email (paginate up to 100)
     let found = null;
-    for (const s of sessions.data) {
-      const sEmail = (s.customer_details?.email || s.customer_email || "").toLowerCase();
-      if (sEmail === cleanEmail && s.payment_status === "paid") {
-        const meta = s.metadata || {};
-        // Verify it's a JADRAN payment (has plan metadata)
-        if (meta.plan && ["week", "season", "vip"].includes(meta.plan)) {
-          found = s;
-          break; // most recent match
+    let startingAfter = undefined;
+    for (let page = 0; page < 5 && !found; page++) {
+      const params = { limit: 20, status: "complete" };
+      if (startingAfter) params.starting_after = startingAfter;
+      const sessions = await stripe.checkout.sessions.list(params);
+      for (const s of sessions.data) {
+        const sEmail = (s.customer_details?.email || s.customer_email || "").toLowerCase();
+        if (sEmail === cleanEmail && s.payment_status === "paid") {
+          const meta = s.metadata || {};
+          if (meta.plan && ["week", "season", "vip"].includes(meta.plan)) {
+            found = s;
+            break;
+          }
         }
       }
+      if (!sessions.has_more) break;
+      startingAfter = sessions.data[sessions.data.length - 1]?.id;
     }
 
     if (!found) return res.status(404).json({ error: "No JADRAN payment found for this email" });

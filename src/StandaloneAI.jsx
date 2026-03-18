@@ -1233,7 +1233,7 @@ const [lang, setLang] = useState(() => {
             </div>
           );
         })()}
-        <button onClick={() => { setShowPaywall(false); setUpsellFeature(null); }} style={{ width: "100%", background: "none", border: "none", color: C.mut, fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: 8 }}>{t.payLater}</button>
+        <button onClick={() => { setShowPaywall(false); setUpsellFeature(null); setShowRecovery(false); setRecoveryStatus(null); setRecoveryEmail(""); }} style={{ width: "100%", background: "none", border: "none", color: C.mut, fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: 8 }}>{t.payLater}</button>
         {/* ═══ RECOVERY FLOW ═══ */}
         {!showRecovery ? (
           <button onClick={() => { setShowRecovery(true); setRecoveryStatus(null); setRecoveryError(""); }} style={{ width: "100%", background: "none", border: "none", color: C.acc, fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: "4px 8px", textDecoration: "underline", opacity: 0.8 }}>{t.payRecover}</button>
