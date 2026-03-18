@@ -2583,7 +2583,7 @@ const [lang, setLang] = useState(() => {
       </div>
 
       {paywallJsx}
-      <InviteWelcome />
+      {inviteWelcomeJsx}
       <VerifyingOverlay />
       <SuccessModal />
       {globalToast && <div style={{ position: "fixed", top: 24, left: "50%", transform: "translateX(-50%)", zIndex: 500, background: "linear-gradient(135deg, #22c55e, #16a34a)", color: "#fff", padding: "14px 28px", borderRadius: 16, fontSize: 15, fontWeight: 700, fontFamily: "'Playfair Display',Georgia,serif", boxShadow: "0 8px 32px rgba(34,197,94,0.4)", animation: "fadeInDown 0.3s ease", whiteSpace: "nowrap" }}>{globalToast}</div>}
