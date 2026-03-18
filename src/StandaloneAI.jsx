@@ -1251,7 +1251,7 @@ const [lang, setLang] = useState(() => {
         {/* ═══ RECOVERY FLOW — above referral, easy to reach ═══ */}
         {!showRecovery ? (
           <div style={{ textAlign: "center", marginTop: 8 }}>
-            <button onClick={() => { setShowRecovery(true); setRecoveryStatus(null); setRecoveryError(""); }} style={{ background: "none", border: "none", color: C.acc, fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: "6px 12px", textDecoration: "underline", opacity: 0.8 }}>{t.payRecover}</button>
+            <button onClick={() => { setShowRecovery(true); setRecoveryStatus(null); setRecoveryError(""); }} style={{ background: "none", border: "none", color: C.accent, fontSize: 12, cursor: "pointer", fontFamily: "inherit", padding: "6px 12px", textDecoration: "underline", opacity: 0.8 }}>{t.payRecover}</button>
           </div>
         ) : (
           <div style={{ padding: "12px 16px", marginTop: 8, borderRadius: 12, background: isNight ? "rgba(14,165,233,0.06)" : "rgba(14,165,233,0.04)", border: `1px solid ${isNight ? "rgba(14,165,233,0.15)" : "rgba(14,165,233,0.1)"}` }}>
@@ -1301,7 +1301,7 @@ const [lang, setLang] = useState(() => {
                         })
                         .catch(() => { setRecoveryStatus("error"); setRecoveryError(t.payRecoverFail); });
                     }}
-                    style={{ padding: "12px 18px", borderRadius: 10, border: "none", background: recoveryStatus === "loading" ? C.mut : C.acc, color: "#fff", fontSize: 13, fontWeight: 600, cursor: recoveryStatus === "loading" ? "wait" : "pointer", fontFamily: "inherit", whiteSpace: "nowrap", opacity: !recoveryEmail.includes("@") ? 0.5 : 1 }}
+                    style={{ padding: "12px 18px", borderRadius: 10, border: "none", background: recoveryStatus === "loading" ? C.mut : C.accent, color: "#fff", fontSize: 13, fontWeight: 600, cursor: recoveryStatus === "loading" ? "wait" : "pointer", fontFamily: "inherit", whiteSpace: "nowrap", opacity: !recoveryEmail.includes("@") ? 0.5 : 1 }}
                   >{recoveryStatus === "loading" ? "..." : t.payRecoverBtn}</button>
                 </div>
                 {recoveryError && <div style={{ color: "#ef4444", fontSize: 11, marginTop: 6, textAlign: "center" }}>{recoveryError}</div>}
@@ -2582,7 +2582,7 @@ const [lang, setLang] = useState(() => {
           }}>↑</button>
       </div>
 
-      <Paywall />
+      {paywallJsx}
       <InviteWelcome />
       <VerifyingOverlay />
       <SuccessModal />
