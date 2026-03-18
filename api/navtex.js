@@ -2,13 +2,26 @@
 // Source: https://meteo.hr/prognoze.php?section=prognoze_specp&param=pomorci
 // Official Croatian Meteorological Service — maritime safety forecast
 
+// Rate limit: 30/hour per IP (scrapes external government site)
+const _rl = new Map();
+function navRateOk(ip) {
+  const now = Date.now(), WIN = 3600000;
+  for (const [k, v] of _rl) { if (now > v.r) _rl.delete(k); }
+  const e = _rl.get(ip);
+  if (!e || now > e.r) { _rl.set(ip, { c: 1, r: now + WIN }); return true; }
+  if (e.c >= 30) return false;
+  e.c++; return true;
+}
+
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', (["https://jadran.ai","https://monte-negro.ai","https://greek-islands.ai"].includes(req.headers.origin) ? req.headers.origin : "https://jadran.ai"));
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=1800'); // 30min cache
 
   if (req.method === 'OPTIONS') return res.status(200).end();
+  const clientIp = (req.headers["x-forwarded-for"] || "unknown").split(",")[0].trim();
+  if (!navRateOk(clientIp)) return res.status(429).json({ error: "Too many requests" });
 
   try {
     // Fetch BOTH pages: NAVTEX + nautičari prognoza

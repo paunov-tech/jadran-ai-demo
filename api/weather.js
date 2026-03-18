@@ -1,9 +1,21 @@
 // Weather API — uses Open-Meteo (FREE, no key, unlimited)
-// Podstrana coordinates: 43.4917° N, 16.5531° E
+// Rate limit: 60/hour per IP (Open-Meteo is free but be polite)
+const _rl = new Map();
+function wxRateOk(ip) {
+  const now = Date.now(), WIN = 3600000;
+  for (const [k, v] of _rl) { if (now > v.r) _rl.delete(k); }
+  const e = _rl.get(ip);
+  if (!e || now > e.r) { _rl.set(ip, { c: 1, r: now + WIN }); return true; }
+  if (e.c >= 60) return false;
+  e.c++; return true;
+}
+
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', (["https://jadran.ai","https://monte-negro.ai","https://greek-islands.ai"].includes(req.headers.origin) ? req.headers.origin : "https://jadran.ai"));
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
+  const clientIp = (req.headers["x-forwarded-for"] || "unknown").split(",")[0].trim();
+  if (!wxRateOk(clientIp)) return res.status(429).json({ error: "Too many requests" });
 
   try {
     // Accept region coordinates via query params, default to Split/Podstrana
