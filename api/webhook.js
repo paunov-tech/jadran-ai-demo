@@ -71,6 +71,7 @@ export default async function handler(req, res) {
         expiresAt: new Date(Date.now() + days * 86400000),
         sessionId: session.id,
         amount: session.amount_total,
+        email: session.customer_details?.email || session.customer_email || "",
         partnerRef: meta.partnerRef || "",
       });
     }
