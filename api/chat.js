@@ -1032,7 +1032,7 @@ TVOJ ZADATAK:
 
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin === 'https://jadran.ai' ? 'https://jadran.ai' : req.headers.origin || '*');
+  res.setHeader('Access-Control-Allow-Origin', (["https://jadran.ai","https://monte-negro.ai","https://greek-islands.ai"].includes(req.headers.origin) ? req.headers.origin : "https://jadran.ai"));
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
@@ -1102,7 +1102,6 @@ export default async function handler(req, res) {
     // ── FAIR USAGE: Layer 3 — Tier-aware per-device limit ──
     // SECURITY: Don't trust frontend plan claim without deviceId
     // Without deviceId, default to free (prevents curl spoofing)
-    const clientIp = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "").split(",")[0].trim();
     const promoCode = req.body.promoCode || "";
     const promo = PROMO_CODES[promoCode.toUpperCase()];
     const promoValid = promo && new Date(promo.expires) > new Date();
@@ -1145,11 +1144,13 @@ export default async function handler(req, res) {
         const maxCount = Math.max(ipCount, fpCount);
         if (maxCount >= 3) {
           const exhaustMsg = lang === "de" || lang === "at"
-            ? "Ihre 10 kostenlosen Nachrichten sind aufgebraucht. Upgraden Sie auf Premium für unbegrenzte Nutzung!"
-            : lang === "en" ? "Your 10 free messages are used up. Upgrade to Premium for unlimited access!"
-            : lang === "it" ? "I tuoi 10 messaggi gratuiti sono esauriti. Passa a Premium per accesso illimitato!"
-            : lang === "fr" ? "Vos 10 messages gratuits sont épuisés. Passez à Premium pour un accès illimité !"
-            : "Vaših 10 besplatnih poruka je iskorišteno. Nadogradite na Premium za neograničen pristup!";
+            ? "Ihre 3 kostenlosen Nachrichten sind aufgebraucht. Upgraden Sie auf Premium für unbegrenzte Nutzung."
+            : lang === "en" ? "Your 3 free messages are used up. Upgrade to Premium for unlimited access."
+            : lang === "it" ? "I tuoi 3 messaggi gratuiti sono esauriti. Passa a Premium per accesso illimitato."
+            : lang === "si" ? "Vaša 3 brezplačna sporočila so porabljena. Nadgradite na Premium za neomejen dostop."
+            : lang === "cz" ? "Vaše 3 bezplatné zprávy byly vyčerpány. Přejděte na Premium pro neomezený přístup."
+            : lang === "pl" ? "Twoje 3 darmowe wiadomości zostały wykorzystane. Przejdź na Premium, aby uzyskać nieograniczony dostęp."
+            : "Vaše 3 besplatne poruke su iskorištene. Nadogradite na Premium za neograničen pristup.";
           return res.status(429).json({ content: [{ type: "text", text: "⭐ " + exhaustMsg }], _exhausted: true });
         }
 
