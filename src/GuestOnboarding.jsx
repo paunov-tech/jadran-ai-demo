@@ -50,13 +50,15 @@ const TX = {
   si: { welcome:"Dobrodošli!", sub:"Vaš osebni turistični vodič za Jadran", s1:"Kdo ste?", s2:"Kdaj prihajate?", s3:"Kaj vas zanima?", name:"Ime (npr. Družina Weber)", country:"Država", cin:"Prihod", cout:"Odhod", adults:"Odrasli", kids:"Otroci", next:"Naprej", back:"Nazaj", go:"Začnite avanturo!", pick2:"Izberite vsaj 2", nights:"noči", saving:"Pripravljamo..." },
   cz: { welcome:"Vítejte!", sub:"Váš osobní průvodce na dovolenou", s1:"Kdo jste?", s2:"Kdy přijedete?", s3:"Co vás zajímá?", name:"Jméno", country:"Země", cin:"Příjezd", cout:"Odjezd", adults:"Dospělí", kids:"Děti", next:"Další", back:"Zpět", go:"Začněte!", pick2:"Vyberte 2+", nights:"nocí", saving:"Připravujeme..." },
   pl: { welcome:"Witajcie!", sub:"Wasz osobisty przewodnik na urlop", s1:"Kim jesteście?", s2:"Kiedy?", s3:"Co was interesuje?", name:"Imię", country:"Kraj", cin:"Przyjazd", cout:"Wyjazd", adults:"Dorośli", kids:"Dzieci", next:"Dalej", back:"Wstecz", go:"Start!", pick2:"Wybierz 2+", nights:"nocy", saving:"Przygotowujemy..." },
-  at: { welcome:"Willkommen!", sub:"Ihr persönlicher Reiseberater für die Adria", s1:"Wer sind Sie?", s2:"Wann kommen Sie?", s3:"Was interessiert Sie?", name:"Name (z.B. Familie Weber)", country:"Land", cin:"Anreise", cout:"Abreise", adults:"Erwachsene", kids:"Kinder", next:"Weiter", back:"Zurück", go:"Abenteuer starten!", pick2:"Mindestens 2 Interessen", nights:"Nächte", saving:"Wird vorbereitet..." },
 };
+TX.at = { ...TX.de }; // AT = standard Hochdeutsch, identical to DE
 
 function langFromCountry(c) { return { DE:"de",AT:"at",HR:"hr",IT:"it",SI:"si",CZ:"cz",PL:"pl" }[c] || "en"; }
 
 /* ── COMPONENT ── */
 export default function GuestOnboarding({ roomCode, onComplete }) {
+  const track = (event, props) => { try { window.plausible?.(event, { props }); } catch {} };
+
   const [step, setStep] = useState(0);
   const [lang, setLang] = useState("en");
   const [saving, setSaving] = useState(false);
@@ -71,7 +73,7 @@ export default function GuestOnboarding({ roomCode, onComplete }) {
   const [kids, setKids] = useState(0);
   const [interests, setInterests] = useState([]);
 
-  useEffect(() => { setTimeout(() => setAnim(true), 100); }, []);
+  useEffect(() => { setTimeout(() => setAnim(true), 100); track("GuestOnboardingStarted", { roomCode }); }, []);
   useEffect(() => { if (country) setLang(langFromCountry(country)); }, [country]);
 
   const t = TX[lang] || TX.en;
@@ -120,6 +122,10 @@ export default function GuestOnboarding({ roomCode, onComplete }) {
     };
     try {
       await saveGuest(roomCode, guestData);
+      track("GuestOnboardingCompleted", { roomCode, country: guestData.country });
+      fetch("/api/notify", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "checkin", guestName: guestData.name, roomCode, dates: `${checkIn}–${checkOut}` }),
+      }).catch(() => {});
       setTimeout(() => onComplete(guestData), 800);
     } catch (err) {
       console.error("Save error:", err);

@@ -532,25 +532,26 @@ const B2B_PARTNERS = {
     pitch: "Smještaj Black Jack Rab — mirna lokacija, domaća atmosfera, lako do centra i plaža.",
     keywords: ["rab", "rabu", "grad rab", "stari grad rab", "rab town"],
   },
-  // TEMPLATE — Srđan adds partners here:
-  // "JAD-KAS-001": {
-  //   name: "Konoba X, Kaštela",
-  //   type: "restaurant",
-  //   hotspots: ["split_centar", "split_riva"],
-  //   threshold: 85,
-  //   radius: "15 min vožnje od Splita",
-  //   pitch: "Konoba X u Kaštelima — mirna lokacija uz more, parking, autentična dalmatinska kuhinja. 15 min od Splita.",
-  //   keywords: ["split", "riva", "dioklecijan", "centar splita", "splitu"],
-  // },
-  // "JAD-CAV-001": {
-  //   name: "Restoran Y, Cavtat",
-  //   type: "restaurant",
-  //   hotspots: ["dubrovnik_stradun"],
-  //   threshold: 85,
-  //   radius: "25 min brodićem iz Dubrovnika",
-  //   pitch: "Restoran Y u Cavtatu — brodićem 25 min, bez gradske gužve, pogled na luku.",
-  //   keywords: ["dubrovnik", "stradun", "stari grad dubrovnik", "old town"],
-  // },
+  "JAD-KAS-001": {
+    name: "Kaštela Rivijera",
+    type: "destination",
+    hotspots: ["split_makarska"], // DMO_MACRO key
+    threshold: 85,
+    radius: "15 min vožnje od Splita",
+    pitch: "Kaštela Rivijera — mirna obiteljska destinacija uz more, 15 min od Splita. Autentična dalmatinska atmosfera bez gradske gužve.",
+    keywords: ["split", "riva", "dioklecijan", "centar splita", "splitu", "kaštela", "kastela"],
+    fallback: "DMO_MACRO",
+  },
+  "JAD-CAV-001": {
+    name: "Cavtat & Konavle",
+    type: "destination",
+    hotspots: ["dubrovnik"], // DMO_MACRO key
+    threshold: 85,
+    radius: "25 min brodićem iz Dubrovnika",
+    pitch: "Cavtat i Konavle — brodićem 25 min od Dubrovnika, bez gradske gužve, kristalno more, pogled na luku i stari grad.",
+    keywords: ["dubrovnik", "stradun", "stari grad dubrovnik", "old town", "dubrovniku", "cavtat"],
+    fallback: "DMO_MACRO",
+  },
 };
 
 // Check if user's message mentions a B2B partner's hotspot
@@ -565,7 +566,8 @@ function checkB2BRedirect(userMessage, userRegion) {
 
     // Is the hotspot currently overcrowded?
     for (const hotspot of partner.hotspots) {
-      const sub = RAB_SUBS[hotspot];
+      // DMO_MACRO fallback for partners that aren't in RAB_SUBS
+      const sub = partner.fallback === "DMO_MACRO" ? DMO_MACRO[hotspot] : RAB_SUBS[hotspot];
       if (!sub) continue;
       const est = _estOcc(sub.bl, new Date(), hotspot);
       if (est >= partner.threshold) {

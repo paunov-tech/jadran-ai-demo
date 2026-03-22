@@ -1640,7 +1640,7 @@ const [lang, setLang] = useState(() => {
             <div style={{ fontSize: 11, color: C.mut, letterSpacing: 3, marginBottom: 12, fontWeight: 500 }}>{t.mode}</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
               {TRAVEL_MODES.map(m => (
-                <div key={m.id} onClick={() => setTravelMode(m.id)} style={{
+                <div key={m.id} onClick={() => { setTravelMode(m.id); track("niche_selected", { mode: m.id }); }} style={{
                   padding: "16px 12px", borderRadius: 16, textAlign: "center", cursor: "pointer",
                   background: travelMode === m.id ? "rgba(14,165,233,0.12)" : C.card,
                   border: `1px solid ${travelMode === m.id ? "#0ea5e9" : C.bord}`,
@@ -1665,6 +1665,7 @@ const [lang, setLang] = useState(() => {
               return (
               <div key={r.id} onClick={() => {
                 setRegion(r.id);
+                track("region_selected", { region: r.id });
                 if (travelMode) {
                   const ice = generateIcebreaker(r.id);
                   setMsgs([{ role: "assistant", text: ice }]);

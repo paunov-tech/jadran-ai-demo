@@ -6,7 +6,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useCallback } from "react";
 import { db } from "./firebase";
-import { collection, doc, getDocs, getDoc, setDoc, deleteDoc, query, where, onSnapshot, serverTimestamp } from "firebase/firestore";
+import { collection, doc, getDocs, setDoc, deleteDoc, onSnapshot, orderBy, limit, query } from "firebase/firestore";
 
 const COLL_APT = "apartments";
 const COLL_GUEST = "guests";
@@ -45,6 +45,11 @@ export default function HostPanel() {
 
   // Detail view
   const [viewApt, setViewApt] = useState(null);
+
+  // Revenue dashboard
+  const [activeTab, setActiveTab] = useState("apts"); // "apts" | "prihodi"
+  const [revenues, setRevenues] = useState([]);
+  const [revLoading, setRevLoading] = useState(false);
 
   // ─── AUTH ───
   const HOST_PIN = "jadran2026"; // Simple pin for MVP
@@ -126,6 +131,27 @@ export default function HostPanel() {
 
   // ─── GUEST for apartment ───
   const guestForApt = (roomCode) => guests.find(g => (g.roomCode || g.id) === roomCode);
+
+  // ─── LOAD REVENUES ───
+  const loadRevenues = async () => {
+    if (!db || revLoading) return;
+    setRevLoading(true);
+    try {
+      const q = query(collection(db, "jadran_premium"), orderBy("paidAt", "desc"), limit(100));
+      const snap = await getDocs(q);
+      setRevenues(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    } catch {
+      // paidAt index may not exist — fallback without order
+      try {
+        const snap = await getDocs(collection(db, "jadran_premium"));
+        const sorted = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => {
+          const ta = a.paidAt?.seconds || 0; const tb = b.paidAt?.seconds || 0;
+          return tb - ta;
+        });
+        setRevenues(sorted.slice(0, 100));
+      } catch {}
+    } finally { setRevLoading(false); }
+  };
 
   // ─── STYLES ───
   const C = {
@@ -268,6 +294,16 @@ export default function HostPanel() {
           </div>
         </div>
 
+        {/* Tab bar */}
+        <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+          {[["apts", "🏠 Apartmani"], ["prihodi", "💰 Prihodi"]].map(([id, label]) => (
+            <button key={id} onClick={() => { setActiveTab(id); if (id === "prihodi" && revenues.length === 0) loadRevenues(); }}
+              style={{ padding: "10px 20px", borderRadius: 12, border: `1px solid ${activeTab === id ? C.accent : C.bord}`, background: activeTab === id ? "rgba(14,165,233,0.12)" : "transparent", color: activeTab === id ? C.accent : C.mut, fontSize: 13, fontWeight: activeTab === id ? 600 : 400, cursor: "pointer" }}>
+              {label}
+            </button>
+          ))}
+        </div>
+
         {/* Stats bar */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 12, marginBottom: 24 }}>
           {[
@@ -283,8 +319,76 @@ export default function HostPanel() {
           ))}
         </div>
 
+        {/* Revenue Dashboard */}
+        {activeTab === "prihodi" && (() => {
+          const now = Date.now();
+          const active = revenues.filter(r => {
+            const exp = r.expiresAt?.seconds ? r.expiresAt.seconds * 1000 : (r.expiresAt || 0);
+            return exp > now;
+          });
+          const totalEur = revenues.reduce((s, r) => s + (r.amount ? r.amount / 100 : 0), 0);
+          const planCounts = { week: 0, season: 0, vip: 0 };
+          revenues.forEach(r => { if (planCounts[r.plan] !== undefined) planCounts[r.plan]++; });
+          const maskEmail = e => e ? e.replace(/(.{2})(.*)(@.*)/, (_, a, b, c) => a + "***" + c) : "—";
+          const fmtDate = v => {
+            if (!v) return "—";
+            const ms = v.seconds ? v.seconds * 1000 : (typeof v === "string" ? new Date(v).getTime() : v);
+            return new Date(ms).toLocaleDateString("hr");
+          };
+          return (
+            <div>
+              {/* Summary cards */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 12, marginBottom: 24 }}>
+                {[
+                  { label: "Ukupni prihod", value: `${totalEur.toFixed(2)} €`, icon: "💶", color: C.gold },
+                  { label: "Aktivne pretplate", value: active.length, icon: "✅", color: C.green },
+                  { label: "Tjedne (9,99€)", value: planCounts.week, icon: "📅", color: C.accent },
+                  { label: "Sezonske (19,99€)", value: planCounts.season, icon: "☀️", color: "#fb923c" },
+                  { label: "VIP (49,99€)", value: planCounts.vip, icon: "⭐", color: C.gold },
+                  { label: "Ukupno transakcija", value: revenues.length, icon: "📊", color: "#a78bfa" },
+                ].map((s, i) => (
+                  <div key={i} style={{ background: C.card, borderRadius: 16, padding: "16px 14px", border: `1px solid ${C.bord}`, backdropFilter: "blur(20px)" }}>
+                    <div style={{ fontSize: 11, color: C.mut, marginBottom: 6 }}>{s.icon} {s.label}</div>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: s.color }}>{s.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Payment list */}
+              {revLoading ? (
+                <div style={{ textAlign: "center", padding: 40, color: C.mut }}>Učitavanje prihoda...</div>
+              ) : revenues.length === 0 ? (
+                <div style={{ textAlign: "center", padding: 40, background: C.card, borderRadius: 20, border: `1px dashed ${C.bord}`, color: C.mut }}>
+                  Nema transakcija. Pretplate će se prikazati ovdje.
+                </div>
+              ) : (
+                <div style={{ background: C.card, borderRadius: 20, border: `1px solid ${C.bord}`, overflow: "hidden" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr 0.8fr 0.8fr 0.8fr", padding: "12px 16px", borderBottom: `1px solid ${C.bord}`, fontSize: 10, color: C.mut, fontWeight: 600, letterSpacing: 1 }}>
+                    <span>DATUM</span><span>EMAIL</span><span>PLAN</span><span>IZNOS</span><span>STATUS</span>
+                  </div>
+                  {revenues.map((r, i) => {
+                    const expMs = r.expiresAt?.seconds ? r.expiresAt.seconds * 1000 : (r.expiresAt || 0);
+                    const isActive = expMs > now;
+                    return (
+                      <div key={r.id} style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr 0.8fr 0.8fr 0.8fr", padding: "12px 16px", borderBottom: i < revenues.length - 1 ? `1px solid ${C.bord}` : "none", fontSize: 12, alignItems: "center" }}>
+                        <span style={{ color: C.mut }}>{fmtDate(r.paidAt)}</span>
+                        <span style={{ color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{maskEmail(r.email)}</span>
+                        <span style={{ color: r.plan === "vip" ? C.gold : r.plan === "season" ? "#fb923c" : C.accent, fontWeight: 600 }}>{r.plan}</span>
+                        <span style={{ color: C.green }}>{r.amount ? `${(r.amount / 100).toFixed(2)} €` : "—"}</span>
+                        <span style={{ padding: "2px 8px", borderRadius: 8, fontSize: 10, fontWeight: 600, background: isActive ? "rgba(74,222,128,0.12)" : "rgba(100,116,139,0.08)", color: isActive ? C.green : C.mut, border: `1px solid ${isActive ? "rgba(74,222,128,0.2)" : "rgba(100,116,139,0.15)"}` }}>
+                          {isActive ? "aktivno" : "isteklo"}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {/* Apartments list */}
-        {loading ? (
+        {activeTab === "apts" && (loading ? (
           <div style={{ textAlign: "center", padding: 60, color: C.mut }}>Učitavanje...</div>
         ) : apartments.length === 0 ? (
           <div style={{ textAlign: "center", padding: 60, background: C.card, borderRadius: 20, border: `1px dashed ${C.bord}` }}>
@@ -374,7 +478,7 @@ export default function HostPanel() {
               );
             })}
           </div>
-        )}
+        ))}
 
         {/* Footer */}
         <div style={{ textAlign: "center", padding: "32px 0 20px", fontSize: 10, color: "rgba(255,255,255,0.15)" }}>

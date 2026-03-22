@@ -24,6 +24,29 @@ async function writePremium(deviceId, data) {
   } catch (err) { console.error("Firestore write error:", err.message); }
 }
 
+async function sendPaymentAlert(email, plan, amount) {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return;
+  try {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: "JADRAN AI <noreply@jadran.ai>",
+        to: ["info@sialconsulting.com"],
+        subject: `Nova uplata — ${plan} (${amount ? (amount / 100).toFixed(2) : "?"}€)`,
+        html: `<div style="font-family:system-ui,sans-serif;color:#1e293b;max-width:480px;">
+          <h2 style="color:#0284c7;">💶 Nova uplata — JADRAN AI</h2>
+          <p><strong>Email:</strong> ${email || "—"}</p>
+          <p><strong>Plan:</strong> ${plan}</p>
+          <p><strong>Iznos:</strong> ${amount ? (amount / 100).toFixed(2) : "?"} €</p>
+          <p style="font-size:12px;color:#94a3b8;margin-top:20px;">Stripe webhook · jadran.ai</p>
+        </div>`,
+      }),
+    });
+  } catch (err) { console.error("sendPaymentAlert error:", err.message); }
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
@@ -62,6 +85,7 @@ export default async function handler(req, res) {
     } catch (err) { console.error("Receipt email error:", err.message); }
 
     // Persist to Firestore for cross-device/cross-session recovery
+    const email = session.customer_details?.email || session.customer_email || "";
     if (meta.deviceId && meta.deviceId !== "unknown") {
       await writePremium(meta.deviceId, {
         plan: meta.plan || "week",
@@ -72,10 +96,12 @@ export default async function handler(req, res) {
         expiresAt: new Date(Date.now() + days * 86400000),
         sessionId: session.id,
         amount: session.amount_total,
-        email: session.customer_details?.email || session.customer_email || "",
+        email,
         partnerRef: meta.partnerRef || "",
       });
     }
+    // Fire-and-forget payment alert email
+    sendPaymentAlert(email, meta.plan || "week", session.amount_total).catch(() => {});
   }
 
   return res.status(200).json({ received: true });
