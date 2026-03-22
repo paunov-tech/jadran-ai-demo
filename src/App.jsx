@@ -649,6 +649,12 @@ export default function JadranUnified() {
   const [arrivalCountdown, setArrivalCountdown] = useState(null); // seconds remaining
   const geoWatchRef = useRef(null);
   const arrivalFiredRef = useRef(false);
+  const [returnRating, setReturnRating] = useState(0);
+  const [returnFeedback, setReturnFeedback] = useState("");
+  const [returnCheckDone, setReturnCheckDone] = useState([]);
+  const [returnRouteData, setReturnRouteData] = useState(null);
+  const returnMapRef = useRef(null);
+  const returnMapInst = useRef(null);
   const [chatMsgs, setChatMsgs] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
@@ -2434,6 +2440,14 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           </div>
         </Card>
 
+        {kioskDay >= 6 && (
+          <div style={{ textAlign: "center", padding: "4px 0 8px" }}>
+            <Btn onClick={() => { updateDelta({ phase: "povratak" }); setSubScreen("povratak"); }}
+              style={{ background: "linear-gradient(135deg,rgba(245,158,11,0.15),rgba(14,165,233,0.1))", border: "1px solid rgba(245,158,11,0.2)", color: C.gold }}>
+              🧳 Idem kući
+            </Btn>
+          </div>
+        )}
         <div style={{ textAlign: "center", padding: "8px 0 16px" }}>
           <Btn onClick={() => { setPhase("post"); setSubScreen("summary"); updateGuest(roomCode.current, { phase: "post", subScreen: "summary" }); }}>{t("checkOut",lang)}</Btn>
         </div>
@@ -2759,12 +2773,300 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
     );
   };
 
+  const KioskPovratak = () => {
+    // ── Departure checklist per segment ──
+    const CHECKLISTS = {
+      kamper:    [{ id:"dump",  text:"Dump stanica obavljena?" }, { id:"lpg",   text:"LPG napunjen?" }, { id:"markiza", text:"Markiza uvučena?" }, { id:"klima", text:"Klima isključena?" }],
+      porodica:  [{ id:"igracke", text:"Igračke spakirane?" }, { id:"krem",  text:"Suncokrem u torbi?" }, { id:"djeca",  text:"Djeca nahranjena za put?" }],
+      par:       [{ id:"suv",   text:"Suveniri?" }, { id:"foto",  text:"Galerija fotki napravljena?" }, { id:"rez",   text:"Restoran recenzija ostavljena?" }],
+      jedrilicar:[{ id:"vez",   text:"Vez odjava?" }, { id:"gorivo", text:"Gorivo napunjeno?" }, { id:"navtex", text:"NAVTEX provjeren za povratak?" }],
+    };
+    const seg = delta.segment || "porodica";
+    const items = CHECKLISTS[seg] || CHECKLISTS.porodica;
+    const allDone = items.every(it => returnCheckDone.includes(it.id));
+
+    // ── Return route HERE Maps ──
+    const COUNTRY_CITY = { DE:"München,Germany", AT:"Wien,Austria", IT:"Trieste,Italy", SI:"Ljubljana,Slovenia", CZ:"Praha,Czechia", PL:"Kraków,Poland", HR:"Zagreb,Croatia" };
+    useEffect(() => {
+      if (returnRouteData) return; // already fetched
+      const homeQuery = COUNTRY_CITY[G.country] || (G.country + ",Europe");
+      const hereMode = delta.segment === "kamper" ? "truck" : "car";
+      (async () => {
+        try {
+          const geo = await fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(homeQuery)}&limit=1&apikey=${HERE_KEY}`).then(r => r.json());
+          const pos = geo.items?.[0]?.position;
+          if (!pos) return;
+          const route = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${dest.lat},${dest.lng}&destination=${pos.lat},${pos.lng}&return=polyline,summary&apikey=${HERE_KEY}`).then(r => r.json());
+          const sec = route.routes?.[0]?.sections?.[0];
+          if (!sec) return;
+          const km = Math.round(sec.summary.length / 1000);
+          const hrs = Math.floor(sec.summary.duration / 3600);
+          const mins = Math.round((sec.summary.duration % 3600) / 60);
+          const eta = new Date(Date.now() + sec.summary.duration * 1000);
+          setReturnRouteData({ km, hrs, mins, eta: eta.toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }), homeCity: homeQuery.split(",")[0], oLat: dest.lat, oLng: dest.lng, dLat: pos.lat, dLng: pos.lng, polyline: sec.polyline });
+
+          // Render map
+          const loadScripts = () => new Promise((res, rej) => {
+            if (window.H?.Map) { res(); return; }
+            const urls = ["https://js.api.here.com/v3/3.1/mapsjs-core.js","https://js.api.here.com/v3/3.1/mapsjs-service.js","https://js.api.here.com/v3/3.1/mapsjs-ui.js","https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"];
+            const next = (i) => { if (i >= urls.length) { res(); return; } const s = document.createElement("script"); s.src = urls[i]; s.async = false; s.onload = () => next(i+1); s.onerror = rej; document.head.appendChild(s); };
+            next(0);
+          });
+          await loadScripts();
+          if (!returnMapRef.current) return;
+          if (returnMapInst.current) returnMapInst.current.dispose();
+          const platform = new window.H.service.Platform({ apikey: HERE_KEY });
+          const layers = platform.createDefaultLayers();
+          const map = new window.H.Map(returnMapRef.current, layers.vector.normal.map, { zoom: 6, center: { lat: (dest.lat + pos.lat) / 2, lng: (dest.lng + pos.lng) / 2 } });
+          returnMapInst.current = map;
+          new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
+          try {
+            const ls = window.H.geo.LineString.fromFlexiblePolyline(sec.polyline);
+            const poly = new window.H.map.Polyline(ls, { style: { lineWidth: 5, strokeColor: "#f59e0b" } });
+            map.addObject(poly);
+            map.getViewModel().setLookAtData({ bounds: poly.getBoundingBox() }, true);
+          } catch {}
+        } catch (e) { console.error("[HERE return route]", e); }
+      })();
+      return () => { returnMapInst.current?.dispose?.(); returnMapInst.current = null; };
+    }, []); // eslint-disable-line
+
+    // ── Home weather comparison (static estimate) ──
+    const HOME_TEMP = { DE: 18, AT: 17, SI: 20, IT: 24, CZ: 16, PL: 15, HR: 25 };
+    const homeTemp = HOME_TEMP[G.country] || 18;
+    const homeCity = { DE:"München", AT:"Wien", SI:"Ljubljana", IT:"Trieste", CZ:"Praha", PL:"Kraków", HR:"Zagreb" }[G.country] || "dom";
+
+    // ── Loyalty points earned this trip ──
+    const earnedPts = 125;
+    const totalPts = LOYALTY.points + earnedPts;
+    const newTier = totalPts >= 500 ? "Jadran Legend 🏆" : totalPts >= 200 ? "Dalmatin 🌊" : "Morski val 🌊";
+
+    // ── Segment-aware next destinations ──
+    const NEXT_DESTS = {
+      kamper:    [ACCOMMODATION[1], ACCOMMODATION[5], ACCOMMODATION[4]], // Makarska, Opatija, Pula
+      porodica:  [ACCOMMODATION[1], ACCOMMODATION[4], ACCOMMODATION[6]], // Makarska, Pula, Krk
+      par:       [ACCOMMODATION[2], ACCOMMODATION[3], ACCOMMODATION[0]], // Hvar, Rovinj, Split
+      jedrilicar:[ACCOMMODATION[2], ACCOMMODATION[5], ACCOMMODATION[6]], // Hvar, Opatija, Krk
+    };
+    const nextDests = NEXT_DESTS[seg] || ACCOMMODATION.slice(0, 3);
+
+    // ── Segment return tips ──
+    const RETURN_TIPS = {
+      kamper:    "⛽ Zadnja jeftina benzinska s kamper parkiranjem: INA Karlovac Jug (izlaz 6) · LPG na autocesti",
+      porodica:  "🏖️ Zadnja plaža pred granicom: Crikvenica (25min detour A6) — djeca će obožavati!",
+      par:       "🍷 Romantična večera na povratku: Rovinj stari grad (odskočite 45min) — Konoba Val",
+      jedrilicar:"⚓ Odjava iz marine, čišćenje broda, NAVTEX za prolaz Kvarnerom",
+    };
+
+    const [feedbackSent, setFeedbackSent] = useState(false);
+
+    const sendFeedback = () => {
+      if (!returnFeedback.trim()) return;
+      const key = import.meta.env.VITE_FIREBASE_API_KEY || "";
+      fetch(`https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_feedback?key=${key}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fields: { guest: { stringValue: G.name }, feedback: { stringValue: returnFeedback }, segment: { stringValue: seg }, destination: { stringValue: dest.city || "" }, timestamp: { stringValue: new Date().toISOString() } } }),
+      }).catch(() => {});
+      setFeedbackSent(true);
+    };
+
+    const deviceId = (() => { try { return localStorage.getItem("jadran_push_deviceId") || Math.random().toString(36).slice(2); } catch { return "anon"; } })();
+
+    return (
+      <>
+        <BackBtn onClick={() => setSubScreen("home")} />
+
+        {/* ── Farewell hero ── */}
+        <div style={{ textAlign: "center", padding: "20px 0 16px" }}>
+          <div style={{ fontSize: 64, marginBottom: 8 }}>🌅</div>
+          <div style={{ ...hf, fontSize: 30, fontWeight: 300, lineHeight: 1.3 }}>
+            Hvala što ste bili s nama u <span style={{ color: C.warm, fontStyle: "italic" }}>{dest.city || "Podstrani"}</span>!
+          </div>
+          <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 8 }}>
+            {kioskDay} dana nezaboravnog odmora · {EXPERIENCES?.filter(e => booked.has(e.id)).length || 0} aktivnosti · {G.spent || 0}€
+          </div>
+        </div>
+
+        {/* ── Weather comparison ── */}
+        <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+          <div style={{ flex: 1, padding: "14px 16px", borderRadius: 14, border: `1px solid ${C.bord}`, background: C.card, textAlign: "center" }}>
+            <div style={{ ...dm, fontSize: 10, color: C.mut, letterSpacing: 1.5, marginBottom: 6 }}>OVDJE SADA</div>
+            <div style={{ fontSize: 32, fontWeight: 300, color: C.accent }}>{weather.temp}°C</div>
+            <div style={{ fontSize: 20 }}>{weather.icon}</div>
+            <div style={{ ...dm, fontSize: 11, color: C.mut, marginTop: 4 }}>🌊 {weather.sea}°C more</div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", fontSize: 20 }}>😎</div>
+          <div style={{ flex: 1, padding: "14px 16px", borderRadius: 14, border: `1px solid ${C.bord}`, background: C.card, textAlign: "center" }}>
+            <div style={{ ...dm, fontSize: 10, color: C.mut, letterSpacing: 1.5, marginBottom: 6 }}>U {homeCity.toUpperCase()}</div>
+            <div style={{ fontSize: 32, fontWeight: 300, color: C.mut }}>{homeTemp}°C</div>
+            <div style={{ fontSize: 20 }}>🌧️</div>
+            <div style={{ ...dm, fontSize: 11, color: C.mut, marginTop: 4 }}>Uživajte još malo!</div>
+          </div>
+        </div>
+
+        {/* ── Departure checklist ── */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 2, marginBottom: 10 }}>✅ CHECKLISTA ZA ODLAZAK</div>
+          {/* Progress bar */}
+          <div style={{ height: 6, borderRadius: 3, background: C.bord, overflow: "hidden", marginBottom: 12 }}>
+            <div style={{ height: "100%", borderRadius: 3, background: `linear-gradient(90deg,${C.accent},${C.gold})`, width: `${(returnCheckDone.length / items.length) * 100}%`, transition: "width 0.4s" }} />
+          </div>
+          {items.map(it => {
+            const checked = returnCheckDone.includes(it.id);
+            return (
+              <div key={it.id} onClick={() => setReturnCheckDone(prev => checked ? prev.filter(x => x !== it.id) : [...prev, it.id])}
+                style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, border: `1px solid ${checked ? "rgba(34,197,94,0.2)" : C.bord}`, background: checked ? "rgba(34,197,94,0.04)" : C.card, marginBottom: 8, cursor: "pointer", transition: "all 0.2s" }}>
+                <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${checked ? "#22c55e" : C.bord}`, background: checked ? "#22c55e" : "transparent", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                  {checked && <span style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>✓</span>}
+                </div>
+                <span style={{ ...dm, fontSize: 14, color: checked ? C.mut : C.text, textDecoration: checked ? "line-through" : "none" }}>{it.text}</span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── Return route ── */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 2, marginBottom: 10 }}>🗺️ POVRATNA RUTA</div>
+          <div style={{ borderRadius: 16, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 10 }}>
+            <div ref={returnMapRef} style={{ height: 220, background: "linear-gradient(135deg,#1a2332,#0f1822)" }}>
+              {!returnRouteData && (
+                <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  <div style={{ width: 24, height: 24, border: `2px solid ${C.gold}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin-slow 0.8s linear infinite" }} />
+                  <div style={{ ...dm, fontSize: 12, color: C.mut }}>Računam povratnu rutu…</div>
+                </div>
+              )}
+            </div>
+            {returnRouteData && (
+              <div style={{ padding: "12px 16px", display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center", background: "rgba(245,158,11,0.04)" }}>
+                <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>🛣 {returnRouteData.km} km</span>
+                <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>⏱ {returnRouteData.hrs}h {returnRouteData.mins}min</span>
+                <span style={{ ...dm, fontSize: 13, color: C.gold }}>🏠 Stižete u {returnRouteData.homeCity} oko {returnRouteData.eta}</span>
+              </div>
+            )}
+          </div>
+          {/* Segment return tip */}
+          <div style={{ padding: "12px 16px", borderRadius: 12, border: `1px solid ${C.bord}`, background: C.card, ...dm, fontSize: 13, color: C.text, lineHeight: 1.7 }}>
+            {RETURN_TIPS[seg]}
+          </div>
+          {/* Border intelligence summary */}
+          {borderData && (
+            <div style={{ marginTop: 10, padding: "10px 14px", borderRadius: 12, border: "1px solid rgba(14,165,233,0.15)", background: "rgba(14,165,233,0.04)", display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <span style={{ ...dm, fontSize: 11, color: C.accent, fontWeight: 700 }}>🛂 Granice:</span>
+              {borderData.crossings?.slice(0, 3).map(cr => (
+                <span key={cr.name} style={{ ...dm, fontSize: 11, color: C.mut }}>
+                  {cr.name}: {cr.wait_minutes}min
+                </span>
+              ))}
+              {borderLastUpdate && <span style={{ ...dm, fontSize: 10, color: "rgba(100,116,139,0.5)", marginLeft: "auto" }}>ažurirano {borderLastUpdate}</span>}
+            </div>
+          )}
+        </div>
+
+        {/* ── Rating ── */}
+        <div style={{ marginBottom: 20, padding: "16px", borderRadius: 14, border: `1px solid ${C.bord}`, background: C.card }}>
+          <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 2, marginBottom: 10 }}>⭐ OCIJENI ODMOR</div>
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 12 }}>
+            {[1,2,3,4,5].map(star => (
+              <button key={star} onClick={() => setReturnRating(star)}
+                style={{ fontSize: 32, background: "none", border: "none", cursor: "pointer", color: star <= returnRating ? "#fbbf24" : "rgba(100,116,139,0.3)", transition: "all 0.2s", transform: star <= returnRating ? "scale(1.15)" : "scale(1)" }}>
+                ★
+              </button>
+            ))}
+          </div>
+          {returnRating >= 4 && (
+            <a href="https://g.page/r/your-google-review-link" target="_blank" rel="noopener noreferrer"
+              style={{ display: "block", textAlign: "center", padding: "10px 20px", borderRadius: 12, background: "rgba(66,133,244,0.12)", border: "1px solid rgba(66,133,244,0.2)", color: "#4285f4", ...dm, fontSize: 13, fontWeight: 700, textDecoration: "none", marginTop: 4 }}>
+              🔵 Ostavi Google recenziju →
+            </a>
+          )}
+          {returnRating > 0 && returnRating <= 3 && !feedbackSent && (
+            <div style={{ marginTop: 8 }}>
+              <div style={{ ...dm, fontSize: 12, color: C.mut, marginBottom: 6 }}>Što možemo poboljšati?</div>
+              <textarea value={returnFeedback} onChange={e => setReturnFeedback(e.target.value)}
+                placeholder="Vaš feedback..." rows={3}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${C.bord}`, background: "rgba(255,255,255,0.04)", color: C.text, fontSize: 14, resize: "none", outline: "none", boxSizing: "border-box", ...dm }} />
+              <button onClick={sendFeedback}
+                style={{ marginTop: 8, width: "100%", padding: "10px", borderRadius: 10, border: "none", background: C.acDim, color: C.accent, ...dm, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                Pošalji feedback
+              </button>
+            </div>
+          )}
+          {feedbackSent && <div style={{ ...dm, fontSize: 13, color: "#22c55e", textAlign: "center", marginTop: 4 }}>✓ Hvala! Cijenimo vaš feedback.</div>}
+        </div>
+
+        {/* ── Loyalty reward ── */}
+        <div style={{ marginBottom: 20, padding: "16px 20px", borderRadius: 14, border: "1px solid rgba(245,158,11,0.2)", background: "linear-gradient(135deg,rgba(245,158,11,0.06),rgba(14,165,233,0.04))" }}>
+          <div style={{ ...dm, fontSize: 11, color: C.gold, letterSpacing: 2, marginBottom: 8 }}>🏅 JADRAN LOYALTY</div>
+          <div style={{ fontSize: 22, fontWeight: 300, marginBottom: 4 }}>+{earnedPts} bodova zaradio si ovaj odmor!</div>
+          <div style={{ ...dm, fontSize: 13, color: C.mut, marginBottom: 12 }}>Ukupno: <strong style={{ color: C.gold }}>{totalPts} bodova</strong> — {newTier}</div>
+          <div style={{ height: 6, borderRadius: 3, background: "rgba(0,0,0,0.3)", overflow: "hidden", marginBottom: 8 }}>
+            <div style={{ height: "100%", borderRadius: 3, background: `linear-gradient(90deg,${C.accent},${C.gold})`, width: `${Math.min(100, (totalPts / 500) * 100)}%`, transition: "width 1s" }} />
+          </div>
+          <div style={{ ...dm, fontSize: 11, color: C.mut }}>
+            {totalPts < 200 && `Još ${200 - totalPts} bodova do Dalmatin 🌊`}
+            {totalPts >= 200 && totalPts < 500 && `Još ${500 - totalPts} bodova do Jadran Legend 🏆`}
+            {totalPts >= 500 && "🏆 Jadran Legend — 10% popust na sve aktivnosti!"}
+          </div>
+          {totalPts < 500 && <div style={{ ...dm, fontSize: 12, color: C.accent, marginTop: 6 }}>Sljedeći put dobivaš 10% popust na sve aktivnosti</div>}
+        </div>
+
+        {/* ── Next destination AI suggestions ── */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 2, marginBottom: 10 }}>✨ SLJEDEĆI PUT PREPORUČUJEMO</div>
+          <div style={{ ...dm, fontSize: 13, color: C.mut, marginBottom: 12 }}>
+            Na temelju tvog odmora i segmenta, idealne sljedeće destinacije:
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 10 }}>
+            {nextDests.filter(Boolean).slice(0, 3).map((a, i) => (
+              <a key={i} href={a.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
+                <div style={{ padding: "14px 14px", borderRadius: 14, border: `1px solid ${C.bord}`, background: C.card, cursor: "pointer", transition: "all 0.2s" }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = C.accent + "33"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.transform = ""; }}>
+                  <div style={{ fontSize: 24, marginBottom: 6 }}>{a.emoji}</div>
+                  <div style={{ ...dm, fontSize: 13, fontWeight: 600 }}>{a.name[lang] || a.name.hr}</div>
+                  <div style={{ ...dm, fontSize: 11, color: C.mut, marginTop: 4, lineHeight: 1.4 }}>{a.note[lang] || a.note.hr}</div>
+                  <div style={{ ...dm, fontSize: 10, color: C.accent, marginTop: 6 }}>Booking.com →</div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Referral ── */}
+        <div style={{ marginBottom: 20, padding: "16px 20px", borderRadius: 14, border: "1px dashed rgba(14,165,233,0.2)", textAlign: "center" }}>
+          <div style={{ fontSize: 18, fontWeight: 400, marginBottom: 4 }}>🎁 Preporuči prijatelju</div>
+          <div style={{ ...dm, fontSize: 13, color: C.mut, marginBottom: 10 }}>Oboje dobivate 50 bodova!</div>
+          <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: 4, color: C.accent, marginBottom: 12 }}>
+            jadran.ai?ref={deviceId.slice(0, 8)}
+          </div>
+          <button onClick={() => {
+            const url = `https://jadran.ai?ref=${deviceId.slice(0, 8)}&seg=${seg}`;
+            if (navigator.share) { navigator.share({ title: "Jadran.ai — Tvoj AI turistički vodič", text: "Probaj Jadran.ai za savršen odmor na Jadranu!", url }); }
+            else { navigator.clipboard?.writeText?.(url).catch(() => {}); }
+          }}
+            style={{ padding: "12px 28px", borderRadius: 12, border: "none", background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", ...dm }}>
+            📤 Podijeli link
+          </button>
+        </div>
+
+        {/* ── Final CTA: proceed to PostStay ── */}
+        <div style={{ textAlign: "center", padding: "8px 0 20px" }}>
+          <Btn primary onClick={() => { setPhase("post"); setSubScreen("summary"); updateGuest(roomCode.current, { phase: "post", subScreen: "summary" }); updateDelta({ phase: "povratak" }); }}>
+            Završi i check-out →
+          </Btn>
+        </div>
+      </>
+    );
+  };
+
   const Kiosk = () => {
     if (subScreen === "home") return <KioskHome />;
     if (subScreen === "activities") return <KioskActivities />;
     if (subScreen === "gems") return <KioskGems />;
     if (subScreen === "chat") return <KioskChat />;
     if (subScreen === "beaches") return <KioskBeach />;
+    if (subScreen === "povratak") return <KioskPovratak />;
     if (PRACTICAL[subScreen]) return <KioskDetail />;
     return <KioskHome />;
   };
@@ -2786,9 +3088,9 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         {/* Loyalty */}
         <Card glow style={{ background: `linear-gradient(135deg,${C.acDim},${C.goDim})`, borderColor: "rgba(14,165,233,0.1)" }}>
           <div style={{ ...dm, fontSize: 11, textTransform: "uppercase", letterSpacing: 3, color: C.gold, marginBottom: 4 }}>JADRAN LOYALTY</div>
-          <div style={{ fontSize: 26, fontWeight: 300 }}>🌊 {LOYALTY.tier}</div>
+          <div style={{ fontSize: 26, fontWeight: 300 }}>🌊 {(LOYALTY.points + 125) >= 500 ? "Jadran Legend 🏆" : (LOYALTY.points + 125) >= 200 ? "Dalmatin" : "Morski val"}</div>
           <div style={{ ...dm, fontSize: 13, color: C.mut, marginTop: 8 }}>
-            {LOYALTY.points} {t("points",lang)} → <strong style={{ color: C.gold }}>{LOYALTY.next}</strong> ({LOYALTY.nextPts})
+            {LOYALTY.points + 125} {t("points",lang)} · <strong style={{ color: C.gold }}>+125 ovaj odmor</strong>
           </div>
           <div style={{ height: 8, borderRadius: 4, background: "rgba(0,0,0,0.3)", overflow: "hidden", margin: "12px 0 6px" }}>
             <div style={{ height: "100%", width: `${(LOYALTY.points / LOYALTY.nextPts) * 100}%`, borderRadius: 4, background: `linear-gradient(90deg,${C.accent},${C.gold})` }} />
