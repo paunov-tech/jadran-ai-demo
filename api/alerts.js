@@ -393,14 +393,22 @@ async function aggregateAlerts() {
     (severityOrder[a.severity] || 3) - (severityOrder[b.severity] || 3)
   );
 
+  // Normalize: add icon + message fields for frontend compatibility
+  const TYPE_ICONS = { fire:"🔥", wind:"🌬️", storm:"⛈", rain:"🌧️", heat:"🌡️", coastal:"🌊", flood:"💧", fog:"🌫️", snow:"❄️", road_closure:"⚠️", ferry_cancelled:"⛴", bura_closure:"🌬️", traffic_jam:"🚗", roadworks:"🔧", travel_advisory:"🇩🇪", weather:"⛈" };
+  const normalized = all.slice(0, 12).map(a => ({
+    ...a,
+    icon: TYPE_ICONS[a.type] || "⚠️",
+    message: a.description ? `${a.title} — ${a.description}`.slice(0, 120) : a.title?.slice(0, 120) || "",
+  }));
+
   return {
     fires: clustered.length + hvz.filter(a => a.type === "fire").length,
     weather: weather.length,
     hvz: hvz.length,
     aa: aa.length,
     hak: hak.length,
-    total: all.length,
-    alerts: all.slice(0, 12), // Max 12 alerts (was 10, +2 for HAK)
+    total: normalized.length,
+    alerts: normalized,
     updated: new Date().toISOString(),
   };
 }

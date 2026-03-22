@@ -150,6 +150,9 @@ const T = {
   night:      { hr:"Laku noć", de:"Gute Nacht", at:"Gute Nacht", en:"Good night", it:"Buonanotte", si:"Lahko noč", cz:"Dobrou noc", pl:"Dobranoc" },
 };
 
+// AT = standard Hochdeutsch: copy all DE values into AT keys
+Object.keys(T).forEach(k => { if (T[k] && T[k].de !== undefined) T[k].at = T[k].de; });
+
 // Helper: get translation for current language, fallback to HR then EN
 const t = (key, lang) => {
   const entry = T[key];
@@ -435,6 +438,11 @@ export default function JadranUnified() {
   const chatEnd = useRef(null);
   const roomCode = useRef(getRoomCode());
 
+  // ─── TRANSIT HERE MAP ───
+  const transitMapRef = useRef(null);
+  const hereTransitInst = useRef(null);
+  const [transitRouteData, setTransitRouteData] = useState(null);
+
   // ─── GUEST ONBOARDING STATE ───
   const [guestProfile, setGuestProfile] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -515,6 +523,71 @@ export default function JadranUnified() {
     const t = setInterval(() => setAlertIdx(i => (i + 1) % alerts.length), 4000);
     return () => clearInterval(t);
   }, [alerts]);
+
+  // ─── HERE MAPS: transit screen route ───
+  const HERE_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
+  const PODSTRANA = { lat: 43.4892, lng: 16.5523 };
+  const COUNTRY_CITY = { DE:"München,Germany", AT:"Wien,Austria", IT:"Trieste,Italy", SI:"Ljubljana,Slovenia", CZ:"Praha,Czechia", PL:"Kraków,Poland", HR:"Zagreb,Croatia" };
+
+  useEffect(() => {
+    if (subScreen !== "transit") return;
+    const transportMode = (() => { try { return localStorage.getItem("jadran_transport") || "auto"; } catch { return "auto"; } })();
+    const depQuery = COUNTRY_CITY[G.country] || (G.country + ",Europe");
+    const hereMode = transportMode === "kamper" ? "truck" : transportMode === "avion" ? "pedestrian" : "car";
+
+    const loadScripts = () => new Promise((resolve, reject) => {
+      if (window.H?.Map) { resolve(); return; }
+      const css = document.createElement("link"); css.rel = "stylesheet"; css.href = "https://js.api.here.com/v3/3.1/mapsjs-ui.css"; document.head.appendChild(css);
+      const urls = ["https://js.api.here.com/v3/3.1/mapsjs-core.js","https://js.api.here.com/v3/3.1/mapsjs-service.js","https://js.api.here.com/v3/3.1/mapsjs-ui.js","https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"];
+      const next = (i) => { if (i >= urls.length) { resolve(); return; } const s = document.createElement("script"); s.src = urls[i]; s.async = false; s.onload = () => next(i+1); s.onerror = reject; document.head.appendChild(s); };
+      next(0);
+    });
+
+    (async () => {
+      try {
+        // Geocode departure city
+        const geo = await fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(depQuery)}&limit=1&apikey=${HERE_KEY}`).then(r => r.json());
+        const pos = geo.items?.[0]?.position;
+        if (!pos) return;
+        const { lat: oLat, lng: oLng } = pos;
+
+        // Calculate route
+        const route = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${oLat},${oLng}&destination=${PODSTRANA.lat},${PODSTRANA.lng}&return=polyline,summary&apikey=${HERE_KEY}`).then(r => r.json());
+        const sec = route.routes?.[0]?.sections?.[0];
+        if (!sec) return;
+        const km = Math.round(sec.summary.length / 1000);
+        const hrs = Math.floor(sec.summary.duration / 3600);
+        const mins = Math.round((sec.summary.duration % 3600) / 60);
+        setTransitRouteData({ oLat, oLng, km, hrs, mins, polyline: sec.polyline, mode: transportMode });
+
+        // Load HERE Maps JS and render
+        await loadScripts();
+        if (!transitMapRef.current) return;
+        if (hereTransitInst.current) { hereTransitInst.current.dispose(); }
+        const platform = new window.H.service.Platform({ apikey: HERE_KEY });
+        const layers = platform.createDefaultLayers();
+        const map = new window.H.Map(transitMapRef.current, layers.vector.normal.map, {
+          zoom: 6, center: { lat: (oLat + PODSTRANA.lat) / 2, lng: (oLng + PODSTRANA.lng) / 2 },
+        });
+        hereTransitInst.current = map;
+        new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
+        window.H.ui.UI.createDefault(map, layers);
+        try {
+          const ls = window.H.geo.LineString.fromFlexiblePolyline(sec.polyline);
+          const poly = new window.H.map.Polyline(ls, { style: { lineWidth: 5, strokeColor: "#0ea5e9" } });
+          map.addObject(poly);
+          map.getViewModel().setLookAtData({ bounds: poly.getBoundingBox() }, true);
+        } catch {}
+        const mkIcon = (emoji) => new window.H.map.Icon(`<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><circle cx="14" cy="14" r="13" fill="#0c1e35" stroke="#0ea5e9" stroke-width="2"/><text x="14" y="19" text-anchor="middle" font-size="13">${emoji}</text></svg>`);
+        map.addObjects([
+          new window.H.map.Marker({ lat: oLat, lng: oLng }, { icon: mkIcon(G.flag || "🚩") }),
+          new window.H.map.Marker({ lat: PODSTRANA.lat, lng: PODSTRANA.lng }, { icon: mkIcon("⚓") }),
+        ]);
+      } catch (e) { console.error("[HERE transit]", e); }
+    })();
+
+    return () => { hereTransitInst.current?.dispose?.(); hereTransitInst.current = null; };
+  }, [subScreen]);
 
   // ─── WEATHER: Fetch real data via Gemini grounding ───
   const [weather, setWeather] = useState(W_DEFAULT);
@@ -992,16 +1065,30 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
     if (subScreen === "transit") return (
       <>
         <div style={{ padding: "24px 0 8px" }}>
-          <div style={{ fontSize: 28, fontWeight: 400 }}>{t("safeTrip",lang)} 🚗</div>
-          <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>{G.country === "DE" ? "München" : G.country === "AT" ? "Wien" : G.country === "IT" ? "Trieste" : G.country === "SI" ? "Ljubljana" : G.country === "CZ" ? "Praha" : G.country === "PL" ? "Kraków" : "Polazište"} → Podstrana</div>
+          <div style={{ fontSize: 28, fontWeight: 400 }}>{t("safeTrip",lang)} {transitRouteData?.mode === "kamper" ? "🚐" : transitRouteData?.mode === "avion" ? "✈️" : "🚗"}</div>
+          <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>{COUNTRY_CITY[G.country]?.split(",")?.[0] || G.country} → Podstrana</div>
         </div>
-        {/* Map */}
-        <div style={{ height: 160, borderRadius: 18, background: "linear-gradient(135deg,#1a2332,#0f1822)", position: "relative", overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 16 }}>
-          <div style={{ position: "absolute", top: "50%", left: "10%", right: "10%", height: 3, background: C.bord }} />
-          <div style={{ position: "absolute", top: "50%", left: "10%", width: `${transitProg * 0.8}%`, height: 3, background: `linear-gradient(90deg,${C.accent},${C.gold})`, transition: "width 0.4s" }} />
-          <div style={{ position: "absolute", top: "calc(50% - 8px)", left: "8%", ...dm, fontSize: 12, color: C.mut }}>{G.flag} {G.country === "DE" ? "München" : G.country === "AT" ? "Wien" : G.country === "IT" ? "Trieste" : G.country === "SI" ? "Ljubljana" : G.country === "CZ" ? "Praha" : G.country === "PL" ? "Kraków" : "Start"}</div>
-          <div style={{ position: "absolute", top: "calc(50% - 14px)", left: `calc(10% + ${transitProg * 0.8}% - 14px)`, fontSize: 28, transition: "left 0.4s", transform: "scaleX(-1)" }}>🚗</div>
-          <div style={{ position: "absolute", top: "calc(50% - 10px)", right: "6%", fontSize: 22 }}>🏖️</div>
+        {/* HERE Maps interactive route */}
+        <div style={{ borderRadius: 18, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 12 }}>
+          <div ref={transitMapRef} style={{ height: 300, width: "100%", background: "linear-gradient(135deg,#1a2332,#0f1822)" }}>
+            {!transitRouteData && (
+              <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <div style={{ width: 32, height: 32, border: `2px solid ${C.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin-slow 0.8s linear infinite" }} />
+                <div style={{ ...dm, fontSize: 12, color: C.mut }}>Računam rutu…</div>
+              </div>
+            )}
+          </div>
+          {transitRouteData && (
+            <div style={{ padding: "12px 16px", background: `rgba(14,165,233,0.04)`, display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
+              <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>🛣 {transitRouteData.km} km</span>
+              <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>⏱ {transitRouteData.hrs}h {transitRouteData.mins}min</span>
+              {transitRouteData.mode === "kamper" && <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 6, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.15)", color: C.gold }}>🚐 Kamper ruta</span>}
+              <a href={`https://wego.here.com/directions/drive/${transitRouteData.oLat},${transitRouteData.oLng}/${PODSTRANA.lat},${PODSTRANA.lng}`} target="_blank" rel="noopener noreferrer"
+                style={{ marginLeft: "auto", padding: "8px 16px", borderRadius: 10, background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>
+                📍 Pokreni navigaciju →
+              </a>
+            </div>
+          )}
         </div>
         {isAdmin && <input type="range" min={0} max={100} value={transitProg} onChange={e => setTransitProg(+e.target.value)} style={{ width: "100%", accentColor: C.accent, marginBottom: 16 }} />}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginBottom: 24 }}>
@@ -1061,6 +1148,16 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
     };
     const tip = tips[lang] || tips[lang === "at" ? "de" : "hr"] || tips.hr;
 
+    // ─── Beach Status (crowd data from /api/camera) ───
+    const [crowdData, setCrowdData] = useState(null);
+    useEffect(() => {
+      const fetchCrowd = () => fetch("/api/camera").then(r => r.json()).then(setCrowdData).catch(() => {});
+      fetchCrowd();
+      const iv = setInterval(fetchCrowd, 600000); // 10 min
+      return () => clearInterval(iv);
+    }, []);
+    const CROWD_COLOR = { mirno: C.accent, "malo gužve": "#22c55e", "srednje gužve": C.gold, "jako gužva": C.red };
+
     return (
       <>
         <div style={{ padding: "20px 0 16px" }}>
@@ -1071,6 +1168,18 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             {greeting}, <span style={{ color: C.warm, fontStyle: "italic" }}>{G.first}</span>
           </div>
         </div>
+
+        {/* Beach & Marina Status Bar */}
+        {crowdData && (
+          <div style={{ display: "flex", gap: 10, marginBottom: 14, padding: "10px 14px", borderRadius: 12, background: "rgba(14,165,233,0.04)", border: `1px solid ${C.bord}`, flexWrap: "wrap", alignItems: "center" }}>
+            <span style={{ fontSize: 13, color: CROWD_COLOR[crowdData.beach?.crowd] || C.mut, fontWeight: 600 }}>🏖 {crowdData.beach?.name}: {crowdData.beach?.crowd}</span>
+            <span style={{ width: 1, height: 14, background: C.bord }} />
+            <span style={{ ...dm, fontSize: 12, color: C.mut }}>🛥 {crowdData.marina?.boats} brodova u luci</span>
+            <span style={{ width: 1, height: 14, background: C.bord }} />
+            <span style={{ ...dm, fontSize: 12, color: C.mut }}>🅿️ {crowdData.parking?.free_spots} slobodnih mjesta</span>
+            <span style={{ ...dm, fontSize: 10, color: "rgba(100,116,139,0.4)", marginLeft: "auto" }}>ažurirano 10min</span>
+          </div>
+        )}
 
         {/* Weather + UV + time sim */}
         <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
