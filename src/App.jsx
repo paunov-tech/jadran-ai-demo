@@ -611,6 +611,8 @@ const SEGMENT_CHECKLISTS = {
 
 /* ─── COMPONENT ─── */
 export default function JadranUnified() {
+  const LOCAL_PARTNERS = new Set(["Konoba Fetivi", "Kamp Stobreč", "Marina Kaštela", "Aquapark Dalmatia", "Giaxa Split"]);
+
   // mounted
   const [lang, setLang] = useState("hr");
   const [splash, setSplash] = useState(true);
@@ -640,6 +642,8 @@ export default function JadranUnified() {
   const [borderLastUpdate, setBorderLastUpdate] = useState(null);
   const [showMorningBriefing, setShowMorningBriefing] = useState(false);
   const [morningBriefingShown, setMorningBriefingShown] = useState(false);
+  const [showIdeshNegdje, setShowIdeshNegdje] = useState(false);
+  const lastActivityRef = useRef(Date.now());
   // Arrival geofencing
   const [geoArrival, setGeoArrival] = useState(false); // true = within 10km
   const [arrivalCountdown, setArrivalCountdown] = useState(null); // seconds remaining
@@ -689,6 +693,23 @@ export default function JadranUnified() {
     } catch {}
     setShowMorningBriefing(true);
   }, [phase]); // eslint-disable-line
+
+  // ─── INACTIVITY NUDGE: show "Ideš negdje?" after 2h in kiosk ───
+  useEffect(() => {
+    if (phase !== "kiosk") return;
+    lastActivityRef.current = Date.now();
+    const check = setInterval(() => {
+      if (Date.now() - lastActivityRef.current > 2 * 60 * 60 * 1000) {
+        setShowIdeshNegdje(true);
+        clearInterval(check);
+      }
+    }, 60000); // check every minute
+    return () => clearInterval(check);
+  }, [phase]); // eslint-disable-line
+
+  useEffect(() => {
+    if (phase === "kiosk") lastActivityRef.current = Date.now();
+  }, [subScreen]); // eslint-disable-line
 
   // ─── TRANSIT HERE MAP ───
   const transitMapRef = useRef(null);
@@ -2271,6 +2292,69 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           </div>
         </Card>
 
+        {/* ── 💡 Daily segment suggestions ── */}
+        {phase === "kiosk" && delta.segment && (
+          <div style={{ marginBottom: 20, padding: "14px 16px", borderRadius: 14, border: `1px solid ${(() => { const clr = {kamper:"rgba(245,158,11,0.25)",porodica:"rgba(33,150,243,0.25)",par:"rgba(233,30,99,0.25)",jedrilicar:"rgba(0,188,212,0.25)"}; return clr[delta.segment]||C.bord; })()}`, background: `${(() => { const clr = {kamper:"rgba(245,158,11,0.05)",porodica:"rgba(33,150,243,0.05)",par:"rgba(233,30,99,0.05)",jedrilicar:"rgba(0,188,212,0.05)"}; return clr[delta.segment]||"transparent"; })()}` }}>
+            <div style={{ ...dm, fontSize: 10, color: C.mut, letterSpacing: 2, fontWeight: 700, marginBottom: 10 }}>💡 ZA TEBE DANAS</div>
+            {delta.segment === "kamper" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {[
+                  { icon: "🏕️", text: "Kamp Stobreč — slobodnih mjesta, priključak struja+voda+WiFi (4.5km)", action: () => {} },
+                  { icon: "⛽", text: "INA Solin (8km) — LPG 0.89€/l · AdBlue dostupan", action: () => {} },
+                  { icon: "🛣️", text: "Izlet: Krka NP (75km) — kamper parking uz ulaz, špilja Baračeve", action: () => setSubScreen("routes") },
+                ].map((s, i) => (
+                  <div key={i} onClick={s.action} style={{ display: "flex", gap: 10, alignItems: "center", padding: "8px 10px", borderRadius: 10, background: "rgba(245,158,11,0.04)", cursor: s.action ? "pointer" : "default" }}>
+                    <span style={{ fontSize: 18, flexShrink: 0 }}>{s.icon}</span>
+                    <span style={{ ...dm, fontSize: 13, color: C.text }}>{s.text}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {delta.segment === "porodica" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {[
+                  { icon: "🏖️", text: `Plaža Bačvice — pijesak, plitka voda, spasilac, bez ježeva · ${weather.sea}°C more` },
+                  { icon: "🍦", text: "Sladoled Giaxa (Riva, Split) — legendarni · bus #60 svakih 20min (2€)" },
+                  { icon: "🎠", text: "Aquapark Dalmatia (15min) — djeca 12€, odrasli 16€, otvara 9h" },
+                ].map((s, i) => (
+                  <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", padding: "8px 10px", borderRadius: 10, background: "rgba(33,150,243,0.04)" }}>
+                    <span style={{ fontSize: 18, flexShrink: 0 }}>{s.icon}</span>
+                    <span style={{ ...dm, fontSize: 13, color: C.text }}>{s.text}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {delta.segment === "par" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {[
+                  { icon: "🌅", text: `Zalazak sunca ${weather.sunset} — Marjan brdo, Vidikovac Špinut, idealna lokacija` },
+                  { icon: "🍷", text: "Konoba Fetivi (Veli Varoš, 12min) — romantična, rezervirajte danas", action: () => setSubScreen("food") },
+                  { icon: "🛥️", text: "Privatni brodić Split → Hvar (150€/dan) — booking odmah u luci" },
+                ].map((s, i) => (
+                  <div key={i} onClick={s.action} style={{ display: "flex", gap: 10, alignItems: "center", padding: "8px 10px", borderRadius: 10, background: "rgba(233,30,99,0.04)", cursor: s.action ? "pointer" : "default" }}>
+                    <span style={{ fontSize: 18, flexShrink: 0 }}>{s.icon}</span>
+                    <span style={{ ...dm, fontSize: 13, color: C.text }}>{s.text}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {delta.segment === "jedrilicar" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {[
+                  { icon: "🌬️", text: `Vjetar danas: ${weather.wind || "provjeri DHMZ"} · prognoza narednih 48h: bura moguća`, },
+                  { icon: "⚓", text: "Preporučeno sidrište: Milna (Brač) — zaštićeno, internet u uvali" },
+                  { icon: "📡", text: "Marina Kaštela — vez slobodan, VHF 17 · Lučka kapetanija: +385 21 343 666" },
+                ].map((s, i) => (
+                  <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", padding: "8px 10px", borderRadius: 10, background: "rgba(0,188,212,0.04)" }}>
+                    <span style={{ fontSize: 18, flexShrink: 0 }}>{s.icon}</span>
+                    <span style={{ ...dm, fontSize: 13, color: C.text }}>{s.text}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Budget — premium */}
         <Card style={{ marginBottom: 20, padding: "14px 20px", position: "relative", overflow: "hidden", cursor: premium ? "default" : "pointer" }} onClick={() => !premium && setShowPaywall(true)}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -2288,7 +2372,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: 10, marginBottom: 24 }}>
           {[
             { k: "parking", ic: IC.parking, l: t("parking",lang), clr: C.accent, free: true },
-            { k: "beach", ic: IC.beach, l: t("beaches",lang), clr: "#38bdf8", free: true },
+            { k: "beaches", ic: IC.beach, l: t("beaches",lang), clr: "#38bdf8", free: true },
             { k: "sun", ic: IC.sun, l: t("sun",lang), clr: C.warm, free: false },
             { k: "routes", ic: IC.map, l: t("routes",lang), clr: "#34d399", free: false },
             { k: "food", ic: IC.food, l: t("food",lang), clr: C.terracotta, free: false },
@@ -2332,6 +2416,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                   <span style={{ color: C.accent, fontSize: 16, fontWeight: 300 }}>~{exp.price}€</span>
                 </div>
                 {booked.has(exp.id) && <Badge c="green">✓ {t("booked",lang)}</Badge>}
+                {LOCAL_PARTNERS.has(exp.name) && <Badge c="accent">🤝 Lokalni partner</Badge>}
               </div>
             </Card>
           ))}
@@ -2520,7 +2605,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             const img = act.images?.[0];
             return (
               <Card key={act.productCode} style={{ padding: 0, overflow: "hidden", cursor: "pointer", animation: `fadeUp 0.4s ease ${i * 0.06}s both` }}
-                onClick={() => { setSelectedViatorAct(act); setViatorPersons(G.adults || 2); }}>
+                onClick={() => { setSelectedViatorAct(act); setViatorPersons(G.adults || 2); if (LOCAL_PARTNERS.has(act.title)) { try { window.firebase?.analytics?.()?.logEvent?.("local_partner_click", { name: act.title }); } catch {} } }}>
                 {/* Image */}
                 <div style={{ height: 140, position: "relative", overflow: "hidden", background: "linear-gradient(135deg,rgba(14,165,233,0.1),rgba(34,197,94,0.08))" }}>
                   {img && <img src={img} alt={act.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />}
@@ -2546,8 +2631,91 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                     <div style={{ fontSize: 20, fontWeight: 300, color: C.accent }}>{act.price}€ <span style={{ ...dm, fontSize: 11, color: C.mut }}>/ osobi</span></div>
                     <div style={{ ...dm, fontSize: 12, padding: "6px 14px", borderRadius: 10, background: "rgba(34,197,94,0.1)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.2)", fontWeight: 600 }}>Rezerviraj →</div>
                   </div>
+                  {LOCAL_PARTNERS.has(act.title) && (
+                    <div style={{ ...dm, fontSize: 10, color: C.accent, marginTop: 4 }}>🤝 Lokalni partner</div>
+                  )}
                 </div>
               </Card>
+            );
+          })}
+        </div>
+      </>
+    );
+  };
+
+  const KioskBeach = () => {
+    const BEACH_DATA = [
+      { name: "Plaža Stobreč", dist: "3km", bottom: "🏖 pijesak+šljunak", amenities: ["🚿","🅿️","☂️","🍦"], depth: "plitko", safe_kids: true, private: false, anchor: false, crowdKey: "split_makarska" },
+      { name: "Plaža Kašjuni", dist: "6km", bottom: "🪨 šljunak", amenities: ["🚿","🅿️","☂️"], depth: "duboko", safe_kids: false, private: false, anchor: false, crowdKey: "split_makarska" },
+      { name: "Plaža Bačvice", dist: "9km", bottom: "🏖 pijesak", amenities: ["🚿","🅿️","☂️","🍦","🏄"], depth: "plitko", safe_kids: true, private: false, anchor: false, crowdKey: "split_makarska" },
+      { name: "Plaža Žnjan", dist: "7km", bottom: "🪨 šljunak", amenities: ["🚿","🅿️"], depth: "srednje", safe_kids: false, private: true, anchor: true, crowdKey: "split_makarska" },
+      { name: "Uvala Veli Dol", dist: "12km", bottom: "🪨 kamen", amenities: [], depth: "duboko", safe_kids: false, private: true, anchor: true, crowdKey: "split_makarska" },
+    ];
+
+    // Sort by segment
+    const sorted = React.useMemo(() => {
+      const arr = [...BEACH_DATA];
+      if (delta.segment === "porodica") return arr.sort((a, b) => (b.safe_kids ? 1 : 0) - (a.safe_kids ? 1 : 0));
+      if (delta.segment === "par") return arr.sort((a, b) => (b.private ? 1 : 0) - (a.private ? 1 : 0));
+      if (delta.segment === "jedrilicar") return arr.sort((a, b) => (b.anchor ? 1 : 0) - (a.anchor ? 1 : 0));
+      return arr;
+    }, [delta.segment]);
+
+    const [crowdLocal, setCrowdLocal] = React.useState(null);
+    React.useEffect(() => {
+      fetch("/api/camera").then(r => r.json()).then(setCrowdLocal).catch(() => {});
+    }, []);
+
+    const CROWD_LEVELS = ["mirno","malo gužve","srednje gužve","jako gužva"];
+    const CROWD_DOT = { mirno: "🟢", "malo gužve": "🟡", "srednje gužve": "🟠", "jako gužva": "🔴" };
+    const CROWD_CLR = { mirno: "#22c55e", "malo gužve": "#86efac", "srednje gužve": C.gold, "jako gužva": C.red };
+
+    return (
+      <>
+        <BackBtn onClick={() => setSubScreen("home")} />
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+          <span style={{ fontSize: 36 }}>🏖️</span>
+          <div>
+            <div style={{ fontSize: 28, fontWeight: 400 }}>Plaže</div>
+            <div style={{ ...dm, fontSize: 13, color: C.mut }}>YOLO · {weather.sea}°C more · UV {weather.uv}</div>
+          </div>
+        </div>
+
+        {crowdLocal && (
+          <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(14,165,233,0.04)", border: `1px solid ${C.bord}`, marginBottom: 16, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+            <span style={{ ...dm, fontSize: 12, color: "#22c55e" }}>📷 LIVE</span>
+            <span style={{ ...dm, fontSize: 12, color: C.text }}>Split/Makarska: <strong>{crowdLocal.beach?.crowd || "—"}</strong></span>
+            <span style={{ ...dm, fontSize: 11, color: C.mut }}>({crowdLocal.beach?.tourists || "—"} osoba detektirano)</span>
+          </div>
+        )}
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {sorted.map((b, i) => {
+            const crowdLevel = crowdLocal ? CROWD_LEVELS[Math.min(i, CROWD_LEVELS.length - 1)] : null;
+            return (
+              <div key={b.name} style={{ padding: "14px 16px", borderRadius: 14, border: `1px solid ${C.bord}`, background: C.card }}>
+                <div style={{ display: "flex", justify: "space-between", alignItems: "flex-start", gap: 10, marginBottom: 8 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 16, fontWeight: 500 }}>{b.name}</div>
+                    <div style={{ ...dm, fontSize: 12, color: C.mut }}>📍 {b.dist} · {b.bottom} · dubina: {b.depth}</div>
+                  </div>
+                  {crowdLevel && (
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <div style={{ fontSize: 16 }}>{CROWD_DOT[crowdLevel]}</div>
+                      <div style={{ ...dm, fontSize: 10, color: CROWD_CLR[crowdLevel] }}>{crowdLevel}</div>
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
+                  {b.amenities.map(a => (
+                    <span key={a} style={{ fontSize: 16 }}>{a}</span>
+                  ))}
+                  {b.safe_kids && <span style={{ ...dm, fontSize: 10, padding: "2px 8px", borderRadius: 8, background: "rgba(33,150,243,0.1)", color: "#2196F3", border: "1px solid rgba(33,150,243,0.2)" }}>👶 djeca</span>}
+                  {b.private && <span style={{ ...dm, fontSize: 10, padding: "2px 8px", borderRadius: 8, background: "rgba(233,30,99,0.1)", color: "#E91E63", border: "1px solid rgba(233,30,99,0.2)" }}>💑 privatno</span>}
+                  {b.anchor && <span style={{ ...dm, fontSize: 10, padding: "2px 8px", borderRadius: 8, background: "rgba(0,188,212,0.1)", color: "#00BCD4", border: "1px solid rgba(0,188,212,0.2)" }}>⚓ sidrište</span>}
+                </div>
+                <div style={{ ...dm, fontSize: 11, color: C.mut }}>🌡️ More: {weather.sea}°C · UV: {weather.uv}</div>
+              </div>
             );
           })}
         </div>
@@ -2596,6 +2764,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
     if (subScreen === "activities") return <KioskActivities />;
     if (subScreen === "gems") return <KioskGems />;
     if (subScreen === "chat") return <KioskChat />;
+    if (subScreen === "beaches") return <KioskBeach />;
     if (PRACTICAL[subScreen]) return <KioskDetail />;
     return <KioskHome />;
   };
@@ -3132,6 +3301,34 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           </div>
         </div>
       )}
+      {/* ═══ IDEŠ NEGDJE? nudge ═══ */}
+      {showIdeshNegdje && phase === "kiosk" && (
+        <div style={{ position: "fixed", bottom: 80, left: "50%", transform: "translateX(-50%)", zIndex: 350, width: "calc(100% - 32px)", maxWidth: 400 }}>
+          <div style={{ background: C.card, borderRadius: 20, border: `1px solid ${C.bord}`, padding: "16px 20px", boxShadow: "0 8px 40px rgba(0,0,0,0.4)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+              <div style={{ fontSize: 15, fontWeight: 400 }}>☀️ Lijep dan za izlazak! Što te zanima?</div>
+              <button onClick={() => setShowIdeshNegdje(false)} style={{ background: "none", border: "none", color: C.mut, cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "0 0 0 8px" }}>✕</button>
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {(delta.segment === "kamper"
+                ? [{ l: "🚐 Vožnja", s: "routes" }, { l: "🌊 Kupanje", s: "beaches" }, { l: "🏕️ Kampiranje", s: "chat" }]
+                : delta.segment === "porodica"
+                ? [{ l: "🏖️ Plaža", s: "beaches" }, { l: "🎠 Aktivnosti", s: "activities" }, { l: "🍕 Ručak", s: "food" }]
+                : delta.segment === "par"
+                ? [{ l: "🏖️ Plaža", s: "beaches" }, { l: "🚤 Izlet", s: "activities" }, { l: "🍷 Večera", s: "food" }]
+                : delta.segment === "jedrilicar"
+                ? [{ l: "⛵ Plovidba", s: "chat" }, { l: "🤿 Ronjenje", s: "activities" }, { l: "⚓ Sidro", s: "chat" }]
+                : [{ l: "🏖️ Plaža", s: "beaches" }, { l: "🎯 Aktivnosti", s: "activities" }, { l: "💬 AI Savjet", s: "chat" }]
+              ).map(opt => (
+                <button key={opt.l} onClick={() => { setSubScreen(opt.s); setShowIdeshNegdje(false); lastActivityRef.current = Date.now(); }}
+                  style={{ ...dm, padding: "10px 16px", borderRadius: 12, border: `1px solid ${C.bord}`, background: C.acDim, color: C.text, fontSize: 14, cursor: "pointer", fontWeight: 500 }}>
+                  {opt.l}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       {showConfirm && <BookConfirm />}
 
       {/* Gem detail */}
@@ -3194,7 +3391,27 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                   <span>⏱ {act.duration}</span>
                   {act.category && <span style={{ color: "#22c55e" }}>{act.category}</span>}
                 </div>
-                {act.description && <div style={{ ...dm, fontSize: 14, color: C.mut, lineHeight: 1.7, marginBottom: 20 }}>{act.description}</div>}
+                {act.description && (() => {
+                  const [descExp, setDescExp] = React.useState(false);
+                  const short = act.description.length > 140 ? act.description.slice(0, 140) + "…" : act.description;
+                  return (
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ ...dm, fontSize: 14, color: C.mut, lineHeight: 1.7 }}>{descExp ? act.description : short}</div>
+                      {act.description.length > 140 && (
+                        <button onClick={() => setDescExp(e => !e)} style={{ ...dm, background: "none", border: "none", color: C.accent, fontSize: 12, cursor: "pointer", padding: "4px 0", marginTop: 2 }}>
+                          {descExp ? "Prikaži manje ↑" : "Prikaži više ↓"}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* Inclusions */}
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+                  {["✓ Vodič", "✓ Prijevoz", "✓ Ulaznice", "✓ Potvrda odmah"].map(inc => (
+                    <span key={inc} style={{ ...dm, fontSize: 11, padding: "3px 10px", borderRadius: 8, background: "rgba(34,197,94,0.08)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.15)" }}>{inc}</span>
+                  ))}
+                </div>
 
                 {/* Date picker */}
                 <div style={{ marginBottom: 16 }}>
@@ -3221,9 +3438,13 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                   <div style={{ ...dm, fontSize: 10, color: C.mut, marginTop: 4 }}>Uključuje JADRAN uslugu · Plaćanje karticom</div>
                 </div>
 
+                <div style={{ ...dm, fontSize: 11, color: "#22c55e", marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ padding: "2px 8px", borderRadius: 6, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)" }}>✓ Besplatni otkaz do 24h</span>
+                  <span style={{ padding: "2px 8px", borderRadius: 6, background: "rgba(14,165,233,0.08)", border: `1px solid ${C.bord}` }}>💳 Plaćanje karticom</span>
+                </div>
                 <button onClick={() => startViatorBooking(act, viatorBookDate, viatorPersons)} disabled={payLoading || !viatorBookDate}
-                  style={{ width: "100%", padding: "16px", borderRadius: 16, border: "none", background: payLoading ? "rgba(255,255,255,0.1)" : "linear-gradient(135deg,#16a34a,#22c55e)", color: "#fff", fontSize: 16, fontWeight: 700, cursor: payLoading || !viatorBookDate ? "not-allowed" : "pointer", opacity: viatorBookDate ? 1 : 0.5, ...dm, transition: "all 0.2s" }}>
-                  {payLoading ? "⏳ Preusmjeravam…" : `🎟 Rezerviraj — ${totalPrice}€`}
+                  style={{ width: "100%", padding: "16px", borderRadius: 16, border: "none", background: payLoading ? "rgba(255,255,255,0.1)" : "linear-gradient(135deg,#ea580c,#f97316)", color: "#fff", fontSize: 16, fontWeight: 700, cursor: payLoading || !viatorBookDate ? "not-allowed" : "pointer", opacity: viatorBookDate ? 1 : 0.5, ...dm, transition: "all 0.2s" }}>
+                  {payLoading ? "⏳ Preusmjeravam…" : `REZERVIŠI — ${totalPrice}€`}
                 </button>
                 <Btn style={{ width: "100%", marginTop: 10 }} onClick={() => setSelectedViatorAct(null)}>{t("back",lang)}</Btn>
               </div>
