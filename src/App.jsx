@@ -880,68 +880,93 @@ export default function JadranUnified() {
     return () => clearInterval(t);
   }, [alerts]);
 
-  // ─── HERE MAPS: transit screen route ───
+  // ─── HERE REST + LEAFLET: transit screen route ───
   const HERE_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
-  const COUNTRY_CITY = { DE:"München,Germany", AT:"Wien,Austria", IT:"Trieste,Italy", SI:"Ljubljana,Slovenia", CZ:"Praha,Czechia", PL:"Kraków,Poland", HR:"Zagreb,Croatia" };
+  const COUNTRY_CITY = { DE:"Wien,Austria", AT:"Wien,Austria", IT:"Trieste,Italy", SI:"Ljubljana,Slovenia", CZ:"Praha,Czechia", PL:"Kraków,Poland", HR:"Zagreb,Croatia" };
 
   useEffect(() => {
     if (subScreen !== "transit") return;
     const transportMode = (() => { try { return localStorage.getItem("jadran_transport") || "auto"; } catch { return "auto"; } })();
-    const depQuery = delta.from ? `${delta.from},Europe` : COUNTRY_CITY[G.country] || (G.country + ",Europe");
-    const hereMode = transportMode === "kamper" ? "truck" : transportMode === "avion" ? "pedestrian" : "car";
+    const depQuery = delta.from || COUNTRY_CITY[G.country] || "Wien,Austria";
+    const hereMode = transportMode === "kamper" ? "truck" : "car";
+    const dLat = dest?.lat || delta.destination?.lat || 43.5081;
+    const dLng = dest?.lng || delta.destination?.lon || 16.4402;
+    const destCity = dest?.city || delta.destination?.city || "Split";
 
-    const loadScripts = () => new Promise((resolve, reject) => {
-      if (window.H?.Map) { resolve(); return; }
-      const css = document.createElement("link"); css.rel = "stylesheet"; css.href = "https://js.api.here.com/v3/3.1/mapsjs-ui.css"; document.head.appendChild(css);
-      const urls = ["https://js.api.here.com/v3/3.1/mapsjs-core.js","https://js.api.here.com/v3/3.1/mapsjs-service.js","https://js.api.here.com/v3/3.1/mapsjs-ui.js","https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"];
-      const next = (i) => { if (i >= urls.length) { resolve(); return; } const s = document.createElement("script"); s.src = urls[i]; s.async = false; s.onload = () => next(i+1); s.onerror = reject; document.head.appendChild(s); };
-      next(0);
+    const loadLeaflet = () => new Promise((resolve) => {
+      if (window.L) { resolve(); return; }
+      const css = document.createElement("link"); css.rel = "stylesheet"; css.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"; document.head.appendChild(css);
+      const s = document.createElement("script"); s.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      s.onload = resolve; document.head.appendChild(s);
     });
+
+    const decodeFlexPolyline = (encoded) => {
+      // Decode HERE flexible polyline format
+      const ENCODING_TABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+      const result = []; let index = 0; let lat = 0; let lng = 0;
+      const decoder = (str, i) => {
+        let result = 0; let shift = 0; let b;
+        do { b = ENCODING_TABLE.indexOf(str[i++]); result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+        return [i, ((result & 1) ? ~(result >> 1) : (result >> 1))];
+      };
+      // skip header (first char is precision+dims)
+      const precision = Math.pow(10, (ENCODING_TABLE.indexOf(encoded[0]) >> 4) & 15);
+      index = 1; // skip header byte
+      try {
+        while (index < encoded.length) {
+          let dLat2, dLng2;
+          [index, dLat2] = decoder(encoded, index);
+          [index, dLng2] = decoder(encoded, index);
+          lat += dLat2; lng += dLng2;
+          result.push([lat / precision, lng / precision]);
+        }
+      } catch {}
+      return result;
+    };
 
     (async () => {
       try {
-        // Geocode departure city
-        const geo = await fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(depQuery)}&limit=1&apikey=${HERE_KEY}`).then(r => r.json());
-        const pos = geo.items?.[0]?.position;
-        if (!pos) return;
+        // 1. Geocode departure city via HERE REST
+        const geoResp = await fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(depQuery)}&limit=1&apikey=${HERE_KEY}`, { signal: AbortSignal.timeout(8000) }).then(r => r.json());
+        const pos = geoResp.items?.[0]?.position;
+        if (!pos) { console.warn("[transit] geocode failed for:", depQuery); return; }
         const { lat: oLat, lng: oLng } = pos;
 
-        // Calculate route
-        const route = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${oLat},${oLng}&destination=${dest.lat},${dest.lng}&return=polyline,summary&apikey=${HERE_KEY}`).then(r => r.json());
-        const sec = route.routes?.[0]?.sections?.[0];
+        // 2. Calculate route via HERE REST
+        const routeResp = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${oLat},${oLng}&destination=${dLat},${dLng}&return=polyline,summary&apikey=${HERE_KEY}`, { signal: AbortSignal.timeout(10000) }).then(r => r.json());
+        const sec = routeResp.routes?.[0]?.sections?.[0];
         if (!sec) return;
         const km = Math.round(sec.summary.length / 1000);
         const hrs = Math.floor(sec.summary.duration / 3600);
         const mins = Math.round((sec.summary.duration % 3600) / 60);
-        setTransitRouteData({ oLat, oLng, km, hrs, mins, polyline: sec.polyline, mode: transportMode });
+        setTransitRouteData({ oLat, oLng, dLat, dLng, km, hrs, mins, polyline: sec.polyline, mode: transportMode, destCity });
 
-        // Load HERE Maps JS and render
-        await loadScripts();
+        // 3. Render with Leaflet
+        await loadLeaflet();
         if (!transitMapRef.current) return;
-        if (hereTransitInst.current) { hereTransitInst.current.dispose(); }
-        const platform = new window.H.service.Platform({ apikey: HERE_KEY });
-        const layers = platform.createDefaultLayers();
-        const map = new window.H.Map(transitMapRef.current, layers.vector.normal.map, {
-          zoom: 6, center: { lat: (oLat + dest.lat) / 2, lng: (oLng + dest.lng) / 2 },
-        });
+        if (hereTransitInst.current) { hereTransitInst.current.remove(); }
+
+        const map = window.L.map(transitMapRef.current, { zoomControl: true, attributionControl: false });
         hereTransitInst.current = map;
-        new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
-        window.H.ui.UI.createDefault(map, layers);
-        try {
-          const ls = window.H.geo.LineString.fromFlexiblePolyline(sec.polyline);
-          const poly = new window.H.map.Polyline(ls, { style: { lineWidth: 5, strokeColor: "#0ea5e9" } });
-          map.addObject(poly);
-          map.getViewModel().setLookAtData({ bounds: poly.getBoundingBox() }, true);
-        } catch {}
-        const mkIcon = (emoji) => new window.H.map.Icon(`<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><circle cx="14" cy="14" r="13" fill="#0c1e35" stroke="#0ea5e9" stroke-width="2"/><text x="14" y="19" text-anchor="middle" font-size="13">${emoji}</text></svg>`);
-        map.addObjects([
-          new window.H.map.Marker({ lat: oLat, lng: oLng }, { icon: mkIcon(G.flag || "🚩") }),
-          new window.H.map.Marker({ lat: dest.lat, lng: dest.lng }, { icon: mkIcon("⚓") }),
-        ]);
-      } catch (e) { console.error("[HERE transit]", e); }
+        window.L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(map);
+
+        // Decode and draw polyline
+        const coords = decodeFlexPolyline(sec.polyline);
+        if (coords.length > 1) {
+          const poly = window.L.polyline(coords, { color: "#f97316", weight: 4, opacity: 0.9 }).addTo(map);
+          map.fitBounds(poly.getBounds(), { padding: [30, 30] });
+        } else {
+          map.setView([(oLat + dLat) / 2, (oLng + dLng) / 2], 6);
+        }
+
+        const fromIcon = window.L.divIcon({ html: `<div style="background:#0c1e35;border:2px solid #f97316;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px">🚗</div>`, iconSize: [28,28], className:"" });
+        const toIcon = window.L.divIcon({ html: `<div style="background:#0c1e35;border:2px solid #22c55e;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px">⚓</div>`, iconSize: [28,28], className:"" });
+        window.L.marker([oLat, oLng], { icon: fromIcon }).addTo(map).bindPopup(geoResp.items[0]?.address?.city || depQuery);
+        window.L.marker([dLat, dLng], { icon: toIcon }).addTo(map).bindPopup(destCity);
+      } catch (e) { console.error("[Leaflet transit]", e); }
     })();
 
-    return () => { hereTransitInst.current?.dispose?.(); hereTransitInst.current = null; };
+    return () => { if (hereTransitInst.current) { try { hereTransitInst.current.remove(); } catch {} hereTransitInst.current = null; } };
   }, [subScreen, delta.from, dest?.lat]);
 
   // ─── WEATHER: Fetch real data via Gemini grounding ───
@@ -1849,10 +1874,10 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>🛣 {transitRouteData.km} km</span>
               <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>⏱ {transitRouteData.hrs}h {transitRouteData.mins}min</span>
               {transitRouteData.mode === "kamper" && <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 6, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.15)", color: C.gold }}>🚐 Kamper ruta</span>}
-              <a href={`https://wego.here.com/directions/drive/${transitRouteData.oLat},${transitRouteData.oLng}/${dest.lat},${dest.lng}`} target="_blank" rel="noopener noreferrer"
-                style={{ marginLeft: "auto", padding: "8px 16px", borderRadius: 10, background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>
+              <button onClick={() => window.location.href = `https://wego.here.com/directions/drive/${transitRouteData.oLat},${transitRouteData.oLng}/${transitRouteData.dLat || dest?.lat},${transitRouteData.dLng || dest?.lng}`}
+                style={{ marginLeft: "auto", padding: "8px 16px", borderRadius: 10, background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
                 📍 Pokreni navigaciju →
-              </a>
+              </button>
             </div>
           )}
         </div>
@@ -1966,6 +1991,11 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                   ⚠️ Tunel Karavanke (visina 4.1m) — ako ste viši od 4.1m koristite Šentilj (A1)!
                 </div>
               )}
+              <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+                {["⛽ LPG stanice: Petrol Ljubljana (A1), OMV Celje (A1)","🅿️ Kamper odmorišta: Lučko, Bosiljevo, Karlovac sever","🚿 Dump stanice: Kamp Stobreč (4.5km), Kamp Trstenik (8km)"].map(w => (
+                  <div key={w} style={{ padding: "7px 12px", borderRadius: 8, background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.12)", ...dm, fontSize: 12, color: C.text }}>{w}</div>
+                ))}
+              </div>
             </div>
             <div style={{ padding: "12px 16px", borderRadius: 12, border: `1px solid ${C.bord}`, background: C.card }}>
               <div style={{ ...dm, fontSize: 11, color: C.mut, marginBottom: 6 }}>🏕️ Dump stanice u blizini destinacije</div>
@@ -1977,7 +2007,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             </div>
           </div>
         )}
-        {delta.segment === "porodica" && transitRouteData && (
+        {delta.segment === "porodica" && (
           <div style={{ marginBottom: 20 }}>
             <div style={{ padding: "14px 16px", borderRadius: 14, border: "1px solid rgba(33,150,243,0.3)", background: "rgba(33,150,243,0.06)", marginBottom: 10 }}>
               <div style={{ ...dm, fontSize: 11, color: "#2196F3", fontWeight: 700, letterSpacing: 1.5, marginBottom: 8 }}>👨‍👩‍👧 DJECA U AUTU — SAVJETI</div>
@@ -2005,6 +2035,11 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               <div style={{ marginTop: 10, padding: "10px 14px", borderRadius: 10, background: "rgba(233,30,99,0.08)", ...dm, fontSize: 13, color: "#f48fb1" }}>
                 💝 Iznenađenje za partnera: rezervirajte stol u konobama Split večeras — Konoba Fetivi (Veli Varoš), Zinfandel's (Radisson), Dvor (Špinut)
               </div>
+              <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+                {["📸 Vidikovac: Ljubelj prijevoj (SLO)", "🍷 Vinska regija Štajerska: Ptuj, Maribor (usput)", `🌅 Zalazak sunca: ${weather?.sunset || "20:15"} u destinaciji`].map(w => (
+                  <div key={w} style={{ padding: "7px 12px", borderRadius: 8, background: "rgba(233,30,99,0.06)", border: "1px solid rgba(233,30,99,0.12)", ...dm, fontSize: 12, color: C.text }}>{w}</div>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -2017,10 +2052,15 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                 🌬️ Vjetar danas: {weather?.wind || "provjeri DHMZ"} — DHMZ prognoza na meteo.hr<br />
                 📋 Najava dolaska: kontaktirajte marinsku kapetaniju 2h prije
               </div>
+              <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
+                {["⚓ Marina Split: +385 21 398 900 · VHF kanal 17", `🌬️ Vjetar: ${weather?.wind || "provjeri DHMZ (meteo.hr)"}`, "📡 Lučka kapetanija: +385 21 343 666 · otv. do 20h"].map(w => (
+                  <div key={w} style={{ padding: "7px 12px", borderRadius: 8, background: "rgba(0,188,212,0.06)", border: "1px solid rgba(0,188,212,0.12)", ...dm, fontSize: 12, color: C.text }}>{w}</div>
+                ))}
+              </div>
               <a
                 href={`https://wa.me/38521203555?text=${encodeURIComponent("Pozdrav! Dolazim jedrenjem, planirani dolazak: " + new Date().toLocaleDateString("hr-HR") + ". Molim vez za jedrenjak. Hvala!")}`}
                 target="_blank" rel="noopener noreferrer"
-                style={{ display: "inline-block", marginTop: 10, padding: "10px 18px", borderRadius: 10, background: "#25D366", color: "#fff", fontSize: 13, fontWeight: 700, textDecoration: "none", ...dm }}>
+                style={{ display: "inline-block", padding: "10px 18px", borderRadius: 10, background: "#25D366", color: "#fff", fontSize: 13, fontWeight: 700, textDecoration: "none", ...dm }}>
                 📱 Najavi dolazak WhatsApp →
               </a>
             </div>
