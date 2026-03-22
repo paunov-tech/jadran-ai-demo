@@ -880,90 +880,104 @@ export default function JadranUnified() {
     return () => clearInterval(t);
   }, [alerts]);
 
-  // ─── HERE REST + LEAFLET: transit screen route ───
+  // ─── LEAFLET + HERE REST only (no HERE JS SDK anywhere) ───
   const HERE_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
-  const COUNTRY_CITY = { DE:"Wien,Austria", AT:"Wien,Austria", IT:"Trieste,Italy", SI:"Ljubljana,Slovenia", CZ:"Praha,Czechia", PL:"Kraków,Poland", HR:"Zagreb,Croatia" };
+  const COUNTRY_CITY = { DE:"München,Germany", AT:"Wien,Austria", IT:"Trieste,Italy", SI:"Ljubljana,Slovenia", CZ:"Praha,Czechia", PL:"Kraków,Poland", HR:"Zagreb,Croatia" };
+  const CITY_COORDS = {
+    "Wien": {lat:48.2082, lng:16.3738}, "Wien,Austria": {lat:48.2082, lng:16.3738},
+    "München": {lat:48.1351, lng:11.5820}, "München,Germany": {lat:48.1351, lng:11.5820},
+    "Graz": {lat:47.0707, lng:15.4395}, "Salzburg": {lat:47.8095, lng:13.0550},
+    "Berlin": {lat:52.5200, lng:13.4050}, "Frankfurt": {lat:50.1109, lng:8.6821},
+    "Praha": {lat:50.0755, lng:14.4378}, "Praha,Czechia": {lat:50.0755, lng:14.4378},
+    "Kraków": {lat:50.0647, lng:19.9450}, "Kraków,Poland": {lat:50.0647, lng:19.9450},
+    "Ljubljana": {lat:46.0569, lng:14.5058}, "Ljubljana,Slovenia": {lat:46.0569, lng:14.5058},
+    "Trieste": {lat:45.6495, lng:13.7768}, "Trieste,Italy": {lat:45.6495, lng:13.7768},
+    "Split": {lat:43.5081, lng:16.4402}, "Dubrovnik": {lat:42.6507, lng:18.0944},
+    "Zadar": {lat:44.1194, lng:15.2314}, "Rijeka": {lat:45.3271, lng:14.4422},
+    "Pula": {lat:44.8666, lng:13.8496}, "Rovinj": {lat:45.0811, lng:13.6387},
+    "Zagreb": {lat:45.8150, lng:15.9819}, "Zagreb,Croatia": {lat:45.8150, lng:15.9819},
+  };
+
+  const loadLeafletLib = () => new Promise((resolve) => {
+    if (window.L) { resolve(); return; }
+    const css = document.createElement("link"); css.rel = "stylesheet"; css.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"; document.head.appendChild(css);
+    const s = document.createElement("script"); s.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    s.onload = resolve; s.onerror = resolve; document.head.appendChild(s);
+  });
+
+  const loadFlexPolyline = () => new Promise((resolve) => {
+    if (window.flexpolyline) { resolve(); return; }
+    const s = document.createElement("script"); s.src = "https://unpkg.com/@here/flexpolyline@1.1.0/dist/web/index.umd.js";
+    s.onload = resolve; s.onerror = resolve; document.head.appendChild(s);
+  });
+
+  const renderLeafletMap = (containerId, oLat, oLng, dLat, dLng, polylineStr, fromLabel, toLabel, lineColor = "#f97316") => {
+    const el = document.getElementById(containerId);
+    if (!el || !window.L) return null;
+    const map = window.L.map(el, { zoomControl: true, attributionControl: false });
+    window.L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(map);
+    const mkIcon = (emoji, color) => window.L.divIcon({ html: `<div style="background:#0c1e35;border:2px solid ${color};border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px">${emoji}</div>`, iconSize: [28,28], className:"" });
+    window.L.marker([oLat, oLng], { icon: mkIcon("🚗", lineColor) }).addTo(map).bindPopup(fromLabel);
+    window.L.marker([dLat, dLng], { icon: mkIcon("⚓", "#22c55e") }).addTo(map).bindPopup(toLabel);
+    if (polylineStr && window.flexpolyline) {
+      try {
+        const decoded = window.flexpolyline.decode(polylineStr);
+        const coords = decoded.polyline || decoded;
+        if (coords?.length > 1) {
+          const poly = window.L.polyline(coords, { color: lineColor, weight: 4, opacity: 0.9 }).addTo(map);
+          map.fitBounds(poly.getBounds(), { padding: [30, 30] });
+          return map;
+        }
+      } catch {}
+    }
+    map.fitBounds([[oLat, oLng], [dLat, dLng]], { padding: [40, 40] });
+    return map;
+  };
+
+  const geocodeCity = async (query) => {
+    const fallback = CITY_COORDS[query] || CITY_COORDS[query?.split(",")?.[0]];
+    try {
+      const geo = await fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(query)}&limit=1&apikey=${HERE_KEY}`, { signal: AbortSignal.timeout(8000) }).then(r => r.json());
+      const pos = geo.items?.[0]?.position;
+      if (pos) return pos;
+    } catch {}
+    return fallback || null;
+  };
 
   useEffect(() => {
     if (subScreen !== "transit") return;
     const transportMode = (() => { try { return localStorage.getItem("jadran_transport") || "auto"; } catch { return "auto"; } })();
-    const depQuery = delta.from || COUNTRY_CITY[G.country] || "Wien,Austria";
-    const hereMode = transportMode === "kamper" ? "truck" : "car";
-    const dLat = dest?.lat || delta.destination?.lat || 43.5081;
-    const dLng = dest?.lng || delta.destination?.lon || 16.4402;
-    const destCity = dest?.city || delta.destination?.city || "Split";
-
-    const loadLeaflet = () => new Promise((resolve) => {
-      if (window.L) { resolve(); return; }
-      const css = document.createElement("link"); css.rel = "stylesheet"; css.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"; document.head.appendChild(css);
-      const s = document.createElement("script"); s.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-      s.onload = resolve; document.head.appendChild(s);
-    });
-
-    const decodeFlexPolyline = (encoded) => {
-      // Decode HERE flexible polyline format
-      const ENCODING_TABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-      const result = []; let index = 0; let lat = 0; let lng = 0;
-      const decoder = (str, i) => {
-        let result = 0; let shift = 0; let b;
-        do { b = ENCODING_TABLE.indexOf(str[i++]); result |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
-        return [i, ((result & 1) ? ~(result >> 1) : (result >> 1))];
-      };
-      // skip header (first char is precision+dims)
-      const precision = Math.pow(10, (ENCODING_TABLE.indexOf(encoded[0]) >> 4) & 15);
-      index = 1; // skip header byte
-      try {
-        while (index < encoded.length) {
-          let dLat2, dLng2;
-          [index, dLat2] = decoder(encoded, index);
-          [index, dLng2] = decoder(encoded, index);
-          lat += dLat2; lng += dLng2;
-          result.push([lat / precision, lng / precision]);
-        }
-      } catch {}
-      return result;
-    };
+    // Always read fresh DELTA from localStorage
+    let freshDelta = delta;
+    try { const s = localStorage.getItem("jadran_delta_context"); if (s) freshDelta = { ...freshDelta, ...JSON.parse(s) }; } catch {}
+    const fromCity = freshDelta.from || COUNTRY_CITY[G.country] || "Wien,Austria";
+    const toCity = freshDelta.destination?.city || dest?.city || "Split";
+    const segment = freshDelta.segment || transportMode;
+    console.log("DELTA:", fromCity, toCity, segment, freshDelta);
+    const hereMode = segment === "kamper" || transportMode === "kamper" ? "truck" : "car";
+    const dLat = freshDelta.destination?.lat || dest?.lat || 43.5081;
+    const dLng = freshDelta.destination?.lon || dest?.lng || 16.4402;
 
     (async () => {
       try {
-        // 1. Geocode departure city via HERE REST
-        const geoResp = await fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(depQuery)}&limit=1&apikey=${HERE_KEY}`, { signal: AbortSignal.timeout(8000) }).then(r => r.json());
-        const pos = geoResp.items?.[0]?.position;
-        if (!pos) { console.warn("[transit] geocode failed for:", depQuery); return; }
+        await Promise.all([loadLeafletLib(), loadFlexPolyline()]);
+        const pos = await geocodeCity(fromCity);
+        if (!pos) { console.warn("[transit] geocode + fallback both failed for:", fromCity); return; }
         const { lat: oLat, lng: oLng } = pos;
 
-        // 2. Calculate route via HERE REST
-        const routeResp = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${oLat},${oLng}&destination=${dLat},${dLng}&return=polyline,summary&apikey=${HERE_KEY}`, { signal: AbortSignal.timeout(10000) }).then(r => r.json());
-        const sec = routeResp.routes?.[0]?.sections?.[0];
-        if (!sec) return;
-        const km = Math.round(sec.summary.length / 1000);
-        const hrs = Math.floor(sec.summary.duration / 3600);
-        const mins = Math.round((sec.summary.duration % 3600) / 60);
-        setTransitRouteData({ oLat, oLng, dLat, dLng, km, hrs, mins, polyline: sec.polyline, mode: transportMode, destCity });
+        let km = 0, hrs = 0, mins = 0, polylineStr = null;
+        try {
+          const routeResp = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${oLat},${oLng}&destination=${dLat},${dLng}&return=polyline,summary&apikey=${HERE_KEY}`, { signal: AbortSignal.timeout(10000) }).then(r => r.json());
+          const sec = routeResp.routes?.[0]?.sections?.[0];
+          if (sec) { km = Math.round(sec.summary.length / 1000); hrs = Math.floor(sec.summary.duration / 3600); mins = Math.round((sec.summary.duration % 3600) / 60); polylineStr = sec.polyline; }
+        } catch (e) { console.warn("[transit] routing failed, map still shown:", e.message); }
 
-        // 3. Render with Leaflet
-        await loadLeaflet();
-        if (!transitMapRef.current) return;
-        if (hereTransitInst.current) { hereTransitInst.current.remove(); }
+        setTransitRouteData({ oLat, oLng, dLat, dLng, km, hrs, mins, polyline: polylineStr, mode: segment, destCity: toCity });
 
-        const map = window.L.map(transitMapRef.current, { zoomControl: true, attributionControl: false });
-        hereTransitInst.current = map;
-        window.L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(map);
-
-        // Decode and draw polyline
-        const coords = decodeFlexPolyline(sec.polyline);
-        if (coords.length > 1) {
-          const poly = window.L.polyline(coords, { color: "#f97316", weight: 4, opacity: 0.9 }).addTo(map);
-          map.fitBounds(poly.getBounds(), { padding: [30, 30] });
-        } else {
-          map.setView([(oLat + dLat) / 2, (oLng + dLng) / 2], 6);
-        }
-
-        const fromIcon = window.L.divIcon({ html: `<div style="background:#0c1e35;border:2px solid #f97316;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px">🚗</div>`, iconSize: [28,28], className:"" });
-        const toIcon = window.L.divIcon({ html: `<div style="background:#0c1e35;border:2px solid #22c55e;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px">⚓</div>`, iconSize: [28,28], className:"" });
-        window.L.marker([oLat, oLng], { icon: fromIcon }).addTo(map).bindPopup(geoResp.items[0]?.address?.city || depQuery);
-        window.L.marker([dLat, dLng], { icon: toIcon }).addTo(map).bindPopup(destCity);
-      } catch (e) { console.error("[Leaflet transit]", e); }
+        if (hereTransitInst.current) { try { hereTransitInst.current.remove(); } catch {} hereTransitInst.current = null; }
+        const map = renderLeafletMap("transit-map", oLat, oLng, dLat, dLng, polylineStr, fromCity.split(",")[0], toCity);
+        if (map) hereTransitInst.current = map;
+      } catch (e) { console.error("[transit map]", e); }
     })();
 
     return () => { if (hereTransitInst.current) { try { hereTransitInst.current.remove(); } catch {} hereTransitInst.current = null; } };
@@ -1492,62 +1506,51 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       const mapContRef = React.useRef(null);
       const mapInstRef = React.useRef(null);
 
-      const loadHereScripts = () => new Promise((resolve, reject) => {
-        if (window.H?.Map) { resolve(); return; }
-        const css = document.createElement("link"); css.rel = "stylesheet"; css.href = "https://js.api.here.com/v3/3.1/mapsjs-ui.css"; document.head.appendChild(css);
-        const urls = ["https://js.api.here.com/v3/3.1/mapsjs-core.js","https://js.api.here.com/v3/3.1/mapsjs-service.js","https://js.api.here.com/v3/3.1/mapsjs-ui.js","https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"];
-        const next = (i) => { if (i >= urls.length) { resolve(); return; } const s = document.createElement("script"); s.src = urls[i]; s.async = false; s.onload = () => next(i+1); s.onerror = reject; document.head.appendChild(s); };
-        next(0);
-      });
-
       React.useEffect(() => {
         if (!fromSel || !toSel?.lat) return;
         setRouteLoading(true);
         let disposed = false;
         (async () => {
           try {
-            let oLat, oLng;
-            if (delta.from_coords?.lat) { oLat = delta.from_coords.lat; oLng = delta.from_coords.lon; }
-            else {
-              const geo = await fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(fromSel)}&limit=1&apikey=${HERE_KEY}`).then(r => r.json());
-              const pos = geo.items?.[0]?.position;
-              if (!pos) { setRouteLoading(false); return; }
-              oLat = pos.lat; oLng = pos.lng;
-            }
+            await Promise.all([loadLeafletLib(), loadFlexPolyline()]);
+            const pos = await geocodeCity(fromSel);
+            if (!pos || disposed) { setRouteLoading(false); return; }
+            const { lat: oLat, lng: oLng } = pos;
             const dLat = toSel.lat; const dLng = toSel.lng;
             const transport = (() => { try { return localStorage.getItem("jadran_transport") || "auto"; } catch { return "auto"; } })();
             const hereMode = transport === "kamper" ? "truck" : "car";
-            const route = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${oLat},${oLng}&destination=${dLat},${dLng}&return=polyline,summary&apikey=${HERE_KEY}`).then(r => r.json());
-            const sec = route.routes?.[0]?.sections?.[0];
-            if (!sec || disposed) { setRouteLoading(false); return; }
-            const km = Math.round(sec.summary.length / 1000);
-            const hrs = Math.floor(sec.summary.duration / 3600);
-            const mins = Math.round((sec.summary.duration % 3600) / 60);
-            setRouteInfo({ km, hrs, mins, oLat, oLng });
-            await loadHereScripts();
-            if (!mapContRef.current || disposed) { setRouteLoading(false); return; }
-            mapInstRef.current?.dispose?.();
-            const platform = new window.H.service.Platform({ apikey: HERE_KEY });
-            const layers = platform.createDefaultLayers();
-            const map = new window.H.Map(mapContRef.current, layers.vector.normal.map, { zoom: 6, center: { lat: (oLat + dLat) / 2, lng: (oLng + dLng) / 2 } });
-            mapInstRef.current = map;
-            new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
-            window.H.ui.UI.createDefault(map, layers);
+            let km = 0, hrs = 0, mins = 0, polylineStr = null;
             try {
-              const ls = window.H.geo.LineString.fromFlexiblePolyline(sec.polyline);
-              const poly = new window.H.map.Polyline(ls, { style: { lineWidth: 5, strokeColor: "#f97316" } });
-              map.addObject(poly);
-              map.getViewModel().setLookAtData({ bounds: poly.getBoundingBox() }, true);
+              const route = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${oLat},${oLng}&destination=${dLat},${dLng}&return=polyline,summary&apikey=${HERE_KEY}`, { signal: AbortSignal.timeout(10000) }).then(r => r.json());
+              const sec = route.routes?.[0]?.sections?.[0];
+              if (sec) { km = Math.round(sec.summary.length / 1000); hrs = Math.floor(sec.summary.duration / 3600); mins = Math.round((sec.summary.duration % 3600) / 60); polylineStr = sec.polyline; }
             } catch {}
-            const mkIcon = (emoji) => new window.H.map.Icon(`<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><circle cx="14" cy="14" r="13" fill="#0c1e35" stroke="#f97316" stroke-width="2"/><text x="14" y="19" text-anchor="middle" font-size="13">${emoji}</text></svg>`);
-            map.addObjects([
-              new window.H.map.Marker({ lat: oLat, lng: oLng }, { icon: mkIcon("🚗") }),
-              new window.H.map.Marker({ lat: dLat, lng: dLng }, { icon: mkIcon("⚓") }),
-            ]);
-          } catch (e) { console.error("[RutaStep HERE]", e); }
+            if (disposed) { setRouteLoading(false); return; }
+            setRouteInfo({ km, hrs, mins, oLat, oLng });
+            if (mapContRef.current) {
+              if (mapInstRef.current) { try { mapInstRef.current.remove(); } catch {} mapInstRef.current = null; }
+              const map = window.L.map(mapContRef.current, { zoomControl: false, attributionControl: false });
+              mapInstRef.current = map;
+              window.L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(map);
+              const mkIcon = (emoji, c) => window.L.divIcon({ html: `<div style="background:#0c1e35;border:2px solid ${c};border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px">${emoji}</div>`, iconSize: [24,24], className:"" });
+              window.L.marker([oLat, oLng], { icon: mkIcon("🚗","#f97316") }).addTo(map);
+              window.L.marker([dLat, dLng], { icon: mkIcon("⚓","#22c55e") }).addTo(map);
+              if (polylineStr && window.flexpolyline) {
+                try {
+                  const decoded = window.flexpolyline.decode(polylineStr);
+                  const coords = decoded.polyline || decoded;
+                  if (coords?.length > 1) {
+                    const poly = window.L.polyline(coords, { color: "#f97316", weight: 4, opacity: 0.9 }).addTo(map);
+                    map.fitBounds(poly.getBounds(), { padding: [20, 20] }); setRouteLoading(false); return;
+                  }
+                } catch {}
+              }
+              map.fitBounds([[oLat, oLng], [dLat, dLng]], { padding: [30, 30] });
+            }
+          } catch (e) { console.error("[RutaStep map]", e); }
           setRouteLoading(false);
         })();
-        return () => { disposed = true; mapInstRef.current?.dispose?.(); mapInstRef.current = null; };
+        return () => { disposed = true; if (mapInstRef.current) { try { mapInstRef.current.remove(); } catch {} mapInstRef.current = null; } };
       }, [fromSel, toSel]);
 
       const proceed = () => {
@@ -1630,7 +1633,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           {/* HERE Map — auto-renders when both selected */}
           {fromSel && toSel && (
             <div style={{ marginBottom: 16 }}>
-              <div ref={mapContRef} style={{ width: "100%", height: 260, borderRadius: 14, overflow: "hidden", background: "#0a1828", position: "relative" }}>
+              <div ref={mapContRef} style={{ width: "100%", height: 260, borderRadius: 14, overflow: "hidden", background: "#0a1828", position: "relative", zIndex: 1 }}>
                 {routeLoading && <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", ...dm, fontSize: 13, color: C.mut }}>⏳ Računam rutu…</div>}
               </div>
               {routeInfo && !routeLoading && (
@@ -1861,7 +1864,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         </div>
         {/* HERE Maps interactive route */}
         <div style={{ borderRadius: 18, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 12 }}>
-          <div ref={transitMapRef} style={{ height: 300, width: "100%", background: "linear-gradient(135deg,#1a2332,#0f1822)" }}>
+          <div id="transit-map" ref={transitMapRef} style={{ height: 280, width: "100%", position: "relative", zIndex: 1, background: "linear-gradient(135deg,#1a2332,#0f1822)" }}>
             {!transitRouteData && (
               <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
                 <div style={{ width: 32, height: 32, border: `2px solid ${C.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin-slow 0.8s linear infinite" }} />
@@ -2790,42 +2793,22 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       const hereMode = delta.segment === "kamper" ? "truck" : "car";
       (async () => {
         try {
-          const geo = await fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(homeQuery)}&limit=1&apikey=${HERE_KEY}`).then(r => r.json());
-          const pos = geo.items?.[0]?.position;
+          await Promise.all([loadLeafletLib(), loadFlexPolyline()]);
+          const pos = await geocodeCity(homeQuery);
           if (!pos) return;
-          const route = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${dest.lat},${dest.lng}&destination=${pos.lat},${pos.lng}&return=polyline,summary&apikey=${HERE_KEY}`).then(r => r.json());
-          const sec = route.routes?.[0]?.sections?.[0];
-          if (!sec) return;
-          const km = Math.round(sec.summary.length / 1000);
-          const hrs = Math.floor(sec.summary.duration / 3600);
-          const mins = Math.round((sec.summary.duration % 3600) / 60);
-          const eta = new Date(Date.now() + sec.summary.duration * 1000);
-          setReturnRouteData({ km, hrs, mins, eta: eta.toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }), homeCity: homeQuery.split(",")[0], oLat: dest.lat, oLng: dest.lng, dLat: pos.lat, dLng: pos.lng, polyline: sec.polyline });
-
-          // Render map
-          const loadScripts = () => new Promise((res, rej) => {
-            if (window.H?.Map) { res(); return; }
-            const urls = ["https://js.api.here.com/v3/3.1/mapsjs-core.js","https://js.api.here.com/v3/3.1/mapsjs-service.js","https://js.api.here.com/v3/3.1/mapsjs-ui.js","https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"];
-            const next = (i) => { if (i >= urls.length) { res(); return; } const s = document.createElement("script"); s.src = urls[i]; s.async = false; s.onload = () => next(i+1); s.onerror = rej; document.head.appendChild(s); };
-            next(0);
-          });
-          await loadScripts();
-          if (!returnMapRef.current) return;
-          if (returnMapInst.current) returnMapInst.current.dispose();
-          const platform = new window.H.service.Platform({ apikey: HERE_KEY });
-          const layers = platform.createDefaultLayers();
-          const map = new window.H.Map(returnMapRef.current, layers.vector.normal.map, { zoom: 6, center: { lat: (dest.lat + pos.lat) / 2, lng: (dest.lng + pos.lng) / 2 } });
-          returnMapInst.current = map;
-          new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
+          let km = 0, hrs = 0, mins = 0, polylineStr = null;
           try {
-            const ls = window.H.geo.LineString.fromFlexiblePolyline(sec.polyline);
-            const poly = new window.H.map.Polyline(ls, { style: { lineWidth: 5, strokeColor: "#f59e0b" } });
-            map.addObject(poly);
-            map.getViewModel().setLookAtData({ bounds: poly.getBoundingBox() }, true);
+            const route = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${dest.lat},${dest.lng}&destination=${pos.lat},${pos.lng}&return=polyline,summary&apikey=${HERE_KEY}`, { signal: AbortSignal.timeout(10000) }).then(r => r.json());
+            const sec = route.routes?.[0]?.sections?.[0];
+            if (sec) { km = Math.round(sec.summary.length / 1000); hrs = Math.floor(sec.summary.duration / 3600); mins = Math.round((sec.summary.duration % 3600) / 60); polylineStr = sec.polyline; const eta = new Date(Date.now() + sec.summary.duration * 1000); setReturnRouteData({ km, hrs, mins, eta: eta.toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }), homeCity: homeQuery.split(",")[0], oLat: dest.lat, oLng: dest.lng, dLat: pos.lat, dLng: pos.lng, polyline: polylineStr }); }
           } catch {}
-        } catch (e) { console.error("[HERE return route]", e); }
+          if (!returnMapRef.current) return;
+          if (returnMapInst.current) { try { returnMapInst.current.remove(); } catch {} returnMapInst.current = null; }
+          const map = renderLeafletMap("return-map", dest.lat, dest.lng, pos.lat, pos.lng, polylineStr, dest.city || "Destinacija", homeQuery.split(",")[0], "#f59e0b");
+          if (map) returnMapInst.current = map;
+        } catch (e) { console.error("[return map]", e); }
       })();
-      return () => { returnMapInst.current?.dispose?.(); returnMapInst.current = null; };
+      return () => { if (returnMapInst.current) { try { returnMapInst.current.remove(); } catch {} returnMapInst.current = null; } };
     }, []); // eslint-disable-line
 
     // ── Home weather comparison (static estimate) ──
@@ -2926,7 +2909,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         <div style={{ marginBottom: 20 }}>
           <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 2, marginBottom: 10 }}>🗺️ POVRATNA RUTA</div>
           <div style={{ borderRadius: 16, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 10 }}>
-            <div ref={returnMapRef} style={{ height: 220, background: "linear-gradient(135deg,#1a2332,#0f1822)" }}>
+            <div id="return-map" ref={returnMapRef} style={{ height: 220, position: "relative", zIndex: 1, background: "linear-gradient(135deg,#1a2332,#0f1822)" }}>
               {!returnRouteData && (
                 <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                   <div style={{ width: 24, height: 24, border: `2px solid ${C.gold}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin-slow 0.8s linear infinite" }} />
