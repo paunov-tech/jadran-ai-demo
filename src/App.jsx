@@ -407,6 +407,75 @@ const ROOM_DESTINATIONS = {
   "_default": { city: "Podstrana", lat: 43.4833, lng: 16.5500 },
 };
 
+// ─── 4 ADRIATIC REGIONS with precise boundaries ────────────────────────────
+const ADRIATIC_REGIONS = {
+  istra: {
+    name: { hr: "Istra", de: "Istrien", en: "Istria", it: "Istria" },
+    lat_min: 44.8, lat_max: 45.6, lon_min: 13.5, lon_max: 14.2,
+    cities: ["Rovinj","Poreč","Pula","Umag","Novigrad","Labin","Medulin","Vrsar"],
+    center: { city: "Rovinj", lat: 45.0811, lng: 13.6387 },
+    hero_img: "https://images.unsplash.com/photo-1598820659657-bec45d9de940?w=600&q=75",
+    color: "#2E7D32", emoji: "🌿",
+    drive_from_vienna: "5–6h",
+    highlights: ["Rovinj stari grad", "Pula amfiteatar", "Tartufi"],
+    border_crossing: "Koper/Rupa", chat_region: "istra",
+    pre_trip: { hr: "Pula amfiteatar (UNESCO) · Tartufi u sezoni · Limski kanal", de: "Pula Amphitheater (UNESCO) · Trüffel in der Saison · Limski Kanal" },
+  },
+  kvarner: {
+    name: { hr: "Kvarner", de: "Kvarner", en: "Kvarner", it: "Quarnero" },
+    lat_min: 44.4, lat_max: 45.3, lon_min: 14.2, lon_max: 15.1,
+    cities: ["Opatija","Rijeka","Crikvenica","Senj","Krk","Rab","Mali Lošinj","Cres","Novalja"],
+    center: { city: "Opatija", lat: 45.3380, lng: 14.3051 },
+    hero_img: "https://images.unsplash.com/photo-1586861635167-e5223aadc9fe?w=600&q=75",
+    color: "#1565C0", emoji: "⛵",
+    drive_from_vienna: "5–6h",
+    highlights: ["Opatija rivijera", "Krk — otok sunca", "Zrće festival"],
+    border_crossing: "Rupa (SLO→HR)", chat_region: "kvarner",
+    pre_tip: { hr: "Bura vjetar — provjeri DHMZ upozorenja!", de: "Bura-Wind — DHMZ-Warnungen beachten!" },
+  },
+  srednja_dalmacija: {
+    name: { hr: "Srednja Dalmacija", de: "Mitteldalmatien", en: "Central Dalmatia", it: "Dalmazia Centrale" },
+    lat_min: 43.0, lat_max: 44.4, lon_min: 15.1, lon_max: 17.5,
+    cities: ["Split","Trogir","Makarska","Omiš","Podstrana","Hvar","Brač","Vis","Korčula","Šibenik","Zadar","Primošten","Vodice","Murter","Biograd"],
+    center: { city: "Split", lat: 43.5081, lng: 16.4402 },
+    hero_img: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=600&q=75",
+    color: "#00838F", emoji: "🏛",
+    drive_from_vienna: "7–8h",
+    highlights: ["Dioklecijanova palača", "Zlatni Rat", "Hvar nightlife"],
+    border_crossing: "Macelj ili Karavanke → A1", chat_region: "split",
+    pre_tip: { hr: "Macelj vs Karavanke — provjeri gužve u realnom vremenu.", de: "Macelj vs. Karawanken — Staus in Echtzeit prüfen." },
+  },
+  juzna_dalmacija: {
+    name: { hr: "Južna Dalmacija", de: "Süddalmatien", en: "Southern Dalmatia", it: "Dalmazia del Sud" },
+    lat_min: 42.0, lat_max: 43.0, lon_min: 16.5, lon_max: 18.5,
+    cities: ["Dubrovnik","Cavtat","Korčula grad","Pelješac","Ston","Mljet","Lastovo","Herceg Novi"],
+    center: { city: "Dubrovnik", lat: 42.6507, lng: 18.0944 },
+    hero_img: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=600&q=75",
+    color: "#AD1457", emoji: "🏰",
+    drive_from_vienna: "8–9h",
+    highlights: ["Dubrovnik stari grad", "Pelješac vino", "Mljet NP"],
+    border_crossing: "Macelj → A1 (najduži put)", chat_region: "dubrovnik",
+    pre_tip: { hr: "Neum koridor — kratki prolaz kroz BiH (bez vize za EU).", de: "Neum-Korridor — kurze Durchfahrt durch Bosnien (kein EU-Visum nötig)." },
+  },
+};
+
+// Detect region from lat/lng coordinates
+function detectRegion(lat, lon) {
+  for (const [key, r] of Object.entries(ADRIATIC_REGIONS)) {
+    if (lat >= r.lat_min && lat <= r.lat_max && lon >= r.lon_min && lon <= r.lon_max) return key;
+  }
+  return "srednja_dalmacija";
+}
+// Detect region by city name (also tries lat/lng lookup via COASTAL_DESTINATIONS)
+function detectRegionByCity(cityName) {
+  if (!cityName) return null;
+  const lower = cityName.toLowerCase();
+  for (const [key, r] of Object.entries(ADRIATIC_REGIONS)) {
+    if (r.cities.some(c => c.toLowerCase() === lower)) return key;
+  }
+  return null;
+}
+
 const COASTAL_DESTINATIONS = [
   { city: "Dubrovnik",   lat: 42.6507, lng: 18.0944 },
   { city: "Split",       lat: 43.5081, lng: 16.4402 },
@@ -512,6 +581,15 @@ export default function JadranUnified() {
       if (saved?.city && saved?.lat) return saved;
     } catch {}
     return ROOM_DESTINATIONS[roomCode.current] || ROOM_DESTINATIONS["_default"];
+  });
+  // Active Adriatic region (from localStorage, derived from dest)
+  const [region, setRegion] = useState(() => {
+    try { const r = localStorage.getItem("jadran_region"); if (r && ADRIATIC_REGIONS[r]) return r; } catch {}
+    // derive from dest
+    const d = (() => { try { return JSON.parse(localStorage.getItem("jadran_destination_obj") || "null"); } catch { return null; } })();
+    if (d?.city) { const r = detectRegionByCity(d.city); if (r) return r; }
+    if (d?.lat) return detectRegion(d.lat, d.lng || 16);
+    return "srednja_dalmacija";
   });
 
   // ─── TRANSIT HERE MAP ───
@@ -1206,96 +1284,140 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
      ══════════════════════════════ */
   const PreTrip = () => {
     const DestStep = () => {
+      const [selRegKey, setSelRegKey] = React.useState(region || null);
+      const [advMode, setAdvMode] = React.useState(null); // null | "city" | "room"
       const [dQuery, setDQuery] = React.useState(dest?.city || "");
       const [dSugs, setDSugs] = React.useState([]);
-      const [roomMode, setRoomMode] = React.useState(false);
       const [rcInput, setRcInput] = React.useState("");
       const [rcMatch, setRcMatch] = React.useState(null);
-      const [chosen, setChosen] = React.useState(dest);
+      const [chosen, setChosen] = React.useState(
+        dest?.city ? dest : (region ? ADRIATIC_REGIONS[region]?.center : null)
+      );
 
+      const pickRegion = (key) => {
+        setSelRegKey(key); setAdvMode(null);
+        setChosen(ADRIATIC_REGIONS[key].center);
+      };
       const onQueryChange = (v) => {
-        setDQuery(v);
-        setChosen(null);
+        setDQuery(v); setChosen(null); setSelRegKey(null);
         const q = v.toLowerCase();
         setDSugs(q.length < 1 ? [] : COASTAL_DESTINATIONS.filter(d => d.city.toLowerCase().includes(q)).slice(0, 8));
       };
-      const selectDest = (d) => { setChosen(d); setDQuery(d.city); setDSugs([]); };
+      const selectCity = (d) => {
+        setChosen(d); setDQuery(d.city); setDSugs([]);
+        const rk = detectRegionByCity(d.city) || detectRegion(d.lat, d.lng);
+        setSelRegKey(rk);
+      };
       const tryRoomCode = () => {
         const code = rcInput.trim().toUpperCase();
         const match = ROOM_DESTINATIONS[code];
-        if (match) { setRcMatch(match); setChosen(match); }
-        else setRcMatch(null);
+        if (match) {
+          setRcMatch(match); setChosen(match);
+          setSelRegKey(detectRegionByCity(match.city) || detectRegion(match.lat, match.lng));
+        } else setRcMatch(null);
       };
       const saveAndNext = () => {
-        if (!chosen) return;
-        try { localStorage.setItem("jadran_destination_obj", JSON.stringify(chosen)); } catch {}
-        setDest(chosen);
+        const finalDest = chosen || (selRegKey && ADRIATIC_REGIONS[selRegKey]?.center);
+        if (!finalDest && !selRegKey) return;
+        if (finalDest) {
+          try { localStorage.setItem("jadran_destination_obj", JSON.stringify(finalDest)); } catch {}
+          setDest(finalDest);
+        }
+        if (selRegKey) {
+          try { localStorage.setItem("jadran_region", selRegKey); } catch {}
+          setRegion(selRegKey);
+        }
         setOnboardStep(3);
       };
 
-      const destLabels = { hr: "Kamo idete?", de: "Wohin reisen Sie?", en: "Where are you going?", it: "Dove andate?", si: "Kam greste?", cz: "Kam jedete?", pl: "Dokąd jadą Państwo?" };
-      const inputPlaceholders = { hr: "Unesite destinaciju…", de: "Reiseziel eingeben…", en: "Enter destination…", it: "Inserisci destinazione…", si: "Vnesite destinacijo…", cz: "Zadejte destinaci…", pl: "Wpisz cel podróży…" };
-      const roomToggleLabels = { hr: "Imam kod smještaja", de: "Ich habe einen Zimmercode", en: "I have a room code", it: "Ho il codice camera" };
+      const headLabel = { hr: "Kamo idete?", de: "Wohin reisen Sie?", en: "Where are you going?", it: "Dove andate?", si: "Kam greste?", cz: "Kam jedete?", pl: "Dokąd jadą?" };
 
       return (
-        <Card style={{ padding: 32 }}>
-          <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 3, textTransform: "uppercase", marginBottom: 16 }}>Korak 2 / 3</div>
-          <div style={{ fontSize: 22, fontWeight: 400, marginBottom: 20 }}>{destLabels[lang] || destLabels.hr}</div>
+        <Card style={{ padding: "28px 20px" }}>
+          <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 3, textTransform: "uppercase", marginBottom: 12 }}>Korak 2 / 3</div>
+          <div style={{ fontSize: 21, fontWeight: 400, marginBottom: 18 }}>{headLabel[lang] || headLabel.hr}</div>
 
-          {/* Mode A — autocomplete */}
-          <div style={{ position: "relative", marginBottom: 14 }}>
-            <input value={dQuery} onChange={e => onQueryChange(e.target.value)}
-              placeholder={inputPlaceholders[lang] || inputPlaceholders.hr}
-              style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: `1px solid ${chosen ? "rgba(34,197,94,0.4)" : C.bord}`, background: C.card, color: C.text, fontSize: 15, outline: "none", ...dm, boxSizing: "border-box" }} />
-            {dSugs.length > 0 && (
-              <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: `1px solid ${C.bord}`, borderRadius: 12, marginTop: 4, zIndex: 50, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
-                {dSugs.map(d => (
-                  <div key={d.city} onClick={() => selectDest(d)}
-                    style={{ padding: "11px 16px", cursor: "pointer", ...dm, fontSize: 14, color: C.text, borderBottom: `1px solid ${C.bord}` }}
-                    onMouseEnter={e => e.currentTarget.style.background = C.acDim}
-                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                    📍 {d.city}
+          {/* ── 4 region cards 2×2 grid ── */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+            {Object.entries(ADRIATIC_REGIONS).map(([key, reg]) => {
+              const active = selRegKey === key;
+              const nm = reg.name[lang] || reg.name.hr;
+              return (
+                <div key={key} onClick={() => pickRegion(key)}
+                  style={{ borderRadius: 14, overflow: "hidden", border: `2px solid ${active ? reg.color : "rgba(255,255,255,0.07)"}`, cursor: "pointer", background: "#0a1828",
+                    boxShadow: active ? `0 0 0 1px ${reg.color}44, 0 4px 20px ${reg.color}33` : "none",
+                    transition: "border-color 0.2s, box-shadow 0.2s" }}>
+                  <div style={{ height: 64, background: `url(${reg.hero_img}) center/cover no-repeat`, position: "relative" }}>
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(5,15,30,0.82))" }} />
+                    {active && <div style={{ position: "absolute", top: 6, right: 6, width: 18, height: 18, borderRadius: "50%", background: reg.color, display: "grid", placeItems: "center", fontSize: 10, color: "#fff" }}>✓</div>}
                   </div>
-                ))}
-              </div>
-            )}
+                  <div style={{ padding: "7px 10px 9px" }}>
+                    <div style={{ ...dm, fontSize: 13, fontWeight: 700, color: active ? reg.color : C.text }}>{reg.emoji} {nm}</div>
+                    <div style={{ ...dm, fontSize: 10, color: C.mut }}>🚗 {reg.drive_from_vienna}</div>
+                    <div style={{ ...dm, fontSize: 9, color: "#475569", marginTop: 2, lineHeight: 1.35 }}>{reg.highlights.slice(0, 2).join(" · ")}</div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Mode B — room code toggle */}
-          <button onClick={() => setRoomMode(!roomMode)}
-            style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1px solid ${roomMode ? "rgba(245,158,11,0.3)" : C.bord}`, background: roomMode ? "rgba(245,158,11,0.06)" : "transparent", color: roomMode ? C.gold : C.mut, fontSize: 13, cursor: "pointer", ...dm, textAlign: "left", marginBottom: roomMode ? 10 : 14 }}>
-            🏠 {roomToggleLabels[lang] || roomToggleLabels.hr}
-          </button>
-          {roomMode && (
-            <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-              <input value={rcInput} onChange={e => setRcInput(e.target.value.toUpperCase())}
-                onKeyDown={e => e.key === "Enter" && tryRoomCode()}
-                placeholder="npr. 1001, DEMO…"
-                style={{ flex: 1, padding: "10px 14px", borderRadius: 10, border: `1px solid ${C.bord}`, background: C.card, color: C.text, fontSize: 14, outline: "none", ...dm }} />
-              <button onClick={tryRoomCode}
-                style={{ padding: "10px 16px", borderRadius: 10, background: "linear-gradient(135deg,#f59e0b,#d97706)", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", ...dm }}>
-                OK
-              </button>
+          {/* ── Advanced: exact city or room code ── */}
+          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+            <button onClick={() => setAdvMode(advMode === "city" ? null : "city")}
+              style={{ flex: 1, padding: "8px 10px", borderRadius: 10, border: `1px solid ${advMode === "city" ? "rgba(14,165,233,0.4)" : C.bord}`, background: advMode === "city" ? "rgba(14,165,233,0.07)" : "transparent", color: advMode === "city" ? C.accent : C.mut, fontSize: 12, cursor: "pointer", ...dm }}>
+              📍 {lang === "de" ? "Genaue Stadt" : lang === "en" ? "Exact city" : "Unesite grad"}
+            </button>
+            <button onClick={() => setAdvMode(advMode === "room" ? null : "room")}
+              style={{ flex: 1, padding: "8px 10px", borderRadius: 10, border: `1px solid ${advMode === "room" ? "rgba(245,158,11,0.3)" : C.bord}`, background: advMode === "room" ? "rgba(245,158,11,0.06)" : "transparent", color: advMode === "room" ? C.gold : C.mut, fontSize: 12, cursor: "pointer", ...dm }}>
+              🏠 {lang === "de" ? "Zimmercode" : lang === "en" ? "Room code" : "Kod smještaja"}
+            </button>
+          </div>
+
+          {advMode === "city" && (
+            <div style={{ position: "relative", marginBottom: 12 }}>
+              <input value={dQuery} onChange={e => onQueryChange(e.target.value)}
+                placeholder={lang === "de" ? "z.B. Hvar, Split, Rovinj…" : lang === "en" ? "e.g. Hvar, Split, Rovinj…" : "npr. Hvar, Split, Rovinj…"}
+                style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: `1px solid ${chosen && advMode === "city" ? "rgba(34,197,94,0.4)" : C.bord}`, background: C.card, color: C.text, fontSize: 14, outline: "none", ...dm, boxSizing: "border-box" }} />
+              {dSugs.length > 0 && (
+                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: `1px solid ${C.bord}`, borderRadius: 10, marginTop: 4, zIndex: 50, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
+                  {dSugs.map(d => (
+                    <div key={d.city} onClick={() => selectCity(d)}
+                      style={{ padding: "10px 14px", cursor: "pointer", ...dm, fontSize: 13, color: C.text, borderBottom: `1px solid ${C.bord}` }}
+                      onMouseEnter={e => e.currentTarget.style.background = C.acDim}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      📍 {d.city}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-          {rcMatch && (
-            <div style={{ padding: "8px 14px", borderRadius: 10, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", ...dm, fontSize: 13, color: "#22c55e", marginBottom: 14 }}>
-              ✓ Smještaj pronađen: {rcMatch.city}
-            </div>
-          )}
-          {roomMode && rcInput.length > 0 && !rcMatch && (
-            <div style={{ ...dm, fontSize: 12, color: C.red, marginBottom: 10 }}>Kod nije pronađen</div>
           )}
 
-          {chosen && (
-            <div style={{ padding: "8px 14px", borderRadius: 10, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)", ...dm, fontSize: 13, color: C.accent, marginBottom: 16 }}>
-              ✓ Destinacija: <strong>{chosen.city}</strong>
+          {advMode === "room" && (
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input value={rcInput} onChange={e => setRcInput(e.target.value.toUpperCase())}
+                  onKeyDown={e => e.key === "Enter" && tryRoomCode()}
+                  placeholder="npr. 1001, DEMO…"
+                  style={{ flex: 1, padding: "10px 14px", borderRadius: 10, border: `1px solid ${C.bord}`, background: C.card, color: C.text, fontSize: 14, outline: "none", ...dm }} />
+                <button onClick={tryRoomCode}
+                  style={{ padding: "10px 16px", borderRadius: 10, background: "linear-gradient(135deg,#f59e0b,#d97706)", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", ...dm }}>OK</button>
+              </div>
+              {rcMatch && <div style={{ ...dm, fontSize: 12, color: "#22c55e", marginTop: 8 }}>✓ Smještaj pronađen: {rcMatch.city}</div>}
+              {rcInput.length > 1 && !rcMatch && <div style={{ ...dm, fontSize: 12, color: C.red, marginTop: 6 }}>Kod nije pronađen</div>}
+            </div>
+          )}
+
+          {(chosen || selRegKey) && (
+            <div style={{ padding: "8px 14px", borderRadius: 10, background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.2)", ...dm, fontSize: 13, color: C.accent, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+              {selRegKey && <span style={{ color: ADRIATIC_REGIONS[selRegKey]?.color }}>{ADRIATIC_REGIONS[selRegKey]?.emoji}</span>}
+              <span>✓ {selRegKey ? (ADRIATIC_REGIONS[selRegKey]?.name[lang] || ADRIATIC_REGIONS[selRegKey]?.name.hr) : ""}{chosen?.city && chosen.city !== ADRIATIC_REGIONS[selRegKey]?.center?.city ? ` — ${chosen.city}` : ""}</span>
             </div>
           )}
 
           <div style={{ display: "flex", gap: 8 }}>
             <Btn onClick={() => setOnboardStep(1)}>← {t("back",lang) || "Natrag"}</Btn>
-            <Btn primary onClick={saveAndNext} style={{ flex: 1, opacity: chosen ? 1 : 0.4, pointerEvents: chosen ? "auto" : "none" }}>{t("next",lang) || "Dalje"} →</Btn>
+            <Btn primary onClick={saveAndNext} style={{ flex: 1, opacity: (chosen || selRegKey) ? 1 : 0.4, pointerEvents: (chosen || selRegKey) ? "auto" : "none" }}>{t("next",lang) || "Dalje"} →</Btn>
           </div>
         </Card>
       );
@@ -1538,6 +1660,29 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             );
           })()}
         </div>
+
+        {/* ── Region-aware pre-trip tips ── */}
+        {region && ADRIATIC_REGIONS[region] && (() => {
+          const reg = ADRIATIC_REGIONS[region];
+          const tip = reg.pre_tip?.[lang] || reg.pre_tip?.hr || reg.pre_tip?.de || "";
+          return (
+            <div style={{ padding: "14px 16px", borderRadius: 14, border: `1px solid ${reg.color}33`, background: `${reg.color}0a`, marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{ fontSize: 18 }}>{reg.emoji}</span>
+                <div style={{ ...dm, fontSize: 11, fontWeight: 700, color: reg.color, letterSpacing: 1.5, textTransform: "uppercase" }}>
+                  {reg.name[lang] || reg.name.hr} — Pre-trip
+                </div>
+              </div>
+              <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.6, marginBottom: 6 }}>{tip}</div>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {reg.highlights.map(h => (
+                  <span key={h} style={{ ...dm, fontSize: 10, padding: "3px 8px", borderRadius: 8, background: `${reg.color}15`, color: reg.color, border: `1px solid ${reg.color}22` }}>{h}</span>
+                ))}
+              </div>
+              <div style={{ ...dm, fontSize: 10, color: C.mut, marginTop: 8 }}>🛂 {reg.border_crossing} · 🚗 {reg.drive_from_vienna} iz Beča/Münchena</div>
+            </div>
+          );
+        })()}
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginBottom: 24 }}>
           <Card>

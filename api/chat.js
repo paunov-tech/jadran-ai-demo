@@ -1093,7 +1093,15 @@ export default async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: 'Service temporarily unavailable' });
 
   try {
-    const { system, messages, mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, plan, deviceId } = req.body;
+    const { system, messages, mode, region: regionRaw, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, plan, deviceId, adriatic_region } = req.body;
+    // Map new Adriatic region keys to existing LOCATIONS keys
+    const ADRIATIC_TO_LOCATION = { istra: "istra", kvarner: "kvarner", srednja_dalmacija: "split", juzna_dalmacija: "dubrovnik" };
+    const region = regionRaw || (adriatic_region ? ADRIATIC_TO_LOCATION[adriatic_region] : undefined);
+    // Region context header injected into system prompt
+    const ADRIATIC_REGION_NAMES = { istra: "Istra (Pula/Rovinj area)", kvarner: "Kvarner (Opatija/Krk area)", srednja_dalmacija: "Srednja Dalmacija — Split/Makarska area", juzna_dalmacija: "Južna Dalmacija — Dubrovnik area" };
+    const adriaticCtx = adriatic_region && ADRIATIC_REGION_NAMES[adriatic_region]
+      ? `[REGION: ${ADRIATIC_REGION_NAMES[adriatic_region]}. Guest arriving from Central Europe.]`
+      : null;
 
     // ── PROMO CODES — free VIP access for testers ──
     const PROMO_CODES = {
@@ -1190,13 +1198,15 @@ export default async function handler(req, res) {
 
     let systemPrompt = '';
     try {
-      systemPrompt = mode && region 
+      systemPrompt = mode && region
         ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan, yoloCrowdData })
         : (system || '');
     } catch (promptErr) {
       // If prompt building fails, use minimal fallback
       systemPrompt = 'Ti si Jadran.ai, lokalni turistički vodič za hrvatsku obalu Jadrana. Kratki, korisni odgovori.';
     }
+    // Prepend Adriatic region context if available (precise geographic anchor for AI)
+    if (adriaticCtx && systemPrompt) systemPrompt = adriaticCtx + '\n' + systemPrompt;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
