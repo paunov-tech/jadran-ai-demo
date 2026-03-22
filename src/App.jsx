@@ -660,6 +660,7 @@ export default function JadranUnified() {
   const [chatLoading, setChatLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(null);
   const chatEnd = useRef(null);
+  if (!new URLSearchParams(window.location.search).get("room")) { try { localStorage.removeItem("jadran_room"); } catch {} }
   const roomCode = useRef(getRoomCode());
   // Destination: prefer localStorage (set during onboarding), fallback to room code config
   const [dest, setDest] = useState(() => {
@@ -1424,251 +1425,174 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
      PHASE 1: PRE-TRIP
      ══════════════════════════════ */
   const PreTrip = () => {
-    // ─── Step 1: From (departure city) ────────────────────────────────────
-    const FromStep = () => {
-      const [fQuery, setFQuery] = React.useState(delta.from || "");
-      const [fSugs, setFSugs] = React.useState([]);
+    // ─── Step 2: Ruta (combined from + destination + HERE map) ───────────
+    const RutaStep = () => {
+      const [fromQ, setFromQ] = React.useState(delta.from || "");
+      const [fromSugs, setFromSugs] = React.useState([]);
+      const [fromSel, setFromSel] = React.useState(delta.from || null);
+      const [toQ, setToQ] = React.useState(delta.destination?.city || "");
+      const [toSugs, setToSugs] = React.useState([]);
+      const [toSel, setToSel] = React.useState(delta.destination?.city ? delta.destination : null);
+      const [routeInfo, setRouteInfo] = React.useState(null);
+      const [routeLoading, setRouteLoading] = React.useState(false);
       const [locLoading, setLocLoading] = React.useState(false);
-      const onQueryChange = (v) => {
-        setFQuery(v);
-        const q = v.toLowerCase();
-        setFSugs(q.length < 1 ? [] : EU_CITIES.filter(c => c.toLowerCase().includes(q)).slice(0, 8));
-      };
-      const selectCity = (c) => { setFQuery(c); setFSugs([]); updateDelta({ from: c }); };
-      const detectLoc = () => {
-        if (!navigator.geolocation) return;
-        setLocLoading(true);
-        navigator.geolocation.getCurrentPosition(async pos => {
+      const mapContRef = React.useRef(null);
+      const mapInstRef = React.useRef(null);
+
+      const loadHereScripts = () => new Promise((resolve, reject) => {
+        if (window.H?.Map) { resolve(); return; }
+        const css = document.createElement("link"); css.rel = "stylesheet"; css.href = "https://js.api.here.com/v3/3.1/mapsjs-ui.css"; document.head.appendChild(css);
+        const urls = ["https://js.api.here.com/v3/3.1/mapsjs-core.js","https://js.api.here.com/v3/3.1/mapsjs-service.js","https://js.api.here.com/v3/3.1/mapsjs-ui.js","https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"];
+        const next = (i) => { if (i >= urls.length) { resolve(); return; } const s = document.createElement("script"); s.src = urls[i]; s.async = false; s.onload = () => next(i+1); s.onerror = reject; document.head.appendChild(s); };
+        next(0);
+      });
+
+      React.useEffect(() => {
+        if (!fromSel || !toSel?.lat) return;
+        setRouteLoading(true);
+        let disposed = false;
+        (async () => {
           try {
-            const r = await fetch(`https://revgeocode.search.hereapi.com/v1/revgeocode?at=${pos.coords.latitude},${pos.coords.longitude}&limit=1&apikey=0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw`);
-            const d = await r.json();
-            const city = d.items?.[0]?.address?.city || d.items?.[0]?.address?.county || "Vaša lokacija";
-            setFQuery(city); updateDelta({ from: city, from_coords: { lat: pos.coords.latitude, lon: pos.coords.longitude } });
-          } catch {}
-          setLocLoading(false);
-        }, () => setLocLoading(false));
-      };
-      return (
-        <Card style={{ padding: "28px 20px" }}>
-          <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 3, textTransform: "uppercase", marginBottom: 12 }}>Korak 2 / 4</div>
-          <div style={{ fontSize: 21, fontWeight: 400, marginBottom: 18 }}>Odakle krenete?</div>
-          <div style={{ position: "relative", marginBottom: 10 }}>
-            <input value={fQuery} onChange={e => onQueryChange(e.target.value)}
-              placeholder="npr. Wien, München, Praha…"
-              style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: `1px solid ${delta.from ? "rgba(34,197,94,0.4)" : C.bord}`, background: C.card, color: C.text, fontSize: 15, outline: "none", ...dm, boxSizing: "border-box" }} />
-            {fSugs.length > 0 && (
-              <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: `1px solid ${C.bord}`, borderRadius: 12, marginTop: 4, zIndex: 50, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
-                {fSugs.map(c => (
-                  <div key={c} onClick={() => selectCity(c)}
-                    style={{ padding: "10px 14px", cursor: "pointer", ...dm, fontSize: 14, color: C.text, borderBottom: `1px solid ${C.bord}` }}
-                    onMouseEnter={e => e.currentTarget.style.background = C.acDim}
-                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                    📍 {c}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <button onClick={detectLoc} disabled={locLoading}
-            style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: `1px solid ${C.bord}`, background: "transparent", color: C.mut, fontSize: 13, cursor: "pointer", ...dm, marginBottom: 18 }}>
-            {locLoading ? "⏳ Detektiram…" : "📡 Detektiraj moju lokaciju"}
-          </button>
-          <div style={{ display: "flex", gap: 8 }}>
-            <Btn onClick={() => setOnboardStep(0)}>← Natrag</Btn>
-            <Btn primary onClick={() => { if (fQuery && !delta.from) updateDelta({ from: fQuery }); setOnboardStep(2); }} style={{ flex: 1 }}>Nastavi →</Btn>
-          </div>
-        </Card>
-      );
-    };
+            let oLat, oLng;
+            if (delta.from_coords?.lat) { oLat = delta.from_coords.lat; oLng = delta.from_coords.lon; }
+            else {
+              const geo = await fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(fromSel)}&limit=1&apikey=${HERE_KEY}`).then(r => r.json());
+              const pos = geo.items?.[0]?.position;
+              if (!pos) { setRouteLoading(false); return; }
+              oLat = pos.lat; oLng = pos.lng;
+            }
+            const dLat = toSel.lat; const dLng = toSel.lng;
+            const transport = (() => { try { return localStorage.getItem("jadran_transport") || "auto"; } catch { return "auto"; } })();
+            const hereMode = transport === "kamper" ? "truck" : "car";
+            const route = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${oLat},${oLng}&destination=${dLat},${dLng}&return=polyline,summary&apikey=${HERE_KEY}`).then(r => r.json());
+            const sec = route.routes?.[0]?.sections?.[0];
+            if (!sec || disposed) { setRouteLoading(false); return; }
+            const km = Math.round(sec.summary.length / 1000);
+            const hrs = Math.floor(sec.summary.duration / 3600);
+            const mins = Math.round((sec.summary.duration % 3600) / 60);
+            setRouteInfo({ km, hrs, mins, oLat, oLng });
+            await loadHereScripts();
+            if (!mapContRef.current || disposed) { setRouteLoading(false); return; }
+            mapInstRef.current?.dispose?.();
+            const platform = new window.H.service.Platform({ apikey: HERE_KEY });
+            const layers = platform.createDefaultLayers();
+            const map = new window.H.Map(mapContRef.current, layers.vector.normal.map, { zoom: 6, center: { lat: (oLat + dLat) / 2, lng: (oLng + dLng) / 2 } });
+            mapInstRef.current = map;
+            new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
+            window.H.ui.UI.createDefault(map, layers);
+            try {
+              const ls = window.H.geo.LineString.fromFlexiblePolyline(sec.polyline);
+              const poly = new window.H.map.Polyline(ls, { style: { lineWidth: 5, strokeColor: "#f97316" } });
+              map.addObject(poly);
+              map.getViewModel().setLookAtData({ bounds: poly.getBoundingBox() }, true);
+            } catch {}
+            const mkIcon = (emoji) => new window.H.map.Icon(`<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><circle cx="14" cy="14" r="13" fill="#0c1e35" stroke="#f97316" stroke-width="2"/><text x="14" y="19" text-anchor="middle" font-size="13">${emoji}</text></svg>`);
+            map.addObjects([
+              new window.H.map.Marker({ lat: oLat, lng: oLng }, { icon: mkIcon("🚗") }),
+              new window.H.map.Marker({ lat: dLat, lng: dLng }, { icon: mkIcon("⚓") }),
+            ]);
+          } catch (e) { console.error("[RutaStep HERE]", e); }
+          setRouteLoading(false);
+        })();
+        return () => { disposed = true; mapInstRef.current?.dispose?.(); mapInstRef.current = null; };
+      }, [fromSel, toSel]);
 
-    // ─── Step 3: When & How many ──────────────────────────────────────────
-    const WhenStep = () => {
-      const [adults, setAdults] = React.useState(delta.travelers?.adults || 2);
-      const [kids, setKids] = React.useState(delta.travelers?.kids?.length || 0);
-      const [arrDate, setArrDate] = React.useState(delta.arrival_date || "");
-      const [budget, setBudget] = React.useState(delta.budget || null);
       const proceed = () => {
-        updateDelta({ travelers: { adults, kids: Array(kids).fill(0), kids_ages: [] }, arrival_date: arrDate, budget, phase: "transit" });
+        if (!toSel?.lat) return;
+        const rk = detectRegionByCity(toSel.city) || detectRegion(toSel.lat, toSel.lng);
+        try { localStorage.setItem("jadran_destination_obj", JSON.stringify(toSel)); } catch {}
+        if (rk) { try { localStorage.setItem("jadran_region", rk); } catch {} setRegion(rk); }
+        setDest(toSel);
+        updateDelta({ from: fromSel || fromQ, destination: { city: toSel.city, lat: toSel.lat, lon: toSel.lng, region: rk }, yolo_region: rk, phase: "transit" });
         setSubScreen("transit");
+        setPhase("pre");
       };
-      const ready = arrDate && budget;
-      return (
-        <Card style={{ padding: "28px 20px" }}>
-          <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 3, textTransform: "uppercase", marginBottom: 12 }}>Korak 4 / 4</div>
-          <div style={{ fontSize: 21, fontWeight: 400, marginBottom: 18 }}>Kada i koliko vas putuje?</div>
-          <div style={{ marginBottom: 14 }}>
-            <div style={{ ...dm, fontSize: 12, color: C.mut, marginBottom: 6 }}>📅 Datum dolaska</div>
-            <input type="date" value={arrDate} onChange={e => setArrDate(e.target.value)}
-              style={{ width: "100%", padding: "11px 14px", borderRadius: 12, border: `1px solid ${arrDate ? "rgba(34,197,94,0.4)" : C.bord}`, background: C.card, color: C.text, fontSize: 14, outline: "none", ...dm, boxSizing: "border-box", colorScheme: "dark" }} />
-          </div>
-          <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
-            {[{ label: "👤 Odrasli", val: adults, set: setAdults, min: 1, max: 10 }, { label: "👶 Djeca", val: kids, set: setKids, min: 0, max: 8 }].map(({ label, val, set, min, max }) => (
-              <div key={label} style={{ flex: 1, padding: "12px 10px", borderRadius: 12, border: `1px solid ${C.bord}`, background: C.card, textAlign: "center" }}>
-                <div style={{ ...dm, fontSize: 11, color: C.mut, marginBottom: 8 }}>{label}</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, justifyContent: "center" }}>
-                  <button onClick={() => set(v => Math.max(min, v - 1))} style={{ width: 30, height: 30, borderRadius: "50%", border: `1px solid ${C.bord}`, background: "transparent", color: C.text, fontSize: 16, cursor: "pointer", lineHeight: 1 }}>−</button>
-                  <span style={{ ...dm, fontSize: 20, fontWeight: 300, minWidth: 20 }}>{val}</span>
-                  <button onClick={() => set(v => Math.min(max, v + 1))} style={{ width: 30, height: 30, borderRadius: "50%", border: `1px solid ${C.bord}`, background: "transparent", color: C.text, fontSize: 16, cursor: "pointer", lineHeight: 1 }}>+</button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ ...dm, fontSize: 12, color: C.mut, marginBottom: 8 }}>💶 Budžet</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              {[{ k: "low", l: "💰 Budžet" }, { k: "mid", l: "💳 Srednji" }, { k: "high", l: "💎 Luksuz" }].map(b => (
-                <button key={b.k} onClick={() => setBudget(b.k)}
-                  style={{ flex: 1, padding: "10px 6px", borderRadius: 10, border: `1px solid ${budget === b.k ? "rgba(14,165,233,0.4)" : C.bord}`, background: budget === b.k ? C.acDim : "transparent", color: budget === b.k ? C.accent : C.mut, fontSize: 12, cursor: "pointer", ...dm, fontWeight: budget === b.k ? 600 : 400 }}>
-                  {b.l}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <Btn onClick={() => setOnboardStep(2)}>← Natrag</Btn>
-            <Btn primary onClick={proceed} style={{ flex: 1, opacity: ready ? 1 : 0.4, pointerEvents: ready ? "auto" : "none" }}>Kreni sa mnom →</Btn>
-          </div>
-        </Card>
-      );
-    };
-
-    const DestStep = () => {
-      const [selRegKey, setSelRegKey] = React.useState(region || null);
-      const [advMode, setAdvMode] = React.useState(null); // null | "city" | "room"
-      const [dQuery, setDQuery] = React.useState(dest?.city || "");
-      const [dSugs, setDSugs] = React.useState([]);
-      const [rcInput, setRcInput] = React.useState("");
-      const [rcMatch, setRcMatch] = React.useState(null);
-      const [chosen, setChosen] = React.useState(
-        dest?.city ? dest : (region ? ADRIATIC_REGIONS[region]?.center : null)
-      );
-
-      const pickRegion = (key) => {
-        setSelRegKey(key); setAdvMode(null);
-        setChosen(ADRIATIC_REGIONS[key].center);
-      };
-      const onQueryChange = (v) => {
-        setDQuery(v); setChosen(null); setSelRegKey(null);
-        const q = v.toLowerCase();
-        setDSugs(q.length < 1 ? [] : COASTAL_DESTINATIONS.filter(d => d.city.toLowerCase().includes(q)).slice(0, 8));
-      };
-      const selectCity = (d) => {
-        setChosen(d); setDQuery(d.city); setDSugs([]);
-        const rk = detectRegionByCity(d.city) || detectRegion(d.lat, d.lng);
-        setSelRegKey(rk);
-      };
-      const tryRoomCode = () => {
-        const code = rcInput.trim().toUpperCase();
-        const match = ROOM_DESTINATIONS[code];
-        if (match) {
-          setRcMatch(match); setChosen(match);
-          setSelRegKey(detectRegionByCity(match.city) || detectRegion(match.lat, match.lng));
-        } else setRcMatch(null);
-      };
-      const saveAndNext = () => {
-        const finalDest = chosen || (selRegKey && ADRIATIC_REGIONS[selRegKey]?.center);
-        if (!finalDest && !selRegKey) return;
-        if (finalDest) {
-          try { localStorage.setItem("jadran_destination_obj", JSON.stringify(finalDest)); } catch {}
-          setDest(finalDest);
-          updateDelta({ destination: { city: finalDest.city, lat: finalDest.lat, lon: finalDest.lng, region: selRegKey } });
-        }
-        if (selRegKey) {
-          try { localStorage.setItem("jadran_region", selRegKey); } catch {}
-          setRegion(selRegKey);
-          updateDelta({ yolo_region: selRegKey });
-        }
-        setOnboardStep(3);
-      };
-
-      const headLabel = { hr: "Kamo idete?", de: "Wohin reisen Sie?", en: "Where are you going?", it: "Dove andate?", si: "Kam greste?", cz: "Kam jedete?", pl: "Dokąd jadą?" };
 
       return (
         <Card style={{ padding: "28px 20px" }}>
-          <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 3, textTransform: "uppercase", marginBottom: 12 }}>Korak 3 / 4</div>
-          <div style={{ fontSize: 21, fontWeight: 400, marginBottom: 18 }}>{headLabel[lang] || headLabel.hr}</div>
+          <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 3, textTransform: "uppercase", marginBottom: 12 }}>Korak 2 / 2</div>
+          <div style={{ fontSize: 22, fontWeight: 400, marginBottom: 20 }}>Gdje ideš?</div>
 
-          {/* ── 4 region cards 2×2 grid ── */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
-            {Object.entries(ADRIATIC_REGIONS).map(([key, reg]) => {
-              const active = selRegKey === key;
-              const nm = reg.name[lang] || reg.name.hr;
-              return (
-                <div key={key} onClick={() => pickRegion(key)}
-                  style={{ borderRadius: 14, overflow: "hidden", border: `2px solid ${active ? reg.color : "rgba(255,255,255,0.07)"}`, cursor: "pointer", background: "#0a1828",
-                    boxShadow: active ? `0 0 0 1px ${reg.color}44, 0 4px 20px ${reg.color}33` : "none",
-                    transition: "border-color 0.2s, box-shadow 0.2s" }}>
-                  <div style={{ height: 64, background: `url(${reg.hero_img}) center/cover no-repeat`, position: "relative" }}>
-                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(5,15,30,0.82))" }} />
-                    {active && <div style={{ position: "absolute", top: 6, right: 6, width: 18, height: 18, borderRadius: "50%", background: reg.color, display: "grid", placeItems: "center", fontSize: 10, color: "#fff" }}>✓</div>}
-                  </div>
-                  <div style={{ padding: "7px 10px 9px" }}>
-                    <div style={{ ...dm, fontSize: 13, fontWeight: 700, color: active ? reg.color : C.text }}>{reg.emoji} {nm}</div>
-                    <div style={{ ...dm, fontSize: 10, color: C.mut }}>🚗 {reg.drive_from_vienna}</div>
-                    <div style={{ ...dm, fontSize: 9, color: "#475569", marginTop: 2, lineHeight: 1.35 }}>{reg.highlights.slice(0, 2).join(" · ")}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* ── Advanced: exact city or room code ── */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-            <button onClick={() => setAdvMode(advMode === "city" ? null : "city")}
-              style={{ flex: 1, padding: "8px 10px", borderRadius: 10, border: `1px solid ${advMode === "city" ? "rgba(14,165,233,0.4)" : C.bord}`, background: advMode === "city" ? "rgba(14,165,233,0.07)" : "transparent", color: advMode === "city" ? C.accent : C.mut, fontSize: 12, cursor: "pointer", ...dm }}>
-              📍 {lang === "de" ? "Genaue Stadt" : lang === "en" ? "Exact city" : "Unesite grad"}
-            </button>
-            <button onClick={() => setAdvMode(advMode === "room" ? null : "room")}
-              style={{ flex: 1, padding: "8px 10px", borderRadius: 10, border: `1px solid ${advMode === "room" ? "rgba(245,158,11,0.3)" : C.bord}`, background: advMode === "room" ? "rgba(245,158,11,0.06)" : "transparent", color: advMode === "room" ? C.gold : C.mut, fontSize: 12, cursor: "pointer", ...dm }}>
-              🏠 {lang === "de" ? "Zimmercode" : lang === "en" ? "Room code" : "Kod smještaja"}
-            </button>
-          </div>
-
-          {advMode === "city" && (
-            <div style={{ position: "relative", marginBottom: 12 }}>
-              <input value={dQuery} onChange={e => onQueryChange(e.target.value)}
-                placeholder={lang === "de" ? "z.B. Hvar, Split, Rovinj…" : lang === "en" ? "e.g. Hvar, Split, Rovinj…" : "npr. Hvar, Split, Rovinj…"}
-                style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: `1px solid ${chosen && advMode === "city" ? "rgba(34,197,94,0.4)" : C.bord}`, background: C.card, color: C.text, fontSize: 14, outline: "none", ...dm, boxSizing: "border-box" }} />
-              {dSugs.length > 0 && (
-                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: `1px solid ${C.bord}`, borderRadius: 10, marginTop: 4, zIndex: 50, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
-                  {dSugs.map(d => (
-                    <div key={d.city} onClick={() => selectCity(d)}
-                      style={{ padding: "10px 14px", cursor: "pointer", ...dm, fontSize: 13, color: C.text, borderBottom: `1px solid ${C.bord}` }}
+          {/* FROM */}
+          <div style={{ marginBottom: 6 }}>
+            <div style={{ ...dm, fontSize: 11, color: C.mut, marginBottom: 5 }}>📍 Odakle krećeš?</div>
+            <div style={{ position: "relative" }}>
+              <input value={fromQ}
+                onChange={e => { setFromQ(e.target.value); setFromSel(null); const q = e.target.value.toLowerCase(); setFromSugs(q.length < 1 ? [] : EU_CITIES.filter(c => c.toLowerCase().includes(q)).slice(0, 6)); }}
+                placeholder="npr. Wien, München, Praha…"
+                style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: `1px solid ${fromSel ? "rgba(34,197,94,0.4)" : C.bord}`, background: C.card, color: C.text, fontSize: 15, outline: "none", ...dm, boxSizing: "border-box" }} />
+              {fromSugs.length > 0 && (
+                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: `1px solid ${C.bord}`, borderRadius: 12, marginTop: 4, zIndex: 50, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
+                  {fromSugs.map(c => (
+                    <div key={c} onClick={() => { setFromQ(c); setFromSel(c); setFromSugs([]); updateDelta({ from: c }); }}
+                      style={{ padding: "10px 14px", cursor: "pointer", ...dm, fontSize: 14, color: C.text, borderBottom: `1px solid ${C.bord}` }}
                       onMouseEnter={e => e.currentTarget.style.background = C.acDim}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      📍 {d.city}
+                      📍 {c}
                     </div>
                   ))}
                 </div>
               )}
             </div>
-          )}
+          </div>
+          <button onClick={() => {
+            if (!navigator.geolocation) return; setLocLoading(true);
+            navigator.geolocation.getCurrentPosition(async pos => {
+              try {
+                const r = await fetch(`https://revgeocode.search.hereapi.com/v1/revgeocode?at=${pos.coords.latitude},${pos.coords.longitude}&limit=1&apikey=${HERE_KEY}`);
+                const d = await r.json();
+                const city = d.items?.[0]?.address?.city || d.items?.[0]?.address?.county || "Vaša lokacija";
+                setFromQ(city); setFromSel(city);
+                updateDelta({ from: city, from_coords: { lat: pos.coords.latitude, lon: pos.coords.longitude } });
+              } catch {} setLocLoading(false);
+            }, () => setLocLoading(false));
+          }} disabled={locLoading}
+            style={{ width: "100%", padding: "10px 14px", borderRadius: 12, border: `1px solid ${C.bord}`, background: "transparent", color: C.mut, fontSize: 13, cursor: "pointer", ...dm, marginBottom: 16 }}>
+            {locLoading ? "⏳ Detektiram…" : "📡 Detektiraj moju lokaciju"}
+          </button>
 
-          {advMode === "room" && (
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ display: "flex", gap: 8 }}>
-                <input value={rcInput} onChange={e => setRcInput(e.target.value.toUpperCase())}
-                  onKeyDown={e => e.key === "Enter" && tryRoomCode()}
-                  placeholder="npr. 1001, DEMO…"
-                  style={{ flex: 1, padding: "10px 14px", borderRadius: 10, border: `1px solid ${C.bord}`, background: C.card, color: C.text, fontSize: 14, outline: "none", ...dm }} />
-                <button onClick={tryRoomCode}
-                  style={{ padding: "10px 16px", borderRadius: 10, background: "linear-gradient(135deg,#f59e0b,#d97706)", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", ...dm }}>OK</button>
+          {/* TO */}
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ ...dm, fontSize: 11, color: C.mut, marginBottom: 5 }}>🏖️ Kuda ideš?</div>
+            <div style={{ position: "relative" }}>
+              <input value={toQ}
+                onChange={e => { setToQ(e.target.value); setToSel(null); const q = e.target.value.toLowerCase(); setToSugs(q.length < 1 ? [] : COASTAL_DESTINATIONS.filter(d => d.city.toLowerCase().includes(q)).slice(0, 6)); }}
+                placeholder="npr. Hvar, Split, Rovinj…"
+                style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: `1px solid ${toSel ? "rgba(34,197,94,0.4)" : C.bord}`, background: C.card, color: C.text, fontSize: 15, outline: "none", ...dm, boxSizing: "border-box" }} />
+              {toSugs.length > 0 && (
+                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: `1px solid ${C.bord}`, borderRadius: 12, marginTop: 4, zIndex: 50, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
+                  {toSugs.map(d => (
+                    <div key={d.city} onClick={() => { setToQ(d.city); setToSel(d); setToSugs([]); }}
+                      style={{ padding: "10px 14px", cursor: "pointer", ...dm, fontSize: 14, color: C.text, borderBottom: `1px solid ${C.bord}` }}
+                      onMouseEnter={e => e.currentTarget.style.background = C.acDim}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      🏖️ {d.city}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* HERE Map — auto-renders when both selected */}
+          {fromSel && toSel && (
+            <div style={{ marginBottom: 16 }}>
+              <div ref={mapContRef} style={{ width: "100%", height: 260, borderRadius: 14, overflow: "hidden", background: "#0a1828", position: "relative" }}>
+                {routeLoading && <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", ...dm, fontSize: 13, color: C.mut }}>⏳ Računam rutu…</div>}
               </div>
-              {rcMatch && <div style={{ ...dm, fontSize: 12, color: "#22c55e", marginTop: 8 }}>✓ Smještaj pronađen: {rcMatch.city}</div>}
-              {rcInput.length > 1 && !rcMatch && <div style={{ ...dm, fontSize: 12, color: C.red, marginTop: 6 }}>Kod nije pronađen</div>}
+              {routeInfo && !routeLoading && (
+                <div style={{ textAlign: "center", marginTop: 8 }}>
+                  <span style={{ padding: "6px 16px", borderRadius: 20, background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.3)", ...dm, fontSize: 14, color: "#f97316" }}>
+                    🚗 {routeInfo.km} km · ~{routeInfo.hrs}h {routeInfo.mins}min
+                  </span>
+                </div>
+              )}
             </div>
           )}
 
-          {(chosen || selRegKey) && (
-            <div style={{ padding: "8px 14px", borderRadius: 10, background: "rgba(14,165,233,0.07)", border: "1px solid rgba(14,165,233,0.2)", ...dm, fontSize: 13, color: C.accent, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
-              {selRegKey && <span style={{ color: ADRIATIC_REGIONS[selRegKey]?.color }}>{ADRIATIC_REGIONS[selRegKey]?.emoji}</span>}
-              <span>✓ {selRegKey ? (ADRIATIC_REGIONS[selRegKey]?.name[lang] || ADRIATIC_REGIONS[selRegKey]?.name.hr) : ""}{chosen?.city && chosen.city !== ADRIATIC_REGIONS[selRegKey]?.center?.city ? ` — ${chosen.city}` : ""}</span>
-            </div>
-          )}
-
-          <div style={{ display: "flex", gap: 8 }}>
-            <Btn onClick={() => setOnboardStep(1)}>← {t("back",lang) || "Natrag"}</Btn>
-            <Btn primary onClick={saveAndNext} style={{ flex: 1, opacity: (chosen || selRegKey) ? 1 : 0.4, pointerEvents: (chosen || selRegKey) ? "auto" : "none" }}>{t("next",lang) || "Dalje"} →</Btn>
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <Btn onClick={() => setOnboardStep(0)}>← Natrag</Btn>
+            <Btn primary onClick={proceed} style={{ flex: 1, background: "linear-gradient(135deg,#ea580c,#f97316)", opacity: toSel ? 1 : 0.4, pointerEvents: toSel ? "auto" : "none" }}>Kreni sa mnom →</Btn>
           </div>
         </Card>
       );
@@ -1678,7 +1602,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       <div style={{ maxWidth: 540, margin: "32px auto", textAlign: "center" }}>
         {onboardStep === 0 && (
           <Card style={{ padding: "28px 20px" }}>
-            <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 3, textTransform: "uppercase", marginBottom: 12 }}>Korak 1 / 4</div>
+            <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 3, textTransform: "uppercase", marginBottom: 12 }}>Korak 1 / 2</div>
             <div style={{ fontSize: 22, fontWeight: 400, marginBottom: 20 }}>Kakvi ste putnici?</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
               {SEGMENTS.map(s => {
@@ -1704,9 +1628,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             </div>
           </Card>
         )}
-        {onboardStep === 1 && <FromStep />}
-        {onboardStep === 2 && <DestStep />}
-        {onboardStep === 3 && <WhenStep />}
+        {onboardStep === 1 && <RutaStep />}
       </div>
     );
 
