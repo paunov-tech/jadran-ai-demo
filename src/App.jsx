@@ -21,6 +21,11 @@ const HERE_ROUTING_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
 // ─── useLeafletMap: renders Leaflet map in containerId, no HERE SDK ───
 function useLeafletMap(containerId, fromCity, toCity, onRoute) {
   useEffect(() => {
+    console.log("useLeafletMap called", containerId, fromCity, toCity);
+    console.log("COORDS from:", CITY_COORDS[fromCity]);
+    console.log("COORDS to:", CITY_COORDS[toCity]);
+    console.log("container el:", document.getElementById(containerId));
+    console.log("Leaflet loaded:", !!window.L);
     if (!containerId) return;
     const from = CITY_COORDS[fromCity];
     const to = CITY_COORDS[toCity] || CITY_COORDS["Split"];
@@ -1351,8 +1356,9 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>{transitFromUrl || COUNTRY_CITY[G.country]?.split(",")?.[0] || G.country} → <span style={{ color: C.accent }}>{transitToUrl || "Podstrana"}</span></div>
         </div>
         {/* Leaflet map — no HERE SDK */}
+        <p style={{ color: "lime", fontSize: 12 }}>FROM: {mapFromCity} | TO: {mapToCity}</p>
         <div style={{ borderRadius: 18, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 12 }}>
-          <div id="transit-map" style={{ height: "280px", width: "100%", borderRadius: "12px", overflow: "hidden", background: "#1a2035", position: "relative", zIndex: 1 }} />
+          <div id="transit-map" style={{ height: "280px", width: "100%", borderRadius: "12px", background: "#FF6600", position: "relative", zIndex: 1 }} />
           {transitRouteData && (
             <div style={{ padding: "12px 16px", background: `rgba(14,165,233,0.04)`, display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
               <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>🛣 {transitRouteData.km} km</span>
