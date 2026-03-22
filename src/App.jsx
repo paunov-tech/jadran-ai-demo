@@ -734,6 +734,7 @@ export default function JadranUnified() {
   // ─── PERSISTENCE: Load guest state from Firestore/localStorage ───
   const persistReady = useRef(false);
   useEffect(() => {
+    if (!new URLSearchParams(window.location.search).get("room")) { persistReady.current = true; return; }
     loadGuest(roomCode.current).then(data => {
       if (data) {
         if (data.premium) setPremium(true);
@@ -3083,7 +3084,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   /* ═══ MAIN RENDER ═══ */
 
   /* ─── GUEST ONBOARDING ─── */
-  if (showOnboarding) return (
+  if (showOnboarding && new URLSearchParams(window.location.search).get("room")) return (
     <GuestOnboarding
       roomCode={roomCode.current}
       onComplete={(guestData) => {
