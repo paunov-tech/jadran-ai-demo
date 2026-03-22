@@ -407,6 +407,39 @@ const ROOM_DESTINATIONS = {
   "_default": { city: "Podstrana", lat: 43.4833, lng: 16.5500 },
 };
 
+const COASTAL_DESTINATIONS = [
+  { city: "Dubrovnik",   lat: 42.6507, lng: 18.0944 },
+  { city: "Split",       lat: 43.5081, lng: 16.4402 },
+  { city: "Makarska",    lat: 43.2981, lng: 17.0187 },
+  { city: "Hvar",        lat: 43.1729, lng: 16.4414 },
+  { city: "Brač",        lat: 43.3083, lng: 16.6167 },
+  { city: "Korčula",     lat: 42.9597, lng: 17.1350 },
+  { city: "Trogir",      lat: 43.5172, lng: 16.2506 },
+  { city: "Omiš",        lat: 43.4441, lng: 16.6900 },
+  { city: "Podgora",     lat: 43.2476, lng: 17.0721 },
+  { city: "Bol",         lat: 43.2625, lng: 16.6483 },
+  { city: "Stari Grad",  lat: 43.1828, lng: 16.5956 },
+  { city: "Vis",         lat: 43.0602, lng: 16.1844 },
+  { city: "Šibenik",     lat: 43.7350, lng: 15.8952 },
+  { city: "Zadar",       lat: 44.1194, lng: 15.2314 },
+  { city: "Biograd",     lat: 43.9375, lng: 15.4475 },
+  { city: "Murter",      lat: 43.8097, lng: 15.5961 },
+  { city: "Primošten",   lat: 43.5853, lng: 15.9228 },
+  { city: "Vodice",      lat: 43.7608, lng: 15.7783 },
+  { city: "Rovinj",      lat: 45.0811, lng: 13.6387 },
+  { city: "Poreč",       lat: 45.2267, lng: 13.5956 },
+  { city: "Pula",        lat: 44.8683, lng: 13.8481 },
+  { city: "Opatija",     lat: 45.3380, lng: 14.3051 },
+  { city: "Crikvenica",  lat: 45.1781, lng: 14.6922 },
+  { city: "Senj",        lat: 44.9897, lng: 14.9072 },
+  { city: "Novalja",     lat: 44.5574, lng: 14.8880 },
+  { city: "Rab",         lat: 44.7558, lng: 14.7562 },
+  { city: "Krk",         lat: 45.0267, lng: 14.5728 },
+  { city: "Mali Lošinj", lat: 44.5321, lng: 14.4681 },
+  { city: "Cavtat",      lat: 42.5789, lng: 18.2156 },
+  { city: "Herceg Novi", lat: 42.4527, lng: 18.5384 },
+];
+
 const VIATOR_FALLBACK = [
   { productCode: "LOCAL-001", title: "Split – Dioklecijanova palača", description: "Razgledajte rimsku palaču iz 4. st. s lokalnim vodičem.", price: 29, rating: 4.8, reviewCount: 1240, duration: "2h", category: "Kultura", images: ["https://images.unsplash.com/photo-1555990538-1e09e0e62c7e?w=400"], bookingUrl: "https://www.viator.com/tours/Split/" },
   { productCode: "LOCAL-002", title: "Plava špilja & 5 otoka (brzi brod)", description: "Posjetite Plavu špilju, Hvar, Brač i uvale Paklenih otoka.", price: 79, rating: 4.9, reviewCount: 3580, duration: "8h", category: "Nautika", images: ["https://images.unsplash.com/photo-1503756234508-e32369269dde?w=400"], bookingUrl: "https://www.viator.com/tours/Split/" },
@@ -472,8 +505,14 @@ export default function JadranUnified() {
   const [showConfirm, setShowConfirm] = useState(null);
   const chatEnd = useRef(null);
   const roomCode = useRef(getRoomCode());
-  // Destination derived from room code — used throughout transit screen + geofencing
-  const dest = ROOM_DESTINATIONS[roomCode.current] || ROOM_DESTINATIONS["_default"];
+  // Destination: prefer localStorage (set during onboarding), fallback to room code config
+  const [dest, setDest] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("jadran_destination_obj") || "null");
+      if (saved?.city && saved?.lat) return saved;
+    } catch {}
+    return ROOM_DESTINATIONS[roomCode.current] || ROOM_DESTINATIONS["_default"];
+  });
 
   // ─── TRANSIT HERE MAP ───
   const transitMapRef = useRef(null);
@@ -1077,6 +1116,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
     ];
     const idx = phases.findIndex(p => p.k === phase);
     return (
+      <>
       <div style={{ display: "flex", alignItems: "center", gap: 0, padding: "20px 0 12px", position: "relative" }}>
         {/* Track line */}
         <div style={{ position: "absolute", top: 28, left: "12%", right: "12%", height: 1, background: C.bord, zIndex: 0 }} />
@@ -1106,6 +1146,15 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           );
         })}
       </div>
+      {/* Destination indicator — visible in pre phase when dest is set */}
+      {phase === "pre" && dest?.city && (
+        <div style={{ textAlign: "center", marginTop: -4, marginBottom: 6 }}>
+          <span style={{ ...dm, fontSize: 11, color: C.accent, background: "rgba(14,165,233,0.08)", border: `1px solid rgba(14,165,233,0.15)`, borderRadius: 20, padding: "3px 12px" }}>
+            → {dest.city}
+          </span>
+        </div>
+      )}
+      </>
     );
   };
 
@@ -1156,6 +1205,102 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
      PHASE 1: PRE-TRIP
      ══════════════════════════════ */
   const PreTrip = () => {
+    const DestStep = () => {
+      const [dQuery, setDQuery] = React.useState(dest?.city || "");
+      const [dSugs, setDSugs] = React.useState([]);
+      const [roomMode, setRoomMode] = React.useState(false);
+      const [rcInput, setRcInput] = React.useState("");
+      const [rcMatch, setRcMatch] = React.useState(null);
+      const [chosen, setChosen] = React.useState(dest);
+
+      const onQueryChange = (v) => {
+        setDQuery(v);
+        setChosen(null);
+        const q = v.toLowerCase();
+        setDSugs(q.length < 1 ? [] : COASTAL_DESTINATIONS.filter(d => d.city.toLowerCase().includes(q)).slice(0, 8));
+      };
+      const selectDest = (d) => { setChosen(d); setDQuery(d.city); setDSugs([]); };
+      const tryRoomCode = () => {
+        const code = rcInput.trim().toUpperCase();
+        const match = ROOM_DESTINATIONS[code];
+        if (match) { setRcMatch(match); setChosen(match); }
+        else setRcMatch(null);
+      };
+      const saveAndNext = () => {
+        if (!chosen) return;
+        try { localStorage.setItem("jadran_destination_obj", JSON.stringify(chosen)); } catch {}
+        setDest(chosen);
+        setOnboardStep(3);
+      };
+
+      const destLabels = { hr: "Kamo idete?", de: "Wohin reisen Sie?", en: "Where are you going?", it: "Dove andate?", si: "Kam greste?", cz: "Kam jedete?", pl: "Dokąd jadą Państwo?" };
+      const inputPlaceholders = { hr: "Unesite destinaciju…", de: "Reiseziel eingeben…", en: "Enter destination…", it: "Inserisci destinazione…", si: "Vnesite destinacijo…", cz: "Zadejte destinaci…", pl: "Wpisz cel podróży…" };
+      const roomToggleLabels = { hr: "Imam kod smještaja", de: "Ich habe einen Zimmercode", en: "I have a room code", it: "Ho il codice camera" };
+
+      return (
+        <Card style={{ padding: 32 }}>
+          <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 3, textTransform: "uppercase", marginBottom: 16 }}>Korak 2 / 3</div>
+          <div style={{ fontSize: 22, fontWeight: 400, marginBottom: 20 }}>{destLabels[lang] || destLabels.hr}</div>
+
+          {/* Mode A — autocomplete */}
+          <div style={{ position: "relative", marginBottom: 14 }}>
+            <input value={dQuery} onChange={e => onQueryChange(e.target.value)}
+              placeholder={inputPlaceholders[lang] || inputPlaceholders.hr}
+              style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: `1px solid ${chosen ? "rgba(34,197,94,0.4)" : C.bord}`, background: C.card, color: C.text, fontSize: 15, outline: "none", ...dm, boxSizing: "border-box" }} />
+            {dSugs.length > 0 && (
+              <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: `1px solid ${C.bord}`, borderRadius: 12, marginTop: 4, zIndex: 50, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
+                {dSugs.map(d => (
+                  <div key={d.city} onClick={() => selectDest(d)}
+                    style={{ padding: "11px 16px", cursor: "pointer", ...dm, fontSize: 14, color: C.text, borderBottom: `1px solid ${C.bord}` }}
+                    onMouseEnter={e => e.currentTarget.style.background = C.acDim}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                    📍 {d.city}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Mode B — room code toggle */}
+          <button onClick={() => setRoomMode(!roomMode)}
+            style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: `1px solid ${roomMode ? "rgba(245,158,11,0.3)" : C.bord}`, background: roomMode ? "rgba(245,158,11,0.06)" : "transparent", color: roomMode ? C.gold : C.mut, fontSize: 13, cursor: "pointer", ...dm, textAlign: "left", marginBottom: roomMode ? 10 : 14 }}>
+            🏠 {roomToggleLabels[lang] || roomToggleLabels.hr}
+          </button>
+          {roomMode && (
+            <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+              <input value={rcInput} onChange={e => setRcInput(e.target.value.toUpperCase())}
+                onKeyDown={e => e.key === "Enter" && tryRoomCode()}
+                placeholder="npr. 1001, DEMO…"
+                style={{ flex: 1, padding: "10px 14px", borderRadius: 10, border: `1px solid ${C.bord}`, background: C.card, color: C.text, fontSize: 14, outline: "none", ...dm }} />
+              <button onClick={tryRoomCode}
+                style={{ padding: "10px 16px", borderRadius: 10, background: "linear-gradient(135deg,#f59e0b,#d97706)", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", ...dm }}>
+                OK
+              </button>
+            </div>
+          )}
+          {rcMatch && (
+            <div style={{ padding: "8px 14px", borderRadius: 10, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", ...dm, fontSize: 13, color: "#22c55e", marginBottom: 14 }}>
+              ✓ Smještaj pronađen: {rcMatch.city}
+            </div>
+          )}
+          {roomMode && rcInput.length > 0 && !rcMatch && (
+            <div style={{ ...dm, fontSize: 12, color: C.red, marginBottom: 10 }}>Kod nije pronađen</div>
+          )}
+
+          {chosen && (
+            <div style={{ padding: "8px 14px", borderRadius: 10, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)", ...dm, fontSize: 13, color: C.accent, marginBottom: 16 }}>
+              ✓ Destinacija: <strong>{chosen.city}</strong>
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: 8 }}>
+            <Btn onClick={() => setOnboardStep(1)}>← {t("back",lang) || "Natrag"}</Btn>
+            <Btn primary onClick={saveAndNext} style={{ flex: 1, opacity: chosen ? 1 : 0.4, pointerEvents: chosen ? "auto" : "none" }}>{t("next",lang) || "Dalje"} →</Btn>
+          </div>
+        </Card>
+      );
+    };
+
     if (subScreen === "onboard") return (
       <div style={{ maxWidth: 540, margin: "32px auto", textAlign: "center" }}>
         {onboardStep === 0 && (
@@ -1183,7 +1328,8 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             <Btn primary onClick={() => setOnboardStep(2)}>{t("next",lang)}</Btn>
           </Card>
         )}
-        {onboardStep === 2 && (
+        {onboardStep === 2 && <DestStep />}
+        {onboardStep === 3 && (
           <Card style={{ padding: 40 }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>✨</div>
             <div style={{ fontSize: 26, fontWeight: 400, marginBottom: 6 }}>{t("profileDone",lang)}</div>

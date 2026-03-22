@@ -28,6 +28,39 @@ const goToStripe = async (plan = "season", lang = "en") => {
 };
 
 const GYG = (id) => `https://www.getyourguide.com/${id}/?partner_id=9OEGOYI&utm_medium=local_partners`;
+
+const COASTAL_DESTINATIONS = [
+  { city: "Dubrovnik",   lat: 42.6507, lng: 18.0944 },
+  { city: "Split",       lat: 43.5081, lng: 16.4402 },
+  { city: "Makarska",    lat: 43.2981, lng: 17.0187 },
+  { city: "Hvar",        lat: 43.1729, lng: 16.4414 },
+  { city: "Brač",        lat: 43.3083, lng: 16.6167 },
+  { city: "Korčula",     lat: 42.9597, lng: 17.1350 },
+  { city: "Trogir",      lat: 43.5172, lng: 16.2506 },
+  { city: "Omiš",        lat: 43.4441, lng: 16.6900 },
+  { city: "Podgora",     lat: 43.2476, lng: 17.0721 },
+  { city: "Bol",         lat: 43.2625, lng: 16.6483 },
+  { city: "Stari Grad",  lat: 43.1828, lng: 16.5956 },
+  { city: "Vis",         lat: 43.0602, lng: 16.1844 },
+  { city: "Šibenik",     lat: 43.7350, lng: 15.8952 },
+  { city: "Zadar",       lat: 44.1194, lng: 15.2314 },
+  { city: "Biograd",     lat: 43.9375, lng: 15.4475 },
+  { city: "Murter",      lat: 43.8097, lng: 15.5961 },
+  { city: "Primošten",   lat: 43.5853, lng: 15.9228 },
+  { city: "Vodice",      lat: 43.7608, lng: 15.7783 },
+  { city: "Rovinj",      lat: 45.0811, lng: 13.6387 },
+  { city: "Poreč",       lat: 45.2267, lng: 13.5956 },
+  { city: "Pula",        lat: 44.8683, lng: 13.8481 },
+  { city: "Opatija",     lat: 45.3380, lng: 14.3051 },
+  { city: "Crikvenica",  lat: 45.1781, lng: 14.6922 },
+  { city: "Senj",        lat: 44.9897, lng: 14.9072 },
+  { city: "Novalja",     lat: 44.5574, lng: 14.8880 },
+  { city: "Rab",         lat: 44.7558, lng: 14.7562 },
+  { city: "Krk",         lat: 45.0267, lng: 14.5728 },
+  { city: "Mali Lošinj", lat: 44.5321, lng: 14.4681 },
+  { city: "Cavtat",      lat: 42.5789, lng: 18.2156 },
+  { city: "Herceg Novi", lat: 42.4527, lng: 18.5384 },
+];
 const BKG = (city) => `https://www.booking.com/searchresults.html?aid=101704203&ss=${encodeURIComponent(city)}&lang=en`;
 
 const L = {
@@ -92,9 +125,18 @@ export default function LandingPage() {
   // Unified entry flow
   const [selectedMode, setSelectedMode] = useState(null); // "auto"|"avion"|"kamper"|"odmor"
   const [depCity, setDepCity] = useState("");
-  const [routeStep, setRouteStep] = useState(null); // null | "city" | "map"
+  const [routeStep, setRouteStep] = useState(null); // null | "destination" | "city" | "map"
   const [routeData, setRouteData] = useState(null);
   const [routeLoading, setRouteLoading] = useState(false);
+  // Destination selection state
+  const [destObj, setDestObj] = useState(() => {
+    try { const s = JSON.parse(localStorage.getItem("jadran_destination_obj") || "null"); if (s?.city) return s; } catch {} return null;
+  });
+  const [destInputLP, setDestInputLP] = useState("");
+  const [destSugsLP, setDestSugsLP] = useState([]);
+  const [showRoomModeLP, setShowRoomModeLP] = useState(false);
+  const [roomCodeLP, setRoomCodeLP] = useState("");
+  const [roomCodeMatchLP, setRoomCodeMatchLP] = useState(null);
   const mapRef = useRef(null);
   const hereMapRef = useRef(null);
   const [chatStep, setChatStep] = useState(0);
@@ -233,7 +275,9 @@ export default function LandingPage() {
 
       // 2. Calculate route
       const niche = selectedMode === "avion" ? "pedestrian" : selectedMode === "kamper" ? "truck" : "car";
-      const routeRes = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${niche}&origin=${oLat},${oLng}&destination=${DEST_LAT},${DEST_LNG}&return=polyline,summary,actions&apikey=${HERE_KEY}`);
+      const dLat = destObj?.lat || DEST_LAT;
+      const dLng = destObj?.lng || DEST_LNG;
+      const routeRes = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${niche}&origin=${oLat},${oLng}&destination=${dLat},${dLng}&return=polyline,summary,actions&apikey=${HERE_KEY}`);
       const routeJson = await routeRes.json();
       const section = routeJson.routes?.[0]?.sections?.[0];
       if (!section) throw new Error("No route");
@@ -253,7 +297,7 @@ export default function LandingPage() {
     } finally {
       setRouteLoading(false);
     }
-  }, [selectedMode, loadHereMaps]);
+  }, [selectedMode, loadHereMaps, destObj]);
 
   // Render HERE map after routeData is set and mapRef is available
   useEffect(() => {
@@ -353,8 +397,9 @@ export default function LandingPage() {
                     return (
                       <button key={id} onClick={() => {
                         setSelectedMode(id);
-                        setRouteStep(id === "odmor" ? "room" : "city");
+                        setRouteStep(id === "odmor" ? "room" : "destination");
                         setRouteData(null);
+                        setDestSugsLP([]);
                         try { localStorage.setItem("jadran_transport", id); } catch {}
                       }} style={{
                         borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
@@ -390,9 +435,93 @@ export default function LandingPage() {
                   </div>
                 )}
 
+                {/* ── Step indicator (shown for destination/city steps) ── */}
+                {(routeStep === "destination" || routeStep === "city" || routeStep === "map") && routeStep !== null && selectedMode !== "odmor" && (
+                  <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 4, justifyContent: "center", fontSize: 11, color: "#475569" }}>
+                    <span style={{ color: "#22c55e", fontWeight: 700 }}>1. {tlang({ hr: "Prevoz", de: "Verkehr", en: "Transport", it: "Trasporto" })} ✓</span>
+                    <span style={{ color: "#334155" }}>→</span>
+                    <span style={{ color: routeStep === "destination" ? "#38bdf8" : "#22c55e", fontWeight: routeStep === "destination" ? 700 : 400 }}>
+                      {routeStep !== "destination" && "✓ "}2. {tlang({ hr: "Destinacija", de: "Ziel", en: "Destination", it: "Destinazione" })}
+                    </span>
+                    <span style={{ color: "#334155" }}>→</span>
+                    <span style={{ color: routeStep === "city" ? "#38bdf8" : routeStep === "map" ? "#22c55e" : "#475569", fontWeight: routeStep === "city" ? 700 : 400 }}>
+                      {routeStep === "map" && "✓ "}3. {tlang({ hr: "Polazak", de: "Abfahrt", en: "Departure", it: "Partenza" })}
+                    </span>
+                  </div>
+                )}
+
+                {/* Destination selection panel */}
+                {routeStep === "destination" && (
+                  <div style={{ marginTop: 10, padding: "18px 20px", borderRadius: 16, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)", animation: "fadeIn 0.3s both" }}>
+                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 10 }}>
+                      {tlang({ hr: "Kamo idete?", de: "Wohin reisen Sie?", en: "Where are you going?", it: "Dove andate?" })}
+                    </div>
+                    {/* Autocomplete input */}
+                    <div style={{ position: "relative", marginBottom: 10 }}>
+                      <input value={destInputLP} onChange={e => {
+                          setDestInputLP(e.target.value);
+                          const q = e.target.value.toLowerCase();
+                          setDestSugsLP(q.length < 1 ? [] : COASTAL_DESTINATIONS.filter(d => d.city.toLowerCase().includes(q)).slice(0, 7));
+                          if (destObj && !COASTAL_DESTINATIONS.find(d => d.city.toLowerCase() === e.target.value.toLowerCase())) setDestObj(null);
+                        }}
+                        placeholder={tlang({ hr: "npr. Hvar, Dubrovnik, Split…", de: "z.B. Hvar, Dubrovnik, Split…", en: "e.g. Hvar, Dubrovnik, Split…", it: "es. Hvar, Dubrovnik, Spalato…" })}
+                        style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: `1px solid ${destObj ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 14, outline: "none", fontFamily: "inherit", boxSizing: "border-box" }} />
+                      {destSugsLP.length > 0 && (
+                        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, marginTop: 4, zIndex: 50, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
+                          {destSugsLP.map(d => (
+                            <div key={d.city} onClick={() => { setDestObj(d); setDestInputLP(d.city); setDestSugsLP([]); try { localStorage.setItem("jadran_destination_obj", JSON.stringify(d)); } catch {} }}
+                              style={{ padding: "10px 16px", cursor: "pointer", fontSize: 13, color: "#f0f4f8", borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+                              onMouseEnter={e => e.currentTarget.style.background = "rgba(14,165,233,0.12)"}
+                              onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                              📍 {d.city}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {/* Room code toggle */}
+                    <button onClick={() => setShowRoomModeLP(!showRoomModeLP)}
+                      style={{ background: "transparent", border: `1px solid ${showRoomModeLP ? "rgba(245,158,11,0.3)" : "rgba(255,255,255,0.06)"}`, color: showRoomModeLP ? "#f59e0b" : "#64748b", fontSize: 12, cursor: "pointer", padding: "7px 12px", borderRadius: 8, marginBottom: showRoomModeLP ? 10 : 0, width: "100%" }}>
+                      🏠 {tlang({ hr: "Imam kod smještaja", de: "Ich habe einen Zimmercode", en: "I have a room code", it: "Ho il codice camera" })}
+                    </button>
+                    {showRoomModeLP && (
+                      <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                        <input value={roomCodeLP} onChange={e => setRoomCodeLP(e.target.value.toUpperCase())}
+                          onKeyDown={e => { if (e.key === "Enter") { const m = { "DEMO": { city: "Hvar", lat: 43.1729, lng: 16.4414 }, "1001": { city: "Podstrana", lat: 43.4833, lng: 16.5500 }, "1002": { city: "Makarska", lat: 43.2981, lng: 17.0187 }, "1003": { city: "Trogir", lat: 43.5172, lng: 16.2506 } }[roomCodeLP.trim()]; if (m) { setRoomCodeMatchLP(m); setDestObj(m); setDestInputLP(m.city); try { localStorage.setItem("jadran_destination_obj", JSON.stringify(m)); } catch {} } else setRoomCodeMatchLP(false); }}}
+                          placeholder={tlang({ hr: "Kod sobe (npr. 1001)", de: "Zimmercode (z.B. 1001)", en: "Room code (e.g. 1001)", it: "Codice camera" })}
+                          style={{ flex: 1, padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 13, outline: "none" }} />
+                        <button onClick={() => { const m = { "DEMO": { city: "Hvar", lat: 43.1729, lng: 16.4414 }, "1001": { city: "Podstrana", lat: 43.4833, lng: 16.5500 }, "1002": { city: "Makarska", lat: 43.2981, lng: 17.0187 }, "1003": { city: "Trogir", lat: 43.5172, lng: 16.2506 } }[roomCodeLP.trim()]; if (m) { setRoomCodeMatchLP(m); setDestObj(m); setDestInputLP(m.city); try { localStorage.setItem("jadran_destination_obj", JSON.stringify(m)); } catch {} } else setRoomCodeMatchLP(false); }}
+                          style={{ padding: "10px 14px", borderRadius: 8, background: "linear-gradient(135deg,#f59e0b,#d97706)", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>OK</button>
+                      </div>
+                    )}
+                    {roomCodeMatchLP && (
+                      <div style={{ marginTop: 8, fontSize: 12, color: "#22c55e" }}>✓ {tlang({ hr: "Smještaj pronađen:", de: "Unterkunft gefunden:", en: "Accommodation found:", it: "Alloggio trovato:" })} {roomCodeMatchLP.city}</div>
+                    )}
+                    {roomCodeMatchLP === false && (
+                      <div style={{ marginTop: 8, fontSize: 12, color: "#f87171" }}>{tlang({ hr: "Kod nije pronađen", de: "Code nicht gefunden", en: "Code not found", it: "Codice non trovato" })}</div>
+                    )}
+                    {destObj && (
+                      <div style={{ marginTop: 10, padding: "7px 12px", borderRadius: 8, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", fontSize: 12, color: "#22c55e" }}>
+                        ✓ {destObj.city}
+                      </div>
+                    )}
+                    <button onClick={() => { if (destObj) setRouteStep("city"); }}
+                      disabled={!destObj}
+                      style={{ marginTop: 12, width: "100%", padding: "12px 20px", borderRadius: 10, background: destObj ? "linear-gradient(135deg, #0ea5e9, #0284c7)" : "rgba(14,165,233,0.2)", border: "none", color: destObj ? "#fff" : "#475569", fontSize: 14, fontWeight: 700, cursor: destObj ? "pointer" : "not-allowed", fontFamily: "inherit" }}>
+                      {tlang({ hr: "Dalje →", de: "Weiter →", en: "Continue →", it: "Avanti →" })}
+                    </button>
+                  </div>
+                )}
+
                 {/* Departure city panel */}
                 {routeStep === "city" && (
-                  <div style={{ marginTop: 14, padding: "18px 20px", borderRadius: 16, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)", animation: "fadeIn 0.3s both" }}>
+                  <div style={{ marginTop: 10, padding: "18px 20px", borderRadius: 16, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)", animation: "fadeIn 0.3s both" }}>
+                    {destObj && (
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                        <span style={{ fontSize: 12, color: "#22c55e" }}>→ {destObj.city}</span>
+                        <button onClick={() => setRouteStep("destination")} style={{ background: "transparent", border: "none", color: "#475569", fontSize: 11, cursor: "pointer", padding: "2px 6px" }}>← {tlang({ hr: "Promijeni", de: "Ändern", en: "Change", it: "Cambia" })}</button>
+                      </div>
+                    )}
                     <div style={{ fontSize: 12, color: "#64748b", marginBottom: 10 }}>
                       {tlang({ hr: "Odakle krećete?", de: "Von wo reisen Sie an?", en: "Where are you departing from?", it: "Da dove parti?" })}
                     </div>
@@ -426,7 +555,7 @@ export default function LandingPage() {
                             <span style={{ fontSize: 16 }}>📍</span>
                             <span style={{ fontSize: 13, color: "#94a3b8" }}>{routeData.city}</span>
                             <span style={{ color: "#0ea5e9" }}>→</span>
-                            <span style={{ fontSize: 13, color: "#94a3b8" }}>Podstrana</span>
+                            <span style={{ fontSize: 13, color: "#94a3b8" }}>{destObj?.city || "Podstrana"}</span>
                           </div>
                           <div style={{ display: "flex", gap: 16 }}>
                             <span style={{ fontSize: 13, color: "#f0f4f8", fontWeight: 600 }}>🛣 {routeData.km} km</span>
