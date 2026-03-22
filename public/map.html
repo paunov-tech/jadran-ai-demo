@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="initial-scale=1.0,width=device-width"/>
+<style>body{margin:0;padding:0;}#map{width:100%;height:100vh;}</style>
+<script src="https://js.api.here.com/v3/3.2/mapsjs-core.js"></script>
+<script src="https://js.api.here.com/v3/3.2/mapsjs-service.js"></script>
+<script src="https://js.api.here.com/v3/3.2/mapsjs-mapevents.js"></script>
+</head>
+<body>
+<div id="map"></div>
+<script>
+const p = new URLSearchParams(window.location.search);
+const flat=parseFloat(p.get("flat")||"48.2082"), flon=parseFloat(p.get("flon")||"16.3738");
+const tlat=parseFloat(p.get("tlat")||"43.5081"), tlon=parseFloat(p.get("tlon")||"16.4402");
+
+const platform = new H.service.Platform({apikey:"0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw"});
+const layers = platform.createDefaultLayers();
+
+const map = new H.Map(document.getElementById("map"), layers.vector.normal.night, {
+  center:{lat:(flat+tlat)/2, lng:(flon+tlon)/2}, zoom:6,
+  pixelRatio:window.devicePixelRatio||1
+});
+window.addEventListener("resize",()=>map.getViewPort().resize());
+new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
+
+const fromIcon = new H.map.Icon('<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="8" fill="#FF6600" stroke="#fff" stroke-width="2"/></svg>', {size:{w:20,h:20}});
+const toIcon = new H.map.Icon('<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="8" fill="#00D4AA" stroke="#fff" stroke-width="2"/></svg>', {size:{w:20,h:20}});
+
+const startMarker = new H.map.Marker({lat:flat,lng:flon},{icon:fromIcon});
+const endMarker = new H.map.Marker({lat:tlat,lng:tlon},{icon:toIcon});
+const group = new H.map.Group();
+group.addObjects([startMarker, endMarker]);
+map.addObject(group);
+map.getViewModel().setLookAtData({bounds:group.getBoundingBox()},{animate:false});
+
+const router = platform.getRoutingService8();
+router.calculateRoute({
+  transportMode:"car", routingMode:"fast",
+  origin:flat+","+flon, destination:tlat+","+tlon,
+  return:"polyline"
+}, function(result){
+  try {
+    const lines = result.routes[0].sections.map(s=>H.geo.LineString.fromFlexiblePolyline(s.polyline));
+    const routeLine = new H.map.Polyline(new H.geo.MultiLineString(lines),{
+      style:{strokeColor:"#FF6600",lineWidth:5}
+    });
+    const routeGroup = new H.map.Group();
+    routeGroup.addObjects([routeLine, startMarker, endMarker]);
+    map.addObject(routeLine);
+    map.getViewModel().setLookAtData({bounds:routeGroup.getBoundingBox()},{animate:true});
+  } catch(e){console.log("route err",e);}
+}, function(e){console.log("routing failed",e);});
+</script>
+</body>
+</html>

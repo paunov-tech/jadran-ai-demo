@@ -18,104 +18,24 @@ const CITY_COORDS = {
 };
 const HERE_ROUTING_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
 
-// ─── TransitMap: HERE Maps JS SDK, CDN-loaded ───
-const TransitMap = React.memo(({ fromCity, toCity }) => {
-  const mapRef = React.useRef(null);
-  const mapInstance = React.useRef(null);
-
+// ─── TransitMap: HERE Maps via iframe (public/map.html) ───
+const TransitMap = ({ fromCity, toCity }) => {
   const COORDS = {
-    "Wien":{lat:48.2082,lng:16.3738},"München":{lat:48.1351,lng:11.5820},
-    "Frankfurt":{lat:50.1109,lng:8.6821},"Beograd":{lat:44.8176,lng:20.4633},
-    "Ljubljana":{lat:46.0569,lng:14.5058},"Graz":{lat:47.0707,lng:15.4395},
-    "Split":{lat:43.5081,lng:16.4402},"Dubrovnik":{lat:42.6507,lng:18.0944},
-    "Zadar":{lat:44.1194,lng:15.2314},"Rijeka":{lat:45.3271,lng:14.4422},
-    "Pula":{lat:44.8666,lng:13.8496},"Rovinj":{lat:45.0811,lng:13.6387},
-    "Makarska":{lat:43.2967,lng:17.0177},"Hvar":{lat:43.1729,lng:16.4414},
-    "Trogir":{lat:43.5167,lng:16.2500},"Podstrana":{lat:43.4833,lng:16.5500},
+    "Wien":[48.2082,16.3738],"München":[48.1351,11.5820],"Frankfurt":[50.1109,8.6821],
+    "Beograd":[44.8176,20.4633],"Ljubljana":[46.0569,14.5058],"Graz":[47.0707,15.4395],
+    "Split":[43.5081,16.4402],"Dubrovnik":[42.6507,18.0944],"Zadar":[44.1194,15.2314],
+    "Rijeka":[45.3271,14.4422],"Pula":[44.8666,13.8496],"Rovinj":[45.0811,13.6387],
+    "Makarska":[43.2967,17.0177],"Hvar":[43.1729,16.4414],"Trogir":[43.5167,16.2500],
+    "Podstrana":[43.4833,16.5500],
   };
-
-  React.useEffect(() => {
-    if (!mapRef.current || mapInstance.current) return;
-
-    const from = COORDS[fromCity] || COORDS["Wien"];
-    const to = COORDS[toCity] || COORDS["Split"];
-    const center = { lat: (from.lat + to.lat) / 2, lng: (from.lng + to.lng) / 2 };
-
-    const loadScripts = (cb) => {
-      if (window.H) { cb(); return; }
-      const scripts = [
-        "https://js.api.here.com/v3/3.1/mapsjs-core.js",
-        "https://js.api.here.com/v3/3.1/mapsjs-service.js",
-        "https://js.api.here.com/v3/3.1/mapsjs-mapevents.js",
-      ];
-      let loaded = 0;
-      scripts.forEach(src => {
-        const s = document.createElement("script");
-        s.src = src;
-        s.onload = () => { if (++loaded === scripts.length) cb(); };
-        document.head.appendChild(s);
-      });
-    };
-
-    loadScripts(() => {
-      if (!mapRef.current || mapInstance.current) return;
-
-      const platform = new H.service.Platform({ apikey: "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw" });
-      const layers = platform.createDefaultLayers();
-
-      mapInstance.current = new H.Map(
-        mapRef.current,
-        layers.vector.normal.mapnight,
-        { center, zoom: 6, pixelRatio: window.devicePixelRatio || 1 }
-      );
-
-      const handleResize = () => mapInstance.current?.getViewPort().resize();
-      window.addEventListener("resize", handleResize);
-
-      new H.mapevents.Behavior(new H.mapevents.MapEvents(mapInstance.current));
-
-      // Add markers immediately
-      const startMarker = new H.map.Marker(from);
-      const endMarker = new H.map.Marker(to);
-      const group = new H.map.Group();
-      group.addObjects([startMarker, endMarker]);
-      mapInstance.current.addObject(group);
-      mapInstance.current.getViewModel().setLookAtData({ bounds: group.getBoundingBox() });
-
-      // Route
-      const router = platform.getRoutingService(null, 8);
-      router.calculateRoute({
-        routingMode: "fast", transportMode: "car",
-        origin: `${from.lat},${from.lng}`,
-        destination: `${to.lat},${to.lng}`,
-        return: "polyline",
-      }, (result) => {
-        try {
-          const lines = result.routes[0].sections.map(s =>
-            H.geo.LineString.fromFlexiblePolyline(s.polyline)
-          );
-          const routeLine = new H.map.Polyline(
-            new H.geo.MultiLineString(lines),
-            { style: { strokeColor: "#FF6600", lineWidth: 4 } }
-          );
-          const routeGroup = new H.map.Group();
-          routeGroup.addObjects([routeLine, startMarker, endMarker]);
-          mapInstance.current.addObject(routeLine);
-          mapInstance.current.getViewModel().setLookAtData({ bounds: routeGroup.getBoundingBox() });
-        } catch (e) {}
-      }, (e) => console.log("Route error:", e));
-
-      return () => {
-        window.removeEventListener("resize", handleResize);
-        if (mapInstance.current) { mapInstance.current.dispose(); mapInstance.current = null; }
-      };
-    });
-  }, []); // eslint-disable-line
-
+  const from = COORDS[fromCity] || COORDS["Wien"];
+  const to = COORDS[toCity] || COORDS["Split"];
+  const src = `/map.html?flat=${from[0]}&flon=${from[1]}&tlat=${to[0]}&tlon=${to[1]}`;
   return (
-    <div ref={mapRef} style={{ width: "100%", height: "280px", borderRadius: "12px", background: "#0d1b2a" }} />
+    <iframe src={src} style={{ width: "100%", height: "280px", border: "none", borderRadius: "12px" }}
+      sandbox="allow-scripts allow-same-origin" title="route-map" />
   );
-});
+};
 
 /* ══════════════════════════════════════════════════════════
    JADRAN — Turistički vodič v6
