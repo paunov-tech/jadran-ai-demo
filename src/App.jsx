@@ -36,6 +36,7 @@ const TransitMap = ({ fromCity, toCity }) => {
     <iframe
       src={src}
       style={{ width: "100%", height: "280px", border: "none", borderRadius: "12px" }}
+      sandbox="allow-scripts allow-same-origin"
       title="route-map"
     />
   );
