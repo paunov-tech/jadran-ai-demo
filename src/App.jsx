@@ -616,80 +616,95 @@ export default function JadranUnified() {
     return () => clearInterval(t);
   }, [alerts]);
 
-  // ─── HERE MAPS: transit screen route ───
+  // ─── LEAFLET + HERE REST: transit screen route (no HERE JS SDK) ───
   const HERE_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
-  const PODSTRANA = { lat: 43.4892, lng: 16.5523 };
   const COUNTRY_CITY = { DE:"München,Germany", AT:"Wien,Austria", IT:"Trieste,Italy", SI:"Ljubljana,Slovenia", CZ:"Praha,Czechia", PL:"Kraków,Poland", HR:"Zagreb,Croatia" };
+  const TRANSIT_COORDS = {
+    "Wien":[48.2082,16.3738], "Wien,Austria":[48.2082,16.3738],
+    "München":[48.1351,11.5820], "München,Germany":[48.1351,11.5820],
+    "Frankfurt":[50.1109,8.6821], "Beograd":[44.8176,20.4633],
+    "Ljubljana":[46.0569,14.5058], "Ljubljana,Slovenia":[46.0569,14.5058],
+    "Trieste":[45.6495,13.7768], "Praha":[50.0755,14.4378],
+    "Kraków":[50.0647,19.9450], "Zagreb":[45.8150,15.9819],
+    "Split":[43.5081,16.4402], "Dubrovnik":[42.6507,18.0944],
+    "Hvar":[43.1729,16.4414], "Zadar":[44.1194,15.2314],
+    "Rijeka":[45.3271,14.4422], "Pula":[44.8666,13.8496],
+    "Rovinj":[45.0811,13.6387], "Makarska":[43.2967,17.0177],
+    "Trogir":[43.5167,16.2500], "Omiš":[43.4439,16.6892],
+  };
 
   useEffect(() => {
     if (subScreen !== "transit") return;
+    const fromCity = transitFromUrl || COUNTRY_CITY[G.country]?.split(",")?.[0] || "Wien";
+    const toCity = transitToUrl || "Split";
     const transportMode = transitSegUrl || (() => { try { return localStorage.getItem("jadran_transport") || "auto"; } catch { return "auto"; } })();
-    const depQuery = transitFromUrl || COUNTRY_CITY[G.country] || "Wien,Austria";
-    const destQuery = transitToUrl || "Podstrana,Croatia";
-    const hereMode = transportMode === "kamper" ? "truck" : transportMode === "avion" ? "pedestrian" : "car";
+    const hereMode = transportMode === "kamper" ? "truck" : "car";
 
-    const loadScripts = () => new Promise((resolve, reject) => {
-      if (window.H?.Map) { resolve(); return; }
-      const css = document.createElement("link"); css.rel = "stylesheet"; css.href = "https://js.api.here.com/v3/3.1/mapsjs-ui.css"; document.head.appendChild(css);
-      const urls = ["https://js.api.here.com/v3/3.1/mapsjs-core.js","https://js.api.here.com/v3/3.1/mapsjs-service.js","https://js.api.here.com/v3/3.1/mapsjs-ui.js","https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"];
-      const next = (i) => { if (i >= urls.length) { resolve(); return; } const s = document.createElement("script"); s.src = urls[i]; s.async = false; s.onload = () => next(i+1); s.onerror = reject; document.head.appendChild(s); };
-      next(0);
-    });
+    async function initMap() {
+      if (window._jadranMap) { try { window._jadranMap.remove(); } catch {} window._jadranMap = null; }
+      const container = document.getElementById("transit-map");
+      if (!container) return;
 
-    (async () => {
+      const map = window.L.map("transit-map", { zoomControl: true, attributionControl: false });
+      window._jadranMap = map;
+      hereTransitInst.current = map;
+      window.L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 18 }).addTo(map);
+
+      const fromCoords = TRANSIT_COORDS[fromCity] || TRANSIT_COORDS["Wien"];
+      const toCoords = TRANSIT_COORDS[toCity] || TRANSIT_COORDS["Split"];
+
+      // Straight-line fallback
+      const fallbackLine = window.L.polyline([fromCoords, toCoords], { color: "#FF6600", weight: 3, opacity: 0.8, dashArray: "8,6" }).addTo(map);
+      window.L.marker(fromCoords).addTo(map).bindPopup(fromCity);
+      window.L.marker(toCoords).addTo(map).bindPopup(toCity);
+      map.fitBounds([fromCoords, toCoords], { padding: [40, 40] });
+
+      // Try HERE REST routing for real polyline
       try {
-        // Geocode departure city
-        const geo = await fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(depQuery)}&limit=1&apikey=${HERE_KEY}`).then(r => r.json());
-        const pos = geo.items?.[0]?.position;
-        if (!pos) return;
-        const { lat: oLat, lng: oLng } = pos;
+        const r = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${fromCoords[0]},${fromCoords[1]}&destination=${toCoords[0]},${toCoords[1]}&return=polyline,summary&apikey=${HERE_KEY}`);
+        const d = await r.json();
+        const sec = d.routes?.[0]?.sections?.[0];
+        if (sec) {
+          const km = Math.round(sec.summary.length / 1000);
+          const hrs = Math.floor(sec.summary.duration / 3600);
+          const mins = Math.round((sec.summary.duration % 3600) / 60);
+          setTransitRouteData({ oLat: fromCoords[0], oLng: fromCoords[1], dLat: toCoords[0], dLng: toCoords[1], km, hrs, mins, mode: transportMode });
 
-        // Geocode destination (URL param or fallback to Podstrana)
-        let dLat = PODSTRANA.lat, dLng = PODSTRANA.lng;
-        if (destQuery !== "Podstrana,Croatia") {
-          try {
-            const dGeo = await fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(destQuery + ",Croatia")}&limit=1&apikey=${HERE_KEY}`).then(r => r.json());
-            const dp = dGeo.items?.[0]?.position;
-            if (dp) { dLat = dp.lat; dLng = dp.lng; }
-          } catch {}
+          // Decode HERE flexible polyline
+          if (sec.polyline) {
+            try {
+              const ENC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+              const coords = []; let idx = 0; let lat = 0; let lng = 0;
+              const dec = (s, i) => { let v=0,shift=0,b; do { b=ENC.indexOf(s[i++]); v|=(b&0x1f)<<shift; shift+=5; } while(b>=0x20); return [i,(v&1)?~(v>>1):(v>>1)]; };
+              const prec = Math.pow(10, (ENC.indexOf(sec.polyline[0])>>4)&15); idx=1;
+              while (idx < sec.polyline.length) {
+                let dlat, dlng; [idx,dlat]=dec(sec.polyline,idx); [idx,dlng]=dec(sec.polyline,idx);
+                lat+=dlat; lng+=dlng; coords.push([lat/prec, lng/prec]);
+              }
+              if (coords.length > 1) {
+                map.removeLayer(fallbackLine);
+                window.L.polyline(coords, { color: "#FF6600", weight: 4, opacity: 0.9 }).addTo(map);
+                map.fitBounds(coords, { padding: [30, 30] });
+              }
+            } catch {}
+          }
         }
+      } catch (e) { console.warn("[transit routing]", e.message); }
+    }
 
-        // Calculate route
-        const route = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${oLat},${oLng}&destination=${dLat},${dLng}&return=polyline,summary&apikey=${HERE_KEY}`).then(r => r.json());
-        const sec = route.routes?.[0]?.sections?.[0];
-        if (!sec) return;
-        const km = Math.round(sec.summary.length / 1000);
-        const hrs = Math.floor(sec.summary.duration / 3600);
-        const mins = Math.round((sec.summary.duration % 3600) / 60);
-        setTransitRouteData({ oLat, oLng, dLat, dLng, km, hrs, mins, polyline: sec.polyline, mode: transportMode });
+    // Load Leaflet CSS + JS then init
+    if (!document.getElementById("leaflet-css")) {
+      const link = document.createElement("link"); link.id = "leaflet-css"; link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"; document.head.appendChild(link);
+    }
+    if (!window.L) {
+      const s = document.createElement("script"); s.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      s.onload = () => initMap(); document.head.appendChild(s);
+    } else {
+      initMap();
+    }
 
-        // Load HERE Maps JS and render
-        await loadScripts();
-        if (!transitMapRef.current) return;
-        if (hereTransitInst.current) { hereTransitInst.current.dispose(); }
-        const platform = new window.H.service.Platform({ apikey: HERE_KEY });
-        const layers = platform.createDefaultLayers();
-        const map = new window.H.Map(transitMapRef.current, layers.vector.normal.map, {
-          zoom: 6, center: { lat: (oLat + dLat) / 2, lng: (oLng + dLng) / 2 },
-        });
-        hereTransitInst.current = map;
-        new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
-        window.H.ui.UI.createDefault(map, layers);
-        try {
-          const ls = window.H.geo.LineString.fromFlexiblePolyline(sec.polyline);
-          const poly = new window.H.map.Polyline(ls, { style: { lineWidth: 5, strokeColor: "#0ea5e9" } });
-          map.addObject(poly);
-          map.getViewModel().setLookAtData({ bounds: poly.getBoundingBox() }, true);
-        } catch {}
-        const mkIcon = (emoji) => new window.H.map.Icon(`<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><circle cx="14" cy="14" r="13" fill="#0c1e35" stroke="#0ea5e9" stroke-width="2"/><text x="14" y="19" text-anchor="middle" font-size="13">${emoji}</text></svg>`);
-        map.addObjects([
-          new window.H.map.Marker({ lat: oLat, lng: oLng }, { icon: mkIcon(G.flag || "🚩") }),
-          new window.H.map.Marker({ lat: dLat, lng: dLng }, { icon: mkIcon("⚓") }),
-        ]);
-      } catch (e) { console.error("[HERE transit]", e); }
-    })();
-
-    return () => { hereTransitInst.current?.dispose?.(); hereTransitInst.current = null; };
+    return () => { if (window._jadranMap) { try { window._jadranMap.remove(); } catch {} window._jadranMap = null; } hereTransitInst.current = null; };
   }, [subScreen, transitFromUrl, transitToUrl]); // eslint-disable-line
 
   // ─── WEATHER: Fetch real data via Gemini grounding ───
@@ -1314,7 +1329,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         </div>
         {/* HERE Maps interactive route */}
         <div style={{ borderRadius: 18, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 12 }}>
-          <div ref={transitMapRef} style={{ height: 300, width: "100%", background: "linear-gradient(135deg,#1a2332,#0f1822)" }}>
+          <div id="transit-map" ref={transitMapRef} style={{ height: 300, width: "100%", position: "relative", zIndex: 1, background: "linear-gradient(135deg,#1a2332,#0f1822)" }}>
             {!transitRouteData && (
               <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
                 <div style={{ width: 32, height: 32, border: `2px solid ${C.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin-slow 0.8s linear infinite" }} />
