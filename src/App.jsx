@@ -591,6 +591,7 @@ export default function JadranUnified() {
     setPhase("pre");
     setSubScreen("transit");
     setSplash(false);
+    localStorage.setItem("jadran_go_transit", "1");
     window.history.replaceState({}, "", "/");
   }, []); // eslint-disable-line
 
@@ -598,6 +599,10 @@ export default function JadranUnified() {
   const persistReady = useRef(false);
   useEffect(() => {
     loadGuest(roomCode.current).then(data => {
+      if (localStorage.getItem("jadran_go_transit") === "1") {
+        localStorage.removeItem("jadran_go_transit");
+        return; // transit handoff active — don't override phase/subScreen
+      }
       if (data) {
         if (data.premium) setPremium(true);
         if (data.lang) setLang(data.lang);
@@ -2321,8 +2326,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             <div style={{ ...dm, display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 18 }}>{G.flag}</span>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{transitFromUrl ? `${SEG_ICON[transitSegUrl] || "🚗"} ${transitFromUrl} → ${transitToUrl}` : G.name}</div>
-                <div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>{transitFromUrl ? "Sloboda ceste i mora" : G.accommodation}</div>
+                {(() => { try { const d = JSON.parse(localStorage.getItem("jadran_delta_context") || "{}"); const f = transitFromUrl || d.from; const t = transitToUrl || d.destination?.city; const s = transitSegUrl || d.segment; return f && t ? (<><div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{(SEG_ICON[s] || "🚗")} {f} → {t}</div><div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>Sloboda ceste i mora</div></>) : (<><div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{G.name}</div><div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>{G.accommodation}</div></>); } catch { return (<><div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{G.name}</div><div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>{G.accommodation}</div></>); } })()}
               </div>
             </div>
             {G.arrival && <div style={{ ...dm, fontSize: 11, color: C.mut, textAlign: "right" }}>
