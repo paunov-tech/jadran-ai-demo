@@ -1473,7 +1473,9 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             <span style={{ ...dm, fontSize: 12, color: C.mut }}>🛥 {crowdData.marina?.boats} brodova u luci</span>
             <span style={{ width: 1, height: 14, background: C.bord }} />
             <span style={{ ...dm, fontSize: 12, color: C.mut }}>🅿️ {crowdData.parking?.free_spots} slobodnih mjesta</span>
-            <span style={{ ...dm, fontSize: 10, color: "rgba(100,116,139,0.4)", marginLeft: "auto" }}>ažurirano 10min</span>
+            <span style={{ ...dm, fontSize: 10, color: crowdData.source === "yolo" ? "rgba(34,197,94,0.6)" : "rgba(100,116,139,0.4)", marginLeft: "auto" }}>
+              {crowdData.source === "yolo" ? `📷 LIVE · ${crowdData.beach?.yolo_cams || "?"} kamera` : "ažurirano 10min"}
+            </span>
           </div>
         )}
 
