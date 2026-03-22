@@ -396,6 +396,17 @@ const BUNDLES = [
 
 const LOYALTY = { points: 345, tier: "Morski val", next: "Dalmatinac", nextPts: 500, code: "WEBER2026" };
 
+// ─── ROOM DESTINATIONS — configurable per room code ───────────────────────────
+// Add new rooms here as hosts sign up. _default = fallback for unknown codes.
+const ROOM_DESTINATIONS = {
+  "DEMO":  { city: "Hvar",       lat: 43.1729, lng: 16.4414 },
+  "1001":  { city: "Podstrana",  lat: 43.4833, lng: 16.5500 },
+  "1002":  { city: "Makarska",   lat: 43.2981, lng: 17.0187 },
+  "1003":  { city: "Trogir",     lat: 43.5172, lng: 16.2506 },
+  "1004":  { city: "Omiš",       lat: 43.4441, lng: 16.6900 },
+  "_default": { city: "Podstrana", lat: 43.4833, lng: 16.5500 },
+};
+
 const VIATOR_FALLBACK = [
   { productCode: "LOCAL-001", title: "Split – Dioklecijanova palača", description: "Razgledajte rimsku palaču iz 4. st. s lokalnim vodičem.", price: 29, rating: 4.8, reviewCount: 1240, duration: "2h", category: "Kultura", images: ["https://images.unsplash.com/photo-1555990538-1e09e0e62c7e?w=400"], bookingUrl: "https://www.viator.com/tours/Split/" },
   { productCode: "LOCAL-002", title: "Plava špilja & 5 otoka (brzi brod)", description: "Posjetite Plavu špilju, Hvar, Brač i uvale Paklenih otoka.", price: 79, rating: 4.9, reviewCount: 3580, duration: "8h", category: "Nautika", images: ["https://images.unsplash.com/photo-1503756234508-e32369269dde?w=400"], bookingUrl: "https://www.viator.com/tours/Split/" },
@@ -461,6 +472,8 @@ export default function JadranUnified() {
   const [showConfirm, setShowConfirm] = useState(null);
   const chatEnd = useRef(null);
   const roomCode = useRef(getRoomCode());
+  // Destination derived from room code — used throughout transit screen + geofencing
+  const dest = ROOM_DESTINATIONS[roomCode.current] || ROOM_DESTINATIONS["_default"];
 
   // ─── TRANSIT HERE MAP ───
   const transitMapRef = useRef(null);
@@ -597,7 +610,6 @@ export default function JadranUnified() {
 
   // ─── HERE MAPS: transit screen route ───
   const HERE_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
-  const PODSTRANA = { lat: 43.4892, lng: 16.5523 };
   const COUNTRY_CITY = { DE:"München,Germany", AT:"Wien,Austria", IT:"Trieste,Italy", SI:"Ljubljana,Slovenia", CZ:"Praha,Czechia", PL:"Kraków,Poland", HR:"Zagreb,Croatia" };
 
   useEffect(() => {
@@ -623,7 +635,7 @@ export default function JadranUnified() {
         const { lat: oLat, lng: oLng } = pos;
 
         // Calculate route
-        const route = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${oLat},${oLng}&destination=${PODSTRANA.lat},${PODSTRANA.lng}&return=polyline,summary&apikey=${HERE_KEY}`).then(r => r.json());
+        const route = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${oLat},${oLng}&destination=${dest.lat},${dest.lng}&return=polyline,summary&apikey=${HERE_KEY}`).then(r => r.json());
         const sec = route.routes?.[0]?.sections?.[0];
         if (!sec) return;
         const km = Math.round(sec.summary.length / 1000);
@@ -638,7 +650,7 @@ export default function JadranUnified() {
         const platform = new window.H.service.Platform({ apikey: HERE_KEY });
         const layers = platform.createDefaultLayers();
         const map = new window.H.Map(transitMapRef.current, layers.vector.normal.map, {
-          zoom: 6, center: { lat: (oLat + PODSTRANA.lat) / 2, lng: (oLng + PODSTRANA.lng) / 2 },
+          zoom: 6, center: { lat: (oLat + dest.lat) / 2, lng: (oLng + dest.lng) / 2 },
         });
         hereTransitInst.current = map;
         new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
@@ -652,7 +664,7 @@ export default function JadranUnified() {
         const mkIcon = (emoji) => new window.H.map.Icon(`<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><circle cx="14" cy="14" r="13" fill="#0c1e35" stroke="#0ea5e9" stroke-width="2"/><text x="14" y="19" text-anchor="middle" font-size="13">${emoji}</text></svg>`);
         map.addObjects([
           new window.H.map.Marker({ lat: oLat, lng: oLng }, { icon: mkIcon(G.flag || "🚩") }),
-          new window.H.map.Marker({ lat: PODSTRANA.lat, lng: PODSTRANA.lng }, { icon: mkIcon("⚓") }),
+          new window.H.map.Marker({ lat: dest.lat, lng: dest.lng }, { icon: mkIcon("⚓") }),
         ]);
       } catch (e) { console.error("[HERE transit]", e); }
     })();
@@ -784,7 +796,7 @@ export default function JadranUnified() {
     try {
       const res = await fetch("/api/viator-search", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ destination: "Podstrana" }),
+        body: JSON.stringify({ destination: dest.city }),
       });
       const data = await res.json();
       setViatorActs(Array.isArray(data.activities) && data.activities.length > 0 ? data.activities : VIATOR_FALLBACK);
@@ -843,7 +855,7 @@ export default function JadranUnified() {
     if (phase !== "pre" || subScreen !== "transit") return;
     if (!("geolocation" in navigator)) return;
 
-    const DEST = { lat: 43.4892, lng: 16.5523 }; // Podstrana
+    const DEST = dest; // room-configurable destination
     const R = 6371;
     const distKm = (lat1, lng1, lat2, lng2) => {
       const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -1278,7 +1290,19 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       <>
         <div style={{ padding: "24px 0 8px" }}>
           <div style={{ fontSize: 28, fontWeight: 400 }}>{t("safeTrip",lang)} {transitRouteData?.mode === "kamper" ? "🚐" : transitRouteData?.mode === "avion" ? "✈️" : "🚗"}</div>
-          <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>{COUNTRY_CITY[G.country]?.split(",")?.[0] || G.country} → Podstrana</div>
+          <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>
+            {COUNTRY_CITY[G.country]?.split(",")?.[0] || G.country} → <span style={{ color: C.accent }}>{dest.city}</span>
+          </div>
+          {transitRouteData && (() => {
+            const now = new Date();
+            const eta = new Date(now.getTime() + (transitRouteData.hrs * 3600 + transitRouteData.mins * 60) * 1000);
+            const etaStr = eta.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+            return (
+              <div style={{ ...dm, fontSize: 12, color: C.gold, marginTop: 6 }}>
+                📍 Putujete prema: <strong>{dest.city}</strong> · Stižete oko <strong>{etaStr}</strong> · Preostalo: <strong>{transitRouteData.km} km</strong>
+              </div>
+            );
+          })()}
         </div>
         {/* HERE Maps interactive route */}
         <div style={{ borderRadius: 18, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 12 }}>
@@ -1295,7 +1319,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>🛣 {transitRouteData.km} km</span>
               <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>⏱ {transitRouteData.hrs}h {transitRouteData.mins}min</span>
               {transitRouteData.mode === "kamper" && <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 6, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.15)", color: C.gold }}>🚐 Kamper ruta</span>}
-              <a href={`https://wego.here.com/directions/drive/${transitRouteData.oLat},${transitRouteData.oLng}/${PODSTRANA.lat},${PODSTRANA.lng}`} target="_blank" rel="noopener noreferrer"
+              <a href={`https://wego.here.com/directions/drive/${transitRouteData.oLat},${transitRouteData.oLng}/${dest.lat},${dest.lng}`} target="_blank" rel="noopener noreferrer"
                 style={{ marginLeft: "auto", padding: "8px 16px", borderRadius: 10, background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>
                 📍 Pokreni navigaciju →
               </a>
