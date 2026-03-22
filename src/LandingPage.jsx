@@ -62,6 +62,18 @@ const COASTAL_DESTINATIONS = [
   { city: "Herceg Novi", lat: 42.4527, lng: 18.5384 },
 ];
 const BKG = (city) => `https://www.booking.com/searchresults.html?aid=101704203&ss=${encodeURIComponent(city)}&lang=en`;
+const EU_CITIES_LP = [
+  "Wien","Graz","Salzburg","Linz","Innsbruck","Klagenfurt",
+  "München","Frankfurt","Stuttgart","Nürnberg","Augsburg","Düsseldorf","Berlin","Hamburg","Köln",
+  "Zürich","Bern","Basel","Luzern",
+  "Praha","Brno","Ostrava",
+  "Bratislava","Košice",
+  "Budapest","Debrecen",
+  "Warszawa","Kraków","Wrocław","Poznań","Gdańsk",
+  "Ljubljana","Maribor","Celje",
+  "Trieste","Venezia","Verona","Milano","Torino","Bologna",
+  "Rijeka","Zagreb",
+];
 
 // ─── 4 Adriatic regions (mirrors App.jsx — Vercel functions can't share modules) ─
 const ADRIATIC_REGIONS_LP = {
@@ -204,6 +216,10 @@ export default function LandingPage() {
   const [showRoomModeLP, setShowRoomModeLP] = useState(false);
   const [roomCodeLP, setRoomCodeLP] = useState("");
   const [roomCodeMatchLP, setRoomCodeMatchLP] = useState(null);
+  const [fromQ, setFromQ] = useState("");
+  const [fromSugs, setFromSugs] = useState([]);
+  const [fromSel, setFromSel] = useState(null);
+  const [locLoadingLP, setLocLoadingLP] = useState(false);
   const mapRef = useRef(null);
   const hereMapRef = useRef(null);
   const [chatStep, setChatStep] = useState(0);
@@ -405,6 +421,25 @@ export default function LandingPage() {
   // Clean up HERE map on unmount
   useEffect(() => () => { hereMapRef.current?.dispose?.(); }, []);
 
+  // Auto-fetch route when both from + to are selected
+  useEffect(() => {
+    if (fromSel && destObj?.lat && selectedMode && selectedMode !== "odmor") {
+      fetchRoute(fromSel);
+    }
+  }, [fromSel, destObj, selectedMode]);
+
+  const proceedToTransit = () => {
+    if (!destObj) return;
+    const seg = selectedMode === "kamper" ? "kamper" : selectedMode === "avion" ? "jedrilicar" : "par";
+    const delta = { segment: seg, from: fromQ, destination: { city: destObj.city, lat: destObj.lat, lon: destObj.lng } };
+    try { localStorage.setItem("jadran_delta_context", JSON.stringify(delta)); } catch {}
+    try { localStorage.setItem("jadran_destination_obj", JSON.stringify(destObj)); } catch {}
+    try { if (selectedRegionLP) localStorage.setItem("jadran_region", selectedRegionLP); } catch {}
+    try { localStorage.setItem("jadran_transport", selectedMode); } catch {}
+    const p = new URLSearchParams({ go: "transit", from: fromQ || "", to: destObj.city, segment: seg });
+    window.location.href = "/?" + p.toString();
+  };
+
   const F = "'Playfair Display', Georgia, serif";
   const B = "'Outfit', system-ui, sans-serif";
 
@@ -506,183 +541,104 @@ export default function LandingPage() {
                   </div>
                 )}
 
-                {/* ── Step indicator (shown for destination/city steps) ── */}
-                {(routeStep === "destination" || routeStep === "city" || routeStep === "map") && routeStep !== null && selectedMode !== "odmor" && (
-                  <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 4, justifyContent: "center", fontSize: 11, color: "#475569" }}>
-                    <span style={{ color: "#22c55e", fontWeight: 700 }}>1. {tlang({ hr: "Prevoz", de: "Verkehr", en: "Transport", it: "Trasporto" })} ✓</span>
-                    <span style={{ color: "#334155" }}>→</span>
-                    <span style={{ color: routeStep === "destination" ? "#38bdf8" : "#22c55e", fontWeight: routeStep === "destination" ? 700 : 400 }}>
-                      {routeStep !== "destination" && "✓ "}2. {tlang({ hr: "Destinacija", de: "Ziel", en: "Destination", it: "Destinazione" })}
-                    </span>
-                    <span style={{ color: "#334155" }}>→</span>
-                    <span style={{ color: routeStep === "city" ? "#38bdf8" : routeStep === "map" ? "#22c55e" : "#475569", fontWeight: routeStep === "city" ? 700 : 400 }}>
-                      {routeStep === "map" && "✓ "}3. {tlang({ hr: "Polazak", de: "Abfahrt", en: "Departure", it: "Partenza" })}
-                    </span>
-                  </div>
-                )}
-
-                {/* ── Destination selection: 4 region cards ── */}
-                {routeStep === "destination" && (
-                  <div style={{ marginTop: 10, animation: "fadeIn 0.3s both" }}>
-                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 10, textAlign: "center" }}>
-                      {tlang({ hr: "Kamo idete?", de: "Wohin reisen Sie?", en: "Where are you going?", it: "Dove andate?" })}
-                    </div>
-                    {/* 2×2 region grid */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
-                      {Object.entries(ADRIATIC_REGIONS_LP).map(([key, reg]) => {
-                        const active = selectedRegionLP === key;
-                        const nm = reg.name[lang === "at" ? "de" : lang] || reg.name.hr;
-                        return (
-                          <div key={key} onClick={() => {
-                              setSelectedRegionLP(key);
-                              const ctr = reg.center;
-                              setDestObj(ctr); setDestInputLP(ctr.city);
-                              try { localStorage.setItem("jadran_destination_obj", JSON.stringify(ctr)); localStorage.setItem("jadran_region", key); } catch {}
-                            }}
-                            style={{ borderRadius: 12, overflow: "hidden", border: `2px solid ${active ? reg.color : "rgba(255,255,255,0.07)"}`, cursor: "pointer", background: "#0a1828",
-                              boxShadow: active ? `0 0 0 1px ${reg.color}44, 0 4px 16px ${reg.color}33` : "none", transition: "all 0.2s" }}>
-                            <div style={{ height: 56, background: `url(${reg.hero_img}) center/cover no-repeat`, position: "relative" }}>
-                              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 20%, rgba(5,15,30,0.85))" }} />
-                              {active && <div style={{ position: "absolute", top: 5, right: 5, width: 16, height: 16, borderRadius: "50%", background: reg.color, display: "grid", placeItems: "center", fontSize: 9, color: "#fff" }}>✓</div>}
-                            </div>
-                            <div style={{ padding: "6px 8px 8px" }}>
-                              <div style={{ fontFamily: "'Inter','system-ui',sans-serif", fontSize: 12, fontWeight: 700, color: active ? reg.color : "#f0f4f8" }}>{reg.emoji} {nm}</div>
-                              <div style={{ fontFamily: "'Inter','system-ui',sans-serif", fontSize: 10, color: "#475569" }}>🚗 {reg.drive_from_vienna}</div>
-                              <div style={{ fontFamily: "'Inter','system-ui',sans-serif", fontSize: 9, color: "#334155", marginTop: 2, lineHeight: 1.3 }}>{reg.highlights.slice(0, 2).join(" · ")}</div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {/* Advanced: exact city or room code */}
-                    <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
-                      <button onClick={() => setShowRoomModeLP(showRoomModeLP === "city" ? null : "city")}
-                        style={{ flex: 1, padding: "7px 8px", borderRadius: 8, border: `1px solid ${showRoomModeLP === "city" ? "rgba(14,165,233,0.3)" : "rgba(255,255,255,0.06)"}`, background: showRoomModeLP === "city" ? "rgba(14,165,233,0.07)" : "transparent", color: showRoomModeLP === "city" ? "#38bdf8" : "#64748b", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
-                        📍 {tlang({ hr: "Unesite grad", de: "Stadt eingeben", en: "Enter city", it: "Inserisci città" })}
-                      </button>
-                      <button onClick={() => setShowRoomModeLP(showRoomModeLP === "room" ? null : "room")}
-                        style={{ flex: 1, padding: "7px 8px", borderRadius: 8, border: `1px solid ${showRoomModeLP === "room" ? "rgba(245,158,11,0.3)" : "rgba(255,255,255,0.06)"}`, background: showRoomModeLP === "room" ? "rgba(245,158,11,0.06)" : "transparent", color: showRoomModeLP === "room" ? "#f59e0b" : "#64748b", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
-                        🏠 {tlang({ hr: "Kod smještaja", de: "Zimmercode", en: "Room code", it: "Codice camera" })}
-                      </button>
-                    </div>
-                    {showRoomModeLP === "city" && (
-                      <div style={{ position: "relative", marginBottom: 8 }}>
-                        <input value={destInputLP} onChange={e => {
-                            setDestInputLP(e.target.value);
-                            const q = e.target.value.toLowerCase();
-                            setDestSugsLP(q.length < 1 ? [] : COASTAL_DESTINATIONS.filter(d => d.city.toLowerCase().includes(q)).slice(0, 7));
-                            if (destObj && !COASTAL_DESTINATIONS.find(d => d.city.toLowerCase() === e.target.value.toLowerCase())) { setDestObj(null); setSelectedRegionLP(null); }
-                          }}
-                          placeholder={tlang({ hr: "npr. Hvar, Dubrovnik, Split…", de: "z.B. Hvar, Dubrovnik, Split…", en: "e.g. Hvar, Dubrovnik, Split…", it: "es. Hvar, Dubrovnik, Spalato…" })}
-                          style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${destObj ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 13, outline: "none", fontFamily: "inherit", boxSizing: "border-box" }} />
-                        {destSugsLP.length > 0 && (
-                          <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, marginTop: 4, zIndex: 50, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
-                            {destSugsLP.map(d => (
-                              <div key={d.city} onClick={() => {
-                                  setDestObj(d); setDestInputLP(d.city); setDestSugsLP([]);
-                                  const rk = detectRegionByCityLP(d.city);
-                                  setSelectedRegionLP(rk);
-                                  try { localStorage.setItem("jadran_destination_obj", JSON.stringify(d)); if (rk) localStorage.setItem("jadran_region", rk); } catch {}
-                                }}
-                                style={{ padding: "9px 14px", cursor: "pointer", fontSize: 12, color: "#f0f4f8", borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+                {/* ── RutaStep: from + to + HERE map ── */}
+                {selectedMode && selectedMode !== "odmor" && (
+                  <div style={{ marginTop: 14, animation: "fadeIn 0.3s both" }}>
+                    {/* FROM */}
+                    <div style={{ marginBottom: 8 }}>
+                      <div style={{ fontSize: 11, color: "#64748b", marginBottom: 5 }}>📍 {tlang({ hr: "Odakle krećeš?", de: "Von wo reist du?", en: "Where are you leaving from?", it: "Da dove parti?" })}</div>
+                      <div style={{ position: "relative" }}>
+                        <input value={fromQ}
+                          onChange={e => { setFromQ(e.target.value); setFromSel(null); const q = e.target.value.toLowerCase(); setFromSugs(q.length < 1 ? [] : EU_CITIES_LP.filter(c => c.toLowerCase().includes(q)).slice(0, 6)); }}
+                          placeholder={tlang({ hr: "npr. Wien, München, Praha…", de: "z.B. Wien, München, Prag…", en: "e.g. Wien, Munich, Prague…", it: "es. Vienna, Monaco, Praga…" })}
+                          style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${fromSel ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 14, outline: "none", fontFamily: B, boxSizing: "border-box", fontSize: 16 }} />
+                        {fromSugs.length > 0 && (
+                          <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, marginTop: 4, zIndex: 50, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
+                            {fromSugs.map(c => (
+                              <div key={c} onClick={() => { setFromQ(c); setFromSel(c); setFromSugs([]); }}
+                                style={{ padding: "10px 14px", cursor: "pointer", fontSize: 13, color: "#f0f4f8", borderBottom: "1px solid rgba(255,255,255,0.05)" }}
                                 onMouseEnter={e => e.currentTarget.style.background = "rgba(14,165,233,0.12)"}
                                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                                📍 {d.city}
+                                📍 {c}
                               </div>
                             ))}
                           </div>
                         )}
                       </div>
-                    )}
-                    {showRoomModeLP === "room" && (
-                      <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
-                        <input value={roomCodeLP} onChange={e => setRoomCodeLP(e.target.value.toUpperCase())}
-                          onKeyDown={e => { if (e.key === "Enter") { const m = ROOM_DESTS_LP[roomCodeLP.trim()]; if (m) { setRoomCodeMatchLP(m); setDestObj(m); setDestInputLP(m.city); const rk = detectRegionByCityLP(m.city); setSelectedRegionLP(rk); try { localStorage.setItem("jadran_destination_obj", JSON.stringify(m)); if (rk) localStorage.setItem("jadran_region", rk); } catch {} } else setRoomCodeMatchLP(false); }}}
-                          placeholder={tlang({ hr: "Kod sobe (npr. 1001)", de: "Zimmercode (z.B. 1001)", en: "Room code (e.g. 1001)", it: "Codice camera" })}
-                          style={{ flex: 1, padding: "9px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 13, outline: "none" }} />
-                        <button onClick={() => { const m = ROOM_DESTS_LP[roomCodeLP.trim()]; if (m) { setRoomCodeMatchLP(m); setDestObj(m); setDestInputLP(m.city); const rk = detectRegionByCityLP(m.city); setSelectedRegionLP(rk); try { localStorage.setItem("jadran_destination_obj", JSON.stringify(m)); if (rk) localStorage.setItem("jadran_region", rk); } catch {} } else setRoomCodeMatchLP(false); }}
-                          style={{ padding: "9px 12px", borderRadius: 8, background: "linear-gradient(135deg,#f59e0b,#d97706)", border: "none", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>OK</button>
-                      </div>
-                    )}
-                    {roomCodeMatchLP && <div style={{ fontSize: 11, color: "#22c55e", marginBottom: 6 }}>✓ {tlang({ hr: "Smještaj pronađen:", de: "Unterkunft gefunden:", en: "Found:", it: "Trovato:" })} {roomCodeMatchLP.city}</div>}
-                    {roomCodeMatchLP === false && <div style={{ fontSize: 11, color: "#f87171", marginBottom: 6 }}>{tlang({ hr: "Kod nije pronađen", de: "Code nicht gefunden", en: "Code not found", it: "Codice non trovato" })}</div>}
-                    {(destObj || selectedRegionLP) && (
-                      <div style={{ padding: "7px 12px", borderRadius: 8, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", fontSize: 12, color: "#22c55e", marginBottom: 8, display: "flex", gap: 6, alignItems: "center" }}>
-                        {selectedRegionLP && <span style={{ color: ADRIATIC_REGIONS_LP[selectedRegionLP]?.color }}>{ADRIATIC_REGIONS_LP[selectedRegionLP]?.emoji}</span>}
-                        ✓ {selectedRegionLP ? (ADRIATIC_REGIONS_LP[selectedRegionLP]?.name[lang === "at" ? "de" : lang] || ADRIATIC_REGIONS_LP[selectedRegionLP]?.name.hr) : destObj?.city}
-                        {destObj?.city && selectedRegionLP && destObj.city !== ADRIATIC_REGIONS_LP[selectedRegionLP]?.center?.city ? ` — ${destObj.city}` : ""}
-                      </div>
-                    )}
-                    <button onClick={() => { if (destObj || selectedRegionLP) setRouteStep("city"); }}
-                      disabled={!destObj && !selectedRegionLP}
-                      style={{ width: "100%", padding: "12px 20px", borderRadius: 10, background: (destObj || selectedRegionLP) ? "linear-gradient(135deg, #0ea5e9, #0284c7)" : "rgba(14,165,233,0.2)", border: "none", color: (destObj || selectedRegionLP) ? "#fff" : "#475569", fontSize: 14, fontWeight: 700, cursor: (destObj || selectedRegionLP) ? "pointer" : "not-allowed", fontFamily: "inherit" }}>
-                      {tlang({ hr: "Nastavi →", de: "Weiter →", en: "Continue →", it: "Avanti →" })}
+                    </div>
+                    <button onClick={() => {
+                      if (!navigator.geolocation) return; setLocLoadingLP(true);
+                      navigator.geolocation.getCurrentPosition(async pos => {
+                        try {
+                          const r = await fetch(`https://revgeocode.search.hereapi.com/v1/revgeocode?at=${pos.coords.latitude},${pos.coords.longitude}&limit=1&apikey=${HERE_KEY}`);
+                          const d = await r.json();
+                          const city = d.items?.[0]?.address?.city || d.items?.[0]?.address?.county || "Vaša lokacija";
+                          setFromQ(city); setFromSel(city);
+                        } catch {} setLocLoadingLP(false);
+                      }, () => setLocLoadingLP(false));
+                    }} disabled={locLoadingLP}
+                      style={{ width: "100%", padding: "9px 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "#64748b", fontSize: 12, cursor: "pointer", fontFamily: B, marginBottom: 10 }}>
+                      {locLoadingLP ? "⏳ Detektiram…" : "📡 " + tlang({ hr: "Detektiraj moju lokaciju", de: "Meinen Standort erkennen", en: "Detect my location", it: "Rileva posizione" })}
                     </button>
-                  </div>
-                )}
 
-                {/* Departure city panel */}
-                {routeStep === "city" && (
-                  <div style={{ marginTop: 10, padding: "18px 20px", borderRadius: 16, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)", animation: "fadeIn 0.3s both" }}>
-                    {destObj && (
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                        <span style={{ fontSize: 12, color: "#22c55e" }}>→ {destObj.city}</span>
-                        <button onClick={() => setRouteStep("destination")} style={{ background: "transparent", border: "none", color: "#475569", fontSize: 11, cursor: "pointer", padding: "2px 6px" }}>← {tlang({ hr: "Promijeni", de: "Ändern", en: "Change", it: "Cambia" })}</button>
-                      </div>
-                    )}
-                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 10 }}>
-                      {tlang({ hr: "Odakle krećete?", de: "Von wo reisen Sie an?", en: "Where are you departing from?", it: "Da dove parti?" })}
-                    </div>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <input value={depCity} onChange={e => setDepCity(e.target.value)}
-                        onKeyDown={e => e.key === "Enter" && depCity.trim() && fetchRoute(depCity.trim())}
-                        placeholder={tlang(DEP_PLACEHOLDER)}
-                        style={{ flex: 1, padding: "12px 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 14, outline: "none", fontFamily: B }} />
-                      <button onClick={() => depCity.trim() && fetchRoute(depCity.trim())}
-                        disabled={routeLoading || !depCity.trim()}
-                        style={{ padding: "12px 16px", borderRadius: 10, background: routeLoading ? "rgba(14,165,233,0.2)" : "linear-gradient(135deg, #0ea5e9, #0284c7)", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: routeLoading ? "wait" : "pointer", fontFamily: B, whiteSpace: "nowrap", minWidth: 80 }}>
-                        {routeLoading ? "..." : goLabel(lang === "at" ? "de" : lang)}
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* HERE Maps route result */}
-                {routeStep === "map" && routeData && (
-                  <div style={{ marginTop: 14, borderRadius: 16, overflow: "hidden", border: "1px solid rgba(14,165,233,0.2)", animation: "fadeIn 0.4s both" }}>
-                    {routeData.error ? (
-                      <div style={{ padding: "20px", textAlign: "center", color: "#f87171", fontSize: 13 }}>
-                        ⚠️ {tlang({ hr: "Grad nije pronađen. Pokušajte ponovo.", de: "Stadt nicht gefunden. Bitte erneut versuchen.", en: "City not found. Please try again.", it: "Città non trovata. Riprova." })}
-                        <br/><button onClick={() => setRouteStep("city")} style={{ marginTop: 8, padding: "6px 14px", borderRadius: 8, background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)", color: "#38bdf8", fontSize: 12, cursor: "pointer" }}>← {tlang({ hr: "Natrag", de: "Zurück", en: "Back", it: "Indietro" })}</button>
-                      </div>
-                    ) : (
-                      <>
-                        {/* Route summary */}
-                        <div style={{ padding: "14px 18px", background: "rgba(14,165,233,0.06)", display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <span style={{ fontSize: 16 }}>📍</span>
-                            <span style={{ fontSize: 13, color: "#94a3b8" }}>{routeData.city}</span>
-                            <span style={{ color: "#0ea5e9" }}>→</span>
-                            <span style={{ fontSize: 13, color: "#94a3b8" }}>{destObj?.city || "Podstrana"}</span>
+                    {/* TO */}
+                    <div style={{ marginBottom: 12 }}>
+                      <div style={{ fontSize: 11, color: "#64748b", marginBottom: 5 }}>🏖️ {tlang({ hr: "Kuda ideš?", de: "Wohin reist du?", en: "Where are you going?", it: "Dove vai?" })}</div>
+                      <div style={{ position: "relative" }}>
+                        <input value={destInputLP}
+                          onChange={e => {
+                            setDestInputLP(e.target.value); setDestObj(null); setSelectedRegionLP(null);
+                            const q = e.target.value.toLowerCase();
+                            setDestSugsLP(q.length < 1 ? [] : COASTAL_DESTINATIONS.filter(d => d.city.toLowerCase().includes(q)).slice(0, 6));
+                          }}
+                          placeholder={tlang({ hr: "npr. Hvar, Split, Rovinj…", de: "z.B. Hvar, Split, Rovinj…", en: "e.g. Hvar, Split, Rovinj…", it: "es. Hvar, Spalato, Rovigno…" })}
+                          style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${destObj ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 16, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
+                        {destSugsLP.length > 0 && (
+                          <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, marginTop: 4, zIndex: 50, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
+                            {destSugsLP.map(d => (
+                              <div key={d.city} onClick={() => {
+                                setDestObj(d); setDestInputLP(d.city); setDestSugsLP([]);
+                                const rk = detectRegionByCityLP(d.city);
+                                setSelectedRegionLP(rk);
+                                try { localStorage.setItem("jadran_destination_obj", JSON.stringify(d)); if (rk) localStorage.setItem("jadran_region", rk); } catch {}
+                              }}
+                                style={{ padding: "10px 14px", cursor: "pointer", fontSize: 13, color: "#f0f4f8", borderBottom: "1px solid rgba(255,255,255,0.05)" }}
+                                onMouseEnter={e => e.currentTarget.style.background = "rgba(14,165,233,0.12)"}
+                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                                🏖️ {d.city}
+                              </div>
+                            ))}
                           </div>
-                          <div style={{ display: "flex", gap: 16 }}>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* HERE Map — auto-renders when both selected */}
+                    {fromSel && destObj && (
+                      <div style={{ marginBottom: 12, borderRadius: 14, overflow: "hidden", border: "1px solid rgba(249,115,22,0.25)" }}>
+                        <div ref={mapRef} style={{ height: 240, width: "100%", background: "#0c2d48", position: "relative" }}>
+                          {routeLoading && <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", fontSize: 12, color: "#64748b" }}>⏳ {tlang({ hr: "Računam rutu…", de: "Route berechnen…", en: "Calculating route…", it: "Calcolo percorso…" })}</div>}
+                        </div>
+                        {routeData && !routeData.error && !routeLoading && (
+                          <div style={{ padding: "10px 14px", background: "rgba(10,22,40,0.9)", display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
                             <span style={{ fontSize: 13, color: "#f0f4f8", fontWeight: 600 }}>🛣 {routeData.km} km</span>
                             <span style={{ fontSize: 13, color: "#f0f4f8", fontWeight: 600 }}>⏱ {routeData.hrs}h {routeData.mins}min</span>
+                            {selectedMode === "kamper" && <span style={{ fontSize: 11, color: "#f59e0b" }}>🚐 Kamper ruta</span>}
                           </div>
-                          {selectedMode === "kamper" && <span style={{ fontSize: 11, color: "#f59e0b", padding: "2px 8px", borderRadius: 6, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.15)" }}>🚐 Kamper ruta</span>}
-                        </div>
-                        {/* Map container */}
-                        <div ref={mapRef} style={{ height: 260, width: "100%", background: "#0c2d48" }} />
-                        {/* CTA */}
-                        <div style={{ padding: "14px 18px", background: "rgba(10,22,40,0.8)", display: "flex", gap: 10, alignItems: "center" }}>
-                          <button onClick={() => window.location.href = `/ai?niche=${modeToNiche[selectedMode] || "local"}&lang=${lang}&from=${encodeURIComponent(routeData.city)}`}
-                            style={{ flex: 1, padding: "13px 20px", borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: F, letterSpacing: 0.5 }}>
-                            {startLabel(lang === "at" ? "de" : lang)}
-                          </button>
-                          <button onClick={() => setRouteStep("city")} style={{ padding: "13px 14px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", color: "#64748b", fontSize: 13, cursor: "pointer" }}>←</button>
-                        </div>
-                      </>
+                        )}
+                        {routeData?.error && (
+                          <div style={{ padding: "10px 14px", color: "#f87171", fontSize: 12, background: "rgba(10,22,40,0.9)" }}>
+                            ⚠️ {tlang({ hr: "Grad nije pronađen.", de: "Stadt nicht gefunden.", en: "City not found.", it: "Città non trovata." })}
+                          </div>
+                        )}
+                      </div>
                     )}
+
+                    {/* CTA */}
+                    <button onClick={proceedToTransit} disabled={!destObj}
+                      style={{ width: "100%", padding: "14px 20px", borderRadius: 12, background: destObj ? "linear-gradient(135deg,#ea580c,#f97316)" : "rgba(249,115,22,0.2)", border: "none", color: destObj ? "#fff" : "#64748b", fontSize: 15, fontWeight: 700, cursor: destObj ? "pointer" : "not-allowed", fontFamily: F, letterSpacing: 0.5 }}>
+                      {tlang({ hr: "Kreni sa mnom →", de: "Los geht's →", en: "Let's go →", it: "Partiamo →" })}
+                    </button>
                   </div>
                 )}
 

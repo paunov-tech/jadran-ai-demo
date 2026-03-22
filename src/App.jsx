@@ -731,6 +731,33 @@ export default function JadranUnified() {
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMsgs]);
   useEffect(() => { const t = setTimeout(() => setSplash(false), 3800); return () => clearTimeout(t); }, []);
 
+  // ─── LANDING → TRANSIT handoff (?go=transit) ───
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("go") !== "transit") return;
+    const from = params.get("from") || "";
+    const to = params.get("to") || "";
+    const segment = params.get("segment") || "par";
+    // Load DELTA from localStorage (written by LandingPage before redirect)
+    try {
+      const saved = localStorage.getItem("jadran_delta_context");
+      if (saved) { const d = JSON.parse(saved); updateDelta(d); }
+    } catch {}
+    // Also patch any missing fields from URL params
+    if (from || to) updateDelta({ from, segment, phase: "transit" });
+    // Load destination if set
+    try {
+      const savedDest = localStorage.getItem("jadran_destination_obj");
+      if (savedDest) { const d = JSON.parse(savedDest); setDest(d); }
+      const savedRegion = localStorage.getItem("jadran_region");
+      if (savedRegion) setRegion(savedRegion);
+    } catch {}
+    setPhase("pre");
+    setSubScreen("transit");
+    setSplash(false);
+    window.history.replaceState({}, "", "/");
+  }, []);
+
   // ─── PERSISTENCE: Load guest state from Firestore/localStorage ───
   const persistReady = useRef(false);
   useEffect(() => {
