@@ -83,8 +83,14 @@ function useLeafletMap(containerId, fromCity, toCity, onRoute) {
         .catch(() => {});
     };
 
+    const tryInit = (attempts = 0) => {
+      const el = document.getElementById(containerId);
+      if (el && !el._leaflet_id) { initMap(); }
+      else if (attempts < 20) { requestAnimationFrame(() => tryInit(attempts + 1)); }
+    };
+
     if (window.L) {
-      initMap();
+      tryInit();
     } else {
       if (!document.getElementById("leaflet-css")) {
         const css = document.createElement("link");
@@ -94,7 +100,7 @@ function useLeafletMap(containerId, fromCity, toCity, onRoute) {
       }
       const s = document.createElement("script");
       s.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-      s.onload = initMap;
+      s.onload = () => tryInit();
       document.body.appendChild(s);
     }
 
