@@ -11,35 +11,53 @@
 <body>
 <div id="map"></div>
 <script>
-const params = new URLSearchParams(window.location.search);
-const fromLat = parseFloat(params.get("flat")||"48.2082");
-const fromLon = parseFloat(params.get("flon")||"16.3738");
-const toLat = parseFloat(params.get("tlat")||"43.5081");
-const toLon = parseFloat(params.get("tlon")||"16.4402");
+const p = new URLSearchParams(window.location.search);
+const flat = parseFloat(p.get("flat")||"48.2082");
+const flon = parseFloat(p.get("flon")||"16.3738");
+const tlat = parseFloat(p.get("tlat")||"43.5081");
+const tlon = parseFloat(p.get("tlon")||"16.4402");
 
 const platform = new H.service.Platform({apikey:"0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw"});
 const layers = platform.createDefaultLayers();
 const map = new H.Map(document.getElementById("map"), layers.vector.normal.mapnight, {
-  center:{lat:(fromLat+toLat)/2,lng:(fromLon+toLon)/2}, zoom:6,
-  pixelRatio:window.devicePixelRatio||1
+  center:{lat:(flat+tlat)/2, lng:(flon+tlon)/2}, zoom:6,
+  pixelRatio: window.devicePixelRatio||1
 });
-window.addEventListener("resize",()=>map.getViewPort().resize());
+window.addEventListener("resize", ()=>map.getViewPort().resize());
 new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
 
-const router = platform.getRoutingService(null,8);
+// Add markers immediately — no routing dependency
+const startMarker = new H.map.Marker({lat:flat, lng:flon});
+const endMarker = new H.map.Marker({lat:tlat, lng:tlon});
+map.addObjects([startMarker, endMarker]);
+
+// Fit to markers
+const group = new H.map.Group();
+group.addObjects([startMarker, endMarker]);
+map.getViewModel().setLookAtData({bounds: group.getBoundingBox()});
+
+// Try routing separately — if fails, markers still show
+const router = platform.getRoutingService(null, 8);
 router.calculateRoute({
-  transportMode:"car",
-  origin:`${fromLat},${fromLon}`,
-  destination:`${toLat},${toLon}`,
-  return:"polyline,summary"
-}, (result)=>{
-  const section = result.routes[0].sections[0];
-  const linestring = H.geo.LineString.fromFlexiblePolyline(section.polyline);
-  map.addObject(new H.map.Polyline(linestring,{style:{strokeColor:"#FF6600",lineWidth:4}}));
-  map.addObject(new H.map.Marker({lat:fromLat,lng:fromLon}));
-  map.addObject(new H.map.Marker({lat:toLat,lng:toLon}));
-  map.getViewModel().setLookAtData({bounds:map.getObjects()[0].getBoundingBox()},{animate:true});
-}, (err)=>console.error(err));
+  routingMode: "fast",
+  transportMode: "car",
+  origin: flat+","+flon,
+  destination: tlat+","+tlon,
+  return: "polyline"
+}, function(result) {
+  try {
+    const sections = result.routes[0].sections;
+    const lineStrings = sections.map(s => H.geo.LineString.fromFlexiblePolyline(s.polyline));
+    const multiLine = new H.geo.MultiLineString(lineStrings);
+    const routeLine = new H.map.Polyline(multiLine, {style:{strokeColor:"#FF6600",lineWidth:4}});
+    map.addObject(routeLine);
+    const routeGroup = new H.map.Group();
+    routeGroup.addObjects([routeLine, startMarker, endMarker]);
+    map.getViewModel().setLookAtData({bounds: routeGroup.getBoundingBox()});
+  } catch(e) { console.log("Route draw error:", e); }
+}, function(err) {
+  console.log("Routing failed, showing markers only:", err);
+});
 </script>
 </body>
 </html>
