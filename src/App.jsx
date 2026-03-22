@@ -768,11 +768,12 @@ export default function JadranUnified() {
             hostPhone: data.hostPhone || "", budget: data.budget || 1200,
             spent: data.spent || 0, email: data.email || "",
           });
-        } else if (roomCode.current && roomCode.current !== "DEMO") {
-          // No profile yet — show onboarding
+        } else if (new URLSearchParams(window.location.search).get("room") && roomCode.current !== "DEMO") {
+          // No profile yet — show onboarding only when ?room= is explicit in URL
           setShowOnboarding(true);
         }
-      } else if (roomCode.current && roomCode.current !== "DEMO") {
+      } else if (new URLSearchParams(window.location.search).get("room") && roomCode.current !== "DEMO") {
+        // URL has ?room= but no data in Firestore yet — show onboarding
         setShowOnboarding(true);
       }
       // Mark ready AFTER initial state is applied
@@ -1487,8 +1488,8 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       const [arrDate, setArrDate] = React.useState(delta.arrival_date || "");
       const [budget, setBudget] = React.useState(delta.budget || null);
       const proceed = () => {
-        updateDelta({ travelers: { adults, kids: Array(kids).fill(0), kids_ages: [] }, arrival_date: arrDate, budget, phase: "priprema" });
-        setSubScreen("priprema");
+        updateDelta({ travelers: { adults, kids: Array(kids).fill(0), kids_ages: [] }, arrival_date: arrDate, budget, phase: "transit" });
+        setSubScreen("transit");
       };
       const ready = arrDate && budget;
       return (
@@ -1695,6 +1696,12 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               })}
             </div>
             <Btn primary onClick={() => setOnboardStep(1)} style={{ opacity: delta.segment ? 1 : 0.4, pointerEvents: delta.segment ? "auto" : "none" }}>Nastavi →</Btn>
+            <div style={{ textAlign: "center", marginTop: 10 }}>
+              <button onClick={() => setShowOnboarding(true)}
+                style={{ background: "none", border: "none", color: C.mut, fontSize: 12, cursor: "pointer", ...dm, textDecoration: "underline", padding: "4px 8px" }}>
+                🏠 Imam kod smještaja (već sam gost)
+              </button>
+            </div>
           </Card>
         )}
         {onboardStep === 1 && <FromStep />}
