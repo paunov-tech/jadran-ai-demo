@@ -20,25 +20,27 @@ const HERE_ROUTING_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
 
 // ─── useLeafletMap: renders Leaflet map in containerId, no HERE SDK ───
 function useLeafletMap(containerId, fromCity, toCity, onRoute) {
+  const mapRef = useRef(null);
+
   useEffect(() => {
-    console.log("useLeafletMap called", containerId, fromCity, toCity);
-    console.log("COORDS from:", CITY_COORDS[fromCity]);
-    console.log("COORDS to:", CITY_COORDS[toCity]);
-    console.log("container el:", document.getElementById(containerId));
-    console.log("Leaflet loaded:", !!window.L);
     if (!containerId) return;
     const from = CITY_COORDS[fromCity];
     const to = CITY_COORDS[toCity] || CITY_COORDS["Split"];
     if (!from || !to) return;
 
+    // If map already exists for same container, skip reinit
+    if (mapRef.current) return;
+
+    let mounted = true;
+
     const initMap = () => {
+      if (!mounted) return;
       const L = window.L;
       const el = document.getElementById(containerId);
-      if (!el) return;
-      // Remove existing Leaflet instance if any
-      if (el._leaflet_id) { try { L.map(el).remove(); } catch {} delete el._leaflet_id; }
+      if (!el || el._leaflet_id) return; // already initialized
 
       const map = L.map(el, { zoomControl: false, attributionControl: false });
+      mapRef.current = map;
       L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 18 }).addTo(map);
 
       const fromLL = L.latLng(from[0], from[1]);
@@ -55,13 +57,13 @@ function useLeafletMap(containerId, fromCity, toCity, onRoute) {
       fetch(`https://router.hereapi.com/v8/routes?transportMode=car&origin=${from[0]},${from[1]}&destination=${to[0]},${to[1]}&return=polyline,summary&apikey=${HERE_ROUTING_KEY}`)
         .then(r => r.json())
         .then(d => {
+          if (!mounted) return;
           const sec = d.routes?.[0]?.sections?.[0];
           if (!sec) return;
           const km = Math.round(sec.summary.length / 1000);
           const hrs = Math.floor(sec.summary.duration / 3600);
           const mins = Math.round((sec.summary.duration % 3600) / 60);
           if (onRoute) onRoute({ km, hrs, mins, oLat: from[0], oLng: from[1], dLat: to[0], dLng: to[1], mode: "auto" });
-          // Decode HERE flexible polyline
           if (sec.polyline) {
             try {
               const ENC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
@@ -84,6 +86,7 @@ function useLeafletMap(containerId, fromCity, toCity, onRoute) {
     };
 
     const tryInit = (attempts = 0) => {
+      if (!mounted) return;
       const el = document.getElementById(containerId);
       if (el && !el._leaflet_id) { initMap(); }
       else if (attempts < 20) { requestAnimationFrame(() => tryInit(attempts + 1)); }
@@ -105,10 +108,17 @@ function useLeafletMap(containerId, fromCity, toCity, onRoute) {
     }
 
     return () => {
-      const el = document.getElementById(containerId);
-      if (el && el._leaflet_id) { try { window.L?.map(el)?.remove(); } catch {} delete el._leaflet_id; }
+      mounted = false;
+      // Only destroy map on actual unmount (containerId goes null = transit screen hidden)
     };
   }, [containerId, fromCity, toCity]); // eslint-disable-line
+
+  // Destroy map when hook truly unmounts (component teardown)
+  useEffect(() => {
+    return () => {
+      if (mapRef.current) { try { mapRef.current.remove(); } catch {} mapRef.current = null; }
+    };
+  }, []); // eslint-disable-line
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -1362,9 +1372,8 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>{transitFromUrl || COUNTRY_CITY[G.country]?.split(",")?.[0] || G.country} → <span style={{ color: C.accent }}>{transitToUrl || "Podstrana"}</span></div>
         </div>
         {/* Leaflet map — no HERE SDK */}
-        <p style={{ color: "lime", fontSize: 12 }}>FROM: {mapFromCity} | TO: {mapToCity}</p>
         <div style={{ borderRadius: 18, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 12 }}>
-          <div id="transit-map" style={{ height: "280px", width: "100%", borderRadius: "12px", background: "#FF6600", position: "relative", zIndex: 1 }} />
+          <div id="transit-map" key="transit-map-stable" style={{ height: "280px", width: "100%", borderRadius: "12px", background: "#1a2035", position: "relative", zIndex: 1 }} />
           {transitRouteData && (
             <div style={{ padding: "12px 16px", background: `rgba(14,165,233,0.04)`, display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
               <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>🛣 {transitRouteData.km} km</span>
