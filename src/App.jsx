@@ -466,6 +466,10 @@ export default function JadranUnified() {
   const transitMapRef = useRef(null);
   const hereTransitInst = useRef(null);
   const [transitRouteData, setTransitRouteData] = useState(null);
+  const [transitFromUrl, setTransitFromUrl] = useState("");
+  const [transitToUrl, setTransitToUrl] = useState("");
+  const [transitSegUrl, setTransitSegUrl] = useState("");
+  const SEG_ICON = { kamper:"🚐", porodica:"👨‍👩‍👧", par:"💑", jedrilicar:"⛵" };
 
   // ─── GUEST ONBOARDING STATE ───
   const [guestProfile, setGuestProfile] = useState(null);
@@ -474,6 +478,23 @@ export default function JadranUnified() {
 
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMsgs]);
   useEffect(() => { const t = setTimeout(() => setSplash(false), 3800); return () => clearTimeout(t); }, []);
+
+  // ─── URL transit handoff (?go=transit&from=Wien&to=Split&seg=kamper) ───
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("go") !== "transit") return;
+    const from = p.get("from") || "";
+    const to = p.get("to") || "";
+    const seg = p.get("seg") || "par";
+    if (!from || !to) return;
+    setTransitFromUrl(from);
+    setTransitToUrl(to);
+    setTransitSegUrl(seg);
+    setPhase("pre");
+    setSubScreen("transit");
+    setSplash(false);
+    window.history.replaceState({}, "", "/");
+  }, []); // eslint-disable-line
 
   // ─── PERSISTENCE: Load guest state from Firestore/localStorage ───
   const persistReady = useRef(false);
@@ -602,8 +623,9 @@ export default function JadranUnified() {
 
   useEffect(() => {
     if (subScreen !== "transit") return;
-    const transportMode = (() => { try { return localStorage.getItem("jadran_transport") || "auto"; } catch { return "auto"; } })();
-    const depQuery = COUNTRY_CITY[G.country] || (G.country + ",Europe");
+    const transportMode = transitSegUrl || (() => { try { return localStorage.getItem("jadran_transport") || "auto"; } catch { return "auto"; } })();
+    const depQuery = transitFromUrl || COUNTRY_CITY[G.country] || "Wien,Austria";
+    const destQuery = transitToUrl || "Podstrana,Croatia";
     const hereMode = transportMode === "kamper" ? "truck" : transportMode === "avion" ? "pedestrian" : "car";
 
     const loadScripts = () => new Promise((resolve, reject) => {
@@ -622,14 +644,24 @@ export default function JadranUnified() {
         if (!pos) return;
         const { lat: oLat, lng: oLng } = pos;
 
+        // Geocode destination (URL param or fallback to Podstrana)
+        let dLat = PODSTRANA.lat, dLng = PODSTRANA.lng;
+        if (destQuery !== "Podstrana,Croatia") {
+          try {
+            const dGeo = await fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(destQuery + ",Croatia")}&limit=1&apikey=${HERE_KEY}`).then(r => r.json());
+            const dp = dGeo.items?.[0]?.position;
+            if (dp) { dLat = dp.lat; dLng = dp.lng; }
+          } catch {}
+        }
+
         // Calculate route
-        const route = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${oLat},${oLng}&destination=${PODSTRANA.lat},${PODSTRANA.lng}&return=polyline,summary&apikey=${HERE_KEY}`).then(r => r.json());
+        const route = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${oLat},${oLng}&destination=${dLat},${dLng}&return=polyline,summary&apikey=${HERE_KEY}`).then(r => r.json());
         const sec = route.routes?.[0]?.sections?.[0];
         if (!sec) return;
         const km = Math.round(sec.summary.length / 1000);
         const hrs = Math.floor(sec.summary.duration / 3600);
         const mins = Math.round((sec.summary.duration % 3600) / 60);
-        setTransitRouteData({ oLat, oLng, km, hrs, mins, polyline: sec.polyline, mode: transportMode });
+        setTransitRouteData({ oLat, oLng, dLat, dLng, km, hrs, mins, polyline: sec.polyline, mode: transportMode });
 
         // Load HERE Maps JS and render
         await loadScripts();
@@ -638,7 +670,7 @@ export default function JadranUnified() {
         const platform = new window.H.service.Platform({ apikey: HERE_KEY });
         const layers = platform.createDefaultLayers();
         const map = new window.H.Map(transitMapRef.current, layers.vector.normal.map, {
-          zoom: 6, center: { lat: (oLat + PODSTRANA.lat) / 2, lng: (oLng + PODSTRANA.lng) / 2 },
+          zoom: 6, center: { lat: (oLat + dLat) / 2, lng: (oLng + dLng) / 2 },
         });
         hereTransitInst.current = map;
         new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
@@ -652,13 +684,13 @@ export default function JadranUnified() {
         const mkIcon = (emoji) => new window.H.map.Icon(`<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><circle cx="14" cy="14" r="13" fill="#0c1e35" stroke="#0ea5e9" stroke-width="2"/><text x="14" y="19" text-anchor="middle" font-size="13">${emoji}</text></svg>`);
         map.addObjects([
           new window.H.map.Marker({ lat: oLat, lng: oLng }, { icon: mkIcon(G.flag || "🚩") }),
-          new window.H.map.Marker({ lat: PODSTRANA.lat, lng: PODSTRANA.lng }, { icon: mkIcon("⚓") }),
+          new window.H.map.Marker({ lat: dLat, lng: dLng }, { icon: mkIcon("⚓") }),
         ]);
       } catch (e) { console.error("[HERE transit]", e); }
     })();
 
     return () => { hereTransitInst.current?.dispose?.(); hereTransitInst.current = null; };
-  }, [subScreen]);
+  }, [subScreen, transitFromUrl, transitToUrl]); // eslint-disable-line
 
   // ─── WEATHER: Fetch real data via Gemini grounding ───
   const [weather, setWeather] = useState(W_DEFAULT);
@@ -1278,7 +1310,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       <>
         <div style={{ padding: "24px 0 8px" }}>
           <div style={{ fontSize: 28, fontWeight: 400 }}>{t("safeTrip",lang)} {transitRouteData?.mode === "kamper" ? "🚐" : transitRouteData?.mode === "avion" ? "✈️" : "🚗"}</div>
-          <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>{COUNTRY_CITY[G.country]?.split(",")?.[0] || G.country} → Podstrana</div>
+          <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>{transitFromUrl || COUNTRY_CITY[G.country]?.split(",")?.[0] || G.country} → <span style={{ color: C.accent }}>{transitToUrl || "Podstrana"}</span></div>
         </div>
         {/* HERE Maps interactive route */}
         <div style={{ borderRadius: 18, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 12 }}>
@@ -1295,7 +1327,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>🛣 {transitRouteData.km} km</span>
               <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>⏱ {transitRouteData.hrs}h {transitRouteData.mins}min</span>
               {transitRouteData.mode === "kamper" && <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 6, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.15)", color: C.gold }}>🚐 Kamper ruta</span>}
-              <a href={`https://wego.here.com/directions/drive/${transitRouteData.oLat},${transitRouteData.oLng}/${PODSTRANA.lat},${PODSTRANA.lng}`} target="_blank" rel="noopener noreferrer"
+              <a href={`https://wego.here.com/directions/drive/${transitRouteData.oLat},${transitRouteData.oLng}/${transitRouteData.dLat},${transitRouteData.dLng}`} target="_blank" rel="noopener noreferrer"
                 style={{ marginLeft: "auto", padding: "8px 16px", borderRadius: 10, background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>
                 📍 Pokreni navigaciju →
               </a>
@@ -1355,7 +1387,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                   </div>
                 )}
                 {/* Alerts */}
-                {borderData.alerts?.map((al, i) => (
+                {borderData.alerts?.filter(al => al.message).map((al, i) => (
                   <div key={i} style={{ padding: "8px 14px", borderRadius: 10, border: "1px solid rgba(239,68,68,0.2)", background: "rgba(239,68,68,0.04)", ...dm, fontSize: 12, color: "#fca5a5", marginBottom: 6 }}>
                     ⚠️ {al.message}
                   </div>
@@ -2263,8 +2295,8 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             <div style={{ ...dm, display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 18 }}>{G.flag}</span>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{G.name}</div>
-                <div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>{G.accommodation}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{transitFromUrl ? `${SEG_ICON[transitSegUrl] || "🚗"} ${transitFromUrl} → ${transitToUrl}` : G.name}</div>
+                <div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>{transitFromUrl ? "Sloboda ceste i mora" : G.accommodation}</div>
               </div>
             </div>
             {G.arrival && <div style={{ ...dm, fontSize: 11, color: C.mut, textAlign: "right" }}>
@@ -2274,7 +2306,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           {/* Warm divider */}
           <div style={{ height: 1, marginTop: 16, background: `linear-gradient(90deg, transparent, rgba(245,158,11,0.12) 30%, rgba(14,165,233,0.08) 70%, transparent)` }} />
           {/* Demo mode banner */}
-          {!guestProfile && <div style={{ ...dm, display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, padding: "10px 16px", background: "rgba(245,158,11,0.06)", borderRadius: 12, border: "1px solid rgba(245,158,11,0.1)" }}>
+          {!guestProfile && !transitFromUrl && <div style={{ ...dm, display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, padding: "10px 16px", background: "rgba(245,158,11,0.06)", borderRadius: 12, border: "1px solid rgba(245,158,11,0.1)" }}>
             <span style={{ fontSize: 12, color: C.warm }}>🎭 Primjer prikaza — kreirajte vlastiti profil</span>
             <a href="/host" style={{ ...dm, fontSize: 11, color: C.accent, textDecoration: "none", fontWeight: 600 }}>Host Panel →</a>
           </div>}
