@@ -887,7 +887,7 @@ export default function JadranUnified() {
   useEffect(() => {
     if (subScreen !== "transit") return;
     const transportMode = (() => { try { return localStorage.getItem("jadran_transport") || "auto"; } catch { return "auto"; } })();
-    const depQuery = COUNTRY_CITY[G.country] || (G.country + ",Europe");
+    const depQuery = delta.from ? `${delta.from},Europe` : COUNTRY_CITY[G.country] || (G.country + ",Europe");
     const hereMode = transportMode === "kamper" ? "truck" : transportMode === "avion" ? "pedestrian" : "car";
 
     const loadScripts = () => new Promise((resolve, reject) => {
@@ -942,7 +942,7 @@ export default function JadranUnified() {
     })();
 
     return () => { hereTransitInst.current?.dispose?.(); hereTransitInst.current = null; };
-  }, [subScreen]);
+  }, [subScreen, delta.from, dest?.lat]);
 
   // ─── WEATHER: Fetch real data via Gemini grounding ───
   const [weather, setWeather] = useState(W_DEFAULT);
@@ -1821,7 +1821,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         <div style={{ padding: "24px 0 8px" }}>
           <div style={{ fontSize: 28, fontWeight: 400 }}>{t("safeTrip",lang)} {transitRouteData?.mode === "kamper" ? "🚐" : transitRouteData?.mode === "avion" ? "✈️" : "🚗"}</div>
           <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>
-            {COUNTRY_CITY[G.country]?.split(",")?.[0] || G.country} → <span style={{ color: C.accent }}>{dest.city}</span>
+            {delta.from || COUNTRY_CITY[G.country]?.split(",")?.[0] || G.country} → <span style={{ color: C.accent }}>{dest?.city || delta.destination?.city}</span>
           </div>
           {transitRouteData && (() => {
             const now = new Date();
@@ -3415,20 +3415,36 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           {/* Guest bar */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, marginTop: 14, padding: "12px 16px", background: C.sand, borderRadius: 16, border: `1px solid rgba(245,158,11,0.06)` }}>
             <div style={{ ...dm, display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 18 }}>{G.flag}</span>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{G.name}</div>
-                <div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>{G.accommodation}</div>
-              </div>
+              {guestProfile ? (
+                <>
+                  <span style={{ fontSize: 18 }}>{G.flag}</span>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{G.name}</div>
+                    <div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>{G.accommodation}</div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <span style={{ fontSize: 18 }}>{SEGMENTS.find(s => s.key === delta.segment)?.emoji || "🌊"}</span>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
+                      {delta.from && delta.destination?.city ? `${delta.from} → ${delta.destination.city}` : (SEGMENTS.find(s => s.key === delta.segment)?.label || "Putnik")}
+                    </div>
+                    <div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>
+                      {SEGMENTS.find(s => s.key === delta.segment)?.sub || ""}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
-            {G.arrival && <div style={{ ...dm, fontSize: 11, color: C.mut, textAlign: "right" }}>
+            {G.arrival && guestProfile && <div style={{ ...dm, fontSize: 11, color: C.mut, textAlign: "right" }}>
               {new Date(G.arrival).toLocaleDateString(dateLocale || "hr-HR", {day:"numeric",month:"short"})} – {new Date(G.departure).toLocaleDateString(dateLocale || "hr-HR", {day:"numeric",month:"short"})}
             </div>}
           </div>
           {/* Warm divider */}
           <div style={{ height: 1, marginTop: 16, background: `linear-gradient(90deg, transparent, rgba(245,158,11,0.12) 30%, rgba(14,165,233,0.08) 70%, transparent)` }} />
-          {/* Demo mode banner */}
-          {!guestProfile && <div style={{ ...dm, display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, padding: "10px 16px", background: "rgba(245,158,11,0.06)", borderRadius: 12, border: "1px solid rgba(245,158,11,0.1)" }}>
+          {/* Demo mode banner — only when no profile AND no real onboarding data */}
+          {!guestProfile && !delta.from && <div style={{ ...dm, display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, padding: "10px 16px", background: "rgba(245,158,11,0.06)", borderRadius: 12, border: "1px solid rgba(245,158,11,0.1)" }}>
             <span style={{ fontSize: 12, color: C.warm }}>🎭 Primjer prikaza — kreirajte vlastiti profil</span>
             <a href="/host" style={{ ...dm, fontSize: 11, color: C.accent, textDecoration: "none", fontWeight: 600 }}>Host Panel →</a>
           </div>}
