@@ -1,4 +1,4 @@
-// JADRAN Service Worker v5 — App Shell Cache
+// JADRAN Service Worker v5 — App Shell Cache + Push Notifications
 // Strategy: Network-first for HTML, Cache-first for hashed assets, Never cache API
 const CACHE = "jadran-v5";
 const SHELL = ["/", "/ai"];
@@ -57,6 +57,35 @@ self.addEventListener("fetch", (e) => {
         return res;
       }).catch(() => cached);
       return cached || fetched;
+    })
+  );
+});
+
+// ─── Push Notifications ────────────────────────────────────────────────
+
+self.addEventListener("push", e => {
+  let data = { title: "JADRAN AI", body: "Nova obavijest", icon: "/icon-192.svg", tag: "jadran" };
+  try { data = { ...data, ...e.data.json() }; } catch {}
+  e.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: data.icon || "/icon-192.svg",
+      badge: "/icon-192.svg",
+      tag: data.tag || "jadran",
+      data: data.url ? { url: data.url } : {},
+      requireInteraction: data.requireInteraction || false,
+    })
+  );
+});
+
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  const url = e.notification.data?.url || "/";
+  e.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(clients => {
+      const existing = clients.find(c => c.url.includes(self.location.origin));
+      if (existing) return existing.focus();
+      return self.clients.openWindow(url);
     })
   );
 });

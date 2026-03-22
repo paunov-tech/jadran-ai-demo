@@ -447,6 +447,14 @@ export default function JadranUnified() {
   const [viatorBookDate, setViatorBookDate] = useState(() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); });
   const [viatorPersons, setViatorPersons] = useState(2);
   const [viatorWishlist, setViatorWishlist] = useState(() => { try { return JSON.parse(localStorage.getItem("jadran_viator_wishlist") || "[]"); } catch { return []; } });
+  // Border intelligence
+  const [borderData, setBorderData] = useState(null);
+  const [borderLoading, setBorderLoading] = useState(false);
+  // Arrival geofencing
+  const [geoArrival, setGeoArrival] = useState(false); // true = within 10km
+  const [arrivalCountdown, setArrivalCountdown] = useState(null); // seconds remaining
+  const geoWatchRef = useRef(null);
+  const arrivalFiredRef = useRef(false);
   const [chatMsgs, setChatMsgs] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
@@ -530,6 +538,46 @@ export default function JadranUnified() {
       fetchViatorActs();
     }
   }, [phase, subScreen]); // eslint-disable-line
+
+  // ─── PUSH NOTIFICATIONS: register SW subscription on first load ───
+  useEffect(() => {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    const VAPID_PUBLIC = "BGjw0W1rv8Mr69DVizpHWpki-rbrHo9kSWOSF_cZjHwoy8yMcI3rMA2J_TbmOEm1xswDGHkRlQ-IZh1nANK5Ujc";
+    const stored = localStorage.getItem("jadran_push_deviceId");
+    const deviceId = stored || `dev_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    if (!stored) localStorage.setItem("jadran_push_deviceId", deviceId);
+
+    const registerPush = async (reg) => {
+      try {
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+          sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: VAPID_PUBLIC,
+          });
+        }
+        await fetch("/api/push-subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subscription: sub.toJSON(), deviceId, roomCode: roomCode.current }),
+        }).catch(() => {});
+        localStorage.setItem("jadran_push_active", "1");
+      } catch {}
+    };
+
+    navigator.serviceWorker.ready.then(reg => {
+      if (Notification.permission === "granted") {
+        registerPush(reg);
+      } else if (Notification.permission === "default") {
+        // Request permission on first meaningful interaction (after onboarding)
+        const onInteract = () => {
+          Notification.requestPermission().then(p => { if (p === "granted") registerPush(reg); });
+          window.removeEventListener("click", onInteract);
+        };
+        window.addEventListener("click", onInteract, { once: true });
+      }
+    }).catch(() => {});
+  }, []); // eslint-disable-line
 
   // ─── ALERTS BAR ───
   const [alerts, setAlerts] = useState([]);
@@ -770,6 +818,82 @@ export default function JadranUnified() {
     setViatorWishlist(next);
     try { localStorage.setItem("jadran_viator_wishlist", JSON.stringify(next)); } catch {}
   };
+
+  // ─── Border intelligence ───
+  const fetchBorderData = async () => {
+    if (borderLoading) return;
+    setBorderLoading(true);
+    try {
+      const res = await fetch("/api/border-intelligence");
+      if (res.ok) setBorderData(await res.json());
+    } catch {}
+    setBorderLoading(false);
+  };
+
+  useEffect(() => {
+    if (phase === "pre" && subScreen === "transit") {
+      fetchBorderData();
+      const iv = setInterval(fetchBorderData, 600000); // 10-min auto-refresh
+      return () => clearInterval(iv);
+    }
+  }, [phase, subScreen]); // eslint-disable-line
+
+  // ─── ARRIVAL GEOFENCING: watch position, trigger at <10km to Podstrana ───
+  useEffect(() => {
+    if (phase !== "pre" || subScreen !== "transit") return;
+    if (!("geolocation" in navigator)) return;
+
+    const DEST = { lat: 43.4892, lng: 16.5523 }; // Podstrana
+    const R = 6371;
+    const distKm = (lat1, lng1, lat2, lng2) => {
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    };
+
+    const onPos = (pos) => {
+      const km = distKm(pos.coords.latitude, pos.coords.longitude, DEST.lat, DEST.lng);
+      if (km < 10 && !arrivalFiredRef.current) {
+        arrivalFiredRef.current = true;
+        setGeoArrival(true);
+        setArrivalCountdown(30);
+
+        // Notify host via push-send (fire-and-forget)
+        const deviceId = localStorage.getItem("jadran_push_deviceId");
+        if (deviceId) {
+          fetch("/api/push-send", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              deviceId, title: "Gost stiže!",
+              body: `${G.first} je ~${Math.round(km)} km od apartmana`,
+              tag: "arrival",
+            }),
+          }).catch(() => {});
+        }
+      }
+    };
+
+    geoWatchRef.current = navigator.geolocation.watchPosition(onPos, () => {}, {
+      enableHighAccuracy: false, maximumAge: 60000, timeout: 30000,
+    });
+    return () => {
+      if (geoWatchRef.current != null) navigator.geolocation.clearWatch(geoWatchRef.current);
+    };
+  }, [phase, subScreen]); // eslint-disable-line
+
+  // ─── ARRIVAL COUNTDOWN: auto-transition to kiosk after 30s ───
+  useEffect(() => {
+    if (arrivalCountdown === null) return;
+    if (arrivalCountdown <= 0) {
+      setPhase("kiosk");
+      setSubScreen("home");
+      updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" });
+      return;
+    }
+    const t = setTimeout(() => setArrivalCountdown(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [arrivalCountdown]); // eslint-disable-line
 
   const hour = simHour ?? new Date().getHours();
   const timeCtx = hour < 6 ? "night" : hour < 12 ? "morning" : hour < 18 ? "midday" : hour < 22 ? "evening" : "night";
@@ -1179,6 +1303,72 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           )}
         </div>
         {isAdmin && <input type="range" min={0} max={100} value={transitProg} onChange={e => setTransitProg(+e.target.value)} style={{ width: "100%", accentColor: C.accent, marginBottom: 16 }} />}
+
+        {/* ── Border Intelligence ── */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <SectionLabel>🛂 Granični prelazi — Live</SectionLabel>
+            <button onClick={fetchBorderData} disabled={borderLoading}
+              style={{ padding: "5px 12px", borderRadius: 8, border: `1px solid ${C.bord}`, background: "transparent", color: borderLoading ? C.mut : C.accent, fontSize: 12, cursor: borderLoading ? "default" : "pointer", ...dm }}>
+              {borderLoading ? "⏳" : "↻ Ažuriraj"}
+            </button>
+          </div>
+          {borderLoading && !borderData && (
+            <div style={{ ...dm, fontSize: 13, color: C.mut, padding: "12px 0" }}>Dohvaćam podatke o granicama…</div>
+          )}
+          {borderData && (() => {
+            const CLR = { green: "#22c55e", yellow: C.gold, red: C.red };
+            const DOT = { green: "🟢", yellow: "🟡", red: "🔴" };
+            return (
+              <>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 12 }}>
+                  {borderData.crossings?.map(cr => {
+                    const cam = borderData.cameras?.find(c => c.key === cr.name.toLowerCase().replace("š","s").replace("š","s") || c.location?.toLowerCase().includes(cr.name.toLowerCase().slice(0,4)));
+                    const camSrc = cam?.snapshot_url;
+                    return (
+                      <div key={cr.name} style={{ borderRadius: 14, border: `1px solid ${CLR[cr.color] || C.bord}22`, background: `${CLR[cr.color] || "#64748b"}08`, overflow: "hidden" }}>
+                        {camSrc && (
+                          <img src={`${camSrc}?t=${Math.floor(Date.now() / 300000)}`} alt={cr.name}
+                            style={{ width: "100%", height: 72, objectFit: "cover", display: "block" }} loading="lazy" />
+                        )}
+                        {!camSrc && (
+                          <div style={{ height: 72, background: "rgba(14,165,233,0.05)", display: "grid", placeItems: "center", fontSize: 28 }}>🛂</div>
+                        )}
+                        <div style={{ padding: "8px 10px" }}>
+                          <div style={{ ...dm, fontSize: 11, fontWeight: 700, color: CLR[cr.color] || C.mut, marginBottom: 2 }}>{DOT[cr.color] || "⚪"} {cr.name}</div>
+                          <div style={{ fontSize: 18, fontWeight: 300, lineHeight: 1 }}>{cr.wait_minutes}<span style={{ ...dm, fontSize: 10, color: C.mut }}> min</span></div>
+                          {cr.note && <div style={{ ...dm, fontSize: 9, color: C.mut, marginTop: 3, lineHeight: 1.3 }}>{cr.note}</div>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* AI Recommendation */}
+                {borderData.recommendation?.crossing && (
+                  <div style={{ padding: "12px 16px", borderRadius: 14, border: "1px solid rgba(245,158,11,0.3)", background: "rgba(245,158,11,0.04)", marginBottom: 10 }}>
+                    <div style={{ ...dm, fontSize: 11, color: C.gold, fontWeight: 700, marginBottom: 4 }}>✨ AI preporuka</div>
+                    <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 4 }}>Preporučamo: <span style={{ color: C.gold }}>{borderData.recommendation.crossing}</span></div>
+                    <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.5 }}>{borderData.recommendation.reason}</div>
+                    {borderData.recommendation.time_saved_min > 0 && (
+                      <div style={{ ...dm, fontSize: 12, color: "#22c55e", marginTop: 6 }}>⏱ Ušteda: ~{borderData.recommendation.time_saved_min} min</div>
+                    )}
+                  </div>
+                )}
+                {/* Alerts */}
+                {borderData.alerts?.map((al, i) => (
+                  <div key={i} style={{ padding: "8px 14px", borderRadius: 10, border: "1px solid rgba(239,68,68,0.2)", background: "rgba(239,68,68,0.04)", ...dm, fontSize: 12, color: "#fca5a5", marginBottom: 6 }}>
+                    ⚠️ {al.message}
+                  </div>
+                ))}
+                <div style={{ ...dm, fontSize: 10, color: "rgba(100,116,139,0.4)", textAlign: "right" }}>
+                  {borderData.updated ? `ažurirano ${new Date(borderData.updated).toLocaleTimeString("hr")}` : ""}
+                  {borderData.cached ? " · cached" : ""}
+                </div>
+              </>
+            );
+          })()}
+        </div>
+
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginBottom: 24 }}>
           <Card>
             <SectionLabel>{t("onTheRoad",lang)}</SectionLabel>
@@ -1198,6 +1388,24 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             </div>
           </Card>
         </div>
+        {/* Arrival geofence animation */}
+        {geoArrival && arrivalCountdown !== null && (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)", backdropFilter: "blur(16px)", zIndex: 300, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
+            <div style={{ fontSize: 80 }}>⚓</div>
+            <div style={{ ...hf, fontSize: 32, fontWeight: 300, textAlign: "center" }}>
+              Dobrodošli u Podstranu,<br /><span style={{ color: C.warm, fontStyle: "italic" }}>{G.first}!</span>
+            </div>
+            <div style={{ ...dm, fontSize: 16, color: C.mut, textAlign: "center" }}>Detektirali smo da ste stigli</div>
+            <div style={{ width: 80, height: 80, borderRadius: "50%", border: `3px solid ${C.accent}`, display: "grid", placeItems: "center" }}>
+              <span style={{ fontSize: 32, fontWeight: 300 }}>{arrivalCountdown}</span>
+            </div>
+            <div style={{ ...dm, fontSize: 13, color: C.mut }}>Prelazak na kiosk za {arrivalCountdown}s…</div>
+            <button onClick={() => { setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" }); setArrivalCountdown(null); }}
+              style={{ padding: "14px 32px", borderRadius: 14, border: "none", background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", ...dm }}>
+              Uđi u Kiosk →
+            </button>
+          </div>
+        )}
         <div style={{ textAlign: "center" }}>
           <Btn primary onClick={() => { setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" }); }}>{t("arrived",lang)}</Btn>
         </div>
