@@ -396,6 +396,15 @@ const BUNDLES = [
 
 const LOYALTY = { points: 345, tier: "Morski val", next: "Dalmatinac", nextPts: 500, code: "WEBER2026" };
 
+const VIATOR_FALLBACK = [
+  { productCode: "LOCAL-001", title: "Split – Dioklecijanova palača", description: "Razgledajte rimsku palaču iz 4. st. s lokalnim vodičem.", price: 29, rating: 4.8, reviewCount: 1240, duration: "2h", category: "Kultura", images: ["https://images.unsplash.com/photo-1555990538-1e09e0e62c7e?w=400"], bookingUrl: "https://www.viator.com/tours/Split/" },
+  { productCode: "LOCAL-002", title: "Plava špilja & 5 otoka (brzi brod)", description: "Posjetite Plavu špilju, Hvar, Brač i uvale Paklenih otoka.", price: 79, rating: 4.9, reviewCount: 3580, duration: "8h", category: "Nautika", images: ["https://images.unsplash.com/photo-1503756234508-e32369269dde?w=400"], bookingUrl: "https://www.viator.com/tours/Split/" },
+  { productCode: "LOCAL-003", title: "NP Krka – izlet s prijevozom", description: "Vodopadima Roski slap i Skradin Buk. Kupanje u rijeci Krki uključeno.", price: 65, rating: 4.7, reviewCount: 890, duration: "9h", category: "Priroda", images: ["https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400"], bookingUrl: "https://www.viator.com/tours/Split/" },
+  { productCode: "LOCAL-004", title: "Rafting na Cetini iz Omiša", description: "Adrenalinska avantura u kanjonu Cetine — 20 min od Podstrane. Oprema uključena.", price: 45, rating: 4.8, reviewCount: 650, duration: "3h", category: "Avantura", images: ["https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=400"], bookingUrl: "https://www.viator.com/tours/Omis/" },
+  { productCode: "LOCAL-005", title: "Hvar + Pakleni otoci (katamaranom)", description: "Cjelodnevni izlet do Hvara, Paklenih otoka i špilje Zelena — ručak uključen.", price: 89, rating: 4.8, reviewCount: 2100, duration: "10h", category: "Nautika", images: ["https://images.unsplash.com/photo-1534447677768-be436bb09401?w=400"], bookingUrl: "https://www.viator.com/tours/Split/" },
+  { productCode: "LOCAL-006", title: "Zalazak sunca na Bračkim stijenama", description: "Vožnja brodom do zlatnih stijena Brača uz čašu dalmatinskog vina.", price: 55, rating: 5.0, reviewCount: 420, duration: "2.5h", category: "Romantika", images: ["https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400"], bookingUrl: "https://www.viator.com/tours/Split/" },
+];
+
 const INTEREST_LABELS = {
   gastro:    { hr:"Gastronomija", de:"Gastronomie", en:"Gastronomy", it:"Gastronomia", si:"Gastronomija", cz:"Gastronomie", pl:"Gastronomia" },
   adventure: { hr:"Avantura", de:"Abenteuer", en:"Adventure", it:"Avventura", si:"Pustolovščina", cz:"Dobrodružství", pl:"Przygoda" },
@@ -431,6 +440,13 @@ export default function JadranUnified() {
   const [selectedGem, setSelectedGem] = useState(null);
   const [selectedExp, setSelectedExp] = useState(null);
   const [booked, setBooked] = useState(new Set());
+  // Viator activities
+  const [viatorActs, setViatorActs] = useState(null); // null=not loaded, array=loaded
+  const [viatorLoading, setViatorLoading] = useState(false);
+  const [selectedViatorAct, setSelectedViatorAct] = useState(null);
+  const [viatorBookDate, setViatorBookDate] = useState(() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); });
+  const [viatorPersons, setViatorPersons] = useState(2);
+  const [viatorWishlist, setViatorWishlist] = useState(() => { try { return JSON.parse(localStorage.getItem("jadran_viator_wishlist") || "[]"); } catch { return []; } });
   const [chatMsgs, setChatMsgs] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
@@ -507,6 +523,13 @@ export default function JadranUnified() {
     updateGuest(roomCode.current, { lang, phase, subScreen, premium, booked: [...booked] });
   }, [lang, phase, subScreen, premium, booked]);
 
+
+  // ─── AUTO-FETCH VIATOR when entering relevant screens ───
+  useEffect(() => {
+    if ((phase === "kiosk" && subScreen === "activities") || (phase === "pre" && subScreen === "pretrip")) {
+      fetchViatorActs();
+    }
+  }, [phase, subScreen]); // eslint-disable-line
 
   // ─── ALERTS BAR ───
   const [alerts, setAlerts] = useState([]);
@@ -706,6 +729,48 @@ export default function JadranUnified() {
     setPayLoading(false);
   };
 
+  // ─── Viator: Fetch activities ───
+  const fetchViatorActs = async () => {
+    if (viatorLoading || viatorActs !== null) return;
+    setViatorLoading(true);
+    try {
+      const res = await fetch("/api/viator-search", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ destination: "Podstrana" }),
+      });
+      const data = await res.json();
+      setViatorActs(Array.isArray(data.activities) && data.activities.length > 0 ? data.activities : VIATOR_FALLBACK);
+    } catch {
+      setViatorActs(VIATOR_FALLBACK);
+    } finally {
+      setViatorLoading(false);
+    }
+  };
+
+  // ─── Viator: Book activity via Stripe ───
+  const startViatorBooking = async (act, date, persons) => {
+    setPayLoading(true);
+    try {
+      const res = await fetch("/api/viator-book", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productCode: act.productCode, title: act.title, price: act.price, date, persons, roomCode: roomCode.current, guestName: G.name, lang }),
+      });
+      const data = await res.json();
+      if (data.url) { window.location.href = data.url; }
+      else { alert(lang === "de" ? "Buchung nicht verfügbar." : lang === "en" ? "Booking unavailable." : "Rezervacija nije dostupna."); }
+    } catch { alert(lang === "en" ? "Connection error." : "Greška. Pokušajte ponovo."); }
+    setPayLoading(false);
+  };
+
+  // ─── Viator: Wishlist toggle ───
+  const toggleViatorWishlist = (act) => {
+    const next = viatorWishlist.some(a => a.productCode === act.productCode)
+      ? viatorWishlist.filter(a => a.productCode !== act.productCode)
+      : [...viatorWishlist, { productCode: act.productCode, title: act.title, price: act.price, duration: act.duration, rating: act.rating }];
+    setViatorWishlist(next);
+    try { localStorage.setItem("jadran_viator_wishlist", JSON.stringify(next)); } catch {}
+  };
+
   const hour = simHour ?? new Date().getHours();
   const timeCtx = hour < 6 ? "night" : hour < 12 ? "morning" : hour < 18 ? "midday" : hour < 22 ? "evening" : "night";
   const dateLocale = lang === "de" || lang === "at" ? "de-DE" : lang === "en" ? "en-GB" : lang === "it" ? "it-IT" : lang === "si" ? "sl-SI" : lang === "cz" ? "cs-CZ" : lang === "pl" ? "pl-PL" : "hr-HR";
@@ -823,6 +888,8 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
     anchor:   "M12 2a3 3 0 0 0-3 3a3 3 0 0 0 3 3a3 3 0 0 0 3-3a3 3 0 0 0-3-3Z M12 8v13 M5 21a7 7 0 0 1 7-7a7 7 0 0 1 7 7 M8 12H5 M19 12h-3",
     walls:    "M3 21V6l4-3l4 3l4-3l4 3l2 0v15 M3 6h18 M7 6v15 M11 6v15 M15 6v15",
     island:   "M2 20c2-3 5-5 10-5s8 2 10 5 M7 15V9l3-4l3 4v6 M12 5V3 M10 5h4",
+    star:     "M12 2l3.09 6.26L22 9.27l-5 4.87l1.18 6.88L12 17.77l-6.18 3.25L7 14.14L2 9.27l6.91-1.01Z",
+    ticket:   "M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z M13 5v2 M13 17v2 M13 11v2",
   };
 
   // City landmark icon mapping — renders SVG instead of emoji for known cities
@@ -1056,6 +1123,27 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           ))}
         </div>
 
+        {/* Top aktivnosti — Viator preview */}
+        <SectionLabel extra="Viator">Top aktivnosti</SectionLabel>
+        {viatorLoading && <div style={{ ...dm, fontSize: 13, color: C.mut, marginBottom: 16 }}>Učitavam aktivnosti…</div>}
+        {(viatorActs || VIATOR_FALLBACK).slice(0, 3).map(act => {
+          const inWishlist = viatorWishlist.some(a => a.productCode === act.productCode);
+          return (
+            <Card key={act.productCode} style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 14, padding: "14px 18px" }}>
+              {act.images?.[0] && <img src={act.images[0]} alt={act.title} style={{ width: 60, height: 60, borderRadius: 12, objectFit: "cover", flexShrink: 0 }} />}
+              {!act.images?.[0] && <div style={{ width: 60, height: 60, borderRadius: 12, background: "rgba(34,197,94,0.1)", display: "grid", placeItems: "center", fontSize: 28, flexShrink: 0 }}>🎯</div>}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{act.title}</div>
+                <div style={{ ...dm, fontSize: 12, color: C.mut }}>⏱ {act.duration} · <span style={{ color: C.accent }}>{act.price}€</span> / osobi</div>
+              </div>
+              <button onClick={() => toggleViatorWishlist(act)}
+                style={{ padding: "6px 14px", borderRadius: 10, border: `1px solid ${inWishlist ? "rgba(34,197,94,0.3)" : C.bord}`, background: inWishlist ? "rgba(34,197,94,0.1)" : "transparent", color: inWishlist ? "#22c55e" : C.mut, fontSize: 12, cursor: "pointer", ...dm, flexShrink: 0, fontWeight: inWishlist ? 600 : 400 }}>
+                {inWishlist ? "💚 Dodano" : "Saznaj više"}
+              </button>
+            </Card>
+          );
+        })}
+
         <div style={{ textAlign: "center", padding: "16px 0" }}>
           <Btn primary onClick={() => setSubScreen("transit")}>{t("simArrival",lang)}</Btn>
         </div>
@@ -1271,6 +1359,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             { k: "routes", ic: IC.map, l: t("routes",lang), clr: "#34d399", free: false },
             { k: "food", ic: IC.food, l: t("food",lang), clr: C.terracotta, free: false },
             { k: "emergency", ic: IC.medic, l: t("emergency",lang), clr: C.red, free: true },
+            { k: "activities", ic: IC.ticket, l: t("activities",lang), clr: "#22c55e", free: true },
             { k: "gems", ic: IC.gem, l: t("gems",lang), clr: C.gold, free: false },
             { k: "chat", ic: IC.bot, l: t("aiGuide",lang), clr: "#a78bfa", free: false },
           ].map(t => (
@@ -1459,6 +1548,79 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
     </>
   );
 
+  const KioskActivities = () => {
+    const acts = viatorActs || VIATOR_FALLBACK;
+    const CATCLR = { Kultura: "#a78bfa", Nautika: "#0ea5e9", Priroda: "#34d399", Avantura: "#f97316", Romantika: "#f472b6" };
+    const STARS = (r) => r ? "★".repeat(Math.round(r)) + "☆".repeat(5 - Math.round(r)) : "★★★★★";
+    return (
+      <>
+        <BackBtn onClick={() => setSubScreen("home")} />
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+          <span style={{ fontSize: 36 }}>🎯</span>
+          <div>
+            <div style={{ fontSize: 28, fontWeight: 400 }}>{t("activities",lang)}</div>
+            <div style={{ ...dm, fontSize: 13, color: C.mut }}>Rezervirajte odmah · Potvrda odmah</div>
+          </div>
+        </div>
+
+        {/* Wishlist teaser */}
+        {viatorWishlist.length > 0 && (
+          <div style={{ padding: "10px 16px", borderRadius: 14, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.15)", marginBottom: 16, display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 18 }}>💚</span>
+            <div style={{ ...dm, fontSize: 13 }}>
+              <strong style={{ color: "#22c55e" }}>{viatorWishlist.length} aktivnost{viatorWishlist.length === 1 ? "" : "i"}</strong> iz vaše liste želja
+            </div>
+          </div>
+        )}
+
+        {viatorLoading && (
+          <div style={{ textAlign: "center", padding: 40 }}>
+            <div style={{ width: 32, height: 32, border: `2px solid ${C.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin-slow 0.8s linear infinite", margin: "0 auto 12px" }} />
+            <div style={{ ...dm, fontSize: 13, color: C.mut }}>Učitavam aktivnosti…</div>
+          </div>
+        )}
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14, marginTop: 8 }}>
+          {acts.map((act, i) => {
+            const inWishlist = viatorWishlist.some(a => a.productCode === act.productCode);
+            const img = act.images?.[0];
+            return (
+              <Card key={act.productCode} style={{ padding: 0, overflow: "hidden", cursor: "pointer", animation: `fadeUp 0.4s ease ${i * 0.06}s both` }}
+                onClick={() => { setSelectedViatorAct(act); setViatorPersons(G.adults || 2); }}>
+                {/* Image */}
+                <div style={{ height: 140, position: "relative", overflow: "hidden", background: "linear-gradient(135deg,rgba(14,165,233,0.1),rgba(34,197,94,0.08))" }}>
+                  {img && <img src={img} alt={act.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />}
+                  {!img && <div style={{ height: "100%", display: "grid", placeItems: "center", fontSize: 48 }}>🏖️</div>}
+                  {/* Wishlist btn */}
+                  <button onClick={e => { e.stopPropagation(); toggleViatorWishlist(act); }}
+                    style={{ position: "absolute", top: 10, right: 10, width: 34, height: 34, borderRadius: "50%", border: "none", background: "rgba(0,0,0,0.45)", color: inWishlist ? "#22c55e" : "#fff", fontSize: 18, cursor: "pointer", display: "grid", placeItems: "center" }}>
+                    {inWishlist ? "♥" : "♡"}
+                  </button>
+                  {/* Category badge */}
+                  {act.category && <div style={{ position: "absolute", top: 10, left: 10, padding: "2px 10px", borderRadius: 10, background: "rgba(0,0,0,0.5)", color: CATCLR[act.category] || C.mut, fontSize: 10, fontWeight: 600, ...dm }}>{act.category.toUpperCase()}</div>}
+                </div>
+                <div style={{ padding: "12px 16px" }}>
+                  <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 6, lineHeight: 1.3 }}>{act.title}</div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ ...dm, fontSize: 12, color: C.mut }}>
+                      <span style={{ color: "#facc15", letterSpacing: -1 }}>{STARS(act.rating)}</span>{" "}
+                      {act.rating?.toFixed(1)} ({act.reviewCount > 1000 ? `${(act.reviewCount/1000).toFixed(1)}k` : act.reviewCount})
+                    </div>
+                    <div style={{ ...dm, fontSize: 12, color: C.mut }}>⏱ {act.duration}</div>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+                    <div style={{ fontSize: 20, fontWeight: 300, color: C.accent }}>{act.price}€ <span style={{ ...dm, fontSize: 11, color: C.mut }}>/ osobi</span></div>
+                    <div style={{ ...dm, fontSize: 12, padding: "6px 14px", borderRadius: 10, background: "rgba(34,197,94,0.1)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.2)", fontWeight: 600 }}>Rezerviraj →</div>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      </>
+    );
+  };
+
   const KioskChat = () => {
     const prompts = [t("chatPrompt1",lang), t("chatPrompt2",lang), t("chatPrompt3",lang), t("chatPrompt4",lang)];
     return (
@@ -1497,6 +1659,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
 
   const Kiosk = () => {
     if (subScreen === "home") return <KioskHome />;
+    if (subScreen === "activities") return <KioskActivities />;
     if (subScreen === "gems") return <KioskGems />;
     if (subScreen === "chat") return <KioskChat />;
     if (PRACTICAL[subScreen]) return <KioskDetail />;
@@ -1955,6 +2118,77 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           </div>
         </div>
       )}
+
+      {/* Viator Activity Modal */}
+      {selectedViatorAct && (() => {
+        const act = selectedViatorAct;
+        const IMGS = act.images?.length ? act.images : [];
+        const [imgIdx, setImgIdx] = React.useState(0);
+        const totalPrice = act.price ? (act.price * viatorPersons).toFixed(2) : "—";
+        return (
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(20px)", zIndex: 200, overflowY: "auto", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "24px 16px" }}
+            onClick={() => setSelectedViatorAct(null)}>
+            <div onClick={e => e.stopPropagation()} className="overlay-enter glass"
+              style={{ background: "rgba(12,28,50,0.96)", borderRadius: 24, maxWidth: 520, width: "100%", border: `1px solid ${C.bord}`, overflow: "hidden" }}>
+              {/* Photo gallery */}
+              <div style={{ position: "relative", height: 240, background: "linear-gradient(135deg,rgba(14,165,233,0.1),rgba(34,197,94,0.08))" }}>
+                {IMGS.length > 0
+                  ? <img src={IMGS[imgIdx % IMGS.length]} alt={act.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : <div style={{ height: "100%", display: "grid", placeItems: "center", fontSize: 72 }}>🏖️</div>}
+                {IMGS.length > 1 && <>
+                  <button onClick={e => { e.stopPropagation(); setImgIdx(p => Math.max(0, p - 1)); }} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: "50%", width: 34, height: 34, fontSize: 18, cursor: "pointer", display: "grid", placeItems: "center" }}>‹</button>
+                  <button onClick={e => { e.stopPropagation(); setImgIdx(p => (p + 1) % IMGS.length); }} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: "50%", width: 34, height: 34, fontSize: 18, cursor: "pointer", display: "grid", placeItems: "center" }}>›</button>
+                  <div style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 4 }}>
+                    {IMGS.map((_, i) => <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: i === imgIdx % IMGS.length ? "#fff" : "rgba(255,255,255,0.4)" }} />)}
+                  </div>
+                </>}
+                <button onClick={() => setSelectedViatorAct(null)} style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: "50%", width: 34, height: 34, cursor: "pointer", fontSize: 18, display: "grid", placeItems: "center" }}>✕</button>
+              </div>
+
+              <div style={{ padding: "20px 24px 28px" }}>
+                <div style={{ fontSize: 22, fontWeight: 500, marginBottom: 8, lineHeight: 1.3 }}>{act.title}</div>
+                <div style={{ ...dm, display: "flex", gap: 16, marginBottom: 12, fontSize: 13, color: C.mut }}>
+                  {act.rating && <span style={{ color: "#facc15" }}>★ {act.rating.toFixed(1)} <span style={{ color: C.mut }}>({act.reviewCount > 1000 ? `${(act.reviewCount/1000).toFixed(1)}k` : act.reviewCount})</span></span>}
+                  <span>⏱ {act.duration}</span>
+                  {act.category && <span style={{ color: "#22c55e" }}>{act.category}</span>}
+                </div>
+                {act.description && <div style={{ ...dm, fontSize: 14, color: C.mut, lineHeight: 1.7, marginBottom: 20 }}>{act.description}</div>}
+
+                {/* Date picker */}
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ ...dm, fontSize: 11, color: C.mut, display: "block", marginBottom: 6, letterSpacing: 1 }}>DATUM AKTIVNOSTI</label>
+                  <input type="date" value={viatorBookDate} min={new Date().toISOString().slice(0, 10)}
+                    onChange={e => setViatorBookDate(e.target.value)}
+                    style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: `1px solid ${C.bord}`, background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                </div>
+
+                {/* Persons stepper */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, padding: "14px 18px", borderRadius: 14, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.bord}` }}>
+                  <div style={{ ...dm, fontSize: 14 }}>Broj osoba</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                    <button onClick={() => setViatorPersons(p => Math.max(1, p - 1))} style={{ width: 32, height: 32, borderRadius: "50%", border: `1px solid ${C.bord}`, background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 18, cursor: "pointer", display: "grid", placeItems: "center" }}>−</button>
+                    <span style={{ fontSize: 20, fontWeight: 600, minWidth: 24, textAlign: "center" }}>{viatorPersons}</span>
+                    <button onClick={() => setViatorPersons(p => Math.min(20, p + 1))} style={{ width: 32, height: 32, borderRadius: "50%", border: `1px solid ${C.bord}`, background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 18, cursor: "pointer", display: "grid", placeItems: "center" }}>+</button>
+                  </div>
+                </div>
+
+                {/* Total price */}
+                <div style={{ textAlign: "center", padding: "14px", borderRadius: 14, background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)", marginBottom: 20 }}>
+                  <div style={{ ...dm, fontSize: 11, color: C.mut, marginBottom: 4 }}>{act.price}€ × {viatorPersons} osoba</div>
+                  <div style={{ fontSize: 32, fontWeight: 300, color: "#22c55e" }}>{totalPrice}€</div>
+                  <div style={{ ...dm, fontSize: 10, color: C.mut, marginTop: 4 }}>Uključuje JADRAN uslugu · Plaćanje karticom</div>
+                </div>
+
+                <button onClick={() => startViatorBooking(act, viatorBookDate, viatorPersons)} disabled={payLoading || !viatorBookDate}
+                  style={{ width: "100%", padding: "16px", borderRadius: 16, border: "none", background: payLoading ? "rgba(255,255,255,0.1)" : "linear-gradient(135deg,#16a34a,#22c55e)", color: "#fff", fontSize: 16, fontWeight: 700, cursor: payLoading || !viatorBookDate ? "not-allowed" : "pointer", opacity: viatorBookDate ? 1 : 0.5, ...dm, transition: "all 0.2s" }}>
+                  {payLoading ? "⏳ Preusmjeravam…" : `🎟 Rezerviraj — ${totalPrice}€`}
+                </button>
+                <Btn style={{ width: "100%", marginTop: 10 }} onClick={() => setSelectedViatorAct(null)}>{t("back",lang)}</Btn>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Experience booking */}
       {selectedExp && (
