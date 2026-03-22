@@ -28,116 +28,7 @@ const goToStripe = async (plan = "season", lang = "en") => {
 };
 
 const GYG = (id) => `https://www.getyourguide.com/${id}/?partner_id=9OEGOYI&utm_medium=local_partners`;
-
-const COASTAL_DESTINATIONS = [
-  { city: "Dubrovnik",   lat: 42.6507, lng: 18.0944 },
-  { city: "Split",       lat: 43.5081, lng: 16.4402 },
-  { city: "Makarska",    lat: 43.2981, lng: 17.0187 },
-  { city: "Hvar",        lat: 43.1729, lng: 16.4414 },
-  { city: "Brač",        lat: 43.3083, lng: 16.6167 },
-  { city: "Korčula",     lat: 42.9597, lng: 17.1350 },
-  { city: "Trogir",      lat: 43.5172, lng: 16.2506 },
-  { city: "Omiš",        lat: 43.4441, lng: 16.6900 },
-  { city: "Podgora",     lat: 43.2476, lng: 17.0721 },
-  { city: "Bol",         lat: 43.2625, lng: 16.6483 },
-  { city: "Stari Grad",  lat: 43.1828, lng: 16.5956 },
-  { city: "Vis",         lat: 43.0602, lng: 16.1844 },
-  { city: "Šibenik",     lat: 43.7350, lng: 15.8952 },
-  { city: "Zadar",       lat: 44.1194, lng: 15.2314 },
-  { city: "Biograd",     lat: 43.9375, lng: 15.4475 },
-  { city: "Murter",      lat: 43.8097, lng: 15.5961 },
-  { city: "Primošten",   lat: 43.5853, lng: 15.9228 },
-  { city: "Vodice",      lat: 43.7608, lng: 15.7783 },
-  { city: "Rovinj",      lat: 45.0811, lng: 13.6387 },
-  { city: "Poreč",       lat: 45.2267, lng: 13.5956 },
-  { city: "Pula",        lat: 44.8683, lng: 13.8481 },
-  { city: "Opatija",     lat: 45.3380, lng: 14.3051 },
-  { city: "Crikvenica",  lat: 45.1781, lng: 14.6922 },
-  { city: "Senj",        lat: 44.9897, lng: 14.9072 },
-  { city: "Novalja",     lat: 44.5574, lng: 14.8880 },
-  { city: "Rab",         lat: 44.7558, lng: 14.7562 },
-  { city: "Krk",         lat: 45.0267, lng: 14.5728 },
-  { city: "Mali Lošinj", lat: 44.5321, lng: 14.4681 },
-  { city: "Cavtat",      lat: 42.5789, lng: 18.2156 },
-  { city: "Herceg Novi", lat: 42.4527, lng: 18.5384 },
-];
 const BKG = (city) => `https://www.booking.com/searchresults.html?aid=101704203&ss=${encodeURIComponent(city)}&lang=en`;
-const EU_CITIES_LP = [
-  "Wien","Graz","Salzburg","Linz","Innsbruck","Klagenfurt",
-  "München","Frankfurt","Stuttgart","Nürnberg","Augsburg","Düsseldorf","Berlin","Hamburg","Köln",
-  "Zürich","Bern","Basel","Luzern",
-  "Praha","Brno","Ostrava",
-  "Bratislava","Košice",
-  "Budapest","Debrecen",
-  "Warszawa","Kraków","Wrocław","Poznań","Gdańsk",
-  "Ljubljana","Maribor","Celje",
-  "Trieste","Venezia","Verona","Milano","Torino","Bologna",
-  "Rijeka","Zagreb",
-];
-
-// ─── 4 Adriatic regions (mirrors App.jsx — Vercel functions can't share modules) ─
-const ADRIATIC_REGIONS_LP = {
-  istra: {
-    name: { hr: "Istra", de: "Istrien", en: "Istria", it: "Istria" },
-    lat_min: 44.8, lat_max: 45.6, lon_min: 13.5, lon_max: 14.2,
-    cities: ["Rovinj","Poreč","Pula","Umag","Novigrad","Labin","Medulin","Vrsar"],
-    center: { city: "Rovinj", lat: 45.0811, lng: 13.6387 },
-    hero_img: "https://images.unsplash.com/photo-1598820659657-bec45d9de940?w=600&q=75",
-    color: "#2E7D32", emoji: "🌿", drive_from_vienna: "5–6h",
-    highlights: ["Rovinj stari grad","Pula amfiteatar","Tartufi"],
-  },
-  kvarner: {
-    name: { hr: "Kvarner", de: "Kvarner", en: "Kvarner", it: "Quarnero" },
-    lat_min: 44.4, lat_max: 45.3, lon_min: 14.2, lon_max: 15.1,
-    cities: ["Opatija","Rijeka","Crikvenica","Senj","Krk","Rab","Mali Lošinj","Cres","Novalja"],
-    center: { city: "Opatija", lat: 45.3380, lng: 14.3051 },
-    hero_img: "https://images.unsplash.com/photo-1586861635167-e5223aadc9fe?w=600&q=75",
-    color: "#1565C0", emoji: "⛵", drive_from_vienna: "5–6h",
-    highlights: ["Opatija rivijera","Krk — otok sunca","Zrće festival"],
-  },
-  srednja_dalmacija: {
-    name: { hr: "Srednja Dalmacija", de: "Mitteldalmatien", en: "Central Dalmatia", it: "Dalmazia Centrale" },
-    lat_min: 43.0, lat_max: 44.4, lon_min: 15.1, lon_max: 17.5,
-    cities: ["Split","Trogir","Makarska","Omiš","Podstrana","Hvar","Brač","Vis","Korčula","Šibenik","Zadar"],
-    center: { city: "Split", lat: 43.5081, lng: 16.4402 },
-    hero_img: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=600&q=75",
-    color: "#00838F", emoji: "🏛", drive_from_vienna: "7–8h",
-    highlights: ["Dioklecijanova palača","Zlatni Rat","Hvar nightlife"],
-  },
-  juzna_dalmacija: {
-    name: { hr: "Južna Dalmacija", de: "Süddalmatien", en: "Southern Dalmatia", it: "Dalmazia del Sud" },
-    lat_min: 42.0, lat_max: 43.0, lon_min: 16.5, lon_max: 18.5,
-    cities: ["Dubrovnik","Cavtat","Pelješac","Ston","Mljet","Herceg Novi"],
-    center: { city: "Dubrovnik", lat: 42.6507, lng: 18.0944 },
-    hero_img: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=600&q=75",
-    color: "#AD1457", emoji: "🏰", drive_from_vienna: "8–9h",
-    highlights: ["Dubrovnik stari grad","Pelješac vino","Mljet NP"],
-  },
-};
-// Room code → destination lookup (mirrors App.jsx ROOM_DESTINATIONS)
-const ROOM_DESTS_LP = {
-  "DEMO": { city: "Hvar", lat: 43.1729, lng: 16.4414 },
-  "1001": { city: "Podstrana", lat: 43.4833, lng: 16.5500 },
-  "1002": { city: "Makarska", lat: 43.2981, lng: 17.0187 },
-  "1003": { city: "Trogir", lat: 43.5172, lng: 16.2506 },
-  "1004": { city: "Omiš", lat: 43.4441, lng: 16.6900 },
-};
-function detectRegionLP(lat, lon) {
-  for (const [key, r] of Object.entries(ADRIATIC_REGIONS_LP)) {
-    if (lat >= r.lat_min && lat <= r.lat_max && lon >= r.lon_min && lon <= r.lon_max) return key;
-  }
-  return "srednja_dalmacija";
-}
-function detectRegionByCityLP(cityName) {
-  if (!cityName) return null;
-  const lower = cityName.toLowerCase();
-  for (const [key, r] of Object.entries(ADRIATIC_REGIONS_LP)) {
-    if (r.cities.some(c => c.toLowerCase() === lower)) return key;
-  }
-  const cd = COASTAL_DESTINATIONS.find(d => d.city.toLowerCase() === lower);
-  if (cd) return detectRegionLP(cd.lat, cd.lng);
-  return null;
-}
 
 const L = {
   hr: { badge: "AI vodič · radi odmah u browseru", h1a: "", h1b: "", h1c: "Tvoj digitalni |J| vodič.", sub: "Google Maps poznaje puteve. Mi poznajemo sve ostalo.", destLabel: "Kamo ideš?", lenLabel: "Dužina vozila?", cta: "Započni Chat", pain1t: "Zaboravi na kazne", pain1d: "Naš vodič zna visinu svakog podvožnjaka i širinu svakog starog grada. Ne rizikuj zaglavljivanje kampera na usponima Biokova ili uličicama Trogira.", pain2t: "Bura te neće iznenaditi", pain2d: "Povezani smo sa lokalnim meteo-stanicama. Ako udari vjetar opasan za tvoju tendu, dobijaš upozorenje i lokaciju najbližeg zaklona.", pain3t: "Mjesta kojih nema na Googleu", pain3d: "OPG-ovi, vinarije s besplatnim parkingom i prazne uvale koje samo lokalci čuvaju za sebe.", demoTitle: "Pametnije od mape. Brže od recepcije.", trendTitle: "Što se traži na Jadranu?", b2bTitle: "Vlasnik ste apartmana, kampa ili konobe?", b2bDesc: "Prestanite odgovarati na ista pitanja 50 puta dnevno. Podijelite naš QR kod gostima — oni dobijaju 24/7 vodiča na svom jeziku, a vi mirnu recepciju.", b2bBtn: "Generiraj besplatan QR kod", sticky: "Od 9.99€/tjedan", stickyBuy: "KUPI ODMAH", stickyBtn: "POKRENI JADRAN", demoLabel: "POGLEDAJTE U AKCIJI", demoDesc: "Hans pita:", demoQ: "Mogu li kamperom do centra Pule?", demoA: "Nikako! 🚨 Pauk cilja kampere — kazna 60€. Parkiraj na Gregovici besplatno.", demoCta: "Konoba Batelina — svježa riba, parking", demoTry: "Probaj besplatno", demoStory: "Vodič odmah upozorava, daje besplatan parking i preporučuje konubu sa popustom. Sve u 3 sekunde.", destLabel2: "DESTINACIJE", destTitle2: "Otkrijte Jadran", destBook2: "Booking.com →", trendLabel2: "POPULARNO", trendSub2: "Aktivnosti i izleti", trendAsk: "Pitaj vodič", trendBook2: "Rezerviraj", freeInfo: "3 poruke besplatno · 8 jezika · bez registracije", roomCode: "Kod sobe", roomOpen: "Otvori", phoneName: "Jadran Vodič" , tab1: "Kamper vodič", tab1s: "Parking, rute, upozorenja", tab2: "Lokalni vodič", tab2s: "Apartman, hotel ili auto — plaže, konobe", tab3: "Nautički vodič", tab3s: "Marine, sidrišta, vjetar", tab4: "Kruzer vodič", tab4s: "Lučki dan, plan po minutu" },
@@ -201,25 +92,9 @@ export default function LandingPage() {
   // Unified entry flow
   const [selectedMode, setSelectedMode] = useState(null); // "auto"|"avion"|"kamper"|"odmor"
   const [depCity, setDepCity] = useState("");
-  const [routeStep, setRouteStep] = useState(null); // null | "destination" | "city" | "map"
+  const [routeStep, setRouteStep] = useState(null); // null | "city" | "map"
   const [routeData, setRouteData] = useState(null);
   const [routeLoading, setRouteLoading] = useState(false);
-  // Destination selection state
-  const [destObj, setDestObj] = useState(() => {
-    try { const s = JSON.parse(localStorage.getItem("jadran_destination_obj") || "null"); if (s?.city) return s; } catch {} return null;
-  });
-  const [selectedRegionLP, setSelectedRegionLP] = useState(() => {
-    try { const r = localStorage.getItem("jadran_region"); if (r && ADRIATIC_REGIONS_LP[r]) return r; } catch {} return null;
-  });
-  const [destInputLP, setDestInputLP] = useState("");
-  const [destSugsLP, setDestSugsLP] = useState([]);
-  const [showRoomModeLP, setShowRoomModeLP] = useState(false);
-  const [roomCodeLP, setRoomCodeLP] = useState("");
-  const [roomCodeMatchLP, setRoomCodeMatchLP] = useState(null);
-  const [fromQ, setFromQ] = useState("");
-  const [fromSugs, setFromSugs] = useState([]);
-  const [fromSel, setFromSel] = useState(null);
-  const [locLoadingLP, setLocLoadingLP] = useState(false);
   const mapRef = useRef(null);
   const hereMapRef = useRef(null);
   const [chatStep, setChatStep] = useState(0);
@@ -358,10 +233,7 @@ export default function LandingPage() {
 
       // 2. Calculate route
       const niche = selectedMode === "avion" ? "pedestrian" : selectedMode === "kamper" ? "truck" : "car";
-      const regionCenter = selectedRegionLP ? ADRIATIC_REGIONS_LP[selectedRegionLP]?.center : null;
-      const dLat = destObj?.lat || regionCenter?.lat || DEST_LAT;
-      const dLng = destObj?.lng || regionCenter?.lng || DEST_LNG;
-      const routeRes = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${niche}&origin=${oLat},${oLng}&destination=${dLat},${dLng}&return=polyline,summary,actions&apikey=${HERE_KEY}`);
+      const routeRes = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${niche}&origin=${oLat},${oLng}&destination=${DEST_LAT},${DEST_LNG}&return=polyline,summary,actions&apikey=${HERE_KEY}`);
       const routeJson = await routeRes.json();
       const section = routeJson.routes?.[0]?.sections?.[0];
       if (!section) throw new Error("No route");
@@ -381,7 +253,7 @@ export default function LandingPage() {
     } finally {
       setRouteLoading(false);
     }
-  }, [selectedMode, loadHereMaps, destObj, selectedRegionLP]);
+  }, [selectedMode, loadHereMaps]);
 
   // Render HERE map after routeData is set and mapRef is available
   useEffect(() => {
@@ -389,11 +261,8 @@ export default function LandingPage() {
     if (hereMapRef.current) { hereMapRef.current.dispose(); }
     const platform = new window.H.service.Platform({ apikey: HERE_KEY });
     const defaultLayers = platform.createDefaultLayers();
-    const rcLP = selectedRegionLP ? ADRIATIC_REGIONS_LP[selectedRegionLP]?.center : null;
-    const finalDLat = destObj?.lat || rcLP?.lat || DEST_LAT;
-    const finalDLng = destObj?.lng || rcLP?.lng || DEST_LNG;
     const map = new window.H.Map(mapRef.current, defaultLayers.vector.normal.map, {
-      zoom: 6, center: { lat: (routeData.oLat + finalDLat) / 2, lng: (routeData.oLng + finalDLng) / 2 },
+      zoom: 6, center: { lat: (routeData.oLat + DEST_LAT) / 2, lng: (routeData.oLng + DEST_LNG) / 2 },
     });
     hereMapRef.current = map;
     const behavior = new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
@@ -414,31 +283,12 @@ export default function LandingPage() {
     const svgDest = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#22c55e"/><text x="12" y="16" text-anchor="middle" fill="white" font-size="12">⚓</text></svg>`;
     map.addObjects([
       new window.H.map.Marker({ lat: routeData.oLat, lng: routeData.oLng }, { icon: new window.H.map.Icon(svgOrigin) }),
-      new window.H.map.Marker({ lat: finalDLat, lng: finalDLng }, { icon: new window.H.map.Icon(svgDest) }),
+      new window.H.map.Marker({ lat: DEST_LAT, lng: DEST_LNG }, { icon: new window.H.map.Icon(svgDest) }),
     ]);
   }, [routeStep, routeData]);
 
   // Clean up HERE map on unmount
   useEffect(() => () => { hereMapRef.current?.dispose?.(); }, []);
-
-  // Auto-fetch route when both from + to are selected
-  useEffect(() => {
-    if (fromSel && destObj?.lat && selectedMode && selectedMode !== "odmor") {
-      fetchRoute(fromSel);
-    }
-  }, [fromSel, destObj, selectedMode]);
-
-  const proceedToTransit = () => {
-    if (!destObj) return;
-    const seg = selectedMode === "kamper" ? "kamper" : selectedMode === "avion" ? "jedrilicar" : "par";
-    const delta = { segment: seg, from: fromQ, destination: { city: destObj.city, lat: destObj.lat, lon: destObj.lng } };
-    try { localStorage.setItem("jadran_delta_context", JSON.stringify(delta)); } catch {}
-    try { localStorage.setItem("jadran_destination_obj", JSON.stringify(destObj)); } catch {}
-    try { if (selectedRegionLP) localStorage.setItem("jadran_region", selectedRegionLP); } catch {}
-    try { localStorage.setItem("jadran_transport", selectedMode); } catch {}
-    const p = new URLSearchParams({ go: "transit", from: fromQ || "", to: destObj.city, segment: seg });
-    window.location.href = "/?" + p.toString();
-  };
 
   const F = "'Playfair Display', Georgia, serif";
   const B = "'Outfit', system-ui, sans-serif";
@@ -503,9 +353,8 @@ export default function LandingPage() {
                     return (
                       <button key={id} onClick={() => {
                         setSelectedMode(id);
-                        setRouteStep(id === "odmor" ? "room" : "destination");
+                        setRouteStep(id === "odmor" ? "room" : "city");
                         setRouteData(null);
-                        setDestSugsLP([]);
                         try { localStorage.setItem("jadran_transport", id); } catch {}
                       }} style={{
                         borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
@@ -541,104 +390,62 @@ export default function LandingPage() {
                   </div>
                 )}
 
-                {/* ── RutaStep: from + to + HERE map ── */}
-                {selectedMode && selectedMode !== "odmor" && (
-                  <div style={{ marginTop: 14, animation: "fadeIn 0.3s both" }}>
-                    {/* FROM */}
-                    <div style={{ marginBottom: 8 }}>
-                      <div style={{ fontSize: 11, color: "#64748b", marginBottom: 5 }}>📍 {tlang({ hr: "Odakle krećeš?", de: "Von wo reist du?", en: "Where are you leaving from?", it: "Da dove parti?" })}</div>
-                      <div style={{ position: "relative" }}>
-                        <input value={fromQ}
-                          onChange={e => { setFromQ(e.target.value); setFromSel(null); const q = e.target.value.toLowerCase(); setFromSugs(q.length < 1 ? [] : EU_CITIES_LP.filter(c => c.toLowerCase().includes(q)).slice(0, 6)); }}
-                          placeholder={tlang({ hr: "npr. Wien, München, Praha…", de: "z.B. Wien, München, Prag…", en: "e.g. Wien, Munich, Prague…", it: "es. Vienna, Monaco, Praga…" })}
-                          style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${fromSel ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 14, outline: "none", fontFamily: B, boxSizing: "border-box", fontSize: 16 }} />
-                        {fromSugs.length > 0 && (
-                          <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, marginTop: 4, zIndex: 50, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
-                            {fromSugs.map(c => (
-                              <div key={c} onClick={() => { setFromQ(c); setFromSel(c); setFromSugs([]); }}
-                                style={{ padding: "10px 14px", cursor: "pointer", fontSize: 13, color: "#f0f4f8", borderBottom: "1px solid rgba(255,255,255,0.05)" }}
-                                onMouseEnter={e => e.currentTarget.style.background = "rgba(14,165,233,0.12)"}
-                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                                📍 {c}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                {/* Departure city panel */}
+                {routeStep === "city" && (
+                  <div style={{ marginTop: 14, padding: "18px 20px", borderRadius: 16, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)", animation: "fadeIn 0.3s both" }}>
+                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 10 }}>
+                      {tlang({ hr: "Odakle krećete?", de: "Von wo reisen Sie an?", en: "Where are you departing from?", it: "Da dove parti?" })}
                     </div>
-                    <button onClick={() => {
-                      if (!navigator.geolocation) return; setLocLoadingLP(true);
-                      navigator.geolocation.getCurrentPosition(async pos => {
-                        try {
-                          const r = await fetch(`https://revgeocode.search.hereapi.com/v1/revgeocode?at=${pos.coords.latitude},${pos.coords.longitude}&limit=1&apikey=${HERE_KEY}`);
-                          const d = await r.json();
-                          const city = d.items?.[0]?.address?.city || d.items?.[0]?.address?.county || "Vaša lokacija";
-                          setFromQ(city); setFromSel(city);
-                        } catch {} setLocLoadingLP(false);
-                      }, () => setLocLoadingLP(false));
-                    }} disabled={locLoadingLP}
-                      style={{ width: "100%", padding: "9px 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", background: "transparent", color: "#64748b", fontSize: 12, cursor: "pointer", fontFamily: B, marginBottom: 10 }}>
-                      {locLoadingLP ? "⏳ Detektiram…" : "📡 " + tlang({ hr: "Detektiraj moju lokaciju", de: "Meinen Standort erkennen", en: "Detect my location", it: "Rileva posizione" })}
-                    </button>
-
-                    {/* TO */}
-                    <div style={{ marginBottom: 12 }}>
-                      <div style={{ fontSize: 11, color: "#64748b", marginBottom: 5 }}>🏖️ {tlang({ hr: "Kuda ideš?", de: "Wohin reist du?", en: "Where are you going?", it: "Dove vai?" })}</div>
-                      <div style={{ position: "relative" }}>
-                        <input value={destInputLP}
-                          onChange={e => {
-                            setDestInputLP(e.target.value); setDestObj(null); setSelectedRegionLP(null);
-                            const q = e.target.value.toLowerCase();
-                            setDestSugsLP(q.length < 1 ? [] : COASTAL_DESTINATIONS.filter(d => d.city.toLowerCase().includes(q)).slice(0, 6));
-                          }}
-                          placeholder={tlang({ hr: "npr. Hvar, Split, Rovinj…", de: "z.B. Hvar, Split, Rovinj…", en: "e.g. Hvar, Split, Rovinj…", it: "es. Hvar, Spalato, Rovigno…" })}
-                          style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${destObj ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 16, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
-                        {destSugsLP.length > 0 && (
-                          <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, marginTop: 4, zIndex: 50, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
-                            {destSugsLP.map(d => (
-                              <div key={d.city} onClick={() => {
-                                setDestObj(d); setDestInputLP(d.city); setDestSugsLP([]);
-                                const rk = detectRegionByCityLP(d.city);
-                                setSelectedRegionLP(rk);
-                                try { localStorage.setItem("jadran_destination_obj", JSON.stringify(d)); if (rk) localStorage.setItem("jadran_region", rk); } catch {}
-                              }}
-                                style={{ padding: "10px 14px", cursor: "pointer", fontSize: 13, color: "#f0f4f8", borderBottom: "1px solid rgba(255,255,255,0.05)" }}
-                                onMouseEnter={e => e.currentTarget.style.background = "rgba(14,165,233,0.12)"}
-                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                                🏖️ {d.city}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <input value={depCity} onChange={e => setDepCity(e.target.value)}
+                        onKeyDown={e => e.key === "Enter" && depCity.trim() && fetchRoute(depCity.trim())}
+                        placeholder={tlang(DEP_PLACEHOLDER)}
+                        style={{ flex: 1, padding: "12px 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 14, outline: "none", fontFamily: B }} />
+                      <button onClick={() => depCity.trim() && fetchRoute(depCity.trim())}
+                        disabled={routeLoading || !depCity.trim()}
+                        style={{ padding: "12px 16px", borderRadius: 10, background: routeLoading ? "rgba(14,165,233,0.2)" : "linear-gradient(135deg, #0ea5e9, #0284c7)", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: routeLoading ? "wait" : "pointer", fontFamily: B, whiteSpace: "nowrap", minWidth: 80 }}>
+                        {routeLoading ? "..." : goLabel(lang === "at" ? "de" : lang)}
+                      </button>
                     </div>
+                  </div>
+                )}
 
-                    {/* HERE Map — auto-renders when both selected */}
-                    {fromSel && destObj && (
-                      <div style={{ marginBottom: 12, borderRadius: 14, overflow: "hidden", border: "1px solid rgba(249,115,22,0.25)" }}>
-                        <div ref={mapRef} style={{ height: 240, width: "100%", background: "#0c2d48", position: "relative" }}>
-                          {routeLoading && <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", fontSize: 12, color: "#64748b" }}>⏳ {tlang({ hr: "Računam rutu…", de: "Route berechnen…", en: "Calculating route…", it: "Calcolo percorso…" })}</div>}
-                        </div>
-                        {routeData && !routeData.error && !routeLoading && (
-                          <div style={{ padding: "10px 14px", background: "rgba(10,22,40,0.9)", display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+                {/* HERE Maps route result */}
+                {routeStep === "map" && routeData && (
+                  <div style={{ marginTop: 14, borderRadius: 16, overflow: "hidden", border: "1px solid rgba(14,165,233,0.2)", animation: "fadeIn 0.4s both" }}>
+                    {routeData.error ? (
+                      <div style={{ padding: "20px", textAlign: "center", color: "#f87171", fontSize: 13 }}>
+                        ⚠️ {tlang({ hr: "Grad nije pronađen. Pokušajte ponovo.", de: "Stadt nicht gefunden. Bitte erneut versuchen.", en: "City not found. Please try again.", it: "Città non trovata. Riprova." })}
+                        <br/><button onClick={() => setRouteStep("city")} style={{ marginTop: 8, padding: "6px 14px", borderRadius: 8, background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)", color: "#38bdf8", fontSize: 12, cursor: "pointer" }}>← {tlang({ hr: "Natrag", de: "Zurück", en: "Back", it: "Indietro" })}</button>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Route summary */}
+                        <div style={{ padding: "14px 18px", background: "rgba(14,165,233,0.06)", display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <span style={{ fontSize: 16 }}>📍</span>
+                            <span style={{ fontSize: 13, color: "#94a3b8" }}>{routeData.city}</span>
+                            <span style={{ color: "#0ea5e9" }}>→</span>
+                            <span style={{ fontSize: 13, color: "#94a3b8" }}>Podstrana</span>
+                          </div>
+                          <div style={{ display: "flex", gap: 16 }}>
                             <span style={{ fontSize: 13, color: "#f0f4f8", fontWeight: 600 }}>🛣 {routeData.km} km</span>
                             <span style={{ fontSize: 13, color: "#f0f4f8", fontWeight: 600 }}>⏱ {routeData.hrs}h {routeData.mins}min</span>
-                            {selectedMode === "kamper" && <span style={{ fontSize: 11, color: "#f59e0b" }}>🚐 Kamper ruta</span>}
                           </div>
-                        )}
-                        {routeData?.error && (
-                          <div style={{ padding: "10px 14px", color: "#f87171", fontSize: 12, background: "rgba(10,22,40,0.9)" }}>
-                            ⚠️ {tlang({ hr: "Grad nije pronađen.", de: "Stadt nicht gefunden.", en: "City not found.", it: "Città non trovata." })}
-                          </div>
-                        )}
-                      </div>
+                          {selectedMode === "kamper" && <span style={{ fontSize: 11, color: "#f59e0b", padding: "2px 8px", borderRadius: 6, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.15)" }}>🚐 Kamper ruta</span>}
+                        </div>
+                        {/* Map container */}
+                        <div ref={mapRef} style={{ height: 260, width: "100%", background: "#0c2d48" }} />
+                        {/* CTA */}
+                        <div style={{ padding: "14px 18px", background: "rgba(10,22,40,0.8)", display: "flex", gap: 10, alignItems: "center" }}>
+                          <button onClick={() => window.location.href = `/ai?niche=${modeToNiche[selectedMode] || "local"}&lang=${lang}&from=${encodeURIComponent(routeData.city)}`}
+                            style={{ flex: 1, padding: "13px 20px", borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: F, letterSpacing: 0.5 }}>
+                            {startLabel(lang === "at" ? "de" : lang)}
+                          </button>
+                          <button onClick={() => setRouteStep("city")} style={{ padding: "13px 14px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", color: "#64748b", fontSize: 13, cursor: "pointer" }}>←</button>
+                        </div>
+                      </>
                     )}
-
-                    {/* CTA */}
-                    <button onClick={proceedToTransit} disabled={!destObj}
-                      style={{ width: "100%", padding: "14px 20px", borderRadius: 12, background: destObj ? "linear-gradient(135deg,#ea580c,#f97316)" : "rgba(249,115,22,0.2)", border: "none", color: destObj ? "#fff" : "#64748b", fontSize: 15, fontWeight: 700, cursor: destObj ? "pointer" : "not-allowed", fontFamily: F, letterSpacing: 0.5 }}>
-                      {tlang({ hr: "Kreni sa mnom →", de: "Los geht's →", en: "Let's go →", it: "Partiamo →" })}
-                    </button>
                   </div>
                 )}
 

@@ -11,8 +11,7 @@ const hasRoom = new URLSearchParams(window.location.search).has("room");
 const isHost = path === "/host" || path === "/host/";
 const isAI = path === "/ai" || path === "/ai/";
 
-const hasGoTransit = new URLSearchParams(window.location.search).get("go") === "transit";
-const route = isHost ? "host" : isAI ? "ai" : (hasRoom || hasGoTransit) ? "app" : "landing";
+const route = isHost ? "host" : isAI ? "ai" : hasRoom ? "app" : "landing";
 
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null }; }

@@ -396,119 +396,6 @@ const BUNDLES = [
 
 const LOYALTY = { points: 345, tier: "Morski val", next: "Dalmatinac", nextPts: 500, code: "WEBER2026" };
 
-// ─── ROOM DESTINATIONS — configurable per room code ───────────────────────────
-// Add new rooms here as hosts sign up. _default = fallback for unknown codes.
-const ROOM_DESTINATIONS = {
-  "DEMO":  { city: "Hvar",       lat: 43.1729, lng: 16.4414 },
-  "1001":  { city: "Podstrana",  lat: 43.4833, lng: 16.5500 },
-  "1002":  { city: "Makarska",   lat: 43.2981, lng: 17.0187 },
-  "1003":  { city: "Trogir",     lat: 43.5172, lng: 16.2506 },
-  "1004":  { city: "Omiš",       lat: 43.4441, lng: 16.6900 },
-  "_default": { city: "Podstrana", lat: 43.4833, lng: 16.5500 },
-};
-
-// ─── 4 ADRIATIC REGIONS with precise boundaries ────────────────────────────
-const ADRIATIC_REGIONS = {
-  istra: {
-    name: { hr: "Istra", de: "Istrien", en: "Istria", it: "Istria" },
-    lat_min: 44.8, lat_max: 45.6, lon_min: 13.5, lon_max: 14.2,
-    cities: ["Rovinj","Poreč","Pula","Umag","Novigrad","Labin","Medulin","Vrsar"],
-    center: { city: "Rovinj", lat: 45.0811, lng: 13.6387 },
-    hero_img: "https://images.unsplash.com/photo-1598820659657-bec45d9de940?w=600&q=75",
-    color: "#2E7D32", emoji: "🌿",
-    drive_from_vienna: "5–6h",
-    highlights: ["Rovinj stari grad", "Pula amfiteatar", "Tartufi"],
-    border_crossing: "Koper/Rupa", chat_region: "istra",
-    pre_trip: { hr: "Pula amfiteatar (UNESCO) · Tartufi u sezoni · Limski kanal", de: "Pula Amphitheater (UNESCO) · Trüffel in der Saison · Limski Kanal" },
-  },
-  kvarner: {
-    name: { hr: "Kvarner", de: "Kvarner", en: "Kvarner", it: "Quarnero" },
-    lat_min: 44.4, lat_max: 45.3, lon_min: 14.2, lon_max: 15.1,
-    cities: ["Opatija","Rijeka","Crikvenica","Senj","Krk","Rab","Mali Lošinj","Cres","Novalja"],
-    center: { city: "Opatija", lat: 45.3380, lng: 14.3051 },
-    hero_img: "https://images.unsplash.com/photo-1586861635167-e5223aadc9fe?w=600&q=75",
-    color: "#1565C0", emoji: "⛵",
-    drive_from_vienna: "5–6h",
-    highlights: ["Opatija rivijera", "Krk — otok sunca", "Zrće festival"],
-    border_crossing: "Rupa (SLO→HR)", chat_region: "kvarner",
-    pre_tip: { hr: "Bura vjetar — provjeri DHMZ upozorenja!", de: "Bura-Wind — DHMZ-Warnungen beachten!" },
-  },
-  srednja_dalmacija: {
-    name: { hr: "Srednja Dalmacija", de: "Mitteldalmatien", en: "Central Dalmatia", it: "Dalmazia Centrale" },
-    lat_min: 43.0, lat_max: 44.4, lon_min: 15.1, lon_max: 17.5,
-    cities: ["Split","Trogir","Makarska","Omiš","Podstrana","Hvar","Brač","Vis","Korčula","Šibenik","Zadar","Primošten","Vodice","Murter","Biograd"],
-    center: { city: "Split", lat: 43.5081, lng: 16.4402 },
-    hero_img: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=600&q=75",
-    color: "#00838F", emoji: "🏛",
-    drive_from_vienna: "7–8h",
-    highlights: ["Dioklecijanova palača", "Zlatni Rat", "Hvar nightlife"],
-    border_crossing: "Macelj ili Karavanke → A1", chat_region: "split",
-    pre_tip: { hr: "Macelj vs Karavanke — provjeri gužve u realnom vremenu.", de: "Macelj vs. Karawanken — Staus in Echtzeit prüfen." },
-  },
-  juzna_dalmacija: {
-    name: { hr: "Južna Dalmacija", de: "Süddalmatien", en: "Southern Dalmatia", it: "Dalmazia del Sud" },
-    lat_min: 42.0, lat_max: 43.0, lon_min: 16.5, lon_max: 18.5,
-    cities: ["Dubrovnik","Cavtat","Korčula grad","Pelješac","Ston","Mljet","Lastovo","Herceg Novi"],
-    center: { city: "Dubrovnik", lat: 42.6507, lng: 18.0944 },
-    hero_img: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=600&q=75",
-    color: "#AD1457", emoji: "🏰",
-    drive_from_vienna: "8–9h",
-    highlights: ["Dubrovnik stari grad", "Pelješac vino", "Mljet NP"],
-    border_crossing: "Macelj → A1 (najduži put)", chat_region: "dubrovnik",
-    pre_tip: { hr: "Neum koridor — kratki prolaz kroz BiH (bez vize za EU).", de: "Neum-Korridor — kurze Durchfahrt durch Bosnien (kein EU-Visum nötig)." },
-  },
-};
-
-// Detect region from lat/lng coordinates
-function detectRegion(lat, lon) {
-  for (const [key, r] of Object.entries(ADRIATIC_REGIONS)) {
-    if (lat >= r.lat_min && lat <= r.lat_max && lon >= r.lon_min && lon <= r.lon_max) return key;
-  }
-  return "srednja_dalmacija";
-}
-// Detect region by city name (also tries lat/lng lookup via COASTAL_DESTINATIONS)
-function detectRegionByCity(cityName) {
-  if (!cityName) return null;
-  const lower = cityName.toLowerCase();
-  for (const [key, r] of Object.entries(ADRIATIC_REGIONS)) {
-    if (r.cities.some(c => c.toLowerCase() === lower)) return key;
-  }
-  return null;
-}
-
-const COASTAL_DESTINATIONS = [
-  { city: "Dubrovnik",   lat: 42.6507, lng: 18.0944 },
-  { city: "Split",       lat: 43.5081, lng: 16.4402 },
-  { city: "Makarska",    lat: 43.2981, lng: 17.0187 },
-  { city: "Hvar",        lat: 43.1729, lng: 16.4414 },
-  { city: "Brač",        lat: 43.3083, lng: 16.6167 },
-  { city: "Korčula",     lat: 42.9597, lng: 17.1350 },
-  { city: "Trogir",      lat: 43.5172, lng: 16.2506 },
-  { city: "Omiš",        lat: 43.4441, lng: 16.6900 },
-  { city: "Podgora",     lat: 43.2476, lng: 17.0721 },
-  { city: "Bol",         lat: 43.2625, lng: 16.6483 },
-  { city: "Stari Grad",  lat: 43.1828, lng: 16.5956 },
-  { city: "Vis",         lat: 43.0602, lng: 16.1844 },
-  { city: "Šibenik",     lat: 43.7350, lng: 15.8952 },
-  { city: "Zadar",       lat: 44.1194, lng: 15.2314 },
-  { city: "Biograd",     lat: 43.9375, lng: 15.4475 },
-  { city: "Murter",      lat: 43.8097, lng: 15.5961 },
-  { city: "Primošten",   lat: 43.5853, lng: 15.9228 },
-  { city: "Vodice",      lat: 43.7608, lng: 15.7783 },
-  { city: "Rovinj",      lat: 45.0811, lng: 13.6387 },
-  { city: "Poreč",       lat: 45.2267, lng: 13.5956 },
-  { city: "Pula",        lat: 44.8683, lng: 13.8481 },
-  { city: "Opatija",     lat: 45.3380, lng: 14.3051 },
-  { city: "Crikvenica",  lat: 45.1781, lng: 14.6922 },
-  { city: "Senj",        lat: 44.9897, lng: 14.9072 },
-  { city: "Novalja",     lat: 44.5574, lng: 14.8880 },
-  { city: "Rab",         lat: 44.7558, lng: 14.7562 },
-  { city: "Krk",         lat: 45.0267, lng: 14.5728 },
-  { city: "Mali Lošinj", lat: 44.5321, lng: 14.4681 },
-  { city: "Cavtat",      lat: 42.5789, lng: 18.2156 },
-  { city: "Herceg Novi", lat: 42.4527, lng: 18.5384 },
-];
-
 const VIATOR_FALLBACK = [
   { productCode: "LOCAL-001", title: "Split – Dioklecijanova palača", description: "Razgledajte rimsku palaču iz 4. st. s lokalnim vodičem.", price: 29, rating: 4.8, reviewCount: 1240, duration: "2h", category: "Kultura", images: ["https://images.unsplash.com/photo-1555990538-1e09e0e62c7e?w=400"], bookingUrl: "https://www.viator.com/tours/Split/" },
   { productCode: "LOCAL-002", title: "Plava špilja & 5 otoka (brzi brod)", description: "Posjetite Plavu špilju, Hvar, Brač i uvale Paklenih otoka.", price: 79, rating: 4.9, reviewCount: 3580, duration: "8h", category: "Nautika", images: ["https://images.unsplash.com/photo-1503756234508-e32369269dde?w=400"], bookingUrl: "https://www.viator.com/tours/Split/" },
@@ -535,84 +422,8 @@ const INTERESTS = [
   { k: "nightlife", e: "🍸" }, { k: "nature", e: "🌿" },
 ];
 
-// ─── DELTA_CONTEXT — unified trip context ────────────────────────────────
-const DELTA_CTX_DEFAULTS = {
-  segment: null,       // "kamper" | "porodica" | "par" | "jedrilicar"
-  transport: null,
-  from: null,          // departure city string
-  from_coords: null,   // {lat, lon}
-  destination: null,   // {city, region, lat, lon}
-  travelers: { adults: 2, kids: [], kids_ages: [] },
-  arrival_date: null,
-  budget: null,        // "low" | "mid" | "high"
-  interests: [],
-  room_code: null,
-  phase: "landing",    // landing | inspiracija | priprema | transit | odmor | povratak
-  yolo_region: null,
-  checklist_done: [],
-};
-function loadDelta() {
-  try { const s = localStorage.getItem("jadran_delta_context"); if (s) return { ...DELTA_CTX_DEFAULTS, ...JSON.parse(s) }; } catch {}
-  return { ...DELTA_CTX_DEFAULTS };
-}
-function saveDelta(d) { try { localStorage.setItem("jadran_delta_context", JSON.stringify(d)); } catch {} }
-
-// ─── SEGMENTS ────────────────────────────────────────────────────────────
-const SEGMENTS = [
-  { key: "kamper",     emoji: "🚐", label: "Kamperi",  sub: "Sloboda ceste i mora",   hint: "Rute bez tunela, dump stanice, kampovi",         color: "#FF8C00" },
-  { key: "porodica",   emoji: "👨‍👩‍👧", label: "Porodice", sub: "Savršen odmor za sve",    hint: "Sigurne plaže, dječje aktivnosti, savjeti",     color: "#2196F3" },
-  { key: "par",        emoji: "💑", label: "Parovi",   sub: "Nezaboravni trenuci",    hint: "Romantični zalasci, wine tours, privatne uvale", color: "#E91E63" },
-  { key: "jedrilicar", emoji: "⛵", label: "Nautičari", sub: "Sloboda mora",           hint: "Marine, sidrišta, NAVTEX, AIS",                 color: "#00BCD4" },
-];
-
-// ─── EUROPEAN DEPARTURE CITIES ───────────────────────────────────────────
-const EU_CITIES = [
-  "Wien","Graz","Salzburg","Linz","Innsbruck","Klagenfurt",
-  "München","Frankfurt","Stuttgart","Nürnberg","Augsburg","Düsseldorf","Berlin","Hamburg","Köln",
-  "Zürich","Bern","Basel","Luzern",
-  "Praha","Brno","Ostrava",
-  "Bratislava","Košice",
-  "Budapest","Debrecen",
-  "Warszawa","Kraków","Wrocław","Poznań","Gdańsk",
-  "Ljubljana","Maribor","Celje",
-  "Trieste","Venezia","Verona","Milano","Torino","Bologna",
-  "Rijeka","Zagreb",
-];
-
-// ─── SEGMENT CHECKLISTS ──────────────────────────────────────────────────
-const SEGMENT_CHECKLISTS = {
-  kamper: [
-    { id: "vinjeta_slo", text: "Vinjeta SLO (€16)", link: null },
-    { id: "vinjeta_hr",  text: "Vinjeta HR godišnja", link: null },
-    { id: "gabariti",    text: "Gabariti unešeni u navigaciju", link: null },
-    { id: "lpg",         text: "LPG/AdBlue stanice na ruti provjerene", link: null },
-    { id: "kamp_rez",    text: "Kampovi rezervirani", link: "https://www.camping.hr" },
-  ],
-  porodica: [
-    { id: "sjedalica",   text: "Dječja sjedalica fiksirana", link: null },
-    { id: "pedijatar",   text: "Pedijatrija kontakt sačuvan (+385 112)", link: null },
-    { id: "sunscreen",   text: "Sunscreen SPF50+ upakovan", link: null },
-    { id: "plaza",       text: "Plaže bez ježeva odabrane", link: null },
-    { id: "aktivnosti",  text: "Dječje aktivnosti rezervirane", link: "https://www.getyourguide.com/split-l1255/?partner_id=9OEGOYI" },
-  ],
-  par: [
-    { id: "restoran",  text: "Restoran rezervacija potvrđena", link: "https://www.booking.com/searchresults.html?aid=101704203&ss=Split" },
-    { id: "sunset",    text: "Sunset tour booking", link: "https://www.getyourguide.com/split-l1255/?partner_id=9OEGOYI" },
-    { id: "smjestaj",  text: "Romantični smještaj potvrđen", link: "https://www.booking.com/searchresults.html?aid=101704203&ss=Hvar" },
-  ],
-  jedrilicar: [
-    { id: "marina",      text: "Marina rezervacija potvrđena", link: "https://www.aci.hr" },
-    { id: "vhf",         text: "VHF kanal 17 provjeren", link: null },
-    { id: "navtex",      text: "NAVTEX/prognoza aktivirana", link: null },
-    { id: "dozvola",     text: "Plovidbena dozvola u brodu", link: null },
-    { id: "osiguranje",  text: "Osiguranje plovila aktivno", link: null },
-  ],
-};
-
 /* ─── COMPONENT ─── */
 export default function JadranUnified() {
-  const LOCAL_PARTNERS = new Set(["Konoba Fetivi", "Kamp Stobreč", "Marina Kaštela", "Aquapark Dalmatia", "Giaxa Split"]);
-
   // mounted
   const [lang, setLang] = useState("hr");
   const [splash, setSplash] = useState(true);
@@ -639,84 +450,17 @@ export default function JadranUnified() {
   // Border intelligence
   const [borderData, setBorderData] = useState(null);
   const [borderLoading, setBorderLoading] = useState(false);
-  const [borderLastUpdate, setBorderLastUpdate] = useState(null);
-  const [showMorningBriefing, setShowMorningBriefing] = useState(false);
-  const [morningBriefingShown, setMorningBriefingShown] = useState(false);
-  const [showIdeshNegdje, setShowIdeshNegdje] = useState(false);
-  const lastActivityRef = useRef(Date.now());
   // Arrival geofencing
   const [geoArrival, setGeoArrival] = useState(false); // true = within 10km
   const [arrivalCountdown, setArrivalCountdown] = useState(null); // seconds remaining
   const geoWatchRef = useRef(null);
   const arrivalFiredRef = useRef(false);
-  const [returnRating, setReturnRating] = useState(0);
-  const [returnFeedback, setReturnFeedback] = useState("");
-  const [returnCheckDone, setReturnCheckDone] = useState([]);
-  const [returnRouteData, setReturnRouteData] = useState(null);
-  const returnMapRef = useRef(null);
-  const returnMapInst = useRef(null);
   const [chatMsgs, setChatMsgs] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(null);
   const chatEnd = useRef(null);
-  if (!new URLSearchParams(window.location.search).get("room")) { try { localStorage.removeItem("jadran_room"); } catch {} }
   const roomCode = useRef(getRoomCode());
-  // Destination: prefer localStorage (set during onboarding), fallback to room code config
-  const [dest, setDest] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem("jadran_destination_obj") || "null");
-      if (saved?.city && saved?.lat) return saved;
-    } catch {}
-    return ROOM_DESTINATIONS[roomCode.current] || ROOM_DESTINATIONS["_default"];
-  });
-  // Active Adriatic region (from localStorage, derived from dest)
-  const [region, setRegion] = useState(() => {
-    try { const r = localStorage.getItem("jadran_region"); if (r && ADRIATIC_REGIONS[r]) return r; } catch {}
-    // derive from dest
-    const d = (() => { try { return JSON.parse(localStorage.getItem("jadran_destination_obj") || "null"); } catch { return null; } })();
-    if (d?.city) { const r = detectRegionByCity(d.city); if (r) return r; }
-    if (d?.lat) return detectRegion(d.lat, d.lng || 16);
-    return "srednja_dalmacija";
-  });
-
-  // ─── DELTA_CONTEXT — unified trip context ───
-  const [delta, setDelta] = useState(() => loadDelta());
-  const updateDelta = (patch) => {
-    setDelta(prev => { const next = { ...prev, ...patch }; saveDelta(next); return next; });
-  };
-
-  useEffect(() => { window.__DELTA = delta; }, [delta]);
-
-  // ─── MORNING BRIEFING: auto-show at 8am on app open ───
-  useEffect(() => {
-    if (phase !== "kiosk") return;
-    const h = new Date().getHours();
-    if (h !== 8) return;
-    const todayKey = "jadran_morning_" + new Date().toISOString().slice(0, 10);
-    try {
-      if (localStorage.getItem(todayKey)) return; // already shown today
-      localStorage.setItem(todayKey, "1");
-    } catch {}
-    setShowMorningBriefing(true);
-  }, [phase]); // eslint-disable-line
-
-  // ─── INACTIVITY NUDGE: show "Ideš negdje?" after 2h in kiosk ───
-  useEffect(() => {
-    if (phase !== "kiosk") return;
-    lastActivityRef.current = Date.now();
-    const check = setInterval(() => {
-      if (Date.now() - lastActivityRef.current > 2 * 60 * 60 * 1000) {
-        setShowIdeshNegdje(true);
-        clearInterval(check);
-      }
-    }, 60000); // check every minute
-    return () => clearInterval(check);
-  }, [phase]); // eslint-disable-line
-
-  useEffect(() => {
-    if (phase === "kiosk") lastActivityRef.current = Date.now();
-  }, [subScreen]); // eslint-disable-line
 
   // ─── TRANSIT HERE MAP ───
   const transitMapRef = useRef(null);
@@ -731,37 +475,9 @@ export default function JadranUnified() {
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMsgs]);
   useEffect(() => { const t = setTimeout(() => setSplash(false), 3800); return () => clearTimeout(t); }, []);
 
-  // ─── LANDING → TRANSIT handoff (?go=transit) ───
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("go") !== "transit") return;
-    const from = params.get("from") || "";
-    const to = params.get("to") || "";
-    const segment = params.get("segment") || "par";
-    // Load DELTA from localStorage (written by LandingPage before redirect)
-    try {
-      const saved = localStorage.getItem("jadran_delta_context");
-      if (saved) { const d = JSON.parse(saved); updateDelta(d); }
-    } catch {}
-    // Also patch any missing fields from URL params
-    if (from || to) updateDelta({ from, segment, phase: "transit" });
-    // Load destination if set
-    try {
-      const savedDest = localStorage.getItem("jadran_destination_obj");
-      if (savedDest) { const d = JSON.parse(savedDest); setDest(d); }
-      const savedRegion = localStorage.getItem("jadran_region");
-      if (savedRegion) setRegion(savedRegion);
-    } catch {}
-    setPhase("pre");
-    setSubScreen("transit");
-    setSplash(false);
-    window.history.replaceState({}, "", "/");
-  }, []);
-
   // ─── PERSISTENCE: Load guest state from Firestore/localStorage ───
   const persistReady = useRef(false);
   useEffect(() => {
-    if (!new URLSearchParams(window.location.search).get("room")) { persistReady.current = true; return; }
     loadGuest(roomCode.current).then(data => {
       if (data) {
         if (data.premium) setPremium(true);
@@ -797,12 +513,11 @@ export default function JadranUnified() {
             hostPhone: data.hostPhone || "", budget: data.budget || 1200,
             spent: data.spent || 0, email: data.email || "",
           });
-        } else if (new URLSearchParams(window.location.search).get("room") && roomCode.current !== "DEMO") {
-          // No profile yet — show onboarding only when ?room= is explicit in URL
+        } else if (roomCode.current && roomCode.current !== "DEMO") {
+          // No profile yet — show onboarding
           setShowOnboarding(true);
         }
-      } else if (new URLSearchParams(window.location.search).get("room") && roomCode.current !== "DEMO") {
-        // URL has ?room= but no data in Firestore yet — show onboarding
+      } else if (roomCode.current && roomCode.current !== "DEMO") {
         setShowOnboarding(true);
       }
       // Mark ready AFTER initial state is applied
@@ -880,108 +595,70 @@ export default function JadranUnified() {
     return () => clearInterval(t);
   }, [alerts]);
 
-  // ─── LEAFLET + HERE REST only (no HERE JS SDK anywhere) ───
+  // ─── HERE MAPS: transit screen route ───
   const HERE_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
+  const PODSTRANA = { lat: 43.4892, lng: 16.5523 };
   const COUNTRY_CITY = { DE:"München,Germany", AT:"Wien,Austria", IT:"Trieste,Italy", SI:"Ljubljana,Slovenia", CZ:"Praha,Czechia", PL:"Kraków,Poland", HR:"Zagreb,Croatia" };
-  const CITY_COORDS = {
-    "Wien": {lat:48.2082, lng:16.3738}, "Wien,Austria": {lat:48.2082, lng:16.3738},
-    "München": {lat:48.1351, lng:11.5820}, "München,Germany": {lat:48.1351, lng:11.5820},
-    "Graz": {lat:47.0707, lng:15.4395}, "Salzburg": {lat:47.8095, lng:13.0550},
-    "Berlin": {lat:52.5200, lng:13.4050}, "Frankfurt": {lat:50.1109, lng:8.6821},
-    "Praha": {lat:50.0755, lng:14.4378}, "Praha,Czechia": {lat:50.0755, lng:14.4378},
-    "Kraków": {lat:50.0647, lng:19.9450}, "Kraków,Poland": {lat:50.0647, lng:19.9450},
-    "Ljubljana": {lat:46.0569, lng:14.5058}, "Ljubljana,Slovenia": {lat:46.0569, lng:14.5058},
-    "Trieste": {lat:45.6495, lng:13.7768}, "Trieste,Italy": {lat:45.6495, lng:13.7768},
-    "Split": {lat:43.5081, lng:16.4402}, "Dubrovnik": {lat:42.6507, lng:18.0944},
-    "Zadar": {lat:44.1194, lng:15.2314}, "Rijeka": {lat:45.3271, lng:14.4422},
-    "Pula": {lat:44.8666, lng:13.8496}, "Rovinj": {lat:45.0811, lng:13.6387},
-    "Zagreb": {lat:45.8150, lng:15.9819}, "Zagreb,Croatia": {lat:45.8150, lng:15.9819},
-  };
-
-  const loadLeafletLib = () => new Promise((resolve) => {
-    if (window.L) { resolve(); return; }
-    const css = document.createElement("link"); css.rel = "stylesheet"; css.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"; document.head.appendChild(css);
-    const s = document.createElement("script"); s.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-    s.onload = resolve; s.onerror = resolve; document.head.appendChild(s);
-  });
-
-  const loadFlexPolyline = () => new Promise((resolve) => {
-    if (window.flexpolyline) { resolve(); return; }
-    const s = document.createElement("script"); s.src = "https://unpkg.com/@here/flexpolyline@1.1.0/dist/web/index.umd.js";
-    s.onload = resolve; s.onerror = resolve; document.head.appendChild(s);
-  });
-
-  const renderLeafletMap = (containerId, oLat, oLng, dLat, dLng, polylineStr, fromLabel, toLabel, lineColor = "#f97316") => {
-    const el = document.getElementById(containerId);
-    if (!el || !window.L) return null;
-    const map = window.L.map(el, { zoomControl: true, attributionControl: false });
-    window.L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(map);
-    const mkIcon = (emoji, color) => window.L.divIcon({ html: `<div style="background:#0c1e35;border:2px solid ${color};border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px">${emoji}</div>`, iconSize: [28,28], className:"" });
-    window.L.marker([oLat, oLng], { icon: mkIcon("🚗", lineColor) }).addTo(map).bindPopup(fromLabel);
-    window.L.marker([dLat, dLng], { icon: mkIcon("⚓", "#22c55e") }).addTo(map).bindPopup(toLabel);
-    if (polylineStr && window.flexpolyline) {
-      try {
-        const decoded = window.flexpolyline.decode(polylineStr);
-        const coords = decoded.polyline || decoded;
-        if (coords?.length > 1) {
-          const poly = window.L.polyline(coords, { color: lineColor, weight: 4, opacity: 0.9 }).addTo(map);
-          map.fitBounds(poly.getBounds(), { padding: [30, 30] });
-          return map;
-        }
-      } catch {}
-    }
-    map.fitBounds([[oLat, oLng], [dLat, dLng]], { padding: [40, 40] });
-    return map;
-  };
-
-  const geocodeCity = async (query) => {
-    const fallback = CITY_COORDS[query] || CITY_COORDS[query?.split(",")?.[0]];
-    try {
-      const geo = await fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(query)}&limit=1&apikey=${HERE_KEY}`, { signal: AbortSignal.timeout(8000) }).then(r => r.json());
-      const pos = geo.items?.[0]?.position;
-      if (pos) return pos;
-    } catch {}
-    return fallback || null;
-  };
 
   useEffect(() => {
     if (subScreen !== "transit") return;
     const transportMode = (() => { try { return localStorage.getItem("jadran_transport") || "auto"; } catch { return "auto"; } })();
-    // Always read fresh DELTA from localStorage
-    let freshDelta = delta;
-    try { const s = localStorage.getItem("jadran_delta_context"); if (s) freshDelta = { ...freshDelta, ...JSON.parse(s) }; } catch {}
-    const fromCity = freshDelta.from || COUNTRY_CITY[G.country] || "Wien,Austria";
-    const toCity = freshDelta.destination?.city || dest?.city || "Split";
-    const segment = freshDelta.segment || transportMode;
-    console.log("DELTA:", fromCity, toCity, segment, freshDelta);
-    const hereMode = segment === "kamper" || transportMode === "kamper" ? "truck" : "car";
-    const dLat = freshDelta.destination?.lat || dest?.lat || 43.5081;
-    const dLng = freshDelta.destination?.lon || dest?.lng || 16.4402;
+    const depQuery = COUNTRY_CITY[G.country] || (G.country + ",Europe");
+    const hereMode = transportMode === "kamper" ? "truck" : transportMode === "avion" ? "pedestrian" : "car";
+
+    const loadScripts = () => new Promise((resolve, reject) => {
+      if (window.H?.Map) { resolve(); return; }
+      const css = document.createElement("link"); css.rel = "stylesheet"; css.href = "https://js.api.here.com/v3/3.1/mapsjs-ui.css"; document.head.appendChild(css);
+      const urls = ["https://js.api.here.com/v3/3.1/mapsjs-core.js","https://js.api.here.com/v3/3.1/mapsjs-service.js","https://js.api.here.com/v3/3.1/mapsjs-ui.js","https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"];
+      const next = (i) => { if (i >= urls.length) { resolve(); return; } const s = document.createElement("script"); s.src = urls[i]; s.async = false; s.onload = () => next(i+1); s.onerror = reject; document.head.appendChild(s); };
+      next(0);
+    });
 
     (async () => {
       try {
-        await Promise.all([loadLeafletLib(), loadFlexPolyline()]);
-        const pos = await geocodeCity(fromCity);
-        if (!pos) { console.warn("[transit] geocode + fallback both failed for:", fromCity); return; }
+        // Geocode departure city
+        const geo = await fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(depQuery)}&limit=1&apikey=${HERE_KEY}`).then(r => r.json());
+        const pos = geo.items?.[0]?.position;
+        if (!pos) return;
         const { lat: oLat, lng: oLng } = pos;
 
-        let km = 0, hrs = 0, mins = 0, polylineStr = null;
+        // Calculate route
+        const route = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${oLat},${oLng}&destination=${PODSTRANA.lat},${PODSTRANA.lng}&return=polyline,summary&apikey=${HERE_KEY}`).then(r => r.json());
+        const sec = route.routes?.[0]?.sections?.[0];
+        if (!sec) return;
+        const km = Math.round(sec.summary.length / 1000);
+        const hrs = Math.floor(sec.summary.duration / 3600);
+        const mins = Math.round((sec.summary.duration % 3600) / 60);
+        setTransitRouteData({ oLat, oLng, km, hrs, mins, polyline: sec.polyline, mode: transportMode });
+
+        // Load HERE Maps JS and render
+        await loadScripts();
+        if (!transitMapRef.current) return;
+        if (hereTransitInst.current) { hereTransitInst.current.dispose(); }
+        const platform = new window.H.service.Platform({ apikey: HERE_KEY });
+        const layers = platform.createDefaultLayers();
+        const map = new window.H.Map(transitMapRef.current, layers.vector.normal.map, {
+          zoom: 6, center: { lat: (oLat + PODSTRANA.lat) / 2, lng: (oLng + PODSTRANA.lng) / 2 },
+        });
+        hereTransitInst.current = map;
+        new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
+        window.H.ui.UI.createDefault(map, layers);
         try {
-          const routeResp = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${oLat},${oLng}&destination=${dLat},${dLng}&return=polyline,summary&apikey=${HERE_KEY}`, { signal: AbortSignal.timeout(10000) }).then(r => r.json());
-          const sec = routeResp.routes?.[0]?.sections?.[0];
-          if (sec) { km = Math.round(sec.summary.length / 1000); hrs = Math.floor(sec.summary.duration / 3600); mins = Math.round((sec.summary.duration % 3600) / 60); polylineStr = sec.polyline; }
-        } catch (e) { console.warn("[transit] routing failed, map still shown:", e.message); }
-
-        setTransitRouteData({ oLat, oLng, dLat, dLng, km, hrs, mins, polyline: polylineStr, mode: segment, destCity: toCity });
-
-        if (hereTransitInst.current) { try { hereTransitInst.current.remove(); } catch {} hereTransitInst.current = null; }
-        const map = renderLeafletMap("transit-map", oLat, oLng, dLat, dLng, polylineStr, fromCity.split(",")[0], toCity);
-        if (map) hereTransitInst.current = map;
-      } catch (e) { console.error("[transit map]", e); }
+          const ls = window.H.geo.LineString.fromFlexiblePolyline(sec.polyline);
+          const poly = new window.H.map.Polyline(ls, { style: { lineWidth: 5, strokeColor: "#0ea5e9" } });
+          map.addObject(poly);
+          map.getViewModel().setLookAtData({ bounds: poly.getBoundingBox() }, true);
+        } catch {}
+        const mkIcon = (emoji) => new window.H.map.Icon(`<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"><circle cx="14" cy="14" r="13" fill="#0c1e35" stroke="#0ea5e9" stroke-width="2"/><text x="14" y="19" text-anchor="middle" font-size="13">${emoji}</text></svg>`);
+        map.addObjects([
+          new window.H.map.Marker({ lat: oLat, lng: oLng }, { icon: mkIcon(G.flag || "🚩") }),
+          new window.H.map.Marker({ lat: PODSTRANA.lat, lng: PODSTRANA.lng }, { icon: mkIcon("⚓") }),
+        ]);
+      } catch (e) { console.error("[HERE transit]", e); }
     })();
 
-    return () => { if (hereTransitInst.current) { try { hereTransitInst.current.remove(); } catch {} hereTransitInst.current = null; } };
-  }, [subScreen, delta.from, dest?.lat]);
+    return () => { hereTransitInst.current?.dispose?.(); hereTransitInst.current = null; };
+  }, [subScreen]);
 
   // ─── WEATHER: Fetch real data via Gemini grounding ───
   const [weather, setWeather] = useState(W_DEFAULT);
@@ -1107,7 +784,7 @@ export default function JadranUnified() {
     try {
       const res = await fetch("/api/viator-search", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ destination: dest.city }),
+        body: JSON.stringify({ destination: "Podstrana" }),
       });
       const data = await res.json();
       setViatorActs(Array.isArray(data.activities) && data.activities.length > 0 ? data.activities : VIATOR_FALLBACK);
@@ -1148,21 +825,7 @@ export default function JadranUnified() {
     setBorderLoading(true);
     try {
       const res = await fetch("/api/border-intelligence");
-      if (res.ok) {
-        const d = await res.json();
-        setBorderData(d);
-        setBorderLastUpdate(new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }));
-        const heavyCrossing = d?.crossings?.find(cr => (cr.wait_minutes || 0) > 30);
-        if (heavyCrossing) {
-          const deviceId = localStorage.getItem("jadran_push_deviceId");
-          if (deviceId) {
-            fetch("/api/push-send", {
-              method: "POST", headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ deviceId, title: "⚠️ Granica — Gužva!", body: `${heavyCrossing.name}: ~${heavyCrossing.wait_minutes} min čekanja`, tag: "border" }),
-            }).catch(() => {});
-          }
-        }
-      }
+      if (res.ok) setBorderData(await res.json());
     } catch {}
     setBorderLoading(false);
   };
@@ -1170,7 +833,7 @@ export default function JadranUnified() {
   useEffect(() => {
     if (phase === "pre" && subScreen === "transit") {
       fetchBorderData();
-      const iv = setInterval(fetchBorderData, 300000); // 5-min auto-refresh
+      const iv = setInterval(fetchBorderData, 600000); // 10-min auto-refresh
       return () => clearInterval(iv);
     }
   }, [phase, subScreen]); // eslint-disable-line
@@ -1180,7 +843,7 @@ export default function JadranUnified() {
     if (phase !== "pre" || subScreen !== "transit") return;
     if (!("geolocation" in navigator)) return;
 
-    const DEST = dest; // room-configurable destination
+    const DEST = { lat: 43.4892, lng: 16.5523 }; // Podstrana
     const R = 6371;
     const distKm = (lat1, lng1, lat2, lng2) => {
       const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -1257,8 +920,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       const res = await fetch("/api/chat", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ system: sys,
-          messages: [...chatMsgs.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })), { role: "user", content: msg }],
-          delta_context: delta }),
+          messages: [...chatMsgs.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })), { role: "user", content: msg }] }),
       });
       const data = await res.json();
       setChatMsgs(p => [...p, { role: "assistant", text: data.content?.map(c => c.text || "").join("") || "..." }]);
@@ -1403,7 +1065,6 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
     ];
     const idx = phases.findIndex(p => p.k === phase);
     return (
-      <>
       <div style={{ display: "flex", alignItems: "center", gap: 0, padding: "20px 0 12px", position: "relative" }}>
         {/* Track line */}
         <div style={{ position: "absolute", top: 28, left: "12%", right: "12%", height: 1, background: C.bord, zIndex: 0 }} />
@@ -1433,15 +1094,6 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           );
         })}
       </div>
-      {/* Destination indicator — visible in pre phase when dest is set */}
-      {phase === "pre" && dest?.city && (
-        <div style={{ textAlign: "center", marginTop: -4, marginBottom: 6 }}>
-          <span style={{ ...dm, fontSize: 11, color: C.accent, background: "rgba(14,165,233,0.08)", border: `1px solid rgba(14,165,233,0.15)`, borderRadius: 20, padding: "3px 12px" }}>
-            → {dest.city}
-          </span>
-        </div>
-      )}
-      </>
     );
   };
 
@@ -1492,270 +1144,48 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
      PHASE 1: PRE-TRIP
      ══════════════════════════════ */
   const PreTrip = () => {
-    // ─── Step 2: Ruta (combined from + destination + HERE map) ───────────
-    const RutaStep = () => {
-      const [fromQ, setFromQ] = React.useState(delta.from || "");
-      const [fromSugs, setFromSugs] = React.useState([]);
-      const [fromSel, setFromSel] = React.useState(delta.from || null);
-      const [toQ, setToQ] = React.useState(delta.destination?.city || "");
-      const [toSugs, setToSugs] = React.useState([]);
-      const [toSel, setToSel] = React.useState(delta.destination?.city ? delta.destination : null);
-      const [routeInfo, setRouteInfo] = React.useState(null);
-      const [routeLoading, setRouteLoading] = React.useState(false);
-      const [locLoading, setLocLoading] = React.useState(false);
-      const mapContRef = React.useRef(null);
-      const mapInstRef = React.useRef(null);
-
-      React.useEffect(() => {
-        if (!fromSel || !toSel?.lat) return;
-        setRouteLoading(true);
-        let disposed = false;
-        (async () => {
-          try {
-            await Promise.all([loadLeafletLib(), loadFlexPolyline()]);
-            const pos = await geocodeCity(fromSel);
-            if (!pos || disposed) { setRouteLoading(false); return; }
-            const { lat: oLat, lng: oLng } = pos;
-            const dLat = toSel.lat; const dLng = toSel.lng;
-            const transport = (() => { try { return localStorage.getItem("jadran_transport") || "auto"; } catch { return "auto"; } })();
-            const hereMode = transport === "kamper" ? "truck" : "car";
-            let km = 0, hrs = 0, mins = 0, polylineStr = null;
-            try {
-              const route = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${oLat},${oLng}&destination=${dLat},${dLng}&return=polyline,summary&apikey=${HERE_KEY}`, { signal: AbortSignal.timeout(10000) }).then(r => r.json());
-              const sec = route.routes?.[0]?.sections?.[0];
-              if (sec) { km = Math.round(sec.summary.length / 1000); hrs = Math.floor(sec.summary.duration / 3600); mins = Math.round((sec.summary.duration % 3600) / 60); polylineStr = sec.polyline; }
-            } catch {}
-            if (disposed) { setRouteLoading(false); return; }
-            setRouteInfo({ km, hrs, mins, oLat, oLng });
-            if (mapContRef.current) {
-              if (mapInstRef.current) { try { mapInstRef.current.remove(); } catch {} mapInstRef.current = null; }
-              const map = window.L.map(mapContRef.current, { zoomControl: false, attributionControl: false });
-              mapInstRef.current = map;
-              window.L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(map);
-              const mkIcon = (emoji, c) => window.L.divIcon({ html: `<div style="background:#0c1e35;border:2px solid ${c};border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px">${emoji}</div>`, iconSize: [24,24], className:"" });
-              window.L.marker([oLat, oLng], { icon: mkIcon("🚗","#f97316") }).addTo(map);
-              window.L.marker([dLat, dLng], { icon: mkIcon("⚓","#22c55e") }).addTo(map);
-              if (polylineStr && window.flexpolyline) {
-                try {
-                  const decoded = window.flexpolyline.decode(polylineStr);
-                  const coords = decoded.polyline || decoded;
-                  if (coords?.length > 1) {
-                    const poly = window.L.polyline(coords, { color: "#f97316", weight: 4, opacity: 0.9 }).addTo(map);
-                    map.fitBounds(poly.getBounds(), { padding: [20, 20] }); setRouteLoading(false); return;
-                  }
-                } catch {}
-              }
-              map.fitBounds([[oLat, oLng], [dLat, dLng]], { padding: [30, 30] });
-            }
-          } catch (e) { console.error("[RutaStep map]", e); }
-          setRouteLoading(false);
-        })();
-        return () => { disposed = true; if (mapInstRef.current) { try { mapInstRef.current.remove(); } catch {} mapInstRef.current = null; } };
-      }, [fromSel, toSel]);
-
-      const proceed = () => {
-        if (!toSel?.lat) return;
-        const rk = detectRegionByCity(toSel.city) || detectRegion(toSel.lat, toSel.lng);
-        try { localStorage.setItem("jadran_destination_obj", JSON.stringify(toSel)); } catch {}
-        if (rk) { try { localStorage.setItem("jadran_region", rk); } catch {} setRegion(rk); }
-        setDest(toSel);
-        updateDelta({ from: fromSel || fromQ, destination: { city: toSel.city, lat: toSel.lat, lon: toSel.lng, region: rk }, yolo_region: rk, phase: "transit" });
-        setSubScreen("transit");
-        setPhase("pre");
-      };
-
-      return (
-        <Card style={{ padding: "28px 20px" }}>
-          <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 3, textTransform: "uppercase", marginBottom: 12 }}>Korak 2 / 2</div>
-          <div style={{ fontSize: 22, fontWeight: 400, marginBottom: 20 }}>Gdje ideš?</div>
-
-          {/* FROM */}
-          <div style={{ marginBottom: 6 }}>
-            <div style={{ ...dm, fontSize: 11, color: C.mut, marginBottom: 5 }}>📍 Odakle krećeš?</div>
-            <div style={{ position: "relative" }}>
-              <input value={fromQ}
-                onChange={e => { setFromQ(e.target.value); setFromSel(null); const q = e.target.value.toLowerCase(); setFromSugs(q.length < 1 ? [] : EU_CITIES.filter(c => c.toLowerCase().includes(q)).slice(0, 6)); }}
-                placeholder="npr. Wien, München, Praha…"
-                style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: `1px solid ${fromSel ? "rgba(34,197,94,0.4)" : C.bord}`, background: C.card, color: C.text, fontSize: 15, outline: "none", ...dm, boxSizing: "border-box" }} />
-              {fromSugs.length > 0 && (
-                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: `1px solid ${C.bord}`, borderRadius: 12, marginTop: 4, zIndex: 50, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
-                  {fromSugs.map(c => (
-                    <div key={c} onClick={() => { setFromQ(c); setFromSel(c); setFromSugs([]); updateDelta({ from: c }); }}
-                      style={{ padding: "10px 14px", cursor: "pointer", ...dm, fontSize: 14, color: C.text, borderBottom: `1px solid ${C.bord}` }}
-                      onMouseEnter={e => e.currentTarget.style.background = C.acDim}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      📍 {c}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-          <button onClick={() => {
-            if (!navigator.geolocation) return; setLocLoading(true);
-            navigator.geolocation.getCurrentPosition(async pos => {
-              try {
-                const r = await fetch(`https://revgeocode.search.hereapi.com/v1/revgeocode?at=${pos.coords.latitude},${pos.coords.longitude}&limit=1&apikey=${HERE_KEY}`);
-                const d = await r.json();
-                const city = d.items?.[0]?.address?.city || d.items?.[0]?.address?.county || "Vaša lokacija";
-                setFromQ(city); setFromSel(city);
-                updateDelta({ from: city, from_coords: { lat: pos.coords.latitude, lon: pos.coords.longitude } });
-              } catch {} setLocLoading(false);
-            }, () => setLocLoading(false));
-          }} disabled={locLoading}
-            style={{ width: "100%", padding: "10px 14px", borderRadius: 12, border: `1px solid ${C.bord}`, background: "transparent", color: C.mut, fontSize: 13, cursor: "pointer", ...dm, marginBottom: 16 }}>
-            {locLoading ? "⏳ Detektiram…" : "📡 Detektiraj moju lokaciju"}
-          </button>
-
-          {/* TO */}
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ ...dm, fontSize: 11, color: C.mut, marginBottom: 5 }}>🏖️ Kuda ideš?</div>
-            <div style={{ position: "relative" }}>
-              <input value={toQ}
-                onChange={e => { setToQ(e.target.value); setToSel(null); const q = e.target.value.toLowerCase(); setToSugs(q.length < 1 ? [] : COASTAL_DESTINATIONS.filter(d => d.city.toLowerCase().includes(q)).slice(0, 6)); }}
-                placeholder="npr. Hvar, Split, Rovinj…"
-                style={{ width: "100%", padding: "12px 14px", borderRadius: 12, border: `1px solid ${toSel ? "rgba(34,197,94,0.4)" : C.bord}`, background: C.card, color: C.text, fontSize: 15, outline: "none", ...dm, boxSizing: "border-box" }} />
-              {toSugs.length > 0 && (
-                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: `1px solid ${C.bord}`, borderRadius: 12, marginTop: 4, zIndex: 50, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.4)" }}>
-                  {toSugs.map(d => (
-                    <div key={d.city} onClick={() => { setToQ(d.city); setToSel(d); setToSugs([]); }}
-                      style={{ padding: "10px 14px", cursor: "pointer", ...dm, fontSize: 14, color: C.text, borderBottom: `1px solid ${C.bord}` }}
-                      onMouseEnter={e => e.currentTarget.style.background = C.acDim}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      🏖️ {d.city}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* HERE Map — auto-renders when both selected */}
-          {fromSel && toSel && (
-            <div style={{ marginBottom: 16 }}>
-              <div ref={mapContRef} style={{ width: "100%", height: 260, borderRadius: 14, overflow: "hidden", background: "#0a1828", position: "relative", zIndex: 1 }}>
-                {routeLoading && <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", ...dm, fontSize: 13, color: C.mut }}>⏳ Računam rutu…</div>}
-              </div>
-              {routeInfo && !routeLoading && (
-                <div style={{ textAlign: "center", marginTop: 8 }}>
-                  <span style={{ padding: "6px 16px", borderRadius: 20, background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.3)", ...dm, fontSize: 14, color: "#f97316" }}>
-                    🚗 {routeInfo.km} km · ~{routeInfo.hrs}h {routeInfo.mins}min
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            <Btn onClick={() => setOnboardStep(0)}>← Natrag</Btn>
-            <Btn primary onClick={proceed} style={{ flex: 1, background: "linear-gradient(135deg,#ea580c,#f97316)", opacity: toSel ? 1 : 0.4, pointerEvents: toSel ? "auto" : "none" }}>Kreni sa mnom →</Btn>
-          </div>
-        </Card>
-      );
-    };
-
     if (subScreen === "onboard") return (
       <div style={{ maxWidth: 540, margin: "32px auto", textAlign: "center" }}>
         {onboardStep === 0 && (
-          <Card style={{ padding: "28px 20px" }}>
-            <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 3, textTransform: "uppercase", marginBottom: 12 }}>Korak 1 / 2</div>
-            <div style={{ fontSize: 22, fontWeight: 400, marginBottom: 20 }}>Kakvi ste putnici?</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
-              {SEGMENTS.map(s => {
-                const active = delta.segment === s.key;
-                return (
-                  <div key={s.key} onClick={() => updateDelta({ segment: s.key })}
-                    style={{ padding: "18px 14px", borderRadius: 16, border: `2px solid ${active ? s.color : C.bord}`, background: active ? `${s.color}12` : C.card, cursor: "pointer", textAlign: "left",
-                      boxShadow: active ? `0 0 0 1px ${s.color}44, 0 4px 20px ${s.color}22` : "none", transition: "all 0.2s" }}>
-                    <div style={{ fontSize: 30, marginBottom: 8 }}>{s.emoji}</div>
-                    <div style={{ ...dm, fontSize: 14, fontWeight: 700, color: active ? s.color : C.text, marginBottom: 3 }}>{s.label}</div>
-                    <div style={{ ...dm, fontSize: 11, color: active ? s.color : C.mut, marginBottom: 4, fontWeight: active ? 600 : 400 }}>{s.sub}</div>
-                    <div style={{ ...dm, fontSize: 10, color: "#475569", lineHeight: 1.4 }}>{s.hint}</div>
-                  </div>
-                );
-              })}
+          <Card style={{ padding: 40 }}>
+            <div style={{ fontSize: 64, marginBottom: 16 }} className="emoji-float">🌊</div>
+            <div style={{ ...hf, fontSize: 36, fontWeight: 400, marginBottom: 8, background: `linear-gradient(135deg,${C.text} 30%,${C.accent})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{t("welcome",lang)}</div>
+            <div style={{ ...dm, color: C.mut, fontSize: 15, marginBottom: 28, lineHeight: 1.7 }}>
+              {t("hostUsesName",lang).replace("{HOST}","")}<strong style={{ color: C.gold }}>{G.host}</strong><br />{t("onboardSub",lang)}
             </div>
-            <Btn primary onClick={() => setOnboardStep(1)} style={{ opacity: delta.segment ? 1 : 0.4, pointerEvents: delta.segment ? "auto" : "none" }}>Nastavi →</Btn>
-            <div style={{ textAlign: "center", marginTop: 10 }}>
-              <button onClick={() => setShowOnboarding(true)}
-                style={{ background: "none", border: "none", color: C.mut, fontSize: 12, cursor: "pointer", ...dm, textDecoration: "underline", padding: "4px 8px" }}>
-                🏠 Imam kod smještaja (već sam gost)
-              </button>
-            </div>
+            <Btn primary onClick={() => setOnboardStep(1)}>{t("createProfile",lang)}</Btn>
           </Card>
         )}
-        {onboardStep === 1 && <RutaStep />}
+        {onboardStep === 1 && (
+          <Card style={{ padding: 32 }}>
+            <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 3, textTransform: "uppercase", marginBottom: 16 }}>{t("step1",lang)}</div>
+            <div style={{ fontSize: 22, fontWeight: 400, marginBottom: 20 }}>{t("interests",lang)}</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(70px, 1fr))", gap: 10, marginBottom: 24 }}>
+              {INTERESTS.map(opt => (
+                <div key={opt.k} onClick={() => setInterests(p => { const n = new Set(p); n.has(opt.k) ? n.delete(opt.k) : n.add(opt.k); return n; })}
+                  style={{ padding: "16px 8px", background: interests.has(opt.k) ? C.acDim : C.card, border: `1px solid ${interests.has(opt.k) ? "rgba(14,165,233,0.25)" : C.bord}`, borderRadius: 14, cursor: "pointer", textAlign: "center", ...dm, fontSize: 13, color: interests.has(opt.k) ? C.accent : C.mut, transition: "all 0.3s" }}>
+                  <span style={{ fontSize: 28, display: "block", marginBottom: 4 }}>{opt.e}</span>{(INTEREST_LABELS[opt.k]||{})[lang] || (INTEREST_LABELS[opt.k]||{}).hr || opt.k}
+                </div>
+              ))}
+            </div>
+            <Btn primary onClick={() => setOnboardStep(2)}>{t("next",lang)}</Btn>
+          </Card>
+        )}
+        {onboardStep === 2 && (
+          <Card style={{ padding: 40 }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>✨</div>
+            <div style={{ fontSize: 26, fontWeight: 400, marginBottom: 6 }}>{t("profileDone",lang)}</div>
+            <div style={{ ...dm, color: C.mut, fontSize: 14, lineHeight: 1.6, marginBottom: 20 }}>
+              {t("preparing",lang)}
+            </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginBottom: 20 }}>
+              {[...interests].map(k => { const o = INTERESTS.find(x => x.k === k); return o ? <Badge key={k} c="accent">{o.e} {(INTEREST_LABELS[k]||{})[lang] || (INTEREST_LABELS[k]||{}).hr || k}</Badge> : null; })}
+            </div>
+            <Btn primary onClick={() => setSubScreen("pretrip")}>{t("toPreTrip",lang)}</Btn>
+          </Card>
+        )}
       </div>
     );
-
-    if (subScreen === "priprema") {
-      const seg = delta.segment || "porodica";
-      const items = SEGMENT_CHECKLISTS[seg] || SEGMENT_CHECKLISTS.porodica;
-      const done = delta.checklist_done || [];
-      const doneCount = items.filter(i => done.includes(i.id)).length;
-      const segInfo = SEGMENTS.find(s => s.key === seg);
-      return (
-        <>
-          <div style={{ padding: "24px 0 12px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-              <span style={{ fontSize: 28 }}>{segInfo?.emoji || "🏖"}</span>
-              <div>
-                <div style={{ fontSize: 26, fontWeight: 400 }}>Faza 1: Priprema</div>
-                <div style={{ ...dm, fontSize: 13, color: C.mut }}>{segInfo?.label} — priprema za polazak</div>
-              </div>
-            </div>
-            <div style={{ marginTop: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", ...dm, fontSize: 12, color: C.mut, marginBottom: 6 }}>
-                <span>Priprema putovanja</span>
-                <span style={{ color: doneCount === items.length ? "#22c55e" : C.accent }}>{doneCount}/{items.length} pripremljeno</span>
-              </div>
-              <div style={{ height: 4, borderRadius: 4, background: C.bord, overflow: "hidden" }}>
-                <div style={{ height: "100%", borderRadius: 4, background: `linear-gradient(90deg,${segInfo?.color || C.accent},#0284c7)`, width: `${(doneCount / items.length) * 100}%`, transition: "width 0.4s" }} />
-              </div>
-            </div>
-          </div>
-
-          {(delta.destination?.city || delta.from) && (
-            <div style={{ padding: "10px 14px", borderRadius: 12, border: `1px solid ${C.bord}`, ...dm, fontSize: 13, color: C.mut, marginBottom: 16, display: "flex", gap: 16, flexWrap: "wrap" }}>
-              {delta.from && <span>📍 Iz: <strong style={{ color: C.text }}>{delta.from}</strong></span>}
-              {delta.destination?.city && <span>→ <strong style={{ color: C.accent }}>{delta.destination.city}</strong></span>}
-              {delta.arrival_date && <span>📅 <strong>{new Date(delta.arrival_date + "T12:00:00").toLocaleDateString("hr-HR", { day: "numeric", month: "short" })}</strong></span>}
-              {delta.travelers?.adults && <span>👤 {delta.travelers.adults + (delta.travelers.kids?.length || 0)} osoba</span>}
-            </div>
-          )}
-
-          <div style={{ marginBottom: 24 }}>
-            {items.map(item => {
-              const checked = done.includes(item.id);
-              return (
-                <div key={item.id} onClick={() => {
-                    const newDone = checked ? done.filter(d => d !== item.id) : [...done, item.id];
-                    updateDelta({ checklist_done: newDone });
-                  }}
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 12, border: `1px solid ${checked ? "rgba(34,197,94,0.2)" : C.bord}`, background: checked ? "rgba(34,197,94,0.04)" : C.card, marginBottom: 8, cursor: "pointer", transition: "all 0.2s" }}>
-                  <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${checked ? "#22c55e" : C.bord}`, background: checked ? "#22c55e" : "transparent", display: "grid", placeItems: "center", flexShrink: 0, transition: "all 0.2s" }}>
-                    {checked && <span style={{ color: "#fff", fontSize: 12 }}>✓</span>}
-                  </div>
-                  <div style={{ flex: 1, ...dm, fontSize: 14, color: checked ? "#22c55e" : C.text, textDecoration: checked ? "line-through" : "none" }}>{item.text}</div>
-                  {item.link && !checked && (
-                    <a href={item.link} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-                      style={{ padding: "5px 10px", borderRadius: 8, background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)", color: C.accent, ...dm, fontSize: 11, textDecoration: "none", flexShrink: 0 }}>
-                      Rezerviši →
-                    </a>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          <div style={{ textAlign: "center" }}>
-            <Btn primary onClick={() => { updateDelta({ phase: "transit" }); setSubScreen("transit"); }}>
-              Krenuo sam → {doneCount < items.length ? `(${doneCount}/${items.length})` : "✓"}
-            </Btn>
-          </div>
-        </>
-      );
-    }
 
     if (subScreen === "pretrip") return (
       <>
@@ -1848,23 +1278,11 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       <>
         <div style={{ padding: "24px 0 8px" }}>
           <div style={{ fontSize: 28, fontWeight: 400 }}>{t("safeTrip",lang)} {transitRouteData?.mode === "kamper" ? "🚐" : transitRouteData?.mode === "avion" ? "✈️" : "🚗"}</div>
-          <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>
-            {delta.from || COUNTRY_CITY[G.country]?.split(",")?.[0] || G.country} → <span style={{ color: C.accent }}>{dest?.city || delta.destination?.city}</span>
-          </div>
-          {transitRouteData && (() => {
-            const now = new Date();
-            const eta = new Date(now.getTime() + (transitRouteData.hrs * 3600 + transitRouteData.mins * 60) * 1000);
-            const etaStr = eta.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-            return (
-              <div style={{ ...dm, fontSize: 12, color: C.gold, marginTop: 6 }}>
-                📍 Putujete prema: <strong>{dest.city}</strong> · Stižete oko <strong>{etaStr}</strong> · Preostalo: <strong>{transitRouteData.km} km</strong>
-              </div>
-            );
-          })()}
+          <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>{COUNTRY_CITY[G.country]?.split(",")?.[0] || G.country} → Podstrana</div>
         </div>
         {/* HERE Maps interactive route */}
         <div style={{ borderRadius: 18, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 12 }}>
-          <div id="transit-map" ref={transitMapRef} style={{ height: 280, width: "100%", position: "relative", zIndex: 1, background: "linear-gradient(135deg,#1a2332,#0f1822)" }}>
+          <div ref={transitMapRef} style={{ height: 300, width: "100%", background: "linear-gradient(135deg,#1a2332,#0f1822)" }}>
             {!transitRouteData && (
               <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
                 <div style={{ width: 32, height: 32, border: `2px solid ${C.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin-slow 0.8s linear infinite" }} />
@@ -1877,10 +1295,10 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>🛣 {transitRouteData.km} km</span>
               <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>⏱ {transitRouteData.hrs}h {transitRouteData.mins}min</span>
               {transitRouteData.mode === "kamper" && <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 6, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.15)", color: C.gold }}>🚐 Kamper ruta</span>}
-              <button onClick={() => window.location.href = `https://wego.here.com/directions/drive/${transitRouteData.oLat},${transitRouteData.oLng}/${transitRouteData.dLat || dest?.lat},${transitRouteData.dLng || dest?.lng}`}
-                style={{ marginLeft: "auto", padding: "8px 16px", borderRadius: 10, background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>
+              <a href={`https://wego.here.com/directions/drive/${transitRouteData.oLat},${transitRouteData.oLng}/${PODSTRANA.lat},${PODSTRANA.lng}`} target="_blank" rel="noopener noreferrer"
+                style={{ marginLeft: "auto", padding: "8px 16px", borderRadius: 10, background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>
                 📍 Pokreni navigaciju →
-              </button>
+              </a>
             </div>
           )}
         </div>
@@ -1943,132 +1361,13 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                   </div>
                 ))}
                 <div style={{ ...dm, fontSize: 10, color: "rgba(100,116,139,0.4)", textAlign: "right" }}>
-                  {borderLastUpdate ? `Zadnje ažuriranje: ${borderLastUpdate}` : borderData.updated ? `ažurirano ${new Date(borderData.updated).toLocaleTimeString("hr")}` : ""}
+                  {borderData.updated ? `ažurirano ${new Date(borderData.updated).toLocaleTimeString("hr")}` : ""}
                   {borderData.cached ? " · cached" : ""}
                 </div>
               </>
             );
           })()}
         </div>
-
-        {/* ── Region-aware pre-trip tips ── */}
-        {region && ADRIATIC_REGIONS[region] && (() => {
-          const reg = ADRIATIC_REGIONS[region];
-          const tip = reg.pre_tip?.[lang] || reg.pre_tip?.hr || reg.pre_tip?.de || "";
-          return (
-            <div style={{ padding: "14px 16px", borderRadius: 14, border: `1px solid ${reg.color}33`, background: `${reg.color}0a`, marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <span style={{ fontSize: 18 }}>{reg.emoji}</span>
-                <div style={{ ...dm, fontSize: 11, fontWeight: 700, color: reg.color, letterSpacing: 1.5, textTransform: "uppercase" }}>
-                  {reg.name[lang] || reg.name.hr} — Pre-trip
-                </div>
-              </div>
-              <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.6, marginBottom: 6 }}>{tip}</div>
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {reg.highlights.map(h => (
-                  <span key={h} style={{ ...dm, fontSize: 10, padding: "3px 8px", borderRadius: 8, background: `${reg.color}15`, color: reg.color, border: `1px solid ${reg.color}22` }}>{h}</span>
-                ))}
-              </div>
-              <div style={{ ...dm, fontSize: 10, color: C.mut, marginTop: 8 }}>🛂 {reg.border_crossing} · 🚗 {reg.drive_from_vienna} iz Beča/Münchena</div>
-            </div>
-          );
-        })()}
-
-        {/* ── Segment-aware transit content ── */}
-        {delta.segment === "kamper" && (
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ padding: "14px 16px", borderRadius: 14, border: "1px solid rgba(245,158,11,0.3)", background: "rgba(245,158,11,0.06)", marginBottom: 10 }}>
-              <div style={{ ...dm, fontSize: 11, color: "#f59e0b", fontWeight: 700, letterSpacing: 1.5, marginBottom: 8 }}>⚠️ KAMPER — VAŽNO</div>
-              <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.7 }}>
-                🚐 Ruta prilagođena za kamper (bez niskih mostova i tunela s ograničenjem visine)<br />
-                ⛽ Provjerite LPG/AdBlue stanice na ruti — preporučamo puniti u SLO (jeftinije)<br />
-                🅿️ Kamper odmorišta: A1 Lučko, Bosiljevo, Karlovac sever
-              </div>
-              {borderData?.crossings?.some(cr => cr.name?.toLowerCase().includes("karavanke")) && (
-                <div style={{ marginTop: 10, padding: "10px 14px", borderRadius: 10, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", ...dm, fontSize: 13, color: "#fca5a5" }}>
-                  ⚠️ Tunel Karavanke: visina 4.1m — provjerite gabarite kampera! Alternativa: Šentilj (A1)
-                </div>
-              )}
-              {!borderData?.crossings?.some(cr => cr.name?.toLowerCase().includes("karavanke")) && (
-                <div style={{ marginTop: 10, padding: "10px 14px", borderRadius: 10, background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", ...dm, fontSize: 12, color: "#fca5a5" }}>
-                  ⚠️ Tunel Karavanke (visina 4.1m) — ako ste viši od 4.1m koristite Šentilj (A1)!
-                </div>
-              )}
-              <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
-                {["⛽ LPG stanice: Petrol Ljubljana (A1), OMV Celje (A1)","🅿️ Kamper odmorišta: Lučko, Bosiljevo, Karlovac sever","🚿 Dump stanice: Kamp Stobreč (4.5km), Kamp Trstenik (8km)"].map(w => (
-                  <div key={w} style={{ padding: "7px 12px", borderRadius: 8, background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.12)", ...dm, fontSize: 12, color: C.text }}>{w}</div>
-                ))}
-              </div>
-            </div>
-            <div style={{ padding: "12px 16px", borderRadius: 12, border: `1px solid ${C.bord}`, background: C.card }}>
-              <div style={{ ...dm, fontSize: 11, color: C.mut, marginBottom: 6 }}>🏕️ Dump stanice u blizini destinacije</div>
-              <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.7 }}>
-                • Kamp Stobreč (4.5km) — puna usluga, priključak struja/voda<br />
-                • Kamp Trstenik, Split (8km) — dump stanica, punjenje plina<br />
-                • Kamp Dalmacija, Podstrana (2km) — slobodnih mjesta pitajte na info
-              </div>
-            </div>
-          </div>
-        )}
-        {delta.segment === "porodica" && (
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ padding: "14px 16px", borderRadius: 14, border: "1px solid rgba(33,150,243,0.3)", background: "rgba(33,150,243,0.06)", marginBottom: 10 }}>
-              <div style={{ ...dm, fontSize: 11, color: "#2196F3", fontWeight: 700, letterSpacing: 1.5, marginBottom: 8 }}>👨‍👩‍👧 DJECA U AUTU — SAVJETI</div>
-              <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.8 }}>
-                🚻 WC pauza preporučena svakih 2h — odmorišta s WC: Lučko, Bosiljevo, Karlovac<br />
-                🍔 McDonald's na ruti: Ljubljana (A1), Karlovac (A1 HR), Zaprešić<br />
-                🎮 Igre za djecu: "Vidi, vidi" — broji karavane, prometne znakove, tunele<br />
-                🎵 Spotify: "Jadranskim cestama" playlist za djecu
-              </div>
-              <div style={{ marginTop: 10, padding: "10px 14px", borderRadius: 10, background: "rgba(33,150,243,0.08)", ...dm, fontSize: 13, color: "#90caf9" }}>
-                📍 ETA: stižete oko <strong>{(() => { const eta = new Date(Date.now() + (transitRouteData.hrs * 3600 + transitRouteData.mins * 60) * 1000); return eta.toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }); })()}</strong> — idealno za kratki odmor i kupanje prije večere!
-              </div>
-            </div>
-          </div>
-        )}
-        {delta.segment === "par" && (
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ padding: "14px 16px", borderRadius: 14, border: "1px solid rgba(233,30,99,0.3)", background: "rgba(233,30,99,0.06)", marginBottom: 10 }}>
-              <div style={{ ...dm, fontSize: 11, color: "#E91E63", fontWeight: 700, letterSpacing: 1.5, marginBottom: 8 }}>💑 ROMANTIČNA RUTA</div>
-              <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.8 }}>
-                🌅 Vidikovci na ruti: Predel prijevoj (SLO) · Krvavec panorama · Karlovac stari grad<br />
-                🍷 Vinska regija Štajerska (SLO): Ptuj, Maribor — wine stop preporučen<br />
-                🫒 Istra: Rovinj stari grad (30min detour) — vrhunski bijeli tartuf u sezoni
-              </div>
-              <div style={{ marginTop: 10, padding: "10px 14px", borderRadius: 10, background: "rgba(233,30,99,0.08)", ...dm, fontSize: 13, color: "#f48fb1" }}>
-                💝 Iznenađenje za partnera: rezervirajte stol u konobama Split večeras — Konoba Fetivi (Veli Varoš), Zinfandel's (Radisson), Dvor (Špinut)
-              </div>
-              <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
-                {["📸 Vidikovac: Ljubelj prijevoj (SLO)", "🍷 Vinska regija Štajerska: Ptuj, Maribor (usput)", `🌅 Zalazak sunca: ${weather?.sunset || "20:15"} u destinaciji`].map(w => (
-                  <div key={w} style={{ padding: "7px 12px", borderRadius: 8, background: "rgba(233,30,99,0.06)", border: "1px solid rgba(233,30,99,0.12)", ...dm, fontSize: 12, color: C.text }}>{w}</div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-        {delta.segment === "jedrilicar" && (
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ padding: "14px 16px", borderRadius: 14, border: "1px solid rgba(0,188,212,0.3)", background: "rgba(0,188,212,0.06)", marginBottom: 10 }}>
-              <div style={{ ...dm, fontSize: 11, color: "#00BCD4", fontWeight: 700, letterSpacing: 1.5, marginBottom: 8 }}>⛵ NAUTIČAR — DOLAZAK</div>
-              <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.8 }}>
-                ⚓ Destinacija: Marina Kaštela (21.2°E) · VHF kanal 17 · Tel: +385 21 203 555<br />
-                🌬️ Vjetar danas: {weather?.wind || "provjeri DHMZ"} — DHMZ prognoza na meteo.hr<br />
-                📋 Najava dolaska: kontaktirajte marinsku kapetaniju 2h prije
-              </div>
-              <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6, marginBottom: 10 }}>
-                {["⚓ Marina Split: +385 21 398 900 · VHF kanal 17", `🌬️ Vjetar: ${weather?.wind || "provjeri DHMZ (meteo.hr)"}`, "📡 Lučka kapetanija: +385 21 343 666 · otv. do 20h"].map(w => (
-                  <div key={w} style={{ padding: "7px 12px", borderRadius: 8, background: "rgba(0,188,212,0.06)", border: "1px solid rgba(0,188,212,0.12)", ...dm, fontSize: 12, color: C.text }}>{w}</div>
-                ))}
-              </div>
-              <a
-                href={`https://wa.me/38521203555?text=${encodeURIComponent("Pozdrav! Dolazim jedrenjem, planirani dolazak: " + new Date().toLocaleDateString("hr-HR") + ". Molim vez za jedrenjak. Hvala!")}`}
-                target="_blank" rel="noopener noreferrer"
-                style={{ display: "inline-block", padding: "10px 18px", borderRadius: 10, background: "#25D366", color: "#fff", fontSize: 13, fontWeight: 700, textDecoration: "none", ...dm }}>
-                📱 Najavi dolazak WhatsApp →
-              </a>
-            </div>
-          </div>
-        )}
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginBottom: 24 }}>
           <Card>
@@ -2092,69 +1391,19 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         {/* Arrival geofence animation */}
         {geoArrival && arrivalCountdown !== null && (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)", backdropFilter: "blur(16px)", zIndex: 300, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
-            <div style={{ textAlign: "center", maxWidth: 360, padding: "0 24px" }}>
-              <div style={{ fontSize: 72, marginBottom: 8 }}>⚓</div>
-              <div style={{ ...hf, fontSize: 30, fontWeight: 300, lineHeight: 1.3, marginBottom: 4 }}>
-                Dobrodošli u <span style={{ color: C.warm, fontStyle: "italic" }}>{dest.city || "Podstranu"}</span>!
-              </div>
-              <div style={{ ...dm, fontSize: 14, color: C.mut, marginBottom: 16 }}>Detektirali smo da ste stigli 🎉</div>
-
-              {/* Weather strip */}
-              <div style={{ display: "flex", gap: 16, justifyContent: "center", marginBottom: 16, padding: "10px 16px", borderRadius: 12, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.15)" }}>
-                <span style={{ ...dm, fontSize: 13, color: C.text }}>☀️ {weather?.temp || "—"}°C</span>
-                <span style={{ ...dm, fontSize: 13, color: C.accent }}>🌊 {weather?.sea || "—"}°C</span>
-                <span style={{ ...dm, fontSize: 13, color: C.gold }}>UV {weather?.uv || "—"}</span>
-                <span style={{ ...dm, fontSize: 13, color: C.text }}>🌅 {weather?.sunset || "—"}</span>
-              </div>
-
-              {/* Segment-specific arrival suggestions */}
-              <div style={{ marginBottom: 16, textAlign: "left" }}>
-                {delta.segment === "kamper" && (
-                  <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.8, padding: "10px 14px", borderRadius: 10, background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.15)" }}>
-                    🏕️ Kamp Stobreč (4.5km) — slobodnih mjesta, priključak struja+voda<br />
-                    🚿 Sanitarni čvor otvoren 24h · WiFi uključen u cijenu<br />
-                    ⛽ Punionicu plina naći ćete na autocesti, izlaz Stobreč
-                  </div>
-                )}
-                {delta.segment === "porodica" && (
-                  <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.8, padding: "10px 14px", borderRadius: 10, background: "rgba(33,150,243,0.06)", border: "1px solid rgba(33,150,243,0.15)" }}>
-                    🏖️ Plaža Stobreč — pijesak, plitka voda, bez ježeva, dječje igralište<br />
-                    🛒 Konzum (400m) — otvoreno do 21h za prvi shopping<br />
-                    🎠 Aquapark Dalmatia (15 min) — idealno sutra ujutro
-                  </div>
-                )}
-                {delta.segment === "par" && (
-                  <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.8, padding: "10px 14px", borderRadius: 10, background: "rgba(233,30,99,0.06)", border: "1px solid rgba(233,30,99,0.15)" }}>
-                    🌅 Zalazak sunca za otprilike {Math.max(0, parseInt(weather?.sunset?.split(":")[0] || "20") - new Date().getHours())}h — idealna lokacija: Marjan brdo<br />
-                    🍷 Konoba Fetivi (Veli Varoš, 12min) — romantična večera, rezervirajte odmah<br />
-                    🛥️ Večernja krstarenja Split — polazak 18:00 i 20:00 iz Rive
-                  </div>
-                )}
-                {delta.segment === "jedrilicar" && (
-                  <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.8, padding: "10px 14px", borderRadius: 10, background: "rgba(0,188,212,0.06)", border: "1px solid rgba(0,188,212,0.15)" }}>
-                    ⚓ Marina Kaštela: vez {Math.floor(Math.random() * 15) + 3} slobodan · VHF kanal 17<br />
-                    📞 Lučka kapetanija Split: +385 21 343 666 · otvoreno do 20h<br />
-                    🌬️ Jutarnja bura moguća — sidrište Vranjic zaštićeno
-                  </div>
-                )}
-                {!delta.segment && (
-                  <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.8, padding: "10px 14px", borderRadius: 10, background: `${C.card}` }}>
-                    🏖️ Plaža Podstrana — slobodno kupanje<br />
-                    🛒 Konzum (400m) — prvi shopping<br />
-                    ☀️ UV visok — nanesite kremu!
-                  </div>
-                )}
-              </div>
-
-              <div style={{ width: 64, height: 64, borderRadius: "50%", border: `3px solid ${C.accent}`, display: "grid", placeItems: "center", margin: "0 auto 8px" }}>
-                <span style={{ fontSize: 26, fontWeight: 300 }}>{arrivalCountdown}</span>
-              </div>
-              <div style={{ ...dm, fontSize: 12, color: C.mut, marginBottom: 16 }}>Automatski ulaz u odmor za {arrivalCountdown}s</div>
-              <button onClick={() => { setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" }); setArrivalCountdown(null); updateDelta({ phase: "odmor" }); }}
-                style={{ padding: "14px 32px", borderRadius: 14, border: "none", background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", ...dm, width: "100%" }}>
-                Ulazi u odmor →
-              </button>
+            <div style={{ fontSize: 80 }}>⚓</div>
+            <div style={{ ...hf, fontSize: 32, fontWeight: 300, textAlign: "center" }}>
+              Dobrodošli u Podstranu,<br /><span style={{ color: C.warm, fontStyle: "italic" }}>{G.first}!</span>
             </div>
+            <div style={{ ...dm, fontSize: 16, color: C.mut, textAlign: "center" }}>Detektirali smo da ste stigli</div>
+            <div style={{ width: 80, height: 80, borderRadius: "50%", border: `3px solid ${C.accent}`, display: "grid", placeItems: "center" }}>
+              <span style={{ fontSize: 32, fontWeight: 300 }}>{arrivalCountdown}</span>
+            </div>
+            <div style={{ ...dm, fontSize: 13, color: C.mut }}>Prelazak na kiosk za {arrivalCountdown}s…</div>
+            <button onClick={() => { setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" }); setArrivalCountdown(null); }}
+              style={{ padding: "14px 32px", borderRadius: 14, border: "none", background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", ...dm }}>
+              Uđi u Kiosk →
+            </button>
           </div>
         )}
         <div style={{ textAlign: "center" }}>
@@ -2224,9 +1473,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             <span style={{ ...dm, fontSize: 12, color: C.mut }}>🛥 {crowdData.marina?.boats} brodova u luci</span>
             <span style={{ width: 1, height: 14, background: C.bord }} />
             <span style={{ ...dm, fontSize: 12, color: C.mut }}>🅿️ {crowdData.parking?.free_spots} slobodnih mjesta</span>
-            <span style={{ ...dm, fontSize: 10, color: crowdData.source === "yolo" ? "rgba(34,197,94,0.6)" : "rgba(100,116,139,0.4)", marginLeft: "auto" }}>
-              {crowdData.source === "yolo" ? `📷 LIVE · ${crowdData.beach?.yolo_cams || "?"} kamera` : "ažurirano 10min"}
-            </span>
+            <span style={{ ...dm, fontSize: 10, color: "rgba(100,116,139,0.4)", marginLeft: "auto" }}>ažurirano 10min</span>
           </div>
         )}
 
@@ -2298,69 +1545,6 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           </div>
         </Card>
 
-        {/* ── 💡 Daily segment suggestions ── */}
-        {phase === "kiosk" && delta.segment && (
-          <div style={{ marginBottom: 20, padding: "14px 16px", borderRadius: 14, border: `1px solid ${(() => { const clr = {kamper:"rgba(245,158,11,0.25)",porodica:"rgba(33,150,243,0.25)",par:"rgba(233,30,99,0.25)",jedrilicar:"rgba(0,188,212,0.25)"}; return clr[delta.segment]||C.bord; })()}`, background: `${(() => { const clr = {kamper:"rgba(245,158,11,0.05)",porodica:"rgba(33,150,243,0.05)",par:"rgba(233,30,99,0.05)",jedrilicar:"rgba(0,188,212,0.05)"}; return clr[delta.segment]||"transparent"; })()}` }}>
-            <div style={{ ...dm, fontSize: 10, color: C.mut, letterSpacing: 2, fontWeight: 700, marginBottom: 10 }}>💡 ZA TEBE DANAS</div>
-            {delta.segment === "kamper" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {[
-                  { icon: "🏕️", text: "Kamp Stobreč — slobodnih mjesta, priključak struja+voda+WiFi (4.5km)", action: () => {} },
-                  { icon: "⛽", text: "INA Solin (8km) — LPG 0.89€/l · AdBlue dostupan", action: () => {} },
-                  { icon: "🛣️", text: "Izlet: Krka NP (75km) — kamper parking uz ulaz, špilja Baračeve", action: () => setSubScreen("routes") },
-                ].map((s, i) => (
-                  <div key={i} onClick={s.action} style={{ display: "flex", gap: 10, alignItems: "center", padding: "8px 10px", borderRadius: 10, background: "rgba(245,158,11,0.04)", cursor: s.action ? "pointer" : "default" }}>
-                    <span style={{ fontSize: 18, flexShrink: 0 }}>{s.icon}</span>
-                    <span style={{ ...dm, fontSize: 13, color: C.text }}>{s.text}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            {delta.segment === "porodica" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {[
-                  { icon: "🏖️", text: `Plaža Bačvice — pijesak, plitka voda, spasilac, bez ježeva · ${weather.sea}°C more` },
-                  { icon: "🍦", text: "Sladoled Giaxa (Riva, Split) — legendarni · bus #60 svakih 20min (2€)" },
-                  { icon: "🎠", text: "Aquapark Dalmatia (15min) — djeca 12€, odrasli 16€, otvara 9h" },
-                ].map((s, i) => (
-                  <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", padding: "8px 10px", borderRadius: 10, background: "rgba(33,150,243,0.04)" }}>
-                    <span style={{ fontSize: 18, flexShrink: 0 }}>{s.icon}</span>
-                    <span style={{ ...dm, fontSize: 13, color: C.text }}>{s.text}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            {delta.segment === "par" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {[
-                  { icon: "🌅", text: `Zalazak sunca ${weather.sunset} — Marjan brdo, Vidikovac Špinut, idealna lokacija` },
-                  { icon: "🍷", text: "Konoba Fetivi (Veli Varoš, 12min) — romantična, rezervirajte danas", action: () => setSubScreen("food") },
-                  { icon: "🛥️", text: "Privatni brodić Split → Hvar (150€/dan) — booking odmah u luci" },
-                ].map((s, i) => (
-                  <div key={i} onClick={s.action} style={{ display: "flex", gap: 10, alignItems: "center", padding: "8px 10px", borderRadius: 10, background: "rgba(233,30,99,0.04)", cursor: s.action ? "pointer" : "default" }}>
-                    <span style={{ fontSize: 18, flexShrink: 0 }}>{s.icon}</span>
-                    <span style={{ ...dm, fontSize: 13, color: C.text }}>{s.text}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            {delta.segment === "jedrilicar" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {[
-                  { icon: "🌬️", text: `Vjetar danas: ${weather.wind || "provjeri DHMZ"} · prognoza narednih 48h: bura moguća`, },
-                  { icon: "⚓", text: "Preporučeno sidrište: Milna (Brač) — zaštićeno, internet u uvali" },
-                  { icon: "📡", text: "Marina Kaštela — vez slobodan, VHF 17 · Lučka kapetanija: +385 21 343 666" },
-                ].map((s, i) => (
-                  <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", padding: "8px 10px", borderRadius: 10, background: "rgba(0,188,212,0.04)" }}>
-                    <span style={{ fontSize: 18, flexShrink: 0 }}>{s.icon}</span>
-                    <span style={{ ...dm, fontSize: 13, color: C.text }}>{s.text}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
         {/* Budget — premium */}
         <Card style={{ marginBottom: 20, padding: "14px 20px", position: "relative", overflow: "hidden", cursor: premium ? "default" : "pointer" }} onClick={() => !premium && setShowPaywall(true)}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -2378,7 +1562,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: 10, marginBottom: 24 }}>
           {[
             { k: "parking", ic: IC.parking, l: t("parking",lang), clr: C.accent, free: true },
-            { k: "beaches", ic: IC.beach, l: t("beaches",lang), clr: "#38bdf8", free: true },
+            { k: "beach", ic: IC.beach, l: t("beaches",lang), clr: "#38bdf8", free: true },
             { k: "sun", ic: IC.sun, l: t("sun",lang), clr: C.warm, free: false },
             { k: "routes", ic: IC.map, l: t("routes",lang), clr: "#34d399", free: false },
             { k: "food", ic: IC.food, l: t("food",lang), clr: C.terracotta, free: false },
@@ -2422,7 +1606,6 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                   <span style={{ color: C.accent, fontSize: 16, fontWeight: 300 }}>~{exp.price}€</span>
                 </div>
                 {booked.has(exp.id) && <Badge c="green">✓ {t("booked",lang)}</Badge>}
-                {LOCAL_PARTNERS.has(exp.name) && <Badge c="accent">🤝 Lokalni partner</Badge>}
               </div>
             </Card>
           ))}
@@ -2440,14 +1623,6 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           </div>
         </Card>
 
-        {kioskDay >= 6 && (
-          <div style={{ textAlign: "center", padding: "4px 0 8px" }}>
-            <Btn onClick={() => { updateDelta({ phase: "povratak" }); setSubScreen("povratak"); }}
-              style={{ background: "linear-gradient(135deg,rgba(245,158,11,0.15),rgba(14,165,233,0.1))", border: "1px solid rgba(245,158,11,0.2)", color: C.gold }}>
-              🧳 Idem kući
-            </Btn>
-          </div>
-        )}
         <div style={{ textAlign: "center", padding: "8px 0 16px" }}>
           <Btn onClick={() => { setPhase("post"); setSubScreen("summary"); updateGuest(roomCode.current, { phase: "post", subScreen: "summary" }); }}>{t("checkOut",lang)}</Btn>
         </div>
@@ -2619,7 +1794,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             const img = act.images?.[0];
             return (
               <Card key={act.productCode} style={{ padding: 0, overflow: "hidden", cursor: "pointer", animation: `fadeUp 0.4s ease ${i * 0.06}s both` }}
-                onClick={() => { setSelectedViatorAct(act); setViatorPersons(G.adults || 2); if (LOCAL_PARTNERS.has(act.title)) { try { window.firebase?.analytics?.()?.logEvent?.("local_partner_click", { name: act.title }); } catch {} } }}>
+                onClick={() => { setSelectedViatorAct(act); setViatorPersons(G.adults || 2); }}>
                 {/* Image */}
                 <div style={{ height: 140, position: "relative", overflow: "hidden", background: "linear-gradient(135deg,rgba(14,165,233,0.1),rgba(34,197,94,0.08))" }}>
                   {img && <img src={img} alt={act.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />}
@@ -2645,91 +1820,8 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                     <div style={{ fontSize: 20, fontWeight: 300, color: C.accent }}>{act.price}€ <span style={{ ...dm, fontSize: 11, color: C.mut }}>/ osobi</span></div>
                     <div style={{ ...dm, fontSize: 12, padding: "6px 14px", borderRadius: 10, background: "rgba(34,197,94,0.1)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.2)", fontWeight: 600 }}>Rezerviraj →</div>
                   </div>
-                  {LOCAL_PARTNERS.has(act.title) && (
-                    <div style={{ ...dm, fontSize: 10, color: C.accent, marginTop: 4 }}>🤝 Lokalni partner</div>
-                  )}
                 </div>
               </Card>
-            );
-          })}
-        </div>
-      </>
-    );
-  };
-
-  const KioskBeach = () => {
-    const BEACH_DATA = [
-      { name: "Plaža Stobreč", dist: "3km", bottom: "🏖 pijesak+šljunak", amenities: ["🚿","🅿️","☂️","🍦"], depth: "plitko", safe_kids: true, private: false, anchor: false, crowdKey: "split_makarska" },
-      { name: "Plaža Kašjuni", dist: "6km", bottom: "🪨 šljunak", amenities: ["🚿","🅿️","☂️"], depth: "duboko", safe_kids: false, private: false, anchor: false, crowdKey: "split_makarska" },
-      { name: "Plaža Bačvice", dist: "9km", bottom: "🏖 pijesak", amenities: ["🚿","🅿️","☂️","🍦","🏄"], depth: "plitko", safe_kids: true, private: false, anchor: false, crowdKey: "split_makarska" },
-      { name: "Plaža Žnjan", dist: "7km", bottom: "🪨 šljunak", amenities: ["🚿","🅿️"], depth: "srednje", safe_kids: false, private: true, anchor: true, crowdKey: "split_makarska" },
-      { name: "Uvala Veli Dol", dist: "12km", bottom: "🪨 kamen", amenities: [], depth: "duboko", safe_kids: false, private: true, anchor: true, crowdKey: "split_makarska" },
-    ];
-
-    // Sort by segment
-    const sorted = React.useMemo(() => {
-      const arr = [...BEACH_DATA];
-      if (delta.segment === "porodica") return arr.sort((a, b) => (b.safe_kids ? 1 : 0) - (a.safe_kids ? 1 : 0));
-      if (delta.segment === "par") return arr.sort((a, b) => (b.private ? 1 : 0) - (a.private ? 1 : 0));
-      if (delta.segment === "jedrilicar") return arr.sort((a, b) => (b.anchor ? 1 : 0) - (a.anchor ? 1 : 0));
-      return arr;
-    }, [delta.segment]);
-
-    const [crowdLocal, setCrowdLocal] = React.useState(null);
-    React.useEffect(() => {
-      fetch("/api/camera").then(r => r.json()).then(setCrowdLocal).catch(() => {});
-    }, []);
-
-    const CROWD_LEVELS = ["mirno","malo gužve","srednje gužve","jako gužva"];
-    const CROWD_DOT = { mirno: "🟢", "malo gužve": "🟡", "srednje gužve": "🟠", "jako gužva": "🔴" };
-    const CROWD_CLR = { mirno: "#22c55e", "malo gužve": "#86efac", "srednje gužve": C.gold, "jako gužva": C.red };
-
-    return (
-      <>
-        <BackBtn onClick={() => setSubScreen("home")} />
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-          <span style={{ fontSize: 36 }}>🏖️</span>
-          <div>
-            <div style={{ fontSize: 28, fontWeight: 400 }}>Plaže</div>
-            <div style={{ ...dm, fontSize: 13, color: C.mut }}>YOLO · {weather.sea}°C more · UV {weather.uv}</div>
-          </div>
-        </div>
-
-        {crowdLocal && (
-          <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(14,165,233,0.04)", border: `1px solid ${C.bord}`, marginBottom: 16, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-            <span style={{ ...dm, fontSize: 12, color: "#22c55e" }}>📷 LIVE</span>
-            <span style={{ ...dm, fontSize: 12, color: C.text }}>Split/Makarska: <strong>{crowdLocal.beach?.crowd || "—"}</strong></span>
-            <span style={{ ...dm, fontSize: 11, color: C.mut }}>({crowdLocal.beach?.tourists || "—"} osoba detektirano)</span>
-          </div>
-        )}
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {sorted.map((b, i) => {
-            const crowdLevel = crowdLocal ? CROWD_LEVELS[Math.min(i, CROWD_LEVELS.length - 1)] : null;
-            return (
-              <div key={b.name} style={{ padding: "14px 16px", borderRadius: 14, border: `1px solid ${C.bord}`, background: C.card }}>
-                <div style={{ display: "flex", justify: "space-between", alignItems: "flex-start", gap: 10, marginBottom: 8 }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 16, fontWeight: 500 }}>{b.name}</div>
-                    <div style={{ ...dm, fontSize: 12, color: C.mut }}>📍 {b.dist} · {b.bottom} · dubina: {b.depth}</div>
-                  </div>
-                  {crowdLevel && (
-                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <div style={{ fontSize: 16 }}>{CROWD_DOT[crowdLevel]}</div>
-                      <div style={{ ...dm, fontSize: 10, color: CROWD_CLR[crowdLevel] }}>{crowdLevel}</div>
-                    </div>
-                  )}
-                </div>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
-                  {b.amenities.map(a => (
-                    <span key={a} style={{ fontSize: 16 }}>{a}</span>
-                  ))}
-                  {b.safe_kids && <span style={{ ...dm, fontSize: 10, padding: "2px 8px", borderRadius: 8, background: "rgba(33,150,243,0.1)", color: "#2196F3", border: "1px solid rgba(33,150,243,0.2)" }}>👶 djeca</span>}
-                  {b.private && <span style={{ ...dm, fontSize: 10, padding: "2px 8px", borderRadius: 8, background: "rgba(233,30,99,0.1)", color: "#E91E63", border: "1px solid rgba(233,30,99,0.2)" }}>💑 privatno</span>}
-                  {b.anchor && <span style={{ ...dm, fontSize: 10, padding: "2px 8px", borderRadius: 8, background: "rgba(0,188,212,0.1)", color: "#00BCD4", border: "1px solid rgba(0,188,212,0.2)" }}>⚓ sidrište</span>}
-                </div>
-                <div style={{ ...dm, fontSize: 11, color: C.mut }}>🌡️ More: {weather.sea}°C · UV: {weather.uv}</div>
-              </div>
             );
           })}
         </div>
@@ -2773,280 +1865,11 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
     );
   };
 
-  const KioskPovratak = () => {
-    // ── Departure checklist per segment ──
-    const CHECKLISTS = {
-      kamper:    [{ id:"dump",  text:"Dump stanica obavljena?" }, { id:"lpg",   text:"LPG napunjen?" }, { id:"markiza", text:"Markiza uvučena?" }, { id:"klima", text:"Klima isključena?" }],
-      porodica:  [{ id:"igracke", text:"Igračke spakirane?" }, { id:"krem",  text:"Suncokrem u torbi?" }, { id:"djeca",  text:"Djeca nahranjena za put?" }],
-      par:       [{ id:"suv",   text:"Suveniri?" }, { id:"foto",  text:"Galerija fotki napravljena?" }, { id:"rez",   text:"Restoran recenzija ostavljena?" }],
-      jedrilicar:[{ id:"vez",   text:"Vez odjava?" }, { id:"gorivo", text:"Gorivo napunjeno?" }, { id:"navtex", text:"NAVTEX provjeren za povratak?" }],
-    };
-    const seg = delta.segment || "porodica";
-    const items = CHECKLISTS[seg] || CHECKLISTS.porodica;
-    const allDone = items.every(it => returnCheckDone.includes(it.id));
-
-    // ── Return route HERE Maps ──
-    const COUNTRY_CITY = { DE:"München,Germany", AT:"Wien,Austria", IT:"Trieste,Italy", SI:"Ljubljana,Slovenia", CZ:"Praha,Czechia", PL:"Kraków,Poland", HR:"Zagreb,Croatia" };
-    useEffect(() => {
-      if (returnRouteData) return; // already fetched
-      const homeQuery = COUNTRY_CITY[G.country] || (G.country + ",Europe");
-      const hereMode = delta.segment === "kamper" ? "truck" : "car";
-      (async () => {
-        try {
-          await Promise.all([loadLeafletLib(), loadFlexPolyline()]);
-          const pos = await geocodeCity(homeQuery);
-          if (!pos) return;
-          let km = 0, hrs = 0, mins = 0, polylineStr = null;
-          try {
-            const route = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${hereMode}&origin=${dest.lat},${dest.lng}&destination=${pos.lat},${pos.lng}&return=polyline,summary&apikey=${HERE_KEY}`, { signal: AbortSignal.timeout(10000) }).then(r => r.json());
-            const sec = route.routes?.[0]?.sections?.[0];
-            if (sec) { km = Math.round(sec.summary.length / 1000); hrs = Math.floor(sec.summary.duration / 3600); mins = Math.round((sec.summary.duration % 3600) / 60); polylineStr = sec.polyline; const eta = new Date(Date.now() + sec.summary.duration * 1000); setReturnRouteData({ km, hrs, mins, eta: eta.toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }), homeCity: homeQuery.split(",")[0], oLat: dest.lat, oLng: dest.lng, dLat: pos.lat, dLng: pos.lng, polyline: polylineStr }); }
-          } catch {}
-          if (!returnMapRef.current) return;
-          if (returnMapInst.current) { try { returnMapInst.current.remove(); } catch {} returnMapInst.current = null; }
-          const map = renderLeafletMap("return-map", dest.lat, dest.lng, pos.lat, pos.lng, polylineStr, dest.city || "Destinacija", homeQuery.split(",")[0], "#f59e0b");
-          if (map) returnMapInst.current = map;
-        } catch (e) { console.error("[return map]", e); }
-      })();
-      return () => { if (returnMapInst.current) { try { returnMapInst.current.remove(); } catch {} returnMapInst.current = null; } };
-    }, []); // eslint-disable-line
-
-    // ── Home weather comparison (static estimate) ──
-    const HOME_TEMP = { DE: 18, AT: 17, SI: 20, IT: 24, CZ: 16, PL: 15, HR: 25 };
-    const homeTemp = HOME_TEMP[G.country] || 18;
-    const homeCity = { DE:"München", AT:"Wien", SI:"Ljubljana", IT:"Trieste", CZ:"Praha", PL:"Kraków", HR:"Zagreb" }[G.country] || "dom";
-
-    // ── Loyalty points earned this trip ──
-    const earnedPts = 125;
-    const totalPts = LOYALTY.points + earnedPts;
-    const newTier = totalPts >= 500 ? "Jadran Legend 🏆" : totalPts >= 200 ? "Dalmatin 🌊" : "Morski val 🌊";
-
-    // ── Segment-aware next destinations ──
-    const NEXT_DESTS = {
-      kamper:    [ACCOMMODATION[1], ACCOMMODATION[5], ACCOMMODATION[4]], // Makarska, Opatija, Pula
-      porodica:  [ACCOMMODATION[1], ACCOMMODATION[4], ACCOMMODATION[6]], // Makarska, Pula, Krk
-      par:       [ACCOMMODATION[2], ACCOMMODATION[3], ACCOMMODATION[0]], // Hvar, Rovinj, Split
-      jedrilicar:[ACCOMMODATION[2], ACCOMMODATION[5], ACCOMMODATION[6]], // Hvar, Opatija, Krk
-    };
-    const nextDests = NEXT_DESTS[seg] || ACCOMMODATION.slice(0, 3);
-
-    // ── Segment return tips ──
-    const RETURN_TIPS = {
-      kamper:    "⛽ Zadnja jeftina benzinska s kamper parkiranjem: INA Karlovac Jug (izlaz 6) · LPG na autocesti",
-      porodica:  "🏖️ Zadnja plaža pred granicom: Crikvenica (25min detour A6) — djeca će obožavati!",
-      par:       "🍷 Romantična večera na povratku: Rovinj stari grad (odskočite 45min) — Konoba Val",
-      jedrilicar:"⚓ Odjava iz marine, čišćenje broda, NAVTEX za prolaz Kvarnerom",
-    };
-
-    const [feedbackSent, setFeedbackSent] = useState(false);
-
-    const sendFeedback = () => {
-      if (!returnFeedback.trim()) return;
-      const key = import.meta.env.VITE_FIREBASE_API_KEY || "";
-      fetch(`https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_feedback?key=${key}`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fields: { guest: { stringValue: G.name }, feedback: { stringValue: returnFeedback }, segment: { stringValue: seg }, destination: { stringValue: dest.city || "" }, timestamp: { stringValue: new Date().toISOString() } } }),
-      }).catch(() => {});
-      setFeedbackSent(true);
-    };
-
-    const deviceId = (() => { try { return localStorage.getItem("jadran_push_deviceId") || Math.random().toString(36).slice(2); } catch { return "anon"; } })();
-
-    return (
-      <>
-        <BackBtn onClick={() => setSubScreen("home")} />
-
-        {/* ── Farewell hero ── */}
-        <div style={{ textAlign: "center", padding: "20px 0 16px" }}>
-          <div style={{ fontSize: 64, marginBottom: 8 }}>🌅</div>
-          <div style={{ ...hf, fontSize: 30, fontWeight: 300, lineHeight: 1.3 }}>
-            Hvala što ste bili s nama u <span style={{ color: C.warm, fontStyle: "italic" }}>{dest.city || "Podstrani"}</span>!
-          </div>
-          <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 8 }}>
-            {kioskDay} dana nezaboravnog odmora · {EXPERIENCES?.filter(e => booked.has(e.id)).length || 0} aktivnosti · {G.spent || 0}€
-          </div>
-        </div>
-
-        {/* ── Weather comparison ── */}
-        <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-          <div style={{ flex: 1, padding: "14px 16px", borderRadius: 14, border: `1px solid ${C.bord}`, background: C.card, textAlign: "center" }}>
-            <div style={{ ...dm, fontSize: 10, color: C.mut, letterSpacing: 1.5, marginBottom: 6 }}>OVDJE SADA</div>
-            <div style={{ fontSize: 32, fontWeight: 300, color: C.accent }}>{weather.temp}°C</div>
-            <div style={{ fontSize: 20 }}>{weather.icon}</div>
-            <div style={{ ...dm, fontSize: 11, color: C.mut, marginTop: 4 }}>🌊 {weather.sea}°C more</div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", fontSize: 20 }}>😎</div>
-          <div style={{ flex: 1, padding: "14px 16px", borderRadius: 14, border: `1px solid ${C.bord}`, background: C.card, textAlign: "center" }}>
-            <div style={{ ...dm, fontSize: 10, color: C.mut, letterSpacing: 1.5, marginBottom: 6 }}>U {homeCity.toUpperCase()}</div>
-            <div style={{ fontSize: 32, fontWeight: 300, color: C.mut }}>{homeTemp}°C</div>
-            <div style={{ fontSize: 20 }}>🌧️</div>
-            <div style={{ ...dm, fontSize: 11, color: C.mut, marginTop: 4 }}>Uživajte još malo!</div>
-          </div>
-        </div>
-
-        {/* ── Departure checklist ── */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 2, marginBottom: 10 }}>✅ CHECKLISTA ZA ODLAZAK</div>
-          {/* Progress bar */}
-          <div style={{ height: 6, borderRadius: 3, background: C.bord, overflow: "hidden", marginBottom: 12 }}>
-            <div style={{ height: "100%", borderRadius: 3, background: `linear-gradient(90deg,${C.accent},${C.gold})`, width: `${(returnCheckDone.length / items.length) * 100}%`, transition: "width 0.4s" }} />
-          </div>
-          {items.map(it => {
-            const checked = returnCheckDone.includes(it.id);
-            return (
-              <div key={it.id} onClick={() => setReturnCheckDone(prev => checked ? prev.filter(x => x !== it.id) : [...prev, it.id])}
-                style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, border: `1px solid ${checked ? "rgba(34,197,94,0.2)" : C.bord}`, background: checked ? "rgba(34,197,94,0.04)" : C.card, marginBottom: 8, cursor: "pointer", transition: "all 0.2s" }}>
-                <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${checked ? "#22c55e" : C.bord}`, background: checked ? "#22c55e" : "transparent", display: "grid", placeItems: "center", flexShrink: 0 }}>
-                  {checked && <span style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>✓</span>}
-                </div>
-                <span style={{ ...dm, fontSize: 14, color: checked ? C.mut : C.text, textDecoration: checked ? "line-through" : "none" }}>{it.text}</span>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* ── Return route ── */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 2, marginBottom: 10 }}>🗺️ POVRATNA RUTA</div>
-          <div style={{ borderRadius: 16, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 10 }}>
-            <div id="return-map" ref={returnMapRef} style={{ height: 220, position: "relative", zIndex: 1, background: "linear-gradient(135deg,#1a2332,#0f1822)" }}>
-              {!returnRouteData && (
-                <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                  <div style={{ width: 24, height: 24, border: `2px solid ${C.gold}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin-slow 0.8s linear infinite" }} />
-                  <div style={{ ...dm, fontSize: 12, color: C.mut }}>Računam povratnu rutu…</div>
-                </div>
-              )}
-            </div>
-            {returnRouteData && (
-              <div style={{ padding: "12px 16px", display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center", background: "rgba(245,158,11,0.04)" }}>
-                <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>🛣 {returnRouteData.km} km</span>
-                <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>⏱ {returnRouteData.hrs}h {returnRouteData.mins}min</span>
-                <span style={{ ...dm, fontSize: 13, color: C.gold }}>🏠 Stižete u {returnRouteData.homeCity} oko {returnRouteData.eta}</span>
-              </div>
-            )}
-          </div>
-          {/* Segment return tip */}
-          <div style={{ padding: "12px 16px", borderRadius: 12, border: `1px solid ${C.bord}`, background: C.card, ...dm, fontSize: 13, color: C.text, lineHeight: 1.7 }}>
-            {RETURN_TIPS[seg]}
-          </div>
-          {/* Border intelligence summary */}
-          {borderData && (
-            <div style={{ marginTop: 10, padding: "10px 14px", borderRadius: 12, border: "1px solid rgba(14,165,233,0.15)", background: "rgba(14,165,233,0.04)", display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-              <span style={{ ...dm, fontSize: 11, color: C.accent, fontWeight: 700 }}>🛂 Granice:</span>
-              {borderData.crossings?.slice(0, 3).map(cr => (
-                <span key={cr.name} style={{ ...dm, fontSize: 11, color: C.mut }}>
-                  {cr.name}: {cr.wait_minutes}min
-                </span>
-              ))}
-              {borderLastUpdate && <span style={{ ...dm, fontSize: 10, color: "rgba(100,116,139,0.5)", marginLeft: "auto" }}>ažurirano {borderLastUpdate}</span>}
-            </div>
-          )}
-        </div>
-
-        {/* ── Rating ── */}
-        <div style={{ marginBottom: 20, padding: "16px", borderRadius: 14, border: `1px solid ${C.bord}`, background: C.card }}>
-          <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 2, marginBottom: 10 }}>⭐ OCIJENI ODMOR</div>
-          <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 12 }}>
-            {[1,2,3,4,5].map(star => (
-              <button key={star} onClick={() => setReturnRating(star)}
-                style={{ fontSize: 32, background: "none", border: "none", cursor: "pointer", color: star <= returnRating ? "#fbbf24" : "rgba(100,116,139,0.3)", transition: "all 0.2s", transform: star <= returnRating ? "scale(1.15)" : "scale(1)" }}>
-                ★
-              </button>
-            ))}
-          </div>
-          {returnRating >= 4 && (
-            <a href="https://g.page/r/your-google-review-link" target="_blank" rel="noopener noreferrer"
-              style={{ display: "block", textAlign: "center", padding: "10px 20px", borderRadius: 12, background: "rgba(66,133,244,0.12)", border: "1px solid rgba(66,133,244,0.2)", color: "#4285f4", ...dm, fontSize: 13, fontWeight: 700, textDecoration: "none", marginTop: 4 }}>
-              🔵 Ostavi Google recenziju →
-            </a>
-          )}
-          {returnRating > 0 && returnRating <= 3 && !feedbackSent && (
-            <div style={{ marginTop: 8 }}>
-              <div style={{ ...dm, fontSize: 12, color: C.mut, marginBottom: 6 }}>Što možemo poboljšati?</div>
-              <textarea value={returnFeedback} onChange={e => setReturnFeedback(e.target.value)}
-                placeholder="Vaš feedback..." rows={3}
-                style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${C.bord}`, background: "rgba(255,255,255,0.04)", color: C.text, fontSize: 14, resize: "none", outline: "none", boxSizing: "border-box", ...dm }} />
-              <button onClick={sendFeedback}
-                style={{ marginTop: 8, width: "100%", padding: "10px", borderRadius: 10, border: "none", background: C.acDim, color: C.accent, ...dm, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-                Pošalji feedback
-              </button>
-            </div>
-          )}
-          {feedbackSent && <div style={{ ...dm, fontSize: 13, color: "#22c55e", textAlign: "center", marginTop: 4 }}>✓ Hvala! Cijenimo vaš feedback.</div>}
-        </div>
-
-        {/* ── Loyalty reward ── */}
-        <div style={{ marginBottom: 20, padding: "16px 20px", borderRadius: 14, border: "1px solid rgba(245,158,11,0.2)", background: "linear-gradient(135deg,rgba(245,158,11,0.06),rgba(14,165,233,0.04))" }}>
-          <div style={{ ...dm, fontSize: 11, color: C.gold, letterSpacing: 2, marginBottom: 8 }}>🏅 JADRAN LOYALTY</div>
-          <div style={{ fontSize: 22, fontWeight: 300, marginBottom: 4 }}>+{earnedPts} bodova zaradio si ovaj odmor!</div>
-          <div style={{ ...dm, fontSize: 13, color: C.mut, marginBottom: 12 }}>Ukupno: <strong style={{ color: C.gold }}>{totalPts} bodova</strong> — {newTier}</div>
-          <div style={{ height: 6, borderRadius: 3, background: "rgba(0,0,0,0.3)", overflow: "hidden", marginBottom: 8 }}>
-            <div style={{ height: "100%", borderRadius: 3, background: `linear-gradient(90deg,${C.accent},${C.gold})`, width: `${Math.min(100, (totalPts / 500) * 100)}%`, transition: "width 1s" }} />
-          </div>
-          <div style={{ ...dm, fontSize: 11, color: C.mut }}>
-            {totalPts < 200 && `Još ${200 - totalPts} bodova do Dalmatin 🌊`}
-            {totalPts >= 200 && totalPts < 500 && `Još ${500 - totalPts} bodova do Jadran Legend 🏆`}
-            {totalPts >= 500 && "🏆 Jadran Legend — 10% popust na sve aktivnosti!"}
-          </div>
-          {totalPts < 500 && <div style={{ ...dm, fontSize: 12, color: C.accent, marginTop: 6 }}>Sljedeći put dobivaš 10% popust na sve aktivnosti</div>}
-        </div>
-
-        {/* ── Next destination AI suggestions ── */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 2, marginBottom: 10 }}>✨ SLJEDEĆI PUT PREPORUČUJEMO</div>
-          <div style={{ ...dm, fontSize: 13, color: C.mut, marginBottom: 12 }}>
-            Na temelju tvog odmora i segmenta, idealne sljedeće destinacije:
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(160px,1fr))", gap: 10 }}>
-            {nextDests.filter(Boolean).slice(0, 3).map((a, i) => (
-              <a key={i} href={a.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
-                <div style={{ padding: "14px 14px", borderRadius: 14, border: `1px solid ${C.bord}`, background: C.card, cursor: "pointer", transition: "all 0.2s" }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = C.accent + "33"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.transform = ""; }}>
-                  <div style={{ fontSize: 24, marginBottom: 6 }}>{a.emoji}</div>
-                  <div style={{ ...dm, fontSize: 13, fontWeight: 600 }}>{a.name[lang] || a.name.hr}</div>
-                  <div style={{ ...dm, fontSize: 11, color: C.mut, marginTop: 4, lineHeight: 1.4 }}>{a.note[lang] || a.note.hr}</div>
-                  <div style={{ ...dm, fontSize: 10, color: C.accent, marginTop: 6 }}>Booking.com →</div>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Referral ── */}
-        <div style={{ marginBottom: 20, padding: "16px 20px", borderRadius: 14, border: "1px dashed rgba(14,165,233,0.2)", textAlign: "center" }}>
-          <div style={{ fontSize: 18, fontWeight: 400, marginBottom: 4 }}>🎁 Preporuči prijatelju</div>
-          <div style={{ ...dm, fontSize: 13, color: C.mut, marginBottom: 10 }}>Oboje dobivate 50 bodova!</div>
-          <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: 4, color: C.accent, marginBottom: 12 }}>
-            jadran.ai?ref={deviceId.slice(0, 8)}
-          </div>
-          <button onClick={() => {
-            const url = `https://jadran.ai?ref=${deviceId.slice(0, 8)}&seg=${seg}`;
-            if (navigator.share) { navigator.share({ title: "Jadran.ai — Tvoj AI turistički vodič", text: "Probaj Jadran.ai za savršen odmor na Jadranu!", url }); }
-            else { navigator.clipboard?.writeText?.(url).catch(() => {}); }
-          }}
-            style={{ padding: "12px 28px", borderRadius: 12, border: "none", background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", ...dm }}>
-            📤 Podijeli link
-          </button>
-        </div>
-
-        {/* ── Final CTA: proceed to PostStay ── */}
-        <div style={{ textAlign: "center", padding: "8px 0 20px" }}>
-          <Btn primary onClick={() => { setPhase("post"); setSubScreen("summary"); updateGuest(roomCode.current, { phase: "post", subScreen: "summary" }); updateDelta({ phase: "povratak" }); }}>
-            Završi i check-out →
-          </Btn>
-        </div>
-      </>
-    );
-  };
-
   const Kiosk = () => {
     if (subScreen === "home") return <KioskHome />;
     if (subScreen === "activities") return <KioskActivities />;
     if (subScreen === "gems") return <KioskGems />;
     if (subScreen === "chat") return <KioskChat />;
-    if (subScreen === "beaches") return <KioskBeach />;
-    if (subScreen === "povratak") return <KioskPovratak />;
     if (PRACTICAL[subScreen]) return <KioskDetail />;
     return <KioskHome />;
   };
@@ -3068,9 +1891,9 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         {/* Loyalty */}
         <Card glow style={{ background: `linear-gradient(135deg,${C.acDim},${C.goDim})`, borderColor: "rgba(14,165,233,0.1)" }}>
           <div style={{ ...dm, fontSize: 11, textTransform: "uppercase", letterSpacing: 3, color: C.gold, marginBottom: 4 }}>JADRAN LOYALTY</div>
-          <div style={{ fontSize: 26, fontWeight: 300 }}>🌊 {(LOYALTY.points + 125) >= 500 ? "Jadran Legend 🏆" : (LOYALTY.points + 125) >= 200 ? "Dalmatin" : "Morski val"}</div>
+          <div style={{ fontSize: 26, fontWeight: 300 }}>🌊 {LOYALTY.tier}</div>
           <div style={{ ...dm, fontSize: 13, color: C.mut, marginTop: 8 }}>
-            {LOYALTY.points + 125} {t("points",lang)} · <strong style={{ color: C.gold }}>+125 ovaj odmor</strong>
+            {LOYALTY.points} {t("points",lang)} → <strong style={{ color: C.gold }}>{LOYALTY.next}</strong> ({LOYALTY.nextPts})
           </div>
           <div style={{ height: 8, borderRadius: 4, background: "rgba(0,0,0,0.3)", overflow: "hidden", margin: "12px 0 6px" }}>
             <div style={{ height: "100%", width: `${(LOYALTY.points / LOYALTY.nextPts) * 100}%`, borderRadius: 4, background: `linear-gradient(90deg,${C.accent},${C.gold})` }} />
@@ -3134,7 +1957,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   /* ═══ MAIN RENDER ═══ */
 
   /* ─── GUEST ONBOARDING ─── */
-  if (showOnboarding && new URLSearchParams(window.location.search).get("room")) return (
+  if (showOnboarding) return (
     <GuestOnboarding
       roomCode={roomCode.current}
       onComplete={(guestData) => {
@@ -3438,36 +2261,20 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           {/* Guest bar */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, marginTop: 14, padding: "12px 16px", background: C.sand, borderRadius: 16, border: `1px solid rgba(245,158,11,0.06)` }}>
             <div style={{ ...dm, display: "flex", alignItems: "center", gap: 10 }}>
-              {guestProfile ? (
-                <>
-                  <span style={{ fontSize: 18 }}>{G.flag}</span>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{G.name}</div>
-                    <div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>{G.accommodation}</div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <span style={{ fontSize: 18 }}>{SEGMENTS.find(s => s.key === delta.segment)?.emoji || "🌊"}</span>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>
-                      {delta.from && delta.destination?.city ? `${delta.from} → ${delta.destination.city}` : (SEGMENTS.find(s => s.key === delta.segment)?.label || "Putnik")}
-                    </div>
-                    <div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>
-                      {SEGMENTS.find(s => s.key === delta.segment)?.sub || ""}
-                    </div>
-                  </div>
-                </>
-              )}
+              <span style={{ fontSize: 18 }}>{G.flag}</span>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{G.name}</div>
+                <div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>{G.accommodation}</div>
+              </div>
             </div>
-            {G.arrival && guestProfile && <div style={{ ...dm, fontSize: 11, color: C.mut, textAlign: "right" }}>
+            {G.arrival && <div style={{ ...dm, fontSize: 11, color: C.mut, textAlign: "right" }}>
               {new Date(G.arrival).toLocaleDateString(dateLocale || "hr-HR", {day:"numeric",month:"short"})} – {new Date(G.departure).toLocaleDateString(dateLocale || "hr-HR", {day:"numeric",month:"short"})}
             </div>}
           </div>
           {/* Warm divider */}
           <div style={{ height: 1, marginTop: 16, background: `linear-gradient(90deg, transparent, rgba(245,158,11,0.12) 30%, rgba(14,165,233,0.08) 70%, transparent)` }} />
-          {/* Demo mode banner — only when no profile AND no real onboarding data */}
-          {!guestProfile && !delta.from && <div style={{ ...dm, display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, padding: "10px 16px", background: "rgba(245,158,11,0.06)", borderRadius: 12, border: "1px solid rgba(245,158,11,0.1)" }}>
+          {/* Demo mode banner */}
+          {!guestProfile && <div style={{ ...dm, display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, padding: "10px 16px", background: "rgba(245,158,11,0.06)", borderRadius: 12, border: "1px solid rgba(245,158,11,0.1)" }}>
             <span style={{ fontSize: 12, color: C.warm }}>🎭 Primjer prikaza — kreirajte vlastiti profil</span>
             <a href="/host" style={{ ...dm, fontSize: 11, color: C.accent, textDecoration: "none", fontWeight: 600 }}>Host Panel →</a>
           </div>}
@@ -3491,142 +2298,6 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
 
       {/* Overlays */}
       {showPaywall && <Paywall />}
-      {/* ═══ MORNING BRIEFING ═══ */}
-      {showMorningBriefing && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(16px)", zIndex: 400, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 16px" }}>
-          <div style={{ width: "100%", maxWidth: 380, background: C.card, borderRadius: 24, border: `1px solid ${C.bord}`, overflow: "hidden" }}>
-            {/* Header */}
-            <div style={{ padding: "20px 22px 14px", background: `linear-gradient(135deg,rgba(14,165,233,0.08),rgba(245,158,11,0.04))`, borderBottom: `1px solid ${C.bord}` }}>
-              <div style={{ ...dm, fontSize: 10, color: C.gold, letterSpacing: 2, fontWeight: 700, marginBottom: 4 }}>☀️ JUTARNJI BRIEFING · {new Date().toLocaleDateString("hr-HR", { weekday: "long", day: "numeric", month: "long" })}</div>
-              <div style={{ ...hf, fontSize: 26, fontWeight: 300 }}>Dobro jutro, <span style={{ color: C.warm, fontStyle: "italic" }}>{G.first}</span>!</div>
-            </div>
-
-            {/* Weather strip */}
-            <div style={{ padding: "12px 22px", display: "flex", gap: 20, borderBottom: `1px solid ${C.bord}` }}>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 28 }}>{weather?.icon || "☀️"}</div>
-                <div style={{ ...dm, fontSize: 11, color: C.mut }}>Zrak</div>
-                <div style={{ fontSize: 18, fontWeight: 300 }}>{weather?.temp || "—"}°</div>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 24 }}>🌊</div>
-                <div style={{ ...dm, fontSize: 11, color: C.mut }}>More</div>
-                <div style={{ fontSize: 18, fontWeight: 300, color: C.accent }}>{weather?.sea || "—"}°</div>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 24 }}>🕶️</div>
-                <div style={{ ...dm, fontSize: 11, color: C.mut }}>UV</div>
-                <div style={{ fontSize: 18, fontWeight: 300, color: (weather?.uv || 0) >= 8 ? C.red : C.gold }}>{weather?.uv || "—"}</div>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 24 }}>💨</div>
-                <div style={{ ...dm, fontSize: 11, color: C.mut }}>Vjetar</div>
-                <div style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.mut }}>{weather?.wind?.split(" ")[1] || "—"}</div>
-              </div>
-            </div>
-
-            {/* YOLO beach status */}
-            <div style={{ padding: "12px 22px", borderBottom: `1px solid ${C.bord}` }}>
-              <div style={{ ...dm, fontSize: 12, color: C.accent, fontWeight: 700, marginBottom: 4 }}>📷 LIVE · Plaže jutros</div>
-              <div style={{ ...dm, fontSize: 13, color: C.text }}>
-                {(weather?.uv || 5) < 6
-                  ? "🏖️ Plaže jutros mirne — idealno za kupanje! Dođite prije 10h."
-                  : "🏖️ Plaže trenutno umjereno popunjene · Preporučamo rano jutro (7-9h)"}
-              </div>
-            </div>
-
-            {/* Segment suggestions */}
-            <div style={{ padding: "12px 22px", borderBottom: `1px solid ${C.bord}` }}>
-              <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 1.5, marginBottom: 8 }}>✨ AI PRIJEDLOZI ZA DANAS</div>
-              {delta.segment === "kamper" && (
-                <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.9 }}>
-                  🚐 Izlet: Krka NP (75km) — kamper parking uz ulaz 12€<br />
-                  🏕️ Večeras: Kamp Krka ili ostanite u Stobrečkom — raspisajte kamp<br />
-                  ⛽ Punjenje LPG: INA Solin (8km) — 0.89€/l
-                </div>
-              )}
-              {delta.segment === "porodica" && (
-                <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.9 }}>
-                  🏖️ Plaža Bačvice (pijesak + plitka voda) idealna za djecu<br />
-                  🎠 Aquapark Dalmatia (15min) — otvara u 9h, cijena djeca 12€<br />
-                  🍕 Večera: Pizzeria Bajamonti (Prokurative) — dječje porcije
-                </div>
-              )}
-              {delta.segment === "par" && (
-                <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.9 }}>
-                  🌅 Sunrise walk: Marjan šuma — polazak iza 7h, pogled nevjerojatan<br />
-                  🍷 Wine tasting: Grgić Vina, Komarna (45min) — rezervirajte danas<br />
-                  🛥️ Privatni brodić za izlet do Brača — 150€/dan iz Splita
-                </div>
-              )}
-              {delta.segment === "jedrilicar" && (
-                <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.9 }}>
-                  🌬️ Vjetar za jedrenje: {weather?.wind || "provjeriti DHMZ"}<br />
-                  ⚓ Preporučena ruta: Split → Brač (Milna) → Hvar (10nm)<br />
-                  📡 VHF kanal 16/17 · NAVTEX: stanica Split
-                </div>
-              )}
-              {!delta.segment && (
-                <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.9 }}>
-                  🏖️ Plaža Kašjuni — pred šumom, manje gužve od centra<br />
-                  🏛️ Dioklecijanova palača — vodič u 10h (25€/osoba)<br />
-                  🍽️ Ručak: Konoba Marjan — pogled na Split iz zraka
-                </div>
-              )}
-            </div>
-
-            {/* Viator activity teaser */}
-            <div style={{ padding: "12px 22px", borderBottom: `1px solid ${C.bord}` }}>
-              <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 1.5, marginBottom: 8 }}>🎟️ AKTIVNOST DANA</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 12, background: C.acDim, border: `1px solid rgba(14,165,233,0.15)`, cursor: "pointer" }}
-                onClick={() => { setShowMorningBriefing(false); setSubScreen("activities"); }}>
-                <div style={{ fontSize: 28 }}>🚣</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ ...dm, fontSize: 13, fontWeight: 700, color: C.text }}>Kayak tura — Klis tvrđava</div>
-                  <div style={{ ...dm, fontSize: 12, color: C.mut }}>4h · od 45€/osoba · ocjena 4.8 ⭐</div>
-                </div>
-                <div style={{ ...dm, fontSize: 11, color: C.accent }}>→</div>
-              </div>
-            </div>
-
-            {/* Dismiss */}
-            <div style={{ padding: "14px 22px" }}>
-              <button onClick={() => setShowMorningBriefing(false)}
-                style={{ width: "100%", padding: "12px", borderRadius: 12, border: "none", background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", ...dm }}>
-                Krenimo! ☀️
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* ═══ IDEŠ NEGDJE? nudge ═══ */}
-      {showIdeshNegdje && phase === "kiosk" && (
-        <div style={{ position: "fixed", bottom: 80, left: "50%", transform: "translateX(-50%)", zIndex: 350, width: "calc(100% - 32px)", maxWidth: 400 }}>
-          <div style={{ background: C.card, borderRadius: 20, border: `1px solid ${C.bord}`, padding: "16px 20px", boxShadow: "0 8px 40px rgba(0,0,0,0.4)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-              <div style={{ fontSize: 15, fontWeight: 400 }}>☀️ Lijep dan za izlazak! Što te zanima?</div>
-              <button onClick={() => setShowIdeshNegdje(false)} style={{ background: "none", border: "none", color: C.mut, cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "0 0 0 8px" }}>✕</button>
-            </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {(delta.segment === "kamper"
-                ? [{ l: "🚐 Vožnja", s: "routes" }, { l: "🌊 Kupanje", s: "beaches" }, { l: "🏕️ Kampiranje", s: "chat" }]
-                : delta.segment === "porodica"
-                ? [{ l: "🏖️ Plaža", s: "beaches" }, { l: "🎠 Aktivnosti", s: "activities" }, { l: "🍕 Ručak", s: "food" }]
-                : delta.segment === "par"
-                ? [{ l: "🏖️ Plaža", s: "beaches" }, { l: "🚤 Izlet", s: "activities" }, { l: "🍷 Večera", s: "food" }]
-                : delta.segment === "jedrilicar"
-                ? [{ l: "⛵ Plovidba", s: "chat" }, { l: "🤿 Ronjenje", s: "activities" }, { l: "⚓ Sidro", s: "chat" }]
-                : [{ l: "🏖️ Plaža", s: "beaches" }, { l: "🎯 Aktivnosti", s: "activities" }, { l: "💬 AI Savjet", s: "chat" }]
-              ).map(opt => (
-                <button key={opt.l} onClick={() => { setSubScreen(opt.s); setShowIdeshNegdje(false); lastActivityRef.current = Date.now(); }}
-                  style={{ ...dm, padding: "10px 16px", borderRadius: 12, border: `1px solid ${C.bord}`, background: C.acDim, color: C.text, fontSize: 14, cursor: "pointer", fontWeight: 500 }}>
-                  {opt.l}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
       {showConfirm && <BookConfirm />}
 
       {/* Gem detail */}
@@ -3689,27 +2360,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                   <span>⏱ {act.duration}</span>
                   {act.category && <span style={{ color: "#22c55e" }}>{act.category}</span>}
                 </div>
-                {act.description && (() => {
-                  const [descExp, setDescExp] = React.useState(false);
-                  const short = act.description.length > 140 ? act.description.slice(0, 140) + "…" : act.description;
-                  return (
-                    <div style={{ marginBottom: 16 }}>
-                      <div style={{ ...dm, fontSize: 14, color: C.mut, lineHeight: 1.7 }}>{descExp ? act.description : short}</div>
-                      {act.description.length > 140 && (
-                        <button onClick={() => setDescExp(e => !e)} style={{ ...dm, background: "none", border: "none", color: C.accent, fontSize: 12, cursor: "pointer", padding: "4px 0", marginTop: 2 }}>
-                          {descExp ? "Prikaži manje ↑" : "Prikaži više ↓"}
-                        </button>
-                      )}
-                    </div>
-                  );
-                })()}
-
-                {/* Inclusions */}
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-                  {["✓ Vodič", "✓ Prijevoz", "✓ Ulaznice", "✓ Potvrda odmah"].map(inc => (
-                    <span key={inc} style={{ ...dm, fontSize: 11, padding: "3px 10px", borderRadius: 8, background: "rgba(34,197,94,0.08)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.15)" }}>{inc}</span>
-                  ))}
-                </div>
+                {act.description && <div style={{ ...dm, fontSize: 14, color: C.mut, lineHeight: 1.7, marginBottom: 20 }}>{act.description}</div>}
 
                 {/* Date picker */}
                 <div style={{ marginBottom: 16 }}>
@@ -3736,13 +2387,9 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                   <div style={{ ...dm, fontSize: 10, color: C.mut, marginTop: 4 }}>Uključuje JADRAN uslugu · Plaćanje karticom</div>
                 </div>
 
-                <div style={{ ...dm, fontSize: 11, color: "#22c55e", marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ padding: "2px 8px", borderRadius: 6, background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)" }}>✓ Besplatni otkaz do 24h</span>
-                  <span style={{ padding: "2px 8px", borderRadius: 6, background: "rgba(14,165,233,0.08)", border: `1px solid ${C.bord}` }}>💳 Plaćanje karticom</span>
-                </div>
                 <button onClick={() => startViatorBooking(act, viatorBookDate, viatorPersons)} disabled={payLoading || !viatorBookDate}
-                  style={{ width: "100%", padding: "16px", borderRadius: 16, border: "none", background: payLoading ? "rgba(255,255,255,0.1)" : "linear-gradient(135deg,#ea580c,#f97316)", color: "#fff", fontSize: 16, fontWeight: 700, cursor: payLoading || !viatorBookDate ? "not-allowed" : "pointer", opacity: viatorBookDate ? 1 : 0.5, ...dm, transition: "all 0.2s" }}>
-                  {payLoading ? "⏳ Preusmjeravam…" : `REZERVIŠI — ${totalPrice}€`}
+                  style={{ width: "100%", padding: "16px", borderRadius: 16, border: "none", background: payLoading ? "rgba(255,255,255,0.1)" : "linear-gradient(135deg,#16a34a,#22c55e)", color: "#fff", fontSize: 16, fontWeight: 700, cursor: payLoading || !viatorBookDate ? "not-allowed" : "pointer", opacity: viatorBookDate ? 1 : 0.5, ...dm, transition: "all 0.2s" }}>
+                  {payLoading ? "⏳ Preusmjeravam…" : `🎟 Rezerviraj — ${totalPrice}€`}
                 </button>
                 <Btn style={{ width: "100%", marginTop: 10 }} onClick={() => setSelectedViatorAct(null)}>{t("back",lang)}</Btn>
               </div>
