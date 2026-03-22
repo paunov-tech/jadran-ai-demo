@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { loadGuest, updateGuest, getRoomCode } from "./guestStore";
 import GuestOnboarding from "./GuestOnboarding";
 
@@ -18,22 +18,53 @@ const CITY_COORDS = {
 };
 const HERE_ROUTING_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
 
-// ─── StaticMap: zero-JS static map image, no timing issues ───
-const StaticMap = ({ fromCity, toCity }) => {
-  const from = CITY_COORDS[fromCity] || [48.2082, 16.3738];
-  const to = CITY_COORDS[toCity] || [43.5081, 16.4402];
-  const centerLat = (from[0] + to[0]) / 2;
-  const centerLon = (from[1] + to[1]) / 2;
-  const url = `https://staticmap.openstreetmap.de/staticmap.php?center=${centerLat},${centerLon}&zoom=6&size=800x280&maptype=osm&markers=${from[0]},${from[1]},red-pushpin|${to[0]},${to[1]},green-pushpin`;
-  return (
-    <img
-      src={url}
-      alt={`${fromCity} → ${toCity}`}
-      style={{ width: "100%", height: "280px", borderRadius: "12px", objectFit: "cover", display: "block" }}
-      onError={(e) => { e.target.style.display = "none"; }}
-    />
-  );
-};
+// ─── TransitMap: Mapbox GL JS interactive map ───
+const TransitMap = React.memo(({ fromCity, toCity }) => {
+  const mapContainer = React.useRef(null);
+  const map = React.useRef(null);
+  const COORDS = {
+    "Wien":[16.3738,48.2082],"München":[11.5820,48.1351],"Frankfurt":[8.6821,50.1109],
+    "Beograd":[20.4633,44.8176],"Ljubljana":[14.5058,46.0569],"Graz":[15.4395,47.0707],
+    "Salzburg":[13.0550,47.8095],"Linz":[14.2858,48.3069],"Zürich":[8.5417,47.3769],
+    "Berlin":[13.4050,52.5200],"Hamburg":[10.0153,53.5753],"Köln":[6.9500,50.9333],
+    "Split":[16.4402,43.5081],"Dubrovnik":[18.0944,42.6507],"Zadar":[15.2314,44.1194],
+    "Rijeka":[14.4422,45.3271],"Pula":[13.8496,44.8666],"Rovinj":[13.6387,45.0811],
+    "Makarska":[17.0177,43.2967],"Hvar":[16.4414,43.1729],"Trogir":[16.2500,43.5167],
+    "Zagreb":[15.9819,45.8150],"Trieste":[13.7768,45.6495],"Praha":[14.4378,50.0755],
+    "Kraków":[19.9450,50.0647],
+  };
+  React.useEffect(() => {
+    if (map.current) return;
+    const from = COORDS[fromCity] || [16.3738, 48.2082];
+    const to = COORDS[toCity] || [16.4402, 43.5081];
+    const center = [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2];
+    const loadMapbox = () => {
+      if (!mapContainer.current) return;
+      window.mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB4legg';
+      map.current = new window.mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/dark-v11',
+        center: center,
+        zoom: 5,
+      });
+      map.current.on('load', () => {
+        map.current.addSource('route', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [from, to] } } });
+        map.current.addLayer({ id: 'route', type: 'line', source: 'route', paint: { 'line-color': '#FF6600', 'line-width': 3, 'line-dasharray': [2, 1] } });
+        new window.mapboxgl.Marker({ color: '#FF6600' }).setLngLat(from).addTo(map.current);
+        new window.mapboxgl.Marker({ color: '#00D4AA' }).setLngLat(to).addTo(map.current);
+        map.current.fitBounds([from, to], { padding: 60 });
+      });
+    };
+    if (window.mapboxgl) {
+      loadMapbox();
+    } else {
+      const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css'; document.head.appendChild(css);
+      const script = document.createElement('script'); script.src = 'https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js'; script.onload = loadMapbox; document.head.appendChild(script);
+    }
+    return () => { if (map.current) { map.current.remove(); map.current = null; } };
+  }, []); // eslint-disable-line
+  return (<div ref={mapContainer} style={{ width: '100%', height: '280px', borderRadius: '12px' }} />);
+});
 
 /* ══════════════════════════════════════════════════════════
    JADRAN — Turistički vodič v6
@@ -1278,7 +1309,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>{transitFromUrl || COUNTRY_CITY[G.country]?.split(",")?.[0] || G.country} → <span style={{ color: C.accent }}>{transitToUrl || "Podstrana"}</span></div>
         </div>
         <div style={{ borderRadius: 18, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 12 }}>
-          <StaticMap fromCity={mapFromCity} toCity={mapToCity} />
+          <TransitMap fromCity={mapFromCity} toCity={mapToCity} />
           {transitRouteData && (
             <div style={{ padding: "12px 16px", background: `rgba(14,165,233,0.04)`, display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
               <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>🛣 {transitRouteData.km} km</span>
