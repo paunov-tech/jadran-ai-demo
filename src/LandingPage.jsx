@@ -3,7 +3,7 @@
 // Conversion-optimized: Video hero, pain relief, live demo,
 // social proof carousel, B2B section, sticky CTA
 // ═══════════════════════════════════════════════════════════════
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 // Direct Stripe checkout
 const goToStripe = async (plan = "season", lang = "en") => {
@@ -81,11 +81,20 @@ export default function LandingPage() {
   useEffect(() => { try { localStorage.setItem("jadran_lang", lang); } catch {} }, [lang]);
   const FLAGS = [["hr","🇭🇷"],["de","🇩🇪"],["at","🇦🇹"],["en","🇬🇧"],["it","🇮🇹"],["si","🇸🇮"],["cz","🇨🇿"],["pl","🇵🇱"]];
   const curFlag = (FLAGS.find(f => f[0] === lang) || FLAGS[0])[1];
-  const tx = (k) => (L[lang] || L.hr)[k] || L.hr[k];
+  // AT uses standard DE (Hochdeutsch), no dialect
+  const tx = (k) => (L[lang === "at" ? "de" : lang] || L.hr)[k] || L.hr[k];
   const [dest, setDest] = useState("");
   const [vLen, setVLen] = useState("");
   const [anim, setAnim] = useState(false);
   const [roomInput, setRoomInput] = useState("");
+  // Unified entry flow
+  const [selectedMode, setSelectedMode] = useState(null); // "auto"|"avion"|"kamper"|"odmor"
+  const [depCity, setDepCity] = useState("");
+  const [routeStep, setRouteStep] = useState(null); // null | "city" | "map"
+  const [routeData, setRouteData] = useState(null);
+  const [routeLoading, setRouteLoading] = useState(false);
+  const mapRef = useRef(null);
+  const hereMapRef = useRef(null);
   const [chatStep, setChatStep] = useState(0);
   const [trendImgs, setTrendImgs] = useState({});
   const [cityImgs, setCityImgs] = useState({});
@@ -162,11 +171,129 @@ export default function LandingPage() {
   const goChat = () => { window.location.href = `/ai?niche=camper${dest ? "&dest=" + dest : ""}`; };
   const goRoom = () => { const c = roomInput.trim().toUpperCase(); if (c) window.location.href = `/?room=${encodeURIComponent(c)}`; };
 
+  // HERE Maps API key (safe for client-side JS Maps API)
+  const HERE_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
+  const DEST_LAT = 43.4892, DEST_LNG = 16.5523; // Podstrana
+
+  const TRANSPORT_LABELS = {
+    hr: { auto: "🚗 Auto / Kombi", avion: "✈️ Avion / Jahta", kamper: "🚐 Kamper / Prikolica", odmor: "🏠 Već sam na odmoru" },
+    de: { auto: "🚗 Auto / Kombi", avion: "✈️ Flug / Yacht", kamper: "🚐 Camper / Anhänger", odmor: "🏠 Ich bin schon da" },
+    en: { auto: "🚗 Car / Van", avion: "✈️ Flight / Yacht", kamper: "🚐 Camper / Caravan", odmor: "🏠 Already on vacation" },
+    it: { auto: "🚗 Auto / Furgone", avion: "✈️ Volo / Yacht", kamper: "🚐 Camper / Roulotte", odmor: "🏠 Sono già in vacanza" },
+  };
+  const TRANSPORT_SUBS = {
+    hr: { auto: "Rute, parking, info za putnike", avion: "Transferi, marine, izleti", kamper: "Kampovi, visine mostova, servisi", odmor: "Unesite kod sobe za personalizirani vodič" },
+    de: { auto: "Routen, Parken, Reiseinfos", avion: "Transfers, Marinas, Ausflüge", kamper: "Campingplätze, Brückenhöhen, Service", odmor: "Zimmernummer eingeben für persönlichen Guide" },
+    en: { auto: "Routes, parking, travel info", avion: "Transfers, marinas, excursions", kamper: "Campsites, bridge heights, services", odmor: "Enter room code for personalized guide" },
+    it: { auto: "Percorsi, parcheggi, info viaggio", avion: "Trasferimenti, marine, escursioni", kamper: "Campeggi, altezze ponti, servizi", odmor: "Inserisci codice camera per guida personale" },
+  };
+  const DEP_PLACEHOLDER = { hr: "Grad polaska (npr. München, Wien...)", de: "Abfahrtstadt (z.B. München, Wien...)", en: "Departure city (e.g. München, Vienna...)", it: "Città di partenza (es. Monaco, Vienna...)" };
+  const goLabel = (l) => ({ hr: "Pokaži rutu →", de: "Route anzeigen →", en: "Show route →", it: "Mostra percorso →" }[l] || "Pokaži rutu →");
+  const startLabel = (l) => ({ hr: "Krenite na put →", de: "Reise starten →", en: "Start your journey →", it: "Inizia il viaggio →" }[l] || "Krenite na put →");
+  const tlang = (obj) => obj[lang === "at" ? "de" : lang] || obj.hr || obj.en || "";
+
+  const modeToNiche = { auto: "local", avion: "sailing", kamper: "camper" };
+
+  // Load HERE Maps scripts dynamically
+  const loadHereMaps = useCallback(() => new Promise((resolve, reject) => {
+    if (window.H?.Map) { resolve(); return; }
+    const scripts = [
+      "https://js.api.here.com/v3/3.1/mapsjs-core.js",
+      "https://js.api.here.com/v3/3.1/mapsjs-service.js",
+      "https://js.api.here.com/v3/3.1/mapsjs-ui.js",
+      "https://js.api.here.com/v3/3.1/mapsjs-mapevents.js",
+    ];
+    const css = document.createElement("link");
+    css.rel = "stylesheet"; css.href = "https://js.api.here.com/v3/3.1/mapsjs-ui.css";
+    document.head.appendChild(css);
+    let loaded = 0;
+    const loadNext = (i) => {
+      if (i >= scripts.length) { resolve(); return; }
+      const s = document.createElement("script");
+      s.src = scripts[i]; s.async = false;
+      s.onload = () => { loaded++; loadNext(i + 1); };
+      s.onerror = reject;
+      document.head.appendChild(s);
+    };
+    loadNext(0);
+  }), []);
+
+  // Geocode + route using HERE APIs, then render map
+  const fetchRoute = useCallback(async (city) => {
+    setRouteLoading(true);
+    try {
+      // 1. Geocode departure city
+      const geoRes = await fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(city + ", Europe")}&limit=1&apikey=${HERE_KEY}`);
+      const geoData = await geoRes.json();
+      const pos = geoData.items?.[0]?.position;
+      if (!pos) throw new Error("City not found");
+      const { lat: oLat, lng: oLng } = pos;
+
+      // 2. Calculate route
+      const niche = selectedMode === "avion" ? "pedestrian" : selectedMode === "kamper" ? "truck" : "car";
+      const routeRes = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${niche}&origin=${oLat},${oLng}&destination=${DEST_LAT},${DEST_LNG}&return=polyline,summary,actions&apikey=${HERE_KEY}`);
+      const routeJson = await routeRes.json();
+      const section = routeJson.routes?.[0]?.sections?.[0];
+      if (!section) throw new Error("No route");
+      const summary = section.summary;
+      const km = Math.round(summary.length / 1000);
+      const hrs = Math.floor(summary.duration / 3600);
+      const mins = Math.round((summary.duration % 3600) / 60);
+      setRouteData({ oLat, oLng, city: geoData.items[0].title, km, hrs, mins, polyline: section.polyline });
+
+      // 3. Load HERE Maps JS and render
+      await loadHereMaps();
+      setRouteStep("map");
+    } catch (e) {
+      console.error("Route error:", e);
+      setRouteData({ error: e.message });
+      setRouteStep("map");
+    } finally {
+      setRouteLoading(false);
+    }
+  }, [selectedMode, loadHereMaps]);
+
+  // Render HERE map after routeData is set and mapRef is available
+  useEffect(() => {
+    if (routeStep !== "map" || !routeData || routeData.error || !mapRef.current || !window.H) return;
+    if (hereMapRef.current) { hereMapRef.current.dispose(); }
+    const platform = new window.H.service.Platform({ apikey: HERE_KEY });
+    const defaultLayers = platform.createDefaultLayers();
+    const map = new window.H.Map(mapRef.current, defaultLayers.vector.normal.map, {
+      zoom: 6, center: { lat: (routeData.oLat + DEST_LAT) / 2, lng: (routeData.oLng + DEST_LNG) / 2 },
+    });
+    hereMapRef.current = map;
+    const behavior = new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
+    window.H.ui.UI.createDefault(map, defaultLayers);
+
+    // Decode polyline and draw route
+    if (routeData.polyline && window.H.geo.LineString) {
+      try {
+        const lineString = window.H.geo.LineString.fromFlexiblePolyline(routeData.polyline);
+        const polyline = new window.H.map.Polyline(lineString, { style: { lineWidth: 4, strokeColor: "#0ea5e9" } });
+        map.addObject(polyline);
+        map.getViewModel().setLookAtData({ bounds: polyline.getBoundingBox() }, true);
+      } catch {}
+    }
+
+    // Origin & destination markers
+    const svgOrigin = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#0ea5e9"/><text x="12" y="16" text-anchor="middle" fill="white" font-size="12">🚩</text></svg>`;
+    const svgDest = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#22c55e"/><text x="12" y="16" text-anchor="middle" fill="white" font-size="12">⚓</text></svg>`;
+    map.addObjects([
+      new window.H.map.Marker({ lat: routeData.oLat, lng: routeData.oLng }, { icon: new window.H.map.Icon(svgOrigin) }),
+      new window.H.map.Marker({ lat: DEST_LAT, lng: DEST_LNG }, { icon: new window.H.map.Icon(svgDest) }),
+    ]);
+  }, [routeStep, routeData]);
+
+  // Clean up HERE map on unmount
+  useEffect(() => () => { hereMapRef.current?.dispose?.(); }, []);
+
   const F = "'Playfair Display', Georgia, serif";
   const B = "'Outfit', system-ui, sans-serif";
 
   return (
     <div style={{ background: "#0a1628", color: "#f0f4f8", fontFamily: B, overflowX: "hidden" }}>
+      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
       {/* NAV */}
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, padding: "10px 20px", paddingTop: "max(10px, env(safe-area-inset-top, 10px))", display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(10,22,40,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
@@ -208,66 +335,121 @@ export default function LandingPage() {
               </span>
           </h1>
           <p style={{ fontSize: "clamp(14px, 2.2vw, 17px)", color: "#94a3b8", lineHeight: 1.6, maxWidth: 520, margin: "0 auto 28px" }}>{tx("sub")}</p>
-          {/* 4 CTA Cards — 2x2 grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, maxWidth: 520, margin: "0 auto" }}>
-            {/* Camper */}
-            <a href={`/ai?niche=camper&lang=${lang}`} aria-label="Kamper vodič" style={{
-              borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
-              border: "1px solid rgba(245,158,11,0.2)", transition: "all 0.3s", display: "block", minHeight: 90,
-            }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(245,158,11,0.4)"; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(245,158,11,0.12)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(245,158,11,0.2)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
-              <div style={{ position: "absolute", inset: 0, backgroundImage: "url(https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?w=400&q=75)", backgroundSize: "cover", backgroundPosition: "center" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(245,158,11,0.7) 0%, rgba(15,23,42,0.85) 100%)" }} />
-              <div style={{ position: "relative", padding: "18px 14px" }}>
-                <div style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#fff" }}>{tx("tab1")}</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 3 }}>{tx("tab1s")}</div>
+          {/* ── 4 Entry Tiles ── */}
+          {(() => {
+            const tiles = [
+              { id: "auto",   img: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&q=75", accent: "rgba(14,165,233,0.65)", border: "rgba(14,165,233,0.2)" },
+              { id: "avion",  img: "https://images.unsplash.com/photo-1540946485063-a40da27545f8?w=400&q=75", accent: "rgba(6,182,212,0.6)", border: "rgba(6,182,212,0.2)" },
+              { id: "kamper", img: "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?w=400&q=75", accent: "rgba(245,158,11,0.65)", border: "rgba(245,158,11,0.2)" },
+              { id: "odmor",  img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=75", accent: "rgba(34,197,94,0.55)", border: "rgba(34,197,94,0.2)" },
+            ];
+            return (
+              <div style={{ maxWidth: 540, margin: "0 auto" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  {tiles.map(({ id, img, accent, border }) => {
+                    const active = selectedMode === id;
+                    return (
+                      <button key={id} onClick={() => {
+                        setSelectedMode(id);
+                        setRouteStep(id === "odmor" ? "room" : "city");
+                        setRouteData(null);
+                      }} style={{
+                        borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
+                        border: `1px solid ${active ? border.replace("0.2", "0.6") : border}`,
+                        transition: "all 0.3s", display: "block", minHeight: 90, cursor: "pointer",
+                        background: "transparent", padding: 0,
+                        boxShadow: active ? `0 0 0 2px ${border.replace("0.2", "0.4")}, 0 8px 32px rgba(0,0,0,0.3)` : "none",
+                        transform: active ? "scale(1.02)" : "scale(1)",
+                      }}>
+                        <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${img})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                        <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${accent} 0%, rgba(15,23,42,0.88) 100%)` }} />
+                        <div style={{ position: "relative", padding: "16px 14px", textAlign: "left" }}>
+                          <div style={{ fontFamily: F, fontSize: 15, fontWeight: 700, color: "#fff", lineHeight: 1.3 }}>{tlang(TRANSPORT_LABELS)[id]}</div>
+                          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", marginTop: 4, lineHeight: 1.4 }}>{tlang(TRANSPORT_SUBS)[id]}</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Room code panel */}
+                {routeStep === "room" && (
+                  <div style={{ marginTop: 14, padding: "18px 20px", borderRadius: 16, background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)", animation: "fadeIn 0.3s both" }}>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <input value={roomInput} onChange={e => setRoomInput(e.target.value.toUpperCase())}
+                        onKeyDown={e => e.key === "Enter" && goRoom()}
+                        placeholder={tlang({ hr: "Kod sobe (npr. MDB2F)", de: "Zimmercode (z.B. MDB2F)", en: "Room code (e.g. MDB2F)", it: "Codice camera (es. MDB2F)" })}
+                        style={{ flex: 1, padding: "12px 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 14, outline: "none", fontFamily: B, letterSpacing: 1 }} />
+                      <button onClick={goRoom} style={{ padding: "12px 18px", borderRadius: 10, background: "linear-gradient(135deg, #22c55e, #16a34a)", border: "none", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: B, whiteSpace: "nowrap" }}>
+                        {tx("roomOpen")} →
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Departure city panel */}
+                {routeStep === "city" && (
+                  <div style={{ marginTop: 14, padding: "18px 20px", borderRadius: 16, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)", animation: "fadeIn 0.3s both" }}>
+                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 10 }}>
+                      {tlang({ hr: "Odakle krećete?", de: "Von wo reisen Sie an?", en: "Where are you departing from?", it: "Da dove parti?" })}
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <input value={depCity} onChange={e => setDepCity(e.target.value)}
+                        onKeyDown={e => e.key === "Enter" && depCity.trim() && fetchRoute(depCity.trim())}
+                        placeholder={tlang(DEP_PLACEHOLDER)}
+                        style={{ flex: 1, padding: "12px 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 14, outline: "none", fontFamily: B }} />
+                      <button onClick={() => depCity.trim() && fetchRoute(depCity.trim())}
+                        disabled={routeLoading || !depCity.trim()}
+                        style={{ padding: "12px 16px", borderRadius: 10, background: routeLoading ? "rgba(14,165,233,0.2)" : "linear-gradient(135deg, #0ea5e9, #0284c7)", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: routeLoading ? "wait" : "pointer", fontFamily: B, whiteSpace: "nowrap", minWidth: 80 }}>
+                        {routeLoading ? "..." : goLabel(lang === "at" ? "de" : lang)}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* HERE Maps route result */}
+                {routeStep === "map" && routeData && (
+                  <div style={{ marginTop: 14, borderRadius: 16, overflow: "hidden", border: "1px solid rgba(14,165,233,0.2)", animation: "fadeIn 0.4s both" }}>
+                    {routeData.error ? (
+                      <div style={{ padding: "20px", textAlign: "center", color: "#f87171", fontSize: 13 }}>
+                        ⚠️ {tlang({ hr: "Grad nije pronađen. Pokušajte ponovo.", de: "Stadt nicht gefunden. Bitte erneut versuchen.", en: "City not found. Please try again.", it: "Città non trovata. Riprova." })}
+                        <br/><button onClick={() => setRouteStep("city")} style={{ marginTop: 8, padding: "6px 14px", borderRadius: 8, background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)", color: "#38bdf8", fontSize: 12, cursor: "pointer" }}>← {tlang({ hr: "Natrag", de: "Zurück", en: "Back", it: "Indietro" })}</button>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Route summary */}
+                        <div style={{ padding: "14px 18px", background: "rgba(14,165,233,0.06)", display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <span style={{ fontSize: 16 }}>📍</span>
+                            <span style={{ fontSize: 13, color: "#94a3b8" }}>{routeData.city}</span>
+                            <span style={{ color: "#0ea5e9" }}>→</span>
+                            <span style={{ fontSize: 13, color: "#94a3b8" }}>Podstrana</span>
+                          </div>
+                          <div style={{ display: "flex", gap: 16 }}>
+                            <span style={{ fontSize: 13, color: "#f0f4f8", fontWeight: 600 }}>🛣 {routeData.km} km</span>
+                            <span style={{ fontSize: 13, color: "#f0f4f8", fontWeight: 600 }}>⏱ {routeData.hrs}h {routeData.mins}min</span>
+                          </div>
+                          {selectedMode === "kamper" && <span style={{ fontSize: 11, color: "#f59e0b", padding: "2px 8px", borderRadius: 6, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.15)" }}>🚐 Kamper ruta</span>}
+                        </div>
+                        {/* Map container */}
+                        <div ref={mapRef} style={{ height: 260, width: "100%", background: "#0c2d48" }} />
+                        {/* CTA */}
+                        <div style={{ padding: "14px 18px", background: "rgba(10,22,40,0.8)", display: "flex", gap: 10, alignItems: "center" }}>
+                          <button onClick={() => window.location.href = `/ai?niche=${modeToNiche[selectedMode] || "local"}&lang=${lang}&from=${encodeURIComponent(routeData.city)}`}
+                            style={{ flex: 1, padding: "13px 20px", borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: F, letterSpacing: 0.5 }}>
+                            {startLabel(lang === "at" ? "de" : lang)}
+                          </button>
+                          <button onClick={() => setRouteStep("city")} style={{ padding: "13px 14px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", color: "#64748b", fontSize: 13, cursor: "pointer" }}>←</button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                <div style={{ marginTop: 14, fontSize: 11, color: "#334155" }}>{tx("freeInfo")}</div>
               </div>
-            </a>
-            {/* Local / Auto */}
-            <a href={`/ai?niche=local&lang=${lang}`} aria-label="Lokalni vodič" style={{
-              borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
-              border: "1px solid rgba(14,165,233,0.15)", transition: "all 0.3s", display: "block", minHeight: 90,
-            }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.3)"; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(14,165,233,0.1)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.15)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
-              <div style={{ position: "absolute", inset: 0, backgroundImage: "url(https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&q=75)", backgroundSize: "cover", backgroundPosition: "center" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(14,165,233,0.65) 0%, rgba(15,23,42,0.85) 100%)" }} />
-              <div style={{ position: "relative", padding: "18px 14px" }}>
-                <div style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#fff" }}>{tx("tab2")}</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 3 }}>{tx("tab2s")}</div>
-              </div>
-            </a>
-            {/* Sailing / Yacht */}
-            <a href={`/ai?niche=sailing&lang=${lang}`} aria-label="Nautički vodič" style={{
-              borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
-              border: "1px solid rgba(6,182,212,0.15)", transition: "all 0.3s", display: "block", minHeight: 90,
-            }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(6,182,212,0.3)"; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(6,182,212,0.1)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(6,182,212,0.15)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
-              <div style={{ position: "absolute", inset: 0, backgroundImage: "url(https://images.unsplash.com/photo-1540946485063-a40da27545f8?w=400&q=75)", backgroundSize: "cover", backgroundPosition: "center" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(6,182,212,0.6) 0%, rgba(15,23,42,0.85) 100%)" }} />
-              <div style={{ position: "relative", padding: "18px 14px" }}>
-                <div style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#fff" }}>{tx("tab3")}</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 3 }}>{tx("tab3s")}</div>
-              </div>
-            </a>
-            {/* Cruise */}
-            <a href={`/ai?niche=cruiser&lang=${lang}`} aria-label="Kruzer vodič" style={{
-              borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
-              border: "1px solid rgba(168,85,247,0.15)", transition: "all 0.3s", display: "block", minHeight: 90,
-            }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.3)"; e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(168,85,247,0.1)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.15)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
-              <div style={{ position: "absolute", inset: 0, backgroundImage: "url(https://images.unsplash.com/photo-1548574505-5e239809ee19?w=400&q=75)", backgroundSize: "cover", backgroundPosition: "center" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(168,85,247,0.6) 0%, rgba(15,23,42,0.85) 100%)" }} />
-              <div style={{ position: "relative", padding: "18px 14px" }}>
-                <div style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#fff" }}>{tx("tab4")}</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 3 }}>{tx("tab4s")}</div>
-              </div>
-            </a>
-          </div>
-          <div style={{ marginTop: 16, fontSize: 11, color: "#334155" }}>{tx("freeInfo")}</div>
+            );
+          })()}
         </div>
       </section>
 

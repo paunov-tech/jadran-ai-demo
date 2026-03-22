@@ -154,8 +154,8 @@ const T = {
 const t = (key, lang) => {
   const entry = T[key];
   if (!entry) return key;
-  // Austrian uses DE translations as base
-  const l = lang === "at" ? "at" : lang;
+  // AT uses standard DE (Hochdeutsch), no dialect
+  const l = lang === "at" ? "de" : lang;
   return entry[l] || entry.hr || entry.en || key;
 };
 
@@ -500,6 +500,22 @@ export default function JadranUnified() {
   }, [lang, phase, subScreen, premium, booked]);
 
 
+  // ─── ALERTS BAR ───
+  const [alerts, setAlerts] = useState([]);
+  const [alertIdx, setAlertIdx] = useState(0);
+  const [dismissedAlerts, setDismissedAlerts] = useState(new Set());
+  useEffect(() => {
+    const fetchAlerts = () => fetch("/api/alerts").then(r => r.json()).then(d => { if (d.alerts?.length) setAlerts(d.alerts); }).catch(() => {});
+    fetchAlerts();
+    const interval = setInterval(fetchAlerts, 300000); // 5 min
+    return () => clearInterval(interval);
+  }, []);
+  useEffect(() => {
+    if (alerts.length < 2) return;
+    const t = setInterval(() => setAlertIdx(i => (i + 1) % alerts.length), 4000);
+    return () => clearInterval(t);
+  }, [alerts]);
+
   // ─── WEATHER: Fetch real data via Gemini grounding ───
   const [weather, setWeather] = useState(W_DEFAULT);
   const [forecast, setForecast] = useState(null); // null = use FORECAST_DEFAULT
@@ -755,6 +771,28 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       <Icon d={city.ic} size={size} color={city.clr} stroke={1.5} />
     </div>;
   };
+  const ALERT_ICONS = { fire:"🔥", wind:"🌬️", storm:"⛈", rain:"🌧️", heat:"🌡️", coastal:"🌊", flood:"💧", fog:"🌫️", snow:"❄️", road_closure:"⚠️", ferry_cancelled:"⛴", bura_closure:"🌬️", traffic_jam:"🚗", roadworks:"🔧", travel_advisory:"🇩🇪", weather:"⛈", default:"⚠️" };
+  const ALERT_COLORS = { critical:"#ef4444", high:"#f59e0b", medium:"#38bdf8" };
+
+  const AlertsBar = () => {
+    const visible = alerts.filter(a => !dismissedAlerts.has(a.title));
+    if (!visible.length) return null;
+    const idx = alertIdx % visible.length;
+    const a = visible[idx];
+    if (!a) return null;
+    const icon = ALERT_ICONS[a.type] || ALERT_ICONS.default;
+    const color = ALERT_COLORS[a.severity] || "#38bdf8";
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 14px", borderRadius: 10, background: `rgba(${a.severity==="critical"?"239,68,68":a.severity==="high"?"245,158,11":"56,189,248"},0.07)`, border: `1px solid ${color}22`, marginBottom: 8, minHeight: 32, animation: "fadeUp 0.3s both", position: "relative", overflow: "hidden" }}>
+        <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+        <span style={{ fontSize: 12, color: "#cbd5e1", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.title}</span>
+        {a.severity === "critical" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: "rgba(239,68,68,0.15)", color: "#ef4444", fontWeight: 700, flexShrink: 0 }}>KRITIČNO</span>}
+        <button onClick={() => setDismissedAlerts(s => new Set([...s, a.title]))} style={{ background: "none", border: "none", color: "#475569", fontSize: 14, cursor: "pointer", padding: "0 2px", flexShrink: 0, lineHeight: 1 }}>×</button>
+        {visible.length > 1 && <div style={{ position: "absolute", bottom: 0, left: 0, height: 2, background: color, opacity: 0.3, width: `${((idx + 1) / visible.length) * 100}%`, transition: "width 4s linear" }} />}
+      </div>
+    );
+  };
+
   const PhaseNav = () => {
     const phases = [
       { k: "pre", l: t("preTrip",lang), ic: IC.plane },
@@ -1761,6 +1799,9 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             <a href="/host" style={{ ...dm, fontSize: 11, color: C.accent, textDecoration: "none", fontWeight: 600 }}>Host Panel →</a>
           </div>}
         </div>
+
+        {/* Alerts Bar */}
+        <AlertsBar />
 
         {/* Phase Nav */}
         <PhaseNav />
