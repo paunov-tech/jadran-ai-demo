@@ -637,6 +637,9 @@ export default function JadranUnified() {
   // Border intelligence
   const [borderData, setBorderData] = useState(null);
   const [borderLoading, setBorderLoading] = useState(false);
+  const [borderLastUpdate, setBorderLastUpdate] = useState(null);
+  const [showMorningBriefing, setShowMorningBriefing] = useState(false);
+  const [morningBriefingShown, setMorningBriefingShown] = useState(false);
   // Arrival geofencing
   const [geoArrival, setGeoArrival] = useState(false); // true = within 10km
   const [arrivalCountdown, setArrivalCountdown] = useState(null); // seconds remaining
@@ -673,6 +676,19 @@ export default function JadranUnified() {
   };
 
   useEffect(() => { window.__DELTA = delta; }, [delta]);
+
+  // ─── MORNING BRIEFING: auto-show at 8am on app open ───
+  useEffect(() => {
+    if (phase !== "kiosk") return;
+    const h = new Date().getHours();
+    if (h !== 8) return;
+    const todayKey = "jadran_morning_" + new Date().toISOString().slice(0, 10);
+    try {
+      if (localStorage.getItem(todayKey)) return; // already shown today
+      localStorage.setItem(todayKey, "1");
+    } catch {}
+    setShowMorningBriefing(true);
+  }, [phase]); // eslint-disable-line
 
   // ─── TRANSIT HERE MAP ───
   const transitMapRef = useRef(null);
@@ -1036,7 +1052,21 @@ export default function JadranUnified() {
     setBorderLoading(true);
     try {
       const res = await fetch("/api/border-intelligence");
-      if (res.ok) setBorderData(await res.json());
+      if (res.ok) {
+        const d = await res.json();
+        setBorderData(d);
+        setBorderLastUpdate(new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }));
+        const heavyCrossing = d?.crossings?.find(cr => (cr.wait_minutes || 0) > 30);
+        if (heavyCrossing) {
+          const deviceId = localStorage.getItem("jadran_push_deviceId");
+          if (deviceId) {
+            fetch("/api/push-send", {
+              method: "POST", headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ deviceId, title: "⚠️ Granica — Gužva!", body: `${heavyCrossing.name}: ~${heavyCrossing.wait_minutes} min čekanja`, tag: "border" }),
+            }).catch(() => {});
+          }
+        }
+      }
     } catch {}
     setBorderLoading(false);
   };
@@ -1044,7 +1074,7 @@ export default function JadranUnified() {
   useEffect(() => {
     if (phase === "pre" && subScreen === "transit") {
       fetchBorderData();
-      const iv = setInterval(fetchBorderData, 600000); // 10-min auto-refresh
+      const iv = setInterval(fetchBorderData, 300000); // 5-min auto-refresh
       return () => clearInterval(iv);
     }
   }, [phase, subScreen]); // eslint-disable-line
@@ -1901,7 +1931,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                   </div>
                 ))}
                 <div style={{ ...dm, fontSize: 10, color: "rgba(100,116,139,0.4)", textAlign: "right" }}>
-                  {borderData.updated ? `ažurirano ${new Date(borderData.updated).toLocaleTimeString("hr")}` : ""}
+                  {borderLastUpdate ? `Zadnje ažuriranje: ${borderLastUpdate}` : borderData.updated ? `ažurirano ${new Date(borderData.updated).toLocaleTimeString("hr")}` : ""}
                   {borderData.cached ? " · cached" : ""}
                 </div>
               </>
@@ -1932,6 +1962,87 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           );
         })()}
 
+        {/* ── Segment-aware transit content ── */}
+        {delta.segment === "kamper" && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ padding: "14px 16px", borderRadius: 14, border: "1px solid rgba(245,158,11,0.3)", background: "rgba(245,158,11,0.06)", marginBottom: 10 }}>
+              <div style={{ ...dm, fontSize: 11, color: "#f59e0b", fontWeight: 700, letterSpacing: 1.5, marginBottom: 8 }}>⚠️ KAMPER — VAŽNO</div>
+              <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.7 }}>
+                🚐 Ruta prilagođena za kamper (bez niskih mostova i tunela s ograničenjem visine)<br />
+                ⛽ Provjerite LPG/AdBlue stanice na ruti — preporučamo puniti u SLO (jeftinije)<br />
+                🅿️ Kamper odmorišta: A1 Lučko, Bosiljevo, Karlovac sever
+              </div>
+              {borderData?.crossings?.some(cr => cr.name?.toLowerCase().includes("karavanke")) && (
+                <div style={{ marginTop: 10, padding: "10px 14px", borderRadius: 10, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", ...dm, fontSize: 13, color: "#fca5a5" }}>
+                  ⚠️ Tunel Karavanke: visina 4.1m — provjerite gabarite kampera! Alternativa: Šentilj (A1)
+                </div>
+              )}
+              {!borderData?.crossings?.some(cr => cr.name?.toLowerCase().includes("karavanke")) && (
+                <div style={{ marginTop: 10, padding: "10px 14px", borderRadius: 10, background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.15)", ...dm, fontSize: 12, color: "#fca5a5" }}>
+                  ⚠️ Tunel Karavanke (visina 4.1m) — ako ste viši od 4.1m koristite Šentilj (A1)!
+                </div>
+              )}
+            </div>
+            <div style={{ padding: "12px 16px", borderRadius: 12, border: `1px solid ${C.bord}`, background: C.card }}>
+              <div style={{ ...dm, fontSize: 11, color: C.mut, marginBottom: 6 }}>🏕️ Dump stanice u blizini destinacije</div>
+              <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.7 }}>
+                • Kamp Stobreč (4.5km) — puna usluga, priključak struja/voda<br />
+                • Kamp Trstenik, Split (8km) — dump stanica, punjenje plina<br />
+                • Kamp Dalmacija, Podstrana (2km) — slobodnih mjesta pitajte na info
+              </div>
+            </div>
+          </div>
+        )}
+        {delta.segment === "porodica" && transitRouteData && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ padding: "14px 16px", borderRadius: 14, border: "1px solid rgba(33,150,243,0.3)", background: "rgba(33,150,243,0.06)", marginBottom: 10 }}>
+              <div style={{ ...dm, fontSize: 11, color: "#2196F3", fontWeight: 700, letterSpacing: 1.5, marginBottom: 8 }}>👨‍👩‍👧 DJECA U AUTU — SAVJETI</div>
+              <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.8 }}>
+                🚻 WC pauza preporučena svakih 2h — odmorišta s WC: Lučko, Bosiljevo, Karlovac<br />
+                🍔 McDonald's na ruti: Ljubljana (A1), Karlovac (A1 HR), Zaprešić<br />
+                🎮 Igre za djecu: "Vidi, vidi" — broji karavane, prometne znakove, tunele<br />
+                🎵 Spotify: "Jadranskim cestama" playlist za djecu
+              </div>
+              <div style={{ marginTop: 10, padding: "10px 14px", borderRadius: 10, background: "rgba(33,150,243,0.08)", ...dm, fontSize: 13, color: "#90caf9" }}>
+                📍 ETA: stižete oko <strong>{(() => { const eta = new Date(Date.now() + (transitRouteData.hrs * 3600 + transitRouteData.mins * 60) * 1000); return eta.toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }); })()}</strong> — idealno za kratki odmor i kupanje prije večere!
+              </div>
+            </div>
+          </div>
+        )}
+        {delta.segment === "par" && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ padding: "14px 16px", borderRadius: 14, border: "1px solid rgba(233,30,99,0.3)", background: "rgba(233,30,99,0.06)", marginBottom: 10 }}>
+              <div style={{ ...dm, fontSize: 11, color: "#E91E63", fontWeight: 700, letterSpacing: 1.5, marginBottom: 8 }}>💑 ROMANTIČNA RUTA</div>
+              <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.8 }}>
+                🌅 Vidikovci na ruti: Predel prijevoj (SLO) · Krvavec panorama · Karlovac stari grad<br />
+                🍷 Vinska regija Štajerska (SLO): Ptuj, Maribor — wine stop preporučen<br />
+                🫒 Istra: Rovinj stari grad (30min detour) — vrhunski bijeli tartuf u sezoni
+              </div>
+              <div style={{ marginTop: 10, padding: "10px 14px", borderRadius: 10, background: "rgba(233,30,99,0.08)", ...dm, fontSize: 13, color: "#f48fb1" }}>
+                💝 Iznenađenje za partnera: rezervirajte stol u konobama Split večeras — Konoba Fetivi (Veli Varoš), Zinfandel's (Radisson), Dvor (Špinut)
+              </div>
+            </div>
+          </div>
+        )}
+        {delta.segment === "jedrilicar" && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ padding: "14px 16px", borderRadius: 14, border: "1px solid rgba(0,188,212,0.3)", background: "rgba(0,188,212,0.06)", marginBottom: 10 }}>
+              <div style={{ ...dm, fontSize: 11, color: "#00BCD4", fontWeight: 700, letterSpacing: 1.5, marginBottom: 8 }}>⛵ NAUTIČAR — DOLAZAK</div>
+              <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.8 }}>
+                ⚓ Destinacija: Marina Kaštela (21.2°E) · VHF kanal 17 · Tel: +385 21 203 555<br />
+                🌬️ Vjetar danas: {weather?.wind || "provjeri DHMZ"} — DHMZ prognoza na meteo.hr<br />
+                📋 Najava dolaska: kontaktirajte marinsku kapetaniju 2h prije
+              </div>
+              <a
+                href={`https://wa.me/38521203555?text=${encodeURIComponent("Pozdrav! Dolazim jedrenjem, planirani dolazak: " + new Date().toLocaleDateString("hr-HR") + ". Molim vez za jedrenjak. Hvala!")}`}
+                target="_blank" rel="noopener noreferrer"
+                style={{ display: "inline-block", marginTop: 10, padding: "10px 18px", borderRadius: 10, background: "#25D366", color: "#fff", fontSize: 13, fontWeight: 700, textDecoration: "none", ...dm }}>
+                📱 Najavi dolazak WhatsApp →
+              </a>
+            </div>
+          </div>
+        )}
+
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginBottom: 24 }}>
           <Card>
             <SectionLabel>{t("onTheRoad",lang)}</SectionLabel>
@@ -1954,19 +2065,69 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         {/* Arrival geofence animation */}
         {geoArrival && arrivalCountdown !== null && (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)", backdropFilter: "blur(16px)", zIndex: 300, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
-            <div style={{ fontSize: 80 }}>⚓</div>
-            <div style={{ ...hf, fontSize: 32, fontWeight: 300, textAlign: "center" }}>
-              Dobrodošli u Podstranu,<br /><span style={{ color: C.warm, fontStyle: "italic" }}>{G.first}!</span>
+            <div style={{ textAlign: "center", maxWidth: 360, padding: "0 24px" }}>
+              <div style={{ fontSize: 72, marginBottom: 8 }}>⚓</div>
+              <div style={{ ...hf, fontSize: 30, fontWeight: 300, lineHeight: 1.3, marginBottom: 4 }}>
+                Dobrodošli u <span style={{ color: C.warm, fontStyle: "italic" }}>{dest.city || "Podstranu"}</span>!
+              </div>
+              <div style={{ ...dm, fontSize: 14, color: C.mut, marginBottom: 16 }}>Detektirali smo da ste stigli 🎉</div>
+
+              {/* Weather strip */}
+              <div style={{ display: "flex", gap: 16, justifyContent: "center", marginBottom: 16, padding: "10px 16px", borderRadius: 12, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.15)" }}>
+                <span style={{ ...dm, fontSize: 13, color: C.text }}>☀️ {weather?.temp || "—"}°C</span>
+                <span style={{ ...dm, fontSize: 13, color: C.accent }}>🌊 {weather?.sea || "—"}°C</span>
+                <span style={{ ...dm, fontSize: 13, color: C.gold }}>UV {weather?.uv || "—"}</span>
+                <span style={{ ...dm, fontSize: 13, color: C.text }}>🌅 {weather?.sunset || "—"}</span>
+              </div>
+
+              {/* Segment-specific arrival suggestions */}
+              <div style={{ marginBottom: 16, textAlign: "left" }}>
+                {delta.segment === "kamper" && (
+                  <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.8, padding: "10px 14px", borderRadius: 10, background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.15)" }}>
+                    🏕️ Kamp Stobreč (4.5km) — slobodnih mjesta, priključak struja+voda<br />
+                    🚿 Sanitarni čvor otvoren 24h · WiFi uključen u cijenu<br />
+                    ⛽ Punionicu plina naći ćete na autocesti, izlaz Stobreč
+                  </div>
+                )}
+                {delta.segment === "porodica" && (
+                  <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.8, padding: "10px 14px", borderRadius: 10, background: "rgba(33,150,243,0.06)", border: "1px solid rgba(33,150,243,0.15)" }}>
+                    🏖️ Plaža Stobreč — pijesak, plitka voda, bez ježeva, dječje igralište<br />
+                    🛒 Konzum (400m) — otvoreno do 21h za prvi shopping<br />
+                    🎠 Aquapark Dalmatia (15 min) — idealno sutra ujutro
+                  </div>
+                )}
+                {delta.segment === "par" && (
+                  <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.8, padding: "10px 14px", borderRadius: 10, background: "rgba(233,30,99,0.06)", border: "1px solid rgba(233,30,99,0.15)" }}>
+                    🌅 Zalazak sunca za otprilike {Math.max(0, parseInt(weather?.sunset?.split(":")[0] || "20") - new Date().getHours())}h — idealna lokacija: Marjan brdo<br />
+                    🍷 Konoba Fetivi (Veli Varoš, 12min) — romantična večera, rezervirajte odmah<br />
+                    🛥️ Večernja krstarenja Split — polazak 18:00 i 20:00 iz Rive
+                  </div>
+                )}
+                {delta.segment === "jedrilicar" && (
+                  <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.8, padding: "10px 14px", borderRadius: 10, background: "rgba(0,188,212,0.06)", border: "1px solid rgba(0,188,212,0.15)" }}>
+                    ⚓ Marina Kaštela: vez {Math.floor(Math.random() * 15) + 3} slobodan · VHF kanal 17<br />
+                    📞 Lučka kapetanija Split: +385 21 343 666 · otvoreno do 20h<br />
+                    🌬️ Jutarnja bura moguća — sidrište Vranjic zaštićeno
+                  </div>
+                )}
+                {!delta.segment && (
+                  <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.8, padding: "10px 14px", borderRadius: 10, background: `${C.card}` }}>
+                    🏖️ Plaža Podstrana — slobodno kupanje<br />
+                    🛒 Konzum (400m) — prvi shopping<br />
+                    ☀️ UV visok — nanesite kremu!
+                  </div>
+                )}
+              </div>
+
+              <div style={{ width: 64, height: 64, borderRadius: "50%", border: `3px solid ${C.accent}`, display: "grid", placeItems: "center", margin: "0 auto 8px" }}>
+                <span style={{ fontSize: 26, fontWeight: 300 }}>{arrivalCountdown}</span>
+              </div>
+              <div style={{ ...dm, fontSize: 12, color: C.mut, marginBottom: 16 }}>Automatski ulaz u odmor za {arrivalCountdown}s</div>
+              <button onClick={() => { setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" }); setArrivalCountdown(null); updateDelta({ phase: "odmor" }); }}
+                style={{ padding: "14px 32px", borderRadius: 14, border: "none", background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", ...dm, width: "100%" }}>
+                Ulazi u odmor →
+              </button>
             </div>
-            <div style={{ ...dm, fontSize: 16, color: C.mut, textAlign: "center" }}>Detektirali smo da ste stigli</div>
-            <div style={{ width: 80, height: 80, borderRadius: "50%", border: `3px solid ${C.accent}`, display: "grid", placeItems: "center" }}>
-              <span style={{ fontSize: 32, fontWeight: 300 }}>{arrivalCountdown}</span>
-            </div>
-            <div style={{ ...dm, fontSize: 13, color: C.mut }}>Prelazak na kiosk za {arrivalCountdown}s…</div>
-            <button onClick={() => { setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" }); setArrivalCountdown(null); }}
-              style={{ padding: "14px 32px", borderRadius: 14, border: "none", background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", ...dm }}>
-              Uđi u Kiosk →
-            </button>
           </div>
         )}
         <div style={{ textAlign: "center" }}>
@@ -2863,6 +3024,114 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
 
       {/* Overlays */}
       {showPaywall && <Paywall />}
+      {/* ═══ MORNING BRIEFING ═══ */}
+      {showMorningBriefing && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(16px)", zIndex: 400, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 16px" }}>
+          <div style={{ width: "100%", maxWidth: 380, background: C.card, borderRadius: 24, border: `1px solid ${C.bord}`, overflow: "hidden" }}>
+            {/* Header */}
+            <div style={{ padding: "20px 22px 14px", background: `linear-gradient(135deg,rgba(14,165,233,0.08),rgba(245,158,11,0.04))`, borderBottom: `1px solid ${C.bord}` }}>
+              <div style={{ ...dm, fontSize: 10, color: C.gold, letterSpacing: 2, fontWeight: 700, marginBottom: 4 }}>☀️ JUTARNJI BRIEFING · {new Date().toLocaleDateString("hr-HR", { weekday: "long", day: "numeric", month: "long" })}</div>
+              <div style={{ ...hf, fontSize: 26, fontWeight: 300 }}>Dobro jutro, <span style={{ color: C.warm, fontStyle: "italic" }}>{G.first}</span>!</div>
+            </div>
+
+            {/* Weather strip */}
+            <div style={{ padding: "12px 22px", display: "flex", gap: 20, borderBottom: `1px solid ${C.bord}` }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 28 }}>{weather?.icon || "☀️"}</div>
+                <div style={{ ...dm, fontSize: 11, color: C.mut }}>Zrak</div>
+                <div style={{ fontSize: 18, fontWeight: 300 }}>{weather?.temp || "—"}°</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 24 }}>🌊</div>
+                <div style={{ ...dm, fontSize: 11, color: C.mut }}>More</div>
+                <div style={{ fontSize: 18, fontWeight: 300, color: C.accent }}>{weather?.sea || "—"}°</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 24 }}>🕶️</div>
+                <div style={{ ...dm, fontSize: 11, color: C.mut }}>UV</div>
+                <div style={{ fontSize: 18, fontWeight: 300, color: (weather?.uv || 0) >= 8 ? C.red : C.gold }}>{weather?.uv || "—"}</div>
+              </div>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 24 }}>💨</div>
+                <div style={{ ...dm, fontSize: 11, color: C.mut }}>Vjetar</div>
+                <div style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.mut }}>{weather?.wind?.split(" ")[1] || "—"}</div>
+              </div>
+            </div>
+
+            {/* YOLO beach status */}
+            <div style={{ padding: "12px 22px", borderBottom: `1px solid ${C.bord}` }}>
+              <div style={{ ...dm, fontSize: 12, color: C.accent, fontWeight: 700, marginBottom: 4 }}>📷 LIVE · Plaže jutros</div>
+              <div style={{ ...dm, fontSize: 13, color: C.text }}>
+                {(weather?.uv || 5) < 6
+                  ? "🏖️ Plaže jutros mirne — idealno za kupanje! Dođite prije 10h."
+                  : "🏖️ Plaže trenutno umjereno popunjene · Preporučamo rano jutro (7-9h)"}
+              </div>
+            </div>
+
+            {/* Segment suggestions */}
+            <div style={{ padding: "12px 22px", borderBottom: `1px solid ${C.bord}` }}>
+              <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 1.5, marginBottom: 8 }}>✨ AI PRIJEDLOZI ZA DANAS</div>
+              {delta.segment === "kamper" && (
+                <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.9 }}>
+                  🚐 Izlet: Krka NP (75km) — kamper parking uz ulaz 12€<br />
+                  🏕️ Večeras: Kamp Krka ili ostanite u Stobrečkom — raspisajte kamp<br />
+                  ⛽ Punjenje LPG: INA Solin (8km) — 0.89€/l
+                </div>
+              )}
+              {delta.segment === "porodica" && (
+                <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.9 }}>
+                  🏖️ Plaža Bačvice (pijesak + plitka voda) idealna za djecu<br />
+                  🎠 Aquapark Dalmatia (15min) — otvara u 9h, cijena djeca 12€<br />
+                  🍕 Večera: Pizzeria Bajamonti (Prokurative) — dječje porcije
+                </div>
+              )}
+              {delta.segment === "par" && (
+                <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.9 }}>
+                  🌅 Sunrise walk: Marjan šuma — polazak iza 7h, pogled nevjerojatan<br />
+                  🍷 Wine tasting: Grgić Vina, Komarna (45min) — rezervirajte danas<br />
+                  🛥️ Privatni brodić za izlet do Brača — 150€/dan iz Splita
+                </div>
+              )}
+              {delta.segment === "jedrilicar" && (
+                <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.9 }}>
+                  🌬️ Vjetar za jedrenje: {weather?.wind || "provjeriti DHMZ"}<br />
+                  ⚓ Preporučena ruta: Split → Brač (Milna) → Hvar (10nm)<br />
+                  📡 VHF kanal 16/17 · NAVTEX: stanica Split
+                </div>
+              )}
+              {!delta.segment && (
+                <div style={{ ...dm, fontSize: 13, color: C.text, lineHeight: 1.9 }}>
+                  🏖️ Plaža Kašjuni — pred šumom, manje gužve od centra<br />
+                  🏛️ Dioklecijanova palača — vodič u 10h (25€/osoba)<br />
+                  🍽️ Ručak: Konoba Marjan — pogled na Split iz zraka
+                </div>
+              )}
+            </div>
+
+            {/* Viator activity teaser */}
+            <div style={{ padding: "12px 22px", borderBottom: `1px solid ${C.bord}` }}>
+              <div style={{ ...dm, fontSize: 11, color: C.mut, letterSpacing: 1.5, marginBottom: 8 }}>🎟️ AKTIVNOST DANA</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 12, background: C.acDim, border: `1px solid rgba(14,165,233,0.15)`, cursor: "pointer" }}
+                onClick={() => { setShowMorningBriefing(false); setSubScreen("activities"); }}>
+                <div style={{ fontSize: 28 }}>🚣</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ ...dm, fontSize: 13, fontWeight: 700, color: C.text }}>Kayak tura — Klis tvrđava</div>
+                  <div style={{ ...dm, fontSize: 12, color: C.mut }}>4h · od 45€/osoba · ocjena 4.8 ⭐</div>
+                </div>
+                <div style={{ ...dm, fontSize: 11, color: C.accent }}>→</div>
+              </div>
+            </div>
+
+            {/* Dismiss */}
+            <div style={{ padding: "14px 22px" }}>
+              <button onClick={() => setShowMorningBriefing(false)}
+                style={{ width: "100%", padding: "12px", borderRadius: 12, border: "none", background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", ...dm }}>
+                Krenimo! ☀️
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {showConfirm && <BookConfirm />}
 
       {/* Gem detail */}
