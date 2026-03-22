@@ -1093,7 +1093,7 @@ export default async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: 'Service temporarily unavailable' });
 
   try {
-    const { system, messages, mode, region: regionRaw, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, plan, deviceId, adriatic_region } = req.body;
+    const { system, messages, mode, region: regionRaw, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, plan, deviceId, adriatic_region, delta_context } = req.body;
     // Map new Adriatic region keys to existing LOCATIONS keys
     const ADRIATIC_TO_LOCATION = { istra: "istra", kvarner: "kvarner", srednja_dalmacija: "split", juzna_dalmacija: "dubrovnik" };
     const region = regionRaw || (adriatic_region ? ADRIATIC_TO_LOCATION[adriatic_region] : undefined);
@@ -1102,6 +1102,20 @@ export default async function handler(req, res) {
     const adriaticCtx = adriatic_region && ADRIATIC_REGION_NAMES[adriatic_region]
       ? `[REGION: ${ADRIATIC_REGION_NAMES[adriatic_region]}. Guest arriving from Central Europe.]`
       : null;
+    // DELTA_CONTEXT — structured trip context from onboarding
+    const deltaCtxStr = delta_context ? (() => {
+      const d = delta_context;
+      const parts = ["[DELTA KONTEKST]"];
+      if (d.segment) parts.push(`Segment: ${d.segment}`);
+      if (d.from) parts.push(`Iz: ${d.from}`);
+      if (d.destination?.city) parts.push(`Destinacija: ${d.destination.city}${d.destination.region ? ` (${d.destination.region})` : ""}`);
+      if (d.travelers) parts.push(`Putnici: ${d.travelers.adults || 2} odraslih${d.travelers.kids?.length ? `, ${d.travelers.kids.length} djece` : ""}`);
+      if (d.phase) parts.push(`Faza: ${d.phase}`);
+      if (d.budget) parts.push(`Budžet: ${{ low: "ekonomični", mid: "srednji", high: "luksuz" }[d.budget] || d.budget}`);
+      if (d.interests?.length) parts.push(`Interesi: ${d.interests.join(", ")}`);
+      if (d.arrival_date) parts.push(`Dolazak: ${d.arrival_date}`);
+      return parts.join(" | ");
+    })() : null;
 
     // ── PROMO CODES — free VIP access for testers ──
     const PROMO_CODES = {
@@ -1207,6 +1221,8 @@ export default async function handler(req, res) {
     }
     // Prepend Adriatic region context if available (precise geographic anchor for AI)
     if (adriaticCtx && systemPrompt) systemPrompt = adriaticCtx + '\n' + systemPrompt;
+    // Prepend DELTA_CONTEXT (structured trip info from onboarding)
+    if (deltaCtxStr && systemPrompt) systemPrompt = deltaCtxStr + '\n' + systemPrompt;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
