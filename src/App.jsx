@@ -18,52 +18,100 @@ const CITY_COORDS = {
 };
 const HERE_ROUTING_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
 
-// ─── TransitMap: Mapbox GL JS interactive map ───
+// ─── TransitMap: HERE REST routing + Leaflet rendering ───
 const TransitMap = React.memo(({ fromCity, toCity }) => {
-  const mapContainer = React.useRef(null);
-  const map = React.useRef(null);
+  const mapRef = React.useRef(null);
+  const mapInstance = React.useRef(null);
+
   const COORDS = {
-    "Wien":[16.3738,48.2082],"München":[11.5820,48.1351],"Frankfurt":[8.6821,50.1109],
-    "Beograd":[20.4633,44.8176],"Ljubljana":[14.5058,46.0569],"Graz":[15.4395,47.0707],
-    "Salzburg":[13.0550,47.8095],"Linz":[14.2858,48.3069],"Zürich":[8.5417,47.3769],
-    "Berlin":[13.4050,52.5200],"Hamburg":[10.0153,53.5753],"Köln":[6.9500,50.9333],
-    "Split":[16.4402,43.5081],"Dubrovnik":[18.0944,42.6507],"Zadar":[15.2314,44.1194],
-    "Rijeka":[14.4422,45.3271],"Pula":[13.8496,44.8666],"Rovinj":[13.6387,45.0811],
-    "Makarska":[17.0177,43.2967],"Hvar":[16.4414,43.1729],"Trogir":[16.2500,43.5167],
-    "Zagreb":[15.9819,45.8150],"Trieste":[13.7768,45.6495],"Praha":[14.4378,50.0755],
-    "Kraków":[19.9450,50.0647],
+    "Wien":[48.2082,16.3738],"München":[48.1351,11.5820],"Frankfurt":[50.1109,8.6821],
+    "Beograd":[44.8176,20.4633],"Ljubljana":[46.0569,14.5058],"Graz":[47.0707,15.4395],
+    "Salzburg":[47.8095,13.0550],"Linz":[48.3069,14.2858],"Zürich":[47.3769,8.5417],
+    "Split":[43.5081,16.4402],"Dubrovnik":[42.6507,18.0944],"Zadar":[44.1194,15.2314],
+    "Rijeka":[45.3271,14.4422],"Pula":[44.8666,13.8496],"Rovinj":[45.0811,13.6387],
+    "Makarska":[43.2967,17.0177],"Hvar":[43.1729,16.4414],"Trogir":[43.5167,16.2500],
+    "Podstrana":[43.4833,16.5500],"Omiš":[43.4439,16.6892],"Šibenik":[43.7350,15.8952],
   };
+
   React.useEffect(() => {
-    if (map.current) return;
-    const from = COORDS[fromCity] || [16.3738, 48.2082];
-    const to = COORDS[toCity] || [16.4402, 43.5081];
-    const center = [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2];
-    const loadMapbox = () => {
-      if (!mapContainer.current) return;
-      window.mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB4legg';
-      map.current = new window.mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/dark-v11',
-        center: center,
-        zoom: 5,
-      });
-      map.current.on('load', () => {
-        map.current.addSource('route', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [from, to] } } });
-        map.current.addLayer({ id: 'route', type: 'line', source: 'route', paint: { 'line-color': '#FF6600', 'line-width': 3, 'line-dasharray': [2, 1] } });
-        new window.mapboxgl.Marker({ color: '#FF6600' }).setLngLat(from).addTo(map.current);
-        new window.mapboxgl.Marker({ color: '#00D4AA' }).setLngLat(to).addTo(map.current);
-        map.current.fitBounds([from, to], { padding: 60 });
-      });
+    const from = COORDS[fromCity] || COORDS["Wien"];
+    const to = COORDS[toCity] || COORDS["Split"];
+
+    const HERE_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
+
+    const initMap = async () => {
+      if (!mapRef.current) return;
+      if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
+
+      const L = window.L;
+      const map = L.map(mapRef.current, { zoomControl: false, attributionControl: false });
+      mapInstance.current = map;
+
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 18 }).addTo(map);
+
+      const fromLL = L.latLng(from[0], from[1]);
+      const toLL = L.latLng(to[0], to[1]);
+
+      // Straight line fallback immediately
+      const line = L.polyline([fromLL, toLL], { color: "#FF6600", weight: 3, opacity: 0.7, dashArray: "8,5" }).addTo(map);
+
+      const iconFrom = L.divIcon({ html: '<div style="width:12px;height:12px;background:#FF6600;border:2px solid white;border-radius:50%"></div>', iconSize: [12, 12], className: "" });
+      const iconTo = L.divIcon({ html: '<div style="width:14px;height:14px;background:#00D4AA;border:2px solid white;border-radius:50%"></div>', iconSize: [14, 14], className: "" });
+      L.marker(fromLL, { icon: iconFrom }).addTo(map);
+      L.marker(toLL, { icon: iconTo }).addTo(map);
+      map.fitBounds([fromLL, toLL], { padding: [40, 40] });
+
+      // Try HERE REST routing for real road route
+      try {
+        const url = `https://router.hereapi.com/v8/routes?transportMode=car&origin=${from[0]},${from[1]}&destination=${to[0]},${to[1]}&return=polyline,summary&apikey=${HERE_KEY}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const section = data.routes?.[0]?.sections?.[0];
+        if (section?.polyline) {
+          const coords = decodeHerePolyline(section.polyline);
+          if (coords.length > 0) {
+            map.removeLayer(line);
+            L.polyline(coords, { color: "#FF6600", weight: 3, opacity: 0.9 }).addTo(map);
+            map.fitBounds(coords, { padding: [40, 40] });
+          }
+        }
+      } catch (e) { /* keep straight line */ }
     };
-    if (window.mapboxgl) {
-      loadMapbox();
+
+    const decodeHerePolyline = (encoded) => {
+      const result = [];
+      let lat = 0, lng = 0, i = 0;
+      while (i < encoded.length) {
+        let b, shift = 0, res = 0;
+        do { b = encoded.charCodeAt(i++) - 63; res |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+        lat += (res & 1) ? ~(res >> 1) : (res >> 1);
+        shift = 0; res = 0;
+        do { b = encoded.charCodeAt(i++) - 63; res |= (b & 0x1f) << shift; shift += 5; } while (b >= 0x20);
+        lng += (res & 1) ? ~(res >> 1) : (res >> 1);
+        result.push([lat / 1e5, lng / 1e5]);
+      }
+      return result;
+    };
+
+    if (window.L) {
+      initMap();
     } else {
-      const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css'; document.head.appendChild(css);
-      const script = document.createElement('script'); script.src = 'https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js'; script.onload = loadMapbox; document.head.appendChild(script);
+      if (!document.getElementById("lf-css")) {
+        const css = document.createElement("link");
+        css.id = "lf-css"; css.rel = "stylesheet";
+        css.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+        document.head.appendChild(css);
+      }
+      const s = document.createElement("script");
+      s.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      s.onload = initMap;
+      document.head.appendChild(s);
     }
-    return () => { if (map.current) { map.current.remove(); map.current = null; } };
-  }, []); // eslint-disable-line
-  return (<div ref={mapContainer} style={{ width: '100%', height: '280px', borderRadius: '12px' }} />);
+
+    return () => { if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
+  }, [fromCity, toCity]); // eslint-disable-line
+
+  return <div ref={mapRef} style={{ width: "100%", height: "280px", borderRadius: "12px", background: "#0d1b2a" }} />;
 });
 
 /* ══════════════════════════════════════════════════════════
