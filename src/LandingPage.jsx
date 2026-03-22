@@ -93,6 +93,9 @@ export default function LandingPage() {
   const [selectedMode, setSelectedMode] = useState(null); // "auto"|"avion"|"kamper"|"odmor"
   const [depCity, setDepCity] = useState("");
   const [routeStep, setRouteStep] = useState(null); // null | "city" | "map"
+  const [toLPCity, setToLPCity] = useState(""); // destination city for new 2-input flow
+  const [fromLPSugs, setFromLPSugs] = useState([]);
+  const [toLPSugs, setToLPSugs] = useState([]);
   const [routeData, setRouteData] = useState(null);
   const [routeLoading, setRouteLoading] = useState(false);
   const mapRef = useRef(null);
@@ -390,62 +393,48 @@ export default function LandingPage() {
                   </div>
                 )}
 
-                {/* Departure city panel */}
-                {routeStep === "city" && (
+                {/* Route inputs — shown after transport tile click */}
+                {(routeStep === "city" || routeStep === "map") && (
                   <div style={{ marginTop: 14, padding: "18px 20px", borderRadius: 16, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)", animation: "fadeIn 0.3s both" }}>
-                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 10 }}>
-                      {tlang({ hr: "Odakle krećete?", de: "Von wo reisen Sie an?", en: "Where are you departing from?", it: "Da dove parti?" })}
-                    </div>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <input value={depCity} onChange={e => setDepCity(e.target.value)}
-                        onKeyDown={e => e.key === "Enter" && depCity.trim() && fetchRoute(depCity.trim())}
-                        placeholder={tlang(DEP_PLACEHOLDER)}
-                        style={{ flex: 1, padding: "12px 14px", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 14, outline: "none", fontFamily: B }} />
-                      <button onClick={() => depCity.trim() && fetchRoute(depCity.trim())}
-                        disabled={routeLoading || !depCity.trim()}
-                        style={{ padding: "12px 16px", borderRadius: 10, background: routeLoading ? "rgba(14,165,233,0.2)" : "linear-gradient(135deg, #0ea5e9, #0284c7)", border: "none", color: "#fff", fontSize: 13, fontWeight: 700, cursor: routeLoading ? "wait" : "pointer", fontFamily: B, whiteSpace: "nowrap", minWidth: 80 }}>
-                        {routeLoading ? "..." : goLabel(lang === "at" ? "de" : lang)}
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* HERE Maps route result */}
-                {routeStep === "map" && routeData && (
-                  <div style={{ marginTop: 14, borderRadius: 16, overflow: "hidden", border: "1px solid rgba(14,165,233,0.2)", animation: "fadeIn 0.4s both" }}>
-                    {routeData.error ? (
-                      <div style={{ padding: "20px", textAlign: "center", color: "#f87171", fontSize: 13 }}>
-                        ⚠️ {tlang({ hr: "Grad nije pronađen. Pokušajte ponovo.", de: "Stadt nicht gefunden. Bitte erneut versuchen.", en: "City not found. Please try again.", it: "Città non trovata. Riprova." })}
-                        <br/><button onClick={() => setRouteStep("city")} style={{ marginTop: 8, padding: "6px 14px", borderRadius: 8, background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)", color: "#38bdf8", fontSize: 12, cursor: "pointer" }}>← {tlang({ hr: "Natrag", de: "Zurück", en: "Back", it: "Indietro" })}</button>
-                      </div>
-                    ) : (
-                      <>
-                        {/* Route summary */}
-                        <div style={{ padding: "14px 18px", background: "rgba(14,165,233,0.06)", display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <span style={{ fontSize: 16 }}>📍</span>
-                            <span style={{ fontSize: 13, color: "#94a3b8" }}>{routeData.city}</span>
-                            <span style={{ color: "#0ea5e9" }}>→</span>
-                            <span style={{ fontSize: 13, color: "#94a3b8" }}>Podstrana</span>
-                          </div>
-                          <div style={{ display: "flex", gap: 16 }}>
-                            <span style={{ fontSize: 13, color: "#f0f4f8", fontWeight: 600 }}>🛣 {routeData.km} km</span>
-                            <span style={{ fontSize: 13, color: "#f0f4f8", fontWeight: 600 }}>⏱ {routeData.hrs}h {routeData.mins}min</span>
-                          </div>
-                          {selectedMode === "kamper" && <span style={{ fontSize: 11, color: "#f59e0b", padding: "2px 8px", borderRadius: 6, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.15)" }}>🚐 Kamper ruta</span>}
+                    {/* FROM */}
+                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>Odakle krećeš?</div>
+                    <div style={{ position: "relative", marginBottom: 12 }}>
+                      <input value={depCity} onChange={e => { setDepCity(e.target.value); const q = e.target.value.toLowerCase(); setFromLPSugs(q.length < 1 ? [] : ["Wien","München","Frankfurt","Beograd","Ljubljana"].filter(c => c.toLowerCase().includes(q))); }}
+                        onFocus={() => depCity.length === 0 && setFromLPSugs(["Wien","München","Frankfurt","Beograd","Ljubljana"])}
+                        onBlur={() => setTimeout(() => setFromLPSugs([]), 150)}
+                        placeholder="npr. Wien, München, Frankfurt…"
+                        style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${depCity ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 15, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
+                      {fromLPSugs.length > 0 && (
+                        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, marginTop: 4, zIndex: 50, overflow: "hidden" }}>
+                          {fromLPSugs.map(c => <div key={c} onMouseDown={() => { setDepCity(c); setFromLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c}</div>)}
                         </div>
-                        {/* Map container */}
-                        <div ref={mapRef} style={{ height: 260, width: "100%", background: "#0c2d48" }} />
-                        {/* CTA */}
-                        <div style={{ padding: "14px 18px", background: "rgba(10,22,40,0.8)", display: "flex", gap: 10, alignItems: "center" }}>
-                          <button onClick={() => window.location.href = `/ai?niche=${modeToNiche[selectedMode] || "local"}&lang=${lang}&from=${encodeURIComponent(routeData.city)}`}
-                            style={{ flex: 1, padding: "13px 20px", borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: F, letterSpacing: 0.5 }}>
-                            {startLabel(lang === "at" ? "de" : lang)}
-                          </button>
-                          <button onClick={() => setRouteStep("city")} style={{ padding: "13px 14px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)", color: "#64748b", fontSize: 13, cursor: "pointer" }}>←</button>
+                      )}
+                    </div>
+                    {/* TO */}
+                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>Kuda ideš?</div>
+                    <div style={{ position: "relative", marginBottom: 16 }}>
+                      <input value={toLPCity} onChange={e => { setToLPCity(e.target.value); const q = e.target.value.toLowerCase(); setToLPSugs(q.length < 1 ? [] : ["Split","Dubrovnik","Hvar","Zadar","Rijeka"].filter(c => c.toLowerCase().includes(q))); }}
+                        onFocus={() => toLPCity.length === 0 && setToLPSugs(["Split","Dubrovnik","Hvar","Zadar","Rijeka"])}
+                        onBlur={() => setTimeout(() => setToLPSugs([]), 150)}
+                        placeholder="npr. Split, Dubrovnik, Hvar…"
+                        style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${toLPCity ? "rgba(249,115,22,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 15, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
+                      {toLPSugs.length > 0 && (
+                        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, marginTop: 4, zIndex: 50, overflow: "hidden" }}>
+                          {toLPSugs.map(c => <div key={c} onMouseDown={() => { setToLPCity(c); setToLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c}</div>)}
                         </div>
-                      </>
-                    )}
+                      )}
+                    </div>
+                    {/* CTA */}
+                    <button
+                      disabled={!depCity.trim() || !toLPCity.trim()}
+                      onClick={() => {
+                        const seg = selectedMode === "kamper" ? "kamper" : selectedMode === "avion" ? "jedrilicar" : "par";
+                        try { localStorage.setItem("jadran_delta_context", JSON.stringify({ segment: seg, from: depCity.trim(), destination: { city: toLPCity.trim() } })); } catch {}
+                        window.location.href = `/?room=DEMO&go=transit&from=${encodeURIComponent(depCity.trim())}&to=${encodeURIComponent(toLPCity.trim())}&seg=${seg}`;
+                      }}
+                      style={{ width: "100%", padding: "14px 20px", borderRadius: 12, background: depCity.trim() && toLPCity.trim() ? "linear-gradient(135deg, #f97316, #ea580c)" : "rgba(255,255,255,0.06)", border: "none", color: depCity.trim() && toLPCity.trim() ? "#fff" : "#475569", fontSize: 15, fontWeight: 700, cursor: depCity.trim() && toLPCity.trim() ? "pointer" : "default", fontFamily: F, letterSpacing: 0.5, transition: "all 0.2s" }}>
+                      Kreni sa mnom →
+                    </button>
                   </div>
                 )}
 
