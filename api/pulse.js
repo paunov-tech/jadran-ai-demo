@@ -234,13 +234,13 @@ PRAVILA:
 
 async function fetchNearbyTraffic(lat, lng) {
   try {
-    const minLat = lat - 0.4, maxLat = lat + 0.4;
-    const minLng = lng - 0.4, maxLng = lng + 0.4;
-    const r = await fetch(
-      `https://data.traffic.hereapi.com/v7/incidents?in=bbox:${minLat},${minLng};${maxLat},${maxLng}&apiKey=${HERE_KEY}`,
-      { signal: AbortSignal.timeout(4000) }
-    );
-    if (!r.ok) { console.warn("pulse: HERE Traffic", r.status); return []; }
+    const fLat = parseFloat(lat), fLng = parseFloat(lng);
+    const minLat = fLat - 0.4, maxLat = fLat + 0.4;
+    const minLng = fLng - 0.4, maxLng = fLng + 0.4;
+    const url = `https://data.traffic.hereapi.com/v7/incidents?in=bbox:${minLat},${minLng};${maxLat},${maxLng}&apiKey=${HERE_KEY}`;
+    console.log("pulse: HERE url:", url.replace(HERE_KEY, "KEY"));
+    const r = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    if (!r.ok) { const body = await r.text().catch(()=>""); console.warn("pulse: HERE Traffic", r.status, body.slice(0,200)); return []; }
     const data = await r.json();
     const results = (data.results || []).map(i => ({
       type: i.incidentDetails?.type || "UNKNOWN",
@@ -253,7 +253,16 @@ async function fetchNearbyTraffic(lat, lng) {
   } catch (e) { console.warn("pulse: HERE Traffic error:", e.message); return []; }
 }
 
+// YOLO cache — Firestore 429 (guide.js 5K calls drain quota)
+let YOLO_CACHE = { data: null, ts: 0 };
+const YOLO_CACHE_TTL = 180000; // 3 min
+
 async function fetchNearbyYolo(lat, lng) {
+  // Return cached if fresh
+  if (YOLO_CACHE.data && Date.now() - YOLO_CACHE.ts < YOLO_CACHE_TTL) {
+    console.log("pulse: YOLO cached");
+    return YOLO_CACHE.data;
+  }
   if (!FB_KEY) { console.warn("pulse: YOLO skipped — no FIREBASE_API_KEY"); return null; }
   try {
     const r = await fetch(
@@ -291,7 +300,9 @@ async function fetchNearbyYolo(lat, lng) {
       .map(([r, d]) => `${r}: ${d.cars} vozila, ${d.persons} osoba`)
       .join("; ");
     console.log(`pulse: YOLO OK — ${activeCams} active, ${data.documents.length} docs`);
-    return { activeCams, totalCars, totalPersons, busiestCam, regionSummary };
+    const result = { activeCams, totalCars, totalPersons, busiestCam, regionSummary };
+    YOLO_CACHE = { data: result, ts: Date.now() };
+    return result;
   } catch (e) { console.warn("pulse: YOLO error:", e.message); return null; }
 }
 
