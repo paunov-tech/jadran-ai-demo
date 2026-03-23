@@ -102,7 +102,7 @@ export default function LandingPage() {
     clearTimeout(timerRef.current);
     if (!text || text.length < 2) { setter([]); return; }
     timerRef.current = setTimeout(() => {
-      fetch(`https://autosuggest.search.hereapi.com/v1/autosuggest?q=${encodeURIComponent(text)}&in=countryCode:HR,AT,DE,SI,IT,CZ,PL,RS,BA,ME,HU,CH&limit=5&apikey=${HERE_KEY}`)
+      fetch(`https://autosuggest.search.hereapi.com/v1/autosuggest?q=${encodeURIComponent(text)}&at=45.0,14.5&in=countryCode:HRV,AUT,DEU,SVN,ITA,CZE,POL,SRB,BIH,MNE,HUN,CHE&limit=5&apikey=${HERE_KEY}`)
         .then(r => r.json())
         .then(data => {
           setter((data.items || [])
