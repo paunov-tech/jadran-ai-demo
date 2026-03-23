@@ -465,91 +465,65 @@ function generateYoloCrowdPrompt(yoloData, userRegion) {
   return lines.join("\n");
 }
 
-// ═══ CAMPER-SPECIFIC YOLO INTELLIGENCE ═══
-// Translates raw camera data into actionable camper advice
+// ═══ DELTA BIG EYE — Route-Aware Situational Intelligence ═══
 function generateCamperYoloPrompt(yoloData) {
   if (!yoloData || !yoloData.regions) return "";
 
-  // Camera → camper category mapping
-  const CAMPER_CAMS = {
-    highway: {
-      label: "AUTOCESTA / TRANZIT",
-      prefixes: ["hac_a1","hac_a2","hac_a3","hac_a6","hac_a7","hac_a8","buildzagreb","delnice","fuzine","brinje","otocac","rakovica","sisak","koprivnica","pozega"],
-      interpret: (cars, total) => cars > 30 ? "GUST PROMET — očekujte zastoje na naplatama" : cars > 10 ? "umjeren promet" : "promet teče normalno",
-    },
-    ferry: {
-      label: "TRAJEKTNE LUKE",
-      prefixes: ["tkon","drvenik","orebic","milna","sutivan","postira"],
-      interpret: (cars, total) => cars > 15 ? "RED NA TRAJEKTU — dođite 1-2h ranije!" : cars > 5 ? "umjereni red — dođite 30-60 min ranije" : "nema reda, slobodan ukrcaj",
-    },
-    bura: {
-      label: "BURA ZONE (Senj)",
-      prefixes: ["senj","hac_a1_maslenica"],
-      interpret: (cars, total) => {
-        if (total === 0) return "⚠️ NEMA PROMETA NA SENJU — moguća zabrana zbog bure! Provjerite HAK.hr prije polaska";
-        if (cars > 10) return "promet teče normalno kroz Senj — bura ne puše";
-        return "slab promet — oprez, moguća bura";
-      },
-    },
-    border: {
-      label: "GRANIČNI PRELAZI",
-      prefixes: ["hac_a2_macelj","hac_a3_bregana","hac_a7_rupa"],
-      interpret: (cars, total) => cars > 20 ? "GUŽVA NA GRANICI — očekujte čekanje 30+ min" : cars > 8 ? "umjeren promet na granici" : "slobodan prolaz",
-    },
-    cityParking: {
-      label: "GRADSKI CENTRI (parking)",
-      prefixes: ["split","dubrovnik","pula","rijeka","sibenik","trogir","makarska","omis","zadar","hvar","korcula","rovinj"],
-      interpret: (cars, total) => total > 40 ? "GRAD PUN — koristite P+R ili kamp izvan centra" : total > 15 ? "umjerena gužva u centru — parkiranje otežano" : "grad miran — parkiranje ne bi trebalo biti problem",
-    },
-    coastal: {
-      label: "OBALA (kampovi/plaže)",
-      prefixes: ["brela","tucepi","bol","jelsa","vrboska","murter","nin","pag","povljana","slano","ploce","podstrana","baskavoda","vis","cavtat","orebic","mljet","medulin","rabac","novigrad","umag","novalja","vodice","biograd","baska","crikvenica","losinj","selce"],
-      interpret: (cars, total) => total > 20 ? "popularna mjesta aktivna — rano dolazite po parking" : total > 5 ? "umjerena aktivnost" : "mirno — idealno za kampere",
-    },
+  const DELTA_EYE = {
+    a1_zg_split: { label: "\u{1F1ED}\u{1F1F7} A1 Zagreb\u2192Split\u2192Dubrovnik", prefixes: ["hac_a1","a1_"], interpret: (c,t) => c>40 ? "GUST na A1 \u2014 kolone na naplatnim!" : c>15 ? "A1 umjeren" : "A1 slobodna" },
+    a6_rijeka: { label: "\u{1F1ED}\u{1F1F7} A6 Bosiljevo\u2192Rijeka", prefixes: ["hac_a6","a6_"], interpret: (c,t) => c>25 ? "A6 GUST \u2014 vikend gu\u017Eve!" : c>8 ? "A6 umjeren" : "A6 slobodna" },
+    a2_macelj: { label: "\u{1F1ED}\u{1F1F7} A2 Zagreb\u2192Macelj (SLO)", prefixes: ["hac_a2","a2_"], interpret: (c,t) => c>25 ? "A2 Macelj GU\u017DVA \u2014 granica!" : c>10 ? "A2 umjeren" : "A2 slobodna" },
+    a7_rupa: { label: "\u{1F1ED}\u{1F1F7} A7 Rupa\u2192Rijeka (SLO)", prefixes: ["hac_a7","a7_"], interpret: (c,t) => c>20 ? "A7 Rupa GU\u017DVA \u2014 SLO/HR granica!" : c>8 ? "A7 umjeren" : "A7 slobodna" },
+    a8_istra: { label: "\u{1F1ED}\u{1F1F7} A8/A9 Istra", prefixes: ["hac_a8","hac_a9","a8_","a9_"], interpret: (c,t) => c>20 ? "Istra ipsilon gust \u2014 tunel U\u010Dka kolona?" : c>8 ? "umjeren" : "Istra slobodna" },
+    dars: { label: "\u{1F1F8}\u{1F1EE} DARS (Slovenija)", prefixes: ["dars_","si_"], interpret: (c,t) => c>30 ? "DARS: GUST PROMET u Sloveniji!" : c>10 ? "DARS umjeren" : "DARS slobodna" },
+    asfinag: { label: "\u{1F1E6}\u{1F1F9} ASFINAG (Austrija)", prefixes: ["asf_","at_"], interpret: (c,t) => c>30 ? "ASFINAG: STAU u Austriji!" : c>10 ? "ASFINAG umjeren" : "ASFINAG frei" },
+    border: { label: "\u{1F6C2} GRANICE", prefixes: ["border","granica","macelj","bregana","rupa","sentilj","karavanke","obrezje","spielfeld"], interpret: (c,t) => c>25 ? "\u26A0\uFE0F GU\u017DVA NA GRANICAMA \u2014 30-60 min!" : c>10 ? "umjeren promet na granicama" : "slobodan prolaz" },
+    ferry: { label: "\u26F4\uFE0F TRAJEKTI", prefixes: ["tkon","drvenik","orebic","milna","sutivan","postira","ferry","trajekt","pristaniste","sumartin","valbiska","lopar","jablanac","prizna"], interpret: (c,t) => c>20 ? "\u26A0\uFE0F RED NA TRAJEKTU \u2014 do\u0111ite 1-2h ranije!" : c>8 ? "umjereni red" : "slobodan ukrcaj" },
+    parking: { label: "\u{1F17F}\uFE0F PARKINZI", prefixes: ["parking","park_","garaza"], interpret: (c,t) => t>40 ? "PARKINZI PUNI" : t>15 ? "umjerena popunjenost" : "ima mjesta" },
+    bura: { label: "\u{1F4A8} BURA", prefixes: ["senj","maslenica","jablanac","prizna","krk_most","sveti_rok"], interpret: (c,t) => { if (t===0) return "\u26A0\uFE0F NEMA PROMETA \u2014 mogu\u0107a zabrana! HAK.hr"; if (c>10) return "promet te\u010De \u2014 bura ne pu\u0161e"; return "slab promet \u2014 oprez"; } },
+    city: { label: "\u{1F3D9}\uFE0F GRADOVI", prefixes: ["split","dubrovnik","pula","rijeka","sibenik","trogir","makarska","omis","zadar","hvar","korcula","rovinj"], interpret: (c,t) => t>40 ? "GRAD PUN \u2014 P+R" : t>15 ? "umjerena gu\u017Eva" : "grad miran" },
+    coastal: { label: "\u{1F3D6}\uFE0F OBALA", prefixes: ["brela","tucepi","bol","jelsa","vrboska","murter","nin","pag","povljana","slano","ploce","podstrana","baskavoda","vis","cavtat","orebic","mljet","medulin","rabac","novigrad","umag","novalja","vodice","biograd","baska","crikvenica","losinj","selce"], interpret: (c,t) => t>20 ? "obala aktivna" : t>5 ? "umjereno" : "mirno" },
   };
 
   const lines = [];
-  lines.push("[🚐 BIG EYE — KAMPER INTELLIGENCE iz 90+ kamera]");
+  lines.push("[DELTA BIG EYE — Situaciona svest iz 165+ kamera, 3 zemlje]");
 
-  // Aggregate YOLO data per camper category
-  for (const [catId, cat] of Object.entries(CAMPER_CAMS)) {
+  for (const [catId, cat] of Object.entries(DELTA_EYE)) {
     let totalObj = 0, totalCars = 0, totalPersons = 0, activeCams = 0;
     const hotCams = [];
-
     for (const [regionId, regionData] of Object.entries(yoloData.regions)) {
       for (const cam of regionData.cameras) {
-        const matchesPrefix = cat.prefixes.some(p => cam.camId.includes(p));
-        if (!matchesPrefix) continue;
+        const match = cat.prefixes.some(p => cam.camId.includes(p));
+        if (!match) continue;
         totalObj += cam.rawCount;
         totalCars += (cam.counts?.car || 0);
         totalPersons += (cam.counts?.person || 0);
-        if (cam.rawCount > 0) {
-          activeCams++;
-          hotCams.push(cam);
-        }
+        if (cam.rawCount > 0) { activeCams++; hotCams.push(cam); }
       }
     }
-
+    if (activeCams === 0 && totalObj === 0) continue;
     const status = cat.interpret(totalCars, totalObj);
     const hotList = hotCams.sort((a,b) => b.rawCount - a.rawCount).slice(0, 3)
-      .map(c => `${c.camId.replace("hr_","").replace("buildzagreb","ZG")}:${c.rawCount}`).join(", ");
-
+      .map(c => `${c.camId.replace("hr_","").replace("hac_","HR:").replace("dars_","SI:").replace("asf_","AT:").replace("si_","SI:").replace("at_","AT:")}:${c.rawCount}`).join(", ");
     lines.push(`\n${cat.label}: ${status}`);
-    lines.push(`  ${totalObj} objekata (${totalCars} auta, ${totalPersons} osoba) na ${activeCams} kamera`);
-    if (hotList) lines.push(`  Najaktivnije: ${hotList}`);
+    lines.push(`  ${totalObj} obj (${totalCars} vozila, ${totalPersons} osoba) — ${activeCams} kam`);
+    if (hotList) lines.push(`  Hotspot: ${hotList}`);
   }
 
-  lines.push(`\nKAKO KORISTITI:
-- "Kakav je promet na A1?" → daj podatke iz AUTOCESTA sekcije
-- "Ima li reda na trajektu za Brač?" → daj podatke iz TRAJEKT sekcije
-- "Mogu li voziti kroz Senj?" → daj podatke iz BURA sekcije + "provjerite HAK"
-- "Je li gužva u Splitu?" → daj podatke iz GRADSKI CENTRI sekcije
-- NIKAD ne reci "vidim na kameri" — reci "prema našim podacima" ili "trenutno stanje"`);
+  lines.push(`\nSITUACIONA PRAVILA:
+- "Kakav je promet na A1?" — navedi A1 sekciju sa brojem vozila
+- "Kolona na granici?" — GRANICE + DARS/ASFINAG kamere
+- "Kako je na autoputu kroz Sloveniju?" — DARS sekcija
+- "Stau na Tauern?" — ASFINAG sekcija
+- "Ima li reda na trajektu?" — TRAJEKT sekcija
+- UVIJEK navedi KOJI autoput i KOJI smjer kad govoriš o prometu
+- NIKAD "vidim na kameri" — reci "prema podacima sa X kamera na Y autoputu"
+- Za granice: kombiniraj kamere + border-intelligence`);
 
   return lines.join("\n");
 }
 
-// ═══ HOTSPOT → B2B PARTNER MAPPING ═══
+// ═══ HOTSPOT// ═══ HOTSPOT → B2B PARTNER MAPPING ═══
 // When overcrowded hotspot detected in user's query, redirect to specific B2B partner
 // Partners added as Srđan signs them — each maps to a nearby overcrowded location
 const B2B_PARTNERS = {
