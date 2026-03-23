@@ -53,7 +53,7 @@ markerGroup.addObjects([startMarker, endMarker]);
 map.addObject(markerGroup);
 map.getViewModel().setLookAtData({bounds: markerGroup.getBoundingBox()},{animate:false});
 
-// Route via REST API + decode polyline manually
+// Route via REST API — SDK decodes flexible polyline natively
 var routeUrl = "https://router.hereapi.com/v8/routes"
   + "?transportMode=car&routingMode=fast"
   + "&origin=" + flat + "," + flon
@@ -65,48 +65,18 @@ fetch(routeUrl)
   .then(function(r) { return r.json(); })
   .then(function(data) {
     var sections = data.routes[0].sections;
-    for (var i = 0; i < sections.length; i++) {
-      var decoded = decode(sections[i].polyline);
-      var lineString = new H.geo.LineString();
-      for (var j = 0; j < decoded.length; j++) {
-        lineString.pushPoint({lat: decoded[j][0], lng: decoded[j][1]});
-      }
-      var polyline = new H.map.Polyline(lineString, {
-        style: {strokeColor: "rgba(14,165,233,0.85)", lineWidth: 5, lineCap: "round", lineJoin: "round"}
-      });
-      map.addObject(polyline);
-    }
-    // Zoom to fit route + markers
-    map.getViewModel().setLookAtData({bounds: markerGroup.getBoundingBox()}, {animate: true});
+    var lines = sections.map(function(s) {
+      return H.geo.LineString.fromFlexiblePolyline(s.polyline);
+    });
+    var routeLine = new H.map.Polyline(new H.geo.MultiLineString(lines), {
+      style: {strokeColor: "rgba(14,165,233,0.85)", lineWidth: 5, lineCap: "round", lineJoin: "round"}
+    });
+    map.addObject(routeLine);
+    var routeGroup = new H.map.Group();
+    routeGroup.addObjects([routeLine, startMarker, endMarker]);
+    map.getViewModel().setLookAtData({bounds: routeGroup.getBoundingBox()}, {animate: true});
   })
   .catch(function(e) { console.warn("Route fetch error:", e); });
-
-// HERE flexible polyline decoder (official algorithm)
-function decode(encoded) {
-  var D = [62,-1,-1,52,53,54,55,56,57,58,59,60,61,-1,-1,-1,-1,-1,-1,-1,
-    0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,
-    -1,-1,-1,-1,-1,-1,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,
-    43,44,45,46,47,48,49,50,51];
-  var i = 0, r = [];
-  function dec() { var v = D[encoded.charCodeAt(i++) - 45]; return v; }
-  var header = dec();
-  var prec = dec() & 15;
-  var third = dec();
-  var has3 = (third === 1 || third === 2);
-  var f = Math.pow(10, -prec);
-  var lat = 0, lng = 0, alt = 0;
-  while (i < encoded.length) {
-    var dLat = 0, s = 0, b;
-    do { b = dec(); dLat |= (b & 31) << s; s += 5; } while (b >= 32);
-    lat += (dLat & 1) ? ~(dLat >>> 1) : (dLat >>> 1);
-    var dLng = 0; s = 0;
-    do { b = dec(); dLng |= (b & 31) << s; s += 5; } while (b >= 32);
-    lng += (dLng & 1) ? ~(dLng >>> 1) : (dLng >>> 1);
-    if (has3) { var dA = 0; s = 0; do { b = dec(); dA |= (b & 31) << s; s += 5; } while (b >= 32); alt += (dA & 1) ? ~(dA >>> 1) : (dA >>> 1); }
-    r.push([lat * f, lng * f]);
-  }
-  return r;
-}
 </script>
 </body>
 </html>
