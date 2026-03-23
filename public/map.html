@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="initial-scale=1.0, width=device-width"/>
-<script src="https://js.api.here.com/v3/3.1/mapsjs-core.js" type="text/javascript" charset="utf-8"></script>
-<script src="https://js.api.here.com/v3/3.1/mapsjs-service.js" type="text/javascript" charset="utf-8"></script>
-<script src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js" type="text/javascript" charset="utf-8"></script>
-<script src="https://js.api.here.com/v3/3.1/mapsjs-ui.js" type="text/javascript" charset="utf-8"></script>
-<link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css"/>
+<script src="https://js.api.here.com/v3/3.2/mapsjs-core.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://js.api.here.com/v3/3.2/mapsjs-service.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://js.api.here.com/v3/3.2/mapsjs-mapevents.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://js.api.here.com/v3/3.2/mapsjs-ui.js" type="text/javascript" charset="utf-8"></script>
+<link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.2/mapsjs-ui.css"/>
 <style>
   body { margin:0; padding:0; overflow:hidden; }
   #map { width:100vw; height:100vh; position:relative; }
@@ -53,31 +53,6 @@ group.addObjects([startMarker, endMarker]);
 map.addObject(group);
 map.getViewModel().setLookAtData({bounds:group.getBoundingBox()},{animate:false});
 
-// Flexible polyline decoder (HERE v3.1 lacks fromFlexiblePolyline)
-function decodeFlexiblePolyline(encoded) {
-  var DECODING_TABLE = [62,0,0,52,53,54,55,56,57,58,59,60,61,0,0,0,0,0,0,0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,0,0,0,0,0,0,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51];
-  var coords = [];
-  var i = 0;
-  // header
-  var version = DECODING_TABLE[encoded.charCodeAt(i++) - 45];
-  var prec = DECODING_TABLE[encoded.charCodeAt(i++) - 45];
-  var mode = DECODING_TABLE[encoded.charCodeAt(i++) - 45];
-  var hasZ = (mode === 1 || mode === 2);
-  var factor = Math.pow(10, -prec);
-  var lat = 0, lng = 0, z = 0;
-  while (i < encoded.length) {
-    var dLat = 0, shift = 0, c;
-    do { c = DECODING_TABLE[encoded.charCodeAt(i++) - 45]; dLat |= (c & 0x1F) << shift; shift += 5; } while (c >= 32);
-    lat += (dLat & 1 ? ~(dLat >> 1) : (dLat >> 1));
-    var dLng = 0; shift = 0;
-    do { c = DECODING_TABLE[encoded.charCodeAt(i++) - 45]; dLng |= (c & 0x1F) << shift; shift += 5; } while (c >= 32);
-    lng += (dLng & 1 ? ~(dLng >> 1) : (dLng >> 1));
-    if (hasZ) { var dZ = 0; shift = 0; do { c = DECODING_TABLE[encoded.charCodeAt(i++) - 45]; dZ |= (c & 0x1F) << shift; shift += 5; } while (c >= 32); z += (dZ & 1 ? ~(dZ >> 1) : (dZ >> 1)); }
-    coords.push([lat * factor, lng * factor]);
-  }
-  return coords;
-}
-
 // Route
 var router = platform.getRoutingService8();
 router.calculateRoute({
@@ -89,22 +64,16 @@ router.calculateRoute({
 }, function(result) {
   try {
     var sections = result.routes[0].sections;
-    var allCoords = [];
-    for (var si = 0; si < sections.length; si++) {
-      var pts = decodeFlexiblePolyline(sections[si].polyline);
-      allCoords = allCoords.concat(pts);
-    }
-    var lineString = new H.geo.LineString();
-    for (var ci = 0; ci < allCoords.length; ci++) {
-      lineString.pushPoint({ lat: allCoords[ci][0], lng: allCoords[ci][1] });
-    }
-    var routeLine = new H.map.Polyline(lineString, {
-      style: { strokeColor: "rgba(14,165,233,0.85)", lineWidth: 5, lineCap: "round", lineJoin: "round" }
-    });
-    map.addObject(routeLine);
     var routeGroup = new H.map.Group();
-    routeGroup.addObjects([routeLine, startMarker, endMarker]);
-    map.getViewModel().setLookAtData({bounds:routeGroup.getBoundingBox()},{animate:true});
+    sections.forEach(function(s) {
+      var lineString = H.geo.LineString.fromFlexiblePolyline(s.polyline);
+      var polyline = new H.map.Polyline(lineString, {
+        style: { strokeColor: "rgba(14,165,233,0.85)", lineWidth: 5, lineCap: "round", lineJoin: "round" }
+      });
+      routeGroup.addObject(polyline);
+    });
+    map.addObject(routeGroup);
+    map.getViewModel().setLookAtData({bounds: routeGroup.getBoundingBox()}, {animate: true});
   } catch(e) { console.warn("route error:", e); }
 }, function(e) { console.warn("routing failed:", e); });
 </script>
