@@ -38,8 +38,25 @@ export function startGPS(opts = {}) {
     saved.forEach(id => triggeredZones.add(id));
   } catch {}
 
+  // Periodic card refresh (even without GPS movement)
+  cardTimer = setInterval(() => {
+    const pos = lastPos || getFallbackPos();
+    if (pos) generateCards(pos.lat, pos.lng);
+  }, CARD_INTERVAL);
+
+  // AI Pulse — Claude generates proactive guidance every 3 min
+  pulseTimer = setInterval(() => {
+    const pos = lastPos || getFallbackPos();
+    if (pos) fetchAIPulse(pos.lat, pos.lng);
+  }, PULSE_INTERVAL);
+  // First pulse after 5 seconds (even without GPS — use departure coords)
+  setTimeout(() => {
+    const pos = lastPos || getFallbackPos();
+    if (pos) fetchAIPulse(pos.lat, pos.lng);
+  }, 5000);
+
   if (!navigator.geolocation) {
-    console.warn("GPS: geolocation not available");
+    console.warn("GPS: geolocation not available — pulse uses departure coords");
     return;
   }
 
@@ -48,18 +65,6 @@ export function startGPS(opts = {}) {
     onError,
     { enableHighAccuracy: true, maximumAge: 8000, timeout: 15000 }
   );
-
-  // Periodic card refresh (even without GPS movement)
-  cardTimer = setInterval(() => {
-    if (lastPos) generateCards(lastPos.lat, lastPos.lng);
-  }, CARD_INTERVAL);
-
-  // AI Pulse — Claude generates proactive guidance every 3 min
-  pulseTimer = setInterval(() => {
-    if (lastPos) fetchAIPulse(lastPos.lat, lastPos.lng);
-  }, PULSE_INTERVAL);
-  // First pulse after 5 seconds
-  setTimeout(() => { if (lastPos) fetchAIPulse(lastPos.lat, lastPos.lng); }, 5000);
 }
 
 // ─── STOP ───
@@ -67,6 +72,14 @@ export function stopGPS() {
   if (watchId) { navigator.geolocation.clearWatch(watchId); watchId = null; }
   if (cardTimer) { clearInterval(cardTimer); cardTimer = null; }
   if (pulseTimer) { clearInterval(pulseTimer); pulseTimer = null; }
+}
+
+// Fallback position when GPS unavailable (desktop, denied permission)
+function getFallbackPos() {
+  const delta = loadDelta();
+  if (delta.from_coords) return { lat: delta.from_coords[0], lng: delta.from_coords[1] };
+  if (delta.destination?.lat) return { lat: delta.destination.lat, lng: delta.destination.lng };
+  return null;
 }
 
 // ─── POSITION UPDATE ───
