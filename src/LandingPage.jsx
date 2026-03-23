@@ -96,6 +96,23 @@ export default function LandingPage() {
   const [toLPCity, setToLPCity] = useState(""); // destination city for new 2-input flow
   const [fromLPSugs, setFromLPSugs] = useState([]);
   const [toLPSugs, setToLPSugs] = useState([]);
+  const fromTimerRef = useRef(null);
+  const toTimerRef = useRef(null);
+  const hereSuggest = (text, setter, timerRef) => {
+    clearTimeout(timerRef.current);
+    if (!text || text.length < 2) { setter([]); return; }
+    timerRef.current = setTimeout(() => {
+      fetch(`https://autosuggest.search.hereapi.com/v1/autosuggest?q=${encodeURIComponent(text)}&in=countryCode:HR,AT,DE,SI,IT,CZ,PL,RS,BA,ME,HU,CH&limit=5&apikey=${HERE_KEY}`)
+        .then(r => r.json())
+        .then(data => {
+          setter((data.items || [])
+            .filter(i => i.position && (i.resultType === "locality" || i.resultType === "administrativeArea" || i.resultType === "place"))
+            .map(i => ({ title: i.title, lat: i.position.lat, lng: i.position.lng }))
+          );
+        })
+        .catch(() => setter([]));
+    }, 250);
+  };
   const [routeData, setRouteData] = useState(null);
   const [routeLoading, setRouteLoading] = useState(false);
   const mapRef = useRef(null);
@@ -399,28 +416,26 @@ export default function LandingPage() {
                     {/* FROM */}
                     <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>Odakle krećeš?</div>
                     <div style={{ position: "relative", marginBottom: 12 }}>
-                      <input value={depCity} onChange={e => { setDepCity(e.target.value); const q = e.target.value.toLowerCase(); setFromLPSugs(q.length < 1 ? [] : ["Wien","München","Frankfurt","Beograd","Ljubljana"].filter(c => c.toLowerCase().includes(q))); }}
-                        onFocus={() => depCity.length === 0 && setFromLPSugs(["Wien","München","Frankfurt","Beograd","Ljubljana"])}
-                        onBlur={() => setTimeout(() => setFromLPSugs([]), 150)}
-                        placeholder="npr. Wien, München, Frankfurt…"
+                      <input value={depCity} onChange={e => { setDepCity(e.target.value); hereSuggest(e.target.value, setFromLPSugs, fromTimerRef); }}
+                        onBlur={() => setTimeout(() => setFromLPSugs([]), 200)}
+                        placeholder="Počni kucati grad…"
                         style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${depCity ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 15, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
                       {fromLPSugs.length > 0 && (
                         <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, marginTop: 4, zIndex: 50, overflow: "hidden" }}>
-                          {fromLPSugs.map(c => <div key={c} onMouseDown={() => { setDepCity(c); setFromLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c}</div>)}
+                          {fromLPSugs.map(c => <div key={c.title} onMouseDown={() => { setDepCity(c.title); setFromLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c.title}</div>)}
                         </div>
                       )}
                     </div>
                     {/* TO */}
                     <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>Kuda ideš?</div>
                     <div style={{ position: "relative", marginBottom: 16 }}>
-                      <input value={toLPCity} onChange={e => { setToLPCity(e.target.value); const q = e.target.value.toLowerCase(); setToLPSugs(q.length < 1 ? [] : ["Split","Dubrovnik","Hvar","Zadar","Rijeka"].filter(c => c.toLowerCase().includes(q))); }}
-                        onFocus={() => toLPCity.length === 0 && setToLPSugs(["Split","Dubrovnik","Hvar","Zadar","Rijeka"])}
-                        onBlur={() => setTimeout(() => setToLPSugs([]), 150)}
-                        placeholder="npr. Split, Dubrovnik, Hvar…"
+                      <input value={toLPCity} onChange={e => { setToLPCity(e.target.value); hereSuggest(e.target.value, setToLPSugs, toTimerRef); }}
+                        onBlur={() => setTimeout(() => setToLPSugs([]), 200)}
+                        placeholder="Počni kucati destinaciju…"
                         style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${toLPCity ? "rgba(249,115,22,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 15, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
                       {toLPSugs.length > 0 && (
                         <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, marginTop: 4, zIndex: 50, overflow: "hidden" }}>
-                          {toLPSugs.map(c => <div key={c} onMouseDown={() => { setToLPCity(c); setToLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c}</div>)}
+                          {toLPSugs.map(c => <div key={c.title} onMouseDown={() => { setToLPCity(c.title); setToLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c.title}</div>)}
                         </div>
                       )}
                     </div>

@@ -18,179 +18,152 @@ const CITY_COORDS = {
 };
 const HERE_ROUTING_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
 
-// ─── TransitMap: Inline SVG route visualization (NO iframe, NO WebGL) ───
-const TransitMap = React.memo(({ fromCity, toCity, routeData }) => {
-  const COORDS = {
-    "Wien":[48.2082,16.3738],"München":[48.1351,11.5820],"Frankfurt":[50.1109,8.6821],
-    "Beograd":[44.8176,20.4633],"Ljubljana":[46.0569,14.5058],"Graz":[47.0707,15.4395],
-    "Salzburg":[47.8095,13.0550],"Linz":[48.3069,14.2858],"Zürich":[47.3769,8.5417],
-    "Berlin":[52.5200,13.4050],"Hamburg":[53.5753,10.0153],"Köln":[50.9333,6.9500],
-    "Split":[43.5081,16.4402],"Dubrovnik":[42.6507,18.0944],"Zadar":[44.1194,15.2314],
-    "Rijeka":[45.3271,14.4422],"Pula":[44.8666,13.8496],"Rovinj":[45.0811,13.6387],
-    "Makarska":[43.2967,17.0177],"Hvar":[43.1729,16.4414],"Trogir":[43.5167,16.2500],
-    "Podstrana":[43.4833,16.5500],"Opatija":[45.3369,14.3053],"Krk":[45.0267,14.5756],
-    "Rab":[44.7556,14.7606],"Praha":[50.0755,14.4378],"Kraków":[50.0647,19.9450],
-    "Trieste":[45.6495,13.7768],"Zagreb":[45.8150,15.9819],"Omiš":[43.4439,16.6892],
-    "Šibenik":[43.7350,15.8952],
-  };
-  const from = COORDS[fromCity] || COORDS["Wien"];
-  const to = COORDS[toCity] || COORDS["Split"];
+// ─── TransitMap: Real HERE Maps rendered inline via SDK (loaded in index.html) ───
+const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteReady }) => {
+  const containerRef = useRef(null);
+  const mapObjRef = useRef(null);
+  const routeGroupRef = useRef(null);
 
-  // Project lat/lng to SVG coords (Mercator-ish, good enough for route viz)
-  const allLats = [from[0], to[0]];
-  const allLngs = [from[1], to[1]];
-  const PAD = 60;
-  const W = 800, H = 360;
-  const minLat = Math.min(...allLats) - 0.8, maxLat = Math.max(...allLats) + 0.8;
-  const minLng = Math.min(...allLngs) - 1.2, maxLng = Math.max(...allLngs) + 1.2;
-  const proj = (lat, lng) => {
-    const x = PAD + ((lng - minLng) / (maxLng - minLng)) * (W - 2 * PAD);
-    const y = PAD + ((maxLat - lat) / (maxLat - minLat)) * (H - 2 * PAD);
-    return [x, y];
-  };
-  const [fx, fy] = proj(from[0], from[1]);
-  const [tx, ty] = proj(to[0], to[1]);
+  // Initialize map ONCE
+  useEffect(() => {
+    if (!containerRef.current || !window.H) return;
+    if (mapObjRef.current) return; // already initialized
+    try {
+      const platform = new window.H.service.Platform({ apikey: HERE_ROUTING_KEY });
+      const layers = platform.createDefaultLayers();
+      const map = new window.H.Map(containerRef.current, layers.vector.normal.night, {
+        center: { lat: (fromCoords[0] + toCoords[0]) / 2, lng: (fromCoords[1] + toCoords[1]) / 2 },
+        zoom: 6, pixelRatio: window.devicePixelRatio || 1,
+      });
+      new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
+      mapObjRef.current = map;
+      const ro = new ResizeObserver(() => map.getViewPort().resize());
+      ro.observe(containerRef.current);
+      return () => { ro.disconnect(); };
+    } catch (e) { console.error("HERE Map init failed:", e); }
+  }, []); // eslint-disable-line
 
-  // Curved path via control point (arc feel)
-  const mx = (fx + tx) / 2, my = (fy + ty) / 2;
-  const dx = tx - fx, dy = ty - fy;
-  const cx = mx - dy * 0.15, cy = my + dx * 0.15;
+  // Update route when coords change
+  useEffect(() => {
+    const map = mapObjRef.current;
+    if (!map || !window.H || !fromCoords || !toCoords) return;
 
-  // Waypoint cities along the route (Ljubljana, Zagreb as typical transit)
-  const waypoints = [];
-  const routeCities = ["Ljubljana","Zagreb","Rijeka","Zadar"];
-  for (const city of routeCities) {
-    if (city === fromCity || city === toCity) continue;
-    const c = COORDS[city];
-    if (!c) continue;
-    // Only show if roughly between origin and destination
-    if (c[0] >= minLat && c[0] <= maxLat && c[1] >= minLng && c[1] <= maxLng) {
-      const [wx, wy] = proj(c[0], c[1]);
-      waypoints.push({ name: city, x: wx, y: wy });
-    }
-  }
+    // Clear old route
+    if (routeGroupRef.current) { map.removeObject(routeGroupRef.current); routeGroupRef.current = null; }
 
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: 260, display: "block", borderRadius: 12 }}
-      xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="routeGrad" x1={fx} y1={fy} x2={tx} y2={ty} gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#f97316" />
-          <stop offset="100%" stopColor="#0ea5e9" />
-        </linearGradient>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-        </filter>
-        <radialGradient id="bgGrad" cx="50%" cy="50%">
-          <stop offset="0%" stopColor="#162033" />
-          <stop offset="100%" stopColor="#0c1426" />
-        </radialGradient>
-      </defs>
+    const platform = new window.H.service.Platform({ apikey: HERE_ROUTING_KEY });
+    const router = platform.getRoutingService8();
+    const mode = transportMode === "kamper" ? "truck" : "car";
 
-      {/* Background */}
-      <rect width={W} height={H} fill="url(#bgGrad)" rx="12" />
+    router.calculateRoute({
+      transportMode: mode, routingMode: "fast",
+      origin: `${fromCoords[0]},${fromCoords[1]}`,
+      destination: `${toCoords[0]},${toCoords[1]}`,
+      return: "polyline,summary",
+    }, (result) => {
+      try {
+        const sections = result.routes[0].sections;
+        const group = new window.H.map.Group();
 
-      {/* Subtle grid */}
-      {[0.25,0.5,0.75].map(f => (
-        <React.Fragment key={f}>
-          <line x1={W*f} y1={0} x2={W*f} y2={H} stroke="rgba(148,163,184,0.04)" />
-          <line x1={0} y1={H*f} x2={W} y2={H*f} stroke="rgba(148,163,184,0.04)" />
-        </React.Fragment>
-      ))}
+        // Route polyline
+        for (const sec of sections) {
+          const ls = window.H.geo.LineString.fromFlexiblePolyline(sec.polyline);
+          group.addObject(new window.H.map.Polyline(ls, {
+            style: { strokeColor: "rgba(14,165,233,0.85)", lineWidth: 5, lineCap: "round", lineJoin: "round" },
+          }));
+        }
 
-      {/* Route line — glow layer */}
-      <path d={`M ${fx} ${fy} Q ${cx} ${cy} ${tx} ${ty}`}
-        fill="none" stroke="url(#routeGrad)" strokeWidth="6" strokeLinecap="round" opacity="0.25" />
-      {/* Route line — main */}
-      <path d={`M ${fx} ${fy} Q ${cx} ${cy} ${tx} ${ty}`}
-        fill="none" stroke="url(#routeGrad)" strokeWidth="3" strokeLinecap="round"
-        strokeDasharray="8 4" filter="url(#glow)" />
+        // Markers
+        const mkIcon = (color) => new window.H.map.Icon(
+          `<svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="11" fill="${color}" stroke="#fff" stroke-width="3"/><circle cx="14" cy="14" r="4" fill="#fff"/></svg>`,
+          { size: { w: 28, h: 28 }, anchor: { x: 14, y: 14 } }
+        );
+        group.addObject(new window.H.map.Marker({ lat: fromCoords[0], lng: fromCoords[1] }, { icon: mkIcon("#f97316") }));
+        group.addObject(new window.H.map.Marker({ lat: toCoords[0], lng: toCoords[1] }, { icon: mkIcon("#0ea5e9") }));
 
-      {/* Waypoint dots */}
-      {waypoints.map(wp => (
-        <React.Fragment key={wp.name}>
-          <circle cx={wp.x} cy={wp.y} r="3" fill="rgba(148,163,184,0.3)" />
-          <text x={wp.x} y={wp.y - 8} textAnchor="middle"
-            style={{ fontSize: 10, fill: "rgba(148,163,184,0.4)", fontFamily: "'DM Sans',system-ui" }}>{wp.name}</text>
-        </React.Fragment>
-      ))}
+        map.addObject(group);
+        routeGroupRef.current = group;
+        map.getViewModel().setLookAtData({ bounds: group.getBoundingBox() }, true);
 
-      {/* Origin marker */}
-      <circle cx={fx} cy={fy} r="14" fill="rgba(249,115,22,0.12)" />
-      <circle cx={fx} cy={fy} r="8" fill="#f97316" stroke="#fff" strokeWidth="2.5" />
-      <circle cx={fx} cy={fy} r="3" fill="#fff" />
-      <text x={fx} y={fy - 20} textAnchor="middle"
-        style={{ fontSize: 13, fill: "#f97316", fontWeight: 700, fontFamily: "'DM Sans',system-ui" }}>{fromCity || "Wien"}</text>
+        // Pass route summary back
+        const s = sections[0].summary;
+        if (s && onRouteReady) {
+          onRouteReady({
+            km: Math.round(s.length / 1000),
+            hrs: Math.floor(s.duration / 3600),
+            mins: Math.round((s.duration % 3600) / 60),
+            oLat: fromCoords[0], oLng: fromCoords[1],
+            dLat: toCoords[0], dLng: toCoords[1],
+            mode: transportMode || "auto",
+          });
+        }
+      } catch (e) { console.warn("Route render:", e); }
+    }, (err) => console.warn("Routing failed:", err));
+  }, [fromCoords?.[0], fromCoords?.[1], toCoords?.[0], toCoords?.[1], transportMode]); // eslint-disable-line
 
-      {/* Destination marker */}
-      <circle cx={tx} cy={ty} r="14" fill="rgba(14,165,233,0.12)" />
-      <circle cx={tx} cy={ty} r="8" fill="#0ea5e9" stroke="#fff" strokeWidth="2.5" />
-      <circle cx={tx} cy={ty} r="3" fill="#fff" />
-      <text x={tx} y={ty + 24} textAnchor="middle"
-        style={{ fontSize: 13, fill: "#0ea5e9", fontWeight: 700, fontFamily: "'DM Sans',system-ui" }}>{toCity || "Split"}</text>
-
-      {/* Route info overlay */}
-      {routeData && (
-        <g>
-          <rect x={W/2 - 70} y={H - 42} width={140} height={30} rx={8} fill="rgba(12,20,38,0.85)" stroke="rgba(14,165,233,0.2)" strokeWidth="1" />
-          <text x={W/2} y={H - 22} textAnchor="middle"
-            style={{ fontSize: 12, fill: "#e2e8f0", fontWeight: 600, fontFamily: "'DM Sans',system-ui" }}>
-            {routeData.km} km · {routeData.hrs}h {routeData.mins}min
-          </text>
-        </g>
-      )}
-    </svg>
-  );
+  return <div ref={containerRef} style={{ width: "100%", height: 300, borderRadius: 14 }} />;
 });
 
-// ─── HERE Routing REST API hook ───
-function useHereRoute(fromCity, toCity, mode) {
-  const [routeData, setRouteData] = React.useState(null);
+// ─── HERE Traffic Incidents along a route corridor ───
+function useHereTraffic(fromCoords, toCoords) {
+  const [incidents, setIncidents] = React.useState(null);
   React.useEffect(() => {
-    if (!fromCity || !toCity) return;
-    const fromCoord = CITY_COORDS[fromCity] || CITY_COORDS["Wien"];
-    const toCoord = CITY_COORDS[toCity] || CITY_COORDS["Split"];
-    const transportMode = mode === "kamper" ? "truck" : "car";
-    const url = `https://router.hereapi.com/v8/routes?transportMode=${transportMode}&origin=${fromCoord[0]},${fromCoord[1]}&destination=${toCoord[0]},${toCoord[1]}&return=summary&apikey=${HERE_ROUTING_KEY}`;
+    if (!fromCoords || !toCoords) return;
     let cancelled = false;
-    fetch(url)
+    // Bounding box around route corridor
+    const minLat = Math.min(fromCoords[0], toCoords[0]) - 0.3;
+    const maxLat = Math.max(fromCoords[0], toCoords[0]) + 0.3;
+    const minLng = Math.min(fromCoords[1], toCoords[1]) - 0.3;
+    const maxLng = Math.max(fromCoords[1], toCoords[1]) + 0.3;
+    const bbox = `${minLat},${minLng};${maxLat},${maxLng}`;
+    fetch(`https://data.traffic.hereapi.com/v7/incidents?in=bbox:${bbox}&apiKey=${HERE_ROUTING_KEY}`)
       .then(r => r.json())
       .then(data => {
         if (cancelled) return;
-        const section = data.routes?.[0]?.sections?.[0];
-        if (!section?.summary) throw new Error("no summary");
-        const km = Math.round(section.summary.length / 1000);
-        const totalMin = Math.round(section.summary.duration / 60);
-        const hrs = Math.floor(totalMin / 60);
-        const mins = totalMin % 60;
-        setRouteData({
-          km, hrs, mins, mode: mode || "auto",
-          oLat: fromCoord[0], oLng: fromCoord[1],
-          dLat: toCoord[0], dLng: toCoord[1],
-        });
+        const items = (data.results || []).map(i => ({
+          id: i.incidentDetails?.id,
+          type: i.incidentDetails?.type || "UNKNOWN",
+          desc: i.incidentDetails?.description?.value || "",
+          road: i.location?.description?.value || "",
+          from: i.incidentDetails?.startTime,
+          to: i.incidentDetails?.endTime,
+          severity: i.incidentDetails?.criticality || "minor",
+        })).filter(i => i.desc).slice(0, 8);
+        setIncidents(items);
       })
-      .catch(() => {
-        if (cancelled) return;
-        // Fallback: haversine estimate
-        const fromC = CITY_COORDS[fromCity] || CITY_COORDS["Wien"];
-        const toC = CITY_COORDS[toCity] || CITY_COORDS["Split"];
-        const R = 6371;
-        const dLat = (toC[0] - fromC[0]) * Math.PI / 180;
-        const dLon = (toC[1] - fromC[1]) * Math.PI / 180;
-        const a = Math.sin(dLat/2)**2 + Math.cos(fromC[0]*Math.PI/180)*Math.cos(toC[0]*Math.PI/180)*Math.sin(dLon/2)**2;
-        const straightKm = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        const estKm = Math.round(straightKm * 1.35);
-        const estMin = Math.round(estKm / 1.2);
-        setRouteData({
-          km: estKm, hrs: Math.floor(estMin/60), mins: estMin%60, mode: mode || "auto",
-          oLat: fromC[0], oLng: fromC[1], dLat: toC[0], dLng: toC[1],
-          estimated: true,
-        });
-      });
+      .catch(() => { if (!cancelled) setIncidents([]); });
     return () => { cancelled = true; };
-  }, [fromCity, toCity, mode]);
-  return routeData;
+  }, [fromCoords?.[0], toCoords?.[0]]); // eslint-disable-line
+  return incidents;
+}
+
+// ─── HERE Autosuggest hook ───
+function useHereAutosuggest() {
+  const [suggestions, setSuggestions] = React.useState([]);
+  const timerRef = React.useRef(null);
+  const query = React.useCallback((text) => {
+    clearTimeout(timerRef.current);
+    if (!text || text.length < 2) { setSuggestions([]); return; }
+    timerRef.current = setTimeout(() => {
+      fetch(`https://autosuggest.search.hereapi.com/v1/autosuggest?q=${encodeURIComponent(text)}&in=countryCode:HR,AT,DE,SI,IT,CZ,PL,RS,BA,ME,HU,CH,SK&limit=6&apikey=${HERE_ROUTING_KEY}`)
+        .then(r => r.json())
+        .then(data => {
+          const items = (data.items || [])
+            .filter(i => i.position && (i.resultType === "locality" || i.resultType === "administrativeArea" || i.resultType === "place"))
+            .map(i => ({
+              title: i.title,
+              label: i.address?.city || i.address?.county || i.title,
+              country: i.address?.countryName || "",
+              lat: i.position.lat,
+              lng: i.position.lng,
+            }));
+          setSuggestions(items);
+        })
+        .catch(() => setSuggestions([]));
+    }, 250); // debounce
+  }, []);
+  const clear = React.useCallback(() => setSuggestions([]), []);
+  return { suggestions, query, clear };
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -657,6 +630,9 @@ export default function JadranUnified() {
   const [transitFromUrl, setTransitFromUrl] = useState("");
   const [transitToUrl, setTransitToUrl] = useState("");
   const [transitSegUrl, setTransitSegUrl] = useState("");
+  const [transitFromCoords, setTransitFromCoords] = useState(null);
+  const [transitToCoords, setTransitToCoords] = useState(null);
+  const [transitRouteData, setTransitRouteData] = useState(null);
   const SEG_ICON = { kamper:"🚐", porodica:"👨‍👩‍👧", par:"💑", jedrilicar:"⛵" };
 
   // ─── GUEST ONBOARDING STATE ───
@@ -813,7 +789,29 @@ export default function JadranUnified() {
   const COUNTRY_CITY = { DE:"München", AT:"Wien", IT:"Trieste", SI:"Ljubljana", CZ:"Praha", PL:"Kraków", HR:"Zagreb" };
   const mapFromCity = transitFromUrl || COUNTRY_CITY[G.country] || "Wien";
   const mapToCity = transitToUrl || "Split";
-  const transitRouteData = useHereRoute(mapFromCity, mapToCity, transitSegUrl || "auto");
+
+  // Geocode transit cities to coordinates
+  useEffect(() => {
+    if (!mapFromCity) return;
+    const c = CITY_COORDS[mapFromCity];
+    if (c) { setTransitFromCoords(c); return; }
+    fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(mapFromCity + ", Europe")}&limit=1&apikey=${HERE_ROUTING_KEY}`)
+      .then(r => r.json())
+      .then(d => { const p = d.items?.[0]?.position; if (p) setTransitFromCoords([p.lat, p.lng]); })
+      .catch(() => setTransitFromCoords(CITY_COORDS["Wien"]));
+  }, [mapFromCity]); // eslint-disable-line
+  useEffect(() => {
+    if (!mapToCity) return;
+    const c = CITY_COORDS[mapToCity];
+    if (c) { setTransitToCoords(c); return; }
+    fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(mapToCity + ", Croatia")}&limit=1&apikey=${HERE_ROUTING_KEY}`)
+      .then(r => r.json())
+      .then(d => { const p = d.items?.[0]?.position; if (p) setTransitToCoords([p.lat, p.lng]); })
+      .catch(() => setTransitToCoords(CITY_COORDS["Split"]));
+  }, [mapToCity]); // eslint-disable-line
+
+  // Traffic incidents along route
+  const trafficIncidents = useHereTraffic(transitFromCoords, transitToCoords);
 
   // ─── WEATHER: Fetch real data via Gemini grounding ───
   const [weather, setWeather] = useState(W_DEFAULT);
@@ -1431,132 +1429,118 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
 
     if (subScreen === "transit") return (
       <>
-        <div style={{ padding: "24px 0 8px" }}>
-          <div style={{ fontSize: 28, fontWeight: 400 }}>{t("safeTrip",lang)} {transitRouteData?.mode === "kamper" ? "🚐" : transitRouteData?.mode === "avion" ? "✈️" : "🚗"}</div>
-          <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>{transitFromUrl || COUNTRY_CITY[G.country]?.split(",")?.[0] || G.country} → <span style={{ color: C.accent }}>{transitToUrl || "Podstrana"}</span></div>
-        </div>
-        <div style={{ borderRadius: 18, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 12 }}>
-          <TransitMap fromCity={mapFromCity} toCity={mapToCity} routeData={transitRouteData} />
-          <div style={{ padding: "12px 16px", background: `rgba(14,165,233,0.04)`, display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap", minHeight: 44 }}>
-            {transitRouteData ? (
-              <>
-                <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>🛣 {transitRouteData.km} km</span>
-                <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>⏱ {transitRouteData.hrs}h {transitRouteData.mins}min</span>
-                {transitRouteData.mode === "kamper" && <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 6, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.15)", color: C.gold }}>🚐 Kamper ruta</span>}
-                <button onClick={() => {
-                  const dLat = transitRouteData.dLat, dLng = transitRouteData.dLng;
-                  const oLat = transitRouteData.oLat, oLng = transitRouteData.oLng;
-                  // Universal: tries native maps app first (iOS/Android), falls back to Google Maps web
-                  const gUrl = `https://www.google.com/maps/dir/?api=1&origin=${oLat},${oLng}&destination=${dLat},${dLng}&travelmode=driving`;
-                  window.location.href = gUrl;
-                }}
-                  style={{ marginLeft: "auto", padding: "8px 16px", borderRadius: 10, background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer", whiteSpace: "nowrap", fontFamily: dm.fontFamily }}>
-                  📍 Pokreni navigaciju →
-                </button>
-              </>
-            ) : (
-              <span style={{ ...dm, fontSize: 12, color: C.mut }}>Izračunavam rutu…</span>
-            )}
+        {/* ── Header ── */}
+        <div style={{ padding: "20px 0 12px" }}>
+          <div style={{ fontSize: 24, fontWeight: 400, letterSpacing: -0.3 }}>
+            {(transitSegUrl === "kamper" ? "🚐" : transitSegUrl === "jedrilicar" ? "⛵" : "🚗")} {mapFromCity} → {mapToCity}
           </div>
+          {transitRouteData && (
+            <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 6, display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
+              <span>🛣 {transitRouteData.km} km</span>
+              <span>⏱ {transitRouteData.hrs}h {transitRouteData.mins}min</span>
+              {transitRouteData.estimated && <span style={{ fontSize: 11, color: C.gold }}>(procjena)</span>}
+            </div>
+          )}
+          {!transitRouteData && <div style={{ ...dm, fontSize: 13, color: C.mut, marginTop: 4 }}>Izračunavam rutu…</div>}
         </div>
-        {isAdmin && <input type="range" min={0} max={100} value={transitProg} onChange={e => setTransitProg(+e.target.value)} style={{ width: "100%", accentColor: C.accent, marginBottom: 16 }} />}
+
+        {/* ── HERE Map ── */}
+        <div style={{ borderRadius: 16, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 16 }}>
+          {transitFromCoords && transitToCoords ? (
+            <TransitMap
+              fromCoords={transitFromCoords}
+              toCoords={transitToCoords}
+              transportMode={transitSegUrl || "auto"}
+              onRouteReady={setTransitRouteData}
+            />
+          ) : (
+            <div style={{ height: 300, background: "rgba(14,165,233,0.04)", display: "grid", placeItems: "center" }}>
+              <div style={{ ...dm, fontSize: 13, color: C.mut }}>Učitavam mapu…</div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Navigation button ── */}
+        {transitRouteData && (
+          <button onClick={() => {
+            const { oLat, oLng, dLat, dLng } = transitRouteData;
+            window.location.href = `https://www.google.com/maps/dir/?api=1&origin=${oLat},${oLng}&destination=${dLat},${dLng}&travelmode=driving`;
+          }}
+            style={{ width: "100%", padding: "14px 20px", borderRadius: 14, background: `linear-gradient(135deg,${C.accent},#0284c7)`, border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", marginBottom: 16, ...dm }}>
+            📍 Pokreni navigaciju
+          </button>
+        )}
+
+        {/* ── Traffic Incidents ── */}
+        {trafficIncidents && trafficIncidents.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <SectionLabel>⚠️ Stanje na cesti</SectionLabel>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {trafficIncidents.map((inc, i) => {
+                const sev = inc.severity === "critical" ? C.red : inc.severity === "major" ? C.gold : C.mut;
+                const icon = inc.type === "CONSTRUCTION" ? "🚧" : inc.type === "ACCIDENT" ? "🚨" : inc.type === "ROAD_CLOSURE" ? "⛔" : inc.type === "CONGESTION" ? "🟡" : "ℹ️";
+                return (
+                  <div key={inc.id || i} style={{ padding: "10px 14px", borderRadius: 12, background: `${sev}08`, border: `1px solid ${sev}22` }}>
+                    <div style={{ ...dm, fontSize: 12, fontWeight: 600, color: sev }}>{icon} {inc.road || inc.type}</div>
+                    <div style={{ ...dm, fontSize: 12, color: C.mut, marginTop: 2 }}>{inc.desc}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {trafficIncidents && trafficIncidents.length === 0 && (
+          <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)", marginBottom: 16, ...dm, fontSize: 12, color: "#22c55e" }}>
+            ✅ Nema prijavljenih incidenata na ruti
+          </div>
+        )}
 
         {/* ── Border Intelligence ── */}
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <SectionLabel>🛂 Granični prelazi — Live</SectionLabel>
+            <SectionLabel>🛂 Granični prelazi</SectionLabel>
             <button onClick={fetchBorderData} disabled={borderLoading}
               style={{ padding: "5px 12px", borderRadius: 8, border: `1px solid ${C.bord}`, background: "transparent", color: borderLoading ? C.mut : C.accent, fontSize: 12, cursor: borderLoading ? "default" : "pointer", ...dm }}>
-              {borderLoading ? "⏳" : "↻ Ažuriraj"}
+              {borderLoading ? "⏳" : "↻"}
             </button>
           </div>
           {borderLoading && !borderData && (
-            <div style={{ ...dm, fontSize: 13, color: C.mut, padding: "12px 0" }}>Dohvaćam podatke o granicama…</div>
+            <div style={{ ...dm, fontSize: 13, color: C.mut, padding: "12px 0" }}>Dohvaćam podatke…</div>
           )}
           {borderData && (() => {
             const CLR = { green: "#22c55e", yellow: C.gold, red: C.red };
             const DOT = { green: "🟢", yellow: "🟡", red: "🔴" };
             return (
               <>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 12 }}>
-                  {borderData.crossings?.map(cr => {
-                    const cam = borderData.cameras?.find(c => c.key === cr.name.toLowerCase().replace("š","s").replace("š","s") || c.location?.toLowerCase().includes(cr.name.toLowerCase().slice(0,4)));
-                    const camSrc = cam?.snapshot_url;
-                    return (
-                      <div key={cr.name} style={{ borderRadius: 14, border: `1px solid ${CLR[cr.color] || C.bord}22`, background: `${CLR[cr.color] || "#64748b"}08`, overflow: "hidden" }}>
-                        {camSrc && (
-                          <img src={`${camSrc}?t=${Math.floor(Date.now() / 300000)}`} alt={cr.name}
-                            style={{ width: "100%", height: 72, objectFit: "cover", display: "block" }} loading="lazy" />
-                        )}
-                        {!camSrc && (
-                          <div style={{ height: 72, background: "rgba(14,165,233,0.05)", display: "grid", placeItems: "center", fontSize: 28 }}>🛂</div>
-                        )}
-                        <div style={{ padding: "8px 10px" }}>
-                          <div style={{ ...dm, fontSize: 11, fontWeight: 700, color: CLR[cr.color] || C.mut, marginBottom: 2 }}>{DOT[cr.color] || "⚪"} {cr.name}</div>
-                          <div style={{ fontSize: 18, fontWeight: 300, lineHeight: 1 }}>{cr.wait_minutes}<span style={{ ...dm, fontSize: 10, color: C.mut }}> min</span></div>
-                          {cr.note && <div style={{ ...dm, fontSize: 9, color: C.mut, marginTop: 3, lineHeight: 1.3 }}>{cr.note}</div>}
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 10 }}>
+                  {borderData.crossings?.map(cr => (
+                    <div key={cr.name} style={{ borderRadius: 12, border: `1px solid ${CLR[cr.color] || C.bord}22`, background: `${CLR[cr.color] || "#64748b"}08`, padding: "10px" }}>
+                      <div style={{ ...dm, fontSize: 11, fontWeight: 700, color: CLR[cr.color] || C.mut }}>{DOT[cr.color] || "⚪"} {cr.name}</div>
+                      <div style={{ fontSize: 20, fontWeight: 300, marginTop: 2 }}>{cr.wait_minutes}<span style={{ ...dm, fontSize: 10, color: C.mut }}> min</span></div>
+                    </div>
+                  ))}
                 </div>
-                {/* AI Recommendation */}
                 {borderData.recommendation?.crossing && (
-                  <div style={{ padding: "12px 16px", borderRadius: 14, border: "1px solid rgba(245,158,11,0.3)", background: "rgba(245,158,11,0.04)", marginBottom: 10 }}>
-                    <div style={{ ...dm, fontSize: 11, color: C.gold, fontWeight: 700, marginBottom: 4 }}>✨ AI preporuka</div>
-                    <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 4 }}>Preporučamo: <span style={{ color: C.gold }}>{borderData.recommendation.crossing}</span></div>
-                    <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.5 }}>{borderData.recommendation.reason}</div>
-                    {borderData.recommendation.time_saved_min > 0 && (
-                      <div style={{ ...dm, fontSize: 12, color: "#22c55e", marginTop: 6 }}>⏱ Ušteda: ~{borderData.recommendation.time_saved_min} min</div>
-                    )}
+                  <div style={{ padding: "10px 14px", borderRadius: 12, border: "1px solid rgba(245,158,11,0.2)", background: "rgba(245,158,11,0.04)", marginBottom: 8 }}>
+                    <div style={{ ...dm, fontSize: 11, color: C.gold, fontWeight: 700 }}>✨ AI preporuka: {borderData.recommendation.crossing}</div>
+                    <div style={{ ...dm, fontSize: 12, color: C.mut, marginTop: 2 }}>{borderData.recommendation.reason}</div>
                   </div>
                 )}
-                {/* Alerts */}
-                {borderData.alerts?.filter(al => al.message).map((al, i) => (
-                  <div key={i} style={{ padding: "8px 14px", borderRadius: 10, border: "1px solid rgba(239,68,68,0.2)", background: "rgba(239,68,68,0.04)", ...dm, fontSize: 12, color: "#fca5a5", marginBottom: 6 }}>
-                    ⚠️ {al.message}
-                  </div>
-                ))}
-                <div style={{ ...dm, fontSize: 10, color: "rgba(100,116,139,0.4)", textAlign: "right" }}>
-                  {borderData.updated ? `ažurirano ${new Date(borderData.updated).toLocaleTimeString("hr")}` : ""}
-                  {borderData.cached ? " · cached" : ""}
-                </div>
               </>
             );
           })()}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16, marginBottom: 24 }}>
-          <Card>
-            <SectionLabel>{t("onTheRoad",lang)}</SectionLabel>
-            <div style={{ ...dm, fontSize: 14, color: C.mut, lineHeight: 1.8 }}>
-              {transitProg < 40 && "🍽️ " + t("transitTip1",lang)}
-              {transitProg >= 40 && transitProg < 75 && "🎫 " + t("transitTip2",lang)}
-              {transitProg >= 75 && "🏖️ " + t("transitTip3",lang).replace("{HOST}", G.host)}
-            </div>
-          </Card>
-          <Card>
-            <SectionLabel>{t("arrival",lang)}</SectionLabel>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 40 }}>☀️</div>
-              <div style={{ fontSize: 32, fontWeight: 300 }}>31°</div>
-              <div style={{ ...dm, fontSize: 13, color: C.mut }}>{t("sunny",lang)} · {t("sea",lang)} {weather.sea}°C</div>
-              <div style={{ ...dm, fontSize: 13, color: C.gold, marginTop: 8 }}>🌅 {t("sunset",lang)} {weather.sunset}</div>
-            </div>
-          </Card>
-        </div>
-        {/* Arrival geofence animation */}
+        {/* ── Arrival ── */}
         {geoArrival && arrivalCountdown !== null && (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)", backdropFilter: "blur(16px)", zIndex: 300, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
             <div style={{ fontSize: 80 }}>⚓</div>
             <div style={{ ...hf, fontSize: 32, fontWeight: 300, textAlign: "center" }}>
-              Dobrodošli u Podstranu,<br /><span style={{ color: C.warm, fontStyle: "italic" }}>{G.first}!</span>
+              Dobrodošli,<br /><span style={{ color: C.warm, fontStyle: "italic" }}>{G.first}!</span>
             </div>
-            <div style={{ ...dm, fontSize: 16, color: C.mut, textAlign: "center" }}>Detektirali smo da ste stigli</div>
             <div style={{ width: 80, height: 80, borderRadius: "50%", border: `3px solid ${C.accent}`, display: "grid", placeItems: "center" }}>
               <span style={{ fontSize: 32, fontWeight: 300 }}>{arrivalCountdown}</span>
             </div>
-            <div style={{ ...dm, fontSize: 13, color: C.mut }}>Prelazak na kiosk za {arrivalCountdown}s…</div>
             <button onClick={() => { setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" }); setArrivalCountdown(null); }}
               style={{ padding: "14px 32px", borderRadius: 14, border: "none", background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", ...dm }}>
               Uđi u Kiosk →
