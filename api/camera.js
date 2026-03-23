@@ -51,7 +51,6 @@ async function fetchYoloCrowd() {
       const subRegion = f.sub_region?.stringValue || "other";
       const rawCount = parseInt(f.raw_count?.integerValue || "0");
       const busyness = parseInt(f.busyness_percent?.integerValue || "0");
-      const ts = f.timestamp?.stringValue || "";
       const counts = {};
       if (f.counts?.mapValue?.fields) {
         for (const [k, v] of Object.entries(f.counts.mapValue.fields)) {
