@@ -725,7 +725,7 @@ export default function JadranUnified() {
     if (gpsStarted.current) return;
     gpsStarted.current = true;
     setTripActive(true);
-    saveDelta({ phase: "transit" });
+    saveDelta({ trip_started: true });
     startGPS({
       onCard: (card) => setGpsCards(prev => {
         const exists = prev.some(c => c.id === card.id);
@@ -751,7 +751,7 @@ export default function JadranUnified() {
     if (phase !== "pre" || subScreen !== "transit") return;
     try {
       const delta = loadDelta();
-      if (delta.phase === "transit" && delta.dist_to_dest > 2) {
+      if (delta.trip_started === true) {
         startTrip();
       }
     } catch {}
@@ -1618,13 +1618,23 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           dm={dm}
           C={C}
           extraCards={[
-            ...alerts.filter(a => !dismissedAlerts.has(a.title)).map(a => ({
+            ...alerts
+              .filter(a => !dismissedAlerts.has(a.title))
+              .filter(a => !(a.source || "").includes("Auswärtiges"))  // irrelevant for route
+              .filter(a => a.title && a.title.length > 5)
+              .reduce((acc, a) => {  // deduplicate by first 40 chars
+                const key = (a.title || "").slice(0, 40);
+                if (!acc.seen.has(key)) { acc.seen.add(key); acc.items.push(a); }
+                return acc;
+              }, { seen: new Set(), items: [] }).items
+              .slice(0, 3)  // max 3 alerts
+              .map(a => ({
               id: "alert_" + (a.title || "").slice(0, 20),
               type: a.type || "alert",
               severity: a.severity === "critical" ? "critical" : a.severity === "high" ? "warning" : "info",
               icon: ALERT_ICONS[a.type] || "⚠️",
               title: a.title || "Upozorenje",
-              body: a.description || a.title || "",
+              body: "",  // title is enough, no duplicate body
               source: a.source || "HAK",
               ts: a.ts || new Date().toISOString(),
             })),
