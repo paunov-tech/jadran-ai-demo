@@ -20,75 +20,18 @@ const HERE_ROUTING_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
 
 // ─── TransitMap: Real HERE Maps rendered inline via SDK (loaded in index.html) ───
 const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteReady }) => {
-  const containerRef = useRef(null);
-  const mapObjRef = useRef(null);
-  const routeGroupRef = useRef(null);
-  const [sdkReady, setSdkReady] = React.useState(!!window.H?.service);
+  const iframeRef = useRef(null);
+  const routeFetched = useRef(false);
 
-  // Poll for HERE SDK readiness (loads async from index.html)
+  // Fetch route summary via REST (not SDK — avoids race condition)
   useEffect(() => {
-    if (sdkReady) return;
-    const check = setInterval(() => {
-      if (window.H?.service) { setSdkReady(true); clearInterval(check); }
-    }, 200);
-    const timeout = setTimeout(() => clearInterval(check), 15000);
-    return () => { clearInterval(check); clearTimeout(timeout); };
-  }, [sdkReady]);
-
-  // Init map + draw route (runs when SDK ready AND coords available)
-  useEffect(() => {
-    if (!sdkReady || !containerRef.current || !fromCoords || !toCoords) return;
-
-    // Init map if not yet done
-    if (!mapObjRef.current) {
-      try {
-        const platform = new window.H.service.Platform({ apikey: HERE_ROUTING_KEY });
-        const layers = platform.createDefaultLayers();
-        const map = new window.H.Map(containerRef.current, layers.vector.normal.night, {
-          center: { lat: (fromCoords[0] + toCoords[0]) / 2, lng: (fromCoords[1] + toCoords[1]) / 2 },
-          zoom: 6, pixelRatio: window.devicePixelRatio || 1,
-        });
-        new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
-        mapObjRef.current = map;
-        const ro = new ResizeObserver(() => map.getViewPort().resize());
-        ro.observe(containerRef.current);
-      } catch (e) { console.error("HERE Map init failed:", e); return; }
-    }
-
-    const map = mapObjRef.current;
-    // Clear old route
-    if (routeGroupRef.current) { try { map.removeObject(routeGroupRef.current); } catch(e) {} routeGroupRef.current = null; }
-
-    // Calculate and draw route
-    const platform = new window.H.service.Platform({ apikey: HERE_ROUTING_KEY });
-    const router = platform.getRoutingService8();
+    if (!fromCoords || !toCoords || routeFetched.current) return;
+    routeFetched.current = true;
     const mode = transportMode === "kamper" ? "truck" : "car";
-
-    router.calculateRoute({
-      transportMode: mode, routingMode: "fast",
-      origin: `${fromCoords[0]},${fromCoords[1]}`,
-      destination: `${toCoords[0]},${toCoords[1]}`,
-      return: "polyline,summary",
-    }, (result) => {
-      try {
-        const sections = result.routes[0].sections;
-        const group = new window.H.map.Group();
-        for (const sec of sections) {
-          const ls = window.H.geo.LineString.fromFlexiblePolyline(sec.polyline);
-          group.addObject(new window.H.map.Polyline(ls, {
-            style: { strokeColor: "rgba(14,165,233,0.85)", lineWidth: 5, lineCap: "round", lineJoin: "round" },
-          }));
-        }
-        const mkIcon = (color) => new window.H.map.Icon(
-          `<svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="11" fill="${color}" stroke="#fff" stroke-width="3"/><circle cx="14" cy="14" r="4" fill="#fff"/></svg>`,
-          { size: { w: 28, h: 28 }, anchor: { x: 14, y: 14 } }
-        );
-        group.addObject(new window.H.map.Marker({ lat: fromCoords[0], lng: fromCoords[1] }, { icon: mkIcon("#f97316") }));
-        group.addObject(new window.H.map.Marker({ lat: toCoords[0], lng: toCoords[1] }, { icon: mkIcon("#0ea5e9") }));
-        map.addObject(group);
-        routeGroupRef.current = group;
-        map.getViewModel().setLookAtData({ bounds: group.getBoundingBox() }, true);
-        const s = sections[0].summary;
+    fetch(`https://router.hereapi.com/v8/routes?transportMode=${mode}&origin=${fromCoords[0]},${fromCoords[1]}&destination=${toCoords[0]},${toCoords[1]}&return=summary&apikey=${HERE_ROUTING_KEY}`)
+      .then(r => r.json())
+      .then(data => {
+        const s = data.routes?.[0]?.sections?.[0]?.summary;
         if (s && onRouteReady) {
           onRouteReady({
             km: Math.round(s.length / 1000), hrs: Math.floor(s.duration / 3600),
@@ -97,74 +40,36 @@ const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteRea
             mode: transportMode || "auto",
           });
         }
-      } catch (e) { console.warn("Route render:", e); }
-    }, (err) => console.warn("Routing failed:", err));
-  }, [sdkReady, fromCoords?.[0], fromCoords?.[1], toCoords?.[0], toCoords?.[1], transportMode]); // eslint-disable-line
+      })
+      .catch(() => {
+        // Haversine fallback
+        const R = 6371;
+        const dLat = (toCoords[0] - fromCoords[0]) * Math.PI / 180;
+        const dLon = (toCoords[1] - fromCoords[1]) * Math.PI / 180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(fromCoords[0]*Math.PI/180)*Math.cos(toCoords[0]*Math.PI/180)*Math.sin(dLon/2)**2;
+        const km = Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35);
+        const min = Math.round(km / 1.2);
+        if (onRouteReady) onRouteReady({
+          km, hrs: Math.floor(min/60), mins: min%60, mode: transportMode || "auto",
+          oLat: fromCoords[0], oLng: fromCoords[1], dLat: toCoords[0], dLng: toCoords[1], estimated: true,
+        });
+      });
+  }, [fromCoords?.[0], toCoords?.[0]]); // eslint-disable-line
 
-  return <div ref={containerRef} style={{ width: "100%", height: 300, borderRadius: 14, background: "#0c1426" }} />;
+  const src = fromCoords && toCoords
+    ? `/map.html?flat=${fromCoords[0]}&flon=${fromCoords[1]}&tlat=${toCoords[0]}&tlon=${toCoords[1]}`
+    : null;
+
+  if (!src) return <div style={{ width: "100%", height: 300, background: "#0c1426", borderRadius: 14, display: "grid", placeItems: "center" }}><span style={{ fontSize: 13, color: "#64748b", fontFamily: "'DM Sans',sans-serif" }}>Učitavam mapu…</span></div>;
+
+  return (
+    <iframe ref={iframeRef} src={src}
+      style={{ width: "100%", height: 300, border: "none", display: "block" }}
+      sandbox="allow-scripts allow-same-origin" title="here-route" />
+  );
 });
 
 // ─── HERE Traffic Incidents along a route corridor ───
-function useHereTraffic(fromCoords, toCoords) {
-  const [incidents, setIncidents] = React.useState(null);
-  React.useEffect(() => {
-    if (!fromCoords || !toCoords) return;
-    let cancelled = false;
-    // Bounding box around route corridor
-    const minLat = Math.min(fromCoords[0], toCoords[0]) - 0.3;
-    const maxLat = Math.max(fromCoords[0], toCoords[0]) + 0.3;
-    const minLng = Math.min(fromCoords[1], toCoords[1]) - 0.3;
-    const maxLng = Math.max(fromCoords[1], toCoords[1]) + 0.3;
-    const bbox = `${minLat},${minLng};${maxLat},${maxLng}`;
-    fetch(`https://data.traffic.hereapi.com/v7/incidents?in=bbox:${bbox}&apiKey=${HERE_ROUTING_KEY}`)
-      .then(r => r.json())
-      .then(data => {
-        if (cancelled) return;
-        const items = (data.results || []).map(i => ({
-          id: i.incidentDetails?.id,
-          type: i.incidentDetails?.type || "UNKNOWN",
-          desc: i.incidentDetails?.description?.value || "",
-          road: i.location?.description?.value || "",
-          from: i.incidentDetails?.startTime,
-          to: i.incidentDetails?.endTime,
-          severity: i.incidentDetails?.criticality || "minor",
-        })).filter(i => i.desc).slice(0, 8);
-        setIncidents(items);
-      })
-      .catch(() => { if (!cancelled) setIncidents([]); });
-    return () => { cancelled = true; };
-  }, [fromCoords?.[0], toCoords?.[0]]); // eslint-disable-line
-  return incidents;
-}
-
-// ─── HERE Autosuggest hook ───
-function useHereAutosuggest() {
-  const [suggestions, setSuggestions] = React.useState([]);
-  const timerRef = React.useRef(null);
-  const query = React.useCallback((text) => {
-    clearTimeout(timerRef.current);
-    if (!text || text.length < 2) { setSuggestions([]); return; }
-    timerRef.current = setTimeout(() => {
-      fetch(`https://autosuggest.search.hereapi.com/v1/autosuggest?q=${encodeURIComponent(text)}&in=countryCode:HR,AT,DE,SI,IT,CZ,PL,RS,BA,ME,HU,CH,SK&limit=6&apikey=${HERE_ROUTING_KEY}`)
-        .then(r => r.json())
-        .then(data => {
-          const items = (data.items || [])
-            .filter(i => i.position && (i.resultType === "locality" || i.resultType === "administrativeArea" || i.resultType === "place"))
-            .map(i => ({
-              title: i.title,
-              label: i.address?.city || i.address?.county || i.title,
-              country: i.address?.countryName || "",
-              lat: i.position.lat,
-              lng: i.position.lng,
-            }));
-          setSuggestions(items);
-        })
-        .catch(() => setSuggestions([]));
-    }, 250); // debounce
-  }, []);
-  const clear = React.useCallback(() => setSuggestions([]), []);
-  return { suggestions, query, clear };
-}
 
 // ─── RouteGuide: Live Intelligence Feed ───
 // Polls /api/guide every 3min, displays prioritized cards from all data sources
@@ -974,26 +879,7 @@ export default function JadranUnified() {
 
   // Traffic incidents now handled by /api/guide (RouteGuide component)
 
-  // Fallback: if HERE routing doesn't respond in 8s, compute haversine estimate
-  useEffect(() => {
-    if (transitRouteData || !transitFromCoords || !transitToCoords) return;
-    const t = setTimeout(() => {
-      if (transitRouteData) return; // already got real data
-      const R = 6371;
-      const dLat = (transitToCoords[0] - transitFromCoords[0]) * Math.PI / 180;
-      const dLon = (transitToCoords[1] - transitFromCoords[1]) * Math.PI / 180;
-      const a = Math.sin(dLat/2)**2 + Math.cos(transitFromCoords[0]*Math.PI/180)*Math.cos(transitToCoords[0]*Math.PI/180)*Math.sin(dLon/2)**2;
-      const straight = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      const km = Math.round(straight * 1.35);
-      const min = Math.round(km / 1.2);
-      setTransitRouteData({
-        km, hrs: Math.floor(min/60), mins: min%60, mode: transitSegUrl || "auto",
-        oLat: transitFromCoords[0], oLng: transitFromCoords[1],
-        dLat: transitToCoords[0], dLng: transitToCoords[1], estimated: true,
-      });
-    }, 8000);
-    return () => clearTimeout(t);
-  }, [transitFromCoords, transitToCoords, transitRouteData]); // eslint-disable-line
+  // Route fallback handled inside TransitMap component
 
   // ─── WEATHER: Fetch real data via Gemini grounding ───
   const [weather, setWeather] = useState(W_DEFAULT);
