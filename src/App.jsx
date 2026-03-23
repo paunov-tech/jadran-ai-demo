@@ -21,9 +21,17 @@ const CITY_COORDS = {
 const HERE_ROUTING_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
 
 // ─── TransitMap: Real HERE Maps rendered inline via SDK (loaded in index.html) ───
-const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteReady }) => {
+const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteReady, gpsPosition }) => {
   const iframeRef = useRef(null);
   const routeFetched = useRef(false);
+
+  // Send GPS position to iframe via postMessage
+  useEffect(() => {
+    if (!gpsPosition || !iframeRef.current?.contentWindow) return;
+    iframeRef.current.contentWindow.postMessage({
+      type: "gps_update", lat: gpsPosition.lat, lng: gpsPosition.lng
+    }, "*");
+  }, [gpsPosition?.lat, gpsPosition?.lng]);
 
   // Fetch route summary via REST (not SDK — avoids race condition)
   useEffect(() => {
@@ -709,6 +717,7 @@ export default function JadranUnified() {
 
   // ─── GPS LIVE ENGINE (silent, fires cards) ───
   const [gpsCards, setGpsCards] = useState([]);
+  const [gpsPosition, setGpsPosition] = useState(null);
   const gpsStarted = useRef(false);
 
   useEffect(() => {
@@ -719,8 +728,9 @@ export default function JadranUnified() {
       onCard: (card) => setGpsCards(prev => {
         const exists = prev.some(c => c.id === card.id);
         if (exists) return prev;
-        return [card, ...prev].slice(0, 20); // max 20 cards, newest first
+        return [card, ...prev].slice(0, 20);
       }),
+      onPosition: (pos) => setGpsPosition(pos),
       onPhase: (newPhase) => {
         if (newPhase === "odmor") {
           setPhase("kiosk"); setSubScreen("home");
@@ -1546,6 +1556,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               toCoords={transitToCoords}
               transportMode={transitSegUrl || "auto"}
               onRouteReady={setTransitRouteData}
+              gpsPosition={gpsPosition}
             />
           ) : (
             <div style={{ height: 300, background: "#0c1426", display: "grid", placeItems: "center" }}>

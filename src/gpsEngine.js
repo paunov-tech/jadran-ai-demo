@@ -18,6 +18,7 @@ let routePoints = [];           // breadcrumb trail
 let onCardCallback = null;
 let onPhaseCallback = null;
 let onCountryCallback = null;
+let onPositionCallback = null;
 let cardTimer = null;
 
 // ─── START ───
@@ -27,6 +28,7 @@ export function startGPS(opts = {}) {
   onCardCallback = opts.onCard || null;
   onPhaseCallback = opts.onPhase || null;
   onCountryCallback = opts.onCountry || null;
+  onPositionCallback = opts.onPosition || null;
 
   // Load previously triggered zones from localStorage
   try {
@@ -65,6 +67,9 @@ function onPosition(pos) {
   const speed = pos.coords.speed; // m/s or null
 
   lastPos = { lat, lng, accuracy, speed, ts: Date.now() };
+
+  // Report position to UI (for map dot)
+  if (onPositionCallback) onPositionCallback(lastPos);
 
   // Breadcrumb (max 500 points, ~80 min at 10s intervals)
   routePoints.push({ lat, lng, ts: Date.now() });
@@ -240,6 +245,29 @@ function generateCards(lat, lng) {
           ts: new Date().toISOString(),
         });
       }
+    }
+  }
+
+  // Special 5km warning — last card before arrival
+  if (distToDest && distToDest <= 5 && distToDest > 2 && !triggeredZones.has("arrival_5km")) {
+    triggeredZones.add("arrival_5km");
+    persistTriggered();
+    const destName = delta.destination?.city || "destinacije";
+    if (onCardCallback) {
+      onCardCallback({
+        id: "arrival_5km",
+        type: "destination",
+        severity: "warning",
+        icon: "🏁",
+        title: `${Math.round(distToDest)} km do ${destName}!`,
+        body: segment === "kamper"
+          ? "Pripremite se za izlaz. Provjerite adresu kampa i parking!"
+          : segment === "jedrilicar"
+          ? "Približavate se marini. Pripremite konope i bokobrane!"
+          : `Još malo! Stižete za ~${delta.eta_min || 5} minuta.`,
+        source: "GPS",
+        ts: new Date().toISOString(),
+      });
     }
   }
 }
