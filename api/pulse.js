@@ -158,7 +158,7 @@ export default async function handler(req, res) {
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
       }),
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(4000),
     });
 
     const aiData = await aiRes.json();
@@ -236,29 +236,31 @@ async function fetchNearbyTraffic(lat, lng) {
   try {
     const r = await fetch(
       `https://data.traffic.hereapi.com/v7/incidents?in=circle:${lat},${lng};r=50000&apiKey=${HERE_KEY}`,
-      { signal: AbortSignal.timeout(3000) }
+      { signal: AbortSignal.timeout(4000) }
     );
-    if (!r.ok) return [];
+    if (!r.ok) { console.warn("pulse: HERE Traffic", r.status); return []; }
     const data = await r.json();
-    return (data.results || []).map(i => ({
+    const results = (data.results || []).map(i => ({
       type: i.incidentDetails?.type || "UNKNOWN",
       desc: i.incidentDetails?.description?.value || "",
       road: i.location?.description?.value || "",
       severity: i.incidentDetails?.criticality || "minor",
     })).filter(i => i.desc).slice(0, 10);
-  } catch { return []; }
+    console.log(`pulse: HERE Traffic OK — ${results.length} incidents`);
+    return results;
+  } catch (e) { console.warn("pulse: HERE Traffic error:", e.message); return []; }
 }
 
 async function fetchNearbyYolo(lat, lng) {
-  if (!FB_KEY) return null;
+  if (!FB_KEY) { console.warn("pulse: YOLO skipped — no FIREBASE_API_KEY"); return null; }
   try {
     const r = await fetch(
       `https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_yolo?key=${FB_KEY}&pageSize=300`,
-      { signal: AbortSignal.timeout(3000) }
+      { signal: AbortSignal.timeout(4000) }
     );
-    if (!r.ok) return null;
+    if (!r.ok) { console.warn("pulse: YOLO Firestore", r.status); return null; }
     const data = await r.json();
-    if (!data.documents) return null;
+    if (!data.documents) { console.warn("pulse: YOLO — no documents"); return null; }
 
     let totalCars = 0, totalPersons = 0, activeCams = 0, busiestCam = null, busiestCount = 0;
     const regions = {};
@@ -280,31 +282,34 @@ async function fetchNearbyYolo(lat, lng) {
       const camName = f.camera_id?.stringValue || doc.name.split("/").pop();
       if (cnt > busiestCount) { busiestCount = cnt; busiestCam = `${camName} (${cnt} obj)`; }
     }
-    // Build region summary string for Claude
     const regionSummary = Object.entries(regions)
       .filter(([_, d]) => d.total > 0)
       .sort((a, b) => b[1].total - a[1].total)
       .slice(0, 5)
       .map(([r, d]) => `${r}: ${d.cars} vozila, ${d.persons} osoba`)
       .join("; ");
+    console.log(`pulse: YOLO OK — ${activeCams} active, ${data.documents.length} docs`);
     return { activeCams, totalCars, totalPersons, busiestCam, regionSummary };
-  } catch { return null; }
+  } catch (e) { console.warn("pulse: YOLO error:", e.message); return null; }
 }
 
 async function fetchWeather(lat, lng) {
   try {
     const r = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,weather_code,wind_speed_10m,wind_gusts_10m&timezone=Europe/Zagreb`,
-      { signal: AbortSignal.timeout(3000) }
+      { signal: AbortSignal.timeout(4000) }
     );
+    if (!r.ok) { console.warn("pulse: Weather", r.status); return null; }
     const data = await r.json();
     const c = data.current;
+    if (!c) { console.warn("pulse: Weather — no current data"); return null; }
     const wmo = (code) => code <= 1 ? "sunčano" : code <= 3 ? "oblačno" : code <= 48 ? "magla" : code <= 67 ? "kiša" : code <= 77 ? "snijeg" : code >= 95 ? "oluja" : "oblačno";
+    console.log(`pulse: Weather OK — ${Math.round(c.temperature_2m)}°C`);
     return {
       temp: Math.round(c.temperature_2m),
       wind: Math.round(c.wind_speed_10m),
       gusts: Math.round(c.wind_gusts_10m || 0),
       condition: wmo(c.weather_code || 0),
     };
-  } catch { return null; }
+  } catch (e) { console.warn("pulse: Weather error:", e.message); return null; }
 }
