@@ -112,6 +112,43 @@ async function fetchBorderWaits() {
   } catch (e) { console.warn("guide: DARS border error:", e.message); return []; }
 }
 
+async function fetchDarsRoad() {
+  try {
+    const r = await fetch("https://promet.si/api/v2/events?lang=sl&type=roadworks,traffic_jams,accidents", {
+      headers: { Accept: "application/json" }, signal: AbortSignal.timeout(6000),
+    });
+    if (!r.ok) return [];
+    const data = await r.json();
+    return (data.events || data.features || []).map(e => {
+      const p = e.properties || e;
+      return {
+        road: p.road || p.roadName || "",
+        desc: p.title || p.description || p.name || "",
+        type: p.category || p.type || "info",
+        source: "DARS",
+      };
+    }).filter(i => i.desc).slice(0, 15);
+  } catch (e) { console.warn("guide: DARS road error:", e.message); return []; }
+}
+
+async function fetchAsfinag() {
+  try {
+    // ASFINAG provides JSON endpoint for current road events
+    const r = await fetch("https://routemanager.asfinag.at/lam/api/traffic-messages?lang=de", {
+      headers: { Accept: "application/json", "User-Agent": "JadranAI/1.0" },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!r.ok) return [];
+    const data = await r.json();
+    return (data.messages || data.items || data || []).slice(0, 15).map(i => ({
+      road: i.road || i.roadName || i.segment || "",
+      desc: i.description || i.text || i.title || "",
+      type: i.type || i.category || "info",
+      source: "ASFINAG",
+    })).filter(i => i.desc);
+  } catch (e) { console.warn("guide: ASFINAG error:", e.message); return []; }
+}
+
 async function fetchHAC() {
   try {
     const r = await fetch("https://www.hak.hr/api/stanje-na-cestama", {
@@ -353,13 +390,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Parallel fetch ALL sources
-    const [traffic, yolo, weather, borders, hac] = await Promise.allSettled([
+    // Parallel fetch ALL sources (7)
+    const [traffic, yolo, weather, borders, hac, darsRoad, asfinag] = await Promise.allSettled([
       fetchHereTraffic(oLat, oLng, dLat, dLng),
       fetchYoloCameras(),
       fetchWeatherRoute(oLat, oLng, dLat, dLng),
       fetchBorderWaits(),
       fetchHAC(),
+      fetchDarsRoad(),
+      fetchAsfinag(),
     ]);
 
     const trafficData = traffic.status === "fulfilled" ? traffic.value : [];
@@ -367,18 +406,46 @@ export default async function handler(req, res) {
     const weatherData = weather.status === "fulfilled" ? weather.value : null;
     const borderData = borders.status === "fulfilled" ? borders.value : [];
     const hacData = hac.status === "fulfilled" ? hac.value : [];
+    const darsData = darsRoad.status === "fulfilled" ? darsRoad.value : [];
+    const asfinagData = asfinag.status === "fulfilled" ? asfinag.value : [];
 
     // Generate intelligence cards
     const cards = generateCards(trafficData, yoloData, weatherData, borderData, hacData, seg, lang);
 
+    // Add DARS road events as cards
+    const darsImportant = darsData.filter(d => d.desc.toLowerCase().includes("zapr") || d.desc.toLowerCase().includes("nesre") || d.desc.toLowerCase().includes("zastoj") || d.type === "accidents");
+    if (darsImportant.length > 0) {
+      cards.push({
+        id: "dars_road", severity: "warning", icon: "🇸🇮",
+        title: `DARS: ${darsImportant.length} događaj(a)`,
+        body: darsImportant.slice(0, 3).map(d => d.road ? `${d.road}: ${d.desc}` : d.desc).join(" | "),
+        source: "DARS/promet.si", ts: new Date().toISOString(),
+      });
+    }
+
+    // Add ASFINAG road events as cards
+    const asfImportant = asfinagData.filter(d => d.desc.toLowerCase().includes("gesperrt") || d.desc.toLowerCase().includes("stau") || d.desc.toLowerCase().includes("unfall") || d.type === "closure");
+    if (asfImportant.length > 0) {
+      cards.push({
+        id: "asfinag_road", severity: "warning", icon: "🇦🇹",
+        title: `ASFINAG: ${asfImportant.length} Meldung(en)`,
+        body: asfImportant.slice(0, 3).map(d => d.road ? `${d.road}: ${d.desc}` : d.desc).join(" | "),
+        source: "ASFINAG", ts: new Date().toISOString(),
+      });
+    }
+
+    // Re-sort after adding DARS/ASFINAG
+    cards.sort((a, b) => (SEV[a.severity] ?? 9) - (SEV[b.severity] ?? 9));
+
     const result = {
       cards,
       sources: {
-        traffic: trafficData.length,
+        here: trafficData.length,
         yolo: yoloData ? yoloData.active : 0,
-        weather: weatherData ? true : false,
-        borders: borderData.length,
-        hac: hacData.length,
+        meteo: weatherData ? true : false,
+        dars: borderData.length + darsData.length,
+        hak: hacData.length,
+        asfinag: asfinagData.length,
       },
       updated: new Date().toISOString(),
     };

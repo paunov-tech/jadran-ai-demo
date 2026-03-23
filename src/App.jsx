@@ -23,34 +23,43 @@ const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteRea
   const containerRef = useRef(null);
   const mapObjRef = useRef(null);
   const routeGroupRef = useRef(null);
+  const [sdkReady, setSdkReady] = React.useState(!!window.H?.service);
 
-  // Initialize map ONCE
+  // Poll for HERE SDK readiness (loads async from index.html)
   useEffect(() => {
-    if (!containerRef.current || !window.H) return;
-    if (mapObjRef.current) return; // already initialized
-    try {
-      const platform = new window.H.service.Platform({ apikey: HERE_ROUTING_KEY });
-      const layers = platform.createDefaultLayers();
-      const map = new window.H.Map(containerRef.current, layers.vector.normal.night, {
-        center: { lat: (fromCoords[0] + toCoords[0]) / 2, lng: (fromCoords[1] + toCoords[1]) / 2 },
-        zoom: 6, pixelRatio: window.devicePixelRatio || 1,
-      });
-      new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
-      mapObjRef.current = map;
-      const ro = new ResizeObserver(() => map.getViewPort().resize());
-      ro.observe(containerRef.current);
-      return () => { ro.disconnect(); };
-    } catch (e) { console.error("HERE Map init failed:", e); }
-  }, []); // eslint-disable-line
+    if (sdkReady) return;
+    const check = setInterval(() => {
+      if (window.H?.service) { setSdkReady(true); clearInterval(check); }
+    }, 200);
+    const timeout = setTimeout(() => clearInterval(check), 15000);
+    return () => { clearInterval(check); clearTimeout(timeout); };
+  }, [sdkReady]);
 
-  // Update route when coords change
+  // Init map + draw route (runs when SDK ready AND coords available)
   useEffect(() => {
+    if (!sdkReady || !containerRef.current || !fromCoords || !toCoords) return;
+
+    // Init map if not yet done
+    if (!mapObjRef.current) {
+      try {
+        const platform = new window.H.service.Platform({ apikey: HERE_ROUTING_KEY });
+        const layers = platform.createDefaultLayers();
+        const map = new window.H.Map(containerRef.current, layers.vector.normal.night, {
+          center: { lat: (fromCoords[0] + toCoords[0]) / 2, lng: (fromCoords[1] + toCoords[1]) / 2 },
+          zoom: 6, pixelRatio: window.devicePixelRatio || 1,
+        });
+        new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
+        mapObjRef.current = map;
+        const ro = new ResizeObserver(() => map.getViewPort().resize());
+        ro.observe(containerRef.current);
+      } catch (e) { console.error("HERE Map init failed:", e); return; }
+    }
+
     const map = mapObjRef.current;
-    if (!map || !window.H || !fromCoords || !toCoords) return;
-
     // Clear old route
-    if (routeGroupRef.current) { map.removeObject(routeGroupRef.current); routeGroupRef.current = null; }
+    if (routeGroupRef.current) { try { map.removeObject(routeGroupRef.current); } catch(e) {} routeGroupRef.current = null; }
 
+    // Calculate and draw route
     const platform = new window.H.service.Platform({ apikey: HERE_ROUTING_KEY });
     const router = platform.getRoutingService8();
     const mode = transportMode === "kamper" ? "truck" : "car";
@@ -64,44 +73,35 @@ const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteRea
       try {
         const sections = result.routes[0].sections;
         const group = new window.H.map.Group();
-
-        // Route polyline
         for (const sec of sections) {
           const ls = window.H.geo.LineString.fromFlexiblePolyline(sec.polyline);
           group.addObject(new window.H.map.Polyline(ls, {
             style: { strokeColor: "rgba(14,165,233,0.85)", lineWidth: 5, lineCap: "round", lineJoin: "round" },
           }));
         }
-
-        // Markers
         const mkIcon = (color) => new window.H.map.Icon(
           `<svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="11" fill="${color}" stroke="#fff" stroke-width="3"/><circle cx="14" cy="14" r="4" fill="#fff"/></svg>`,
           { size: { w: 28, h: 28 }, anchor: { x: 14, y: 14 } }
         );
         group.addObject(new window.H.map.Marker({ lat: fromCoords[0], lng: fromCoords[1] }, { icon: mkIcon("#f97316") }));
         group.addObject(new window.H.map.Marker({ lat: toCoords[0], lng: toCoords[1] }, { icon: mkIcon("#0ea5e9") }));
-
         map.addObject(group);
         routeGroupRef.current = group;
         map.getViewModel().setLookAtData({ bounds: group.getBoundingBox() }, true);
-
-        // Pass route summary back
         const s = sections[0].summary;
         if (s && onRouteReady) {
           onRouteReady({
-            km: Math.round(s.length / 1000),
-            hrs: Math.floor(s.duration / 3600),
+            km: Math.round(s.length / 1000), hrs: Math.floor(s.duration / 3600),
             mins: Math.round((s.duration % 3600) / 60),
-            oLat: fromCoords[0], oLng: fromCoords[1],
-            dLat: toCoords[0], dLng: toCoords[1],
+            oLat: fromCoords[0], oLng: fromCoords[1], dLat: toCoords[0], dLng: toCoords[1],
             mode: transportMode || "auto",
           });
         }
       } catch (e) { console.warn("Route render:", e); }
     }, (err) => console.warn("Routing failed:", err));
-  }, [fromCoords?.[0], fromCoords?.[1], toCoords?.[0], toCoords?.[1], transportMode]); // eslint-disable-line
+  }, [sdkReady, fromCoords?.[0], fromCoords?.[1], toCoords?.[0], toCoords?.[1], transportMode]); // eslint-disable-line
 
-  return <div ref={containerRef} style={{ width: "100%", height: 300, borderRadius: 14 }} />;
+  return <div ref={containerRef} style={{ width: "100%", height: 300, borderRadius: 14, background: "#0c1426" }} />;
 });
 
 // ─── HERE Traffic Incidents along a route corridor ───
@@ -250,11 +250,12 @@ const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C }) => {
       {/* Source indicator */}
       {sources && (
         <div style={{ ...dm, fontSize: 10, color: "rgba(100,116,139,0.4)", marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <span>HERE:{sources.traffic}</span>
-          <span>YOLO:{sources.yolo}</span>
-          <span>Meteo:{sources.weather ? "✓" : "–"}</span>
-          <span>Border:{sources.borders}</span>
-          <span>HAK:{sources.hac}</span>
+          <span>HERE:{sources.here || 0}</span>
+          <span>YOLO:{sources.yolo || 0}</span>
+          <span>Meteo:{sources.meteo ? "✓" : "–"}</span>
+          <span>DARS:{sources.dars || 0}</span>
+          <span>HAK:{sources.hak || 0}</span>
+          <span>ASFINAG:{sources.asfinag || 0}</span>
           {updated && <span style={{ marginLeft: "auto" }}>{new Date(updated).toLocaleTimeString("hr", { hour: "2-digit", minute: "2-digit" })}</span>}
         </div>
       )}
@@ -908,6 +909,27 @@ export default function JadranUnified() {
 
   // Traffic incidents now handled by /api/guide (RouteGuide component)
 
+  // Fallback: if HERE routing doesn't respond in 8s, compute haversine estimate
+  useEffect(() => {
+    if (transitRouteData || !transitFromCoords || !transitToCoords) return;
+    const t = setTimeout(() => {
+      if (transitRouteData) return; // already got real data
+      const R = 6371;
+      const dLat = (transitToCoords[0] - transitFromCoords[0]) * Math.PI / 180;
+      const dLon = (transitToCoords[1] - transitFromCoords[1]) * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(transitFromCoords[0]*Math.PI/180)*Math.cos(transitToCoords[0]*Math.PI/180)*Math.sin(dLon/2)**2;
+      const straight = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const km = Math.round(straight * 1.35);
+      const min = Math.round(km / 1.2);
+      setTransitRouteData({
+        km, hrs: Math.floor(min/60), mins: min%60, mode: transitSegUrl || "auto",
+        oLat: transitFromCoords[0], oLng: transitFromCoords[1],
+        dLat: transitToCoords[0], dLng: transitToCoords[1], estimated: true,
+      });
+    }, 8000);
+    return () => clearTimeout(t);
+  }, [transitFromCoords, transitToCoords, transitRouteData]); // eslint-disable-line
+
   // ─── WEATHER: Fetch real data via Gemini grounding ───
   const [weather, setWeather] = useState(W_DEFAULT);
   const [forecast, setForecast] = useState(null); // null = use FORECAST_DEFAULT
@@ -1287,26 +1309,23 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   const ALERT_COLORS = { critical:"#ef4444", high:"#f59e0b", medium:"#38bdf8" };
 
   const AlertsBar = () => {
-    const [localIdx, setLocalIdx] = useState(0);
-    const visible = alerts.filter(a => !dismissedAlerts.has(a.title));
-    useEffect(() => {
-      if (visible.length < 2) return;
-      const t = setInterval(() => setLocalIdx(i => (i + 1) % visible.length), 4000);
-      return () => clearInterval(t);
-    }, [visible.length]);
-    if (!visible.length) return null;
-    const idx = localIdx % visible.length;
-    const a = visible[idx];
-    if (!a) return null;
-    const icon = ALERT_ICONS[a.type] || ALERT_ICONS.default;
-    const color = ALERT_COLORS[a.severity] || "#38bdf8";
+    // Only show critical/high severity alerts — no rotation, stable display
+    const critical = alerts.filter(a => (a.severity === "critical" || a.severity === "high") && !dismissedAlerts.has(a.title));
+    if (!critical.length) return null;
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 14px", borderRadius: 10, background: `rgba(${a.severity==="critical"?"239,68,68":a.severity==="high"?"245,158,11":"56,189,248"},0.07)`, border: `1px solid ${color}22`, marginBottom: 8, minHeight: 32, position: "relative", overflow: "hidden" }}>
-        <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
-        <span style={{ fontSize: 12, color: "#cbd5e1", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.title}</span>
-        {a.severity === "critical" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: "rgba(239,68,68,0.15)", color: "#ef4444", fontWeight: 700, flexShrink: 0 }}>KRITIČNO</span>}
-        <button onClick={() => setDismissedAlerts(s => new Set([...s, a.title]))} style={{ background: "none", border: "none", color: "#475569", fontSize: 14, cursor: "pointer", padding: "0 2px", flexShrink: 0, lineHeight: 1 }}>×</button>
-        {visible.length > 1 && <div style={{ position: "absolute", bottom: 0, left: 0, height: 2, background: color, opacity: 0.3, width: `${((idx + 1) / visible.length) * 100}%`, transition: "width 4s linear" }} />}
+      <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 8 }}>
+        {critical.slice(0, 3).map((a, i) => {
+          const icon = ALERT_ICONS[a.type] || ALERT_ICONS.default;
+          const color = a.severity === "critical" ? "#ef4444" : "#f59e0b";
+          return (
+            <div key={a.title || i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 14px", borderRadius: 10, background: `${color}0B`, border: `1px solid ${color}22`, minHeight: 32 }}>
+              <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+              <span style={{ fontSize: 12, color: "#cbd5e1", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.title}</span>
+              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${color}18`, color, fontWeight: 700, flexShrink: 0 }}>{a.severity === "critical" ? "LIVE" : "⚠️"}</span>
+              <button onClick={() => setDismissedAlerts(s => new Set([...s, a.title]))} style={{ background: "none", border: "none", color: "#475569", fontSize: 14, cursor: "pointer", padding: "0 2px", flexShrink: 0, lineHeight: 1 }}>×</button>
+            </div>
+          );
+        })}
       </div>
     );
   };
