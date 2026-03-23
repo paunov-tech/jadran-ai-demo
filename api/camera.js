@@ -15,12 +15,15 @@ async function fetchYoloCrowd() {
   const key = process.env.FIREBASE_API_KEY;
   if (!key) return null;
   try {
-    const today = new Date().toISOString().slice(0, 10);
     const url = `https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_yolo?key=${key}&pageSize=300`;
     const r = await fetch(url);
     if (!r.ok) return null;
     const data = await r.json();
     if (!data.documents) return null;
+
+    const cutoff24h = Date.now() - 24 * 60 * 60 * 1000;
+    const today = new Date().toISOString().slice(0, 10);
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
 
     const regions = {};
     let totalObjects = 0;
@@ -29,8 +32,20 @@ async function fetchYoloCrowd() {
     for (const doc of data.documents) {
       const f = doc.fields;
       if (!f) continue;
+
+      const ts = f.timestamp?.stringValue || "";
       const docId = doc.name.split("/").pop();
-      if (!docId.includes(today)) continue;
+      let fresh = false;
+      if (ts) {
+        const tsMs = new Date(ts).getTime();
+        fresh = !isNaN(tsMs) && tsMs > cutoff24h;
+      }
+      if (!fresh) fresh = docId.includes(today) || docId.includes(yesterday);
+      if (!fresh) {
+        const hasNoDate = !/\d{4}-\d{2}-\d{2}/.test(docId);
+        if (hasNoDate) fresh = true;
+      }
+      if (!fresh) continue;
 
       const camId = f.camera_id?.stringValue || "";
       const subRegion = f.sub_region?.stringValue || "other";

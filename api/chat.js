@@ -355,31 +355,55 @@ const YOLO_TO_APP_REGION = {
 async function fetchYoloCrowd() {
   if (_yoloCache && Date.now() - _yoloCacheTime < YOLO_CACHE_MS) return _yoloCache;
   const key = process.env.FIREBASE_API_KEY;
-  if (!key) return null;
+  if (!key) { console.warn("YOLO: no FIREBASE_API_KEY"); return null; }
   try {
-    const today = new Date().toISOString().slice(0, 10);
     const url = `https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_yolo?key=${key}&pageSize=300`;
     const r = await fetch(url);
-    if (!r.ok) return null;
+    if (!r.ok) { console.warn("YOLO: Firestore HTTP", r.status); return null; }
     const data = await r.json();
-    if (!data.documents) return null;
+    if (!data.documents) { console.warn("YOLO: no documents in collection"); return null; }
+
+    // Accept docs from last 24h — check timestamp field, then docId date, then accept all
+    const cutoff24h = Date.now() - 24 * 60 * 60 * 1000;
+    const today = new Date().toISOString().slice(0, 10);
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
 
     const regions = {};
     let totalObjects = 0;
     let activeCams = 0;
+    let docsChecked = 0;
+    let docsAccepted = 0;
 
     for (const doc of data.documents) {
       const f = doc.fields;
       if (!f) continue;
-      // Only today's docs
+      docsChecked++;
+
+      // Freshness check: prefer timestamp field, fallback to docId date
+      const ts = f.timestamp?.stringValue || "";
       const docId = doc.name.split("/").pop();
-      if (!docId.includes(today)) continue;
+      let fresh = false;
+      if (ts) {
+        const tsMs = new Date(ts).getTime();
+        fresh = !isNaN(tsMs) && tsMs > cutoff24h;
+      }
+      if (!fresh) {
+        // Fallback: check if docId contains today or yesterday
+        fresh = docId.includes(today) || docId.includes(yesterday);
+      }
+      if (!fresh) {
+        // Last resort: if doc has recent-looking data, accept it (no date in ID at all)
+        // This handles docs with IDs like "cam_split_hak_1" that never had dates
+        const hasNoDate = !/\d{4}-\d{2}-\d{2}/.test(docId);
+        if (hasNoDate) fresh = true;
+      }
+      if (!fresh) continue;
+      docsAccepted++;
 
       const camId = f.camera_id?.stringValue || "";
       const subRegion = f.sub_region?.stringValue || "other";
       const rawCount = parseInt(f.raw_count?.integerValue || "0");
       const busyness = parseInt(f.busyness_percent?.integerValue || "0");
-      const ts = f.timestamp?.stringValue || "";
       const counts = {};
       if (f.counts?.mapValue?.fields) {
         for (const [k, v] of Object.entries(f.counts.mapValue.fields)) {
@@ -397,6 +421,8 @@ async function fetchYoloCrowd() {
       totalObjects += rawCount;
       if (rawCount > 0) activeCams++;
     }
+
+    console.log(`YOLO: ${docsChecked} docs checked, ${docsAccepted} accepted, ${totalObjects} total objects, ${activeCams} active cams`);
 
     // Sort cameras by activity within each region
     for (const r of Object.values(regions)) {
@@ -994,6 +1020,30 @@ PRAVILA ZA KAMERE:
     } else {
       parts.push(generateYoloCrowdPrompt(yoloCrowdData, region));
     }
+  } else {
+    // FALLBACK: time-based crowd estimate so AI ALWAYS has crowd awareness
+    const hour = new Date().getHours();
+    const month = new Date().getMonth(); // 0-indexed
+    const isSeason = month >= 5 && month <= 8; // Jun-Sep
+    const crowdLevel = !isSeason ? "van sezone — mirno"
+      : hour < 8 ? "rano jutro — mirno"
+      : hour < 11 ? "jutro — umjereno"
+      : hour < 16 ? "sredina dana — gužva"
+      : hour < 19 ? "popodne — umjereno do gužva"
+      : "večer — popušta";
+    const beachAdvice = hour >= 11 && hour <= 16 && isSeason
+      ? "Plaže su najgušće 11-16h. Preporuči rano jutro (prije 9h) ili kasno popodne (nakon 17h)."
+      : "Dobro vrijeme za plažu.";
+    parts.push(`[PROCJENA GUŽVE — automatska (YOLO kamere trenutno nemaju podataka)]
+Trenutno stanje: ${crowdLevel}
+Sat: ${hour}:00 | Sezona: ${isSeason ? "DA (ljeto)" : "NE (van sezone)"}
+${beachAdvice}
+PRAVILA:
+- Kad gost pita o gužvi, koristi ovu procjenu ALI naglasi da je okvirna
+- Reci "prema procjeni" umjesto "prema kamerama" kad nemaš YOLO podatke
+- Ako imaš live podatke iz YOLO kamera, UVIJEK ih koristi umjesto procjene
+- Preporuči gostu da pogleda live kameru za točnu situaciju
+- Za parking/trajekt: uvijek dodaj "dođite ranije za sigurno"`);
   }
 
   // 10. DMO NUDGE — Destination Management directives from TZ partners
@@ -1208,7 +1258,16 @@ export default async function handler(req, res) {
 
     // Fetch live YOLO crowd data (async, cached 5min)
     let yoloCrowdData = null;
-    try { yoloCrowdData = await fetchYoloCrowd(); } catch (e) { /* non-critical */ }
+    try {
+      yoloCrowdData = await fetchYoloCrowd();
+      if (yoloCrowdData) {
+        console.log(`YOLO injected: ${yoloCrowdData.totalObjects} objects, ${yoloCrowdData.activeCams} cams, ${Object.keys(yoloCrowdData.regions || {}).length} regions`);
+      } else {
+        console.warn("YOLO: fetch returned null — fallback crowd estimate will be used");
+      }
+    } catch (e) {
+      console.error("YOLO fetch failed:", e.message, "— fallback crowd estimate will be used");
+    }
 
     let systemPrompt = '';
     try {

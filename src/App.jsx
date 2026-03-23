@@ -19,7 +19,8 @@ const CITY_COORDS = {
 const HERE_ROUTING_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
 
 // ─── TransitMap: HERE Maps via iframe (public/map.html) ───
-const TransitMap = ({ fromCity, toCity }) => {
+// React.memo prevents iframe remount on parent re-renders (WebGL context survives)
+const TransitMap = React.memo(({ fromCity, toCity }) => {
   const COORDS = {
     "Wien":[48.2082,16.3738],"München":[48.1351,11.5820],"Frankfurt":[50.1109,8.6821],
     "Beograd":[44.8176,20.4633],"Ljubljana":[46.0569,14.5058],"Graz":[47.0707,15.4395],
@@ -31,11 +32,72 @@ const TransitMap = ({ fromCity, toCity }) => {
   const from = COORDS[fromCity] || COORDS["Wien"];
   const to = COORDS[toCity] || COORDS["Split"];
   const src = `/map.html?flat=${from[0]}&flon=${from[1]}&tlat=${to[0]}&tlon=${to[1]}`;
-  return (
+  const [mapError, setMapError] = React.useState(false);
+  return mapError ? (
+    <div style={{ width: "100%", height: 280, borderRadius: 12, background: "linear-gradient(135deg, #0c1426 0%, #1a2744 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
+      <div style={{ fontSize: 40 }}>🗺️</div>
+      <div style={{ fontSize: 13, color: "#94a3b8", fontFamily: "'DM Sans',sans-serif" }}>{fromCity || "Wien"} → {toCity || "Split"}</div>
+      <a href={`https://wego.here.com/directions/drive/${from[0]},${from[1]}/${to[0]},${to[1]}`} target="_blank" rel="noopener noreferrer"
+        style={{ fontSize: 12, color: "#0ea5e9", textDecoration: "none", padding: "6px 16px", borderRadius: 8, border: "1px solid rgba(14,165,233,0.3)" }}>
+        Otvori mapu →
+      </a>
+    </div>
+  ) : (
     <iframe src={src} style={{ width: "100%", height: "280px", border: "none", borderRadius: "12px" }}
-      sandbox="allow-scripts allow-same-origin" title="route-map" />
+      sandbox="allow-scripts allow-same-origin" title="route-map"
+      onError={() => setMapError(true)}
+      onLoad={(e) => {
+        // Check if iframe loaded actual content (not blank)
+        try { if (!e.target.contentWindow.document.getElementById("map")) setMapError(true); } catch(err) { /* cross-origin ok */ }
+      }} />
   );
-};
+});
+
+// ─── HERE Routing REST API hook ───
+function useHereRoute(fromCity, toCity, mode) {
+  const [routeData, setRouteData] = React.useState(null);
+  React.useEffect(() => {
+    if (!fromCity || !toCity) return;
+    const fromCoord = CITY_COORDS[fromCity] || CITY_COORDS["Wien"];
+    const toCoord = CITY_COORDS[toCity] || CITY_COORDS["Split"];
+    const transportMode = mode === "kamper" ? "truck" : "car";
+    const url = `https://router.hereapi.com/v8/routes?transportMode=${transportMode}&origin=${fromCoord[0]},${fromCoord[1]}&destination=${toCoord[0]},${toCoord[1]}&return=summary&apikey=${HERE_ROUTING_KEY}`;
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        const section = data.routes?.[0]?.sections?.[0];
+        if (!section?.summary) return;
+        const km = Math.round(section.summary.length / 1000);
+        const totalMin = Math.round(section.summary.duration / 60);
+        const hrs = Math.floor(totalMin / 60);
+        const mins = totalMin % 60;
+        setRouteData({
+          km, hrs, mins, mode: mode || "auto",
+          oLat: fromCoord[0], oLng: fromCoord[1],
+          dLat: toCoord[0], dLng: toCoord[1],
+        });
+      })
+      .catch(e => {
+        console.warn("HERE routing failed:", e.message);
+        // Fallback: estimate from straight-line distance
+        const fromC = CITY_COORDS[fromCity] || CITY_COORDS["Wien"];
+        const toC = CITY_COORDS[toCity] || CITY_COORDS["Split"];
+        const R = 6371;
+        const dLat = (toC[0] - fromC[0]) * Math.PI / 180;
+        const dLon = (toC[1] - fromC[1]) * Math.PI / 180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(fromC[0]*Math.PI/180)*Math.cos(toC[0]*Math.PI/180)*Math.sin(dLon/2)**2;
+        const straightKm = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const estKm = Math.round(straightKm * 1.35); // road factor
+        const estMin = Math.round(estKm / 1.2); // ~72 km/h avg
+        setRouteData({
+          km: estKm, hrs: Math.floor(estMin/60), mins: estMin%60, mode: mode || "auto",
+          oLat: fromC[0], oLng: fromC[1], dLat: toC[0], dLng: toC[1],
+          estimated: true,
+        });
+      });
+  }, [fromCity, toCity, mode]);
+  return routeData;
+}
 
 /* ══════════════════════════════════════════════════════════
    JADRAN — Turistički vodič v6
@@ -498,7 +560,6 @@ export default function JadranUnified() {
   const roomCode = useRef(getRoomCode());
 
   // ─── TRANSIT HERE MAP ───
-  const [transitRouteData, setTransitRouteData] = useState(null);
   const [transitFromUrl, setTransitFromUrl] = useState("");
   const [transitToUrl, setTransitToUrl] = useState("");
   const [transitSegUrl, setTransitSegUrl] = useState("");
@@ -658,6 +719,7 @@ export default function JadranUnified() {
   const COUNTRY_CITY = { DE:"München", AT:"Wien", IT:"Trieste", SI:"Ljubljana", CZ:"Praha", PL:"Kraków", HR:"Zagreb" };
   const mapFromCity = transitFromUrl || COUNTRY_CITY[G.country] || "Wien";
   const mapToCity = transitToUrl || "Split";
+  const transitRouteData = useHereRoute(mapFromCity, mapToCity, transitSegUrl || "auto");
 
   // ─── WEATHER: Fetch real data via Gemini grounding ───
   const [weather, setWeather] = useState(W_DEFAULT);

@@ -3,55 +3,112 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="initial-scale=1.0,width=device-width"/>
-<style>body{margin:0;padding:0;}#map{width:100%;height:100vh;}</style>
+<style>
+  body { margin:0; padding:0; background:#0c1426; }
+  #map { width:100%; height:100vh; }
+  #fallback {
+    display:none; width:100%; height:100vh;
+    background:linear-gradient(135deg,#0c1426 0%,#1a2744 100%);
+    color:#94a3b8; font-family:'DM Sans',system-ui,sans-serif;
+    flex-direction:column; align-items:center; justify-content:center; gap:12px;
+  }
+  #fallback .icon { font-size:48px; }
+  #fallback .route { font-size:14px; color:#cbd5e1; }
+  #fallback a { font-size:12px; color:#0ea5e9; text-decoration:none; padding:8px 20px; border-radius:8px; border:1px solid rgba(14,165,233,0.3); }
+</style>
 <script src="https://js.api.here.com/v3/3.2/mapsjs-core.js"></script>
 <script src="https://js.api.here.com/v3/3.2/mapsjs-service.js"></script>
 <script src="https://js.api.here.com/v3/3.2/mapsjs-mapevents.js"></script>
 </head>
 <body>
 <div id="map"></div>
+<div id="fallback">
+  <div class="icon">🗺️</div>
+  <div class="route" id="fb-route"></div>
+  <a id="fb-link" href="#" target="_blank" rel="noopener noreferrer">Otvori u HERE Maps →</a>
+</div>
 <script>
-const p = new URLSearchParams(window.location.search);
-const flat=parseFloat(p.get("flat")||"48.2082"), flon=parseFloat(p.get("flon")||"16.3738");
-const tlat=parseFloat(p.get("tlat")||"43.5081"), tlon=parseFloat(p.get("tlon")||"16.4402");
+(function(){
+  var p = new URLSearchParams(window.location.search);
+  var flat = parseFloat(p.get("flat") || "48.2082");
+  var flon = parseFloat(p.get("flon") || "16.3738");
+  var tlat = parseFloat(p.get("tlat") || "43.5081");
+  var tlon = parseFloat(p.get("tlon") || "16.4402");
+  var KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
 
-const platform = new H.service.Platform({apikey:"0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw"});
-const layers = platform.createDefaultLayers();
+  function showFallback() {
+    document.getElementById("map").style.display = "none";
+    var fb = document.getElementById("fallback");
+    fb.style.display = "flex";
+    document.getElementById("fb-route").textContent = flat.toFixed(2) + "," + flon.toFixed(2) + " \u2192 " + tlat.toFixed(2) + "," + tlon.toFixed(2);
+    document.getElementById("fb-link").href = "https://wego.here.com/directions/drive/" + flat + "," + flon + "/" + tlat + "," + tlon;
+  }
 
-const map = new H.Map(document.getElementById("map"), layers.vector.normal.night, {
-  center:{lat:(flat+tlat)/2, lng:(flon+tlon)/2}, zoom:6,
-  pixelRatio:window.devicePixelRatio||1
-});
-window.addEventListener("resize",()=>map.getViewPort().resize());
-new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
+  var initTimeout = setTimeout(showFallback, 8000);
 
-const fromIcon = new H.map.Icon('<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="8" fill="#FF6600" stroke="#fff" stroke-width="2"/></svg>', {size:{w:20,h:20}});
-const toIcon = new H.map.Icon('<svg width="20" height="20" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="8" fill="#00D4AA" stroke="#fff" stroke-width="2"/></svg>', {size:{w:20,h:20}});
-
-const startMarker = new H.map.Marker({lat:flat,lng:flon},{icon:fromIcon});
-const endMarker = new H.map.Marker({lat:tlat,lng:tlon},{icon:toIcon});
-const group = new H.map.Group();
-group.addObjects([startMarker, endMarker]);
-map.addObject(group);
-map.getViewModel().setLookAtData({bounds:group.getBoundingBox()},{animate:false});
-
-const router = platform.getRoutingService8();
-router.calculateRoute({
-  transportMode:"car", routingMode:"fast",
-  origin:flat+","+flon, destination:tlat+","+tlon,
-  return:"polyline"
-}, function(result){
   try {
-    const lines = result.routes[0].sections.map(s=>H.geo.LineString.fromFlexiblePolyline(s.polyline));
-    const routeLine = new H.map.Polyline(new H.geo.MultiLineString(lines),{
-      style:{strokeColor:"#FF6600",lineWidth:5}
+    if (typeof H === "undefined" || !H.service) { showFallback(); return; }
+
+    var platform = new H.service.Platform({ apikey: KEY });
+    var layers = platform.createDefaultLayers();
+
+    var map = new H.Map(document.getElementById("map"), layers.vector.normal.night, {
+      center: { lat: (flat + tlat) / 2, lng: (flon + tlon) / 2 },
+      zoom: 6,
+      pixelRatio: window.devicePixelRatio || 1
     });
-    const routeGroup = new H.map.Group();
-    routeGroup.addObjects([routeLine, startMarker, endMarker]);
-    map.addObject(routeLine);
-    map.getViewModel().setLookAtData({bounds:routeGroup.getBoundingBox()},{animate:true});
-  } catch(e){console.log("route err",e);}
-}, function(e){console.log("routing failed",e);});
+    clearTimeout(initTimeout);
+
+    window.addEventListener("resize", function() { map.getViewPort().resize(); });
+    new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
+
+    var fromIcon = new H.map.Icon('<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" fill="#FF6600" stroke="#fff" stroke-width="2.5"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg>', {size:{w:24,h:24},anchor:{x:12,y:12}});
+    var toIcon = new H.map.Icon('<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" fill="#00D4AA" stroke="#fff" stroke-width="2.5"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg>', {size:{w:24,h:24},anchor:{x:12,y:12}});
+
+    var startMarker = new H.map.Marker({lat:flat,lng:flon},{icon:fromIcon});
+    var endMarker = new H.map.Marker({lat:tlat,lng:tlon},{icon:toIcon});
+    var group = new H.map.Group();
+    group.addObjects([startMarker, endMarker]);
+    map.addObject(group);
+    map.getViewModel().setLookAtData({bounds:group.getBoundingBox()},{animate:false});
+
+    var router = platform.getRoutingService8();
+    router.calculateRoute({
+      transportMode: "car",
+      routingMode: "fast",
+      origin: flat + "," + flon,
+      destination: tlat + "," + tlon,
+      return: "polyline,summary"
+    }, function(result) {
+      try {
+        var sections = result.routes[0].sections;
+        var lines = sections.map(function(s) { return H.geo.LineString.fromFlexiblePolyline(s.polyline); });
+        var routeLine = new H.map.Polyline(new H.geo.MultiLineString(lines), {
+          style: { strokeColor: "rgba(14,165,233,0.8)", lineWidth: 4, lineCap: "round", lineJoin: "round" }
+        });
+        map.addObject(routeLine);
+        var routeGroup = new H.map.Group();
+        routeGroup.addObjects([routeLine, startMarker, endMarker]);
+        map.getViewModel().setLookAtData({bounds:routeGroup.getBoundingBox()},{animate:true});
+
+        var summary = sections[0].summary;
+        if (summary && window.parent !== window) {
+          window.parent.postMessage({
+            type: "HERE_ROUTE",
+            km: Math.round(summary.length / 1000),
+            duration: Math.round(summary.duration / 60),
+          }, "*");
+        }
+      } catch(e) { console.warn("route render error:", e); }
+    }, function(e) {
+      console.warn("routing API failed:", e);
+    });
+  } catch(e) {
+    console.error("HERE Maps init failed:", e);
+    clearTimeout(initTimeout);
+    showFallback();
+  }
+})();
 </script>
 </body>
 </html>
