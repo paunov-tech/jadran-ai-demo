@@ -215,18 +215,18 @@ const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C, extraCa
           {mergedCards.map((card, i) => (
             <div key={card.id || i}
               style={{
-                padding: "12px 14px", borderRadius: 14,
-                background: SEV_BG[card.severity] || SEV_BG.info,
-                border: `1px solid ${SEV_BORDER[card.severity] || SEV_BORDER.info}`,
-                animation: i === 0 && card.severity === "critical" ? "pulse 2s infinite" : "none",
+                padding: card.isAI ? "14px 16px" : "12px 14px", borderRadius: 14,
+                background: card.isAI ? "linear-gradient(135deg, rgba(14,165,233,0.06), rgba(139,92,246,0.06))" : (SEV_BG[card.severity] || SEV_BG.info),
+                border: card.isAI ? "1px solid rgba(139,92,246,0.2)" : `1px solid ${SEV_BORDER[card.severity] || SEV_BORDER.info}`,
+                animation: i === 0 && card.severity === "critical" ? "pulse 2s infinite" : card.isAI ? "fadeIn 0.5s both" : "none",
               }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={{ ...dm, fontSize: 13, fontWeight: 700, color: SEV_COLOR[card.severity] || C.text }}>
+                <div style={{ ...dm, fontSize: 13, fontWeight: 700, color: card.isAI ? "#a78bfa" : (SEV_COLOR[card.severity] || C.text) }}>
                   {card.icon} {card.title}
                 </div>
                 <span style={{ ...dm, fontSize: 9, color: C.mut, whiteSpace: "nowrap", marginLeft: 8 }}>{card.source}</span>
               </div>
-              <div style={{ ...dm, fontSize: 12, color: C.mut, marginTop: 4, lineHeight: 1.5 }}>
+              <div style={{ ...dm, fontSize: card.isAI ? 13 : 12, color: card.isAI ? C.text : C.mut, marginTop: 4, lineHeight: 1.6 }}>
                 {card.body}
               </div>
             </div>

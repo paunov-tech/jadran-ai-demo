@@ -8,6 +8,7 @@ import { nearbyPOIs } from "./poiDatabase";
 
 const GPS_INTERVAL = 10000;  // 10s position updates
 const CARD_INTERVAL = 60000; // 60s card refresh
+const PULSE_INTERVAL = 180000; // 3 min AI pulse
 const APPROACH_KM = 20;      // warn 20km before zone
 
 let watchId = null;
@@ -20,6 +21,7 @@ let onPhaseCallback = null;
 let onCountryCallback = null;
 let onPositionCallback = null;
 let cardTimer = null;
+let pulseTimer = null;
 
 // ─── START ───
 export function startGPS(opts = {}) {
@@ -51,12 +53,20 @@ export function startGPS(opts = {}) {
   cardTimer = setInterval(() => {
     if (lastPos) generateCards(lastPos.lat, lastPos.lng);
   }, CARD_INTERVAL);
+
+  // AI Pulse — Claude generates proactive guidance every 3 min
+  pulseTimer = setInterval(() => {
+    if (lastPos) fetchAIPulse(lastPos.lat, lastPos.lng);
+  }, PULSE_INTERVAL);
+  // First pulse after 5 seconds
+  setTimeout(() => { if (lastPos) fetchAIPulse(lastPos.lat, lastPos.lng); }, 5000);
 }
 
 // ─── STOP ───
 export function stopGPS() {
   if (watchId) { navigator.geolocation.clearWatch(watchId); watchId = null; }
   if (cardTimer) { clearInterval(cardTimer); cardTimer = null; }
+  if (pulseTimer) { clearInterval(pulseTimer); pulseTimer = null; }
 }
 
 // ─── POSITION UPDATE ───
@@ -191,6 +201,45 @@ function checkAndFireZones(lat, lng) {
         ts: new Date().toISOString(),
       });
     }
+  }
+}
+
+// ─── AI PULSE — Claude generates proactive guidance ───
+let lastPulseId = 0;
+async function fetchAIPulse(lat, lng) {
+  const delta = loadDelta();
+  try {
+    const res = await fetch("/api/pulse", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lat, lng,
+        segment: delta.segment || "par",
+        lang: delta.lang || "hr",
+        destCity: delta.destination?.city || null,
+        distToDest: delta.dist_to_dest || null,
+        etaMin: delta.eta_min || null,
+        speed: lastPos?.speed || null,
+        country: delta.country || null,
+      }),
+    });
+    const data = await res.json();
+    if (data.pulse && onCardCallback) {
+      lastPulseId++;
+      onCardCallback({
+        id: "ai_pulse_" + lastPulseId,
+        type: "ai_pulse",
+        severity: data.pulse.includes("⚠") || data.pulse.includes("UPOZORENJE") || data.pulse.includes("Warnung") ? "warning" : "info",
+        icon: "🧠",
+        title: "JADRAN AI",
+        body: data.pulse,
+        source: `AI · T:${data.sources?.traffic||0} Y:${data.sources?.yolo||0} W:${data.sources?.weather?"✓":"–"}`,
+        ts: data.ts || new Date().toISOString(),
+        isAI: true,
+      });
+    }
+  } catch (e) {
+    console.warn("AI Pulse error:", e.message);
   }
 }
 
