@@ -158,7 +158,12 @@ const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C, extraCa
     const all = [...gps, ...api];
     const seen = new Set();
     return all.filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true; })
-      .sort((a, b) => (SEV_ORDER[a.severity] ?? 9) - (SEV_ORDER[b.severity] ?? 9));
+      .sort((a, b) => {
+        // AI cards always first
+        if (a.isAI && !b.isAI) return -1;
+        if (!a.isAI && b.isAI) return 1;
+        return (SEV_ORDER[a.severity] ?? 9) - (SEV_ORDER[b.severity] ?? 9);
+      });
   }, [cards, extraCards]);
 
   const fetchGuide = React.useCallback(() => {

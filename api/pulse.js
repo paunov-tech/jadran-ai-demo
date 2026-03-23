@@ -11,6 +11,61 @@ const CORS = ["https://jadran.ai", "https://monte-negro.ai"];
 let CACHE = { key: "", data: null, ts: 0 };
 const CACHE_TTL = 120000; // 2 min
 
+// ── Route corridor detection — determines which highways and tunnels are on the route ──
+function detectRouteCorridor(fromCity, destCity, fromLat, fromLng, destLat, destLng) {
+  const from = (fromCity || "").toLowerCase();
+  const dest = (destCity || "").toLowerCase();
+  const all = from + " " + dest;
+
+  // Istra route: A8/A9, Učka tunnel
+  const istra = ["pula", "poreč", "porec", "rovinj", "umag", "novigrad", "rabac", "medulin", "pazin", "labin"];
+  const isIstra = istra.some(c => all.includes(c));
+
+  // Kvarner route: A6, possible A7
+  const kvarner = ["rijeka", "opatija", "crikvenica", "krk", "rab", "cres", "lošinj", "losinj", "senj"];
+  const isKvarner = kvarner.some(c => all.includes(c));
+
+  // South Dalmatia: A1 full
+  const dalmatia = ["split", "trogir", "makarska", "dubrovnik", "zadar", "šibenik", "sibenik", "omiš", "omis", "bol", "hvar", "korčula", "korcula", "vis", "ploče", "ploce"];
+  const isDalmatia = dalmatia.some(c => all.includes(c));
+
+  const highways = [];
+  const tunnels = [];
+
+  // From Austria
+  if (destLat && destLat < 46.4 && fromLat && fromLat > 46.5) {
+    if (fromLng > 14.5) highways.push("AT A2 Süd");
+    highways.push("Karavanke ili Spielfeld");
+  }
+
+  // Through Slovenia
+  if ((fromLat > 45.5 && destLat < 46) || from.includes("maribor") || from.includes("ljubljana")) {
+    highways.push("SLO A1/A2 (DARS)");
+    if (isIstra) {
+      highways.push("SLO A1 → HR A7 Rupa → A8 Istra");
+      tunnels.push("Učka 5062m (4.5m)");
+    }
+  }
+
+  // Croatian highways
+  if (isDalmatia) {
+    highways.push("HR A1 Zagreb→Split→Dubrovnik");
+    tunnels.push("Mala Kapela 5780m (4.2m)", "Sv. Rok 5679m (4.2m)");
+  }
+  if (isKvarner && !isIstra) {
+    highways.push("HR A6 Bosiljevo→Rijeka");
+  }
+  if (isIstra) {
+    highways.push("HR A8/A9 Istarski ipsilon");
+    if (!tunnels.includes("Učka 5062m (4.5m)")) tunnels.push("Učka 5062m (4.5m)");
+  }
+
+  // Fallback
+  if (highways.length === 0) highways.push("nije određen");
+
+  return { highways, tunnels };
+}
+
 export default async function handler(req, res) {
   const origin = req.headers.origin;
   res.setHeader("Access-Control-Allow-Origin", CORS.includes(origin) ? origin : CORS[0]);
@@ -19,7 +74,7 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
-  const { lat, lng, segment, lang, destCity, distToDest, etaMin, speed, country } = req.body || {};
+  const { lat, lng, segment, lang, fromCity, fromLat, fromLng, destCity, destLat, destLng, distToDest, etaMin, speed, country } = req.body || {};
   if (!lat || !lng) return res.status(400).json({ error: "lat/lng required" });
 
   const seg = segment || "par";
@@ -29,6 +84,9 @@ export default async function handler(req, res) {
   if (CACHE.data && CACHE.key === cacheKey && Date.now() - CACHE.ts < CACHE_TTL) {
     return res.status(200).json({ ...CACHE.data, cached: true });
   }
+
+  // ── Determine route corridor (which highways are on this route) ──
+  const routeCorridor = detectRouteCorridor(fromCity, destCity, fromLat, fromLng, destLat, destLng);
 
   // ── Parallel data fetch (all fail gracefully) ──
   const [trafficRes, yoloRes, weatherRes] = await Promise.allSettled([
@@ -45,14 +103,17 @@ export default async function handler(req, res) {
   const hour = new Date().toLocaleString("en", { timeZone: "Europe/Zagreb", hour: "numeric", hour12: false });
   const dayOfWeek = new Date().toLocaleString("en", { timeZone: "Europe/Zagreb", weekday: "long" });
 
-  let context = `POZICIJA: ${lat.toFixed(3)}, ${lng.toFixed(3)}`;
+  let context = `RUTA: ${fromCity || "?"} → ${destCity || "?"}`;
+  context += `\nKORIDOR: ${routeCorridor.highways.join(" → ")}`;
+  context += `\nTUNELI NA OVOJ RUTI: ${routeCorridor.tunnels.length > 0 ? routeCorridor.tunnels.join(", ") : "nema"}`;
+  context += `\nPOZICIJA: ${lat.toFixed(3)}, ${lng.toFixed(3)}`;
   if (country) context += ` (${country})`;
-  if (destCity) context += `\nDESTINACIJA: ${destCity}`;
-  if (distToDest) context += ` — još ${Math.round(distToDest)} km`;
+  if (distToDest) context += `\nDO CILJA: ${Math.round(distToDest)} km`;
   if (etaMin) context += ` (~${etaMin} min)`;
   if (speed) context += `\nBRZINA: ${Math.round(speed * 3.6)} km/h`;
   context += `\nVRIJEME: ${dayOfWeek}, ${hour}:00h`;
   context += `\nSEGMENT: ${seg}`;
+  context += `\n\nVAŽNO: Govori SAMO o tunelima i autoputevima koji su NA OVOJ RUTI (${routeCorridor.highways.join(", ")}). NE spominji tunele/autoputeve koji NISU na ruti!`;
 
   if (traffic.length > 0) {
     context += `\n\nPROMET (HERE Traffic, ${traffic.length} incidenata u blizini):`;
@@ -64,11 +125,12 @@ export default async function handler(req, res) {
   }
 
   if (yolo) {
-    context += `\n\nYOLO KAMERE (${yolo.activeCams} aktivnih u blizini):`;
+    context += `\n\nYOLO KAMERE (${yolo.activeCams} aktivnih od 166):`;
     if (yolo.totalCars > 0 || yolo.totalPersons > 0) {
-      context += ` ${yolo.totalCars} vozila, ${yolo.totalPersons} osoba detektirano`;
+      context += ` ukupno ${yolo.totalCars} vozila, ${yolo.totalPersons} osoba`;
     }
-    if (yolo.busiestCam) context += `\nNajaktivnija: ${yolo.busiestCam}`;
+    if (yolo.regionSummary) context += `\n${yolo.regionSummary}`;
+    if (yolo.busiestCam) context += `\nNajaktivnija kamera: ${yolo.busiestCam}`;
   }
 
   if (weather) {
@@ -140,8 +202,10 @@ ${langInstr}
 TVOJA ROLA: ${segPersona[seg] || segPersona.par}
 
 ČINJENICE — KORISTI SAMO OVE PODATKE, NE IZMIŠLJAJ:
-Tuneli na A1 (HR): Sv. Rok 5679m visina 4.2m, Mala Kapela 5780m visina 4.2m, Učka 5062m visina 4.5m
-Tuneli AT/SLO: Karavanke 7948m visina 4.1m, Ljubelj 1570m visina 3.8m
+Tuneli na A1 Zagreb→Split→Dubrovnik: Sv. Rok 5679m 4.2m, Mala Kapela 5780m 4.2m
+Tunel na A8 Rijeka→Istra (Pula/Poreč/Rovinj): Učka 5062m 4.5m
+Tuneli AT→SLO: Karavanke 7948m 4.1m (A2), Ljubelj 1570m 3.8m (regionalna)
+VAŽNO: Učka je SAMO na ruti prema Istri, NE na A1 prema Splitu! Sv.Rok i Mala Kapela su SAMO na A1!
 LPG stanice: Villach (AT), Ljubljana BTC (SI), Zagreb Jankomir (HR), Karlovac (HR), Zadar (HR), Split Duje (HR)
 Dump stanice: Villach Camping, Krk Ježevac, Stobreč (Split), Solitudo (Dubrovnik), Borik (Zadar), Veštar (Rovinj)
 ACI marine VHF Ch 17: Split (355 vez), Dubrovnik (380), Trogir (174), Zadar (300), Pula (192), Korčula (159)
@@ -197,6 +261,7 @@ async function fetchNearbyYolo(lat, lng) {
     if (!data.documents) return null;
 
     let totalCars = 0, totalPersons = 0, activeCams = 0, busiestCam = null, busiestCount = 0;
+    const regions = {};
     for (const doc of data.documents) {
       const f = doc.fields;
       if (!f) continue;
@@ -207,10 +272,22 @@ async function fetchNearbyYolo(lat, lng) {
       const persons = parseInt(f.counts?.mapValue?.fields?.person?.integerValue || "0");
       totalCars += cars;
       totalPersons += persons;
+      const sub = f.sub_region?.stringValue || "other";
+      if (!regions[sub]) regions[sub] = { cars: 0, persons: 0, total: 0 };
+      regions[sub].cars += cars;
+      regions[sub].persons += persons;
+      regions[sub].total += cnt;
       const camName = f.camera_id?.stringValue || doc.name.split("/").pop();
       if (cnt > busiestCount) { busiestCount = cnt; busiestCam = `${camName} (${cnt} obj)`; }
     }
-    return { activeCams, totalCars, totalPersons, busiestCam };
+    // Build region summary string for Claude
+    const regionSummary = Object.entries(regions)
+      .filter(([_, d]) => d.total > 0)
+      .sort((a, b) => b[1].total - a[1].total)
+      .slice(0, 5)
+      .map(([r, d]) => `${r}: ${d.cars} vozila, ${d.persons} osoba`)
+      .join("; ");
+    return { activeCams, totalCars, totalPersons, busiestCam, regionSummary };
   } catch { return null; }
 }
 
