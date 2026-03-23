@@ -670,6 +670,7 @@ const INTERESTS = [
 export default function JadranUnified() {
   // mounted
   const [lang, setLang] = useState("hr");
+  const [langOpen, setLangOpen] = useState(false);
   const [splash, setSplash] = useState(true);
   const [phase, setPhase] = useState("pre"); // overridden by loadGuest on mount
   const [subScreen, setSubScreen] = useState("onboard"); // varies per phase
@@ -2500,9 +2501,12 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
               {premium && <span className="premium-shimmer" style={{display:"inline-flex",alignItems:"center",gap:4,padding:"5px 14px",borderRadius:20,fontSize:10,fontFamily:"'Outfit',sans-serif",color:C.gold,letterSpacing:1.5,fontWeight:600,border:`1px solid rgba(245,158,11,0.12)`}}>⭐ PREMIUM</span>}
               <div style={{display:"flex",gap:2,background:"rgba(12,28,50,0.5)",borderRadius:14,padding:3,border:`1px solid ${C.bord}`,backdropFilter:"blur(8px)"}}>
-                {LANGS.map(lg => (
-                  <button key={lg.code} onClick={() => setLang(lg.code)}
-                    style={{...dm,padding:"5px 7px",background:lang===lg.code?C.acDim:"transparent",border:lang===lg.code?`1px solid rgba(14,165,233,0.15)`:"1px solid transparent",borderRadius:11,cursor:"pointer",fontSize:15,lineHeight:1,transition:"all 0.25s"}}
+                <button onClick={() => setLangOpen(!langOpen)}
+                  style={{...dm,padding:"5px 7px",background:C.acDim,border:`1px solid rgba(14,165,233,0.15)`,borderRadius:11,cursor:"pointer",fontSize:15,lineHeight:1}}
+                  title="Jezik">{LANGS.find(l => l.code === lang)?.flag || "🇭🇷"}</button>
+                {langOpen && LANGS.filter(lg => lg.code !== lang).map(lg => (
+                  <button key={lg.code} onClick={() => { setLang(lg.code); setLangOpen(false); }}
+                    style={{...dm,padding:"5px 7px",background:"transparent",border:"1px solid transparent",borderRadius:11,cursor:"pointer",fontSize:15,lineHeight:1,transition:"all 0.25s",animation:"fadeIn 0.2s both"}}
                     title={lg.name}>{lg.flag}</button>
                 ))}
               </div>
@@ -2516,7 +2520,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                 {(() => { try { const d = JSON.parse(localStorage.getItem("jadran_delta_context") || "{}"); const f = transitFromUrl || d.from; const t = transitToUrl || d.destination?.city; const s = transitSegUrl || d.segment; return f && t ? (<><div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{(SEG_ICON[s] || "🚗")} {f} → {t}</div><div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>Sloboda ceste i mora</div></>) : (<><div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{G.name}</div><div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>{G.accommodation}</div></>); } catch { return (<><div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{G.name}</div><div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>{G.accommodation}</div></>); } })()}
               </div>
             </div>
-            {G.arrival && <div style={{ ...dm, fontSize: 11, color: C.mut, textAlign: "right" }}>
+            {G.arrival && !transitFromUrl && <div style={{ ...dm, fontSize: 11, color: C.mut, textAlign: "right" }}>
               {new Date(G.arrival).toLocaleDateString(dateLocale || "hr-HR", {day:"numeric",month:"short"})} – {new Date(G.departure).toLocaleDateString(dateLocale || "hr-HR", {day:"numeric",month:"short"})}
             </div>}
           </div>
