@@ -18,38 +18,129 @@ const CITY_COORDS = {
 };
 const HERE_ROUTING_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
 
-// ─── TransitMap: HERE Maps via iframe (public/map.html) ───
-// React.memo prevents iframe remount on parent re-renders (WebGL context survives)
-const TransitMap = React.memo(({ fromCity, toCity }) => {
+// ─── TransitMap: Inline SVG route visualization (NO iframe, NO WebGL) ───
+const TransitMap = React.memo(({ fromCity, toCity, routeData }) => {
   const COORDS = {
     "Wien":[48.2082,16.3738],"München":[48.1351,11.5820],"Frankfurt":[50.1109,8.6821],
     "Beograd":[44.8176,20.4633],"Ljubljana":[46.0569,14.5058],"Graz":[47.0707,15.4395],
+    "Salzburg":[47.8095,13.0550],"Linz":[48.3069,14.2858],"Zürich":[47.3769,8.5417],
+    "Berlin":[52.5200,13.4050],"Hamburg":[53.5753,10.0153],"Köln":[50.9333,6.9500],
     "Split":[43.5081,16.4402],"Dubrovnik":[42.6507,18.0944],"Zadar":[44.1194,15.2314],
     "Rijeka":[45.3271,14.4422],"Pula":[44.8666,13.8496],"Rovinj":[45.0811,13.6387],
     "Makarska":[43.2967,17.0177],"Hvar":[43.1729,16.4414],"Trogir":[43.5167,16.2500],
-    "Podstrana":[43.4833,16.5500],
+    "Podstrana":[43.4833,16.5500],"Opatija":[45.3369,14.3053],"Krk":[45.0267,14.5756],
+    "Rab":[44.7556,14.7606],"Praha":[50.0755,14.4378],"Kraków":[50.0647,19.9450],
+    "Trieste":[45.6495,13.7768],"Zagreb":[45.8150,15.9819],"Omiš":[43.4439,16.6892],
+    "Šibenik":[43.7350,15.8952],
   };
   const from = COORDS[fromCity] || COORDS["Wien"];
   const to = COORDS[toCity] || COORDS["Split"];
-  const src = `/map.html?flat=${from[0]}&flon=${from[1]}&tlat=${to[0]}&tlon=${to[1]}`;
-  const [mapError, setMapError] = React.useState(false);
-  return mapError ? (
-    <div style={{ width: "100%", height: 280, borderRadius: 12, background: "linear-gradient(135deg, #0c1426 0%, #1a2744 100%)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
-      <div style={{ fontSize: 40 }}>🗺️</div>
-      <div style={{ fontSize: 13, color: "#94a3b8", fontFamily: "'DM Sans',sans-serif" }}>{fromCity || "Wien"} → {toCity || "Split"}</div>
-      <a href={`https://wego.here.com/directions/drive/${from[0]},${from[1]}/${to[0]},${to[1]}`} target="_blank" rel="noopener noreferrer"
-        style={{ fontSize: 12, color: "#0ea5e9", textDecoration: "none", padding: "6px 16px", borderRadius: 8, border: "1px solid rgba(14,165,233,0.3)" }}>
-        Otvori mapu →
-      </a>
-    </div>
-  ) : (
-    <iframe src={src} style={{ width: "100%", height: "280px", border: "none", borderRadius: "12px" }}
-      sandbox="allow-scripts allow-same-origin" title="route-map"
-      onError={() => setMapError(true)}
-      onLoad={(e) => {
-        // Check if iframe loaded actual content (not blank)
-        try { if (!e.target.contentWindow.document.getElementById("map")) setMapError(true); } catch(err) { /* cross-origin ok */ }
-      }} />
+
+  // Project lat/lng to SVG coords (Mercator-ish, good enough for route viz)
+  const allLats = [from[0], to[0]];
+  const allLngs = [from[1], to[1]];
+  const PAD = 60;
+  const W = 800, H = 360;
+  const minLat = Math.min(...allLats) - 0.8, maxLat = Math.max(...allLats) + 0.8;
+  const minLng = Math.min(...allLngs) - 1.2, maxLng = Math.max(...allLngs) + 1.2;
+  const proj = (lat, lng) => {
+    const x = PAD + ((lng - minLng) / (maxLng - minLng)) * (W - 2 * PAD);
+    const y = PAD + ((maxLat - lat) / (maxLat - minLat)) * (H - 2 * PAD);
+    return [x, y];
+  };
+  const [fx, fy] = proj(from[0], from[1]);
+  const [tx, ty] = proj(to[0], to[1]);
+
+  // Curved path via control point (arc feel)
+  const mx = (fx + tx) / 2, my = (fy + ty) / 2;
+  const dx = tx - fx, dy = ty - fy;
+  const cx = mx - dy * 0.15, cy = my + dx * 0.15;
+
+  // Waypoint cities along the route (Ljubljana, Zagreb as typical transit)
+  const waypoints = [];
+  const routeCities = ["Ljubljana","Zagreb","Rijeka","Zadar"];
+  for (const city of routeCities) {
+    if (city === fromCity || city === toCity) continue;
+    const c = COORDS[city];
+    if (!c) continue;
+    // Only show if roughly between origin and destination
+    if (c[0] >= minLat && c[0] <= maxLat && c[1] >= minLng && c[1] <= maxLng) {
+      const [wx, wy] = proj(c[0], c[1]);
+      waypoints.push({ name: city, x: wx, y: wy });
+    }
+  }
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: 260, display: "block", borderRadius: 12 }}
+      xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="routeGrad" x1={fx} y1={fy} x2={tx} y2={ty} gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#f97316" />
+          <stop offset="100%" stopColor="#0ea5e9" />
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+        <radialGradient id="bgGrad" cx="50%" cy="50%">
+          <stop offset="0%" stopColor="#162033" />
+          <stop offset="100%" stopColor="#0c1426" />
+        </radialGradient>
+      </defs>
+
+      {/* Background */}
+      <rect width={W} height={H} fill="url(#bgGrad)" rx="12" />
+
+      {/* Subtle grid */}
+      {[0.25,0.5,0.75].map(f => (
+        <React.Fragment key={f}>
+          <line x1={W*f} y1={0} x2={W*f} y2={H} stroke="rgba(148,163,184,0.04)" />
+          <line x1={0} y1={H*f} x2={W} y2={H*f} stroke="rgba(148,163,184,0.04)" />
+        </React.Fragment>
+      ))}
+
+      {/* Route line — glow layer */}
+      <path d={`M ${fx} ${fy} Q ${cx} ${cy} ${tx} ${ty}`}
+        fill="none" stroke="url(#routeGrad)" strokeWidth="6" strokeLinecap="round" opacity="0.25" />
+      {/* Route line — main */}
+      <path d={`M ${fx} ${fy} Q ${cx} ${cy} ${tx} ${ty}`}
+        fill="none" stroke="url(#routeGrad)" strokeWidth="3" strokeLinecap="round"
+        strokeDasharray="8 4" filter="url(#glow)" />
+
+      {/* Waypoint dots */}
+      {waypoints.map(wp => (
+        <React.Fragment key={wp.name}>
+          <circle cx={wp.x} cy={wp.y} r="3" fill="rgba(148,163,184,0.3)" />
+          <text x={wp.x} y={wp.y - 8} textAnchor="middle"
+            style={{ fontSize: 10, fill: "rgba(148,163,184,0.4)", fontFamily: "'DM Sans',system-ui" }}>{wp.name}</text>
+        </React.Fragment>
+      ))}
+
+      {/* Origin marker */}
+      <circle cx={fx} cy={fy} r="14" fill="rgba(249,115,22,0.12)" />
+      <circle cx={fx} cy={fy} r="8" fill="#f97316" stroke="#fff" strokeWidth="2.5" />
+      <circle cx={fx} cy={fy} r="3" fill="#fff" />
+      <text x={fx} y={fy - 20} textAnchor="middle"
+        style={{ fontSize: 13, fill: "#f97316", fontWeight: 700, fontFamily: "'DM Sans',system-ui" }}>{fromCity || "Wien"}</text>
+
+      {/* Destination marker */}
+      <circle cx={tx} cy={ty} r="14" fill="rgba(14,165,233,0.12)" />
+      <circle cx={tx} cy={ty} r="8" fill="#0ea5e9" stroke="#fff" strokeWidth="2.5" />
+      <circle cx={tx} cy={ty} r="3" fill="#fff" />
+      <text x={tx} y={ty + 24} textAnchor="middle"
+        style={{ fontSize: 13, fill: "#0ea5e9", fontWeight: 700, fontFamily: "'DM Sans',system-ui" }}>{toCity || "Split"}</text>
+
+      {/* Route info overlay */}
+      {routeData && (
+        <g>
+          <rect x={W/2 - 70} y={H - 42} width={140} height={30} rx={8} fill="rgba(12,20,38,0.85)" stroke="rgba(14,165,233,0.2)" strokeWidth="1" />
+          <text x={W/2} y={H - 22} textAnchor="middle"
+            style={{ fontSize: 12, fill: "#e2e8f0", fontWeight: 600, fontFamily: "'DM Sans',system-ui" }}>
+            {routeData.km} km · {routeData.hrs}h {routeData.mins}min
+          </text>
+        </g>
+      )}
+    </svg>
   );
 });
 
@@ -62,11 +153,13 @@ function useHereRoute(fromCity, toCity, mode) {
     const toCoord = CITY_COORDS[toCity] || CITY_COORDS["Split"];
     const transportMode = mode === "kamper" ? "truck" : "car";
     const url = `https://router.hereapi.com/v8/routes?transportMode=${transportMode}&origin=${fromCoord[0]},${fromCoord[1]}&destination=${toCoord[0]},${toCoord[1]}&return=summary&apikey=${HERE_ROUTING_KEY}`;
+    let cancelled = false;
     fetch(url)
       .then(r => r.json())
       .then(data => {
+        if (cancelled) return;
         const section = data.routes?.[0]?.sections?.[0];
-        if (!section?.summary) return;
+        if (!section?.summary) throw new Error("no summary");
         const km = Math.round(section.summary.length / 1000);
         const totalMin = Math.round(section.summary.duration / 60);
         const hrs = Math.floor(totalMin / 60);
@@ -77,9 +170,9 @@ function useHereRoute(fromCity, toCity, mode) {
           dLat: toCoord[0], dLng: toCoord[1],
         });
       })
-      .catch(e => {
-        console.warn("HERE routing failed:", e.message);
-        // Fallback: estimate from straight-line distance
+      .catch(() => {
+        if (cancelled) return;
+        // Fallback: haversine estimate
         const fromC = CITY_COORDS[fromCity] || CITY_COORDS["Wien"];
         const toC = CITY_COORDS[toCity] || CITY_COORDS["Split"];
         const R = 6371;
@@ -87,14 +180,15 @@ function useHereRoute(fromCity, toCity, mode) {
         const dLon = (toC[1] - fromC[1]) * Math.PI / 180;
         const a = Math.sin(dLat/2)**2 + Math.cos(fromC[0]*Math.PI/180)*Math.cos(toC[0]*Math.PI/180)*Math.sin(dLon/2)**2;
         const straightKm = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        const estKm = Math.round(straightKm * 1.35); // road factor
-        const estMin = Math.round(estKm / 1.2); // ~72 km/h avg
+        const estKm = Math.round(straightKm * 1.35);
+        const estMin = Math.round(estKm / 1.2);
         setRouteData({
           km: estKm, hrs: Math.floor(estMin/60), mins: estMin%60, mode: mode || "auto",
           oLat: fromC[0], oLng: fromC[1], dLat: toC[0], dLng: toC[1],
           estimated: true,
         });
       });
+    return () => { cancelled = true; };
   }, [fromCity, toCity, mode]);
   return routeData;
 }
@@ -1342,18 +1436,28 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>{transitFromUrl || COUNTRY_CITY[G.country]?.split(",")?.[0] || G.country} → <span style={{ color: C.accent }}>{transitToUrl || "Podstrana"}</span></div>
         </div>
         <div style={{ borderRadius: 18, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 12 }}>
-          <TransitMap fromCity={mapFromCity} toCity={mapToCity} />
-          {transitRouteData && (
-            <div style={{ padding: "12px 16px", background: `rgba(14,165,233,0.04)`, display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
-              <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>🛣 {transitRouteData.km} km</span>
-              <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>⏱ {transitRouteData.hrs}h {transitRouteData.mins}min</span>
-              {transitRouteData.mode === "kamper" && <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 6, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.15)", color: C.gold }}>🚐 Kamper ruta</span>}
-              <a href={`https://wego.here.com/directions/drive/${transitRouteData.oLat},${transitRouteData.oLng}/${transitRouteData.dLat},${transitRouteData.dLng}`} target="_blank" rel="noopener noreferrer"
-                style={{ marginLeft: "auto", padding: "8px 16px", borderRadius: 10, background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 12, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>
-                📍 Pokreni navigaciju →
-              </a>
-            </div>
-          )}
+          <TransitMap fromCity={mapFromCity} toCity={mapToCity} routeData={transitRouteData} />
+          <div style={{ padding: "12px 16px", background: `rgba(14,165,233,0.04)`, display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap", minHeight: 44 }}>
+            {transitRouteData ? (
+              <>
+                <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>🛣 {transitRouteData.km} km</span>
+                <span style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.text }}>⏱ {transitRouteData.hrs}h {transitRouteData.mins}min</span>
+                {transitRouteData.mode === "kamper" && <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 6, background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.15)", color: C.gold }}>🚐 Kamper ruta</span>}
+                <button onClick={() => {
+                  const dLat = transitRouteData.dLat, dLng = transitRouteData.dLng;
+                  const oLat = transitRouteData.oLat, oLng = transitRouteData.oLng;
+                  // Universal: tries native maps app first (iOS/Android), falls back to Google Maps web
+                  const gUrl = `https://www.google.com/maps/dir/?api=1&origin=${oLat},${oLng}&destination=${dLat},${dLng}&travelmode=driving`;
+                  window.location.href = gUrl;
+                }}
+                  style={{ marginLeft: "auto", padding: "8px 16px", borderRadius: 10, background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer", whiteSpace: "nowrap", fontFamily: dm.fontFamily }}>
+                  📍 Pokreni navigaciju →
+                </button>
+              </>
+            ) : (
+              <span style={{ ...dm, fontSize: 12, color: C.mut }}>Izračunavam rutu…</span>
+            )}
+          </div>
         </div>
         {isAdmin && <input type="range" min={0} max={100} value={transitProg} onChange={e => setTransitProg(+e.target.value)} style={{ width: "100%", accentColor: C.accent, marginBottom: 16 }} />}
 
