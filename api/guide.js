@@ -21,7 +21,7 @@ async function fetchHereTraffic(oLat, oLng, dLat, dLng) {
     const minLat = Math.min(oLat, dLat) - 0.3, maxLat = Math.max(oLat, dLat) + 0.3;
     const minLng = Math.min(oLng, dLng) - 0.3, maxLng = Math.max(oLng, dLng) + 0.3;
     const r = await fetch(
-      `https://data.traffic.hereapi.com/v7/incidents?in=bbox:${minLat},${minLng};${maxLat},${maxLng}&apiKey=${HERE_KEY}`,
+      `https://data.traffic.hereapi.com/v7/incidents?in=bbox:${minLat},${minLng};${maxLat},${maxLng}&locationReferencing=shape&apiKey=${HERE_KEY}`,
       { signal: AbortSignal.timeout(4000) }
     );
     if (!r.ok) return [];

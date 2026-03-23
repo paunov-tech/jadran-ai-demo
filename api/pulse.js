@@ -237,7 +237,7 @@ async function fetchNearbyTraffic(lat, lng) {
     const fLat = parseFloat(lat), fLng = parseFloat(lng);
     const minLat = fLat - 0.4, maxLat = fLat + 0.4;
     const minLng = fLng - 0.4, maxLng = fLng + 0.4;
-    const url = `https://data.traffic.hereapi.com/v7/incidents?in=bbox:${minLat},${minLng};${maxLat},${maxLng}&apiKey=${HERE_KEY}`;
+    const url = `https://data.traffic.hereapi.com/v7/incidents?in=bbox:${minLat},${minLng};${maxLat},${maxLng}&locationReferencing=shape&apiKey=${HERE_KEY}`;
     console.log("pulse: HERE url:", url.replace(HERE_KEY, "KEY"));
     const r = await fetch(url, { signal: AbortSignal.timeout(4000) });
     if (!r.ok) { const body = await r.text().catch(()=>""); console.warn("pulse: HERE Traffic", r.status, body.slice(0,200)); return []; }
