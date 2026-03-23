@@ -369,9 +369,6 @@ export default function LandingPage() {
             ];
             return (
               <div style={{ maxWidth: 540, margin: "0 auto" }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: "#f0f4f8", marginBottom: 4, fontFamily: F }}>
-                  {lang === "de" || lang === "at" ? "Wie reise ich?" : lang === "en" ? "How do I travel?" : lang === "it" ? "Come viaggio?" : "Kako putujem?"}
-                </div>
                 <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6, letterSpacing: 1, textTransform: "uppercase", fontFamily: B }}>
                   {lang === "de" || lang === "at" ? "ICH REISE ALS" : lang === "en" ? "I'M TRAVELING AS" : lang === "it" ? "VIAGGIO COME" : "PUTUJEM KAO"}
                 </div>
