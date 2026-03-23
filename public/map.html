@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="initial-scale=1.0, width=device-width"/>
-<script src="https://js.api.here.com/v3/3.1/mapsjs-core.js" type="text/javascript" charset="utf-8"></script>
-<script src="https://js.api.here.com/v3/3.1/mapsjs-service.js" type="text/javascript" charset="utf-8"></script>
-<script src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js" type="text/javascript" charset="utf-8"></script>
-<script src="https://js.api.here.com/v3/3.1/mapsjs-ui.js" type="text/javascript" charset="utf-8"></script>
-<link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css"/>
+<script src="https://js.api.here.com/v3/3.2/mapsjs-core.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://js.api.here.com/v3/3.2/mapsjs-service.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://js.api.here.com/v3/3.2/mapsjs-mapevents.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://js.api.here.com/v3/3.2/mapsjs-ui.js" type="text/javascript" charset="utf-8"></script>
+<link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.2/mapsjs-ui.css"/>
 <style>
   body { margin:0; padding:0; overflow:hidden; }
   #map { width:100vw; height:100vh; position:relative; }
@@ -72,9 +72,11 @@ fetch(routeUrl)
       style: {strokeColor: "rgba(14,165,233,0.85)", lineWidth: 5, lineCap: "round", lineJoin: "round"}
     });
     map.addObject(routeLine);
-    var routeGroup = new H.map.Group();
-    routeGroup.addObjects([routeLine, startMarker, endMarker]);
-    map.getViewModel().setLookAtData({bounds: routeGroup.getBoundingBox()}, {animate: true});
+    // Zoom to fit route + markers
+    var bb = routeLine.getBoundingBox();
+    var mb = markerGroup.getBoundingBox();
+    if (bb && mb) bb = bb.mergeRect(mb);
+    map.getViewModel().setLookAtData({bounds: bb || mb}, {animate: true});
   })
   .catch(function(e) { console.warn("Route fetch error:", e); });
 </script>
