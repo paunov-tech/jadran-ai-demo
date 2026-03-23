@@ -1592,6 +1592,23 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           </div>
         )}
 
+        {/* ── Trip action button — always visible ── */}
+        <div style={{ textAlign: "center", padding: "12px 0" }}>
+          {!tripActive ? (
+            <button onClick={startTrip} style={{
+              padding: "16px 40px", borderRadius: 16, border: "none", cursor: "pointer",
+              background: `linear-gradient(135deg, #22c55e, #16a34a)`,
+              color: "#fff", fontSize: 16, fontWeight: 700, ...dm,
+              boxShadow: "0 4px 24px rgba(34,197,94,0.3)",
+              animation: "pulse 2s infinite",
+            }}>
+              🚀 {lang === "de" || lang === "at" ? "Reise starten" : lang === "en" ? "Start trip" : lang === "it" ? "Inizia viaggio" : "Krećem na put"}
+            </button>
+          ) : (
+            <Btn primary onClick={() => { setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" }); }}>{t("arrived",lang)}</Btn>
+          )}
+        </div>
+
         {/* ── PULS JADRANA — unified intelligence feed ── */}
         <RouteGuide
           fromCoords={transitFromCoords}
@@ -1631,21 +1648,6 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             </button>
           </div>
         )}
-        <div style={{ textAlign: "center", padding: "8px 0" }}>
-          {!tripActive ? (
-            <button onClick={startTrip} style={{
-              padding: "16px 40px", borderRadius: 16, border: "none", cursor: "pointer",
-              background: `linear-gradient(135deg, #22c55e, #16a34a)`,
-              color: "#fff", fontSize: 16, fontWeight: 700, ...dm,
-              boxShadow: "0 4px 24px rgba(34,197,94,0.3)",
-              animation: "pulse 2s infinite",
-            }}>
-              🚀 {lang === "de" || lang === "at" ? "Reise starten" : lang === "en" ? "Start trip" : lang === "it" ? "Inizia viaggio" : "Krećem na put"}
-            </button>
-          ) : (
-            <Btn primary onClick={() => { setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" }); }}>{t("arrived",lang)}</Btn>
-          )}
-        </div>
       </>
     );
   };
