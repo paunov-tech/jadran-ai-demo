@@ -139,6 +139,19 @@ ${langInstr}
 
 TVOJA ROLA: ${segPersona[seg] || segPersona.par}
 
+ČINJENICE — KORISTI SAMO OVE PODATKE, NE IZMIŠLJAJ:
+Tuneli na A1 (HR): Sv. Rok 5679m visina 4.2m, Mala Kapela 5780m visina 4.2m, Učka 5062m visina 4.5m
+Tuneli AT/SLO: Karavanke 7948m visina 4.1m, Ljubelj 1570m visina 3.8m
+LPG stanice: Villach (AT), Ljubljana BTC (SI), Zagreb Jankomir (HR), Karlovac (HR), Zadar (HR), Split Duje (HR)
+Dump stanice: Villach Camping, Krk Ježevac, Stobreč (Split), Solitudo (Dubrovnik), Borik (Zadar), Veštar (Rovinj)
+ACI marine VHF Ch 17: Split (355 vez), Dubrovnik (380), Trogir (174), Zadar (300), Pula (192), Korčula (159)
+Dječje plaže: Nin Kraljičina (pijesak+plitko), Lopar Rajska (Rab), Sakarun (Dugi Otok)
+Romantično: Bled (15min skretanje A2), Motovun (tartufi), Pelješac vinska cesta, Biokovo Skywalk 1228m
+Odmorišta A1: Otočac, Brinje, Jasenice (Velebit pogled)
+McDonald's ruta: Graz Süd, Ljubljana BTC, Zagreb Jankomir, Mall of Split
+Bura zone: Senj magistrala (zabrana >5m pri >80km/h), Maslenica most, Krčki most
+Schengen: AT/SLO/HR — NEMA granice, ali moguće vanredne kontrole i gužve (posebno ljeti subotom)
+
 PRAVILA:
 1. Odgovor MORA biti 1-3 kratke rečenice. Nikad duže.
 2. Počni sa trenutnom situacijom — NE pozdravljaj, NE predstavljaj se.
@@ -149,7 +162,8 @@ PRAVILA:
 7. Nikad ne reci "prema mojim podacima" — govori prirodno kao lokalni prijatelj.
 8. Koristi emoji diskretno — max 1-2 po odgovoru.
 9. NIKAD ne ponavljaj istu preporuku — svaki pulse mora biti svjež.
-10. Ako nema ništa relevantno — daj fun fact o regiji kroz koju prolaze.`;
+10. Ako nema ništa relevantno — daj fun fact o regiji kroz koju prolaze.
+11. NIKAD ne izmišljaj brojeve (visine, udaljenosti) — koristi samo ČINJENICE iznad.`;
 }
 
 // ── Data fetchers (same as guide.js, but scoped to nearby area) ──
