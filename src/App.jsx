@@ -2431,9 +2431,9 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         <PhaseNav />
 
         {/* Content */}
-        {phase === "pre" && <div className="page-enter"><PreTrip /></div>}
-        {phase === "kiosk" && <div className="page-enter" key={subScreen}><Kiosk /></div>}
-        {phase === "post" && <div className="page-enter"><PostStay /></div>}
+        {phase === "pre" && <div className="page-enter">{PreTrip()}</div>}
+        {phase === "kiosk" && <div className="page-enter" key={subScreen}>{Kiosk()}</div>}
+        {phase === "post" && <div className="page-enter">{PostStay()}</div>}
 
         <div style={{ ...dm, textAlign: "center", padding: "20px 0 28px", fontSize: 10, color: "rgba(100,116,139,0.3)", letterSpacing: 2, textTransform: "uppercase" }}>
           JADRAN · SIAL Consulting d.o.o.
