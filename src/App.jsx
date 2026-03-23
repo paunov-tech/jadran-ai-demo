@@ -191,7 +191,7 @@ const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C, extraCa
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
         <div style={{ ...dm, fontSize: 13, fontWeight: 700, color: C.text, letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 6 }}>
           <span style={{ width: 8, height: 8, borderRadius: "50%", background: cards && cards.some(c => c.severity === "critical") ? "#ef4444" : "#22c55e", display: "inline-block", animation: loading ? "pulse 1.5s infinite" : "none" }} />
-          LIVE VODIČ
+          PULS JADRANA
         </div>
         <button onClick={fetchGuide} disabled={loading}
           style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${C.bord}`, background: "transparent", color: loading ? C.mut : C.accent, fontSize: 11, cursor: loading ? "default" : "pointer", ...dm }}>
@@ -1558,9 +1558,6 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
 
     if (subScreen === "transit") return (
       <>
-        {/* ── Live Ticker (single line, rotating) ── */}
-        <LiveTicker fromCoords={transitFromCoords} toCoords={transitToCoords} seg={transitSegUrl} lang={lang} routeData={transitRouteData} dm={dm} C={C} />
-
         {/* ── HERE Map ── */}
         <div style={{ borderRadius: 16, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 0 }}>
           {transitFromCoords && transitToCoords ? (
@@ -1595,7 +1592,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           </div>
         )}
 
-        {/* ── AI ROUTE GUIDE — Live Intelligence Feed ── */}
+        {/* ── PULS JADRANA — unified intelligence feed ── */}
         <RouteGuide
           fromCoords={transitFromCoords}
           toCoords={transitToCoords}
@@ -1603,7 +1600,19 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           lang={lang}
           dm={dm}
           C={C}
-          extraCards={gpsCards}
+          extraCards={[
+            ...alerts.filter(a => !dismissedAlerts.has(a.title)).map(a => ({
+              id: "alert_" + (a.title || "").slice(0, 20),
+              type: a.type || "alert",
+              severity: a.severity === "critical" ? "critical" : a.severity === "high" ? "warning" : "info",
+              icon: ALERT_ICONS[a.type] || "⚠️",
+              title: a.title || "Upozorenje",
+              body: a.description || a.title || "",
+              source: a.source || "HAK",
+              ts: a.ts || new Date().toISOString(),
+            })),
+            ...gpsCards,
+          ]}
         />
 
         {/* ── Arrival ── */}
@@ -2508,8 +2517,8 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           </div>}
         </div>
 
-        {/* Alerts Bar */}
-        <AlertsBar />
+        {/* Alerts Bar — hidden on transit (merged into Puls Jadrana) */}
+        {!(phase === "pre" && subScreen === "transit") && <AlertsBar />}
 
         {/* Phase Nav */}
         <PhaseNav />
