@@ -715,15 +715,17 @@ export default function JadranUnified() {
   const [transitRouteData, setTransitRouteData] = useState(null);
   const SEG_ICON = { kamper:"🚐", porodica:"👨‍👩‍👧", par:"💑", jedrilicar:"⛵" };
 
-  // ─── GPS LIVE ENGINE (silent, fires cards) ───
+  // ─── GPS LIVE ENGINE (starts on user action, not automatically) ───
   const [gpsCards, setGpsCards] = useState([]);
   const [gpsPosition, setGpsPosition] = useState(null);
+  const [tripActive, setTripActive] = useState(false);
   const gpsStarted = useRef(false);
 
-  useEffect(() => {
+  const startTrip = () => {
     if (gpsStarted.current) return;
-    if (phase !== "pre" || subScreen !== "transit") return;
     gpsStarted.current = true;
+    setTripActive(true);
+    saveDelta({ phase: "transit" });
     startGPS({
       onCard: (card) => setGpsCards(prev => {
         const exists = prev.some(c => c.id === card.id);
@@ -741,7 +743,18 @@ export default function JadranUnified() {
         saveDelta({ country });
       },
     });
-    return () => {}; // GPS persists across re-renders
+  };
+
+  // Resume trip if was active before reload
+  useEffect(() => {
+    if (gpsStarted.current) return;
+    if (phase !== "pre" || subScreen !== "transit") return;
+    try {
+      const delta = loadDelta();
+      if (delta.phase === "transit" && delta.dist_to_dest > 2) {
+        startTrip();
+      }
+    } catch {}
   }, [phase, subScreen]);
 
   // ─── GUEST ONBOARDING STATE ───
@@ -1609,8 +1622,20 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             </button>
           </div>
         )}
-        <div style={{ textAlign: "center" }}>
-          <Btn primary onClick={() => { setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" }); }}>{t("arrived",lang)}</Btn>
+        <div style={{ textAlign: "center", padding: "8px 0" }}>
+          {!tripActive ? (
+            <button onClick={startTrip} style={{
+              padding: "16px 40px", borderRadius: 16, border: "none", cursor: "pointer",
+              background: `linear-gradient(135deg, #22c55e, #16a34a)`,
+              color: "#fff", fontSize: 16, fontWeight: 700, ...dm,
+              boxShadow: "0 4px 24px rgba(34,197,94,0.3)",
+              animation: "pulse 2s infinite",
+            }}>
+              🚀 {lang === "de" || lang === "at" ? "Reise starten" : lang === "en" ? "Start trip" : lang === "it" ? "Inizia viaggio" : "Krećem na put"}
+            </button>
+          ) : (
+            <Btn primary onClick={() => { setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" }); }}>{t("arrived",lang)}</Btn>
+          )}
         </div>
       </>
     );
