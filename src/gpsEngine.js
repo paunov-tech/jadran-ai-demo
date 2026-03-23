@@ -4,6 +4,7 @@
 
 import { checkZones, checkApproach, detectCountry, detectPhase, distKm } from "./geofences";
 import { loadDelta, saveDelta } from "./deltaContext";
+import { nearbyPOIs } from "./poiDatabase";
 
 const GPS_INTERVAL = 10000;  // 10s position updates
 const CARD_INTERVAL = 60000; // 60s card refresh
@@ -161,6 +162,31 @@ function checkAndFireZones(lat, lng) {
       });
     }
   }
+
+  // ── POI proximity (segment-specific) ──
+  const pois = nearbyPOIs(lat, lng, segment, 8); // within 8km
+  for (const poi of pois.slice(0, 2)) { // max 2 POI cards per check
+    if (triggeredZones.has("poi_" + poi.id)) continue;
+    triggeredZones.add("poi_" + poi.id);
+    persistTriggered();
+
+    const cardText = poi.card?.[lang] || poi.card?.hr || poi.name;
+    const icon = poiIcon(poi.type);
+    const severity = poi.type === "tunnel_warning" ? "warning" : "tip";
+
+    if (onCardCallback) {
+      onCardCallback({
+        id: "poi_" + poi.id,
+        type: poi.type,
+        severity,
+        icon,
+        title: `${Math.round(poi.dist)} km — ${poi.name}`,
+        body: cardText,
+        source: "POI",
+        ts: new Date().toISOString(),
+      });
+    }
+  }
 }
 
 // ─── PROACTIVE CARD GENERATION ───
@@ -222,6 +248,15 @@ function zoneIcon(type) {
   const icons = {
     schengen_transition: "🛂", bura: "💨", ferry: "⛴️",
     toll: "💶", city: "🏙️", destination: "🏖️",
+  };
+  return icons[type] || "📍";
+}
+
+function poiIcon(type) {
+  const icons = {
+    lpg: "⛽", dump_station: "🚿", marina: "⚓", viewpoint: "🏞️",
+    rest_stop: "☕", mcdonalds: "🍔", camp: "⛺", beach_family: "🏖️",
+    wine: "🍷", tunnel_warning: "🚇",
   };
   return icons[type] || "📍";
 }

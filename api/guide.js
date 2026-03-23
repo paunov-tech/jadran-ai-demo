@@ -266,6 +266,57 @@ function generateCards(traffic, yolo, weather, seg, lang) {
   }
 
 
+  // ── SEGMENT-SPECIFIC INTELLIGENCE ──
+  if (isKamper) {
+    cards.push({
+      id: "seg_kamper_tips",
+      severity: "tip",
+      icon: "🚐",
+      title: de ? "Camper-Hinweise" : hr ? "Kamper savjeti" : "Camper tips",
+      body: de ? "A1 Tunnels: Sv.Rok 4.2m, Mala Kapela 4.2m, Učka 4.5m. Bora bei Senj — HAK.hr prüfen! LPG: Zagreb, Karlovac, Zadar, Split."
+           : hr ? "A1 tuneli: Sv.Rok 4.2m, Mala Kapela 4.2m, Učka 4.5m. Bura kod Senja — HAK.hr! LPG: Zagreb, Karlovac, Zadar, Split."
+           : "A1 tunnels: Sv.Rok 4.2m, Mala Kapela 4.2m, Učka 4.5m. Bora at Senj — check HAK.hr! LPG: Zagreb, Karlovac, Zadar, Split.",
+      source: "Segment",
+      ts: new Date().toISOString(),
+    });
+  } else if (seg === "porodica") {
+    cards.push({
+      id: "seg_porodica_tips",
+      severity: "tip",
+      icon: "👨‍👩‍👧",
+      title: de ? "Familien-Tipps" : hr ? "Obiteljski savjeti" : "Family tips",
+      body: de ? "Pausen alle 2h empfohlen. McDonald's: Graz Süd, Ljubljana, Zagreb, Split. Kinderstrand: Nin (Sand+flach), Lopar/Rab."
+           : hr ? "Pauze svakih 2h. McDonald's: Graz Süd, Ljubljana, Zagreb, Split. Dječje plaže: Nin (pijesak+plitko), Lopar/Rab."
+           : "Breaks every 2h recommended. McDonald's: Graz South, Ljubljana, Zagreb, Split. Kid beaches: Nin (sand+shallow), Lopar/Rab.",
+      source: "Segment",
+      ts: new Date().toISOString(),
+    });
+  } else if (seg === "par") {
+    cards.push({
+      id: "seg_par_tips",
+      severity: "tip",
+      icon: "💑",
+      title: de ? "Paar-Empfehlungen" : hr ? "Preporuke za parove" : "Couple recommendations",
+      body: de ? "Romantische Stopps: Bled (15min Abstecher), Motovun (Trüffel), Pelješac Weinstraße, Biokovo Skywalk 1228m."
+           : hr ? "Romantični zaustavljanja: Bled (15min skretanje), Motovun (tartufi), Pelješac vinska cesta, Biokovo Skywalk 1228m."
+           : "Romantic stops: Bled (15min detour), Motovun (truffles), Pelješac wine road, Biokovo Skywalk 1228m.",
+      source: "Segment",
+      ts: new Date().toISOString(),
+    });
+  } else if (seg === "jedrilicar") {
+    cards.push({
+      id: "seg_jedrilicar_tips",
+      severity: "tip",
+      icon: "⛵",
+      title: de ? "Segler-Info" : hr ? "Nautičke informacije" : "Sailor info",
+      body: de ? "ACI Marinas: VHF Ch 17. Maestral nachmittags (W 10-25kn). Tankstellen: Split, Trogir, Zadar, Pula. Wetterbericht: prognoza.hr"
+           : hr ? "ACI marine: VHF Ch 17. Maestral poslijepodne (W 10-25kn). Gorivo: Split, Trogir, Zadar, Pula. Prognoza: prognoza.hr"
+           : "ACI marinas: VHF Ch 17. Maestral afternoons (W 10-25kn). Fuel: Split, Trogir, Zadar, Pula. Forecast: prognoza.hr",
+      source: "Segment",
+      ts: new Date().toISOString(),
+    });
+  }
+
   // Sort by severity
   cards.sort((a, b) => (SEV[a.severity] ?? 9) - (SEV[b.severity] ?? 9));
   return cards;
