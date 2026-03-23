@@ -74,7 +74,7 @@ const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteRea
   if (!src) return <div style={{ width: "100%", height: 300, background: "#0c1426", borderRadius: 14, display: "grid", placeItems: "center" }}><span style={{ fontSize: 13, color: "#64748b", fontFamily: "'DM Sans',sans-serif" }}>Učitavam mapu…</span></div>;
 
   return (
-    <iframe ref={iframeRef} src={src}
+    <iframe ref={iframeRef} src={src} className="map-frame"
       style={{ width: "100%", height: 300, border: "none", display: "block" }}
       allow="webgl; fullscreen" title="here-route" />
   );
@@ -1583,7 +1583,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
 
         {/* ── HERE Navigation (inside map card) ── */}
         {transitRouteData && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", background: `rgba(14,165,233,0.04)`, borderRadius: "0 0 16px 16px", border: `1px solid ${C.bord}`, borderTop: "none", marginBottom: 16 }}>
+          <div className="route-bar" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", background: `rgba(14,165,233,0.04)`, borderRadius: "0 0 16px 16px", border: `1px solid ${C.bord}`, borderTop: "none", marginBottom: 16 }}>
             <div style={{ ...dm, fontSize: 13, color: C.mut }}>
               🛣 {transitRouteData.km} km · ⏱ {transitRouteData.hrs}h {transitRouteData.mins}min
               {transitRouteData.estimated && <span style={{ fontSize: 10, color: C.gold, marginLeft: 6 }}>(procjena)</span>}
@@ -1601,7 +1601,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         {/* ── Trip action button — always visible ── */}
         <div style={{ textAlign: "center", padding: "12px 0" }}>
           {!tripActive ? (
-            <button onClick={startTrip} style={{
+            <button onClick={startTrip} className="trip-btn" style={{
               padding: "16px 40px", borderRadius: 16, border: "none", cursor: "pointer",
               background: `linear-gradient(135deg, #22c55e, #16a34a)`,
               color: "#fff", fontSize: 16, fontWeight: 700, ...dm,
@@ -2480,6 +2480,12 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         /* Touch-friendly sizing */
         @media (max-width: 480px) {
           .page-enter { padding: 0 !important; }
+          button { min-height: 44px; }
+          .trip-btn { width: 100% !important; box-sizing: border-box; }
+          .map-frame { height: 250px !important; }
+          .lang-btn { padding: 10px 12px !important; min-width: 44px; min-height: 44px; }
+          .route-bar { flex-wrap: wrap; gap: 8px; }
+          .route-bar button { flex: 1; }
         }
         @media (min-width: 768px) and (max-width: 1366px) and (hover: none) {
           button { min-height: 48px; }
@@ -2506,11 +2512,11 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
               {premium && <span className="premium-shimmer" style={{display:"inline-flex",alignItems:"center",gap:4,padding:"5px 14px",borderRadius:20,fontSize:10,fontFamily:"'Outfit',sans-serif",color:C.gold,letterSpacing:1.5,fontWeight:600,border:`1px solid rgba(245,158,11,0.12)`}}>⭐ PREMIUM</span>}
               <div style={{display:"flex",gap:2,background:"rgba(12,28,50,0.5)",borderRadius:14,padding:3,border:`1px solid ${C.bord}`,backdropFilter:"blur(8px)"}}>
-                <button onClick={() => setLangOpen(!langOpen)}
+                <button onClick={() => setLangOpen(!langOpen)} className="lang-btn"
                   style={{...dm,padding:"5px 7px",background:C.acDim,border:`1px solid rgba(14,165,233,0.15)`,borderRadius:11,cursor:"pointer",fontSize:15,lineHeight:1}}
                   title="Jezik">{LANGS.find(l => l.code === lang)?.flag || "🇭🇷"}</button>
                 {langOpen && LANGS.filter(lg => lg.code !== lang).map(lg => (
-                  <button key={lg.code} onClick={() => { setLang(lg.code); setLangOpen(false); }}
+                  <button key={lg.code} onClick={() => { setLang(lg.code); setLangOpen(false); }} className="lang-btn"
                     style={{...dm,padding:"5px 7px",background:"transparent",border:"1px solid transparent",borderRadius:11,cursor:"pointer",fontSize:15,lineHeight:1,transition:"all 0.25s",animation:"fadeIn 0.2s both"}}
                     title={lg.name}>{lg.flag}</button>
                 ))}
