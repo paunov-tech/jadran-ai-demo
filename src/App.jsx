@@ -65,7 +65,7 @@ const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteRea
   return (
     <iframe ref={iframeRef} src={src}
       style={{ width: "100%", height: 300, border: "none", display: "block" }}
-      sandbox="allow-scripts allow-same-origin" title="here-route" />
+      allow="webgl; fullscreen" title="here-route" />
   );
 });
 
@@ -75,65 +75,60 @@ const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteRea
 // Polls /api/guide every 3min, displays prioritized cards from all data sources
 // ─── LiveTicker: Single line above map with rotating live data ───
 const LiveTicker = React.memo(({ fromCoords, toCoords, seg, lang, routeData, dm, C }) => {
-  const [items, setItems] = React.useState([]);
+  const [guideCards, setGuideCards] = React.useState([]);
+  const [guideSources, setGuideSources] = React.useState(null);
   const [idx, setIdx] = React.useState(0);
 
-  // Fetch ticker data from guide API
+  // Fetch guide data (non-blocking — ticker works without it)
   React.useEffect(() => {
     if (!fromCoords || !toCoords) return;
     let cancelled = false;
     const load = () => {
       fetch(`/api/guide?oLat=${fromCoords[0]}&oLng=${fromCoords[1]}&dLat=${toCoords[0]}&dLng=${toCoords[1]}&seg=${seg || "auto"}&lang=${lang || "hr"}`)
         .then(r => r.json())
-        .then(data => {
-          if (cancelled) return;
-          const ticks = [];
-          // Route info
-          if (routeData) ticks.push({ icon: "🛣", text: `${routeData.km} km · ${routeData.hrs}h ${routeData.mins}min`, color: C.accent });
-          // Critical cards first
-          for (const card of (data.cards || [])) {
-            if (card.severity === "critical") ticks.push({ icon: card.icon, text: card.title, color: "#ef4444" });
-          }
-          for (const card of (data.cards || [])) {
-            if (card.severity === "warning") ticks.push({ icon: card.icon, text: card.title, color: "#f59e0b" });
-          }
-          for (const card of (data.cards || [])) {
-            if (card.severity === "info") ticks.push({ icon: card.icon, text: card.title, color: C.accent });
-          }
-          // Sources summary
-          const s = data.sources || {};
-          ticks.push({ icon: "📡", text: `LIVE: HERE·${s.here||0} YOLO·${s.yolo||0} DARS·${s.dars||0} HAK·${s.hak||0} ASFINAG·${s.asfinag||0}`, color: C.mut });
-          setItems(ticks);
-        })
+        .then(data => { if (!cancelled) { setGuideCards(data.cards || []); setGuideSources(data.sources || null); } })
         .catch(() => {});
     };
     load();
     const iv = setInterval(load, 180000);
     return () => { cancelled = true; clearInterval(iv); };
-  }, [fromCoords?.[0], toCoords?.[0], seg, routeData?.km]); // eslint-disable-line
+  }, [fromCoords?.[0], toCoords?.[0], seg]); // eslint-disable-line
 
-  // Rotate every 4s
+  // Build ticker items from route + guide
+  const items = React.useMemo(() => {
+    const t = [];
+    if (routeData) t.push({ icon: "🛣", text: `${routeData.km} km · ${routeData.hrs}h ${routeData.mins}min`, color: C.accent });
+    for (const c of guideCards) {
+      if (c.severity === "critical") t.push({ icon: c.icon, text: c.title, color: "#ef4444" });
+    }
+    for (const c of guideCards) {
+      if (c.severity === "warning") t.push({ icon: c.icon, text: c.title, color: "#f59e0b" });
+    }
+    for (const c of guideCards) {
+      if (c.severity === "info" || c.severity === "tip") t.push({ icon: c.icon, text: c.body?.slice(0, 60) || c.title, color: C.mut });
+    }
+    if (guideSources) {
+      const s = guideSources;
+      t.push({ icon: "📡", text: `HERE·${s.here||0} YOLO·${s.yolo||0} DARS·${s.dars||0} HAK·${s.hak||0} ASF·${s.asfinag||0}`, color: "rgba(100,116,139,0.4)" });
+    }
+    return t.length ? t : [{ icon: "⏳", text: routeData ? "Prikupljam live podatke…" : "Izračunavam rutu…", color: C.mut }];
+  }, [routeData, guideCards, guideSources]); // eslint-disable-line
+
+  // Rotate
   React.useEffect(() => {
     if (items.length < 2) return;
     const t = setInterval(() => setIdx(i => (i + 1) % items.length), 4000);
     return () => clearInterval(t);
   }, [items.length]);
 
-  const current = items[idx % Math.max(items.length, 1)];
-  if (!current && !routeData) return (
-    <div style={{ padding: "10px 0 8px", ...dm, fontSize: 13, color: C.mut }}>Izračunavam rutu…</div>
-  );
-  if (!current) return null;
-
+  const current = items[idx % items.length];
   return (
-    <div style={{ padding: "10px 0 8px", display: "flex", alignItems: "center", gap: 8, minHeight: 28, overflow: "hidden" }}>
-      <span style={{ fontSize: 14, flexShrink: 0 }}>{current.icon}</span>
-      <span style={{ ...dm, fontSize: 12, color: current.color || C.mut, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", transition: "opacity 0.3s", fontWeight: current.color === "#ef4444" ? 700 : 400 }}>
+    <div style={{ padding: "8px 0", display: "flex", alignItems: "center", gap: 8, minHeight: 24, overflow: "hidden" }}>
+      <span style={{ fontSize: 13, flexShrink: 0 }}>{current.icon}</span>
+      <span style={{ ...dm, fontSize: 12, color: current.color || C.mut, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: current.color === "#ef4444" ? 700 : 400 }}>
         {current.text}
       </span>
-      {items.length > 1 && (
-        <span style={{ ...dm, fontSize: 9, color: "rgba(100,116,139,0.3)", flexShrink: 0 }}>{idx % items.length + 1}/{items.length}</span>
-      )}
+      {items.length > 1 && <span style={{ ...dm, fontSize: 9, color: "rgba(100,116,139,0.3)", flexShrink: 0 }}>{idx % items.length + 1}/{items.length}</span>}
     </div>
   );
 });

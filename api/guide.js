@@ -22,7 +22,7 @@ async function fetchHereTraffic(oLat, oLng, dLat, dLng) {
     const minLng = Math.min(oLng, dLng) - 0.3, maxLng = Math.max(oLng, dLng) + 0.3;
     const r = await fetch(
       `https://data.traffic.hereapi.com/v7/incidents?in=bbox:${minLat},${minLng};${maxLat},${maxLng}&apiKey=${HERE_KEY}`,
-      { signal: AbortSignal.timeout(6000) }
+      { signal: AbortSignal.timeout(4000) }
     );
     if (!r.ok) return [];
     const data = await r.json();
@@ -44,7 +44,7 @@ async function fetchYoloCameras() {
   try {
     const r = await fetch(
       `https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_yolo?key=${FB_KEY}&pageSize=300`,
-      { signal: AbortSignal.timeout(6000) }
+      { signal: AbortSignal.timeout(4000) }
     );
     if (!r.ok) return null;
     const data = await r.json();
@@ -85,8 +85,8 @@ async function fetchWeatherRoute(oLat, oLng, dLat, dLng) {
     // Weather at midpoint + destination
     const mLat = (oLat + dLat) / 2, mLng = (oLng + dLng) / 2;
     const [midR, dstR] = await Promise.all([
-      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${mLat}&longitude=${mLng}&current=temperature_2m,weather_code,wind_speed_10m,wind_gusts_10m&timezone=Europe/Zagreb`, { signal: AbortSignal.timeout(5000) }),
-      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${dLat}&longitude=${dLng}&current=temperature_2m,weather_code,wind_speed_10m,wind_gusts_10m,uv_index&timezone=Europe/Zagreb`, { signal: AbortSignal.timeout(5000) }),
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${mLat}&longitude=${mLng}&current=temperature_2m,weather_code,wind_speed_10m,wind_gusts_10m&timezone=Europe/Zagreb`, { signal: AbortSignal.timeout(4000) }),
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${dLat}&longitude=${dLng}&current=temperature_2m,weather_code,wind_speed_10m,wind_gusts_10m,uv_index&timezone=Europe/Zagreb`, { signal: AbortSignal.timeout(4000) }),
     ]);
     const mid = await midR.json();
     const dst = await dstR.json();
@@ -101,7 +101,7 @@ async function fetchWeatherRoute(oLat, oLng, dLat, dLng) {
 async function fetchBorderWaits() {
   try {
     const r = await fetch("https://promet.si/api/v2/events?lang=sl&type=border", {
-      headers: { Accept: "application/json" }, signal: AbortSignal.timeout(6000),
+      headers: { Accept: "application/json" }, signal: AbortSignal.timeout(4000),
     });
     if (!r.ok) return [];
     const data = await r.json();
@@ -115,7 +115,7 @@ async function fetchBorderWaits() {
 async function fetchDarsRoad() {
   try {
     const r = await fetch("https://promet.si/api/v2/events?lang=sl&type=roadworks,traffic_jams,accidents", {
-      headers: { Accept: "application/json" }, signal: AbortSignal.timeout(6000),
+      headers: { Accept: "application/json" }, signal: AbortSignal.timeout(4000),
     });
     if (!r.ok) return [];
     const data = await r.json();
@@ -136,7 +136,7 @@ async function fetchAsfinag() {
     // ASFINAG provides JSON endpoint for current road events
     const r = await fetch("https://routemanager.asfinag.at/lam/api/traffic-messages?lang=de", {
       headers: { Accept: "application/json", "User-Agent": "JadranAI/1.0" },
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(4000),
     });
     if (!r.ok) return [];
     const data = await r.json();
@@ -153,7 +153,7 @@ async function fetchHAC() {
   try {
     const r = await fetch("https://www.hak.hr/api/stanje-na-cestama", {
       headers: { Accept: "application/json", "User-Agent": "JadranAI/1.0" },
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(4000),
     });
     if (!r.ok) return [];
     const data = await r.json();
@@ -383,14 +383,23 @@ export default async function handler(req, res) {
   const seg = req.query?.seg || "auto";
   const lang = req.query?.lang || "hr";
 
-  // Cache key
   const key = `${oLat.toFixed(1)}_${oLng.toFixed(1)}_${dLat.toFixed(1)}_${dLng.toFixed(1)}_${seg}_${lang}`;
   if (CACHE.data && CACHE.key === key && Date.now() - CACHE.ts < CACHE_TTL) {
     return res.status(200).json({ ...CACHE.data, cached: true });
   }
 
+  // Hard timeout: return whatever we have after 8s
+  let responded = false;
+  const hardTimeout = setTimeout(() => {
+    if (!responded) {
+      responded = true;
+      console.warn("guide.js: hard timeout 8s — returning partial data");
+      return res.status(200).json({ cards: [], sources: {}, updated: new Date().toISOString(), timeout: true });
+    }
+  }, 8000);
+
   try {
-    // Parallel fetch ALL sources (7)
+    // Parallel fetch — each source has own 4s timeout, all fail gracefully
     const [traffic, yolo, weather, borders, hac, darsRoad, asfinag] = await Promise.allSettled([
       fetchHereTraffic(oLat, oLng, dLat, dLng),
       fetchYoloCameras(),
@@ -401,54 +410,56 @@ export default async function handler(req, res) {
       fetchAsfinag(),
     ]);
 
-    const trafficData = traffic.status === "fulfilled" ? traffic.value : [];
+    if (responded) return; // hard timeout already fired
+    clearTimeout(hardTimeout);
+    responded = true;
+
+    const trafficData = traffic.status === "fulfilled" ? (traffic.value || []) : [];
     const yoloData = yolo.status === "fulfilled" ? yolo.value : null;
     const weatherData = weather.status === "fulfilled" ? weather.value : null;
-    const borderData = borders.status === "fulfilled" ? borders.value : [];
-    const hacData = hac.status === "fulfilled" ? hac.value : [];
-    const darsData = darsRoad.status === "fulfilled" ? darsRoad.value : [];
-    const asfinagData = asfinag.status === "fulfilled" ? asfinag.value : [];
+    const borderData = borders.status === "fulfilled" ? (borders.value || []) : [];
+    const hacData = hac.status === "fulfilled" ? (hac.value || []) : [];
+    const darsData = darsRoad.status === "fulfilled" ? (darsRoad.value || []) : [];
+    const asfinagData = asfinag.status === "fulfilled" ? (asfinag.value || []) : [];
 
-    // Generate intelligence cards
+    // Log source results for debugging
+    console.log(`guide.js: HERE=${trafficData.length} YOLO=${yoloData?.active||0} Wx=${!!weatherData} DARS=${borderData.length}+${darsData.length} HAK=${hacData.length} ASF=${asfinagData.length}`);
+
     const cards = generateCards(trafficData, yoloData, weatherData, borderData, hacData, seg, lang);
 
-    // Add DARS road events as cards
-    const darsImportant = darsData.filter(d => d.desc.toLowerCase().includes("zapr") || d.desc.toLowerCase().includes("nesre") || d.desc.toLowerCase().includes("zastoj") || d.type === "accidents");
-    if (darsImportant.length > 0) {
-      cards.push({
-        id: "dars_road", severity: "warning", icon: "🇸🇮",
-        title: `DARS: ${darsImportant.length} događaj(a)`,
-        body: darsImportant.slice(0, 3).map(d => d.road ? `${d.road}: ${d.desc}` : d.desc).join(" | "),
-        source: "DARS/promet.si", ts: new Date().toISOString(),
-      });
+    // DARS road events
+    if (darsData.length > 0) {
+      const important = darsData.filter(d => d.desc?.toLowerCase().includes("zapr") || d.desc?.toLowerCase().includes("nesre") || d.type === "accidents");
+      if (important.length > 0) {
+        cards.push({ id: "dars_road", severity: "warning", icon: "🇸🇮", title: `DARS: ${important.length} događaj(a)`, body: important.slice(0, 3).map(d => d.desc).join(" | "), source: "DARS", ts: new Date().toISOString() });
+      }
+    }
+    // ASFINAG road events
+    if (asfinagData.length > 0) {
+      const important = asfinagData.filter(d => d.desc?.toLowerCase().includes("gesperrt") || d.desc?.toLowerCase().includes("stau") || d.type === "closure");
+      if (important.length > 0) {
+        cards.push({ id: "asfinag_road", severity: "warning", icon: "🇦🇹", title: `ASFINAG: ${important.length} Meldung(en)`, body: important.slice(0, 3).map(d => d.desc).join(" | "), source: "ASFINAG", ts: new Date().toISOString() });
+      }
     }
 
-    // Add ASFINAG road events as cards
-    const asfImportant = asfinagData.filter(d => d.desc.toLowerCase().includes("gesperrt") || d.desc.toLowerCase().includes("stau") || d.desc.toLowerCase().includes("unfall") || d.type === "closure");
-    if (asfImportant.length > 0) {
-      cards.push({
-        id: "asfinag_road", severity: "warning", icon: "🇦🇹",
-        title: `ASFINAG: ${asfImportant.length} Meldung(en)`,
-        body: asfImportant.slice(0, 3).map(d => d.road ? `${d.road}: ${d.desc}` : d.desc).join(" | "),
-        source: "ASFINAG", ts: new Date().toISOString(),
-      });
-    }
-
-    // Re-sort after adding DARS/ASFINAG
     cards.sort((a, b) => (SEV[a.severity] ?? 9) - (SEV[b.severity] ?? 9));
 
     const result = {
       cards,
-      sources: {
-        here: trafficData.length,
-        yolo: yoloData ? yoloData.active : 0,
-        meteo: weatherData ? true : false,
-        dars: borderData.length + darsData.length,
-        hak: hacData.length,
-        asfinag: asfinagData.length,
-      },
+      sources: { here: trafficData.length, yolo: yoloData?.active || 0, meteo: !!weatherData, dars: borderData.length + darsData.length, hak: hacData.length, asfinag: asfinagData.length },
       updated: new Date().toISOString(),
     };
+    CACHE.data = result; CACHE.ts = Date.now(); CACHE.key = key;
+    return res.status(200).json(result);
+  } catch (e) {
+    clearTimeout(hardTimeout);
+    if (!responded) {
+      responded = true;
+      console.error("guide.js error:", e.message);
+      return res.status(200).json({ cards: [], sources: {}, updated: new Date().toISOString(), error: e.message });
+    }
+  }
+}
 
     CACHE.data = result;
     CACHE.ts = Date.now();
