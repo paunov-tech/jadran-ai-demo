@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { loadGuest, updateGuest, getRoomCode } from "./guestStore";
 import GuestOnboarding from "./GuestOnboarding";
-import { loadDelta } from "./deltaContext";
+import { loadDelta, saveDelta } from "./deltaContext";
+import { startGPS, stopGPS, resetTrip } from "./gpsEngine";
 
 // ─── CITY COORDINATES (used by Leaflet map, no HERE SDK) ───
 const CITY_COORDS = {
@@ -135,11 +136,22 @@ const LiveTicker = React.memo(({ fromCoords, toCoords, seg, lang, routeData, dm,
   );
 });
 
-const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C }) => {
+const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C, extraCards }) => {
   const [cards, setCards] = React.useState(null);
   const [sources, setSources] = React.useState(null);
   const [updated, setUpdated] = React.useState(null);
   const [loading, setLoading] = React.useState(false);
+
+  // Merge API cards + GPS cards, deduplicate by id, sort by severity
+  const SEV_ORDER = { critical: 0, warning: 1, info: 2, tip: 3 };
+  const mergedCards = React.useMemo(() => {
+    const api = cards || [];
+    const gps = extraCards || [];
+    const all = [...gps, ...api];
+    const seen = new Set();
+    return all.filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true; })
+      .sort((a, b) => (SEV_ORDER[a.severity] ?? 9) - (SEV_ORDER[b.severity] ?? 9));
+  }, [cards, extraCards]);
 
   const fetchGuide = React.useCallback(() => {
     if (!fromCoords || !toCoords) return;
@@ -180,19 +192,19 @@ const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C }) => {
       </div>
 
       {/* Cards */}
-      {cards === null && (
+      {cards === null && mergedCards.length === 0 && (
         <div style={{ ...dm, fontSize: 13, color: C.mut, padding: "20px 0", textAlign: "center" }}>
           Prikupljam live podatke…
         </div>
       )}
-      {cards && cards.length === 0 && (
+      {cards !== null && mergedCards.length === 0 && (
         <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.12)", ...dm, fontSize: 13, color: "#22c55e" }}>
           ✅ Sve čisto — bez incidenata na ruti
         </div>
       )}
-      {cards && cards.length > 0 && (
+      {mergedCards.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {cards.map((card, i) => (
+          {mergedCards.map((card, i) => (
             <div key={card.id || i}
               style={{
                 padding: "12px 14px", borderRadius: 14,
@@ -215,11 +227,10 @@ const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C }) => {
       )}
 
       {/* Source indicator */}
-      {sources && (
+      {(sources || extraCards?.length > 0) && (
         <div style={{ ...dm, fontSize: 10, color: "rgba(100,116,139,0.4)", marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <span>HERE:{sources.here || 0}</span>
-          <span>YOLO:{sources.yolo || 0}</span>
-          <span>Meteo:{sources.meteo ? "✓" : "–"}</span>
+          {sources && <><span>HERE:{sources.here || 0}</span><span>YOLO:{sources.yolo || 0}</span><span>Meteo:{sources.meteo ? "✓" : "–"}</span></>}
+          {extraCards?.length > 0 && <span>GPS:{extraCards.length}</span>}
           {updated && <span style={{ marginLeft: "auto" }}>{new Date(updated).toLocaleTimeString("hr", { hour: "2-digit", minute: "2-digit" })}</span>}
         </div>
       )}
@@ -696,6 +707,33 @@ export default function JadranUnified() {
   const [transitRouteData, setTransitRouteData] = useState(null);
   const SEG_ICON = { kamper:"🚐", porodica:"👨‍👩‍👧", par:"💑", jedrilicar:"⛵" };
 
+  // ─── GPS LIVE ENGINE (silent, fires cards) ───
+  const [gpsCards, setGpsCards] = useState([]);
+  const gpsStarted = useRef(false);
+
+  useEffect(() => {
+    if (gpsStarted.current) return;
+    if (phase !== "pre" || subScreen !== "transit") return;
+    gpsStarted.current = true;
+    startGPS({
+      onCard: (card) => setGpsCards(prev => {
+        const exists = prev.some(c => c.id === card.id);
+        if (exists) return prev;
+        return [card, ...prev].slice(0, 20); // max 20 cards, newest first
+      }),
+      onPhase: (newPhase) => {
+        if (newPhase === "odmor") {
+          setPhase("kiosk"); setSubScreen("home");
+          updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" });
+        }
+      },
+      onCountry: (country) => {
+        saveDelta({ country });
+      },
+    });
+    return () => {}; // GPS persists across re-renders
+  }, [phase, subScreen]);
+
   // ─── GUEST ONBOARDING STATE ───
   const [guestProfile, setGuestProfile] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -849,26 +887,30 @@ export default function JadranUnified() {
   useEffect(() => {
     if (!mapFromCity) return;
     const c = CITY_COORDS[mapFromCity];
-    if (c) { setTransitFromCoords(c); return; }
+    if (c) { setTransitFromCoords(c); saveDelta({ from_coords: c }); return; }
     fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(mapFromCity + ", Europe")}&limit=1&apikey=${HERE_ROUTING_KEY}`)
       .then(r => r.json())
       .then(d => {
         const p = d.items?.[0]?.position;
-        setTransitFromCoords(p ? [p.lat, p.lng] : CITY_COORDS["Wien"]);
+        const coords = p ? [p.lat, p.lng] : CITY_COORDS["Wien"];
+        setTransitFromCoords(coords);
+        saveDelta({ from_coords: coords });
       })
-      .catch(() => setTransitFromCoords(CITY_COORDS["Wien"]));
+      .catch(() => { setTransitFromCoords(CITY_COORDS["Wien"]); saveDelta({ from_coords: CITY_COORDS["Wien"] }); });
   }, [mapFromCity]); // eslint-disable-line
   useEffect(() => {
     if (!mapToCity) return;
     const c = CITY_COORDS[mapToCity];
-    if (c) { setTransitToCoords(c); return; }
+    if (c) { setTransitToCoords(c); saveDelta({ destination: { city: mapToCity, lat: c[0], lng: c[1] } }); return; }
     fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(mapToCity + ", Croatia")}&limit=1&apikey=${HERE_ROUTING_KEY}`)
       .then(r => r.json())
       .then(d => {
         const p = d.items?.[0]?.position;
-        setTransitToCoords(p ? [p.lat, p.lng] : CITY_COORDS["Split"]);
+        const coords = p ? [p.lat, p.lng] : CITY_COORDS["Split"];
+        setTransitToCoords(coords);
+        saveDelta({ destination: { city: mapToCity, lat: coords[0], lng: coords[1] } });
       })
-      .catch(() => setTransitToCoords(CITY_COORDS["Split"]));
+      .catch(() => { setTransitToCoords(CITY_COORDS["Split"]); saveDelta({ destination: { city: mapToCity, lat: 43.508, lng: 16.440 } }); });
   }, [mapToCity]); // eslint-disable-line
 
   // Traffic incidents now handled by /api/guide (RouteGuide component)
@@ -1537,6 +1579,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           lang={lang}
           dm={dm}
           C={C}
+          extraCards={gpsCards}
         />
 
         {/* ── Arrival ── */}
