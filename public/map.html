@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="initial-scale=1.0, width=device-width"/>
-<script src="https://js.api.here.com/v3/3.2/mapsjs-core.js" type="text/javascript" charset="utf-8"></script>
-<script src="https://js.api.here.com/v3/3.2/mapsjs-service.js" type="text/javascript" charset="utf-8"></script>
-<script src="https://js.api.here.com/v3/3.2/mapsjs-mapevents.js" type="text/javascript" charset="utf-8"></script>
-<script src="https://js.api.here.com/v3/3.2/mapsjs-ui.js" type="text/javascript" charset="utf-8"></script>
-<link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.2/mapsjs-ui.css"/>
+<script src="https://js.api.here.com/v3/3.1/mapsjs-core.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://js.api.here.com/v3/3.1/mapsjs-service.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://js.api.here.com/v3/3.1/mapsjs-ui.js" type="text/javascript" charset="utf-8"></script>
+<link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css"/>
 <style>
   body { margin:0; padding:0; overflow:hidden; }
   #map { width:100vw; height:100vh; position:relative; }
@@ -38,44 +38,76 @@ var map = new H.Map(
 
 var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
 var ui = H.ui.UI.createDefault(map, defaultLayers);
-
 window.addEventListener("resize", function() { map.getViewPort().resize(); });
 setTimeout(function() { map.getViewPort().resize(); }, 100);
 
 // Markers
 var fromIcon = new H.map.Icon('<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" fill="#f97316" stroke="#fff" stroke-width="2.5"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg>', {size:{w:24,h:24},anchor:{x:12,y:12}});
 var toIcon = new H.map.Icon('<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" fill="#0ea5e9" stroke="#fff" stroke-width="2.5"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg>', {size:{w:24,h:24},anchor:{x:12,y:12}});
-
 var startMarker = new H.map.Marker({lat:flat,lng:flon},{icon:fromIcon});
 var endMarker = new H.map.Marker({lat:tlat,lng:tlon},{icon:toIcon});
-var group = new H.map.Group();
-group.addObjects([startMarker, endMarker]);
-map.addObject(group);
-map.getViewModel().setLookAtData({bounds:group.getBoundingBox()},{animate:false});
+map.addObject(startMarker);
+map.addObject(endMarker);
 
-// Route
-var router = platform.getRoutingService8();
-router.calculateRoute({
-  transportMode: "car",
-  routingMode: "fast",
-  origin: flat + "," + flon,
-  destination: tlat + "," + tlon,
-  return: "polyline,summary"
-}, function(result) {
-  try {
-    var sections = result.routes[0].sections;
-    var routeGroup = new H.map.Group();
-    sections.forEach(function(s) {
-      var lineString = H.geo.LineString.fromFlexiblePolyline(s.polyline);
+// Route via REST API + decode polyline manually
+var routeUrl = "https://router.hereapi.com/v8/routes"
+  + "?transportMode=car&routingMode=fast"
+  + "&origin=" + flat + "," + flon
+  + "&destination=" + tlat + "," + tlon
+  + "&return=polyline,summary"
+  + "&apikey=" + KEY;
+
+fetch(routeUrl)
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var sections = data.routes[0].sections;
+    for (var i = 0; i < sections.length; i++) {
+      var decoded = decode(sections[i].polyline);
+      var lineString = new H.geo.LineString();
+      for (var j = 0; j < decoded.length; j++) {
+        lineString.pushPoint({lat: decoded[j][0], lng: decoded[j][1]});
+      }
       var polyline = new H.map.Polyline(lineString, {
-        style: { strokeColor: "rgba(14,165,233,0.85)", lineWidth: 5, lineCap: "round", lineJoin: "round" }
+        style: {strokeColor: "rgba(14,165,233,0.85)", lineWidth: 5, lineCap: "round", lineJoin: "round"}
       });
-      routeGroup.addObject(polyline);
-    });
-    map.addObject(routeGroup);
-    map.getViewModel().setLookAtData({bounds: routeGroup.getBoundingBox()}, {animate: true});
-  } catch(e) { console.warn("route error:", e); }
-}, function(e) { console.warn("routing failed:", e); });
+      map.addObject(polyline);
+    }
+    // Zoom to fit everything
+    var allObjects = new H.map.Group();
+    map.getObjects().forEach(function(o) { allObjects.addObject(o.clone ? o : o); });
+    map.getViewModel().setLookAtData({bounds: map.getObjects().reduce(function(bb, o) {
+      if (o.getBoundingBox) { var b = o.getBoundingBox(); if (b) bb = bb ? bb.mergeRect(b) : b; }
+      return bb;
+    }, null)}, {animate: true});
+  })
+  .catch(function(e) { console.warn("Route fetch error:", e); });
+
+// HERE flexible polyline decoder (official algorithm)
+function decode(encoded) {
+  var D = [62,-1,-1,52,53,54,55,56,57,58,59,60,61,-1,-1,-1,-1,-1,-1,-1,
+    0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,
+    -1,-1,-1,-1,-1,-1,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,
+    43,44,45,46,47,48,49,50,51];
+  var i = 0, r = [];
+  function dec() { var v = D[encoded.charCodeAt(i++) - 45]; return v; }
+  var header = dec();
+  var prec = dec() & 15;
+  var third = dec();
+  var has3 = (third === 1 || third === 2);
+  var f = Math.pow(10, -prec);
+  var lat = 0, lng = 0, alt = 0;
+  while (i < encoded.length) {
+    var dLat = 0, s = 0, b;
+    do { b = dec(); dLat |= (b & 31) << s; s += 5; } while (b >= 32);
+    lat += (dLat & 1) ? ~(dLat >>> 1) : (dLat >>> 1);
+    var dLng = 0; s = 0;
+    do { b = dec(); dLng |= (b & 31) << s; s += 5; } while (b >= 32);
+    lng += (dLng & 1) ? ~(dLng >>> 1) : (dLng >>> 1);
+    if (has3) { var dA = 0; s = 0; do { b = dec(); dA |= (b & 31) << s; s += 5; } while (b >= 32); alt += (dA & 1) ? ~(dA >>> 1) : (dA >>> 1); }
+    r.push([lat * f, lng * f]);
+  }
+  return r;
+}
 </script>
 </body>
 </html>

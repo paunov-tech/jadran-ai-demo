@@ -33,9 +33,10 @@ const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteRea
       .then(data => {
         const s = data.routes?.[0]?.sections?.[0]?.summary;
         if (s && onRouteReady) {
+          const totalMin = Math.round(s.duration / 60);
           onRouteReady({
-            km: Math.round(s.length / 1000), hrs: Math.floor(s.duration / 3600),
-            mins: Math.round((s.duration % 3600) / 60),
+            km: Math.round(s.length / 1000), hrs: Math.floor(totalMin / 60),
+            mins: totalMin % 60,
             oLat: fromCoords[0], oLng: fromCoords[1], dLat: toCoords[0], dLng: toCoords[1],
             mode: transportMode || "auto",
           });
@@ -97,7 +98,7 @@ const LiveTicker = React.memo(({ fromCoords, toCoords, seg, lang, routeData, dm,
   // Build ticker items from route + guide
   const items = React.useMemo(() => {
     const t = [];
-    if (routeData) t.push({ icon: "🛣", text: `${routeData.km} km · ${routeData.hrs}h ${routeData.mins}min`, color: C.accent });
+    // Route info shown in bar below map, not in ticker
     for (const c of guideCards) {
       if (c.severity === "critical") t.push({ icon: c.icon, text: c.title, color: "#ef4444" });
     }
