@@ -89,11 +89,13 @@ export default async function handler(req, res) {
   const routeCorridor = detectRouteCorridor(fromCity, destCity, fromLat, fromLng, destLat, destLng);
 
   // ── Parallel data fetch (all fail gracefully) ──
+  console.log(`[pulse] fetch start — lat=${lat} lng=${lng} seg=${seg} dest=${destCity}`);
   const [trafficRes, yoloRes, weatherRes] = await Promise.allSettled([
     fetchNearbyTraffic(lat, lng),
     fetchNearbyYolo(lat, lng),
     fetchWeather(lat, lng),
   ]);
+  console.log(`[pulse] fetch done — traffic=${trafficRes.status} yolo=${yoloRes.status} weather=${weatherRes.status}`);
 
   const traffic = trafficRes.status === "fulfilled" ? trafficRes.value : [];
   const yolo = yoloRes.status === "fulfilled" ? yoloRes.value : null;
@@ -161,6 +163,7 @@ export default async function handler(req, res) {
       signal: AbortSignal.timeout(4000),
     });
 
+    console.log(`[pulse] Claude responded — status=${aiRes.status}`);
     const aiData = await aiRes.json();
     const text = aiData.content?.[0]?.text || "";
 
