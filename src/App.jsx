@@ -166,6 +166,102 @@ function useHereAutosuggest() {
   return { suggestions, query, clear };
 }
 
+// ─── RouteGuide: Live Intelligence Feed ───
+// Polls /api/guide every 3min, displays prioritized cards from all data sources
+const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C }) => {
+  const [cards, setCards] = React.useState(null);
+  const [sources, setSources] = React.useState(null);
+  const [updated, setUpdated] = React.useState(null);
+  const [loading, setLoading] = React.useState(false);
+
+  const fetchGuide = React.useCallback(() => {
+    if (!fromCoords || !toCoords) return;
+    setLoading(true);
+    fetch(`/api/guide?oLat=${fromCoords[0]}&oLng=${fromCoords[1]}&dLat=${toCoords[0]}&dLng=${toCoords[1]}&seg=${seg}&lang=${lang}`)
+      .then(r => r.json())
+      .then(data => {
+        setCards(data.cards || []);
+        setSources(data.sources || null);
+        setUpdated(data.updated);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [fromCoords?.[0], fromCoords?.[1], toCoords?.[0], toCoords?.[1], seg, lang]); // eslint-disable-line
+
+  React.useEffect(() => {
+    fetchGuide();
+    const iv = setInterval(fetchGuide, 180000); // 3 min
+    return () => clearInterval(iv);
+  }, [fetchGuide]);
+
+  const SEV_COLOR = { critical: "#ef4444", warning: "#f59e0b", info: "#0ea5e9", tip: "#22c55e" };
+  const SEV_BG = { critical: "rgba(239,68,68,0.06)", warning: "rgba(245,158,11,0.06)", info: "rgba(14,165,233,0.04)", tip: "rgba(34,197,94,0.04)" };
+  const SEV_BORDER = { critical: "rgba(239,68,68,0.2)", warning: "rgba(245,158,11,0.2)", info: "rgba(14,165,233,0.12)", tip: "rgba(34,197,94,0.12)" };
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+        <div style={{ ...dm, fontSize: 13, fontWeight: 700, color: C.text, letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: cards && cards.some(c => c.severity === "critical") ? "#ef4444" : "#22c55e", display: "inline-block", animation: loading ? "pulse 1.5s infinite" : "none" }} />
+          LIVE VODIČ
+        </div>
+        <button onClick={fetchGuide} disabled={loading}
+          style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${C.bord}`, background: "transparent", color: loading ? C.mut : C.accent, fontSize: 11, cursor: loading ? "default" : "pointer", ...dm }}>
+          {loading ? "⏳" : "↻"}
+        </button>
+      </div>
+
+      {/* Cards */}
+      {cards === null && (
+        <div style={{ ...dm, fontSize: 13, color: C.mut, padding: "20px 0", textAlign: "center" }}>
+          Prikupljam podatke sa 6 izvora…
+        </div>
+      )}
+      {cards && cards.length === 0 && (
+        <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.12)", ...dm, fontSize: 13, color: "#22c55e" }}>
+          ✅ Sve čisto — bez incidenata na ruti
+        </div>
+      )}
+      {cards && cards.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {cards.map((card, i) => (
+            <div key={card.id || i}
+              style={{
+                padding: "12px 14px", borderRadius: 14,
+                background: SEV_BG[card.severity] || SEV_BG.info,
+                border: `1px solid ${SEV_BORDER[card.severity] || SEV_BORDER.info}`,
+                animation: i === 0 && card.severity === "critical" ? "pulse 2s infinite" : "none",
+              }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ ...dm, fontSize: 13, fontWeight: 700, color: SEV_COLOR[card.severity] || C.text }}>
+                  {card.icon} {card.title}
+                </div>
+                <span style={{ ...dm, fontSize: 9, color: C.mut, whiteSpace: "nowrap", marginLeft: 8 }}>{card.source}</span>
+              </div>
+              <div style={{ ...dm, fontSize: 12, color: C.mut, marginTop: 4, lineHeight: 1.5 }}>
+                {card.body}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Source indicator */}
+      {sources && (
+        <div style={{ ...dm, fontSize: 10, color: "rgba(100,116,139,0.4)", marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <span>HERE:{sources.traffic}</span>
+          <span>YOLO:{sources.yolo}</span>
+          <span>Meteo:{sources.weather ? "✓" : "–"}</span>
+          <span>Border:{sources.borders}</span>
+          <span>HAK:{sources.hac}</span>
+          {updated && <span style={{ marginLeft: "auto" }}>{new Date(updated).toLocaleTimeString("hr", { hour: "2-digit", minute: "2-digit" })}</span>}
+        </div>
+      )}
+    </div>
+  );
+});
+
 /* ══════════════════════════════════════════════════════════
    JADRAN — Turistički vodič v6
    3 Phases: Pre-Trip → Kiosk Stay → Post-Stay
@@ -810,8 +906,7 @@ export default function JadranUnified() {
       .catch(() => setTransitToCoords(CITY_COORDS["Split"]));
   }, [mapToCity]); // eslint-disable-line
 
-  // Traffic incidents along route
-  const trafficIncidents = useHereTraffic(transitFromCoords, transitToCoords);
+  // Traffic incidents now handled by /api/guide (RouteGuide component)
 
   // ─── WEATHER: Fetch real data via Gemini grounding ───
   const [weather, setWeather] = useState(W_DEFAULT);
@@ -1471,65 +1566,15 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           </button>
         )}
 
-        {/* ── Traffic Incidents ── */}
-        {trafficIncidents && trafficIncidents.length > 0 && (
-          <div style={{ marginBottom: 16 }}>
-            <SectionLabel>⚠️ Stanje na cesti</SectionLabel>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {trafficIncidents.map((inc, i) => {
-                const sev = inc.severity === "critical" ? C.red : inc.severity === "major" ? C.gold : C.mut;
-                const icon = inc.type === "CONSTRUCTION" ? "🚧" : inc.type === "ACCIDENT" ? "🚨" : inc.type === "ROAD_CLOSURE" ? "⛔" : inc.type === "CONGESTION" ? "🟡" : "ℹ️";
-                return (
-                  <div key={inc.id || i} style={{ padding: "10px 14px", borderRadius: 12, background: `${sev}08`, border: `1px solid ${sev}22` }}>
-                    <div style={{ ...dm, fontSize: 12, fontWeight: 600, color: sev }}>{icon} {inc.road || inc.type}</div>
-                    <div style={{ ...dm, fontSize: 12, color: C.mut, marginTop: 2 }}>{inc.desc}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-        {trafficIncidents && trafficIncidents.length === 0 && (
-          <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)", marginBottom: 16, ...dm, fontSize: 12, color: "#22c55e" }}>
-            ✅ Nema prijavljenih incidenata na ruti
-          </div>
-        )}
-
-        {/* ── Border Intelligence ── */}
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-            <SectionLabel>🛂 Granični prelazi</SectionLabel>
-            <button onClick={fetchBorderData} disabled={borderLoading}
-              style={{ padding: "5px 12px", borderRadius: 8, border: `1px solid ${C.bord}`, background: "transparent", color: borderLoading ? C.mut : C.accent, fontSize: 12, cursor: borderLoading ? "default" : "pointer", ...dm }}>
-              {borderLoading ? "⏳" : "↻"}
-            </button>
-          </div>
-          {borderLoading && !borderData && (
-            <div style={{ ...dm, fontSize: 13, color: C.mut, padding: "12px 0" }}>Dohvaćam podatke…</div>
-          )}
-          {borderData && (() => {
-            const CLR = { green: "#22c55e", yellow: C.gold, red: C.red };
-            const DOT = { green: "🟢", yellow: "🟡", red: "🔴" };
-            return (
-              <>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 10 }}>
-                  {borderData.crossings?.map(cr => (
-                    <div key={cr.name} style={{ borderRadius: 12, border: `1px solid ${CLR[cr.color] || C.bord}22`, background: `${CLR[cr.color] || "#64748b"}08`, padding: "10px" }}>
-                      <div style={{ ...dm, fontSize: 11, fontWeight: 700, color: CLR[cr.color] || C.mut }}>{DOT[cr.color] || "⚪"} {cr.name}</div>
-                      <div style={{ fontSize: 20, fontWeight: 300, marginTop: 2 }}>{cr.wait_minutes}<span style={{ ...dm, fontSize: 10, color: C.mut }}> min</span></div>
-                    </div>
-                  ))}
-                </div>
-                {borderData.recommendation?.crossing && (
-                  <div style={{ padding: "10px 14px", borderRadius: 12, border: "1px solid rgba(245,158,11,0.2)", background: "rgba(245,158,11,0.04)", marginBottom: 8 }}>
-                    <div style={{ ...dm, fontSize: 11, color: C.gold, fontWeight: 700 }}>✨ AI preporuka: {borderData.recommendation.crossing}</div>
-                    <div style={{ ...dm, fontSize: 12, color: C.mut, marginTop: 2 }}>{borderData.recommendation.reason}</div>
-                  </div>
-                )}
-              </>
-            );
-          })()}
-        </div>
+        {/* ── AI ROUTE GUIDE — Live Intelligence Feed ── */}
+        <RouteGuide
+          fromCoords={transitFromCoords}
+          toCoords={transitToCoords}
+          seg={transitSegUrl || "auto"}
+          lang={lang}
+          dm={dm}
+          C={C}
+        />
 
         {/* ── Arrival ── */}
         {geoArrival && arrivalCountdown !== null && (
@@ -2263,6 +2308,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
         @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
         @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 20px rgba(14,165,233,0.15); } 50% { box-shadow: 0 0 40px rgba(14,165,233,0.3); } }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
         @keyframes gradient-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         @keyframes wave-move { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
