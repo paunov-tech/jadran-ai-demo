@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { loadGuest, updateGuest, getRoomCode } from "./guestStore";
 import GuestOnboarding from "./GuestOnboarding";
-import { loadDelta, saveDelta, SEGMENTS } from "./deltaContext";
+import { loadDelta } from "./deltaContext";
 
 // ─── CITY COORDINATES (used by Leaflet map, no HERE SDK) ───
 const CITY_COORDS = {

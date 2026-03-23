@@ -4,7 +4,7 @@
 // social proof carousel, B2B section, sticky CTA
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useRef, useCallback } from "react";
-import { SEGMENTS, saveDelta, loadDelta } from "./deltaContext";
+import { saveDelta } from "./deltaContext";
 
 // Direct Stripe checkout
 const goToStripe = async (plan = "season", lang = "en") => {
@@ -92,7 +92,6 @@ export default function LandingPage() {
   const [roomInput, setRoomInput] = useState("");
   // Unified entry flow
   const [selectedMode, setSelectedMode] = useState(null); // "auto"|"avion"|"kamper"|"odmor"
-  const [selectedSegment, setSelectedSegment] = useState(() => { try { return loadDelta().segment; } catch { return null; } });
   const [depCity, setDepCity] = useState("");
   const [routeStep, setRouteStep] = useState(null); // null | "city" | "map"
   const [toLPCity, setToLPCity] = useState(""); // destination city for new 2-input flow
@@ -359,36 +358,9 @@ export default function LandingPage() {
               </span>
           </h1>
           <p style={{ fontSize: "clamp(14px, 2.2vw, 17px)", color: "#94a3b8", lineHeight: 1.6, maxWidth: 520, margin: "0 auto 28px" }}>{tx("sub")}</p>
-          {/* ── Segment Picker (WHO are you) ── */}
-          <div style={{ maxWidth: 540, margin: "0 auto 16px" }}>
-            <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8, letterSpacing: 1 }}>
-              {lang === "de" || lang === "at" ? "ICH REISE ALS" : lang === "en" ? "I'M TRAVELING AS" : lang === "it" ? "VIAGGIO COME" : "PUTUJEM KAO"}
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
-              {Object.entries(SEGMENTS).map(([id, seg]) => {
-                const active = selectedSegment === id;
-                return (
-                  <button key={id} onClick={() => {
-                    setSelectedSegment(id);
-                    saveDelta({ segment: id, transport: id === "kamper" ? "kamper" : id === "jedrilicar" ? "avion" : "auto" });
-                    // Auto-select matching transport
-                    if (id === "kamper") { setSelectedMode("kamper"); setRouteStep("city"); }
-                    else if (id === "jedrilicar") { setSelectedMode("avion"); setRouteStep("city"); }
-                  }} style={{
-                    padding: "12px 6px", borderRadius: 12, border: `1.5px solid ${active ? "rgba(14,165,233,0.5)" : "rgba(255,255,255,0.06)"}`,
-                    background: active ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.02)",
-                    cursor: "pointer", textAlign: "center", transition: "all 0.2s",
-                    transform: active ? "scale(1.05)" : "scale(1)",
-                  }}>
-                    <div style={{ fontSize: 24 }}>{seg.icon}</div>
-                    <div style={{ fontSize: 11, color: active ? "#0ea5e9" : "#94a3b8", fontWeight: active ? 700 : 400, marginTop: 4, fontFamily: B }}>{(seg.label[lang] || seg.label[lang === "at" ? "de" : "hr"] || seg.label.hr)}</div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          {/* ── 4 Entry Tiles ── */}
+          {/* ── Transport Tiles with DELTA integration ── */}
           {(() => {
+            const TILE_TO_SEGMENT = { auto: "par", avion: "jedrilicar", kamper: "kamper", odmor: null };
             const tiles = [
               { id: "auto",   img: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&q=75", accent: "rgba(14,165,233,0.65)", border: "rgba(14,165,233,0.2)" },
               { id: "avion",  img: "https://images.unsplash.com/photo-1540946485063-a40da27545f8?w=400&q=75", accent: "rgba(6,182,212,0.6)", border: "rgba(6,182,212,0.2)" },
@@ -397,6 +369,12 @@ export default function LandingPage() {
             ];
             return (
               <div style={{ maxWidth: 540, margin: "0 auto" }}>
+                <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6, letterSpacing: 1, textTransform: "uppercase", fontFamily: B }}>
+                  {lang === "de" || lang === "at" ? "ICH REISE ALS" : lang === "en" ? "I'M TRAVELING AS" : lang === "it" ? "VIAGGIO COME" : "PUTUJEM KAO"}
+                </div>
+                <div style={{ fontSize: 13, color: "#475569", marginBottom: 14, lineHeight: 1.5 }}>
+                  {lang === "de" || lang === "at" ? "Wählen Sie Ihre Reiseart — der Assistent passt Tipps, Routen und Warnungen an." : lang === "en" ? "Choose how you travel — the guide adapts tips, routes and warnings to you." : lang === "it" ? "Scegli come viaggi — la guida adatta consigli, percorsi e avvisi." : "Odaberite kako putujete — vodič prilagođava savjete, rute i upozorenja vašem načinu putovanja."}
+                </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                   {tiles.map(({ id, img, accent, border }) => {
                     const active = selectedMode === id;
@@ -406,6 +384,8 @@ export default function LandingPage() {
                         setRouteStep(id === "odmor" ? "room" : "city");
                         setRouteData(null);
                         try { localStorage.setItem("jadran_transport", id); } catch {}
+                        const seg = TILE_TO_SEGMENT[id];
+                        if (seg) saveDelta({ segment: seg, transport: id });
                       }} style={{
                         borderRadius: 16, textDecoration: "none", position: "relative", overflow: "hidden",
                         border: `1px solid ${active ? border.replace("0.2", "0.6") : border}`,
@@ -473,7 +453,7 @@ export default function LandingPage() {
                     <button
                       disabled={!depCity.trim() || !toLPCity.trim()}
                       onClick={() => {
-                        const seg = selectedSegment || (selectedMode === "kamper" ? "kamper" : selectedMode === "avion" ? "jedrilicar" : "par");
+                        const seg = selectedMode === "kamper" ? "kamper" : selectedMode === "avion" ? "jedrilicar" : "par";
                         saveDelta({ segment: seg, transport: selectedMode, from: depCity.trim(), destination: { city: toLPCity.trim() }, phase: "transit" });
                         window.location.href = `/?room=DEMO&go=transit&from=${encodeURIComponent(depCity.trim())}&to=${encodeURIComponent(toLPCity.trim())}&seg=${seg}`;
                       }}
