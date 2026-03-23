@@ -109,7 +109,7 @@ const LiveTicker = React.memo(({ fromCoords, toCoords, seg, lang, routeData, dm,
     }
     if (guideSources) {
       const s = guideSources;
-      t.push({ icon: "📡", text: `HERE·${s.here||0} YOLO·${s.yolo||0} DARS·${s.dars||0} HAK·${s.hak||0} ASF·${s.asfinag||0}`, color: "rgba(100,116,139,0.4)" });
+      t.push({ icon: "📡", text: `HERE·${s.here||0} YOLO·${s.yolo||0} Meteo·${s.meteo?1:0}`, color: "rgba(100,116,139,0.4)" });
     }
     return t.length ? t : [{ icon: "⏳", text: routeData ? "Prikupljam live podatke…" : "Izračunavam rutu…", color: C.mut }];
   }, [routeData, guideCards, guideSources]); // eslint-disable-line
@@ -180,7 +180,7 @@ const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C }) => {
       {/* Cards */}
       {cards === null && (
         <div style={{ ...dm, fontSize: 13, color: C.mut, padding: "20px 0", textAlign: "center" }}>
-          Prikupljam podatke sa 6 izvora…
+          Prikupljam live podatke…
         </div>
       )}
       {cards && cards.length === 0 && (
@@ -218,9 +218,6 @@ const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C }) => {
           <span>HERE:{sources.here || 0}</span>
           <span>YOLO:{sources.yolo || 0}</span>
           <span>Meteo:{sources.meteo ? "✓" : "–"}</span>
-          <span>DARS:{sources.dars || 0}</span>
-          <span>HAK:{sources.hak || 0}</span>
-          <span>ASFINAG:{sources.asfinag || 0}</span>
           {updated && <span style={{ marginLeft: "auto" }}>{new Date(updated).toLocaleTimeString("hr", { hour: "2-digit", minute: "2-digit" })}</span>}
         </div>
       )}
@@ -1255,23 +1252,19 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   const ALERT_COLORS = { critical:"#ef4444", high:"#f59e0b", medium:"#38bdf8" };
 
   const AlertsBar = () => {
-    // Only show critical/high severity alerts — no rotation, stable display
+    // Show only most severe unread alert — single row, no map displacement
     const critical = alerts.filter(a => (a.severity === "critical" || a.severity === "high") && !dismissedAlerts.has(a.title));
     if (!critical.length) return null;
+    const a = critical[0];
+    const icon = ALERT_ICONS[a.type] || ALERT_ICONS.default;
+    const color = a.severity === "critical" ? "#ef4444" : "#f59e0b";
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 8 }}>
-        {critical.slice(0, 3).map((a, i) => {
-          const icon = ALERT_ICONS[a.type] || ALERT_ICONS.default;
-          const color = a.severity === "critical" ? "#ef4444" : "#f59e0b";
-          return (
-            <div key={a.title || i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 14px", borderRadius: 10, background: `${color}0B`, border: `1px solid ${color}22`, minHeight: 32 }}>
-              <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
-              <span style={{ fontSize: 12, color: "#cbd5e1", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.title}</span>
-              <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${color}18`, color, fontWeight: 700, flexShrink: 0 }}>{a.severity === "critical" ? "LIVE" : "⚠️"}</span>
-              <button onClick={() => setDismissedAlerts(s => new Set([...s, a.title]))} style={{ background: "none", border: "none", color: "#475569", fontSize: 14, cursor: "pointer", padding: "0 2px", flexShrink: 0, lineHeight: 1 }}>×</button>
-            </div>
-          );
-        })}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 14px", borderRadius: 10, background: `${color}0B`, border: `1px solid ${color}22`, minHeight: 32, marginBottom: 8, overflow: "hidden" }}>
+        <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+        <span style={{ fontSize: 12, color: "#cbd5e1", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.title}</span>
+        {critical.length > 1 && <span style={{ fontSize: 9, color, flexShrink: 0, fontWeight: 700 }}>+{critical.length - 1}</span>}
+        <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${color}18`, color, fontWeight: 700, flexShrink: 0 }}>{a.severity === "critical" ? "LIVE" : "⚠️"}</span>
+        <button onClick={() => setDismissedAlerts(s => new Set([...s, a.title]))} style={{ background: "none", border: "none", color: "#475569", fontSize: 14, cursor: "pointer", padding: "0 2px", flexShrink: 0, lineHeight: 1 }}>×</button>
       </div>
     );
   };
