@@ -168,6 +168,71 @@ function useHereAutosuggest() {
 
 // ─── RouteGuide: Live Intelligence Feed ───
 // Polls /api/guide every 3min, displays prioritized cards from all data sources
+// ─── LiveTicker: Single line above map with rotating live data ───
+const LiveTicker = React.memo(({ fromCoords, toCoords, seg, lang, routeData, dm, C }) => {
+  const [items, setItems] = React.useState([]);
+  const [idx, setIdx] = React.useState(0);
+
+  // Fetch ticker data from guide API
+  React.useEffect(() => {
+    if (!fromCoords || !toCoords) return;
+    let cancelled = false;
+    const load = () => {
+      fetch(`/api/guide?oLat=${fromCoords[0]}&oLng=${fromCoords[1]}&dLat=${toCoords[0]}&dLng=${toCoords[1]}&seg=${seg || "auto"}&lang=${lang || "hr"}`)
+        .then(r => r.json())
+        .then(data => {
+          if (cancelled) return;
+          const ticks = [];
+          // Route info
+          if (routeData) ticks.push({ icon: "🛣", text: `${routeData.km} km · ${routeData.hrs}h ${routeData.mins}min`, color: C.accent });
+          // Critical cards first
+          for (const card of (data.cards || [])) {
+            if (card.severity === "critical") ticks.push({ icon: card.icon, text: card.title, color: "#ef4444" });
+          }
+          for (const card of (data.cards || [])) {
+            if (card.severity === "warning") ticks.push({ icon: card.icon, text: card.title, color: "#f59e0b" });
+          }
+          for (const card of (data.cards || [])) {
+            if (card.severity === "info") ticks.push({ icon: card.icon, text: card.title, color: C.accent });
+          }
+          // Sources summary
+          const s = data.sources || {};
+          ticks.push({ icon: "📡", text: `LIVE: HERE·${s.here||0} YOLO·${s.yolo||0} DARS·${s.dars||0} HAK·${s.hak||0} ASFINAG·${s.asfinag||0}`, color: C.mut });
+          setItems(ticks);
+        })
+        .catch(() => {});
+    };
+    load();
+    const iv = setInterval(load, 180000);
+    return () => { cancelled = true; clearInterval(iv); };
+  }, [fromCoords?.[0], toCoords?.[0], seg, routeData?.km]); // eslint-disable-line
+
+  // Rotate every 4s
+  React.useEffect(() => {
+    if (items.length < 2) return;
+    const t = setInterval(() => setIdx(i => (i + 1) % items.length), 4000);
+    return () => clearInterval(t);
+  }, [items.length]);
+
+  const current = items[idx % Math.max(items.length, 1)];
+  if (!current && !routeData) return (
+    <div style={{ padding: "10px 0 8px", ...dm, fontSize: 13, color: C.mut }}>Izračunavam rutu…</div>
+  );
+  if (!current) return null;
+
+  return (
+    <div style={{ padding: "10px 0 8px", display: "flex", alignItems: "center", gap: 8, minHeight: 28, overflow: "hidden" }}>
+      <span style={{ fontSize: 14, flexShrink: 0 }}>{current.icon}</span>
+      <span style={{ ...dm, fontSize: 12, color: current.color || C.mut, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", transition: "opacity 0.3s", fontWeight: current.color === "#ef4444" ? 700 : 400 }}>
+        {current.text}
+      </span>
+      {items.length > 1 && (
+        <span style={{ ...dm, fontSize: 9, color: "rgba(100,116,139,0.3)", flexShrink: 0 }}>{idx % items.length + 1}/{items.length}</span>
+      )}
+    </div>
+  );
+});
+
 const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C }) => {
   const [cards, setCards] = React.useState(null);
   const [sources, setSources] = React.useState(null);
@@ -1549,23 +1614,11 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
 
     if (subScreen === "transit") return (
       <>
-        {/* ── Header ── */}
-        <div style={{ padding: "20px 0 12px" }}>
-          <div style={{ fontSize: 24, fontWeight: 400, letterSpacing: -0.3 }}>
-            {(transitSegUrl === "kamper" ? "🚐" : transitSegUrl === "jedrilicar" ? "⛵" : "🚗")} {mapFromCity} → {mapToCity}
-          </div>
-          {transitRouteData && (
-            <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 6, display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
-              <span>🛣 {transitRouteData.km} km</span>
-              <span>⏱ {transitRouteData.hrs}h {transitRouteData.mins}min</span>
-              {transitRouteData.estimated && <span style={{ fontSize: 11, color: C.gold }}>(procjena)</span>}
-            </div>
-          )}
-          {!transitRouteData && <div style={{ ...dm, fontSize: 13, color: C.mut, marginTop: 4 }}>Izračunavam rutu…</div>}
-        </div>
+        {/* ── Live Ticker (single line, rotating) ── */}
+        <LiveTicker fromCoords={transitFromCoords} toCoords={transitToCoords} seg={transitSegUrl} lang={lang} routeData={transitRouteData} dm={dm} C={C} />
 
         {/* ── HERE Map ── */}
-        <div style={{ borderRadius: 16, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 16 }}>
+        <div style={{ borderRadius: 16, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 0 }}>
           {transitFromCoords && transitToCoords ? (
             <TransitMap
               fromCoords={transitFromCoords}
@@ -1574,21 +1627,27 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               onRouteReady={setTransitRouteData}
             />
           ) : (
-            <div style={{ height: 300, background: "rgba(14,165,233,0.04)", display: "grid", placeItems: "center" }}>
-              <div style={{ ...dm, fontSize: 13, color: C.mut }}>Učitavam mapu…</div>
+            <div style={{ height: 300, background: "#0c1426", display: "grid", placeItems: "center" }}>
+              <div style={{ ...dm, fontSize: 13, color: C.mut }}>Učitavam HERE mapu…</div>
             </div>
           )}
         </div>
 
-        {/* ── Navigation button ── */}
+        {/* ── HERE Navigation (inside map card) ── */}
         {transitRouteData && (
-          <button onClick={() => {
-            const { oLat, oLng, dLat, dLng } = transitRouteData;
-            window.location.href = `https://www.google.com/maps/dir/?api=1&origin=${oLat},${oLng}&destination=${dLat},${dLng}&travelmode=driving`;
-          }}
-            style={{ width: "100%", padding: "14px 20px", borderRadius: 14, background: `linear-gradient(135deg,${C.accent},#0284c7)`, border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", marginBottom: 16, ...dm }}>
-            📍 Pokreni navigaciju
-          </button>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 16px", background: `rgba(14,165,233,0.04)`, borderRadius: "0 0 16px 16px", border: `1px solid ${C.bord}`, borderTop: "none", marginBottom: 16 }}>
+            <div style={{ ...dm, fontSize: 13, color: C.mut }}>
+              🛣 {transitRouteData.km} km · ⏱ {transitRouteData.hrs}h {transitRouteData.mins}min
+              {transitRouteData.estimated && <span style={{ fontSize: 10, color: C.gold, marginLeft: 6 }}>(procjena)</span>}
+            </div>
+            <button onClick={() => {
+              const { oLat, oLng, dLat, dLng } = transitRouteData;
+              window.location.href = `https://wego.here.com/directions/drive/${oLat},${oLng}/${dLat},${dLng}`;
+            }}
+              style={{ padding: "8px 18px", borderRadius: 10, background: `linear-gradient(135deg,#48dad0,#0ea5e9)`, border: "none", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", ...dm, whiteSpace: "nowrap" }}>
+              📍 HERE Navigacija
+            </button>
+          </div>
         )}
 
         {/* ── AI ROUTE GUIDE — Live Intelligence Feed ── */}
