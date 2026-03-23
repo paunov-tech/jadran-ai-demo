@@ -234,8 +234,10 @@ PRAVILA:
 
 async function fetchNearbyTraffic(lat, lng) {
   try {
+    const minLat = lat - 0.4, maxLat = lat + 0.4;
+    const minLng = lng - 0.4, maxLng = lng + 0.4;
     const r = await fetch(
-      `https://data.traffic.hereapi.com/v7/incidents?in=circle:${lat},${lng};r=50000&apiKey=${HERE_KEY}`,
+      `https://data.traffic.hereapi.com/v7/incidents?in=bbox:${minLat},${minLng};${maxLat},${maxLng}&apiKey=${HERE_KEY}`,
       { signal: AbortSignal.timeout(4000) }
     );
     if (!r.ok) { console.warn("pulse: HERE Traffic", r.status); return []; }
