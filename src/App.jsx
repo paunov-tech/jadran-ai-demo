@@ -785,6 +785,9 @@ export default function JadranUnified() {
     setPhase("pre");
     setSubScreen("transit");
     setSplash(false);
+    saveDelta({ trip_started: false }); // new route = new trip, not resumed
+    setTripActive(false);
+    gpsStarted.current = false;
     localStorage.setItem("jadran_go_transit", "1");
     window.history.replaceState({}, "", "/");
   }, []); // eslint-disable-line
