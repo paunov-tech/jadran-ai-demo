@@ -4,6 +4,7 @@
 // social proof carousel, B2B section, sticky CTA
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useRef, useCallback } from "react";
+import { SEGMENTS, saveDelta, loadDelta } from "./deltaContext";
 
 // Direct Stripe checkout
 const goToStripe = async (plan = "season", lang = "en") => {
@@ -91,6 +92,7 @@ export default function LandingPage() {
   const [roomInput, setRoomInput] = useState("");
   // Unified entry flow
   const [selectedMode, setSelectedMode] = useState(null); // "auto"|"avion"|"kamper"|"odmor"
+  const [selectedSegment, setSelectedSegment] = useState(() => { try { return loadDelta().segment; } catch { return null; } });
   const [depCity, setDepCity] = useState("");
   const [routeStep, setRouteStep] = useState(null); // null | "city" | "map"
   const [toLPCity, setToLPCity] = useState(""); // destination city for new 2-input flow
@@ -357,6 +359,34 @@ export default function LandingPage() {
               </span>
           </h1>
           <p style={{ fontSize: "clamp(14px, 2.2vw, 17px)", color: "#94a3b8", lineHeight: 1.6, maxWidth: 520, margin: "0 auto 28px" }}>{tx("sub")}</p>
+          {/* ── Segment Picker (WHO are you) ── */}
+          <div style={{ maxWidth: 540, margin: "0 auto 16px" }}>
+            <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8, letterSpacing: 1 }}>
+              {lang === "de" || lang === "at" ? "ICH REISE ALS" : lang === "en" ? "I'M TRAVELING AS" : lang === "it" ? "VIAGGIO COME" : "PUTUJEM KAO"}
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+              {Object.entries(SEGMENTS).map(([id, seg]) => {
+                const active = selectedSegment === id;
+                return (
+                  <button key={id} onClick={() => {
+                    setSelectedSegment(id);
+                    saveDelta({ segment: id, transport: id === "kamper" ? "kamper" : id === "jedrilicar" ? "avion" : "auto" });
+                    // Auto-select matching transport
+                    if (id === "kamper") { setSelectedMode("kamper"); setRouteStep("city"); }
+                    else if (id === "jedrilicar") { setSelectedMode("avion"); setRouteStep("city"); }
+                  }} style={{
+                    padding: "12px 6px", borderRadius: 12, border: `1.5px solid ${active ? "rgba(14,165,233,0.5)" : "rgba(255,255,255,0.06)"}`,
+                    background: active ? "rgba(14,165,233,0.08)" : "rgba(255,255,255,0.02)",
+                    cursor: "pointer", textAlign: "center", transition: "all 0.2s",
+                    transform: active ? "scale(1.05)" : "scale(1)",
+                  }}>
+                    <div style={{ fontSize: 24 }}>{seg.icon}</div>
+                    <div style={{ fontSize: 11, color: active ? "#0ea5e9" : "#94a3b8", fontWeight: active ? 700 : 400, marginTop: 4, fontFamily: B }}>{(seg.label[lang] || seg.label[lang === "at" ? "de" : "hr"] || seg.label.hr)}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           {/* ── 4 Entry Tiles ── */}
           {(() => {
             const tiles = [
@@ -443,8 +473,8 @@ export default function LandingPage() {
                     <button
                       disabled={!depCity.trim() || !toLPCity.trim()}
                       onClick={() => {
-                        const seg = selectedMode === "kamper" ? "kamper" : selectedMode === "avion" ? "jedrilicar" : "par";
-                        try { localStorage.setItem("jadran_delta_context", JSON.stringify({ segment: seg, from: depCity.trim(), destination: { city: toLPCity.trim() } })); } catch {}
+                        const seg = selectedSegment || (selectedMode === "kamper" ? "kamper" : selectedMode === "avion" ? "jedrilicar" : "par");
+                        saveDelta({ segment: seg, transport: selectedMode, from: depCity.trim(), destination: { city: toLPCity.trim() }, phase: "transit" });
                         window.location.href = `/?room=DEMO&go=transit&from=${encodeURIComponent(depCity.trim())}&to=${encodeURIComponent(toLPCity.trim())}&seg=${seg}`;
                       }}
                       style={{ width: "100%", padding: "14px 20px", borderRadius: 12, background: depCity.trim() && toLPCity.trim() ? "linear-gradient(135deg, #f97316, #ea580c)" : "rgba(255,255,255,0.06)", border: "none", color: depCity.trim() && toLPCity.trim() ? "#fff" : "#475569", fontSize: 15, fontWeight: 700, cursor: depCity.trim() && toLPCity.trim() ? "pointer" : "default", fontFamily: F, letterSpacing: 0.5, transition: "all 0.2s" }}>

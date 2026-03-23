@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { loadGuest, updateGuest, getRoomCode } from "./guestStore";
 import GuestOnboarding from "./GuestOnboarding";
+import { loadDelta, saveDelta, SEGMENTS } from "./deltaContext";
 
 // ─── CITY COORDINATES (used by Leaflet map, no HERE SDK) ───
 const CITY_COORDS = {
@@ -1134,7 +1135,10 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       const res = await fetch("/api/chat", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ system: sys,
-          messages: [...chatMsgs.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })), { role: "user", content: msg }] }),
+          messages: [...chatMsgs.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })), { role: "user", content: msg }],
+          delta_context: loadDelta(),
+          lang: lang || "hr",
+        }),
       });
       const data = await res.json();
       setChatMsgs(p => [...p, { role: "assistant", text: data.content?.map(c => c.text || "").join("") || "..." }]);
