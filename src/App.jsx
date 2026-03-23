@@ -149,7 +149,7 @@ const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C }) => {
         setSources(data.sources || null);
         setUpdated(data.updated);
       })
-      .catch(() => {})
+      .catch(() => { setCards([]); })
       .finally(() => setLoading(false));
   }, [fromCoords?.[0], fromCoords?.[1], toCoords?.[0], toCoords?.[1], seg, lang]); // eslint-disable-line
 
