@@ -46,8 +46,12 @@ var fromIcon = new H.map.Icon('<svg width="24" height="24" xmlns="http://www.w3.
 var toIcon = new H.map.Icon('<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" fill="#0ea5e9" stroke="#fff" stroke-width="2.5"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg>', {size:{w:24,h:24},anchor:{x:12,y:12}});
 var startMarker = new H.map.Marker({lat:flat,lng:flon},{icon:fromIcon});
 var endMarker = new H.map.Marker({lat:tlat,lng:tlon},{icon:toIcon});
-map.addObject(startMarker);
-map.addObject(endMarker);
+
+// Show markers immediately with initial zoom
+var markerGroup = new H.map.Group();
+markerGroup.addObjects([startMarker, endMarker]);
+map.addObject(markerGroup);
+map.getViewModel().setLookAtData({bounds: markerGroup.getBoundingBox()},{animate:false});
 
 // Route via REST API + decode polyline manually
 var routeUrl = "https://router.hereapi.com/v8/routes"
@@ -72,13 +76,8 @@ fetch(routeUrl)
       });
       map.addObject(polyline);
     }
-    // Zoom to fit everything
-    var allObjects = new H.map.Group();
-    map.getObjects().forEach(function(o) { allObjects.addObject(o.clone ? o : o); });
-    map.getViewModel().setLookAtData({bounds: map.getObjects().reduce(function(bb, o) {
-      if (o.getBoundingBox) { var b = o.getBoundingBox(); if (b) bb = bb ? bb.mergeRect(b) : b; }
-      return bb;
-    }, null)}, {animate: true});
+    // Zoom to fit route + markers
+    map.getViewModel().setLookAtData({bounds: markerGroup.getBoundingBox()}, {animate: true});
   })
   .catch(function(e) { console.warn("Route fetch error:", e); });
 
