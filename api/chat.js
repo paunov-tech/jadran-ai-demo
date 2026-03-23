@@ -474,7 +474,7 @@ function generateCamperYoloPrompt(yoloData) {
   const CAMPER_CAMS = {
     highway: {
       label: "AUTOCESTA / TRANZIT",
-      prefixes: ["buildzagreb","delnice","fuzine","brinje","otocac","rakovica","sisak","koprivnica","pozega"],
+      prefixes: ["hac_a1","hac_a2","hac_a3","hac_a6","hac_a7","hac_a8","buildzagreb","delnice","fuzine","brinje","otocac","rakovica","sisak","koprivnica","pozega"],
       interpret: (cars, total) => cars > 30 ? "GUST PROMET — očekujte zastoje na naplatama" : cars > 10 ? "umjeren promet" : "promet teče normalno",
     },
     ferry: {
@@ -484,27 +484,32 @@ function generateCamperYoloPrompt(yoloData) {
     },
     bura: {
       label: "BURA ZONE (Senj)",
-      prefixes: ["senj"],
+      prefixes: ["senj","hac_a1_maslenica"],
       interpret: (cars, total) => {
         if (total === 0) return "⚠️ NEMA PROMETA NA SENJU — moguća zabrana zbog bure! Provjerite HAK.hr prije polaska";
         if (cars > 10) return "promet teče normalno kroz Senj — bura ne puše";
         return "slab promet — oprez, moguća bura";
       },
     },
+    border: {
+      label: "GRANIČNI PRELAZI",
+      prefixes: ["hac_a2_macelj","hac_a3_bregana","hac_a7_rupa"],
+      interpret: (cars, total) => cars > 20 ? "GUŽVA NA GRANICI — očekujte čekanje 30+ min" : cars > 8 ? "umjeren promet na granici" : "slobodan prolaz",
+    },
     cityParking: {
       label: "GRADSKI CENTRI (parking)",
-      prefixes: ["split","dubrovnik","pula","rijeka","sibenik","trogir","makarska","omis"],
+      prefixes: ["split","dubrovnik","pula","rijeka","sibenik","trogir","makarska","omis","zadar","hvar","korcula","rovinj"],
       interpret: (cars, total) => total > 40 ? "GRAD PUN — koristite P+R ili kamp izvan centra" : total > 15 ? "umjerena gužva u centru — parkiranje otežano" : "grad miran — parkiranje ne bi trebalo biti problem",
     },
     coastal: {
       label: "OBALA (kampovi/plaže)",
-      prefixes: ["brela","tucepi","bol","jelsa","vrboska","murter","nin","pag","povljana","slano","ploce"],
+      prefixes: ["brela","tucepi","bol","jelsa","vrboska","murter","nin","pag","povljana","slano","ploce","podstrana","baskavoda","vis","cavtat","orebic","mljet","medulin","rabac","novigrad","umag","novalja","vodice","biograd","baska","crikvenica","losinj","selce"],
       interpret: (cars, total) => total > 20 ? "popularna mjesta aktivna — rano dolazite po parking" : total > 5 ? "umjerena aktivnost" : "mirno — idealno za kampere",
     },
   };
 
   const lines = [];
-  lines.push("[🚐 BIG EYE — KAMPER INTELLIGENCE iz 147 kamera]");
+  lines.push("[🚐 BIG EYE — KAMPER INTELLIGENCE iz 90+ kamera]");
 
   // Aggregate YOLO data per camper category
   for (const [catId, cat] of Object.entries(CAMPER_CAMS)) {
