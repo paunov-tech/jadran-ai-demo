@@ -466,11 +466,11 @@ const getMapEmbed = (coordKey) => {
 
 /* ─── DATA ─── */
 const GUEST_FALLBACK = {
-  name: "Familie Weber", first: "Weber", country: "DE", lang: "de", flag: "🇩🇪",
-  adults: 2, kids: 2, kidsAges: [7, 11], interests: ["gastro", "adventure", "culture"],
-  arrival: "2026-07-12", departure: "2026-07-19", car: true, carPlate: "M-WB 4521",
-  accommodation: "Villa Marija, Podstrana", host: "Marija Perić", hostPhone: "+385 91 555 1234",
-  budget: 1200, spent: 345, email: "weber@email.de"
+  name: "Gost", first: "Gost", country: "HR", lang: "hr", flag: "🇭🇷",
+  adults: 2, kids: 0, kidsAges: [], interests: ["gastro", "adventure"],
+  arrival: "2026-07-12", departure: "2026-07-19", car: true, carPlate: "",
+  accommodation: "Apartman", host: "Domaćin", hostPhone: "+385 91 000 0000",
+  budget: 1200, spent: 0, email: ""
 };
 
 const W_DEFAULT = { icon: "☀️", temp: 28, sea: 24, uv: 7, wind: "Z 8 km/h", sunset: "20:30", humidity: 50 };
@@ -867,7 +867,6 @@ export default function JadranUnified() {
 
   // ─── ALERTS BAR ───
   const [alerts, setAlerts] = useState([]);
-  const [alertIdx, setAlertIdx] = useState(0);
   const [dismissedAlerts, setDismissedAlerts] = useState(new Set());
   useEffect(() => {
     const fetchAlerts = () => fetch("/api/alerts").then(r => r.json()).then(d => { if (d.alerts?.length) setAlerts(d.alerts); }).catch(() => {});
@@ -875,11 +874,6 @@ export default function JadranUnified() {
     const interval = setInterval(fetchAlerts, 300000); // 5 min
     return () => clearInterval(interval);
   }, []);
-  useEffect(() => {
-    if (alerts.length < 2) return;
-    const t = setInterval(() => setAlertIdx(i => (i + 1) % alerts.length), 4000);
-    return () => clearInterval(t);
-  }, [alerts]);
 
   // ─── LEAFLET MAP: call hook unconditionally (React rules) ───
   const COUNTRY_CITY = { DE:"München", AT:"Wien", IT:"Trieste", SI:"Ljubljana", CZ:"Praha", PL:"Kraków", HR:"Zagreb" };
@@ -893,7 +887,10 @@ export default function JadranUnified() {
     if (c) { setTransitFromCoords(c); return; }
     fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(mapFromCity + ", Europe")}&limit=1&apikey=${HERE_ROUTING_KEY}`)
       .then(r => r.json())
-      .then(d => { const p = d.items?.[0]?.position; if (p) setTransitFromCoords([p.lat, p.lng]); })
+      .then(d => {
+        const p = d.items?.[0]?.position;
+        setTransitFromCoords(p ? [p.lat, p.lng] : CITY_COORDS["Wien"]);
+      })
       .catch(() => setTransitFromCoords(CITY_COORDS["Wien"]));
   }, [mapFromCity]); // eslint-disable-line
   useEffect(() => {
@@ -902,7 +899,10 @@ export default function JadranUnified() {
     if (c) { setTransitToCoords(c); return; }
     fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(mapToCity + ", Croatia")}&limit=1&apikey=${HERE_ROUTING_KEY}`)
       .then(r => r.json())
-      .then(d => { const p = d.items?.[0]?.position; if (p) setTransitToCoords([p.lat, p.lng]); })
+      .then(d => {
+        const p = d.items?.[0]?.position;
+        setTransitToCoords(p ? [p.lat, p.lng] : CITY_COORDS["Split"]);
+      })
       .catch(() => setTransitToCoords(CITY_COORDS["Split"]));
   }, [mapToCity]); // eslint-disable-line
 
@@ -1287,15 +1287,21 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   const ALERT_COLORS = { critical:"#ef4444", high:"#f59e0b", medium:"#38bdf8" };
 
   const AlertsBar = () => {
+    const [localIdx, setLocalIdx] = useState(0);
     const visible = alerts.filter(a => !dismissedAlerts.has(a.title));
+    useEffect(() => {
+      if (visible.length < 2) return;
+      const t = setInterval(() => setLocalIdx(i => (i + 1) % visible.length), 4000);
+      return () => clearInterval(t);
+    }, [visible.length]);
     if (!visible.length) return null;
-    const idx = alertIdx % visible.length;
+    const idx = localIdx % visible.length;
     const a = visible[idx];
     if (!a) return null;
     const icon = ALERT_ICONS[a.type] || ALERT_ICONS.default;
     const color = ALERT_COLORS[a.severity] || "#38bdf8";
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 14px", borderRadius: 10, background: `rgba(${a.severity==="critical"?"239,68,68":a.severity==="high"?"245,158,11":"56,189,248"},0.07)`, border: `1px solid ${color}22`, marginBottom: 8, minHeight: 32, animation: "fadeUp 0.3s both", position: "relative", overflow: "hidden" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 14px", borderRadius: 10, background: `rgba(${a.severity==="critical"?"239,68,68":a.severity==="high"?"245,158,11":"56,189,248"},0.07)`, border: `1px solid ${color}22`, marginBottom: 8, minHeight: 32, position: "relative", overflow: "hidden" }}>
         <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
         <span style={{ fontSize: 12, color: "#cbd5e1", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.title}</span>
         {a.severity === "critical" && <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: "rgba(239,68,68,0.15)", color: "#ef4444", fontWeight: 700, flexShrink: 0 }}>KRITIČNO</span>}
