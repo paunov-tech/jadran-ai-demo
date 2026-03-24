@@ -21,7 +21,7 @@ var flat = parseFloat(p.get("flat") || "48.2082");
 var flon = parseFloat(p.get("flon") || "16.3738");
 var tlat = parseFloat(p.get("tlat") || "43.5081");
 var tlon = parseFloat(p.get("tlon") || "16.4402");
-var KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
+var KEY = p.get("key") || "";
 
 var platform = new H.service.Platform({ apikey: KEY });
 var defaultLayers = platform.createDefaultLayers();
