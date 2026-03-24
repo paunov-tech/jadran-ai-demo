@@ -1755,7 +1755,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             {greeting}, <span style={{ color: C.warm, fontStyle: "italic" }}>{G.first}</span>
           </div>
           <div style={{ ...dm, fontSize: 13, color: nearbyData ? C.accent : C.mut, marginTop: 4, minHeight: 20 }}>
-            {nearbyData ? `📍 ${kioskCity}${nearbyData.location?.district ? ` · ${nearbyData.location.district}` : ""}`
+            {nearbyData ? `📍 ${kioskCity}${nearbyData.location?.district && nearbyData.location.district !== kioskCity ? ` · ${nearbyData.location.district}` : ""}` 
              : nearbyLoading ? (() => { const loadText = ({hr:"Tražim lokacije u blizini...",de:"Suche Orte in der Nähe...",en:"Finding places nearby...",it:"Cerco luoghi vicini..."})[lang] || "Tražim lokacije..."; return (<span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: "pulse 1.5s infinite" }} />{loadText}</span>); })()
              : `📍 ${kioskCity}`}
           </div>
@@ -1775,29 +1775,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           )}
         </div>
 
-        {/* Weather + UV + time sim */}
-        <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
-          <Card style={{ flex: 2, display: "flex", alignItems: "center", gap: 16, padding: "16px 22px" }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-              <span style={{ fontSize: 36 }}>{weather.icon}</span><span style={{ fontSize: 44, fontWeight: 300 }}>{weather.temp}°</span>
-            </div>
-            <div style={{ width: 1, height: 40, background: C.bord }} />
-            <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.6 }}>
-              {t("sea",lang)}: <strong style={{ color: C.accent }}>{weather.sea}°C</strong> · {weather.wind}<br />
-              UV: <strong style={{ color: weather.uv >= 8 ? C.red : C.gold }}>{weather.uv}</strong>{weather.uv >= 8 && <span style={{ color: C.red }}> SPF50+!</span>} · 🌅 {weather.sunset}
-            </div>
-          </Card>
-          {isAdmin && <Card style={{ display: "flex", flexDirection: "column", gap: 6, padding: "14px 18px", minWidth: 180 }}>
-            <div style={{ ...dm, fontSize: 10, color: C.mut, letterSpacing: 1 }}>⏰ {t("simulation",lang)}</div>
-            <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-              {[{ h: null, l: "Sada" }, { h: 7, l: "07" }, { h: 13, l: "13" }, { h: 19, l: "19" }, { h: 23, l: "23" }].map(t => (
-                <button key={t.l} onClick={() => setSimHour(t.h)} style={{ ...dm, padding: "5px 10px", background: simHour === t.h ? C.acDim : "transparent", border: `1px solid ${simHour === t.h ? "rgba(14,165,233,0.2)" : C.bord}`, borderRadius: 8, color: simHour === t.h ? C.accent : C.mut, fontSize: 11, cursor: "pointer" }}>{t.l}</button>
-              ))}
-            </div>
-          </Card>}
-        </div>
-
-        {/* ═══ LIVE ADRIATIC PULSE ═══ */}
+        {/* ═══ LIVE ADRIATIC PULSE — unified weather/sea/UV board ═══ */}
         <Card style={{ marginBottom: 20, padding: 0, overflow: "hidden", position: "relative" }}>
           {/* Animated wave background */}
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, opacity: 0.12, pointerEvents: "none" }}>
@@ -2184,20 +2162,31 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               {wt[2]}
             </div>
           )}
-          <div style={{ display: "flex", gap: 20, flexWrap: "wrap", justifyContent: "center" }}>
-            {["🅿️","🛒","🏖️","☕"].map((emoji, i) => (
-              <div key={i} style={{ width: 56, height: 56, borderRadius: 16, background: C.card, border: `1px solid ${C.bord}`, display: "grid", placeItems: "center", fontSize: 24, animation: `fadeUp 0.4s ease ${i * 0.1}s both` }}>
-                {emoji}
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
+            {[
+              { emoji: "🅿️", k: "parking", label: {hr:"Parking",de:"Parken",en:"Parking",it:"Parcheggio"}[lang]||"Parking" },
+              { emoji: "🛒", k: "shop", label: {hr:"Dućan",de:"Laden",en:"Shop",it:"Negozio"}[lang]||"Dućan" },
+              { emoji: "🏖️", k: "beach", label: {hr:"Plaže",de:"Strände",en:"Beaches",it:"Spiagge"}[lang]||"Plaže" },
+              { emoji: "🍽️", k: "food", label: {hr:"Hrana",de:"Essen",en:"Food",it:"Cibo"}[lang]||"Hrana" },
+            ].map((item, i) => (
+              <div key={item.k} onClick={() => { setKioskWelcome(false); setSubScreen(item.k); }}
+                style={{ width: 68, cursor: "pointer", textAlign: "center", animation: `fadeUp 0.4s ease ${i * 0.1}s both` }}>
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: C.card, border: `1px solid ${C.bord}`, display: "grid", placeItems: "center", fontSize: 24, margin: "0 auto 4px", transition: "border-color 0.2s" }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(14,165,233,0.3)"}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = C.bord}>
+                  {item.emoji}
+                </div>
+                <div style={{ ...dm, fontSize: 10, color: C.mut }}>{item.label}</div>
               </div>
             ))}
           </div>
           {nearbyData ? (
-            <Btn primary onClick={() => setKioskWelcome(false)} style={{ marginTop: 32, animation: "fadeUp 0.5s ease 0.3s both" }}>
+            <Btn primary onClick={() => setKioskWelcome(false)} style={{ marginTop: 28 }}>
               {({hr:"Istraži",de:"Entdecken",en:"Explore",it:"Esplora",si:"Razišči",cz:"Prozkoumej",pl:"Odkrywaj"})[lang] || "Istraži"} {kioskCity} → {nearbyCount > 0 ? `(${nearbyCount})` : ""}
             </Btn>
           ) : (
-            <div style={{ ...dm, fontSize: 12, color: C.mut, marginTop: 32 }}>
-              <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: "pulse 1s infinite", marginRight: 6 }} />
+            <div style={{ ...dm, fontSize: 12, color: C.mut, marginTop: 28, height: 40, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+              <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: "pulse 1s infinite" }} />
               {({hr:"Učitavam...",de:"Laden...",en:"Loading...",it:"Caricamento...",si:"Nalagam...",cz:"Načítám...",pl:"Ładuję..."})[lang] || "..."}
             </div>
           )}
@@ -2510,15 +2499,10 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         ::selection { background: rgba(14,165,233,0.3); color: #f0f9ff; }
 
         /* Animated cards */
-        .anim-card { animation: fadeUp 0.5s ease both; }
-        .anim-card:nth-child(1) { animation-delay: 0s; }
-        .anim-card:nth-child(2) { animation-delay: 0.08s; }
-        .anim-card:nth-child(3) { animation-delay: 0.16s; }
-        .anim-card:nth-child(4) { animation-delay: 0.24s; }
-        .anim-card:nth-child(5) { animation-delay: 0.32s; }
-        .anim-card:nth-child(6) { animation-delay: 0.40s; }
-        .anim-card:nth-child(7) { animation-delay: 0.48s; }
-        .anim-card:nth-child(8) { animation-delay: 0.56s; }
+        .anim-card { opacity: 1; }
+        .anim-card:nth-child(1) { }
+        .anim-card:nth-child(2) { }
+        /* tiles render instantly — no staggered animation */
 
         /* Button hover effects */
         button { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important; }
