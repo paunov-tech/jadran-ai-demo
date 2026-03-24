@@ -194,8 +194,7 @@ export default function LandingPage() {
   const goChat = () => { window.location.href = `/ai?niche=camper${dest ? "&dest=" + dest : ""}`; };
   const goRoom = () => { const c = roomInput.trim().toUpperCase(); if (c) window.location.href = `/?room=${encodeURIComponent(c)}`; };
 
-  // HERE Maps API key (safe for client-side JS Maps API)
-  const HERE_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
+  const HERE_KEY = import.meta.env.VITE_HERE_API_KEY;
   const DEST_LAT = 43.4892, DEST_LNG = 16.5523; // Podstrana
 
   const TRANSPORT_LABELS = {

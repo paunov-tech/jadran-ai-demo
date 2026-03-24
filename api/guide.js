@@ -5,7 +5,7 @@
 //
 // GET /api/guide?oLat=48.2&oLng=16.4&dLat=43.5&dLng=16.4&seg=kamper&lang=hr
 
-const HERE_KEY = process.env.HERE_API_KEY || "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
+const HERE_KEY = process.env.HERE_API_KEY;
 const FB_KEY = process.env.FIREBASE_API_KEY;
 const CORS = ["https://jadran.ai","https://monte-negro.ai"];
 const CACHE = { data: null, ts: 0, key: "" };

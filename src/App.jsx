@@ -18,7 +18,7 @@ const CITY_COORDS = {
   "Praha":[50.0755,14.4378],"Kraków":[50.0647,19.9450],"Trieste":[45.6495,13.7768],
   "Zagreb":[45.8150,15.9819],
 };
-const HERE_ROUTING_KEY = "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
+const HERE_ROUTING_KEY = import.meta.env.VITE_HERE_API_KEY;
 
 // ─── TransitMap: Real HERE Maps rendered inline via SDK (loaded in index.html) ───
 const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteReady, gpsPosition }) => {

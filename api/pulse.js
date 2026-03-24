@@ -3,9 +3,31 @@
 // This is the BRAIN — transforms raw data into a personal travel companion voice
 
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
-const HERE_KEY = process.env.HERE_API_KEY || "0baWwk3UMqKmttJIQWhv-ocxS7vOFncDkbLKb68JKxw";
+const HERE_KEY = process.env.HERE_API_KEY;
 const FB_KEY = process.env.FIREBASE_API_KEY;
 const CORS = ["https://jadran.ai", "https://monte-negro.ai"];
+
+// ── Rate limiting: 30/IP/hour, 500 global/day ──
+const _rl = new Map();
+const _global = { n: 0, reset: 0 };
+const RL_WIN = 3600000;     // 1 hour
+const IP_LIMIT = 30;
+const GLOBAL_CAP = 500;
+const GLOBAL_WIN = 86400000; // 24 hours
+function _ip(req) { return (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "x"; }
+function rateOk(req) {
+  const k = _ip(req), now = Date.now();
+  const r = _rl.get(k) || { n: 0, t: now };
+  if (now - r.t > RL_WIN) { r.t = now; r.n = 0; }
+  r.n++; _rl.set(k, r);
+  return r.n <= IP_LIMIT;
+}
+function globalOk() {
+  const now = Date.now();
+  if (now - _global.reset > GLOBAL_WIN) { _global.n = 0; _global.reset = now; }
+  _global.n++;
+  return _global.n <= GLOBAL_CAP;
+}
 
 // Cache to avoid hammering Claude on identical positions
 let CACHE = { key: "", data: null, ts: 0 };
@@ -73,6 +95,9 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+  if (!rateOk(req)) return res.status(429).json({ error: "Rate limit: 30 pulses/hour per IP" });
+  if (!globalOk()) return res.status(429).json({ error: "Service busy — try again later" });
+  if (!ANTHROPIC_KEY) return res.status(500).json({ error: "AI service not configured" });
 
   const { lat, lng, segment, lang, fromCity, fromLat, fromLng, destCity, destLat, destLng, distToDest, etaMin, speed, country } = req.body || {};
   if (!lat || !lng) return res.status(400).json({ error: "lat/lng required" });
