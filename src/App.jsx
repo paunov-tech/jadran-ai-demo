@@ -1699,7 +1699,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   }, [phase]); // eslint-disable-line
 
   // Transit destination city — for welcome screen and fallbacks
-  const transitDestCity = loadDelta().destination?.city || "";
+  const transitDestCity = loadDelta().destination?.city || (transitToCoords ? "" : "Jadran");
 
   // Nearby city name for display
   const kioskCity = nearbyData?.location?.city || transitDestCity || "Jadran";
