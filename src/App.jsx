@@ -1747,45 +1747,31 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
 
     return (
       <>
-        <div style={{ padding: "20px 0 16px" }}>
+        {/* Header: greeting + city */}
+        <div style={{ padding: "20px 0 12px" }}>
           <div style={{ ...dm, fontSize: 12, color: C.mut, letterSpacing: 2, textTransform: "uppercase" }}>
             {tipIcon} {new Date().toLocaleDateString(dateLocale, { weekday: "long", day: "numeric", month: "long" })}
           </div>
           <div style={{ ...hf, fontSize: 36, fontWeight: 400, marginTop: 8, lineHeight: 1.2 }}>
             {greeting}, <span style={{ color: C.warm, fontStyle: "italic" }}>{G.first}</span>
           </div>
-          <div style={{ ...dm, fontSize: 13, color: nearbyData ? C.accent : C.mut, marginTop: 4, minHeight: 20 }}>
+          <div style={{ ...dm, fontSize: 13, color: nearbyData ? C.accent : C.mut, marginTop: 4 }}>
             {nearbyData ? `📍 ${kioskCity}${nearbyData.location?.district && nearbyData.location.district !== kioskCity ? ` · ${nearbyData.location.district}` : ""}` 
-             : nearbyLoading ? (() => { const loadText = ({hr:"Tražim lokacije u blizini...",de:"Suche Orte in der Nähe...",en:"Finding places nearby...",it:"Cerco luoghi vicini..."})[lang] || "Tražim lokacije..."; return (<span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: "pulse 1.5s infinite" }} />{loadText}</span>); })()
+             : nearbyLoading ? `📍 ${kioskCity}...`
              : `📍 ${kioskCity}`}
           </div>
         </div>
 
-        {/* Nearby highlights bar — fixed height to prevent jump */}
-        <div style={{ minHeight: nearbyHighlights.length > 0 ? "auto" : 0, marginBottom: nearbyHighlights.length > 0 ? 14 : 0, transition: "all 0.3s ease" }}>
-          {nearbyHighlights.length > 0 && (
-            <div style={{ display: "flex", gap: 10, padding: "10px 14px", borderRadius: 12, background: "rgba(14,165,233,0.04)", border: `1px solid ${C.bord}`, flexWrap: "wrap", alignItems: "center", animation: "fadeIn 0.3s ease" }}>
-              {nearbyHighlights.map((h, i) => (
-                <React.Fragment key={i}>
-                  {i > 0 && <span style={{ width: 1, height: 14, background: C.bord }} />}
-                  <span style={{ ...dm, fontSize: 12, color: C.text }}>{h.icon} {h.text}</span>
-                </React.Fragment>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* ═══ LIVE ADRIATIC PULSE — unified weather/sea/UV board ═══ */}
-        <Card style={{ marginBottom: 20, padding: 0, overflow: "hidden", position: "relative" }}>
-          {/* Animated wave background */}
+        {/* ═══ ADRIATIC PULSE — unified weather/sea/UV board ═══ */}
+        <Card style={{ marginBottom: 14, padding: 0, overflow: "hidden", position: "relative" }}>
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, opacity: 0.12, pointerEvents: "none" }}>
             <svg width="100%" height="60" viewBox="0 0 400 60" preserveAspectRatio="none" style={{ display: "block" }}>
               <path fill={C.accent} style={{ animation: "seaPulse1 4s ease-in-out infinite" }} d="M0,30 C100,45 200,15 300,30 C350,37 375,25 400,30 L400,60 L0,60 Z" />
               <path fill={C.accent} style={{ animation: "seaPulse2 5s ease-in-out infinite", opacity: 0.5 }} d="M0,35 C80,20 160,45 240,32 C320,20 360,40 400,35 L400,60 L0,60 Z" />
             </svg>
           </div>
-          <div style={{ padding: "18px 22px", position: "relative" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div style={{ padding: "16px 20px", position: "relative" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <div style={{ ...dm, display: "flex", alignItems: "center", gap: 8 }}>
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.green, boxShadow: `0 0 8px ${C.green}`, animation: "pulse 2s infinite" }} />
                 <span style={{ fontSize: 10, color: C.mut, letterSpacing: 3, fontWeight: 600 }}>ADRIATIC PULSE</span>
@@ -1810,15 +1796,17 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           </div>
         </Card>
 
-        {/* AI Tip — premium */}
-        <Card glow style={{ background: `linear-gradient(135deg,${C.goDim},rgba(14,165,233,0.03))`, borderColor: "rgba(251,191,36,0.1)", marginBottom: 20, display: "flex", gap: 16, alignItems: "flex-start", cursor: premium ? "default" : "pointer", position: "relative", overflow: "hidden" }} onClick={() => !premium && setShowPaywall(true)}>
-          <div style={{ fontSize: 28 }}>{tipIcon}</div>
-          <div>
-            <div style={{ ...dm, fontSize: 10, color: C.gold, fontWeight: 700, letterSpacing: 2, marginBottom: 4 }}>{t("aiRec",lang)}</div>
-            {premium ? <div style={{ ...dm, fontSize: 15, color: C.text, lineHeight: 1.7, fontWeight: 300 }}>{tip}</div> : <div style={{ ...dm, fontSize: 15, color: C.text, lineHeight: 1.7, fontWeight: 300, filter: "blur(6px)", userSelect: "none" }}>{tip}</div>}
-            {!premium && <div style={{ ...dm, position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,22,40,0.3)", borderRadius: 22 }}><span style={{ background: C.goDim, padding: "8px 18px", borderRadius: 14, fontSize: 13, color: C.gold, fontWeight: 600, border: `1px solid rgba(245,158,11,0.15)` }}>⭐ Premium — 9.99€</span></div>}
+        {/* Nearby highlights bar */}
+        {nearbyHighlights.length > 0 && (
+          <div style={{ display: "flex", gap: 10, padding: "10px 14px", borderRadius: 12, background: "rgba(14,165,233,0.04)", border: `1px solid ${C.bord}`, flexWrap: "wrap", alignItems: "center", marginBottom: 14 }}>
+            {nearbyHighlights.map((h, i) => (
+              <React.Fragment key={i}>
+                {i > 0 && <span style={{ width: 1, height: 14, background: C.bord }} />}
+                <span style={{ ...dm, fontSize: 12, color: C.text }}>{h.icon} {h.text}</span>
+              </React.Fragment>
+            ))}
           </div>
-        </Card>
+        )}
 
         {/* Quick tiles */}
         <SectionLabel>{t("quickAccess",lang)}</SectionLabel>
@@ -1860,6 +1848,16 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             </div>
           );})}
         </div>
+
+        {/* AI Tip — premium */}
+        <Card glow style={{ background: `linear-gradient(135deg,${C.goDim},rgba(14,165,233,0.03))`, borderColor: "rgba(251,191,36,0.1)", marginBottom: 14, display: "flex", gap: 16, alignItems: "flex-start", cursor: premium ? "default" : "pointer", position: "relative", overflow: "hidden" }} onClick={() => !premium && setShowPaywall(true)}>
+          <div style={{ fontSize: 28 }}>{tipIcon}</div>
+          <div>
+            <div style={{ ...dm, fontSize: 10, color: C.gold, fontWeight: 700, letterSpacing: 2, marginBottom: 4 }}>{t("aiRec",lang)}</div>
+            {premium ? <div style={{ ...dm, fontSize: 15, color: C.text, lineHeight: 1.7, fontWeight: 300 }}>{tip}</div> : <div style={{ ...dm, fontSize: 15, color: C.text, lineHeight: 1.7, fontWeight: 300, filter: "blur(6px)", userSelect: "none" }}>{tip}</div>}
+            {!premium && <div style={{ ...dm, position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,22,40,0.3)", borderRadius: 22 }}><span style={{ background: C.goDim, padding: "8px 18px", borderRadius: 14, fontSize: 13, color: C.gold, fontWeight: 600, border: `1px solid rgba(245,158,11,0.15)` }}>⭐ Premium — 9.99€</span></div>}
+          </div>
+        </Card>
 
         {/* Extend Stay — Booking.com */}
         <Card style={{ marginBottom: 16, border: "1px dashed rgba(0,85,166,0.2)", background: "rgba(0,85,166,0.03)" }}>
@@ -2624,7 +2622,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
 
         {/* Content */}
         {phase === "pre" && <div className="page-enter">{PreTrip()}</div>}
-        {phase === "kiosk" && <div className="page-enter">{Kiosk()}</div>}
+        {phase === "kiosk" && <div key={subScreen}>{Kiosk()}</div>}
         {phase === "post" && <div className="page-enter">{PostStay()}</div>}
 
         <div style={{ ...dm, textAlign: "center", padding: "20px 0 28px", fontSize: 10, color: "rgba(100,116,139,0.3)", letterSpacing: 2, textTransform: "uppercase" }}>
