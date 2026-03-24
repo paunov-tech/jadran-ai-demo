@@ -1754,21 +1754,26 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           <div style={{ ...hf, fontSize: 36, fontWeight: 400, marginTop: 8, lineHeight: 1.2 }}>
             {greeting}, <span style={{ color: C.warm, fontStyle: "italic" }}>{G.first}</span>
           </div>
-          {nearbyData && <div style={{ ...dm, fontSize: 13, color: C.accent, marginTop: 4 }}>📍 {kioskCity}{nearbyData.location?.district ? ` · ${nearbyData.location.district}` : ""}</div>}
-          {nearbyLoading && <div style={{ ...dm, fontSize: 12, color: C.mut, marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}><span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: "pulse 1.5s infinite" }} /> {({hr:"Tražim lokacije u blizini...",de:"Suche Orte in der Nähe...",en:"Finding places nearby...",it:"Cerco luoghi vicini..."})[lang] || "Tražim lokacije..."}</div>}
+          <div style={{ ...dm, fontSize: 13, color: nearbyData ? C.accent : C.mut, marginTop: 4, minHeight: 20 }}>
+            {nearbyData ? `📍 ${kioskCity}${nearbyData.location?.district ? ` · ${nearbyData.location.district}` : ""}`
+             : nearbyLoading ? (() => { const loadText = ({hr:"Tražim lokacije u blizini...",de:"Suche Orte in der Nähe...",en:"Finding places nearby...",it:"Cerco luoghi vicini..."})[lang] || "Tražim lokacije..."; return (<span style={{ display: "flex", alignItems: "center", gap: 6 }}><span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: "pulse 1.5s infinite" }} />{loadText}</span>); })()
+             : `📍 ${kioskCity}`}
+          </div>
         </div>
 
-        {/* Nearby highlights bar */}
-        {nearbyHighlights.length > 0 && (
-          <div style={{ display: "flex", gap: 10, marginBottom: 14, padding: "10px 14px", borderRadius: 12, background: "rgba(14,165,233,0.04)", border: `1px solid ${C.bord}`, flexWrap: "wrap", alignItems: "center" }}>
-            {nearbyHighlights.map((h, i) => (
-              <React.Fragment key={i}>
-                {i > 0 && <span style={{ width: 1, height: 14, background: C.bord }} />}
-                <span style={{ ...dm, fontSize: 12, color: C.text }}>{h.icon} {h.text}</span>
-              </React.Fragment>
-            ))}
-          </div>
-        )}
+        {/* Nearby highlights bar — fixed height to prevent jump */}
+        <div style={{ minHeight: nearbyHighlights.length > 0 ? "auto" : 0, marginBottom: nearbyHighlights.length > 0 ? 14 : 0, transition: "all 0.3s ease" }}>
+          {nearbyHighlights.length > 0 && (
+            <div style={{ display: "flex", gap: 10, padding: "10px 14px", borderRadius: 12, background: "rgba(14,165,233,0.04)", border: `1px solid ${C.bord}`, flexWrap: "wrap", alignItems: "center", animation: "fadeIn 0.3s ease" }}>
+              {nearbyHighlights.map((h, i) => (
+                <React.Fragment key={i}>
+                  {i > 0 && <span style={{ width: 1, height: 14, background: C.bord }} />}
+                  <span style={{ ...dm, fontSize: 12, color: C.text }}>{h.icon} {h.text}</span>
+                </React.Fragment>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Weather + UV + time sim */}
         <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
@@ -2635,7 +2640,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
 
         {/* Content */}
         {phase === "pre" && <div className="page-enter">{PreTrip()}</div>}
-        {phase === "kiosk" && <div className="page-enter" key={subScreen}>{Kiosk()}</div>}
+        {phase === "kiosk" && <div className="page-enter">{Kiosk()}</div>}
         {phase === "post" && <div className="page-enter">{PostStay()}</div>}
 
         <div style={{ ...dm, textAlign: "center", padding: "20px 0 28px", fontSize: 10, color: "rgba(100,116,139,0.3)", letterSpacing: 2, textTransform: "uppercase" }}>
