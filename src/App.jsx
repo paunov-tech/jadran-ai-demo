@@ -627,7 +627,9 @@ export default function JadranUnified() {
   const [splash, setSplash] = useState(true);
   const [phase, setPhase] = useState("pre"); // overridden by loadGuest on mount
   const [subScreen, setSubScreen] = useState("onboard"); // varies per phase
-  const [premium, setPremium] = useState(false);
+  const [premium, setPremium] = useState(() => {
+    try { return localStorage.getItem("jadran_ai_premium") === "1"; } catch { return false; }
+  });
   const [showPaywall, setShowPaywall] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
   const [onboardStep, setOnboardStep] = useState(0);
@@ -955,11 +957,13 @@ export default function JadranUnified() {
           setSplash(false);
           setPhase('kiosk');
           setSubScreen('home');
+          try { localStorage.setItem("jadran_ai_premium", "1"); } catch {}
           updateGuest(roomCode.current, { premium: true, premiumSessionId: sessionId, phase: 'kiosk' });
         }
       }).catch(() => {
         // If verify fails, still unlock for UX (webhook will catch it)
         setPremium(true);
+        try { localStorage.setItem("jadran_ai_premium", "1"); } catch {}
         updateGuest(roomCode.current, { premium: true, premiumSessionId: sessionId });
       });
       // Clean URL (keep ?room= if present)
@@ -1691,7 +1695,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   }, [phase]); // eslint-disable-line
 
   // Transit destination city — for welcome screen and fallbacks
-  const transitDestCity = loadDelta().destination?.city || (transitToCoords ? "" : "Jadran");
+  const transitDestCity = loadDelta().destination?.city || "";
 
   // Nearby city name for display
   const kioskCity = nearbyData?.location?.city || transitDestCity || "Jadran";
