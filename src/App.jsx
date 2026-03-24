@@ -1656,7 +1656,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   // ─── GPS → Nearby: detect location and fetch nearby POIs ───
   useEffect(() => {
     if (phase !== "kiosk") return;
-    if (nearbyData) { setKioskWelcome(false); return; } // data ready, dismiss welcome
+    if (nearbyData) return; // already fetched
 
     const fetchNearby = (lat, lng) => {
       setKioskCoords([lat, lng]);
@@ -1664,41 +1664,37 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       fetch(`/api/nearby?lat=${lat}&lng=${lng}&cats=parking,food,shop,beach,pharmacy,bakery,culture,fuel&limit=5&lang=${lang}`)
         .then(r => r.json())
         .then(data => {
-          // Even on API error, set data so UI renders (empty but not null)
-          setNearbyData(data.error ? { location: { city: loadDelta().destination?.city || "Jadran" }, categories: {} } : data);
-          setNearbyLoading(false); setKioskWelcome(false);
+          setNearbyData(data.error ? { location: { city: transitDestCity || "Jadran" }, categories: {} } : data);
+          setNearbyLoading(false);
+          // DON'T auto-dismiss welcome — user clicks "Explore" button
         })
         .catch(() => {
-          // Network failure — set empty data so kiosk still works
-          setNearbyData({ location: { city: loadDelta().destination?.city || "Jadran" }, categories: {} });
-          setNearbyLoading(false); setKioskWelcome(false);
+          setNearbyData({ location: { city: transitDestCity || "Jadran" }, categories: {} });
+          setNearbyLoading(false);
         });
     };
 
-    // Try GPS first
+    // Priority: GPS (actual location) → transitToCoords (route destination) → delta → Split
+    const delta = loadDelta();
+    const fallbackLat = transitToCoords?.[0] || delta.destination?.lat || 43.508;
+    const fallbackLng = transitToCoords?.[1] || delta.destination?.lng || 16.440;
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => fetchNearby(pos.coords.latitude, pos.coords.longitude),
-        () => {
-          // GPS denied — fallback to transit destination or delta
-          const delta = loadDelta();
-          const dLat = delta.destination?.lat || transitToCoords?.[0];
-          const dLng = delta.destination?.lng || transitToCoords?.[1];
-          if (dLat && dLng) fetchNearby(dLat, dLng);
-          else fetchNearby(43.508, 16.440); // Split fallback
-        },
+        () => fetchNearby(fallbackLat, fallbackLng),
         { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
       );
     } else {
-      const delta = loadDelta();
-      const dLat = delta.destination?.lat || 43.508;
-      const dLng = delta.destination?.lng || 16.440;
-      fetchNearby(dLat, dLng);
+      fetchNearby(fallbackLat, fallbackLng);
     }
   }, [phase]); // eslint-disable-line
 
+  // Transit destination city — for welcome screen and fallbacks
+  const transitDestCity = loadDelta().destination?.city || (transitToCoords ? "" : "Jadran");
+
   // Nearby city name for display
-  const kioskCity = nearbyData?.location?.city || loadDelta().destination?.city || "Jadran";
+  const kioskCity = nearbyData?.location?.city || transitDestCity || "Jadran";
 
   const KioskHome = () => {
     const greetKey = hour < 6 ? "night" : hour < 12 ? "morning" : hour < 18 ? "midday" : hour < 22 ? "evening" : "night";
@@ -2153,26 +2149,28 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   const Kiosk = () => {
     // ── Welcome/Transition screen ──
     if (kioskWelcome) {
-      const destCity = nearbyData?.location?.city || loadDelta().destination?.city || "Jadran";
       const welcomeTexts = {
-        hr: ["Stigli ste!", `Dobrodošli u ${destCity}`, "Tražim lokacije u blizini..."],
-        de: ["Angekommen!", `Willkommen in ${destCity}`, "Suche Orte in der Nähe..."],
-        en: ["You've arrived!", `Welcome to ${destCity}`, "Finding places nearby..."],
-        it: ["Siete arrivati!", `Benvenuti a ${destCity}`, "Cerco luoghi vicini..."],
-        si: ["Prispeli ste!", `Dobrodošli v ${destCity}`, "Iščem bližnje lokacije..."],
-        cz: ["Dorazili jste!", `Vítejte v ${destCity}`, "Hledám místa poblíž..."],
-        pl: ["Dotarliście!", `Witamy w ${destCity}`, "Szukam miejsc w pobliżu..."],
+        hr: ["Stigli ste!", `Dobrodošli u ${kioskCity}`, nearbyData ? null : "Tražim lokacije u blizini..."],
+        de: ["Angekommen!", `Willkommen in ${kioskCity}`, nearbyData ? null : "Suche Orte in der Nähe..."],
+        en: ["You've arrived!", `Welcome to ${kioskCity}`, nearbyData ? null : "Finding places nearby..."],
+        it: ["Siete arrivati!", `Benvenuti a ${kioskCity}`, nearbyData ? null : "Cerco luoghi vicini..."],
+        si: ["Prispeli ste!", `Dobrodošli v ${kioskCity}`, nearbyData ? null : "Iščem bližnje lokacije..."],
+        cz: ["Dorazili jste!", `Vítejte v ${kioskCity}`, nearbyData ? null : "Hledám místa poblíž..."],
+        pl: ["Dotarliście!", `Witamy w ${kioskCity}`, nearbyData ? null : "Szukam miejsc w pobliżu..."],
       };
       const wt = welcomeTexts[lang] || welcomeTexts[lang === "at" ? "de" : "hr"];
+      const nearbyCount = nearbyData ? Object.values(nearbyData.categories || {}).reduce((sum, arr) => sum + (arr?.length || 0), 0) : 0;
       return (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", textAlign: "center", animation: "fadeIn 0.6s both" }}>
           <div style={{ fontSize: 72, marginBottom: 16, animation: "pulse-glow 2s ease infinite" }}>⚓</div>
           <div style={{ ...dm, fontSize: 14, color: C.accent, letterSpacing: 3, textTransform: "uppercase", marginBottom: 8 }}>{wt[0]}</div>
           <div style={{ ...hf, fontSize: 36, fontWeight: 400, color: C.text, marginBottom: 8 }}>{wt[1]}</div>
-          <div style={{ ...dm, fontSize: 13, color: C.mut, display: "flex", alignItems: "center", gap: 8, marginBottom: 32 }}>
-            <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: C.accent, animation: "pulse 1.5s infinite" }} />
-            {wt[2]}
-          </div>
+          {wt[2] && (
+            <div style={{ ...dm, fontSize: 13, color: C.mut, display: "flex", alignItems: "center", gap: 8, marginBottom: 32 }}>
+              <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: C.accent, animation: "pulse 1.5s infinite" }} />
+              {wt[2]}
+            </div>
+          )}
           <div style={{ display: "flex", gap: 20, flexWrap: "wrap", justifyContent: "center" }}>
             {["🅿️","🛒","🏖️","☕"].map((emoji, i) => (
               <div key={i} style={{ width: 56, height: 56, borderRadius: 16, background: C.card, border: `1px solid ${C.bord}`, display: "grid", placeItems: "center", fontSize: 24, animation: `fadeUp 0.4s ease ${i * 0.1}s both` }}>
@@ -2180,10 +2178,15 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               </div>
             ))}
           </div>
-          {nearbyData && (
-            <Btn primary onClick={() => setKioskWelcome(false)} style={{ marginTop: 32, animation: "fadeUp 0.5s ease 0.5s both" }}>
-              {({hr:"Istraži",de:"Entdecken",en:"Explore",it:"Esplora",si:"Razišči",cz:"Prozkoumej",pl:"Odkrywaj"})[lang] || "Istraži"} {destCity} →
+          {nearbyData ? (
+            <Btn primary onClick={() => setKioskWelcome(false)} style={{ marginTop: 32, animation: "fadeUp 0.5s ease 0.3s both" }}>
+              {({hr:"Istraži",de:"Entdecken",en:"Explore",it:"Esplora",si:"Razišči",cz:"Prozkoumej",pl:"Odkrywaj"})[lang] || "Istraži"} {kioskCity} → {nearbyCount > 0 ? `(${nearbyCount})` : ""}
             </Btn>
+          ) : (
+            <div style={{ ...dm, fontSize: 12, color: C.mut, marginTop: 32 }}>
+              <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: "pulse 1s infinite", marginRight: 6 }} />
+              {({hr:"Učitavam...",de:"Laden...",en:"Loading...",it:"Caricamento...",si:"Nalagam...",cz:"Načítám...",pl:"Ładuję..."})[lang] || "..."}
+            </div>
           )}
         </div>
       );
