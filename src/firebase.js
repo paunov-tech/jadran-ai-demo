@@ -4,17 +4,17 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FB_API_KEY,
-  authDomain: import.meta.env.VITE_FB_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FB_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FB_STORAGE,
-  messagingSenderId: import.meta.env.VITE_FB_MSG_ID,
-  appId: import.meta.env.VITE_FB_APP_ID,
+  apiKey: import.meta.env.VITE_FB_API_KEY || "",
+  authDomain: import.meta.env.VITE_FB_AUTH_DOMAIN || "molty-portal.firebaseapp.com",
+  projectId: import.meta.env.VITE_FB_PROJECT_ID || "molty-portal",
+  storageBucket: import.meta.env.VITE_FB_STORAGE || "",
+  messagingSenderId: import.meta.env.VITE_FB_MSG_ID || "",
+  appId: import.meta.env.VITE_FB_APP_ID || "",
 };
 
-const hasConfig = !!(firebaseConfig.apiKey && firebaseConfig.projectId);
-const app = hasConfig ? initializeApp(firebaseConfig) : null;
-const db = hasConfig ? getFirestore(app) : null;
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const hasConfig = true; // Always true — hardcoded fallback
 
 
 

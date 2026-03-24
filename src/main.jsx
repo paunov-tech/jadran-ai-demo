@@ -10,8 +10,9 @@ const path = window.location.pathname;
 const hasRoom = new URLSearchParams(window.location.search).has("room");
 const isHost = path === "/host" || path === "/host/";
 const isAI = path === "/ai" || path === "/ai/";
+const isTZ = path === "/tz" || path === "/tz/";
 
-const route = isHost ? "host" : isAI ? "ai" : hasRoom ? "app" : "landing";
+const route = isHost ? "host" : isAI ? "ai" : isTZ ? "tz" : hasRoom ? "app" : "landing";
 
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null }; }
@@ -40,11 +41,12 @@ class ErrorBoundary extends React.Component {
 const App = React.lazy(() =>
   route === "host" ? import('./HostPanel.jsx')
   : route === "ai" ? import('./StandaloneAI.jsx')
+  : route === "tz" ? import('./TZDashboard.jsx')
   : route === "app" ? import('./App.jsx')
   : import('./LandingPage.jsx')
 );
 
-const labels = { host: "Host Panel", ai: "Vodič", app: "JADRAN", landing: "JADRAN" };
+const labels = { host: "Host Panel", ai: "Vodič", tz: "TZ Dashboard", app: "JADRAN", landing: "JADRAN" };
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

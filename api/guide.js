@@ -11,6 +11,17 @@ const CORS = ["https://jadran.ai","https://monte-negro.ai"];
 const CACHE = { data: null, ts: 0, key: "" };
 const CACHE_TTL = 180000; // 3 min
 
+// Rate limiting — max 60 guide calls per IP per hour
+const _guideRL = new Map();
+function guideRateOk(ip) {
+  const now = Date.now(), WIN = 3600000;
+  for (const [k, v] of _guideRL) { if (now > v.r) _guideRL.delete(k); }
+  const e = _guideRL.get(ip);
+  if (!e || now > e.r) { _guideRL.set(ip, { c: 1, r: now + WIN }); return true; }
+  if (e.c >= 60) return false;
+  e.c++; return true;
+}
+
 // ─── SEVERITY PRIORITY ───
 const SEV = { critical: 0, warning: 1, info: 2, tip: 3 };
 
@@ -332,6 +343,9 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "GET") return res.status(405).json({ error: "GET only" });
 
+  const clientIp = (req.headers["x-forwarded-for"] || "unknown").split(",")[0].trim();
+  if (!guideRateOk(clientIp)) return res.status(429).json({ error: "Rate limit exceeded" });
+
   const oLat = parseFloat(req.query?.oLat) || 48.2082;
   const oLng = parseFloat(req.query?.oLng) || 16.3738;
   const dLat = parseFloat(req.query?.dLat) || 43.5081;
@@ -370,7 +384,7 @@ export default async function handler(req, res) {
     const yoloData = yolo.status === "fulfilled" ? yolo.value : null;
     const weatherData = weather.status === "fulfilled" ? weather.value : null;
 
-    console.log(`guide.js: HERE=${trafficData.length} YOLO=${yoloData?.active||0} Wx=${!!weatherData}`);
+    console.warn(`guide.js: HERE=${trafficData.length} YOLO=${yoloData?.active||0} Wx=${!!weatherData}`);
 
     const cards = generateCards(trafficData, yoloData, weatherData, seg, lang);
 

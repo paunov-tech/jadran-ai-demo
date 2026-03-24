@@ -18,7 +18,7 @@ const CITY_COORDS = {
   "Praha":[50.0755,14.4378],"Kraków":[50.0647,19.9450],"Trieste":[45.6495,13.7768],
   "Zagreb":[45.8150,15.9819],
 };
-const HERE_ROUTING_KEY = import.meta.env.VITE_HERE_API_KEY;
+const HERE_ROUTING_KEY = import.meta.env.VITE_HERE_API_KEY || "";
 
 // ─── TransitMap: Real HERE Maps rendered inline via SDK (loaded in index.html) ───
 const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteReady, gpsPosition }) => {
@@ -41,11 +41,13 @@ const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteRea
     fetch(`https://router.hereapi.com/v8/routes?transportMode=${mode}&origin=${fromCoords[0]},${fromCoords[1]}&destination=${toCoords[0]},${toCoords[1]}&return=summary&apikey=${HERE_ROUTING_KEY}`)
       .then(r => r.json())
       .then(data => {
-        const s = data.routes?.[0]?.sections?.[0]?.summary;
-        if (s && onRouteReady) {
-          const totalMin = Math.round(s.duration / 60);
+        const sections = data.routes?.[0]?.sections;
+        if (sections?.length && onRouteReady) {
+          const totalLength = sections.reduce((sum, s) => sum + (s.summary?.length || 0), 0);
+          const totalDuration = sections.reduce((sum, s) => sum + (s.summary?.duration || 0), 0);
+          const totalMin = Math.round(totalDuration / 60);
           onRouteReady({
-            km: Math.round(s.length / 1000), hrs: Math.floor(totalMin / 60),
+            km: Math.round(totalLength / 1000), hrs: Math.floor(totalMin / 60),
             mins: totalMin % 60,
             oLat: fromCoords[0], oLng: fromCoords[1], dLat: toCoords[0], dLng: toCoords[1],
             mode: transportMode || "auto",
@@ -234,6 +236,7 @@ const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C, extraCa
               <div style={{ ...dm, fontSize: card.isAI ? 13 : 12, color: card.isAI ? C.text : C.mut, marginTop: 4, lineHeight: 1.6 }}>
                 {card.body}
               </div>
+              {card.ts && <div style={{ ...dm, fontSize: 9, color: "rgba(100,116,139,0.35)", marginTop: 4 }}>{(() => { const s = Math.floor((Date.now() - new Date(card.ts).getTime()) / 1000); return s < 60 ? "upravo" : s < 3600 ? `prije ${Math.floor(s/60)} min` : s < 86400 ? `prije ${Math.floor(s/3600)}h` : ""; })()}</div>}
             </div>
           ))}
         </div>
@@ -412,44 +415,9 @@ const t = (key, lang) => {
 };
 
 /* ─── GOOGLE MAPS COORDINATES ─── */
-const MAP_COORDS = {
-  // Parking
-  "villa_parking": { lat: 43.4892, lng: 16.5523, label: "Villa Marija Parking" },
-  "podstrana_centar": { lat: 43.4876, lng: 16.5498, label: "Podstrana Centar Parking" },
-  "garaza_lora": { lat: 43.5074, lng: 16.4316, label: "Garaža Lora Split" },
-  // Beaches
-  "plaza_podstrana": { lat: 43.4898, lng: 16.5536, label: "Plaža Podstrana" },
-  "kasjuni": { lat: 43.5075, lng: 16.4078, label: "Kašjuni Beach" },
-  "bacvice": { lat: 43.5020, lng: 16.4500, label: "Bačvice Beach" },
-  "zlatni_rat": { lat: 43.2561, lng: 16.6342, label: "Zlatni Rat, Bol" },
-  // Food
-  "konzum": { lat: 43.4880, lng: 16.5489, label: "Konzum Podstrana" },
-  "pekara_bobis": { lat: 43.4885, lng: 16.5501, label: "Pekara Bobis" },
-  // Routes
-  "split_centar": { lat: 43.5081, lng: 16.4402, label: "Split Centar" },
-  "trogir": { lat: 43.5170, lng: 16.2518, label: "Trogir" },
-  "omis": { lat: 43.4448, lng: 16.6881, label: "Omiš" },
-  "ferry_split": { lat: 43.5039, lng: 16.4419, label: "Ferry Terminal Split" },
-  // Emergency
-  "ljekarna": { lat: 43.4878, lng: 16.5495, label: "Ljekarna Podstrana" },
-  // Hidden Gems
-  "uvala_vruja": { lat: 43.3712, lng: 16.7893, label: "Uvala Vruja" },
-  "marjan_spilje": { lat: 43.5089, lng: 16.4168, label: "Marjan Špilje" },
-  "konoba_stari_mlin": { lat: 43.4901, lng: 16.5634, label: "Konoba Stari Mlin" },
-  "klis": { lat: 43.5583, lng: 16.5242, label: "Klis Fortress" },
-  "cetina_bazen": { lat: 43.4456, lng: 16.7012, label: "Cetina Secret Pool" },
-  "vidova_gora": { lat: 43.3151, lng: 16.6212, label: "Vidova Gora" },
-};
-
-const openGoogleMaps = (coordKey) => {
-  const c = MAP_COORDS[coordKey];
-  if (c) window.open(`https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}`, '_blank');
-};
-
-const getMapEmbed = (coordKey) => {
-  const c = MAP_COORDS[coordKey];
-  if (!c) return null;
-  return `https://www.google.com/maps?q=${c.lat},${c.lng}&z=15&output=embed`;
+// Navigation helper — opens Google Maps directions to any lat/lng
+const navigateTo = (lat, lng) => {
+  if (lat && lng) window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
 };
 
 
@@ -457,9 +425,9 @@ const getMapEmbed = (coordKey) => {
 const GUEST_FALLBACK = {
   name: "Gost", first: "Gost", country: "HR", lang: "hr", flag: "🇭🇷",
   adults: 2, kids: 0, kidsAges: [], interests: ["gastro", "adventure"],
-  arrival: "2026-07-12", departure: "2026-07-19", car: true, carPlate: "",
-  accommodation: "Apartman", host: "Domaćin", hostPhone: "+385 91 000 0000",
-  budget: 1200, spent: 0, email: ""
+  arrival: null, departure: null, car: true, carPlate: "",
+  accommodation: "Apartman", host: "", hostPhone: "",
+  budget: 0, spent: 0, email: ""
 };
 
 const W_DEFAULT = { icon: "☀️", temp: 28, sea: 24, uv: 7, wind: "Z 8 km/h", sunset: "20:30", humidity: 50 };
@@ -483,68 +451,48 @@ const FORECAST_DEFAULT = [
 ];
 
 const PRACTICAL = {
-  parking: { icon: "🅿️", tk: "parking", items: [
-    { n: "Parking ispred vile", d: "0m", note: {hr:"Vaše mjesto: #7",de:"Ihr Platz: #7",en:"Your spot: #7",it:"Il vostro posto: #7",si:"Vaše mesto: #7",cz:"Vaše místo: #7",pl:"Wasze miejsce: #7"}, free: true, mapKey: "villa_parking" },
-    { n: "Podstrana centar", d: "400m", note: {hr:"1€/h · SMS plaćanje",de:"1€/h · SMS-Zahlung",en:"1€/h · SMS payment",it:"1€/h · Pagamento SMS",si:"1€/h · SMS plačilo",cz:"1€/h · SMS platba",pl:"1€/h · Płatność SMS"}, price: "1€/h", mapKey: "podstrana_centar" },
-    { n: "Garaža Lora (Split)", d: "8km", note: {hr:"Natkrivena garaža, 24/7",de:"Überdachte Garage, 24/7",en:"Covered garage, 24/7",it:"Garage coperto, 24/7",si:"Pokrita garaža, 24/7",cz:"Krytá garáž, 24/7",pl:"Garaż kryty, 24/7"}, price: "10€/dan", mapKey: "garaza_lora" },
-  ]},
-  beach: { icon: "🏖️", tk: "beaches", items: [
-    { n: "Plaža Podstrana", d: "200m", note: {hr:"3 min pješice · Ležaljke 15€/dan",de:"3 Min zu Fuß · Liegen 15€/Tag",en:"3 min walk · Sunbeds 15€/day",it:"3 min a piedi · Lettini 15€/giorno",si:"3 min peš · Ležalniki 15€/dan",cz:"3 min pěšky · Lehátka 15€/den",pl:"3 min pieszo · Leżaki 15€/dzień"}, type: "🪨", mapKey: "plaza_podstrana" },
-    { n: "Kašjuni", d: "6km", note: {hr:"12 min autom · Parking 5€ · Najljepša!",de:"12 Min Fahrt · Parking 5€ · Die Schönste!",en:"12 min drive · Parking 5€ · Most beautiful!",it:"12 min in auto · Parcheggio 5€ · La più bella!",si:"12 min z avtom · Parking 5€ · Najlepša!",cz:"12 min autem · Parkování 5€ · Nejkrásnější!",pl:"12 min autem · Parking 5€ · Najpiękniejsza!"}, type: "🪨", mapKey: "kasjuni" },
-    { n: "Bačvice", d: "9km", note: {hr:"PIJESAK! Savršena za djecu · 15 min autom",de:"SAND! Perfekt für Kinder · 15 Min Fahrt",en:"SAND! Perfect for kids · 15 min drive",it:"SABBIA! Perfetta per bambini · 15 min in auto",si:"PESEK! Popolna za otroke · 15 min z avtom",cz:"PÍSEK! Perfektní pro děti · 15 min autem",pl:"PIASEK! Idealna dla dzieci · 15 min autem"}, type: "🏖️", mapKey: "bacvice" },
-    { n: "Zlatni Rat (Brač)", d: "Ferry", note: {hr:"Ikonska · Ferry 7:30, 9:30, 12:00",de:"Ikonisch · Fähre 7:30, 9:30, 12:00",en:"Iconic · Ferry 7:30, 9:30, 12:00",it:"Iconica · Traghetto 7:30, 9:30, 12:00",si:"Ikonska · Trajekt 7:30, 9:30, 12:00",cz:"Ikonická · Trajekt 7:30, 9:30, 12:00",pl:"Kultowa · Prom 7:30, 9:30, 12:00"}, type: "🏖️", affiliate: true, link: "jadrolinija.hr", mapKey: "zlatni_rat" },
-  ]},
+  // parking, beach, food, shop, bakery, pharmacy, culture, fuel — all served by /api/nearby
   sun: { icon: "☀️", tk: "sun", items: [
     { n: "UV Index", note: {hr:"SPF 50+ obavezno između 11-16h!",de:"SPF 50+ Pflicht zwischen 11-16 Uhr!",en:"SPF 50+ mandatory between 11am-4pm!",it:"SPF 50+ obbligatorio tra le 11-16!",si:"SPF 50+ obvezno med 11-16h!",cz:"SPF 50+ povinné mezi 11-16h!",pl:"SPF 50+ obowiązkowe między 11-16!"}, warn: true, uvDynamic: true },
-    { n: {hr:"Hidracija",de:"Hydration",en:"Hydration",it:"Idratazione",si:"Hidracija",cz:"Hydratace",pl:"Nawodnienie"}, note: {hr:"Min. 3L vode pri 31°C · Djeca češće!",de:"Min. 3L Wasser bei 31°C · Kinder öfter!",en:"Min. 3L water at 31°C · Kids more often!",it:"Min. 3L acqua a 31°C · Bambini più spesso!",si:"Min. 3L vode pri 31°C · Otroci pogosteje!",cz:"Min. 3L vody při 31°C · Děti častěji!",pl:"Min. 3L wody przy 31°C · Dzieci częściej!"} },
-    { n: {hr:"Ljekarna Podstrana",de:"Apotheke Podstrana",en:"Pharmacy Podstrana",it:"Farmacia Podstrana",si:"Lekarna Podstrana",cz:"Lékárna Podstrana",pl:"Apteka Podstrana"}, d: "300m", note: {hr:"Do 20h · SPF, After Sun, Panthenol",de:"Bis 20 Uhr · SPF, After Sun, Panthenol",en:"Until 8pm · SPF, After Sun, Panthenol",it:"Fino alle 20 · SPF, After Sun, Panthenol",si:"Do 20h · SPF, After Sun, Panthenol",cz:"Do 20h · SPF, After Sun, Panthenol",pl:"Do 20:00 · SPF, After Sun, Panthenol"} },
-  ]},
-  routes: { icon: "🗺️", tk: "routes", items: [
-    { n: "Split centar", d: "10km", note: {hr:"Auto 15min / Bus #60 svaki 20min (2€)",de:"Auto 15min / Bus #60 alle 20min (2€)",en:"Car 15min / Bus #60 every 20min (2€)",it:"Auto 15min / Bus #60 ogni 20min (2€)",si:"Avto 15min / Bus #60 vsakih 20min (2€)",cz:"Auto 15min / Bus #60 každých 20min (2€)",pl:"Auto 15min / Bus #60 co 20min (2€)"}, mapKey: "split_centar" },
-    { n: "Trogir", d: "30km", note: {hr:"Auto 25min · UNESCO · Prekrasan pogled!",de:"Auto 25min · UNESCO · Herrliche Aussicht!",en:"Car 25min · UNESCO · Beautiful view!",it:"Auto 25min · UNESCO · Vista bellissima!",si:"Avto 25min · UNESCO · Čudovit razgled!",cz:"Auto 25min · UNESCO · Krásný výhled!",pl:"Auto 25min · UNESCO · Piękny widok!"}, mapKey: "trogir" },
-    { n: "Omiš + Cetina", d: "15km", note: {hr:"Auto 18min · Rafting dostupan!",de:"Auto 18min · Rafting verfügbar!",en:"Car 18min · Rafting available!",it:"Auto 18min · Rafting disponibile!",si:"Avto 18min · Rafting na voljo!",cz:"Auto 18min · Rafting k dispozici!",pl:"Auto 18min · Rafting dostępny!"}, affiliate: true, mapKey: "omis" },
-    { n: "Ferry Brač/Hvar", note: {hr:"jadrolinija.hr · Online booking 20% jeftinije",de:"jadrolinija.hr · Online 20% günstiger",en:"jadrolinija.hr · Online booking 20% cheaper",it:"jadrolinija.hr · Prenotazione online 20% più economica",si:"jadrolinija.hr · Online 20% ceneje",cz:"jadrolinija.hr · Online 20% levněji",pl:"jadrolinija.hr · Online 20% taniej"}, affiliate: true, mapKey: "ferry_split" },
-  ]},
-  food: { icon: "🍽️", tk: "food", items: [
-    { n: "Konzum", d: "400m", note: {hr:"7-21h · Svježi kruh do 8h",de:"7-21 Uhr · Frisches Brot bis 8 Uhr",en:"7am-9pm · Fresh bread until 8am",it:"7-21 · Pane fresco fino alle 8",si:"7-21h · Svež kruh do 8h",cz:"7-21h · Čerstvý chléb do 8h",pl:"7-21 · Świeży chleb do 8"}, mapKey: "konzum" },
-    { n: "Pekara Bobis", d: "250m", note: {hr:"Od 6h! Burek, kroasani",de:"Ab 6 Uhr! Burek, Croissants",en:"From 6am! Burek, croissants",it:"Dalle 6! Burek, croissant",si:"Od 6h! Burek, rogljički",cz:"Od 6h! Burek, croissanty",pl:"Od 6! Burek, croissanty"}, mapKey: "pekara_bobis" },
-    { n: "Wolt / Glovo", note: {hr:"Dostava iz Splita do Podstrane",de:"Lieferung von Split nach Podstrana",en:"Delivery from Split to Podstrana",it:"Consegna da Spalato a Podstrana",si:"Dostava iz Splita do Podstrane",cz:"Doručení ze Splitu do Podstrany",pl:"Dostawa ze Splitu do Podstrany"} },
+    { n: {hr:"Hidracija",de:"Hydration",en:"Hydration",it:"Idratazione",si:"Hidracija",cz:"Hydratace",pl:"Nawodnienie"}, note: {hr:"Min. 3L vode dnevno · Djeca češće!",de:"Min. 3L Wasser täglich · Kinder öfter!",en:"Min. 3L water daily · Kids more often!",it:"Min. 3L acqua al giorno · Bambini più spesso!",si:"Min. 3L vode dnevno · Otroci pogosteje!",cz:"Min. 3L vody denně · Děti častěji!",pl:"Min. 3L wody dziennie · Dzieci częściej!"} },
+    { n: {hr:"Ljekarna",de:"Apotheke",en:"Pharmacy",it:"Farmacia",si:"Lekarna",cz:"Lékárna",pl:"Apteka"}, note: {hr:"Potražite najbližu u kategoriji 'Ljekarna'",de:"Suchen Sie die nächste unter 'Apotheke'",en:"Find nearest in 'Pharmacy' category",it:"Trova la più vicina in 'Farmacia'",si:"Poiščite najbližjo v kategoriji 'Lekarna'",cz:"Najděte nejbližší v kategorii 'Lékárna'",pl:"Znajdź najbliższą w kategorii 'Apteka'"} },
   ]},
   emergency: { icon: "🏥", tk: "emergency", items: [
-    { n: {hr:"Hitna pomoć",de:"Notruf",en:"Emergency",it:"Emergenza",si:"Nujna pomoč",cz:"Tísňové volání",pl:"Pogotowie"}, note: "112 / 194", warn: true },
-    { n: {hr:"Ljekarna",de:"Apotheke",en:"Pharmacy",it:"Farmacia",si:"Lekarna",cz:"Lékárna",pl:"Apteka"}, d: "300m", note: {hr:"Do 20h",de:"Bis 20 Uhr",en:"Until 8pm",it:"Fino alle 20",si:"Do 20h",cz:"Do 20h",pl:"Do 20:00"}, mapKey: "ljekarna" },
-    { n: "WiFi", note: "VillaMarija-5G · Lozinka/Password: jadran2026" },
-    { n: {hr:"Domaćin",de:"Gastgeber",en:"Host",it:"Padrone di casa",si:"Gostitelj",cz:"Hostitel",pl:"Gospodarz"}, note: `${GUEST_FALLBACK.host}: ${GUEST_FALLBACK.hostPhone} (WhatsApp)` },
+    { n: {hr:"Hitna pomoć",de:"Notruf",en:"Emergency",it:"Emergenza",si:"Nujna pomoč",cz:"Tísňové volání",pl:"Pogotowie"}, note: "112", warn: true },
+    { n: {hr:"Policija",de:"Polizei",en:"Police",it:"Polizia",si:"Policija",cz:"Policie",pl:"Policja"}, note: "192" },
+    { n: {hr:"Hitna medicinska",de:"Rettungsdienst",en:"Ambulance",it:"Ambulanza",si:"Reševalci",cz:"Záchranná služba",pl:"Pogotowie ratunkowe"}, note: "194" },
+    { n: {hr:"Obalna straža",de:"Küstenwache",en:"Coast Guard",it:"Guardia costiera",si:"Obalna straža",cz:"Pobřežní stráž",pl:"Straż przybrzeżna"}, note: "195" },
+    { n: {hr:"Vatrogasci",de:"Feuerwehr",en:"Fire Department",it:"Vigili del fuoco",si:"Gasilci",cz:"Hasiči",pl:"Straż pożarna"}, note: "193" },
   ]},
 };
 
 const GEMS = [
-  { name: "Uvala Vruja", emoji: "🏝️", mapKey: "uvala_vruja", premium: false,
+  { name: "Uvala Vruja", emoji: "🏝️", lat: 43.3712, lng: 16.7893, region: "split", premium: false,
     type: {hr:"Tajna plaža",de:"Geheimstrand",en:"Secret beach",it:"Spiaggia segreta",si:"Skrita plaža",cz:"Tajná pláž",pl:"Tajna plaża"},
     desc: {hr:"Između Omiša i Makarske, dostupna samo pješice. Kristalno more, potpuno divlja.",de:"Zwischen Omiš und Makarska, nur zu Fuß erreichbar. Kristallklares Meer, völlig wild.",en:"Between Omiš and Makarska, accessible only on foot. Crystal clear sea, completely wild.",it:"Tra Omiš e Makarska, raggiungibile solo a piedi. Mare cristallino, completamente selvaggia.",si:"Med Omišem in Makarsko, dostopna le peš. Kristalno morje, popolnoma divja.",cz:"Mezi Omišem a Makarskou, přístupná pouze pěšky. Křišťálové moře, zcela divoká.",pl:"Między Omišem a Makarską, dostępna tylko pieszo. Krystaliczne morze, całkowicie dzika."},
     tip: {hr:"Ponesite vode i cipele za hodanje! Nema sjene.",de:"Bringen Sie Wasser und Wanderschuhe mit! Kein Schatten.",en:"Bring water and walking shoes! No shade.",it:"Portate acqua e scarpe da trekking! Nessuna ombra.",si:"Vzemite vodo in pohodne čevlje! Ni sence.",cz:"Vezměte vodu a turistickou obuv! Žádný stín.",pl:"Weźcie wodę i buty do chodzenia! Brak cienia."},
     best: {hr:"Ujutro",de:"Morgens",en:"Morning",it:"Mattina",si:"Zjutraj",cz:"Ráno",pl:"Rano"}, diff: {hr:"Srednje",de:"Mittel",en:"Medium",it:"Medio",si:"Srednje",cz:"Střední",pl:"Średni"} },
-  { name: "Marjan špilje", emoji: "🕳️", mapKey: "marjan_spilje", premium: false,
+  { name: "Marjan špilje", emoji: "🕳️", lat: 43.5089, lng: 16.4168, region: "split", premium: false,
     type: {hr:"Šetnja",de:"Wanderung",en:"Walk",it:"Passeggiata",si:"Sprehod",cz:"Procházka",pl:"Spacer"},
     desc: {hr:"Starokršćanske špilje iz 5. st. na stazi od Kašjuna do vrha Marjana.",de:"Frühchristliche Höhlen aus dem 5. Jh. auf dem Weg von Kašjuni zum Marjan-Gipfel.",en:"Early Christian caves from the 5th century on the trail from Kašjuni to Marjan summit.",it:"Grotte paleocristiane del V secolo sul sentiero da Kašjuni alla cima del Marjan.",si:"Starokrščanske jame iz 5. st. na poti od Kašjunov do vrha Marjana.",cz:"Starokřesťanské jeskyně z 5. století na stezce z Kašjuni na vrchol Marjanu.",pl:"Wczesnochrześcijańskie jaskinie z V w. na szlaku z Kašjuni na szczyt Marjanu."},
     tip: {hr:"Krenite u 17h, stignete na vrh za zalazak sunca.",de:"Starten Sie um 17 Uhr, Gipfel zum Sonnenuntergang.",en:"Start at 5pm, reach the summit for sunset.",it:"Partite alle 17, arrivate in cima per il tramonto.",si:"Začnite ob 17h, na vrh za sončni zahod.",cz:"Vyražte v 17h, na vrchol k západu slunce.",pl:"Wyruszcie o 17, na szczyt o zachodzie słońca."},
     best: {hr:"Popodne",de:"Nachmittag",en:"Afternoon",it:"Pomeriggio",si:"Popoldne",cz:"Odpoledne",pl:"Popołudnie"}, diff: {hr:"Lagano",de:"Leicht",en:"Easy",it:"Facile",si:"Lahko",cz:"Snadné",pl:"Łatwe"} },
-  { name: "Konoba Stari Mlin", emoji: "🍷", mapKey: "konoba_stari_mlin", premium: true,
+  { name: "Konoba Stari Mlin", emoji: "🍷", lat: 43.4901, lng: 16.5634, region: "split", premium: true,
     type: {hr:"Lokalna tajna",de:"Lokales Geheimnis",en:"Local secret",it:"Segreto locale",si:"Lokalna skrivnost",cz:"Místní tajemství",pl:"Lokalny sekret"},
     desc: {hr:"Srinjine, 15min. Nema jelovnika — domaćin kuha što ima. Pršut, sir, vino iz podruma.",de:"Srinjine, 15 Min. Keine Speisekarte — der Wirt kocht, was da ist. Pršut, Käse, Wein aus dem Keller.",en:"Srinjine, 15min. No menu — the host cooks what's available. Pršut, cheese, wine from the cellar.",it:"Srinjine, 15min. Nessun menù — il padrone cucina ciò che c'è. Pršut, formaggio, vino dalla cantina.",si:"Srinjine, 15min. Ni jedilnika — gostilničar kuha, kar ima. Pršut, sir, vino iz kleti.",cz:"Srinjine, 15 min. Žádné menu — hostitel vaří, co má. Pršut, sýr, víno ze sklepa.",pl:"Srinjine, 15min. Brak menu — gospodarz gotuje co ma. Pršut, ser, wino z piwnicy."},
     tip: {hr:"Nazovite dan ranije. ~80€ za 4 osobe sa vinom.",de:"Rufen Sie einen Tag vorher an. ~80€ für 4 Personen mit Wein.",en:"Call a day ahead. ~80€ for 4 people with wine.",it:"Chiamate un giorno prima. ~80€ per 4 persone con vino.",si:"Pokličite dan prej. ~80€ za 4 osebe z vinom.",cz:"Zavolejte den předem. ~80€ pro 4 osoby s vínem.",pl:"Zadzwońcie dzień wcześniej. ~80€ za 4 osoby z winem."},
     best: {hr:"Večer",de:"Abend",en:"Evening",it:"Sera",si:"Večer",cz:"Večer",pl:"Wieczór"}, diff: {hr:"Auto",de:"Auto",en:"Car",it:"Auto",si:"Avto",cz:"Auto",pl:"Auto"} },
-  { name: "Klis", emoji: "🏰", mapKey: "klis", premium: true,
+  { name: "Klis", emoji: "🏰", lat: 43.5583, lng: 16.5242, region: "split", premium: true,
     type: {hr:"Iskustvo",de:"Erlebnis",en:"Experience",it:"Esperienza",si:"Doživetje",cz:"Zážitek",pl:"Doświadczenie"},
     desc: {hr:"Game of Thrones tvrđava u zoru. Nema turista. Pogled na Split i otoke.",de:"Game of Thrones Festung im Morgengrauen. Keine Touristen. Blick auf Split und die Inseln.",en:"Game of Thrones fortress at dawn. No tourists. View of Split and the islands.",it:"Fortezza di Game of Thrones all'alba. Nessun turista. Vista su Spalato e le isole.",si:"Game of Thrones trdnjava ob zori. Brez turistov. Pogled na Split in otoke.",cz:"Pevnost ze Hry o trůny za úsvitu. Žádní turisté. Výhled na Split a ostrovy.",pl:"Twierdza z Gry o Tron o świcie. Żadnych turystów. Widok na Split i wyspy."},
     tip: {hr:"Parking besplatan prije 8h. Dođite u 5:15.",de:"Parking kostenlos vor 8 Uhr. Kommen Sie um 5:15.",en:"Free parking before 8am. Arrive at 5:15.",it:"Parcheggio gratuito prima delle 8. Arrivate alle 5:15.",si:"Parking brezplačen pred 8h. Pridite ob 5:15.",cz:"Parkování zdarma před 8h. Přijeďte v 5:15.",pl:"Parking bezpłatny przed 8. Przyjedźcie o 5:15."},
     best: {hr:"Izlazak sunca",de:"Sonnenaufgang",en:"Sunrise",it:"Alba",si:"Sončni vzhod",cz:"Východ slunce",pl:"Wschód słońca"}, diff: {hr:"Lagano",de:"Leicht",en:"Easy",it:"Facile",si:"Lahko",cz:"Snadné",pl:"Łatwe"} },
-  { name: "Cetina", emoji: "🌊", mapKey: "cetina_bazen", premium: true,
+  { name: "Cetina", emoji: "🌊", lat: 43.4456, lng: 16.7012, region: "split", premium: true,
     type: {hr:"Kupanje",de:"Baden",en:"Swimming",it:"Nuoto",si:"Kopanje",cz:"Koupání",pl:"Kąpiel"},
     desc: {hr:"3km uzvodno od Omiša, makadamski put do skrivenog prirodnog bazena.",de:"3km flussaufwärts von Omiš, Schotterweg zum versteckten Naturbecken.",en:"3km upstream from Omiš, gravel road to a hidden natural pool.",it:"3km a monte da Omiš, strada sterrata verso una piscina naturale nascosta.",si:"3km gorvodno od Omiša, makadamska pot do skritega naravnega bazena.",cz:"3km proti proudu od Omiše, štěrková cesta ke skrytému přírodnímu bazénu.",pl:"3km w górę rzeki od Omisza, droga szutrowa do ukrytego naturalnego basenu."},
     tip: {hr:"Skrenite desno kod mosta u Omišu. Makadamski put 1km.",de:"Rechts abbiegen bei der Brücke in Omiš. Schotterweg 1km.",en:"Turn right at the bridge in Omiš. Gravel road 1km.",it:"Girate a destra al ponte di Omiš. Strada sterrata 1km.",si:"Zavijte desno pri mostu v Omišu. Makadamska pot 1km.",cz:"Odbočte vpravo u mostu v Omiši. Štěrková cesta 1km.",pl:"Skręćcie w prawo przy moście w Omiszu. Droga szutrowa 1km."},
     best: {hr:"Popodne",de:"Nachmittag",en:"Afternoon",it:"Pomeriggio",si:"Popoldne",cz:"Odpoledne",pl:"Popołudnie"}, diff: {hr:"Lagano",de:"Leicht",en:"Easy",it:"Facile",si:"Lahko",cz:"Snadné",pl:"Łatwe"} },
-  { name: "Vidova Gora", emoji: "🌄", mapKey: "vidova_gora", premium: true,
+  { name: "Vidova Gora", emoji: "🌄", lat: 43.3151, lng: 16.6212, region: "split", premium: true,
     type: {hr:"Pogled",de:"Aussicht",en:"Viewpoint",it:"Panorama",si:"Razgled",cz:"Vyhlídka",pl:"Punkt widokowy"},
     desc: {hr:"Najviši vrh jadranskih otoka (778m). Auto do vrha. Pogled na Hvar, Vis, Italiju.",de:"Höchster Gipfel der Adriainseln (778m). Auto bis zum Gipfel. Blick auf Hvar, Vis, Italien.",en:"Highest peak of the Adriatic islands (778m). Drive to the top. View of Hvar, Vis, Italy.",it:"Vetta più alta delle isole adriatiche (778m). Auto fino in cima. Vista su Hvar, Vis, Italia.",si:"Najvišji vrh jadranskih otokov (778m). Avto do vrha. Pogled na Hvar, Vis, Italijo.",cz:"Nejvyšší vrchol jadranských ostrovů (778m). Autem na vrchol. Výhled na Hvar, Vis, Itálii.",pl:"Najwyższy szczyt wysp adriatyckich (778m). Autem na szczyt. Widok na Hvar, Vis, Włochy."},
     tip: {hr:"Ferry 12h, auto 30min do vrha, zalazak, večera u Bolu.",de:"Fähre 12 Uhr, Auto 30 Min zum Gipfel, Sonnenuntergang, Abendessen in Bol.",en:"Ferry 12pm, car 30min to top, sunset, dinner in Bol.",it:"Traghetto 12, auto 30min in cima, tramonto, cena a Bol.",si:"Trajekt 12h, avto 30min do vrha, zahod, večerja v Bolu.",cz:"Trajekt 12h, auto 30min na vrchol, západ slunce, večeře v Bolu.",pl:"Prom 12, auto 30min na szczyt, zachód słońca, kolacja w Bolu."},
@@ -684,10 +632,14 @@ export default function JadranUnified() {
   const [payLoading, setPayLoading] = useState(false);
   const [onboardStep, setOnboardStep] = useState(0);
   const [interests, setInterests] = useState(new Set(["gastro", "adventure"]));
-  const [transitProg, setTransitProg] = useState(35);
   const [kioskDay, setKioskDay] = useState(3);
   const [simHour, setSimHour] = useState(null);
   const [selectedGem, setSelectedGem] = useState(null);
+  // Kiosk v2: location-aware nearby data
+  const [nearbyData, setNearbyData] = useState(null); // { location, categories }
+  const [nearbyLoading, setNearbyLoading] = useState(false);
+  const [kioskCoords, setKioskCoords] = useState(null); // [lat, lng] from GPS or fallback
+  const [kioskWelcome, setKioskWelcome] = useState(false); // transition screen
   const [selectedExp, setSelectedExp] = useState(null);
   const [booked, setBooked] = useState(new Set());
   // Viator activities
@@ -719,6 +671,12 @@ export default function JadranUnified() {
   const [transitFromCoords, setTransitFromCoords] = useState(null);
   const [transitToCoords, setTransitToCoords] = useState(null);
   const [transitRouteData, setTransitRouteData] = useState(null);
+  // Save real HERE road distance to delta → gpsEngine → pulse.js gets accurate km
+  useEffect(() => {
+    if (transitRouteData?.km) {
+      saveDelta({ route_km: transitRouteData.km, route_hrs: transitRouteData.hrs, route_mins: transitRouteData.mins });
+    }
+  }, [transitRouteData?.km]); // eslint-disable-line
   const SEG_ICON = { kamper:"🚐", porodica:"👨‍👩‍👧", par:"💑", jedrilicar:"⛵" };
 
   // ─── GPS LIVE ENGINE (starts on user action, not automatically) ───
@@ -736,7 +694,9 @@ export default function JadranUnified() {
       onCard: (card) => setGpsCards(prev => {
         const exists = prev.some(c => c.id === card.id);
         if (exists) return prev;
-        return [card, ...prev].slice(0, 20);
+        // Keep only the newest AI card — remove older AI pulse cards
+        const filtered = card.isAI ? prev.filter(c => !c.isAI) : prev;
+        return [card, ...filtered].slice(0, 20);
       }),
       onPosition: (pos) => setGpsPosition(pos),
       onPhase: (newPhase) => {
@@ -782,6 +742,13 @@ export default function JadranUnified() {
     setTransitFromUrl(from);
     setTransitToUrl(to);
     setTransitSegUrl(seg);
+    // Use coords from URL if available (passed from LandingPage autosuggest)
+    const fLat = parseFloat(p.get("fLat")), fLng = parseFloat(p.get("fLng"));
+    const tLat = parseFloat(p.get("tLat")), tLng = parseFloat(p.get("tLng"));
+    if (fLat && fLng) { setTransitFromCoords([fLat, fLng]); saveDelta({ from_coords: [fLat, fLng] }); }
+    if (tLat && tLng) { setTransitToCoords([tLat, tLng]); saveDelta({ destination: { city: to, lat: tLat, lng: tLng } }); }
+    const urlLang = p.get("lang");
+    if (urlLang) { setLang(urlLang); saveDelta({ lang: urlLang }); }
     setPhase("pre");
     setSubScreen("transit");
     setSplash(false);
@@ -918,6 +885,7 @@ export default function JadranUnified() {
   // Geocode transit cities to coordinates
   useEffect(() => {
     if (!mapFromCity) return;
+    if (transitFromCoords) return; // Already set from URL params — skip geocoding
     const c = CITY_COORDS[mapFromCity];
     if (c) { setTransitFromCoords(c); saveDelta({ from_coords: c }); return; }
     fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(mapFromCity + ", Europe")}&limit=1&apikey=${HERE_ROUTING_KEY}`)
@@ -932,6 +900,7 @@ export default function JadranUnified() {
   }, [mapFromCity]); // eslint-disable-line
   useEffect(() => {
     if (!mapToCity) return;
+    if (transitToCoords) return; // Already set from URL params — skip geocoding
     const c = CITY_COORDS[mapToCity];
     if (c) { setTransitToCoords(c); saveDelta({ destination: { city: mapToCity, lat: c[0], lng: c[1] } }); return; }
     fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(mapToCity + ", Croatia")}&limit=1&apikey=${HERE_ROUTING_KEY}`)
@@ -952,15 +921,17 @@ export default function JadranUnified() {
   // ─── WEATHER: Fetch real data via Gemini grounding ───
   const [weather, setWeather] = useState(W_DEFAULT);
   const [forecast, setForecast] = useState(null); // null = use FORECAST_DEFAULT
-  const [liveInfo, setLiveInfo] = useState({}); // live data per practical section
+
   useEffect(() => {
-    // Live weather + forecast via Open-Meteo (FREE, no quota)
-    fetch("/api/weather").then(r => r.json()).then(data => {
-      
+    // Live weather at destination (or fallback Split)
+    const delta = loadDelta();
+    const wLat = transitToCoords?.[0] || delta.destination?.lat || kioskCoords?.[0] || 43.508;
+    const wLng = transitToCoords?.[1] || delta.destination?.lng || kioskCoords?.[1] || 16.440;
+    fetch(`/api/weather?lat=${wLat}&lon=${wLng}`).then(r => r.json()).then(data => {
       if (data.current?.temp) setWeather(data.current);
       if (data.forecast?.length >= 5) setForecast(data.forecast);
     }).catch(() => {});
-  }, []);
+  }, [transitToCoords?.[0], kioskCoords?.[0]]); // eslint-disable-line
   // ─── ADMIN: Secret unlock DISABLED in production ───
   // To test premium: use Stripe test mode or set jadran_ai_premium in Firebase console
   // useEffect(() => { ... }, []);
@@ -1073,7 +1044,7 @@ export default function JadranUnified() {
     try {
       const res = await fetch("/api/viator-search", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ destination: "Podstrana" }),
+        body: JSON.stringify({ destination: loadDelta().destination?.city || "Split" }),
       });
       const data = await res.json();
       setViatorActs(Array.isArray(data.activities) && data.activities.length > 0 ? data.activities : VIATOR_FALLBACK);
@@ -1127,22 +1098,27 @@ export default function JadranUnified() {
     }
   }, [phase, subScreen]); // eslint-disable-line
 
-  // ─── ARRIVAL GEOFENCING: watch position, trigger at <10km to Podstrana ───
+  // ─── ARRIVAL GEOFENCING: watch position, trigger at <10km to destination ───
   useEffect(() => {
     if (phase !== "pre" || subScreen !== "transit") return;
     if (!("geolocation" in navigator)) return;
 
-    const DEST = { lat: 43.4892, lng: 16.5523 }; // Podstrana
+    // Use transit destination coords (dynamic, not hardcoded)
+    const delta = loadDelta();
+    const dLat = transitToCoords?.[0] || delta.destination?.lat;
+    const dLng = transitToCoords?.[1] || delta.destination?.lng;
+    if (!dLat || !dLng) return;
+
     const R = 6371;
     const distKm = (lat1, lng1, lat2, lng2) => {
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLng = (lng2 - lng1) * Math.PI / 180;
-      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+      const dl = (lat2 - lat1) * Math.PI / 180;
+      const dn = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dl / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dn / 2) ** 2;
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     };
 
     const onPos = (pos) => {
-      const km = distKm(pos.coords.latitude, pos.coords.longitude, DEST.lat, DEST.lng);
+      const km = distKm(pos.coords.latitude, pos.coords.longitude, dLat, dLng);
       if (km < 10 && !arrivalFiredRef.current) {
         arrivalFiredRef.current = true;
         setGeoArrival(true);
@@ -1175,6 +1151,7 @@ export default function JadranUnified() {
   useEffect(() => {
     if (arrivalCountdown === null) return;
     if (arrivalCountdown <= 0) {
+      setKioskWelcome(true); setNearbyData(null);
       setPhase("kiosk");
       setSubScreen("home");
       updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" });
@@ -1188,8 +1165,6 @@ export default function JadranUnified() {
   const timeCtx = hour < 6 ? "night" : hour < 12 ? "morning" : hour < 18 ? "midday" : hour < 22 ? "evening" : "night";
   const dateLocale = lang === "de" || lang === "at" ? "de-DE" : lang === "en" ? "en-GB" : lang === "it" ? "it-IT" : lang === "si" ? "sl-SI" : lang === "cz" ? "cs-CZ" : lang === "pl" ? "pl-PL" : "hr-HR";
   const isAdmin = new URLSearchParams(window.location.search).get("admin") === "sial";
-  const daysLeft = 7 - kioskDay + 1;
-  const budgetLeft = G.budget - G.spent;
 
   const tryPremium = (cb) => { if (premium) { cb(); } else { setShowPaywall(true); } };
 
@@ -1343,7 +1318,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         <span style={{ fontSize: 12, color: "#cbd5e1", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.title}</span>
         {critical.length > 1 && <span style={{ fontSize: 9, color, flexShrink: 0, fontWeight: 700 }}>+{critical.length - 1}</span>}
         <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${color}18`, color, fontWeight: 700, flexShrink: 0 }}>{a.severity === "critical" ? "LIVE" : "⚠️"}</span>
-        <button onClick={() => setDismissedAlerts(s => new Set([...s, a.title]))} style={{ background: "none", border: "none", color: "#475569", fontSize: 14, cursor: "pointer", padding: "0 2px", flexShrink: 0, lineHeight: 1 }}>×</button>
+        <button onClick={() => setDismissedAlerts(s => new Set([...s, a.title]))} style={{ background: "none", border: "none", color: "#475569", fontSize: 16, cursor: "pointer", padding: "8px", flexShrink: 0, lineHeight: 1, minWidth: 32 }}>×</button>
       </div>
     );
   };
@@ -1365,7 +1340,10 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           const done = i < idx;
           return (
             <div key={p.k} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, zIndex: 2, cursor: "pointer" }}
-              onClick={() => { setPhase(p.k); if (p.k === "pre") setSubScreen("onboard"); else if (p.k === "kiosk") setSubScreen("home"); else setSubScreen("summary"); }}>
+              onClick={() => { 
+                if (p.k === "kiosk" && phase !== "kiosk") { setKioskWelcome(true); setNearbyData(null); }
+                setPhase(p.k); if (p.k === "pre") setSubScreen("onboard"); else if (p.k === "kiosk") setSubScreen("home"); else setSubScreen("summary"); 
+              }}>
               <div style={{
                 width: active ? 48 : 36, height: active ? 48 : 36,
                 borderRadius: active ? 18 : 14,
@@ -1380,7 +1358,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                   : <Icon d={p.ic} size={active ? 22 : 18} color={active ? "#fff" : done ? C.accent : C.mut} stroke={active ? 2 : 1.5} />
                 }
               </div>
-              <div style={{ ...dm, fontSize: 10, letterSpacing: 2.5, textTransform: "uppercase", color: active ? C.text : done ? C.accent : C.mut, fontWeight: active ? 700 : done ? 500 : 400 }}>{p.l}</div>
+              <div className="phase-label" style={{ ...dm, fontSize: 10, letterSpacing: 2.5, textTransform: "uppercase", color: active ? C.text : done ? C.accent : C.mut, fontWeight: active ? 700 : done ? 500 : 400 }}>{p.l}</div>
             </div>
           );
         })}
@@ -1614,7 +1592,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               🚀 {lang === "de" || lang === "at" ? "Reise starten" : lang === "en" ? "Start trip" : lang === "it" ? "Inizia viaggio" : "Krećem na put"}
             </button>
           ) : (
-            <Btn primary onClick={() => { setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" }); }}>{t("arrived",lang)}</Btn>
+            <Btn primary onClick={() => { setKioskWelcome(true); setNearbyData(null); setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" }); }}>{t("arrived",lang)}</Btn>
           )}
         </div>
 
@@ -1661,7 +1639,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             <div style={{ width: 80, height: 80, borderRadius: "50%", border: `3px solid ${C.accent}`, display: "grid", placeItems: "center" }}>
               <span style={{ fontSize: 32, fontWeight: 300 }}>{arrivalCountdown}</span>
             </div>
-            <button onClick={() => { setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" }); setArrivalCountdown(null); }}
+            <button onClick={() => { setKioskWelcome(true); setNearbyData(null); setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" }); setArrivalCountdown(null); }}
               style={{ padding: "14px 32px", borderRadius: 14, border: "none", background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", ...dm }}>
               Uđi u Kiosk →
             </button>
@@ -1674,64 +1652,117 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   /* ══════════════════════════════
      PHASE 2: KIOSK (STAY)
      ══════════════════════════════ */
+
+  // ─── GPS → Nearby: detect location and fetch nearby POIs ───
+  useEffect(() => {
+    if (phase !== "kiosk") return;
+    if (nearbyData) { setKioskWelcome(false); return; } // data ready, dismiss welcome
+
+    const fetchNearby = (lat, lng) => {
+      setKioskCoords([lat, lng]);
+      setNearbyLoading(true);
+      fetch(`/api/nearby?lat=${lat}&lng=${lng}&cats=parking,food,shop,beach,pharmacy,bakery,culture,fuel&limit=5&lang=${lang}`)
+        .then(r => r.json())
+        .then(data => {
+          // Even on API error, set data so UI renders (empty but not null)
+          setNearbyData(data.error ? { location: { city: loadDelta().destination?.city || "Jadran" }, categories: {} } : data);
+          setNearbyLoading(false); setKioskWelcome(false);
+        })
+        .catch(() => {
+          // Network failure — set empty data so kiosk still works
+          setNearbyData({ location: { city: loadDelta().destination?.city || "Jadran" }, categories: {} });
+          setNearbyLoading(false); setKioskWelcome(false);
+        });
+    };
+
+    // Try GPS first
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => fetchNearby(pos.coords.latitude, pos.coords.longitude),
+        () => {
+          // GPS denied — fallback to transit destination or delta
+          const delta = loadDelta();
+          const dLat = delta.destination?.lat || transitToCoords?.[0];
+          const dLng = delta.destination?.lng || transitToCoords?.[1];
+          if (dLat && dLng) fetchNearby(dLat, dLng);
+          else fetchNearby(43.508, 16.440); // Split fallback
+        },
+        { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 }
+      );
+    } else {
+      const delta = loadDelta();
+      const dLat = delta.destination?.lat || 43.508;
+      const dLng = delta.destination?.lng || 16.440;
+      fetchNearby(dLat, dLng);
+    }
+  }, [phase]); // eslint-disable-line
+
+  // Nearby city name for display
+  const kioskCity = nearbyData?.location?.city || loadDelta().destination?.city || "Jadran";
+
   const KioskHome = () => {
     const greetKey = hour < 6 ? "night" : hour < 12 ? "morning" : hour < 18 ? "midday" : hour < 22 ? "evening" : "night";
     const greeting = t(greetKey, lang);
     const tipIcon = hour < 6 ? "🌙" : hour < 12 ? "☕" : hour < 18 ? "🏖️" : hour < 22 ? "🍷" : "🌙";
-    const tips = {
-      hr: hour < 6 ? "Sutra sunčano. Alarm za 8h. WiFi: VillaMarija-5G / jadran2026."
-        : hour < 12 ? "Savršeno za plažu Kašjuni — dođite prije 10h. Pekara Bobis (250m) ima burek od 6h!"
-        : hour < 18 ? `UV ${weather.uv} — tražite hlad do 16h! Dioklecijanova palača ili Konzum idealni.`
-        : hour < 22 ? `Zalazak sunca ${weather.sunset}. Konoba Stari Mlin (15min) — nazovite dan ranije!`
-        : "Laku noć. Sutra sunčano, more 25°C.",
-      de: hour < 6 ? "Morgen sonnig. Alarm für 8h empfohlen. WiFi: VillaMarija-5G / jadran2026."
-        : hour < 12 ? "Perfekt für Strand Kašjuni — vor 10h kommen. Pekara Bobis (250m) hat frischen Burek ab 6h!"
-        : hour < 18 ? `UV ${weather.uv} — Schatten suchen bis 16h! Dioklecijanova Palača oder Konzum ideal.`
-        : hour < 22 ? `Sonnenuntergang ${weather.sunset}. Konoba Stari Mlin (15min) — rufen Sie einen Tag vorher an!`
-        : "Gute Nacht. Morgen sonnig, Meer 25°C.",
-      en: hour < 6 ? "Tomorrow sunny. Set alarm for 8am. WiFi: VillaMarija-5G / jadran2026."
-        : hour < 12 ? "Perfect for Kašjuni beach — arrive before 10am. Pekara Bobis (250m) has fresh burek from 6am!"
-        : hour < 18 ? `UV ${weather.uv} — seek shade until 4pm! Diocletian's Palace or Konzum shopping ideal.`
-        : hour < 22 ? `Sunset at ${weather.sunset}. Konoba Stari Mlin (15min) — call a day ahead!`
-        : "Good night. Tomorrow sunny, sea 25°C.",
-      it: hour < 6 ? "Domani sole. Sveglia alle 8. WiFi: VillaMarija-5G / jadran2026."
-        : hour < 12 ? "Perfetto per spiaggia Kašjuni — arrivare prima delle 10. Pekara Bobis (250m) ha burek fresco dalle 6!"
-        : hour < 18 ? `UV ${weather.uv} — cercate ombra fino alle 16! Palazzo di Diocleziano o Konzum ideali.`
-        : hour < 22 ? `Tramonto ${weather.sunset}. Konoba Stari Mlin (15min) — chiamate un giorno prima!`
-        : "Buonanotte. Domani sole, mare 25°C.",
-    };
-    const tip = tips[lang] || tips[lang === "at" ? "de" : "hr"] || tips.hr;
 
-    // ─── Beach Status (crowd data from /api/camera) ───
-    const [crowdData, setCrowdData] = useState(null);
-    useEffect(() => {
-      const fetchCrowd = () => fetch("/api/camera").then(r => r.json()).then(setCrowdData).catch(() => {});
-      fetchCrowd();
-      const iv = setInterval(fetchCrowd, 600000); // 10 min
-      return () => clearInterval(iv);
-    }, []);
-    const CROWD_COLOR = { mirno: C.accent, "malo gužve": "#22c55e", "srednje gužve": C.gold, "jako gužva": C.red };
+    // Dynamic tip based on real nearby data
+    const buildTip = () => {
+      const nb = nearbyData?.categories || {};
+      const firstBakery = nb.bakery?.[0];
+      const firstBeach = nb.beach?.[0];
+      const firstFood = nb.food?.[0];
+      const firstShop = nb.shop?.[0];
+      const firstParking = nb.parking?.[0];
+      if (hour < 6) return `${weather.temp}°C. ${firstShop ? firstShop.name + ` (${firstShop.walkMin || "?"}min)` : kioskCity}.`;
+      if (hour < 12) {
+        const bakeryTip = firstBakery ? `${firstBakery.name} (${firstBakery.distance}m)` : "";
+        const beachTip = firstBeach ? `${firstBeach.name} — ${firstBeach.walkMin}min` : "";
+        return [bakeryTip, beachTip].filter(Boolean).join(". ") || `${kioskCity} — ${weather.temp}°C.`;
+      }
+      if (hour < 18) {
+        const uvWarn = weather.uv >= 8 ? "SPF50+! " : weather.uv >= 5 ? "SPF30. " : "";
+        const beachTip = firstBeach ? `${firstBeach.name} (${firstBeach.distance}m)` : "";
+        return `${uvWarn}${weather.temp}°C. ${beachTip}`;
+      }
+      if (hour < 22) {
+        const foodTip = firstFood ? `${firstFood.name} — ${firstFood.walkMin}min` : "";
+        return `${weather.sunset ? "🌅 " + weather.sunset + ". " : ""}${foodTip}`;
+      }
+      return `${weather.temp}°C. ${kioskCity}.`;
+    };
+    const tip = nearbyData ? buildTip() : "...";
+
+    // Dynamic nearby highlights bar
+    const nb = nearbyData?.categories || {};
+    const nearbyHighlights = [
+      nb.parking?.[0] && { icon: "🅿️", text: `${nb.parking[0].name} · ${nb.parking[0].distance}m` },
+      nb.beach?.[0] && { icon: "🏖️", text: `${nb.beach[0].name} · ${nb.beach[0].walkMin}min` },
+      nb.food?.[0] && { icon: "🍽️", text: `${nb.food[0].name} · ${nb.food[0].distance}m` },
+      nb.shop?.[0] && { icon: "🛒", text: `${nb.shop[0].name} · ${nb.shop[0].walkMin}min` },
+    ].filter(Boolean);
 
     return (
       <>
         <div style={{ padding: "20px 0 16px" }}>
           <div style={{ ...dm, fontSize: 12, color: C.mut, letterSpacing: 2, textTransform: "uppercase" }}>
-            {tipIcon} {new Date().toLocaleDateString(dateLocale, { weekday: "long", day: "numeric", month: "long" })} · {t("day",lang)} {kioskDay}/7
+            {tipIcon} {new Date().toLocaleDateString(dateLocale, { weekday: "long", day: "numeric", month: "long" })}
           </div>
           <div style={{ ...hf, fontSize: 36, fontWeight: 400, marginTop: 8, lineHeight: 1.2 }}>
             {greeting}, <span style={{ color: C.warm, fontStyle: "italic" }}>{G.first}</span>
           </div>
+          {nearbyData && <div style={{ ...dm, fontSize: 13, color: C.accent, marginTop: 4 }}>📍 {kioskCity}{nearbyData.location?.district ? ` · ${nearbyData.location.district}` : ""}</div>}
+          {nearbyLoading && <div style={{ ...dm, fontSize: 12, color: C.mut, marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}><span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: "pulse 1.5s infinite" }} /> {({hr:"Tražim lokacije u blizini...",de:"Suche Orte in der Nähe...",en:"Finding places nearby...",it:"Cerco luoghi vicini..."})[lang] || "Tražim lokacije..."}</div>}
         </div>
 
-        {/* Beach & Marina Status Bar */}
-        {crowdData && (
+        {/* Nearby highlights bar */}
+        {nearbyHighlights.length > 0 && (
           <div style={{ display: "flex", gap: 10, marginBottom: 14, padding: "10px 14px", borderRadius: 12, background: "rgba(14,165,233,0.04)", border: `1px solid ${C.bord}`, flexWrap: "wrap", alignItems: "center" }}>
-            <span style={{ fontSize: 13, color: CROWD_COLOR[crowdData.beach?.crowd] || C.mut, fontWeight: 600 }}>🏖 {crowdData.beach?.name}: {crowdData.beach?.crowd}</span>
-            <span style={{ width: 1, height: 14, background: C.bord }} />
-            <span style={{ ...dm, fontSize: 12, color: C.mut }}>🛥 {crowdData.marina?.boats} brodova u luci</span>
-            <span style={{ width: 1, height: 14, background: C.bord }} />
-            <span style={{ ...dm, fontSize: 12, color: C.mut }}>🅿️ {crowdData.parking?.free_spots} slobodnih mjesta</span>
-            <span style={{ ...dm, fontSize: 10, color: "rgba(100,116,139,0.4)", marginLeft: "auto" }}>ažurirano 10min</span>
+            {nearbyHighlights.map((h, i) => (
+              <React.Fragment key={i}>
+                {i > 0 && <span style={{ width: 1, height: 14, background: C.bord }} />}
+                <span style={{ ...dm, fontSize: 12, color: C.text }}>{h.icon} {h.text}</span>
+              </React.Fragment>
+            ))}
           </div>
         )}
 
@@ -1799,20 +1830,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             <div style={{ ...dm, fontSize: 10, color: C.gold, fontWeight: 700, letterSpacing: 2, marginBottom: 4 }}>{t("aiRec",lang)}</div>
             {premium ? <div style={{ ...dm, fontSize: 15, color: C.text, lineHeight: 1.7, fontWeight: 300 }}>{tip}</div> : <div style={{ ...dm, fontSize: 15, color: C.text, lineHeight: 1.7, fontWeight: 300, filter: "blur(6px)", userSelect: "none" }}>{tip}</div>}
             {!premium && <div style={{ ...dm, position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,22,40,0.3)", borderRadius: 22 }}><span style={{ background: C.goDim, padding: "8px 18px", borderRadius: 14, fontSize: 13, color: C.gold, fontWeight: 600, border: `1px solid rgba(245,158,11,0.15)` }}>⭐ Premium — 9.99€</span></div>}
-            {G.kids > 0 && hour >= 12 && hour < 18 && <div style={{ ...dm, fontSize: 13, color: C.accent, marginTop: 6 }}>👨‍👩‍👧‍👦 {({hr:"S djecom: Bačvice (pijesak, plitka voda) je savršena!",de:"Mit Kindern: Bačvice (Sand, flaches Wasser) ist perfekt!",en:"With kids: Bačvice (sand, shallow water) is perfect!",it:"Con bambini: Bačvice (sabbia, acqua bassa) è perfetta!",si:"Z otroki: Bačvice (pesek, plitva voda) je popolna!",cz:"S dětmi: Bačvice (písek, mělká voda) je perfektní!",pl:"Z dziećmi: Bačvice (piasek, płytka woda) jest idealna!"})[lang] || "S djecom: Bačvice (pijesak, plitka voda) je savršena!"}</div>}
           </div>
-        </Card>
-
-        {/* Budget — premium */}
-        <Card style={{ marginBottom: 20, padding: "14px 20px", position: "relative", overflow: "hidden", cursor: premium ? "default" : "pointer" }} onClick={() => !premium && setShowPaywall(true)}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div><span style={{ ...dm, fontSize: 11, color: C.mut }}>{t("budget",lang)} </span><span style={{ fontSize: 20, fontWeight: 300 }}>{G.spent}€</span><span style={{ ...dm, fontSize: 13, color: C.mut }}> / {G.budget}€</span></div>
-            <div style={{ ...dm, fontSize: 13, color: C.accent }}>{budgetLeft}€ {t("left",lang)} · ~{Math.round(budgetLeft / daysLeft)}{t("perDay",lang)}</div>
-          </div>
-          <div style={{ height: 5, borderRadius: 3, background: C.bord, overflow: "hidden", marginTop: 8 }}>
-            <div style={{ height: "100%", width: `${(G.spent / G.budget * 100)}%`, borderRadius: 3, background: `linear-gradient(90deg,${C.accent},${C.gold})` }} />
-          </div>
-          {!premium && <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,22,40,0.4)", borderRadius: 22, backdropFilter: "blur(4px)" }}><span style={{ ...dm, background: C.goDim, padding: "6px 14px", borderRadius: 12, fontSize: 12, color: C.gold, fontWeight: 600, border: `1px solid rgba(245,158,11,0.15)` }}>⭐ Premium</span></div>}
         </Card>
 
         {/* Quick tiles */}
@@ -1821,14 +1839,19 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           {[
             { k: "parking", ic: IC.parking, l: t("parking",lang), clr: C.accent, free: true },
             { k: "beach", ic: IC.beach, l: t("beaches",lang), clr: "#38bdf8", free: true },
-            { k: "sun", ic: IC.sun, l: t("sun",lang), clr: C.warm, free: false },
-            { k: "routes", ic: IC.map, l: t("routes",lang), clr: "#34d399", free: false },
-            { k: "food", ic: IC.food, l: t("food",lang), clr: C.terracotta, free: false },
+            { k: "food", ic: IC.food, l: ({hr:"Hrana",de:"Essen",en:"Food",it:"Cibo",si:"Hrana",cz:"Jídlo",pl:"Jedzenie"})[lang]||"Hrana", clr: C.terracotta, free: true },
+            { k: "shop", ic: IC.food, l: ({hr:"Dućan",de:"Laden",en:"Shop",it:"Negozio",si:"Trgovina",cz:"Obchod",pl:"Sklep"})[lang]||"Dućan", clr: "#34d399", free: true },
+            { k: "bakery", ic: IC.food, l: ({hr:"Pekara",de:"Bäckerei",en:"Bakery",it:"Panetteria",si:"Pekarna",cz:"Pekárna",pl:"Piekarnia"})[lang]||"Pekara", clr: C.warm, free: true },
+            { k: "pharmacy", ic: IC.medic, l: ({hr:"Ljekarna",de:"Apotheke",en:"Pharmacy",it:"Farmacia",si:"Lekarna",cz:"Lékárna",pl:"Apteka"})[lang]||"Ljekarna", clr: "#f472b6", free: true },
+            { k: "culture", ic: IC.gem, l: ({hr:"Kultura",de:"Kultur",en:"Culture",it:"Cultura",si:"Kultura",cz:"Kultura",pl:"Kultura"})[lang]||"Kultura", clr: C.gold, free: true },
+            { k: "fuel", ic: IC.map, l: ({hr:"Gorivo",de:"Tanken",en:"Fuel",it:"Carburante",si:"Gorivo",cz:"Palivo",pl:"Paliwo"})[lang]||"Gorivo", clr: "#94a3b8", free: true },
             { k: "emergency", ic: IC.medic, l: t("emergency",lang), clr: C.red, free: true },
             { k: "activities", ic: IC.ticket, l: t("activities",lang), clr: "#22c55e", free: true },
             { k: "gems", ic: IC.gem, l: t("gems",lang), clr: C.gold, free: false },
             { k: "chat", ic: IC.bot, l: t("aiGuide",lang), clr: "#a78bfa", free: false },
-          ].map(t => (
+          ].map(t => {
+            const count = nearbyData?.categories?.[t.k]?.length;
+            return (
             <div key={t.k} onClick={() => {
               if (!t.free && !premium) setShowPaywall(true);
               else setSubScreen(t.k);
@@ -1845,28 +1868,10 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                 <Icon d={t.ic} size={22} color={t.clr} stroke={1.6} />
               </div>
               <div style={{ ...dm, fontSize: 12, fontWeight: 500, color: C.text }}>{t.l}</div>
+              {count > 0 && <div style={{ position: "absolute", top: 6, left: 6, ...dm, fontSize: 9, color: C.accent, background: C.acDim, padding: "1px 6px", borderRadius: 8, fontWeight: 700, border: "1px solid rgba(14,165,233,0.15)" }}>{count}</div>}
               {!t.free && !premium && <div style={{ position: "absolute", top: 8, right: 8, ...dm, fontSize: 8, color: C.gold, background: C.goDim, padding: "2px 7px", borderRadius: 8, fontWeight: 600, letterSpacing: 0.5, border: `1px solid rgba(245,158,11,0.1)` }}>PRO</div>}
             </div>
-          ))}
-        </div>
-
-        {/* Experiences */}
-        <SectionLabel extra={t("book",lang)}>{t("activities",lang)}</SectionLabel>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 12, marginBottom: 24 }}>
-          {EXPERIENCES.map((exp, _expIdx) => (
-            <Card key={exp.id} style={{ padding: 0, overflow: "hidden", cursor: "pointer", opacity: booked.has(exp.id) ? 0.5 : 1, animation: `fadeUp 0.5s ease ${_expIdx * 0.08}s both` }}
-              onClick={() => !booked.has(exp.id) && setSelectedExp(exp)}>
-              <div style={{ height: 70, background: `linear-gradient(135deg,rgba(14,165,233,0.08),rgba(251,191,36,0.06),rgba(3,105,161,0.05))`, display: "grid", placeItems: "center", fontSize: 36, position: "relative", overflow: "hidden" }}><span className="emoji-float">{exp.emoji}</span></div>
-              <div style={{ padding: "12px 14px" }}>
-                <div style={{ fontSize: 15, fontWeight: 400, marginBottom: 4 }}>{exp.name}</div>
-                <div style={{ ...dm, display: "flex", justifyContent: "space-between", fontSize: 12, color: C.mut }}>
-                  <span>⏱{exp.dur} · ⭐{exp.rating} · 🎫{exp.spots}</span>
-                  <span style={{ color: C.accent, fontSize: 16, fontWeight: 300 }}>~{exp.price}€</span>
-                </div>
-                {booked.has(exp.id) && <Badge c="green">✓ {t("booked",lang)}</Badge>}
-              </div>
-            </Card>
-          ))}
+          );})}
         </div>
 
         {/* Extend Stay — Booking.com */}
@@ -1876,7 +1881,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               <div style={{ fontSize: 16, fontWeight: 400 }}>🏨 {t("extendStay",lang)}</div>
               <div style={{ ...dm, fontSize: 12, color: C.mut, marginTop: 2 }}>{t("bestDeals",lang)} — Booking.com</div>
             </div>
-            <a href={BKG("Split, Croatia", "&checkin=&checkout=&group_adults=2&no_rooms=1")} target="_blank" rel="noopener noreferrer"
+            <a href={BKG(`${kioskCity}, Croatia`, "&checkin=&checkout=&group_adults=2&no_rooms=1")} target="_blank" rel="noopener noreferrer"
               style={{ padding: "10px 18px", background: "linear-gradient(135deg,#003580,#0055A6)", borderRadius: 12, color: "#fff", fontSize: 13, fontFamily: "'Cormorant Garamond',Georgia,serif", fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap" }}>{t("browseOn",lang)}</a>
           </div>
         </Card>
@@ -1889,95 +1894,116 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
   };
 
   const KioskDetail = () => {
-    const data = PRACTICAL[subScreen];
-    if (!data) return null;
-    // Fetch live info for this section
-    const [liveItems, setLiveItems] = useState(null);
-    const [liveLoading, setLiveLoading] = useState(false);
-    useEffect(() => {
-      const prompts = {
-        parking: "List 5 parking options near Podstrana and Split Croatia with current prices 2025/2026. Include: 1) Free parking spots in Podstrana 2) Paid parking Podstrana center ~1€/h 3) Garaža Lora Split covered garage ~10€/day 4) Street parking Split Riva area 5) Park & Ride options. For each give name, price, distance from Podstrana, payment method (cash/card/SMS).",
-        beach: "List 6 beaches near Podstrana Split Croatia with current conditions. Include: 1) Plaža Podstrana 200m - pebble, sunbeds 2) Kašjuni 6km - pebble, most beautiful 3) Bačvice 9km - SAND family friendly 4) Žnjan 7km - long pebble beach 5) Stobreč 3km - sandy areas 6) Zlatni Rat Brač - iconic, ferry needed. For each: distance from Podstrana, type (sand/pebble), facilities, parking, current sea temperature ~23-25°C.",
-        food: "List 6 food options near Podstrana Split Croatia. Include: 1) Konzum supermarket Podstrana 400m open 7-21h 2) Pekara/Bakery Podstrana from 6am 3) Konoba Stari Mlin Srinjine 15min authentic 4) Wolt/Glovo delivery from Split 5) Ribarski restoran seafood 6) Lidl Split 8km budget. For each: name, distance, hours, specialty, price range.",
-        routes: "List 5 transport routes from Podstrana Croatia. Include: 1) Split center 10km - bus #60 every 20min 2€, car 15min 2) Trogir 30km UNESCO - car 25min 3) Omiš 15km + Cetina rafting - car 18min 4) Ferry Split-Brač/Hvar from Jadrolinija - schedule and prices 2025 5) Airport Kaštela 25km. For each: distance, transport options, time, price.",
-        sun: "Sun safety info for Split Croatia coast today. Include: 1) Current UV index and forecast 2) Recommended SPF level 3) Safe swimming hours 4) Sea water temperature 5) Nearest pharmacy in Podstrana 300m hours 8-20h 6) Hydration tips for 30°C+ heat. Give specific actionable advice.",
-        emergency: "Emergency info for Podstrana Split Croatia. Include: 1) Emergency number 112 2) Ambulance 194 3) Police 192 4) Coast guard 195 5) Nearest hospital KBC Split 10km 6) Pharmacy Podstrana 300m open until 20h 7) Tourist police Split. Give exact phone numbers.",
-      };
-      const prompt = prompts[subScreen];
-      if (!prompt) return;
-      const langName = {hr:"Croatian",de:"German",at:"German",en:"English",it:"Italian",si:"Slovenian",cz:"Czech",pl:"Polish"}[lang] || "Croatian";
-      const localizedPrompt = prompt + `\n\nRespond in ${langName} language.`;
-      setLiveLoading(true);
-      fetch("/api/gemini", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: localizedPrompt, mode: "practical" }),
-      }).then(r => r.json()).then(d => {
-        const rawText = d.text || "";
-        
-        try {
-          let raw = rawText;
-          raw = raw.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
-          const arrStart = raw.indexOf("[");
-          const arrEnd = raw.lastIndexOf("]");
-          if (arrStart >= 0 && arrEnd > arrStart) raw = raw.substring(arrStart, arrEnd + 1);
-          raw = raw.replace(/,\s*([}\]])/g, '$1'); // trailing commas
-          const items = JSON.parse(raw);
-          
-          if (Array.isArray(items) && items.length > 0 && items[0].name) setLiveItems(items);
-        } catch { /* fallback to static */ }
-        setLiveLoading(false);
-      }).catch(() => setLiveLoading(false));
-    }, [subScreen]);
+    const staticData = PRACTICAL[subScreen]; // fallback for sun, emergency, routes
+    const nearbyPlaces = nearbyData?.categories?.[subScreen] || [];
+    const hasNearby = nearbyPlaces.length > 0;
 
+    // Category display config
+    const CAT_DISPLAY = {
+      parking: { icon: "🅿️", tk: "parking" },
+      food: { icon: "🍽️", tk: "food" },
+      shop: { icon: "🛒", tk: "shop" },
+      beach: { icon: "🏖️", tk: "beaches" },
+      pharmacy: { icon: "💊", tk: "emergency" },
+      bakery: { icon: "🥐", tk: "food" },
+      culture: { icon: "🏛️", tk: "activities" },
+      fuel: { icon: "⛽", tk: "routes" },
+    };
+    const display = CAT_DISPLAY[subScreen] || (staticData ? { icon: staticData.icon, tk: staticData.tk } : { icon: "📍", tk: subScreen });
+
+    // For static categories (sun, emergency, routes), use old PRACTICAL
+    if (!hasNearby && staticData) {
+      return (
+        <>
+          <BackBtn onClick={() => setSubScreen("home")} />
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+            <span style={{ fontSize: 40 }}>{display.icon}</span>
+            <div style={{ fontSize: 28, fontWeight: 400 }}>{display.tk ? t(display.tk,lang) : subScreen}</div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {staticData.items.map((it, i) => (
+              <Card key={i} style={{ borderColor: it.warn ? "rgba(239,68,68,0.12)" : it.free ? "rgba(34,197,94,0.12)" : C.bord, display: "flex", gap: 14, alignItems: "flex-start" }}>
+                {it.warn && <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.red, marginTop: 8, flexShrink: 0 }} />}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 16, fontWeight: 400, marginBottom: 2 }}>{it.uvDynamic ? `UV ${weather.uv} (${weather.uv >= 8 ? "HIGH" : weather.uv >= 5 ? "MED" : "LOW"})` : typeof it.n === "object" ? (it.n[lang] || it.n.hr || "") : it.n}</div>
+                  <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.5 }}>
+                    {typeof it.note === "object" ? (it.note[lang] || it.note.hr || "") : it.note}
+                    {it.d && <span style={{ color: C.accent, marginLeft: 8 }}>{it.d}</span>}
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </>
+      );
+    }
+
+    // Dynamic nearby places from HERE
     return (
       <>
         <BackBtn onClick={() => setSubScreen("home")} />
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-          <span style={{ fontSize: 40 }}>{data.icon}</span>
-          <div style={{ fontSize: 28, fontWeight: 400 }}>{data.tk ? t(data.tk,lang) : data.title}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+          <span style={{ fontSize: 40 }}>{display.icon}</span>
+          <div>
+            <div style={{ fontSize: 28, fontWeight: 400 }}>{display.tk ? t(display.tk,lang) : subScreen}</div>
+            <div style={{ ...dm, fontSize: 12, color: C.mut }}>📍 {kioskCity} · {nearbyPlaces.length} {({hr:"rezultata",de:"Ergebnisse",en:"results",it:"risultati"})[lang] || "rezultata"}</div>
+          </div>
         </div>
-        {/* Live data from Gemini */}
-        {liveLoading && <Card style={{ marginBottom: 14, padding: "14px 20px", borderColor: "rgba(14,165,233,0.15)" }}>
+
+        {nearbyLoading && !hasNearby && <Card style={{ marginBottom: 14, padding: "14px 20px" }}>
           <div style={{ ...dm, display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: C.accent }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: "pulse 1.2s infinite" }} />
-            Ažuriranje podataka...
+            {({hr:"Tražim...",de:"Suche...",en:"Searching...",it:"Cerco..."})[lang] || "Tražim..."}
           </div>
         </Card>}
-        {liveItems && <Card warm style={{ marginBottom: 16, borderColor: "rgba(245,158,11,0.12)" }}>
-          <div style={{ ...dm, fontSize: 10, color: C.warm, letterSpacing: 2, fontWeight: 600, marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
-            <div style={{ width: 6, height: 6, borderRadius: "50%", background: C.green }} />
-            UŽIVO — {new Date().toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" })}
-          </div>
-          {liveItems.map((it, i) => (
-            <div key={i} style={{ padding: "8px 0", borderBottom: i < liveItems.length - 1 ? `1px solid ${C.bord}` : "none" }}>
-              <div style={{ fontSize: 14, fontWeight: 500 }}>{it.name}</div>
-              <div style={{ ...dm, fontSize: 12, color: C.mut, lineHeight: 1.5, marginTop: 2 }}>{it.note}</div>
-            </div>
-          ))}
-        </Card>}
-        {/* Static data (always shown as fallback) */}
+
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {data.items.map((it, i) => (
-            <Card key={i} style={{ borderColor: it.warn ? "rgba(239,68,68,0.12)" : it.free ? "rgba(34,197,94,0.12)" : C.bord, display: "flex", gap: 14, alignItems: "flex-start" }}>
-              {it.warn && <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.red, marginTop: 8, flexShrink: 0 }} />}
-              {it.free && <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.green, marginTop: 8, flexShrink: 0 }} />}
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 16, fontWeight: 400, marginBottom: 2 }}>{it.uvDynamic ? `UV ${weather.uv} (${weather.uv >= 8 ? "HIGH" : weather.uv >= 5 ? "MED" : "LOW"})` : typeof it.n === "object" ? (it.n[lang] || it.n.hr || "") : it.n}</div>
-                <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.5 }}>
-                  {typeof it.note === "object" ? (it.note[lang] || it.note.hr || "") : it.note}
-                  {it.d && <span style={{ color: C.accent, marginLeft: 8 }}>{it.d}</span>}
-                  {it.price && <span style={{ color: C.text, marginLeft: 8 }}>{it.price}</span>}
-                  {it.type && <span style={{ marginLeft: 8 }}>{it.type}</span>}
+          {nearbyPlaces.map((place, i) => (
+            <Card key={i} style={{ padding: "16px 20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 16, fontWeight: 500, marginBottom: 2 }}>{place.name}</div>
+                  {place.address && <div style={{ ...dm, fontSize: 12, color: C.mut }}>{place.street || place.district || place.address.split(",")[0]}</div>}
                 </div>
-                {it.affiliate && it.link && <a href={`https://${it.link}`} target="_blank" rel="noopener noreferrer" style={{ ...dm, display: "inline-block", marginTop: 6, padding: "4px 12px", background: C.goDim, borderRadius: 10, fontSize: 11, color: C.gold, textDecoration: "none", letterSpacing: 1 }}>🔗 {it.link}</a>}
-                {it.affiliate && !it.link && <Badge c="gold">PARTNER</Badge>}
-                {it.mapKey && <button onClick={(e) => { e.stopPropagation(); openGoogleMaps(it.mapKey); }}
-                  style={{...dm,marginTop:6,padding:"6px 14px",background:C.acDim,border:`1px solid rgba(14,165,233,0.15)`,borderRadius:10,color:C.accent,fontSize:12,cursor:"pointer",display:"inline-flex",alignItems:"center",gap:4}}>
-                  📍 {t("navigate",lang)}</button>}
+                <div style={{ textAlign: "right", flexShrink: 0, marginLeft: 12 }}>
+                  {place.distance != null && <div style={{ ...dm, fontSize: 14, fontWeight: 600, color: C.accent }}>{place.distance >= 1000 ? `${(place.distance/1000).toFixed(1)}km` : `${place.distance}m`}</div>}
+                  {place.walkMin && <div style={{ ...dm, fontSize: 10, color: C.mut }}>🚶 {place.walkMin}min</div>}
+                </div>
               </div>
+
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                {place.openNow !== null && (
+                  <span style={{ ...dm, fontSize: 11, padding: "2px 8px", borderRadius: 8, background: place.openNow ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", color: place.openNow ? "#22c55e" : "#ef4444", fontWeight: 600 }}>
+                    {place.openNow ? (({hr:"Otvoreno",de:"Geöffnet",en:"Open",it:"Aperto"})[lang]||"Otvoreno") : (({hr:"Zatvoreno",de:"Geschlossen",en:"Closed",it:"Chiuso"})[lang]||"Zatvoreno")}
+                  </span>
+                )}
+                {place.hours && <span style={{ ...dm, fontSize: 11, color: C.mut }}>{place.hours}</span>}
+                {place.phone && <a href={`tel:${place.phone}`} style={{ ...dm, fontSize: 11, color: C.accent, textDecoration: "none" }}>📞 {place.phone}</a>}
+                {place.categories?.[0] && <span style={{ ...dm, fontSize: 10, color: C.mut, padding: "1px 6px", borderRadius: 6, border: `1px solid ${C.bord}` }}>{place.categories[0]}</span>}
+              </div>
+
+              {/* Navigate button */}
+              {place.lat && place.lng && (
+                <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                  <button onClick={() => window.open(`https://wego.here.com/directions/walk/${kioskCoords?.[0]||""},${kioskCoords?.[1]||""}/${place.lat},${place.lng}`, "_blank")}
+                    style={{ ...dm, flex: 1, padding: "10px 14px", background: C.acDim, border: `1px solid rgba(14,165,233,0.15)`, borderRadius: 12, color: C.accent, fontSize: 13, cursor: "pointer", fontWeight: 600, textAlign: "center" }}>
+                    🚶 {({hr:"Pješice",de:"Zu Fuß",en:"Walk",it:"A piedi"})[lang]||"Pješice"}
+                  </button>
+                  <button onClick={() => window.open(`https://wego.here.com/directions/drive/${kioskCoords?.[0]||""},${kioskCoords?.[1]||""}/${place.lat},${place.lng}`, "_blank")}
+                    style={{ ...dm, flex: 1, padding: "10px 14px", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.15)", borderRadius: 12, color: C.gold, fontSize: 13, cursor: "pointer", fontWeight: 600, textAlign: "center" }}>
+                    🚗 {({hr:"Autom",de:"Mit Auto",en:"Drive",it:"In auto"})[lang]||"Autom"}
+                  </button>
+                </div>
+              )}
             </Card>
           ))}
         </div>
+
+        {!hasNearby && !nearbyLoading && (
+          <Card style={{ textAlign: "center", padding: "24px 20px" }}>
+            <div style={{ ...dm, fontSize: 14, color: C.mut }}>{({hr:"Nema rezultata u blizini",de:"Keine Ergebnisse in der Nähe",en:"No results nearby",it:"Nessun risultato vicino"})[lang] || "Nema rezultata"}</div>
+          </Card>
+        )}
       </>
     );
   };
@@ -2123,12 +2149,51 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
     );
   };
 
+  const NEARBY_CATS = ["parking","food","shop","beach","pharmacy","bakery","culture","fuel"];
   const Kiosk = () => {
+    // ── Welcome/Transition screen ──
+    if (kioskWelcome) {
+      const destCity = nearbyData?.location?.city || loadDelta().destination?.city || "Jadran";
+      const welcomeTexts = {
+        hr: ["Stigli ste!", `Dobrodošli u ${destCity}`, "Tražim lokacije u blizini..."],
+        de: ["Angekommen!", `Willkommen in ${destCity}`, "Suche Orte in der Nähe..."],
+        en: ["You've arrived!", `Welcome to ${destCity}`, "Finding places nearby..."],
+        it: ["Siete arrivati!", `Benvenuti a ${destCity}`, "Cerco luoghi vicini..."],
+        si: ["Prispeli ste!", `Dobrodošli v ${destCity}`, "Iščem bližnje lokacije..."],
+        cz: ["Dorazili jste!", `Vítejte v ${destCity}`, "Hledám místa poblíž..."],
+        pl: ["Dotarliście!", `Witamy w ${destCity}`, "Szukam miejsc w pobliżu..."],
+      };
+      const wt = welcomeTexts[lang] || welcomeTexts[lang === "at" ? "de" : "hr"];
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", textAlign: "center", animation: "fadeIn 0.6s both" }}>
+          <div style={{ fontSize: 72, marginBottom: 16, animation: "pulse-glow 2s ease infinite" }}>⚓</div>
+          <div style={{ ...dm, fontSize: 14, color: C.accent, letterSpacing: 3, textTransform: "uppercase", marginBottom: 8 }}>{wt[0]}</div>
+          <div style={{ ...hf, fontSize: 36, fontWeight: 400, color: C.text, marginBottom: 8 }}>{wt[1]}</div>
+          <div style={{ ...dm, fontSize: 13, color: C.mut, display: "flex", alignItems: "center", gap: 8, marginBottom: 32 }}>
+            <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: C.accent, animation: "pulse 1.5s infinite" }} />
+            {wt[2]}
+          </div>
+          <div style={{ display: "flex", gap: 20, flexWrap: "wrap", justifyContent: "center" }}>
+            {["🅿️","🛒","🏖️","☕"].map((emoji, i) => (
+              <div key={i} style={{ width: 56, height: 56, borderRadius: 16, background: C.card, border: `1px solid ${C.bord}`, display: "grid", placeItems: "center", fontSize: 24, animation: `fadeUp 0.4s ease ${i * 0.1}s both` }}>
+                {emoji}
+              </div>
+            ))}
+          </div>
+          {nearbyData && (
+            <Btn primary onClick={() => setKioskWelcome(false)} style={{ marginTop: 32, animation: "fadeUp 0.5s ease 0.5s both" }}>
+              {({hr:"Istraži",de:"Entdecken",en:"Explore",it:"Esplora",si:"Razišči",cz:"Prozkoumej",pl:"Odkrywaj"})[lang] || "Istraži"} {destCity} →
+            </Btn>
+          )}
+        </div>
+      );
+    }
+
     if (subScreen === "home") return <KioskHome />;
     if (subScreen === "activities") return <KioskActivities />;
     if (subScreen === "gems") return <KioskGems />;
     if (subScreen === "chat") return <KioskChat />;
-    if (PRACTICAL[subScreen]) return <KioskDetail />;
+    if (PRACTICAL[subScreen] || NEARBY_CATS.includes(subScreen)) return <KioskDetail />;
     return <KioskHome />;
   };
 
@@ -2141,7 +2206,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         <div style={{ fontSize: 60, marginBottom: 12 }} className="emoji-float">🌅</div>
         <div style={{ ...hf, fontSize: 34, fontWeight: 400 }}>{t("thanks",lang)}, <span style={{ color: C.warm, fontStyle: "italic" }}>{G.first}</span>!</div>
         <div style={{ ...dm, color: C.mut, fontSize: 15, marginTop: 8, lineHeight: 1.6 }}>
-          7 {t("daysStay",lang)} · {EXPERIENCES.filter(e => booked.has(e.id)).length + 2} {t("activitiesDone",lang)} · {G.spent}€ · {t("unforgettable",lang)}
+          {kioskCity} · {t("unforgettable",lang)}
         </div>
       </div>
 
@@ -2198,7 +2263,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             </a>
           ))}
         </div>
-        <a href={BKG("Split, Croatia")} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "14px 28px", background: "linear-gradient(135deg,#003580,#0055A6)", borderRadius: 14, color: "#fff", fontSize: 16, fontFamily: "'Cormorant Garamond',Georgia,serif", fontWeight: 600, textDecoration: "none", boxShadow: "0 4px 16px rgba(0,53,128,0.3)" }}>{t("browseOn",lang)}</a>
+        <a href={BKG(`${kioskCity}, Croatia`)} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "14px 28px", background: "linear-gradient(135deg,#003580,#0055A6)", borderRadius: 14, color: "#fff", fontSize: 16, fontFamily: "'Cormorant Garamond',Georgia,serif", fontWeight: 600, textDecoration: "none", boxShadow: "0 4px 16px rgba(0,53,128,0.3)" }}>{t("browseOn",lang)}</a>
       </Card>
 
       {/* Monetization breakdown (admin) */}
@@ -2489,6 +2554,10 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
           .lang-btn { padding: 10px 12px !important; min-width: 44px; min-height: 44px; }
           .route-bar { flex-wrap: wrap; gap: 8px; }
           .route-bar button { flex: 1; }
+          .phase-label { letter-spacing: 1px !important; font-size: 9px !important; }
+        }
+        @media (max-width: 375px) {
+          .phase-label { letter-spacing: 0.5px !important; font-size: 8px !important; }
         }
         @media (min-width: 768px) and (max-width: 1366px) and (hover: none) {
           button { min-height: 48px; }
@@ -2519,7 +2588,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
                   style={{...dm,padding:"5px 7px",background:C.acDim,border:`1px solid rgba(14,165,233,0.15)`,borderRadius:11,cursor:"pointer",fontSize:15,lineHeight:1}}
                   title="Jezik">{LANGS.find(l => l.code === lang)?.flag || "🇭🇷"}</button>
                 {langOpen && LANGS.filter(lg => lg.code !== lang).map(lg => (
-                  <button key={lg.code} onClick={() => { setLang(lg.code); setLangOpen(false); }} className="lang-btn"
+                  <button key={lg.code} onClick={() => { setLang(lg.code); saveDelta({ lang: lg.code }); setLangOpen(false); }} className="lang-btn"
                     style={{...dm,padding:"5px 7px",background:"transparent",border:"1px solid transparent",borderRadius:11,cursor:"pointer",fontSize:15,lineHeight:1,transition:"all 0.25s",animation:"fadeIn 0.2s both"}}
                     title={lg.name}>{lg.flag}</button>
                 ))}
@@ -2586,7 +2655,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               <div style={{ ...dm, fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: 1, marginBottom: 4 }}>💡 LOCALS TIP</div>
               <div style={{ ...dm, fontSize: 14, lineHeight: 1.6 }}>{typeof selectedGem.tip === "object" ? (selectedGem.tip[lang] || selectedGem.tip.hr) : selectedGem.tip}</div>
             </Card>
-            {selectedGem.mapKey && <button onClick={() => openGoogleMaps(selectedGem.mapKey)}
+            {selectedGem.lat && <button onClick={() => navigateTo(selectedGem.lat, selectedGem.lng)}
               style={{...dm,width:"100%",marginTop:12,padding:"14px",background:C.acDim,border:`1px solid rgba(14,165,233,0.15)`,borderRadius:14,color:C.accent,fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
               📍 {t("openMap",lang)}</button>}
             <Btn style={{ width: "100%", marginTop: 8 }} onClick={() => setSelectedGem(null)}>{t("back",lang)}</Btn>

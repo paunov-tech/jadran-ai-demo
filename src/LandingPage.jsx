@@ -93,8 +93,10 @@ export default function LandingPage() {
   // Unified entry flow
   const [selectedMode, setSelectedMode] = useState(null); // "auto"|"avion"|"kamper"|"odmor"
   const [depCity, setDepCity] = useState("");
+  const [depCoords, setDepCoords] = useState(null); // {lat, lng} from autosuggest
   const [routeStep, setRouteStep] = useState(null); // null | "city" | "map"
   const [toLPCity, setToLPCity] = useState(""); // destination city for new 2-input flow
+  const [toCoords, setToCoords] = useState(null); // {lat, lng} from autosuggest
   const [fromLPSugs, setFromLPSugs] = useState([]);
   const [toLPSugs, setToLPSugs] = useState([]);
   const fromTimerRef = useRef(null);
@@ -194,7 +196,8 @@ export default function LandingPage() {
   const goChat = () => { window.location.href = `/ai?niche=camper${dest ? "&dest=" + dest : ""}`; };
   const goRoom = () => { const c = roomInput.trim().toUpperCase(); if (c) window.location.href = `/?room=${encodeURIComponent(c)}`; };
 
-  const HERE_KEY = import.meta.env.VITE_HERE_API_KEY;
+  // HERE Maps API key (safe for client-side JS Maps API)
+  const HERE_KEY = import.meta.env.VITE_HERE_API_KEY || "";
   const DEST_LAT = 43.4892, DEST_LNG = 16.5523; // Podstrana
 
   const TRANSPORT_LABELS = {
@@ -431,7 +434,7 @@ export default function LandingPage() {
                         style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${depCity ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 15, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
                       {fromLPSugs.length > 0 && (
                         <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, marginTop: 4, zIndex: 50, overflow: "hidden" }}>
-                          {fromLPSugs.map(c => <div key={c.title} onMouseDown={() => { setDepCity(c.title); setFromLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c.title}</div>)}
+                          {fromLPSugs.map(c => <div key={c.title} onMouseDown={() => { setDepCity(c.title); setDepCoords({lat: c.lat, lng: c.lng}); setFromLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c.title}</div>)}
                         </div>
                       )}
                     </div>
@@ -444,7 +447,7 @@ export default function LandingPage() {
                         style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${toLPCity ? "rgba(249,115,22,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 15, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
                       {toLPSugs.length > 0 && (
                         <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, marginTop: 4, zIndex: 50, overflow: "hidden" }}>
-                          {toLPSugs.map(c => <div key={c.title} onMouseDown={() => { setToLPCity(c.title); setToLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c.title}</div>)}
+                          {toLPSugs.map(c => <div key={c.title} onMouseDown={() => { setToLPCity(c.title); setToCoords({lat: c.lat, lng: c.lng}); setToLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c.title}</div>)}
                         </div>
                       )}
                     </div>
@@ -453,8 +456,14 @@ export default function LandingPage() {
                       disabled={!depCity.trim() || !toLPCity.trim()}
                       onClick={() => {
                         const seg = selectedMode === "kamper" ? "kamper" : selectedMode === "avion" ? "jedrilicar" : "par";
-                        saveDelta({ segment: seg, transport: selectedMode, from: depCity.trim(), destination: { city: toLPCity.trim() }, phase: "transit" });
-                        window.location.href = `/?room=DEMO&go=transit&from=${encodeURIComponent(depCity.trim())}&to=${encodeURIComponent(toLPCity.trim())}&seg=${seg}`;
+                        const fromCoordArr = depCoords ? [depCoords.lat, depCoords.lng] : null;
+                        const dest = { city: toLPCity.trim() };
+                        if (toCoords) { dest.lat = toCoords.lat; dest.lng = toCoords.lng; }
+                        saveDelta({ segment: seg, transport: selectedMode, from: depCity.trim(), from_coords: fromCoordArr, destination: dest, lang, phase: "transit" });
+                        let url = `/?room=DEMO&go=transit&from=${encodeURIComponent(depCity.trim())}&to=${encodeURIComponent(toLPCity.trim())}&seg=${seg}&lang=${lang}`;
+                        if (depCoords) url += `&fLat=${depCoords.lat}&fLng=${depCoords.lng}`;
+                        if (toCoords) url += `&tLat=${toCoords.lat}&tLng=${toCoords.lng}`;
+                        window.location.href = url;
                       }}
                       style={{ width: "100%", padding: "14px 20px", borderRadius: 12, background: depCity.trim() && toLPCity.trim() ? "linear-gradient(135deg, #f97316, #ea580c)" : "rgba(255,255,255,0.06)", border: "none", color: depCity.trim() && toLPCity.trim() ? "#fff" : "#475569", fontSize: 15, fontWeight: 700, cursor: depCity.trim() && toLPCity.trim() ? "pointer" : "default", fontFamily: F, letterSpacing: 0.5, transition: "all 0.2s" }}>
                       Kreni sa mnom →
