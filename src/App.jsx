@@ -734,6 +734,8 @@ export default function JadranUnified() {
   useEffect(() => { const t = setTimeout(() => setSplash(false), 3800); return () => clearTimeout(t); }, []);
 
   // ─── URL transit handoff (?go=transit&from=Wien&to=Split&seg=kamper) ───
+  const urlFromSet = useRef(false); // blocks geocode race condition
+  const urlToSet = useRef(false);
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     if (p.get("go") !== "transit") return;
@@ -747,8 +749,8 @@ export default function JadranUnified() {
     // Use coords from URL if available (passed from LandingPage autosuggest)
     const fLat = parseFloat(p.get("fLat")), fLng = parseFloat(p.get("fLng"));
     const tLat = parseFloat(p.get("tLat")), tLng = parseFloat(p.get("tLng"));
-    if (fLat && fLng) { setTransitFromCoords([fLat, fLng]); saveDelta({ from_coords: [fLat, fLng] }); }
-    if (tLat && tLng) { setTransitToCoords([tLat, tLng]); saveDelta({ destination: { city: to, lat: tLat, lng: tLng } }); }
+    if (fLat && fLng) { setTransitFromCoords([fLat, fLng]); saveDelta({ from_coords: [fLat, fLng] }); urlFromSet.current = true; }
+    if (tLat && tLng) { setTransitToCoords([tLat, tLng]); saveDelta({ destination: { city: to, lat: tLat, lng: tLng } }); urlToSet.current = true; }
     const urlLang = p.get("lang");
     if (urlLang) { setLang(urlLang); saveDelta({ lang: urlLang }); }
     setPhase("pre");
@@ -887,7 +889,8 @@ export default function JadranUnified() {
   // Geocode transit cities to coordinates
   useEffect(() => {
     if (!mapFromCity) return;
-    if (transitFromCoords) return; // Already set from URL params — skip geocoding
+    if (transitFromCoords) return;
+    if (urlFromSet.current) return; // URL coords pending — don't race
     const c = CITY_COORDS[mapFromCity];
     if (c) { setTransitFromCoords(c); saveDelta({ from_coords: c }); return; }
     fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(mapFromCity + ", Europe")}&limit=1&apikey=${HERE_ROUTING_KEY}`)
@@ -902,7 +905,8 @@ export default function JadranUnified() {
   }, [mapFromCity]); // eslint-disable-line
   useEffect(() => {
     if (!mapToCity) return;
-    if (transitToCoords) return; // Already set from URL params — skip geocoding
+    if (transitToCoords) return;
+    if (urlToSet.current) return; // URL coords pending — don't race
     const c = CITY_COORDS[mapToCity];
     if (c) { setTransitToCoords(c); saveDelta({ destination: { city: mapToCity, lat: c[0], lng: c[1] } }); return; }
     fetch(`https://geocode.search.hereapi.com/v1/geocode?q=${encodeURIComponent(mapToCity + ", Croatia")}&limit=1&apikey=${HERE_ROUTING_KEY}`)
