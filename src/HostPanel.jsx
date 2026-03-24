@@ -240,11 +240,11 @@ export default function HostPanel() {
         </div>
         {[
           ["name", "Naziv apartmana *", "Villa Marija"],
-          ["address", "Adresa", "Podstrana, Put Svetog Martina 12"],
+          ["address", "Adresa", ""],
           ["hostName", "Ime domaćina", "Marija Perić"],
           ["hostPhone", "Telefon domaćina", "+385 91 555 1234"],
-          ["wifi", "WiFi mreža", "VillaMarija-5G"],
-          ["wifiPass", "WiFi lozinka", "jadran2026"],
+          ["wifi", "WiFi mreža", ""],
+          ["wifiPass", "WiFi lozinka", ""],
           ["notes", "Napomene", "Parking u dvorištu, klima u svim sobama"],
         ].map(([key, label, ph]) => (
           <div key={key} style={{ marginBottom: 14 }}>

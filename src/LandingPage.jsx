@@ -198,7 +198,10 @@ export default function LandingPage() {
 
   // HERE Maps API key (safe for client-side JS Maps API)
   const HERE_KEY = import.meta.env.VITE_HERE_API_KEY || "";
-  const DEST_LAT = 43.4892, DEST_LNG = 16.5523; // Podstrana
+
+  // Destination coords from autosuggest (or Split fallback)
+  const destLat = toCoords?.lat || 43.508;
+  const destLng = toCoords?.lng || 16.440;
 
   const TRANSPORT_LABELS = {
     hr: { auto: "🚗 Auto / Kombi", avion: "✈️ Avion / Jahta", kamper: "🚐 Kamper / Prikolica", odmor: "🏠 Već sam na odmoru" },
@@ -256,7 +259,7 @@ export default function LandingPage() {
 
       // 2. Calculate route
       const niche = selectedMode === "avion" ? "pedestrian" : selectedMode === "kamper" ? "truck" : "car";
-      const routeRes = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${niche}&origin=${oLat},${oLng}&destination=${DEST_LAT},${DEST_LNG}&return=polyline,summary,actions&apikey=${HERE_KEY}`);
+      const routeRes = await fetch(`https://router.hereapi.com/v8/routes?transportMode=${niche}&origin=${oLat},${oLng}&destination=${destLat},${destLng}&return=polyline,summary,actions&apikey=${HERE_KEY}`);
       const routeJson = await routeRes.json();
       const section = routeJson.routes?.[0]?.sections?.[0];
       if (!section) throw new Error("No route");
@@ -276,7 +279,7 @@ export default function LandingPage() {
     } finally {
       setRouteLoading(false);
     }
-  }, [selectedMode, loadHereMaps]);
+  }, [selectedMode, loadHereMaps, destLat, destLng]);
 
   // Render HERE map after routeData is set and mapRef is available
   useEffect(() => {
@@ -285,7 +288,7 @@ export default function LandingPage() {
     const platform = new window.H.service.Platform({ apikey: HERE_KEY });
     const defaultLayers = platform.createDefaultLayers();
     const map = new window.H.Map(mapRef.current, defaultLayers.vector.normal.map, {
-      zoom: 6, center: { lat: (routeData.oLat + DEST_LAT) / 2, lng: (routeData.oLng + DEST_LNG) / 2 },
+      zoom: 6, center: { lat: (routeData.oLat + destLat) / 2, lng: (routeData.oLng + destLng) / 2 },
     });
     hereMapRef.current = map;
     const behavior = new window.H.mapevents.Behavior(new window.H.mapevents.MapEvents(map));
@@ -306,7 +309,7 @@ export default function LandingPage() {
     const svgDest = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#22c55e"/><text x="12" y="16" text-anchor="middle" fill="white" font-size="12">⚓</text></svg>`;
     map.addObjects([
       new window.H.map.Marker({ lat: routeData.oLat, lng: routeData.oLng }, { icon: new window.H.map.Icon(svgOrigin) }),
-      new window.H.map.Marker({ lat: DEST_LAT, lng: DEST_LNG }, { icon: new window.H.map.Icon(svgDest) }),
+      new window.H.map.Marker({ lat: destLat, lng: destLng }, { icon: new window.H.map.Icon(svgDest) }),
     ]);
   }, [routeStep, routeData]);
 
