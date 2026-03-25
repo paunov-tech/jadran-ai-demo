@@ -15,7 +15,7 @@ const FALLBACK_ACTIVITIES = [
     price: 29, rating: 4.8, reviewCount: 1240,
     duration: "2h", category: "Kultura",
     images: ["https://images.unsplash.com/photo-1555990538-1e09e0e62c7e?w=400"],
-    bookingUrl: "https://www.viator.com/tours/Split/",
+    bookingUrl: "https://www.viator.com/tours/Split/?pid=P00292197&mcid=42383&medium=link",
   },
   {
     productCode: "LOCAL-002",
@@ -24,7 +24,7 @@ const FALLBACK_ACTIVITIES = [
     price: 79, rating: 4.9, reviewCount: 3580,
     duration: "8h", category: "Nautika",
     images: ["https://images.unsplash.com/photo-1552560552-4c7d7f7d0e8d?w=400"],
-    bookingUrl: "https://www.viator.com/tours/Split/",
+    bookingUrl: "https://www.viator.com/tours/Split/?pid=P00292197&mcid=42383&medium=link",
   },
   {
     productCode: "LOCAL-003",
@@ -33,7 +33,7 @@ const FALLBACK_ACTIVITIES = [
     price: 65, rating: 4.7, reviewCount: 890,
     duration: "9h", category: "Priroda",
     images: ["https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400"],
-    bookingUrl: "https://www.viator.com/tours/Split/",
+    bookingUrl: "https://www.viator.com/tours/Split/?pid=P00292197&mcid=42383&medium=link",
   },
   {
     productCode: "LOCAL-004",
@@ -42,7 +42,7 @@ const FALLBACK_ACTIVITIES = [
     price: 45, rating: 4.8, reviewCount: 650,
     duration: "3h", category: "Avantura",
     images: ["https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=400"],
-    bookingUrl: "https://www.viator.com/tours/Omis/",
+    bookingUrl: "https://www.viator.com/tours/Omis/?pid=P00292197&mcid=42383&medium=link",
   },
 ];
 

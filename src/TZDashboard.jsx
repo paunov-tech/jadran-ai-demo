@@ -555,7 +555,29 @@ export default function TZDashboard() {
                   ✅ Obavještenje poslano svim turistima u regiji {tzName}
                 </div>
               ) : (
-                <Btn danger onClick={() => { if (emergencyMsg.length > 10) setEmergencySent(true); else alert("Poruka prekratka"); }} style={{ width: "100%" }}>
+                <Btn danger onClick={async () => {
+                  if (emergencyMsg.length < 10) { alert("Poruka prekratka"); return; }
+                  // Write alert to Firestore (kiosk polls this)
+                  const alertId = `alert_${Date.now()}`;
+                  await firestoreWrite("jadran_alerts", alertId, {
+                    tz_id: tzId, message: emergencyMsg, type: "emergency",
+                    created: new Date().toISOString(), active: "true",
+                    expires: new Date(Date.now() + 24 * 3600000).toISOString(),
+                  });
+                  // Attempt push broadcast to all subscribed devices (best-effort)
+                  try {
+                    const subs = await firestoreRead("push_subscriptions");
+                    for (const sub of subs.slice(0, 50)) {
+                      if (sub.deviceId) {
+                        fetch("/api/push-send", {
+                          method: "POST", headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ deviceId: sub.deviceId, title: `🚨 ${tzName}`, body: emergencyMsg, tag: "emergency" }),
+                        }).catch(() => {});
+                      }
+                    }
+                  } catch {}
+                  setEmergencySent(true);
+                }} style={{ width: "100%" }}>
                   🚨 Pošalji hitno obavještenje
                 </Btn>
               )}

@@ -594,12 +594,12 @@ const BUNDLES = [
 const LOYALTY = { points: 345, tier: "Morski val", next: "Dalmatinac", nextPts: 500, code: "WEBER2026" };
 
 const VIATOR_FALLBACK = [
-  { productCode: "LOCAL-001", title: "Split – Dioklecijanova palača", description: "Razgledajte rimsku palaču iz 4. st. s lokalnim vodičem.", price: 29, rating: 4.8, reviewCount: 1240, duration: "2h", category: "Kultura", images: ["https://images.unsplash.com/photo-1555990538-1e09e0e62c7e?w=400"], bookingUrl: "https://www.viator.com/tours/Split/" },
-  { productCode: "LOCAL-002", title: "Plava špilja & 5 otoka (brzi brod)", description: "Posjetite Plavu špilju, Hvar, Brač i uvale Paklenih otoka.", price: 79, rating: 4.9, reviewCount: 3580, duration: "8h", category: "Nautika", images: ["https://images.unsplash.com/photo-1503756234508-e32369269dde?w=400"], bookingUrl: "https://www.viator.com/tours/Split/" },
-  { productCode: "LOCAL-003", title: "NP Krka – izlet s prijevozom", description: "Vodopadima Roski slap i Skradin Buk. Kupanje u rijeci Krki uključeno.", price: 65, rating: 4.7, reviewCount: 890, duration: "9h", category: "Priroda", images: ["https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400"], bookingUrl: "https://www.viator.com/tours/Split/" },
-  { productCode: "LOCAL-004", title: "Rafting na Cetini iz Omiša", description: "Adrenalinska avantura u kanjonu Cetine — 20 min od Podstrane. Oprema uključena.", price: 45, rating: 4.8, reviewCount: 650, duration: "3h", category: "Avantura", images: ["https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=400"], bookingUrl: "https://www.viator.com/tours/Omis/" },
-  { productCode: "LOCAL-005", title: "Hvar + Pakleni otoci (katamaranom)", description: "Cjelodnevni izlet do Hvara, Paklenih otoka i špilje Zelena — ručak uključen.", price: 89, rating: 4.8, reviewCount: 2100, duration: "10h", category: "Nautika", images: ["https://images.unsplash.com/photo-1534447677768-be436bb09401?w=400"], bookingUrl: "https://www.viator.com/tours/Split/" },
-  { productCode: "LOCAL-006", title: "Zalazak sunca na Bračkim stijenama", description: "Vožnja brodom do zlatnih stijena Brača uz čašu dalmatinskog vina.", price: 55, rating: 5.0, reviewCount: 420, duration: "2.5h", category: "Romantika", images: ["https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400"], bookingUrl: "https://www.viator.com/tours/Split/" },
+  { productCode: "LOCAL-001", title: "Split – Dioklecijanova palača", description: "Razgledajte rimsku palaču iz 4. st. s lokalnim vodičem.", price: 29, rating: 4.8, reviewCount: 1240, duration: "2h", category: "Kultura", images: ["https://images.unsplash.com/photo-1555990538-1e09e0e62c7e?w=400"], bookingUrl: "https://www.viator.com/tours/Split/?pid=P00292197&mcid=42383&medium=link" },
+  { productCode: "LOCAL-002", title: "Plava špilja & 5 otoka (brzi brod)", description: "Posjetite Plavu špilju, Hvar, Brač i uvale Paklenih otoka.", price: 79, rating: 4.9, reviewCount: 3580, duration: "8h", category: "Nautika", images: ["https://images.unsplash.com/photo-1503756234508-e32369269dde?w=400"], bookingUrl: "https://www.viator.com/tours/Split/?pid=P00292197&mcid=42383&medium=link" },
+  { productCode: "LOCAL-003", title: "NP Krka – izlet s prijevozom", description: "Vodopadima Roski slap i Skradin Buk. Kupanje u rijeci Krki uključeno.", price: 65, rating: 4.7, reviewCount: 890, duration: "9h", category: "Priroda", images: ["https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400"], bookingUrl: "https://www.viator.com/tours/Split/?pid=P00292197&mcid=42383&medium=link" },
+  { productCode: "LOCAL-004", title: "Rafting na Cetini iz Omiša", description: "Adrenalinska avantura u kanjonu Cetine — 20 min od Podstrane. Oprema uključena.", price: 45, rating: 4.8, reviewCount: 650, duration: "3h", category: "Avantura", images: ["https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=400"], bookingUrl: "https://www.viator.com/tours/Omis/?pid=P00292197&mcid=42383&medium=link" },
+  { productCode: "LOCAL-005", title: "Hvar + Pakleni otoci (katamaranom)", description: "Cjelodnevni izlet do Hvara, Paklenih otoka i špilje Zelena — ručak uključen.", price: 89, rating: 4.8, reviewCount: 2100, duration: "10h", category: "Nautika", images: ["https://images.unsplash.com/photo-1534447677768-be436bb09401?w=400"], bookingUrl: "https://www.viator.com/tours/Split/?pid=P00292197&mcid=42383&medium=link" },
+  { productCode: "LOCAL-006", title: "Zalazak sunca na Bračkim stijenama", description: "Vožnja brodom do zlatnih stijena Brača uz čašu dalmatinskog vina.", price: 55, rating: 5.0, reviewCount: 420, duration: "2.5h", category: "Romantika", images: ["https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400"], bookingUrl: "https://www.viator.com/tours/Split/?pid=P00292197&mcid=42383&medium=link" },
 ];
 
 const INTEREST_LABELS = {
@@ -653,6 +653,7 @@ export default function JadranUnified() {
   const [viatorActs, setViatorActs] = useState(null); // null=not loaded, array=loaded
   const [viatorLoading, setViatorLoading] = useState(false);
   const [selectedViatorAct, setSelectedViatorAct] = useState(null);
+  const [viatorImgIdx, setViatorImgIdx] = useState(0);
   const [viatorBookDate, setViatorBookDate] = useState(() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); });
   const [viatorPersons, setViatorPersons] = useState(2);
   const [viatorWishlist, setViatorWishlist] = useState(() => { try { return JSON.parse(localStorage.getItem("jadran_viator_wishlist") || "[]"); } catch { return []; } });
@@ -669,7 +670,14 @@ export default function JadranUnified() {
   const [chatLoading, setChatLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(null);
   const chatEnd = useRef(null);
-  const roomCode = useRef(getRoomCode());
+  // Guest key: roomCode from URL, or deviceId for standalone users
+  const roomCode = useRef((() => {
+    const rc = getRoomCode();
+    if (rc !== "DEMO") return rc;
+    let did = ""; try { did = localStorage.getItem("jadran_push_deviceId") || ""; } catch {}
+    if (!did) { did = `dev_${Date.now()}_${Math.random().toString(36).slice(2)}`; try { localStorage.setItem("jadran_push_deviceId", did); } catch {} }
+    return did;
+  })());
 
   // ─── TRANSIT HERE MAP ───
   const [transitFromUrl, setTransitFromUrl] = useState("");
@@ -825,7 +833,7 @@ export default function JadranUnified() {
   // ─── PERSISTENCE: Auto-save on key state changes ───
   useEffect(() => {
     if (!persistReady.current) return;
-    updateGuest(roomCode.current, { lang, phase, subScreen, premium, booked: [...booked] });
+    updateGuest(roomCode.current, { lang, phase, subScreen, premium, booked: [...booked], destination: kioskCity || transitDestCity, lastAccess: new Date().toISOString() });
   }, [lang, phase, subScreen, premium, booked]);
 
 
@@ -1193,12 +1201,20 @@ export default function JadranUnified() {
     setChatMsgs(p => [...p, { role: "user", text: msg }]);
     setChatLoading(true);
     try {
-      const sys = `Ti si lokalni turistički vodič za Podstranu i okolicu Splita (blizu Splita), Hrvatska.
-GOST: ${G.name}, ${G.country}, ${G.adults} odraslih + ${G.kids} djece (${G.kidsAges.join(',')} god). Interesi: ${G.interests.join(', ')}. ${G.car ? 'Ima auto.' : 'Nema auto.'}
-SMJEŠTAJ: ${G.accommodation}. Domaćin: ${G.host} (${G.hostPhone}).
-VRIJEME: ${weather.temp}°C ${weather.icon}, UV ${weather.uv}, more ${weather.sea}°C, zalazak ${weather.sunset}. Dan: ${kioskDay}/7.
-HIDDEN GEMS: ${GEMS.map(g => g.name).join(', ')}.
-Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang==="it"?"Italiano":lang==="si"?"Slovenščina":lang==="cz"?"Čeština":lang==="pl"?"Polski":"Hrvatski"}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i udaljenostima. Emoji.`;
+      const langName = ({hr:"Hrvatski",de:"Deutsch",at:"Österreichisches Deutsch",en:"English",it:"Italiano",si:"Slovenščina",cz:"Čeština",pl:"Polski"})[lang] || "Hrvatski";
+      const guestCtx = [
+        G.name !== "Gost" ? `GOST: ${G.name}` : "",
+        G.country ? `Zemlja: ${G.country}` : "",
+        G.adults ? `${G.adults} odraslih` : "",
+        G.kids > 0 ? `${G.kids} djece (${G.kidsAges.join(',')} god)` : "",
+        G.interests?.length ? `Interesi: ${G.interests.join(', ')}` : "",
+        G.car ? "Ima auto" : "",
+      ].filter(Boolean).join(". ");
+      const sys = `Ti si lokalni turistički vodič za ${kioskCity}, Hrvatska. Adriatic coast.
+${guestCtx ? guestCtx + "." : ""}
+VRIJEME: ${weather.temp}°C ${weather.icon}, UV ${weather.uv}, more ${weather.sea}°C, zalazak ${weather.sunset}.
+LOKACIJA: ${kioskCity}. Nearby: ${nearbyHighlights?.map(h => h.text).join(", ") || "loading..."}.
+Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i udaljenostima. Bez emoji.`;
       const res = await fetch("/api/chat", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ system: sys,
@@ -1666,7 +1682,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
               🚀 {lang === "de" || lang === "at" ? "Reise starten" : lang === "en" ? "Start trip" : lang === "it" ? "Inizia viaggio" : "Krećem na put"}
             </button>
           ) : (
-            <Btn primary onClick={() => { setKioskWelcome(true); setNearbyData(null); setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" }); }}>{t("arrived",lang)}</Btn>
+            <Btn primary onClick={() => { setKioskWelcome(true); setNearbyData(null); setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home", lang, destination: transitDestCity || kioskCity, segment: transitSegUrl || "auto", lastAccess: new Date().toISOString() }); }}>{t("arrived",lang)}</Btn>
           )}
         </div>
 
@@ -1782,6 +1798,33 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
     return () => clearInterval(iv);
   }, [phase, kioskCity]);
 
+  // ─── Emergency alerts from TZ Dashboard ───
+  const [emergencyAlert, setEmergencyAlert] = useState(null);
+  useEffect(() => {
+    if (phase !== "kiosk") return;
+    const FB_KEY = import.meta.env.VITE_FB_API_KEY;
+    if (!FB_KEY) return;
+    const checkAlerts = () => {
+      fetch(`https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_alerts?key=${FB_KEY}&pageSize=5&orderBy=created desc`)
+        .then(r => r.json())
+        .then(data => {
+          const docs = data.documents || [];
+          const active = docs.find(d => {
+            const f = d.fields || {};
+            return f.active?.stringValue === "true" && new Date(f.expires?.stringValue || 0) > new Date();
+          });
+          if (active) {
+            setEmergencyAlert(active.fields.message?.stringValue || null);
+          } else {
+            setEmergencyAlert(null);
+          }
+        }).catch(() => {});
+    };
+    checkAlerts();
+    const iv = setInterval(checkAlerts, 60000); // check every 1 min
+    return () => clearInterval(iv);
+  }, [phase]);
+
   const KioskHome = () => {
     const greetKey = hour < 6 ? "night" : hour < 12 ? "morning" : hour < 18 ? "midday" : hour < 22 ? "evening" : "night";
     const greeting = t(greetKey, lang);
@@ -1839,6 +1882,20 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
              : `📍 ${kioskCity}`}
           </div>
         </div>
+
+        {/* Emergency alert from TZ Dashboard */}
+        {emergencyAlert && (
+          <div style={{ padding: "14px 18px", borderRadius: 14, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", marginBottom: 14, display: "flex", alignItems: "flex-start", gap: 12 }}>
+            <span style={{ fontSize: 22, flexShrink: 0 }}>🚨</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ ...dm, fontSize: 11, color: C.red, fontWeight: 700, letterSpacing: 2, marginBottom: 4 }}>
+                {({hr:"HITNO UPOZORENJE",de:"NOTFALL-WARNUNG",en:"EMERGENCY ALERT",it:"AVVISO DI EMERGENZA",si:"NUJNO OPOZORILO",cz:"NOUZOVÉ VAROVÁNÍ",pl:"ALERT AWARYJNY"})[lang] || "HITNO UPOZORENJE"}
+              </div>
+              <div style={{ ...dm, fontSize: 14, color: C.text, lineHeight: 1.5 }}>{emergencyAlert}</div>
+            </div>
+            <button onClick={() => setEmergencyAlert(null)} style={{ background: "none", border: "none", color: C.mut, fontSize: 18, cursor: "pointer", padding: 4, flexShrink: 0 }}>✕</button>
+          </div>
+        )}
 
         {/* ═══ ADRIATIC PULSE — unified weather/sea/UV board ═══ */}
         <Card style={{ marginBottom: 14, padding: 0, overflow: "hidden", position: "relative" }}>
@@ -2180,7 +2237,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
             const img = act.images?.[0];
             return (
               <Card key={act.productCode} style={{ padding: 0, overflow: "hidden", cursor: "pointer", animation: `fadeUp 0.4s ease ${i * 0.06}s both` }}
-                onClick={() => { setSelectedViatorAct(act); setViatorPersons(G.adults || 2); }}>
+                onClick={() => { setSelectedViatorAct(act); setViatorPersons(G.adults || 2); setViatorImgIdx(0); }}>
                 {/* Image */}
                 <div style={{ height: 140, position: "relative", overflow: "hidden", background: "linear-gradient(135deg,rgba(14,165,233,0.1),rgba(34,197,94,0.08))" }}>
                   {img && <img src={img} alt={act.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />}
@@ -2782,7 +2839,8 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
       {selectedViatorAct && (() => {
         const act = selectedViatorAct;
         const IMGS = act.images?.length ? act.images : [];
-        const [imgIdx, setImgIdx] = React.useState(0);
+        const imgIdx = viatorImgIdx;
+        const setImgIdx = setViatorImgIdx;
         const totalPrice = act.price ? (act.price * viatorPersons).toFixed(2) : "—";
         return (
           <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(20px)", zIndex: 200, overflowY: "auto", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "24px 16px" }}
