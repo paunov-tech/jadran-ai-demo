@@ -70,7 +70,7 @@ const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteRea
   }, [fromCoords?.[0], toCoords?.[0]]); // eslint-disable-line
 
   const src = fromCoords && toCoords
-    ? `/map.html?flat=${fromCoords[0]}&flon=${fromCoords[1]}&tlat=${toCoords[0]}&tlon=${toCoords[1]}&key=${import.meta.env.VITE_HERE_API_KEY}`
+    ? `/map.html?flat=${fromCoords[0]}&flon=${fromCoords[1]}&tlat=${toCoords[0]}&tlon=${toCoords[1]}`
     : null;
 
   if (!src) return <div style={{ width: "100%", height: 300, background: "#0c1426", borderRadius: 14, display: "grid", placeItems: "center" }}><span style={{ fontSize: 13, color: "#64748b", fontFamily: "'DM Sans',sans-serif" }}>Učitavam mapu…</span></div>;
