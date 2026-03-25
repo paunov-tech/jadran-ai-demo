@@ -631,6 +631,10 @@ export default function JadranUnified() {
     try { return localStorage.getItem("jadran_ai_premium") === "1"; } catch { return false; }
   });
   const [showPaywall, setShowPaywall] = useState(false);
+  const [showRecovery, setShowRecovery] = useState(false);
+  const [recoveryEmail, setRecoveryEmail] = useState("");
+  const [recoveryStatus, setRecoveryStatus] = useState(null); // null | "loading" | "success" | "error" | "expired"
+  const [recoveryError, setRecoveryError] = useState("");
   const [payLoading, setPayLoading] = useState(false);
   const [onboardStep, setOnboardStep] = useState(0);
   const [interests, setInterests] = useState(new Set(["gastro", "adventure"]));
@@ -1384,7 +1388,7 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
 
   /* ─── PAYWALL ─── */
   const Paywall = () => (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(16px)", zIndex: 300, display: "grid", placeItems: "center", padding: 24 }} onClick={() => setShowPaywall(false)}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(16px)", zIndex: 300, display: "grid", placeItems: "center", padding: 24 }} onClick={() => { setShowPaywall(false); setShowRecovery(false); setRecoveryStatus(null); setRecoveryEmail(""); }}>
       <div onClick={e => e.stopPropagation()} className="overlay-enter glass" style={{ background: "rgba(12,28,50,0.92)", borderRadius: 28, maxWidth: 440, width: "100%", padding: "40px 32px", border: `1px solid rgba(251,191,36,0.15)`, textAlign: "center" }}>
         <div style={{ fontSize: 48, marginBottom: 12 }}>💎</div>
         <div style={{ fontSize: 26, fontWeight: 400, marginBottom: 6 }}>{t("premiumTitle",lang)}</div>
@@ -1405,7 +1409,61 @@ Odgovaraš na ${lang==="de"||lang==="at"?"Deutsch":lang==="en"?"English":lang===
         <Btn primary style={{ width: "100%", marginBottom: 10 }} onClick={startPremiumCheckout}>
           {payLoading ? "⏳..." : t("unlockPremium",lang)}
         </Btn>
-        <div style={{ ...dm, fontSize: 11, color: C.mut }}>{t("payVia",lang)}</div>
+        <div style={{ ...dm, fontSize: 11, color: C.mut, marginBottom: 8 }}>{t("payVia",lang)}</div>
+
+        {/* Recovery */}
+        {!showRecovery ? (
+          <button onClick={() => { setShowRecovery(true); setRecoveryStatus(null); setRecoveryError(""); }}
+            style={{ ...dm, background: "none", border: "none", color: C.accent, fontSize: 12, cursor: "pointer", textDecoration: "underline", opacity: 0.8, padding: "6px 12px" }}>
+            {({hr:"Već ste platili?",de:"Bereits bezahlt?",en:"Already paid?",it:"Già pagato?",si:"Že plačano?",cz:"Už jste platili?",pl:"Już zapłacono?"})[lang] || "Već ste platili?"}
+          </button>
+        ) : (
+          <div style={{ padding: "12px 16px", marginTop: 8, borderRadius: 12, background: "rgba(14,165,233,0.06)", border: `1px solid rgba(14,165,233,0.15)` }}>
+            {recoveryStatus === "success" ? (
+              <div style={{ textAlign: "center", color: "#22c55e", fontSize: 13, fontWeight: 600, padding: 8 }}>
+                {({hr:"Pristup obnovljen!",de:"Zugang wiederhergestellt!",en:"Access restored!",it:"Accesso ripristinato!"})[lang] || "Pristup obnovljen!"}
+              </div>
+            ) : (
+              <>
+                <div style={{ ...dm, fontSize: 11, color: C.mut, marginBottom: 8 }}>
+                  {({hr:"Unesite email s kojim ste platili",de:"E-Mail eingeben, mit der Sie bezahlt haben",en:"Enter the email you used at checkout",it:"Inserisci l'email usata per il pagamento"})[lang] || "Unesite email"}
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input type="email" inputMode="email" autoComplete="email" autoFocus
+                    value={recoveryEmail} onChange={e => setRecoveryEmail(e.target.value)}
+                    placeholder="email@example.com"
+                    style={{ ...dm, flex: 1, padding: "12px 14px", borderRadius: 10, border: `1px solid ${recoveryStatus === "error" || recoveryStatus === "expired" ? "#ef4444" : C.bord}`, background: "rgba(255,255,255,0.06)", color: C.text, fontSize: 14, outline: "none" }}
+                    onKeyDown={e => { if (e.key === "Enter") document.getElementById("jadran-app-recover-btn")?.click(); }}
+                  />
+                  <button id="jadran-app-recover-btn"
+                    disabled={recoveryStatus === "loading" || !recoveryEmail.includes("@")}
+                    onClick={() => {
+                      setRecoveryStatus("loading"); setRecoveryError("");
+                      const did = localStorage.getItem("jadran_push_deviceId") || `dev_${Date.now()}`;
+                      fetch("/api/recover", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: recoveryEmail.trim(), deviceId: did }) })
+                        .then(r => r.json().then(d => ({ ok: r.ok, status: r.status, data: d })))
+                        .then(({ ok, status, data }) => {
+                          if (ok && data.recovered) {
+                            setRecoveryStatus("success");
+                            setPremium(true);
+                            try { localStorage.setItem("jadran_ai_premium", "1"); } catch {}
+                            setTimeout(() => { setShowPaywall(false); setShowRecovery(false); }, 1500);
+                          } else {
+                            setRecoveryStatus(status === 410 ? "expired" : "error");
+                            setRecoveryError(status === 410 ? "Pretplata istekla" : (data.error || "Plaćanje nije pronađeno"));
+                          }
+                        })
+                        .catch(() => { setRecoveryStatus("error"); setRecoveryError("Greška. Pokušajte ponovo."); });
+                    }}
+                    style={{ ...dm, padding: "12px 18px", borderRadius: 10, border: "none", background: recoveryStatus === "loading" ? C.mut : C.accent, color: "#fff", fontSize: 13, fontWeight: 600, cursor: recoveryStatus === "loading" ? "wait" : "pointer", whiteSpace: "nowrap", opacity: !recoveryEmail.includes("@") ? 0.5 : 1 }}>
+                    {recoveryStatus === "loading" ? "..." : ({hr:"Obnovi",de:"Wiederherstellen",en:"Restore",it:"Ripristina"})[lang] || "Obnovi"}
+                  </button>
+                </div>
+                {recoveryError && <div style={{ ...dm, color: "#ef4444", fontSize: 11, marginTop: 6, textAlign: "center" }}>{recoveryError}</div>}
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
