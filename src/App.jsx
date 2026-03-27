@@ -319,6 +319,7 @@ export default function JadranUnified() {
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(null);
+  const [trialRemaining, setTrialRemaining] = useState(null); // ms left in 72h trial, null=not started
   const chatEnd = useRef(null);
   // Guest key: roomCode from URL, or deviceId for standalone users
   const roomCode = useRef((() => {
@@ -374,6 +375,7 @@ export default function JadranUnified() {
       onPosition: (pos) => setGpsPosition(pos),
       onPhase: (newPhase) => {
         if (newPhase === "odmor") {
+          ensureTrialStart();
           setPhase("kiosk"); setSubScreen("home");
           updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" });
         }
@@ -467,6 +469,7 @@ export default function JadranUnified() {
     setPhase("kiosk");
     setSubScreen("home");
     setSplash(false);
+    ensureTrialStart();
     // Auto-unlock premium if arriving from a paid TripGuide booking
     const bookingId = p.get("booking");
     if (bookingId && bookingId.startsWith("JAD-")) {
@@ -896,6 +899,7 @@ export default function JadranUnified() {
   useEffect(() => {
     if (arrivalCountdown === null) return;
     if (arrivalCountdown <= 0) {
+      ensureTrialStart();
       setKioskWelcome(true); setNearbyData(null);
       setPhase("kiosk");
       setSubScreen("home");
@@ -910,6 +914,37 @@ export default function JadranUnified() {
   const timeCtx = hour < 6 ? "night" : hour < 12 ? "morning" : hour < 18 ? "midday" : hour < 22 ? "evening" : "night";
   const dateLocale = lang === "de" || lang === "at" ? "de-DE" : lang === "en" ? "en-GB" : lang === "it" ? "it-IT" : lang === "si" ? "sl-SI" : lang === "cz" ? "cs-CZ" : lang === "pl" ? "pl-PL" : "hr-HR";
   const isAdmin = new URLSearchParams(window.location.search).get("admin") === "sial";
+
+  // ─── 72h AI TRIAL — set start timestamp on first kiosk entry ───
+  const ensureTrialStart = () => {
+    try {
+      if (!localStorage.getItem("jadran_trial_start")) {
+        localStorage.setItem("jadran_trial_start", Date.now().toString());
+      }
+    } catch {}
+  };
+
+  // Compute remaining ms every minute
+  useEffect(() => {
+    if (phase !== "kiosk" || premium) return;
+    const calc = () => {
+      try {
+        const start = parseInt(localStorage.getItem("jadran_trial_start") || "0", 10);
+        if (!start) return null;
+        return Math.max(0, start + 72 * 3600000 - Date.now());
+      } catch { return null; }
+    };
+    const update = () => setTrialRemaining(calc());
+    update();
+    const iv = setInterval(update, 60000);
+    return () => clearInterval(iv);
+  }, [phase, premium]); // eslint-disable-line
+
+  // Show paywall when trial expires (and user is not premium)
+  useEffect(() => {
+    if (premium || trialRemaining === null) return;
+    if (trialRemaining === 0) setShowPaywall(true);
+  }, [trialRemaining, premium]); // eslint-disable-line
 
   const tryPremium = (cb) => { if (premium) { cb(); } else { setShowPaywall(true); } };
 
@@ -1361,7 +1396,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
                   {({hr:"Pitaj →",de:"Fragen →",en:"Ask →",it:"Chiedi →",si:"Vprašaj →",cz:"Zeptat →",pl:"Pytaj →"})[lang] || "Ask →"}
                 </button>
               </div>
-              <Btn primary onClick={() => { setKioskWelcome(true); setNearbyData(null); setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home", lang, destination: transitDestCity || kioskCity, segment: transitSegUrl || "auto", lastAccess: new Date().toISOString() }); }}>{t("arrived",lang)}</Btn>
+              <Btn primary onClick={() => { ensureTrialStart(); setKioskWelcome(true); setNearbyData(null); setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home", lang, destination: transitDestCity || kioskCity, segment: transitSegUrl || "auto", lastAccess: new Date().toISOString() }); }}>{t("arrived",lang)}</Btn>
             </>
           )}
         </div>
@@ -1409,7 +1444,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             <div style={{ width: 80, height: 80, borderRadius: "50%", border: `3px solid ${C.accent}`, display: "grid", placeItems: "center" }}>
               <span style={{ fontSize: 32, fontWeight: 300 }}>{arrivalCountdown}</span>
             </div>
-            <button onClick={() => { setKioskWelcome(true); setNearbyData(null); setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" }); setArrivalCountdown(null); }}
+            <button onClick={() => { ensureTrialStart(); setKioskWelcome(true); setNearbyData(null); setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home" }); setArrivalCountdown(null); }}
               style={{ padding: "14px 32px", borderRadius: 14, border: "none", background: `linear-gradient(135deg,${C.accent},#0284c7)`, color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", ...dm }}>
               Uđi u Kiosk →
             </button>
@@ -1579,6 +1614,33 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             <button onClick={() => setEmergencyAlert(null)} style={{ background: "none", border: "none", color: C.mut, fontSize: 18, cursor: "pointer", padding: 4, flexShrink: 0 }}>✕</button>
           </div>
         )}
+
+        {/* ═══ TRIAL EXPIRY BANNER — <12h remaining ═══ */}
+        {!premium && trialRemaining !== null && trialRemaining > 0 && trialRemaining < 43200000 && (() => {
+          const hrs = Math.floor(trialRemaining / 3600000);
+          const mins = Math.floor((trialRemaining % 3600000) / 60000);
+          const timeStr = hrs > 0
+            ? `${hrs}h ${mins}min`
+            : `${mins} min`;
+          const msg = {
+            hr: `⏳ AI vodič ističe za ${timeStr} — nadogradi na Premium`,
+            de: `⏳ KI-Guide läuft in ${timeStr} ab — auf Premium upgraden`,
+            at: `⏳ KI-Guide läuft in ${timeStr} ab — auf Premium upgraden`,
+            en: `⏳ AI guide expires in ${timeStr} — upgrade to Premium`,
+            it: `⏳ Guida AI scade tra ${timeStr} — passa a Premium`,
+            si: `⏳ AI vodič poteče čez ${timeStr} — nadgradi na Premium`,
+            cz: `⏳ AI průvodce vyprší za ${timeStr} — přejdi na Premium`,
+            pl: `⏳ Przewodnik AI wygaśnie za ${timeStr} — przejdź na Premium`,
+          }[lang] || `⏳ AI guide expires in ${timeStr}`;
+          return (
+            <div onClick={() => setShowPaywall(true)} style={{ cursor: "pointer", padding: "14px 18px", borderRadius: 14, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", marginBottom: 14, display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ flex: 1, ...dm, fontSize: 13, color: "#fbbf24", lineHeight: 1.4 }}>{msg}</div>
+              <div style={{ ...dm, fontSize: 11, color: "#f59e0b", fontWeight: 700, whiteSpace: "nowrap", background: "rgba(245,158,11,0.12)", padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(245,158,11,0.2)" }}>
+                {lang === "de" || lang === "at" ? "Upgrade →" : lang === "en" ? "Upgrade →" : "Nadogradi →"}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ═══ AFFILIATE BANNER — shown when entered via ?affiliate= ═══ */}
         {affiliateId && AFFILIATE_DATA?.[affiliateId] && (() => {
