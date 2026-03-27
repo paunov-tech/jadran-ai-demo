@@ -505,7 +505,21 @@ export default function JadranUnified() {
           })();
           setPhase(autoPhase);
           if (autoPhase === "pre") setSubScreen(data.subScreen || "onboard");
-          else if (autoPhase === "kiosk") setSubScreen(data.subScreen || "home");
+          else if (autoPhase === "kiosk") {
+            setSubScreen(data.subScreen || "home");
+            // Grant 72h trial for QR guests in kiosk — they arrived, no trip button
+            if (!data.premium) {
+              try {
+                const existing = Number(localStorage.getItem("jadran_ai_trial_until") || "0");
+                if (existing <= Date.now()) { // don't reset active trial
+                  const until = Date.now() + 72 * 60 * 60 * 1000;
+                  localStorage.setItem("jadran_ai_trial_until", String(until));
+                  localStorage.setItem("jadran_ai_premium", "1");
+                  setPremium(true);
+                }
+              } catch {}
+            }
+          }
           else setSubScreen(data.subScreen || "summary");
         }
         if (data.booked) setBooked(new Set(data.booked));
