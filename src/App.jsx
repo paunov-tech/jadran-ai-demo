@@ -809,6 +809,17 @@ export default function JadranUnified() {
     setPhase("kiosk");
     setSubScreen("home");
     setSplash(false);
+    // Auto-unlock premium if arriving from a paid TripGuide booking
+    const bookingId = p.get("booking");
+    if (bookingId && bookingId.startsWith("JAD-")) {
+      try {
+        const paid = JSON.parse(localStorage.getItem("jadran_trip_paid") || "{}");
+        if (paid[bookingId]) {
+          setPremium(true);
+          localStorage.setItem("jadran_ai_premium", "1");
+        }
+      } catch {}
+    }
     window.history.replaceState({}, "", "/");
   }, []); // eslint-disable-line
 
@@ -1252,7 +1263,7 @@ export default function JadranUnified() {
       const sys = `Ti si lokalni turistički vodič za ${kioskCity}, Hrvatska. Adriatic coast.
 ${guestCtx ? guestCtx + "." : ""}
 VRIJEME: ${weather.temp}°C ${weather.icon}, UV ${weather.uv}, more ${weather.sea}°C, zalazak ${weather.sunset}.
-LOKACIJA: ${kioskCity}. Nearby: ${nearbyHighlights?.map(h => h.text).join(", ") || "loading..."}.
+LOKACIJA: ${kioskCity}.
 ${senseCtx ? "LIVE STATUS: " + senseCtx + "." : ""}
 Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i udaljenostima. Bez emoji.`;
       const res = await fetch("/api/chat", {
@@ -1263,9 +1274,14 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           lang: lang || "hr",
         }),
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      setChatMsgs(p => [...p, { role: "assistant", text: data.content?.map(c => c.text || "").join("") || "..." }]);
-    } catch { setChatMsgs(p => [...p, { role: "assistant", text: "Verbindung nicht verfügbar. 🌊" }]); }
+      const reply = data.content?.map(c => c.text || "").join("") || data.error || "...";
+      setChatMsgs(p => [...p, { role: "assistant", text: reply }]);
+    } catch (err) {
+      console.error("[chat]", err);
+      setChatMsgs(p => [...p, { role: "assistant", text: "⚠️ " + ({"hr":"Nema veze. Pokušaj ponovo.","de":"Keine Verbindung. Bitte erneut versuchen.","en":"No connection. Please try again.","it":"Nessuna connessione. Riprova."})[lang] || "Nema veze." }]);
+    }
     setChatLoading(false);
   };
 
@@ -2073,7 +2089,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             ...(kioskCity === "Split" || kioskCity === "Podstrana" || kioskCity === "Omiš" || kioskCity === "Makarska" || kioskCity === "Trogir" || kioskCity === "Rab" ? [{ k: "gems", ic: IC.gem, l: t("gems",lang), clr: C.gold, free: false }] : []),
             ...(kioskCity === "Rab" ? [{ k: "excursions", ic: IC.ticket, l: ({hr:"Izleti",de:"Ausflüge",en:"Excursions",it:"Escursioni"})[lang]||"Izleti", clr: "#0ea5e9", free: true }] : []),
             ...(affiliateId && AFFILIATE_DATA?.[affiliateId] ? [{ k: "affiliate", ic: IC.gem, l: AFFILIATE_DATA[affiliateId].name, clr: AFFILIATE_DATA[affiliateId].color, free: true }] : []),
-            { k: "chat", ic: IC.bot, l: t("aiGuide",lang), clr: "#a78bfa", free: false },
+            { k: "chat", ic: IC.bot, l: t("aiGuide",lang), clr: "#a78bfa", free: true },
           ].map(t => {
             const count = nearbyData?.categories?.[t.k]?.length;
             return (
