@@ -16,7 +16,7 @@ import {
 
 // ─── DESIGN SYSTEM ────────────────────────────────────────────
 import {
-  FONT_LINK, dm, hf, makeTheme,
+  FONT_LINK, dm, hf, makeTheme, GLOBAL_CSS,
   ThemeProvider,
   Badge, Btn, Card, SectionLabel, BackBtn,
   IC, Icon, CITY_ICON_MAP, CityIcon,
@@ -722,40 +722,63 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
   const PhaseNav = () => {
     const phases = [
-      { k: "pre", l: t("preTrip",lang), ic: IC.plane },
-      { k: "kiosk", l: t("kiosk",lang), ic: IC.home },
-      { k: "post", l: t("postStay",lang), ic: IC.sparkle },
+      { k: "pre",   l: t("preTrip",lang),   ic: IC.plane   },
+      { k: "kiosk", l: t("kiosk",lang),     ic: IC.home    },
+      { k: "post",  l: t("postStay",lang),  ic: IC.sparkle },
     ];
     const idx = phases.findIndex(p => p.k === phase);
+    const pct = idx / (phases.length - 1);
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 0, padding: "20px 0 12px", position: "relative" }}>
-        {/* Track line */}
-        <div style={{ position: "absolute", top: 28, left: "12%", right: "12%", height: 1, background: C.bord, zIndex: 0 }} />
-        <div style={{ position: "absolute", top: 28, left: "12%", width: `${(idx / (phases.length - 1)) * 76}%`, height: 1, background: `linear-gradient(90deg,${C.accent},${C.warm})`, zIndex: 1, transition: "width 0.6s cubic-bezier(0.4,0,0.2,1)" }} />
+      <div style={{ display: "flex", alignItems: "center", gap: 0,
+        padding: "18px 4px 10px", position: "relative" }}>
+        {/* Background track */}
+        <div style={{ position: "absolute", top: 27, left: "11%", right: "11%",
+          height: 2, background: C.bord, borderRadius: 1, zIndex: 0 }} />
+        {/* Progress fill */}
+        <div style={{ position: "absolute", top: 27, left: "11%",
+          width: `${pct * 78}%`, height: 2, borderRadius: 1,
+          background: `linear-gradient(90deg, ${C.accent}, ${C.warm})`,
+          zIndex: 1, transition: "width 0.65s cubic-bezier(0.4,0,0.2,1)",
+          boxShadow: `0 0 8px ${C.accent}55` }} />
         {phases.map((p, i) => {
           const active = i === idx;
-          const done = i < idx;
+          const done   = i < idx;
           return (
-            <div key={p.k} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, zIndex: 2, cursor: "pointer" }}
-              onClick={() => { 
+            <div key={p.k} style={{ flex: 1, display: "flex", flexDirection: "column",
+              alignItems: "center", gap: 7, zIndex: 2, cursor: "pointer" }}
+              onClick={() => {
                 if (p.k === "kiosk" && phase !== "kiosk") { setKioskWelcome(true); setNearbyData(null); }
-                setPhase(p.k); if (p.k === "pre") setSubScreen("onboard"); else if (p.k === "kiosk") setSubScreen("home"); else setSubScreen("summary"); 
+                setPhase(p.k);
+                if (p.k === "pre")   setSubScreen("onboard");
+                else if (p.k === "kiosk") setSubScreen("home");
+                else                 setSubScreen("summary");
               }}>
               <div style={{
-                width: active ? 48 : 36, height: active ? 48 : 36,
-                borderRadius: active ? 18 : 14,
-                background: active ? `linear-gradient(135deg,${C.accent},#0284c7)` : done ? C.acDim : "rgba(12,28,50,0.6)",
-                border: active ? "none" : `1.5px solid ${done ? C.accent : C.bord}`,
+                width: active ? 46 : 34, height: active ? 46 : 34,
+                borderRadius: active ? 16 : 12,
+                background: active
+                  ? `linear-gradient(135deg, ${C.accent} 0%, #0284c7 100%)`
+                  : done ? C.acDim : "rgba(10,20,38,0.7)",
+                border: active ? "none" : `1.5px solid ${done ? C.acBorder : C.bord}`,
                 display: "grid", placeItems: "center",
-                transition: "all 0.4s cubic-bezier(0.4,0,0.2,1)",
-                boxShadow: active ? `0 8px 28px rgba(14,165,233,0.25), inset 0 1px 0 rgba(255,255,255,0.15)` : "none",
-              }}>
+                transition: "all 0.38s cubic-bezier(0.4,0,0.2,1)",
+                boxShadow: active
+                  ? `0 6px 22px rgba(14,165,233,0.28), inset 0 1px 0 rgba(255,255,255,0.18)`
+                  : done ? `0 0 10px ${C.accent}22` : "none",
+              }} className={active ? "phase-active" : ""}>
                 {done
-                  ? <Icon d={IC.check} size={active ? 22 : 18} color={C.accent} stroke={2.2} />
-                  : <Icon d={p.ic} size={active ? 22 : 18} color={active ? "#fff" : done ? C.accent : C.mut} stroke={active ? 2 : 1.5} />
+                  ? <Icon d={IC.check} size={active ? 20 : 16} color={C.accent} stroke={2.5} />
+                  : <Icon d={p.ic} size={active ? 21 : 17}
+                      color={active ? "#fff" : done ? C.accent : C.mut}
+                      stroke={active ? 2.0 : 1.6} />
                 }
               </div>
-              <div className="phase-label" style={{ ...dm, fontSize: 10, letterSpacing: 2.5, textTransform: "uppercase", color: active ? C.text : done ? C.accent : C.mut, fontWeight: active ? 700 : done ? 500 : 400 }}>{p.l}</div>
+              <div className="phase-label" style={{ ...dm,
+                color: active ? C.text : done ? C.accent : C.mut,
+                fontWeight: active ? 700 : done ? 500 : 400,
+                transition: "color 0.3s" }}>
+                {p.l}
+              </div>
             </div>
           );
         })}
@@ -2351,206 +2374,126 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
     <div style={{ fontFamily: "'Cormorant Garamond','Georgia',serif", background: `linear-gradient(160deg, ${C.bg} 0%, ${C.deep || C.bg} 50%, ${C.sky || C.bg} 100%)`, color: C.text, minHeight: "100dvh", position: "relative", paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       {fonts}
 
-      <style>{`
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-        @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 20px rgba(14,165,233,0.15); } 50% { box-shadow: 0 0 40px rgba(14,165,233,0.3); } }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
-        @keyframes gradient-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        @keyframes wave-move { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes scale-in { from { opacity:0; transform: scale(0.9); } to { opacity:1; transform: scale(1); } }
-        @keyframes slide-up { from { opacity:0; transform: translateY(40px); } to { opacity:1; transform: translateY(0); } }
-        @keyframes check-pop { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
-
-        .jadran-ambient {
-          position: fixed; inset: 0; pointer-events: none; z-index: 0;
-          background: 
-            radial-gradient(ellipse at 20% 10%, rgba(14,165,233,0.08) 0%, transparent 50%),
-            radial-gradient(ellipse at 80% 80%, rgba(14,165,233,0.04) 0%, transparent 50%),
-            radial-gradient(ellipse at 50% 50%, rgba(6,182,212,0.03) 0%, transparent 70%);
-        }
-        .jadran-ambient::before {
-          content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 300px;
-          background: linear-gradient(to top, rgba(10,22,40,0.95), transparent);
-        }
-        .jadran-ambient::after {
-          content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-          background: linear-gradient(90deg, transparent, rgba(14,165,233,0.5), rgba(6,182,212,0.3), transparent);
-          background-size: 200% 100%;
-          animation: gradient-shift 8s ease infinite;
-        }
-
-        /* Wave decoration */
-        .wave-deco { position: fixed; bottom: -2px; left: 0; width: 200%; height: 60px; opacity: 0.03; pointer-events: none; z-index: 1;
-          background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 60'%3E%3Cpath fill='%230ea5e9' d='M0,30 C360,60 720,0 1080,30 C1260,45 1350,15 1440,30 L1440,60 L0,60 Z'/%3E%3C/svg%3E") repeat-x;
-          animation: wave-move 12s linear infinite;
-        }
-
-        /* Grain texture */
-        .grain { position: fixed; inset: 0; opacity: 0.018; pointer-events: none; z-index: 1;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-        }
-
-        /* ── iOS / Android universal fixes ───────────────────────────────────── */
-        * { -webkit-tap-highlight-color: transparent !important; }
-        html { overscroll-behavior: none; }
-        body { overscroll-behavior: none; -webkit-overflow-scrolling: touch; }
-
-        /* Prevent 300ms tap delay on all interactive elements */
-        button, a, [role="button"], input, select, textarea, label {
-          touch-action: manipulation;
-        }
-
-        /* Prevent iOS auto-zoom on input focus (requires font-size ≥ 16px) */
-        input, select, textarea {
-          font-size: 16px !important;
-        }
-
-        /* 100dvh — handles iOS Safari address-bar show/hide correctly.
-           Fallback to 100vh for browsers that don't support dvh (iOS < 15.4) */
-        .dvh { min-height: 100vh; min-height: 100dvh; }
-        .dvh-exact { height: 100vh; height: 100dvh; }
-
-        /* Momentum scrolling on all overflow containers */
-        [style*="overflow-y: auto"], [style*="overflow-y:auto"] {
-          -webkit-overflow-scrolling: touch;
-          overscroll-behavior: contain;
-        }
-        /* ─────────────────────────────────────────────────────────────────────── */
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(14,165,233,0.2); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: rgba(14,165,233,0.4); }
-
-        /* Selection */
-        ::selection { background: rgba(14,165,233,0.3); color: #f0f9ff; }
-
-        /* Animated cards */
-        .anim-card { opacity: 1; }
-        /* tiles render instantly — no staggered animation */
-
-        /* Button effects — disable hover transform on touch devices to prevent stuck states */
-        button { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important; }
-        @media (hover: hover) {
-          button:hover { transform: translateY(-1px); }
-        }
-        button:active { transform: translateY(0) scale(0.98) !important; }
-
-        /* Card hover — only on pointer devices */
-        .glass { transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important; }
-        @media (hover: hover) {
-          .glass:hover { transform: translateY(-2px); box-shadow: 0 16px 48px rgba(0,0,0,0.25), 0 0 0 1px rgba(14,165,233,0.06), inset 0 1px 0 rgba(255,255,255,0.05) !important; }
-        }
-
-        /* Primary button glow */
-        .btn-glow { position: relative; overflow: hidden; }
-        .btn-glow::before { content: ''; position: absolute; inset: -2px; border-radius: 16px;
-          background: linear-gradient(135deg, rgba(14,165,233,0.4), rgba(2,132,199,0.2)); filter: blur(8px); opacity: 0; transition: opacity 0.3s; z-index: -1; }
-        .btn-glow:hover::before { opacity: 1; }
-
-        /* Card glass effect */
-        .glass { backdrop-filter: blur(12px) saturate(1.4); -webkit-backdrop-filter: blur(12px) saturate(1.4); }
-
-        /* Shimmer loading */
-        .shimmer { background: linear-gradient(90deg, transparent 30%, rgba(14,165,233,0.06) 50%, transparent 70%);
-          background-size: 200% 100%; animation: shimmer 2s ease infinite; }
-
-        /* Overlay entrance */
-        .overlay-enter { animation: scale-in 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-
-        /* Phase dot active pulse */
-        .phase-active { animation: pulse-glow 3s ease infinite; }
-
-        /* Premium badge shimmer */
-        .premium-shimmer { background: linear-gradient(90deg, rgba(251,191,36,0.08) 0%, rgba(251,191,36,0.2) 50%, rgba(251,191,36,0.08) 100%);
-          background-size: 200% 100%; animation: shimmer 3s ease infinite; }
-
-        /* Float animation for emojis */
-        .emoji-float { animation: float 4s ease-in-out infinite; display: inline-block; }
-
-        /* Smooth page transitions */
-        .page-enter { animation: slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-
-        /* Check animation for booking confirm */
-        .check-anim { animation: check-pop 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-
-        /* Touch-friendly sizing */
-        @media (max-width: 480px) {
-          .page-enter { padding: 0 !important; }
-          button { min-height: 44px; }
-          .trip-btn { width: 100% !important; box-sizing: border-box; }
-          .map-frame { height: 250px !important; }
-          .lang-btn { padding: 10px 12px !important; min-width: 44px; min-height: 44px; }
-          .route-bar { flex-wrap: wrap; gap: 8px; }
-          .route-bar button { flex: 1; }
-          .phase-label { letter-spacing: 1px !important; font-size: 9px !important; }
-        }
-        @media (max-width: 375px) {
-          .phase-label { letter-spacing: 0.5px !important; font-size: 8px !important; }
-        }
-        @media (min-width: 768px) and (max-width: 1366px) and (hover: none) {
-          button { min-height: 48px; }
-        }
-
-        /* Smooth font rendering */
-        * { -webkit-font-smoothing: antialiased; }
-      `}</style>
+      <style>{GLOBAL_CSS}</style>
       <div className="grain" />
       <div className="wave-deco" />
       <div className="jadran-ambient" />
 
       <div style={{ position: "relative", zIndex: 2, maxWidth: 1100, margin: "0 auto", padding: "0 clamp(12px, 3vw, 24px)" }} className="page-enter">
-        {/* Header — premium hotel lobby */}
-        <div style={{ padding: "20px 0 16px" }}>
+        {/* ── HEADER ── */}
+        <div style={{ padding: "18px 0 14px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 14, background: `linear-gradient(135deg,${C.accent},#0284c7)`, display: "grid", placeItems: "center", fontSize: 18, fontWeight: 700, color: "#fff", boxShadow: "0 4px 16px rgba(14,165,233,0.25), inset 0 1px 0 rgba(255,255,255,0.2)" }}>J</div>
+
+            {/* Logo mark */}
+            <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 13,
+                background: `linear-gradient(135deg, ${C.accent} 0%, #0369a1 100%)`,
+                display: "grid", placeItems: "center",
+                boxShadow: `0 4px 18px rgba(14,165,233,0.30), inset 0 1px 0 rgba(255,255,255,0.22)`,
+                fontSize: 17, fontWeight: 800, color: "#fff", letterSpacing: -1,
+                fontFamily: "'DM Serif Display',Georgia,serif",
+              }}>J</div>
               <div>
-                <div style={{ ...hf, fontSize: 22, fontWeight: 400, letterSpacing: 3, textTransform: "uppercase", color: C.text, lineHeight: 1 }}>Jadran</div>
-                <div style={{ ...dm, fontSize: 9, color: C.accent, letterSpacing: 3, marginTop: 2, fontWeight: 500 }}>VODIČ</div>
+                <div style={{ ...hf, fontSize: 20, fontWeight: 400, letterSpacing: 4,
+                  textTransform: "uppercase", color: C.text, lineHeight: 1 }}>Jadran</div>
+                <div style={{ ...dm, fontSize: 8, color: C.accent, letterSpacing: 3.5,
+                  marginTop: 2, fontWeight: 600, textTransform: "uppercase" }}>AI Guide</div>
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              {premium && <span className="premium-shimmer" style={{display:"inline-flex",alignItems:"center",gap:4,padding:"5px 14px",borderRadius:20,fontSize:10,fontFamily:"'Outfit',sans-serif",color:C.gold,letterSpacing:1.5,fontWeight:600,border:`1px solid rgba(245,158,11,0.12)`}}>⭐ PREMIUM</span>}
-              <div style={{display:"flex",gap:2,background:"rgba(12,28,50,0.5)",borderRadius:14,padding:3,border:`1px solid ${C.bord}`,backdropFilter:"blur(8px)"}}>
+
+            {/* Right: premium badge + language */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              {premium && (
+                <span className="premium-shimmer" style={{
+                  display: "inline-flex", alignItems: "center", gap: 4,
+                  padding: "4px 12px", borderRadius: 20,
+                  fontSize: 9, ...dm, color: C.gold, letterSpacing: 2,
+                  fontWeight: 700, border: `1px solid ${C.goBorder}`,
+                }}>⭐ PREMIUM</span>
+              )}
+              <div style={{ display: "flex", gap: 2, background: "rgba(10,20,38,0.6)",
+                borderRadius: 13, padding: 3, border: `1px solid ${C.bord}`,
+                backdropFilter: "blur(10px)" }}>
                 <button onClick={() => setLangOpen(!langOpen)} className="lang-btn"
-                  style={{...dm,padding:"5px 7px",background:C.acDim,border:`1px solid rgba(14,165,233,0.15)`,borderRadius:11,cursor:"pointer",fontSize:15,lineHeight:1}}
+                  style={{ ...dm, padding: "5px 7px", background: C.acDim,
+                    border: `1px solid ${C.acBorder}`, borderRadius: 10,
+                    cursor: "pointer", fontSize: 15, lineHeight: 1 }}
                   title="Jezik">{LANGS.find(l => l.code === lang)?.flag || "🇭🇷"}</button>
                 {langOpen && LANGS.filter(lg => lg.code !== lang).map(lg => (
-                  <button key={lg.code} onClick={() => { setLang(lg.code); saveDelta({ lang: lg.code }); setLangOpen(false); }} className="lang-btn"
-                    style={{...dm,padding:"5px 7px",background:"transparent",border:"1px solid transparent",borderRadius:11,cursor:"pointer",fontSize:15,lineHeight:1,transition:"all 0.25s",animation:"fadeIn 0.2s both"}}
+                  <button key={lg.code}
+                    onClick={() => { setLang(lg.code); saveDelta({ lang: lg.code }); setLangOpen(false); }}
+                    className="lang-btn"
+                    style={{ ...dm, padding: "5px 7px", background: "transparent",
+                      border: "1px solid transparent", borderRadius: 10,
+                      cursor: "pointer", fontSize: 15, lineHeight: 1,
+                      transition: "all 0.2s", animation: "fadeIn 0.18s both" }}
                     title={lg.name}>{lg.flag}</button>
                 ))}
               </div>
             </div>
           </div>
-          {/* Guest bar */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, marginTop: 14, padding: "12px 16px", background: C.sand, borderRadius: 16, border: `1px solid rgba(245,158,11,0.06)` }}>
+
+          {/* Guest / Route context bar */}
+          <div style={{
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            flexWrap: "wrap", gap: 8, marginTop: 12, padding: "11px 15px",
+            background: "rgba(245,158,11,0.04)",
+            borderRadius: 14, border: `1px solid ${C.goBorder}`,
+          }}>
             <div style={{ ...dm, display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 18 }}>{G.flag}</span>
+              <span style={{ fontSize: 17 }}>{G.flag}</span>
               <div>
-                {(() => { try { const d = JSON.parse(localStorage.getItem("jadran_delta_context") || "{}"); const f = transitFromUrl || d.from; const t = transitToUrl || d.destination?.city; const s = transitSegUrl || d.segment; return f && t ? (<><div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{(SEG_ICON[s] || "🚗")} {f} → {t}</div><div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>Sloboda ceste i mora</div></>) : (<><div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{G.name}</div><div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>{G.accommodation}</div></>); } catch { return (<><div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{G.name}</div><div style={{ fontSize: 11, color: C.mut, marginTop: 1 }}>{G.accommodation}</div></>); } })()}
+                {(() => {
+                  try {
+                    const d = JSON.parse(localStorage.getItem("jadran_delta_context") || "{}");
+                    const f = transitFromUrl || d.from;
+                    const to = transitToUrl || d.destination?.city;
+                    const s = transitSegUrl || d.segment;
+                    return f && to ? (
+                      <>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
+                          {SEG_ICON[s] || "🚗"} {f} → {to}
+                        </div>
+                        <div style={{ fontSize: 10, color: C.mut, marginTop: 1 }}>Sloboda ceste i mora</div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{G.name}</div>
+                        <div style={{ fontSize: 10, color: C.mut, marginTop: 1 }}>{G.accommodation}</div>
+                      </>
+                    );
+                  } catch {
+                    return <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{G.name}</div>;
+                  }
+                })()}
               </div>
             </div>
-            {G.arrival && !transitFromUrl && <div style={{ ...dm, fontSize: 11, color: C.mut, textAlign: "right" }}>
-              {new Date(G.arrival).toLocaleDateString(dateLocale || "hr-HR", {day:"numeric",month:"short"})} – {new Date(G.departure).toLocaleDateString(dateLocale || "hr-HR", {day:"numeric",month:"short"})}
-            </div>}
+            {G.arrival && !transitFromUrl && (
+              <div style={{ ...dm, fontSize: 10, color: C.mut, textAlign: "right" }}>
+                {new Date(G.arrival).toLocaleDateString(dateLocale || "hr-HR", { day:"numeric", month:"short" })}
+                {" – "}
+                {new Date(G.departure).toLocaleDateString(dateLocale || "hr-HR", { day:"numeric", month:"short" })}
+              </div>
+            )}
           </div>
-          {/* Warm divider */}
-          <div style={{ height: 1, marginTop: 16, background: `linear-gradient(90deg, transparent, rgba(245,158,11,0.12) 30%, rgba(14,165,233,0.08) 70%, transparent)` }} />
-          {/* Demo mode banner */}
-          {!guestProfile && !transitFromUrl && <div style={{ ...dm, display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12, padding: "10px 16px", background: "rgba(245,158,11,0.06)", borderRadius: 12, border: "1px solid rgba(245,158,11,0.1)" }}>
-            <span style={{ fontSize: 12, color: C.warm }}>🎭 Primjer prikaza — kreirajte vlastiti profil</span>
-            <a href="/host" style={{ ...dm, fontSize: 11, color: C.accent, textDecoration: "none", fontWeight: 600 }}>Host Panel →</a>
-          </div>}
+
+          {/* Accent divider */}
+          <div style={{ height: 1, marginTop: 14,
+            background: `linear-gradient(90deg, transparent, ${C.acBorder} 30%, ${C.goBorder} 70%, transparent)` }} />
+
+          {/* Demo mode notice */}
+          {!guestProfile && !transitFromUrl && (
+            <div style={{ ...dm, display: "flex", alignItems: "center", justifyContent: "space-between",
+              marginTop: 10, padding: "9px 14px", background: "rgba(245,158,11,0.05)",
+              borderRadius: 11, border: `1px solid ${C.goBorder}` }}>
+              <span style={{ fontSize: 11, color: C.warm }}>🎭 Primjer prikaza</span>
+              <a href="/host" style={{ ...dm, fontSize: 11, color: C.accent, textDecoration: "none", fontWeight: 600 }}>Host Panel →</a>
+            </div>
+          )}
         </div>
 
-        {/* Alerts Bar — hidden on transit (merged into Puls Jadrana) */}
+        {/* Alerts Bar */}
         {!(phase === "pre" && subScreen === "transit") && <AlertsBar />}
 
         {/* Phase Nav */}
