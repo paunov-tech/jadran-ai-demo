@@ -24,6 +24,243 @@ import {
 
 const HERE_ROUTING_KEY = import.meta.env.VITE_HERE_API_KEY || "";
 
+const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteReady, gpsPosition }) => {
+  const iframeRef = useRef(null);
+  const routeFetched = useRef(false);
+
+  // Send GPS position to iframe via postMessage
+  useEffect(() => {
+    if (!gpsPosition || !iframeRef.current?.contentWindow) return;
+    iframeRef.current.contentWindow.postMessage({
+      type: "gps_update", lat: gpsPosition.lat, lng: gpsPosition.lng
+    }, "*");
+  }, [gpsPosition?.lat, gpsPosition?.lng]);
+
+  // Fetch route summary via REST (not SDK — avoids race condition)
+  useEffect(() => {
+    if (!fromCoords || !toCoords || routeFetched.current) return;
+    routeFetched.current = true;
+    const mode = transportMode === "kamper" ? "truck" : "car";
+    fetch(`https://router.hereapi.com/v8/routes?transportMode=${mode}&origin=${fromCoords[0]},${fromCoords[1]}&destination=${toCoords[0]},${toCoords[1]}&return=summary&apikey=${HERE_ROUTING_KEY}`)
+      .then(r => r.json())
+      .then(data => {
+        const sections = data.routes?.[0]?.sections;
+        if (sections?.length && onRouteReady) {
+          const totalLength = sections.reduce((sum, s) => sum + (s.summary?.length || 0), 0);
+          const totalDuration = sections.reduce((sum, s) => sum + (s.summary?.duration || 0), 0);
+          const totalMin = Math.round(totalDuration / 60);
+          onRouteReady({
+            km: Math.round(totalLength / 1000), hrs: Math.floor(totalMin / 60),
+            mins: totalMin % 60,
+            oLat: fromCoords[0], oLng: fromCoords[1], dLat: toCoords[0], dLng: toCoords[1],
+            mode: transportMode || "auto",
+          });
+        }
+      })
+      .catch(() => {
+        // Haversine fallback
+        const R = 6371;
+        const dLat = (toCoords[0] - fromCoords[0]) * Math.PI / 180;
+        const dLon = (toCoords[1] - fromCoords[1]) * Math.PI / 180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(fromCoords[0]*Math.PI/180)*Math.cos(toCoords[0]*Math.PI/180)*Math.sin(dLon/2)**2;
+        const km = Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) * 1.35);
+        const min = Math.round(km / 1.2);
+        if (onRouteReady) onRouteReady({
+          km, hrs: Math.floor(min/60), mins: min%60, mode: transportMode || "auto",
+          oLat: fromCoords[0], oLng: fromCoords[1], dLat: toCoords[0], dLng: toCoords[1], estimated: true,
+        });
+      });
+  }, [fromCoords?.[0], toCoords?.[0]]); // eslint-disable-line
+
+  const tmode = transportMode === "kamper" ? "truck" : "car";
+  const src = fromCoords && toCoords
+    ? `/map.html?flat=${fromCoords[0]}&flon=${fromCoords[1]}&tlat=${toCoords[0]}&tlon=${toCoords[1]}&tmode=${tmode}&key=${import.meta.env.VITE_HERE_API_KEY}`
+    : null;
+
+  if (!src) return <div style={{ width: "100%", height: 300, background: "#0c1426", borderRadius: 14, display: "grid", placeItems: "center" }}><span style={{ fontSize: 13, color: "#64748b", fontFamily: "'DM Sans',sans-serif" }}>Učitavam mapu…</span></div>;
+
+  return (
+    <iframe ref={iframeRef} src={src} className="map-frame"
+      style={{ width: "100%", height: 300, border: "none", display: "block" }}
+      allow="webgl; fullscreen" title="here-route" />
+  );
+});
+
+// ─── HERE Traffic Incidents along a route corridor ───
+
+// ─── RouteGuide: Live Intelligence Feed ───
+// Polls /api/guide every 3min, displays prioritized cards from all data sources
+// ─── LiveTicker: Single line above map with rotating live data ───
+const LiveTicker = React.memo(({ fromCoords, toCoords, seg, lang, routeData, dm, C }) => {
+  const [guideCards, setGuideCards] = React.useState([]);
+  const [guideSources, setGuideSources] = React.useState(null);
+  const [idx, setIdx] = React.useState(0);
+
+  // Fetch guide data (non-blocking — ticker works without it)
+  React.useEffect(() => {
+    if (!fromCoords || !toCoords) return;
+    let cancelled = false;
+    const load = () => {
+      fetch(`/api/guide?oLat=${fromCoords[0]}&oLng=${fromCoords[1]}&dLat=${toCoords[0]}&dLng=${toCoords[1]}&seg=${seg || "auto"}&lang=${lang || "hr"}`)
+        .then(r => r.json())
+        .then(data => { if (!cancelled) { setGuideCards(data.cards || []); setGuideSources(data.sources || null); } })
+        .catch(() => {});
+    };
+    load();
+    const iv = setInterval(load, 180000);
+    return () => { cancelled = true; clearInterval(iv); };
+  }, [fromCoords?.[0], toCoords?.[0], seg]); // eslint-disable-line
+
+  // Build ticker items from route + guide
+  const items = React.useMemo(() => {
+    const t = [];
+    // Route info shown in bar below map, not in ticker
+    for (const c of guideCards) {
+      if (c.severity === "critical") t.push({ icon: c.icon, text: c.title, color: "#ef4444" });
+    }
+    for (const c of guideCards) {
+      if (c.severity === "warning") t.push({ icon: c.icon, text: c.title, color: "#f59e0b" });
+    }
+    for (const c of guideCards) {
+      if (c.severity === "info" || c.severity === "tip") t.push({ icon: c.icon, text: c.body?.slice(0, 60) || c.title, color: C.mut });
+    }
+    if (guideSources) {
+      const s = guideSources;
+      t.push({ icon: "📡", text: `HERE·${s.here||0} Sense·${s.yolo||0} Meteo·${s.meteo?1:0}`, color: "rgba(100,116,139,0.4)" });
+    }
+    return t.length ? t : [{ icon: "⏳", text: routeData ? "Prikupljam live podatke…" : "Izračunavam rutu…", color: C.mut }];
+  }, [routeData, guideCards, guideSources]); // eslint-disable-line
+
+  // Rotate
+  React.useEffect(() => {
+    if (items.length < 2) return;
+    const t = setInterval(() => setIdx(i => (i + 1) % items.length), 4000);
+    return () => clearInterval(t);
+  }, [items.length]);
+
+  const current = items[idx % items.length];
+  return (
+    <div style={{ padding: "8px 0", display: "flex", alignItems: "center", gap: 8, minHeight: 24, overflow: "hidden" }}>
+      <span style={{ fontSize: 13, flexShrink: 0 }}>{current.icon}</span>
+      <span style={{ ...dm, fontSize: 12, color: current.color || C.mut, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: current.color === "#ef4444" ? 700 : 400 }}>
+        {current.text}
+      </span>
+      {items.length > 1 && <span style={{ ...dm, fontSize: 9, color: "rgba(100,116,139,0.3)", flexShrink: 0 }}>{idx % items.length + 1}/{items.length}</span>}
+    </div>
+  );
+});
+
+const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C, extraCards }) => {
+  const [cards, setCards] = React.useState(null);
+  const [sources, setSources] = React.useState(null);
+  const [updated, setUpdated] = React.useState(null);
+  const [loading, setLoading] = React.useState(false);
+
+  // Merge API cards + GPS cards, deduplicate by id, sort by severity
+  const SEV_ORDER = { critical: 0, warning: 1, info: 2, tip: 3 };
+  const mergedCards = React.useMemo(() => {
+    const api = cards || [];
+    const gps = extraCards || [];
+    const all = [...gps, ...api];
+    const seen = new Set();
+    return all.filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true; })
+      .sort((a, b) => {
+        // AI cards always first
+        if (a.isAI && !b.isAI) return -1;
+        if (!a.isAI && b.isAI) return 1;
+        return (SEV_ORDER[a.severity] ?? 9) - (SEV_ORDER[b.severity] ?? 9);
+      });
+  }, [cards, extraCards]);
+
+  const fetchGuide = React.useCallback(() => {
+    if (!fromCoords || !toCoords) return;
+    setLoading(true);
+    fetch(`/api/guide?oLat=${fromCoords[0]}&oLng=${fromCoords[1]}&dLat=${toCoords[0]}&dLng=${toCoords[1]}&seg=${seg}&lang=${lang}`)
+      .then(r => r.json())
+      .then(data => {
+        setCards(data.cards || []);
+        setSources(data.sources || null);
+        setUpdated(data.updated);
+      })
+      .catch(() => { setCards([]); })
+      .finally(() => setLoading(false));
+  }, [fromCoords?.[0], fromCoords?.[1], toCoords?.[0], toCoords?.[1], seg, lang]); // eslint-disable-line
+
+  React.useEffect(() => {
+    fetchGuide();
+    const iv = setInterval(fetchGuide, 180000); // 3 min
+    return () => clearInterval(iv);
+  }, [fetchGuide]);
+
+  const SEV_COLOR = { critical: "#ef4444", warning: "#f59e0b", info: "#0ea5e9", tip: "#22c55e" };
+  const SEV_BG = { critical: "rgba(239,68,68,0.06)", warning: "rgba(245,158,11,0.06)", info: "rgba(14,165,233,0.04)", tip: "rgba(34,197,94,0.04)" };
+  const SEV_BORDER = { critical: "rgba(239,68,68,0.2)", warning: "rgba(245,158,11,0.2)", info: "rgba(14,165,233,0.12)", tip: "rgba(34,197,94,0.12)" };
+
+  return (
+    <div style={{ marginBottom: 16 }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+        <div style={{ ...dm, fontSize: 13, fontWeight: 700, color: C.text, letterSpacing: 0.5, display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: cards && cards.some(c => c.severity === "critical") ? "#ef4444" : "#22c55e", display: "inline-block", animation: loading ? "pulse 1.5s infinite" : "none" }} />
+          PULS JADRANA
+        </div>
+        <button onClick={fetchGuide} disabled={loading}
+          style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${C.bord}`, background: "transparent", color: loading ? C.mut : C.accent, fontSize: 11, cursor: loading ? "default" : "pointer", ...dm }}>
+          {loading ? "⏳" : "↻"}
+        </button>
+      </div>
+
+      {/* Cards */}
+      {cards === null && mergedCards.length === 0 && (
+        <div style={{ ...dm, fontSize: 13, color: C.mut, padding: "20px 0", textAlign: "center" }}>
+          Prikupljam live podatke…
+        </div>
+      )}
+      {cards !== null && mergedCards.length === 0 && (
+        <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(34,197,94,0.04)", border: "1px solid rgba(34,197,94,0.12)", ...dm, fontSize: 13, color: "#22c55e" }}>
+          ✅ Sve čisto — bez incidenata na ruti
+        </div>
+      )}
+      {mergedCards.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {mergedCards.map((card, i) => (
+            <div key={card.id || i}
+              style={{
+                padding: card.isAI ? "14px 16px" : "12px 14px", borderRadius: 14,
+                background: card.isAI ? "linear-gradient(135deg, rgba(14,165,233,0.06), rgba(139,92,246,0.06))" : (SEV_BG[card.severity] || SEV_BG.info),
+                border: card.isAI ? "1px solid rgba(139,92,246,0.2)" : `1px solid ${SEV_BORDER[card.severity] || SEV_BORDER.info}`,
+                animation: i === 0 && card.severity === "critical" ? "pulse 2s infinite" : card.isAI ? "fadeIn 0.5s both" : "none",
+              }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ ...dm, fontSize: 13, fontWeight: 700, color: card.isAI ? "#a78bfa" : (SEV_COLOR[card.severity] || C.text) }}>
+                  {card.icon} {card.title}
+                </div>
+                <span style={{ ...dm, fontSize: 9, color: C.mut, whiteSpace: "nowrap", marginLeft: 8 }}>{card.source}</span>
+              </div>
+              <div style={{ ...dm, fontSize: card.isAI ? 13 : 12, color: card.isAI ? C.text : C.mut, marginTop: 4, lineHeight: 1.6 }}>
+                {card.body}
+              </div>
+              {card.ts && <div style={{ ...dm, fontSize: 9, color: "rgba(100,116,139,0.35)", marginTop: 4 }}>{(() => { const s = Math.floor((Date.now() - new Date(card.ts).getTime()) / 1000); return s < 60 ? "upravo" : s < 3600 ? `prije ${Math.floor(s/60)} min` : s < 86400 ? `prije ${Math.floor(s/3600)}h` : ""; })()}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Source indicator */}
+      {(sources || extraCards?.length > 0) && (
+        <div style={{ ...dm, fontSize: 10, color: "rgba(100,116,139,0.4)", marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {sources && <><span>HERE:{sources.here || 0}</span><span>Sense:{sources.yolo || 0}</span><span>Meteo:{sources.meteo ? "✓" : "–"}</span></>}
+          {extraCards?.length > 0 && <span>GPS:{extraCards.length}</span>}
+          {updated && <span style={{ marginLeft: "auto" }}>{new Date(updated).toLocaleTimeString("hr", { hour: "2-digit", minute: "2-digit" })}</span>}
+        </div>
+      )}
+    </div>
+  );
+});
+
+/* ══════════════════════════════════════════════════════════
+
+
 /* ─── COMPONENT ─── */
 export default function JadranUnified() {
   // mounted
