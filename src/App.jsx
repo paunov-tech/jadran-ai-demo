@@ -3042,7 +3042,6 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         /* Prevent iOS auto-zoom on input focus (requires font-size ≥ 16px) */
         input, select, textarea {
           font-size: 16px !important;
-          -webkit-text-size-adjust: 100%;
         }
 
         /* 100dvh — handles iOS Safari address-bar show/hide correctly.
@@ -3051,7 +3050,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         .dvh-exact { height: 100vh; height: 100dvh; }
 
         /* Momentum scrolling on all overflow containers */
-        [style*="overflow-y: auto"], [style*="overflowY"] {
+        [style*="overflow-y: auto"], [style*="overflow-y:auto"] {
           -webkit-overflow-scrolling: touch;
           overscroll-behavior: contain;
         }
@@ -3134,7 +3133,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         }
 
         /* Smooth font rendering */
-        * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        * { -webkit-font-smoothing: antialiased; }
       `}</style>
       <div className="grain" />
       <div className="wave-deco" />
