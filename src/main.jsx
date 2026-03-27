@@ -4,9 +4,10 @@ import ReactDOM from 'react-dom/client'
 // Route logic:
 // /host         → HostPanel (apartment management)
 // /ai           → Standalone AI (pay & use, campers, day-trippers)
-// /explore      → DestinationExplorer (destination picker → detail → AI chat)
+// /explore      → DestinationExplorer (pre-trip hub: book → confirm → trip ID)
 // ?room=XXXX    → Guest App (guide for apartment guests)
 // ?kiosk=XXX    → Guest App (kiosk mode, tablet demo)
+// ?trip=JAD-... → TripGuide (booking ID entry → AI guide with full context)
 // jadran.ai     → Landing Page (marketing + booking)
 const path = window.location.pathname;
 const params = new URLSearchParams(window.location.search);
@@ -16,8 +17,9 @@ const isHost = path === "/host" || path === "/host/";
 const isAI = path === "/ai" || path === "/ai/";
 const isTZ = path === "/tz" || path === "/tz/";
 const isExplore = path === "/explore" || path === "/explore/";
+const hasTrip = params.has("trip");
 
-const route = isHost ? "host" : isAI ? "ai" : isTZ ? "tz" : isExplore ? "explore" : (hasRoom || hasKiosk) ? "app" : "landing";
+const route = isHost ? "host" : isAI ? "ai" : isTZ ? "tz" : isExplore ? "explore" : hasTrip ? "trip" : (hasRoom || hasKiosk) ? "app" : "landing";
 
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null }; }
@@ -44,15 +46,16 @@ class ErrorBoundary extends React.Component {
 }
 
 const App = React.lazy(() =>
-  route === "host" ? import('./HostPanel.jsx')
-  : route === "ai" ? import('./StandaloneAI.jsx')
-  : route === "tz" ? import('./TZDashboard.jsx')
+  route === "host"    ? import('./HostPanel.jsx')
+  : route === "ai"   ? import('./StandaloneAI.jsx')
+  : route === "tz"   ? import('./TZDashboard.jsx')
   : route === "explore" ? import('./DestinationExplorer.jsx')
-  : route === "app" ? import('./App.jsx')
+  : route === "trip" ? import('./TripGuide.jsx')
+  : route === "app"  ? import('./App.jsx')
   : import('./LandingPage.jsx')
 );
 
-const labels = { host: "Host Panel", ai: "Vodič", tz: "TZ Dashboard", explore: "Destinacije", app: "JADRAN", landing: "JADRAN" };
+const labels = { host: "Host Panel", ai: "Vodič", tz: "TZ Dashboard", explore: "Destinacije", trip: "JADRAN Trip", app: "JADRAN", landing: "JADRAN" };
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

@@ -1273,18 +1273,30 @@ export default async function handler(req, res) {
     const adriaticCtx = adriatic_region && ADRIATIC_REGION_NAMES[adriatic_region]
       ? `[REGION: ${ADRIATIC_REGION_NAMES[adriatic_region]}. Guest arriving from Central Europe.]`
       : null;
-    // DELTA_CONTEXT — structured trip context from onboarding
+    // DELTA_CONTEXT — structured trip context from onboarding + booking
     const deltaCtxStr = delta_context ? (() => {
       const d = delta_context;
-      const parts = ["[DELTA KONTEKST]"];
+      const parts = ["[OPERATOR KONTEKST — turistički operater]"];
+      if (d.booking_id) parts.push(`Booking ID: ${d.booking_id}`);
+      if (d.guest_name) parts.push(`Gost: ${d.guest_name}`);
+      if (d.accommodation_name) parts.push(`Smještaj: ${d.accommodation_name}${d.accommodation_direct ? " ✓ direktni partner" : " (affiliate)"}`);
       if (d.segment) parts.push(`Segment: ${d.segment}`);
       if (d.from) parts.push(`Iz: ${d.from}`);
       if (d.destination?.city) parts.push(`Destinacija: ${d.destination.city}${d.destination.region ? ` (${d.destination.region})` : ""}`);
       if (d.travelers) parts.push(`Putnici: ${d.travelers.adults || 2} odraslih${d.travelers.kids?.length ? `, ${d.travelers.kids.length} djece` : ""}`);
-      if (d.phase) parts.push(`Faza: ${d.phase}`);
+      const phaseMap = { pretrip: "PRE-TRIP", transit: "TRANSIT (na putu)", arrival: "ARRIVAL", odmor: "STAY", departure: "DEPARTURE", landing: "LANDING" };
+      if (d.phase) parts.push(`Faza: ${phaseMap[d.phase] || d.phase}`);
       if (d.budget) parts.push(`Budžet: ${{ low: "ekonomični", mid: "srednji", high: "luksuz" }[d.budget] || d.budget}`);
       if (d.interests?.length) parts.push(`Interesi: ${d.interests.join(", ")}`);
       if (d.arrival_date) parts.push(`Dolazak: ${d.arrival_date}`);
+      if (d.departure_date) parts.push(`Odlazak: ${d.departure_date}`);
+      // Operator instructions based on phase
+      if (d.phase === "pretrip") parts.push("INSTRUKCIJA: Gost je u fazi planiranja. Pomozi s rutom, vremenom, šta ponijeti, i informacijama o destinaciji.");
+      if (d.phase === "transit") parts.push("INSTRUKCIJA: Gost je na putu. Fokus na navigaciju, trajekte, gužve, parking. Proaktivna upozorenja.");
+      if (d.phase === "arrival") parts.push("INSTRUKCIJA: Gost je stigao. Check-in info, parking, prve preporuke za dan, live kamere.");
+      if (d.phase === "odmor") parts.push("INSTRUKCIJA: Gost boravi na destinaciji. Preporuči aktivnosti, restorane, plaže. Direktni partneri uvijek prvi.");
+      if (d.phase === "departure") parts.push("INSTRUKCIJA: Gost odlazi. Trajektni red, alternativne rute, produžetak boravka, promo kod za sljedeću godinu.");
+      if (d.guest_name) parts.push(`PERSONALIZACIJA: Obraćaj se gostu imenom "${d.guest_name}" na početku razgovora.`);
       return parts.join(" | ");
     })() : null;
 

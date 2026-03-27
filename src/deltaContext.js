@@ -18,10 +18,16 @@ export const DEFAULTS = {
   destination: null,      // { city, lat, lng, region }
   travelers: { adults: 2, kids: 0, kids_ages: [] },
   arrival_date: null,     // ISO date string
+  departure_date: null,   // ISO date string
   budget: null,           // "low" | "mid" | "high"
   interests: [],          // array of interest keys
   room_code: null,
-  phase: "landing",       // landing|transit|odmor|povratak
+  phase: "landing",       // landing|pretrip|transit|arrival|odmor|departure|povratak
+  // Operator booking fields
+  booking_id: null,       // JAD-RAB-YYYYMMDD-XXXXXX
+  guest_name: null,       // Guest's full name
+  accommodation_name: null, // Booked accommodation
+  accommodation_direct: false, // true = direct partner booking
 };
 
 export function loadDelta() {
@@ -63,9 +69,15 @@ export function deltaPromptBlock(delta) {
   const t = delta.travelers;
   if (t) lines.push(`Putnici: ${t.adults} odraslih${t.kids > 0 ? `, ${t.kids} djece (${(t.kids_ages ?? t.kidsAges ?? []).join(", ")} god)` : ""}`);
   if (delta.arrival_date) lines.push(`Dolazak: ${delta.arrival_date}`);
+  if (delta.departure_date) lines.push(`Odlazak: ${delta.departure_date}`);
   if (delta.budget) lines.push(`Budget: ${delta.budget}`);
   if (delta.interests?.length) lines.push(`Interesi: ${delta.interests.join(", ")}`);
-  
+  if (delta.booking_id) lines.push(`Booking ID: ${delta.booking_id}`);
+  if (delta.guest_name) lines.push(`Gost: ${delta.guest_name}`);
+  if (delta.accommodation_name) lines.push(`Smještaj: ${delta.accommodation_name}${delta.accommodation_direct ? " (direktni partner)" : ""}`);
+  const phaseMap = { pretrip: "PRE-TRIP (booking potvrđen)", transit: "TRANSIT (na putu)", arrival: "ARRIVAL (dolazak/kiosk)", odmor: "STAY (boravak)", departure: "DEPARTURE" };
+  if (delta.phase && phaseMap[delta.phase]) lines.push(`Faza: ${phaseMap[delta.phase]}`);
+
   lines.push("\nPRAVILA:");
   if (delta.segment === "kamper") {
     lines.push("- Prioritet: parking, visine tunela, dump stanice, LPG, bura upozorenja");
