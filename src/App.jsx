@@ -353,7 +353,7 @@ export default function JadranUnified() {
 
   // ─── LEAFLET MAP: call hook unconditionally (React rules) ───
   const mapFromCity = transitFromUrl || COUNTRY_CITY[G.country] || "Wien";
-  const mapToCity = transitToUrl || "Split";
+  const mapToCity = transitToUrl || loadDelta().destination?.city || kioskCity || "Split";
 
   // Geocode transit cities to coordinates
   useEffect(() => {
@@ -386,7 +386,7 @@ export default function JadranUnified() {
         setTransitToCoords(coords);
         saveDelta({ destination: { city: mapToCity, lat: coords[0], lng: coords[1] } });
       })
-      .catch(() => { setTransitToCoords(CITY_COORDS["Split"]); saveDelta({ destination: { city: mapToCity, lat: 43.508, lng: 16.440 } }); });
+      .catch(() => { const fb = CITY_COORDS[mapToCity] || CITY_COORDS["Split"]; setTransitToCoords(fb); saveDelta({ destination: { city: mapToCity, lat: fb[0], lng: fb[1] } }); });
   }, [mapToCity]); // eslint-disable-line
 
   // Traffic incidents now handled by /api/guide (RouteGuide component)
@@ -524,7 +524,7 @@ export default function JadranUnified() {
     try {
       const res = await fetch("/api/viator-search", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ destination: loadDelta().destination?.city || "Split" }),
+        body: JSON.stringify({ destination: loadDelta().destination?.city || kioskCity || "Split" }),
       });
       const data = await res.json();
       setViatorActs(Array.isArray(data.activities) && data.activities.length > 0 ? data.activities : VIATOR_FALLBACK);
