@@ -666,15 +666,16 @@ export default function JadranUnified() {
   const [forecast, setForecast] = useState(null); // null = use FORECAST_DEFAULT
 
   useEffect(() => {
-    // Live weather at destination (or fallback Split)
+    // Live weather at destination — resolve coords from best available source
     const delta = loadDelta();
-    const wLat = transitToCoords?.[0] || delta.destination?.lat || kioskCoords?.[0] || 43.508;
-    const wLng = transitToCoords?.[1] || delta.destination?.lng || kioskCoords?.[1] || 16.440;
+    const wLat = kioskForcedCoords.current?.[0] || transitToCoords?.[0] || delta.destination?.lat || kioskCoords?.[0];
+    const wLng = kioskForcedCoords.current?.[1] || transitToCoords?.[1] || delta.destination?.lng || kioskCoords?.[1];
+    if (!wLat || !wLng) return; // wait for real coords — don't pollute with Split fallback
     fetch(`/api/weather?lat=${wLat}&lon=${wLng}`).then(r => r.json()).then(data => {
       if (data.current?.temp) setWeather(data.current);
       if (data.forecast?.length >= 5) setForecast(data.forecast);
     }).catch(() => {});
-  }, [transitToCoords?.[0], kioskCoords?.[0]]); // eslint-disable-line
+  }, [transitToCoords?.[0], kioskCoords?.[0], phase]); // eslint-disable-line
   // ─── ADMIN: Secret unlock DISABLED in production ───
   // To test premium: use Stripe test mode or set jadran_ai_premium in Firebase console
   // useEffect(() => { ... }, []);
