@@ -124,7 +124,7 @@ const DESTINATIONS = [
       },
       {
         id: "transport",
-        icon: "🚢",
+        icon: "⛴️",
         title_en: "Getting There",
         title_de: "Anreise",
         items: [
@@ -206,17 +206,11 @@ const C = {
   gradient: "linear-gradient(135deg, #0a1628 0%, #0d2137 50%, #0a1628 100%)",
 };
 
-const fonts = `
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
-`;
-
 export default function DestinationExplorer({ language = "en", onStartChat }) {
   const [view, setView] = useState("explorer"); // explorer | detail
   const [selected, setSelected] = useState(null);
   const [activeCategory, setActiveCategory] = useState(null);
-  const [loaded, setLoaded] = useState(false);
   const [lang, setLang] = useState(() => {
-    // Auto-detect from browser if not passed
     if (language === "de") return "de";
     if (typeof navigator !== "undefined") {
       const bl = navigator.language?.slice(0, 2).toLowerCase();
@@ -225,8 +219,17 @@ export default function DestinationExplorer({ language = "en", onStartChat }) {
     return "en";
   });
 
+  // Inject Google Fonts into <head> — more reliable than @import in body <style>
   useEffect(() => {
-    setTimeout(() => setLoaded(true), 100);
+    const id = "jadran-explore-fonts";
+    if (!document.getElementById(id)) {
+      const link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      link.href = "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap";
+      document.head.appendChild(link);
+    }
+    return () => {};
   }, []);
 
   const openDestination = (dest) => {
@@ -234,110 +237,145 @@ export default function DestinationExplorer({ language = "en", onStartChat }) {
     setSelected(dest);
     setActiveCategory(dest.categories?.[0] || null);
     setView("detail");
+    window.scrollTo({ top: 0, behavior: "instant" });
   };
 
   const goBack = () => {
     setView("explorer");
     setSelected(null);
     setActiveCategory(null);
+    window.scrollTo({ top: 0, behavior: "instant" });
   };
 
   const handleStartTrip = () => {
     if (onStartChat) {
       onStartChat(selected, lang);
     } else {
-      // Default: navigate to kiosk mode for this destination
       window.location.href = `/?kiosk=${selected.id}&lang=${lang}`;
     }
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: C.gradient, fontFamily: "'DM Sans', sans-serif", color: C.white, overflow: "hidden" }}>
-      <style>{fonts}{`
+    <div style={{ minHeight: "100dvh", background: C.gradient, fontFamily: "'DM Sans', sans-serif", color: C.white, overflowX: "hidden" }}>
+      <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        .dest-card { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; }
-        .dest-card:hover { transform: translateY(-8px) scale(1.02); }
+
+        /* Hover effects — pointer devices only, avoids sticky-hover on touch */
+        @media (hover: hover) {
+          .dest-card:not(.locked):hover { transform: translateY(-8px) scale(1.02); }
+          .cat-pill:hover { opacity: 0.85; }
+          .item-card:hover { transform: translateX(4px); background: ${C.cardHover} !important; }
+          .aff-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        }
+
+        .dest-card { transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; }
         .dest-card.locked { opacity: 0.5; cursor: default; }
-        .dest-card.locked:hover { transform: none; }
-        .cat-pill { transition: all 0.3s; cursor: pointer; border: none; outline: none; }
-        .cat-pill:hover { transform: scale(1.05); }
-        .cat-pill.active { background: ${C.accent} !important; color: white !important; }
-        .item-card { transition: all 0.3s; }
-        .item-card:hover { transform: translateX(4px); background: ${C.cardHover} !important; }
-        .aff-btn { transition: all 0.2s; cursor: pointer; border: none; outline: none; }
-        .aff-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
-        .fade-in { opacity: 0; transform: translateY(20px); animation: fadeUp 0.6s ease forwards; }
+        .cat-pill { transition: opacity 0.2s; cursor: pointer; border: none; outline: none; }
+        .item-card { transition: transform 0.25s, background 0.25s; }
+        .aff-btn { transition: transform 0.2s, filter 0.2s; cursor: pointer; border: none; outline: none; }
+
+        .fade-in { opacity: 0; transform: translateY(16px); animation: fadeUp 0.5s ease forwards; }
         @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
         @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
         .hero-shimmer { background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%); background-size: 200% 100%; animation: shimmer 3s infinite; }
+
         .pulse-dot { animation: pulse 2s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        /* Pill scrollbar — hidden but scrollable */
+        .pills-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 24px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .pills-row::-webkit-scrollbar { display: none; }
+
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: ${C.accent}40; border-radius: 4px; }
+
+        /* Detail hero: stack vertically on narrow screens */
+        .hero-bottom { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+        @media (max-width: 600px) {
+          .hero-bottom { flex-direction: column; align-items: flex-start; }
+          .hero-plan-btn { align-self: flex-start; }
+        }
       `}</style>
 
-      {/* HEADER */}
-      <header style={{ padding: "20px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }} onClick={goBack}>
-          <div style={{ fontSize: 28, fontFamily: "'Playfair Display', serif", fontWeight: 700, letterSpacing: "-0.5px" }}>
+      {/* HEADER — sticky so navigation is always reachable */}
+      <header style={{
+        position: "sticky", top: 0, zIndex: 100,
+        padding: "16px 24px",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        background: C.bg,
+        borderBottom: `1px solid ${C.border}`,
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={goBack}>
+          <div style={{ fontSize: 26, fontFamily: "'Playfair Display', serif", fontWeight: 700, letterSpacing: "-0.5px" }}>
             <span style={{ color: C.white }}>JADRAN</span>
             <span style={{ color: C.gold }}>.ai</span>
           </div>
           {view === "detail" && (
-            <span style={{ color: C.muted, fontSize: 14, marginLeft: 8 }}>← {lang === "de" ? "Alle Destinationen" : "All Destinations"}</span>
+            <span style={{ color: C.muted, fontSize: 13, marginLeft: 4 }}>
+              ← {lang === "de" ? "Alle Destinationen" : "All Destinations"}
+            </span>
           )}
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => setLang("de")} style={{ padding: "6px 16px", borderRadius: 20, border: `1px solid ${lang === "de" ? C.accent : C.border}`, background: lang === "de" ? C.accent + "20" : "transparent", color: lang === "de" ? C.accent : C.muted, fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans'" }}>DE</button>
-          <button onClick={() => setLang("en")} style={{ padding: "6px 16px", borderRadius: 20, border: `1px solid ${lang === "en" ? C.accent : C.border}`, background: lang === "en" ? C.accent + "20" : "transparent", color: lang === "en" ? C.accent : C.muted, fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans'" }}>EN</button>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button
+            onClick={() => setLang("de")}
+            style={{ padding: "5px 14px", borderRadius: 20, border: `1px solid ${lang === "de" ? C.accent : C.border}`, background: lang === "de" ? C.accent + "20" : "transparent", color: lang === "de" ? C.accent : C.muted, fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
+          >DE</button>
+          <button
+            onClick={() => setLang("en")}
+            style={{ padding: "5px 14px", borderRadius: 20, border: `1px solid ${lang === "en" ? C.accent : C.border}`, background: lang === "en" ? C.accent + "20" : "transparent", color: lang === "en" ? C.accent : C.muted, fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans', sans-serif" }}
+          >EN</button>
         </div>
       </header>
 
       {/* ========== EXPLORER VIEW ========== */}
       {view === "explorer" && (
-        <div style={{ padding: "40px 32px", maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ padding: "40px 24px", maxWidth: 1200, margin: "0 auto" }}>
           <div className="fade-in" style={{ textAlign: "center", marginBottom: 48 }}>
-            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(32px, 5vw, 52px)", fontWeight: 700, lineHeight: 1.1, marginBottom: 16 }}>
+            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(28px, 5vw, 52px)", fontWeight: 700, lineHeight: 1.1, marginBottom: 16 }}>
               {lang === "de" ? "Entdecke die" : "Discover the"}{" "}
               <span style={{ color: C.accent }}>{lang === "de" ? "Adriaküste" : "Adriatic Coast"}</span>
             </h1>
-            <p style={{ color: C.muted, fontSize: 18, maxWidth: 500, margin: "0 auto" }}>
+            <p style={{ color: C.muted, fontSize: "clamp(15px, 2vw, 18px)", maxWidth: 500, margin: "0 auto" }}>
               {lang === "de"
                 ? "Wähle dein Reiseziel. Dein AI-Reisebegleiter erwartet dich."
                 : "Choose your destination. Your AI travel companion awaits."}
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 24 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 20 }}>
             {DESTINATIONS.map((d, i) => (
               <div
                 key={d.id}
                 className={`dest-card fade-in ${d.locked ? "locked" : ""}`}
-                style={{ animationDelay: `${i * 0.1}s`, borderRadius: 16, overflow: "hidden", background: C.card, border: `1px solid ${C.border}`, position: "relative" }}
+                style={{ animationDelay: `${i * 0.08}s`, borderRadius: 16, overflow: "hidden", background: C.card, border: `1px solid ${C.border}`, position: "relative" }}
                 onClick={() => openDestination(d)}
               >
                 {/* Hero image */}
-                <div style={{ height: 200, background: `url(${d.hero}) center/cover`, position: "relative" }}>
-                  <div className="hero-shimmer" style={{ position: "absolute", inset: 0 }} />
+                <div style={{ height: 190, background: `url(${d.hero}) center/cover`, position: "relative" }}>
+                  {!d.locked && <div className="hero-shimmer" style={{ position: "absolute", inset: 0 }} />}
                   <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 80, background: "linear-gradient(transparent, rgba(10,22,40,0.95))" }} />
 
                   {/* Badge */}
-                  <div style={{ position: "absolute", top: 12, right: 12, padding: "4px 12px", borderRadius: 20, background: d.badge_color, color: d.badge_color === "#666" ? "#ccc" : "#000", fontSize: 11, fontWeight: 600, letterSpacing: "0.5px" }}>
-                    {d.badge === "PILOT" && <span className="pulse-dot" style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: "#000", marginRight: 6 }} />}
+                  <div style={{ position: "absolute", top: 12, right: 12, padding: "4px 12px", borderRadius: 20, background: d.badge_color, color: d.badge_color === "#666" ? "#ccc" : "#000", fontSize: 11, fontWeight: 600, letterSpacing: "0.5px", display: "flex", alignItems: "center", gap: 5 }}>
+                    {d.badge === "PILOT" && <span className="pulse-dot" style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: "#000" }} />}
                     {d.badge}
                   </div>
 
                   {/* Name overlay */}
                   <div style={{ position: "absolute", bottom: 12, left: 16 }}>
-                    <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, margin: 0 }}>{d.name}</h2>
+                    <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 26, fontWeight: 700, margin: 0 }}>{d.name}</h2>
                     <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>{lang === "de" ? d.tagline_de : d.tagline_en}</p>
                   </div>
                 </div>
 
                 {/* Stats bar */}
                 {d.stats && (
-                  <div style={{ padding: "12px 16px", display: "flex", gap: 16, borderTop: `1px solid ${C.border}` }}>
+                  <div style={{ padding: "10px 16px", display: "flex", gap: 14, borderTop: `1px solid ${C.border}` }}>
                     <span style={{ fontSize: 12, color: C.muted }}>🏖️ {d.stats.beaches} {lang === "de" ? "Strände" : "beaches"}</span>
                     <span style={{ fontSize: 12, color: C.muted }}>📸 {d.stats.cameras} {lang === "de" ? "Kameras" : "cameras"}</span>
                     <span style={{ fontSize: 12, color: C.muted }}>📍 {d.stats.pois} POIs</span>
@@ -346,7 +384,7 @@ export default function DestinationExplorer({ language = "en", onStartChat }) {
 
                 {/* Locked overlay */}
                 {d.locked && (
-                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,22,40,0.6)", backdropFilter: "blur(2px)" }}>
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,22,40,0.6)", backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)" }}>
                     <span style={{ fontSize: 14, color: C.muted, fontWeight: 500 }}>🔒 {lang === "de" ? "Bald verfügbar" : "Coming Soon"}</span>
                   </div>
                 )}
@@ -354,167 +392,167 @@ export default function DestinationExplorer({ language = "en", onStartChat }) {
             ))}
           </div>
 
-          {/* Partner logos */}
-          <div style={{ marginTop: 64, textAlign: "center", padding: "32px 0", borderTop: `1px solid ${C.border}` }}>
-            <p style={{ color: C.muted, fontSize: 12, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 20 }}>
+          {/* Partner strip */}
+          <div style={{ marginTop: 56, textAlign: "center", padding: "28px 0", borderTop: `1px solid ${C.border}` }}>
+            <p style={{ color: C.muted, fontSize: 11, letterSpacing: "2px", textTransform: "uppercase", marginBottom: 18 }}>
               {lang === "de" ? "Unsere Partner" : "Our Partners"}
             </p>
-            <div style={{ display: "flex", justifyContent: "center", gap: 40, flexWrap: "wrap", opacity: 0.6 }}>
-              <span style={{ fontSize: 16, color: C.muted, fontWeight: 600 }}>GetYourGuide</span>
-              <span style={{ fontSize: 16, color: C.muted, fontWeight: 600 }}>Viator</span>
-              <span style={{ fontSize: 16, color: C.muted, fontWeight: 600 }}>Booking.com</span>
-              <span style={{ fontSize: 16, color: C.muted, fontWeight: 600 }}>Jadrolinija</span>
+            <div style={{ display: "flex", justifyContent: "center", gap: 32, flexWrap: "wrap", opacity: 0.55 }}>
+              <span style={{ fontSize: 15, color: C.muted, fontWeight: 600 }}>GetYourGuide</span>
+              <span style={{ fontSize: 15, color: C.muted, fontWeight: 600 }}>Viator</span>
+              <span style={{ fontSize: 15, color: C.muted, fontWeight: 600 }}>Booking.com</span>
+              <span style={{ fontSize: 15, color: C.muted, fontWeight: 600 }}>Jadrolinija</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* ========== DETAIL VIEW (TRIP PLANNER) ========== */}
+      {/* ========== DETAIL VIEW ========== */}
       {view === "detail" && selected && (
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px 60px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 0 60px" }}>
 
-          {/* Hero section */}
-          <div className="fade-in" style={{ position: "relative", height: 280, borderRadius: "0 0 24px 24px", overflow: "hidden", marginBottom: 32 }}>
+          {/* Hero — full-width within container, padded content below */}
+          <div className="fade-in" style={{ position: "relative", height: 260, overflow: "hidden", marginBottom: 32 }}>
             <div style={{ position: "absolute", inset: 0, background: `url(${selected.hero}) center/cover` }} />
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(transparent 30%, rgba(10,22,40,0.95))" }} />
-            <div style={{ position: "absolute", bottom: 24, left: 32, right: 32 }}>
-              <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(transparent 20%, rgba(10,22,40,0.96))" }} />
+            <div style={{ position: "absolute", bottom: 20, left: 24, right: 24 }}>
+              <div className="hero-bottom">
                 <div>
-                  <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: 48, fontWeight: 700, margin: 0 }}>{selected.name}</h1>
-                  <p style={{ color: C.accent, fontSize: 16, margin: "4px 0 0" }}>{lang === "de" ? selected.tagline_de : selected.tagline_en}</p>
+                  <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(30px, 6vw, 48px)", fontWeight: 700, margin: 0, lineHeight: 1.1 }}>{selected.name}</h1>
+                  <p style={{ color: C.accent, fontSize: 15, margin: "4px 0 0" }}>{lang === "de" ? selected.tagline_de : selected.tagline_en}</p>
                 </div>
                 <button
                   onClick={handleStartTrip}
-                  className="aff-btn"
-                  style={{ padding: "14px 28px", borderRadius: 28, background: `linear-gradient(135deg, ${C.accent}, #0090b0)`, color: "white", fontSize: 15, fontWeight: 600, fontFamily: "'DM Sans'", display: "flex", alignItems: "center", gap: 8, boxShadow: `0 4px 20px ${C.accent}40` }}
+                  className="aff-btn hero-plan-btn"
+                  style={{ padding: "12px 24px", borderRadius: 24, background: `linear-gradient(135deg, ${C.accent}, #0090b0)`, color: "white", fontSize: 14, fontWeight: 600, fontFamily: "'DM Sans', sans-serif", display: "flex", alignItems: "center", gap: 7, boxShadow: `0 4px 20px ${C.accent}40`, whiteSpace: "nowrap", flexShrink: 0 }}
                 >
                   🤖 {lang === "de" ? "Mit AI planen" : "Plan with AI"}
                 </button>
               </div>
-              <p style={{ color: C.muted, fontSize: 14, marginTop: 8, maxWidth: 600 }}>
+              <p style={{ color: C.muted, fontSize: 13, marginTop: 8, maxWidth: 560 }}>
                 {lang === "de" ? selected.description_de : selected.description_en}
               </p>
             </div>
           </div>
 
           {/* Category pills */}
-          <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, marginBottom: 24 }}>
-            {selected.categories?.map((cat) => (
-              <button
-                key={cat.id}
-                className={`cat-pill ${activeCategory?.id === cat.id ? "active" : ""}`}
-                onClick={() => setActiveCategory(cat)}
-                style={{
-                  padding: "10px 20px",
-                  borderRadius: 24,
-                  background: activeCategory?.id === cat.id ? C.accent : C.card,
-                  color: activeCategory?.id === cat.id ? "white" : C.muted,
-                  fontSize: 14,
-                  fontWeight: 500,
-                  fontFamily: "'DM Sans'",
-                  whiteSpace: "nowrap",
-                  border: `1px solid ${activeCategory?.id === cat.id ? C.accent : C.border}`,
-                }}
-              >
-                {cat.icon} {lang === "de" ? cat.title_de : cat.title_en}
-              </button>
-            ))}
-          </div>
-
-          {/* Category content */}
-          {activeCategory && (
-            <div className="fade-in" key={activeCategory.id}>
-              {/* Affiliate partner header */}
-              {activeCategory.affiliate && (
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, padding: "8px 16px", borderRadius: 12, background: `${C.gold}10`, border: `1px solid ${C.gold}30` }}>
-                  <span style={{ fontSize: 12, color: C.gold }}>⭐</span>
-                  <span style={{ fontSize: 12, color: C.gold, fontWeight: 500 }}>
-                    {lang === "de" ? "Buche direkt bei unseren Partnern — bester Preis garantiert" : "Book directly with our partners — best price guaranteed"}
-                  </span>
-                </div>
-              )}
-
-              {/* Items grid */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-                {activeCategory.items?.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="item-card"
-                    style={{
-                      padding: 20,
-                      borderRadius: 16,
-                      background: C.card,
-                      border: `1px solid ${item.important ? C.accent + "40" : C.border}`,
-                      position: "relative",
-                    }}
-                  >
-                    {/* Local badge */}
-                    {item.local && (
-                      <div style={{ position: "absolute", top: 12, right: 12, padding: "2px 8px", borderRadius: 8, background: "#22c55e20", border: "1px solid #22c55e40" }}>
-                        <span style={{ fontSize: 10, color: "#22c55e", fontWeight: 600 }}>LOCAL TIP</span>
-                      </div>
-                    )}
-
-                    <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 4, paddingRight: item.local ? 70 : 0 }}>{item.name}</h3>
-                    <p style={{ fontSize: 13, color: C.muted, marginBottom: 12 }}>{item.sub}</p>
-
-                    {/* Rating */}
-                    {item.rating && (
-                      <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 12 }}>
-                        <span style={{ color: C.gold, fontSize: 13 }}>★</span>
-                        <span style={{ fontSize: 13, fontWeight: 500 }}>{item.rating}</span>
-                      </div>
-                    )}
-
-                    {/* Affiliate buttons */}
-                    {(item.gyg || item.viator || item.booking) && (
-                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                        {item.gyg && (
-                          <a href={item.gyg} target="_blank" rel="noopener noreferrer" className="aff-btn" style={{ padding: "6px 14px", borderRadius: 8, background: "#FF5533", color: "white", fontSize: 12, fontWeight: 600, textDecoration: "none", fontFamily: "'DM Sans'" }}>
-                            GetYourGuide →
-                          </a>
-                        )}
-                        {item.viator && (
-                          <a href={item.viator} target="_blank" rel="noopener noreferrer" className="aff-btn" style={{ padding: "6px 14px", borderRadius: 8, background: "#2E8B57", color: "white", fontSize: 12, fontWeight: 600, textDecoration: "none", fontFamily: "'DM Sans'" }}>
-                            Viator →
-                          </a>
-                        )}
-                        {item.booking && (
-                          <a href={item.booking} target="_blank" rel="noopener noreferrer" className="aff-btn" style={{ padding: "6px 14px", borderRadius: 8, background: "#003580", color: "white", fontSize: 12, fontWeight: 600, textDecoration: "none", fontFamily: "'DM Sans'" }}>
-                            Booking.com →
-                          </a>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+          <div style={{ padding: "0 24px" }}>
+            <div className="pills-row">
+              {selected.categories?.map((cat) => (
+                <button
+                  key={cat.id}
+                  className="cat-pill"
+                  onClick={() => setActiveCategory(cat)}
+                  style={{
+                    padding: "9px 18px",
+                    borderRadius: 24,
+                    background: activeCategory?.id === cat.id ? C.accent : C.card,
+                    color: activeCategory?.id === cat.id ? "white" : C.muted,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    fontFamily: "'DM Sans', sans-serif",
+                    whiteSpace: "nowrap",
+                    border: `1px solid ${activeCategory?.id === cat.id ? C.accent : C.border}`,
+                    transition: "background 0.2s, color 0.2s, border-color 0.2s",
+                  }}
+                >
+                  {cat.icon} {lang === "de" ? cat.title_de : cat.title_en}
+                </button>
+              ))}
             </div>
-          )}
 
-          {/* Bottom CTA */}
-          <div style={{ marginTop: 48, textAlign: "center", padding: 32, borderRadius: 20, background: C.surface, border: `1px solid ${C.border}` }}>
-            <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, marginBottom: 8 }}>
-              {lang === "de" ? "Bereit für" : "Ready for"} {selected.name}?
-            </h2>
-            <p style={{ color: C.muted, fontSize: 15, marginBottom: 20 }}>
-              {lang === "de"
-                ? "Lass unseren AI-Reisebegleiter deinen perfekten Trip planen."
-                : "Let our AI travel companion plan your perfect trip."}
-            </p>
-            <button
-              onClick={handleStartTrip}
-              className="aff-btn"
-              style={{ padding: "16px 40px", borderRadius: 32, background: `linear-gradient(135deg, ${C.accent}, #0090b0)`, color: "white", fontSize: 17, fontWeight: 600, fontFamily: "'DM Sans'", boxShadow: `0 6px 24px ${C.accent}40` }}
-            >
-              🤖 {lang === "de" ? "AI Trip Planer starten" : "Start AI Trip Planner"}
-            </button>
+            {/* Category content */}
+            {activeCategory && (
+              <div className="fade-in" key={activeCategory.id}>
+                {/* Affiliate partner header */}
+                {activeCategory.affiliate && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14, padding: "8px 14px", borderRadius: 12, background: `${C.gold}10`, border: `1px solid ${C.gold}30` }}>
+                    <span style={{ fontSize: 12, color: C.gold }}>⭐</span>
+                    <span style={{ fontSize: 12, color: C.gold, fontWeight: 500 }}>
+                      {lang === "de" ? "Buche direkt bei unseren Partnern — bester Preis garantiert" : "Book directly with our partners — best price guaranteed"}
+                    </span>
+                  </div>
+                )}
+
+                {/* Items grid */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
+                  {activeCategory.items?.map((item) => (
+                    <div
+                      key={item.name}
+                      className="item-card"
+                      style={{
+                        padding: 18,
+                        borderRadius: 14,
+                        background: C.card,
+                        border: `1px solid ${item.important ? C.accent + "50" : C.border}`,
+                        position: "relative",
+                      }}
+                    >
+                      {item.local && (
+                        <div style={{ position: "absolute", top: 12, right: 12, padding: "2px 8px", borderRadius: 8, background: "#22c55e20", border: "1px solid #22c55e40" }}>
+                          <span style={{ fontSize: 10, color: "#22c55e", fontWeight: 600 }}>LOCAL TIP</span>
+                        </div>
+                      )}
+
+                      <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 4, paddingRight: item.local ? 72 : 0, lineHeight: 1.3 }}>{item.name}</h3>
+                      <p style={{ fontSize: 13, color: C.muted, marginBottom: item.rating || item.gyg || item.viator || item.booking ? 10 : 0 }}>{item.sub}</p>
+
+                      {item.rating && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: item.gyg || item.viator || item.booking ? 10 : 0 }}>
+                          <span style={{ color: C.gold, fontSize: 13 }}>★</span>
+                          <span style={{ fontSize: 13, fontWeight: 500 }}>{item.rating}</span>
+                        </div>
+                      )}
+
+                      {(item.gyg || item.viator || item.booking) && (
+                        <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+                          {item.gyg && (
+                            <a href={item.gyg} target="_blank" rel="noopener noreferrer" className="aff-btn" style={{ padding: "6px 13px", borderRadius: 8, background: "#FF5533", color: "white", fontSize: 12, fontWeight: 600, textDecoration: "none", fontFamily: "'DM Sans', sans-serif" }}>
+                              GetYourGuide →
+                            </a>
+                          )}
+                          {item.viator && (
+                            <a href={item.viator} target="_blank" rel="noopener noreferrer" className="aff-btn" style={{ padding: "6px 13px", borderRadius: 8, background: "#2E8B57", color: "white", fontSize: 12, fontWeight: 600, textDecoration: "none", fontFamily: "'DM Sans', sans-serif" }}>
+                              Viator →
+                            </a>
+                          )}
+                          {item.booking && (
+                            <a href={item.booking} target="_blank" rel="noopener noreferrer" className="aff-btn" style={{ padding: "6px 13px", borderRadius: 8, background: "#003580", color: "white", fontSize: 12, fontWeight: 600, textDecoration: "none", fontFamily: "'DM Sans', sans-serif" }}>
+                              Booking.com →
+                            </a>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Bottom CTA */}
+            <div style={{ marginTop: 44, textAlign: "center", padding: "28px 24px", borderRadius: 20, background: C.surface, border: `1px solid ${C.border}` }}>
+              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(22px, 4vw, 28px)", marginBottom: 8 }}>
+                {lang === "de" ? "Bereit für" : "Ready for"} {selected.name}?
+              </h2>
+              <p style={{ color: C.muted, fontSize: 14, marginBottom: 20 }}>
+                {lang === "de"
+                  ? "Lass unseren AI-Reisebegleiter deinen perfekten Trip planen."
+                  : "Let our AI travel companion plan your perfect trip."}
+              </p>
+              <button
+                onClick={handleStartTrip}
+                className="aff-btn"
+                style={{ padding: "14px 36px", borderRadius: 28, background: `linear-gradient(135deg, ${C.accent}, #0090b0)`, color: "white", fontSize: 16, fontWeight: 600, fontFamily: "'DM Sans', sans-serif", boxShadow: `0 6px 24px ${C.accent}40` }}
+              >
+                🤖 {lang === "de" ? "AI Trip Planer starten" : "Start AI Trip Planner"}
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* Footer */}
-      <footer style={{ padding: "24px 32px", borderTop: `1px solid ${C.border}`, textAlign: "center" }}>
+      <footer style={{ padding: "20px 24px", borderTop: `1px solid ${C.border}`, textAlign: "center" }}>
         <p style={{ color: C.muted, fontSize: 12 }}>
           © 2026 JADRAN.AI — SIAL Consulting d.o.o. | Bizeljska cesta 5, 8250 Brežice, Slovenia
         </p>
