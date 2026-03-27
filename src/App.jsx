@@ -667,6 +667,8 @@ export default function JadranUnified() {
   const [arrivalCountdown, setArrivalCountdown] = useState(null); // seconds remaining
   const geoWatchRef = useRef(null);
   const arrivalFiredRef = useRef(false);
+  const [affiliateId, setAffiliateId] = useState(null); // e.g. "blackjack"
+  const kioskForcedCoords = useRef(null); // set by ?kiosk= param — bypasses GPS
   const [chatMsgs, setChatMsgs] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
@@ -778,7 +780,7 @@ export default function JadranUnified() {
     window.history.replaceState({}, "", "/");
   }, []); // eslint-disable-line
 
-  // ─── ?kiosk=rab&lang=de → direct kiosk demo mode (no onboarding) ───
+  // ─── ?kiosk=rab&lang=de&affiliate=blackjack → direct kiosk demo mode ───
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     const kioskParam = p.get("kiosk");
@@ -791,10 +793,17 @@ export default function JadranUnified() {
       "hvar":      [43.172,  16.441,  "Hvar"],
       "zadar":     [44.119,  15.232,  "Zadar"],
     };
-    const cd = KIOSK_CITIES[kioskParam.toLowerCase()];
+    // Affiliate-specific coordinate overrides
+    const AFFILIATE_COORDS = {
+      "blackjack": [44.7490, 14.7555, "Rab"], // Palit 315, Rab
+    };
+    const urlAffiliate = p.get("affiliate");
+    const cd = (urlAffiliate && AFFILIATE_COORDS[urlAffiliate]) || KIOSK_CITIES[kioskParam.toLowerCase()];
     if (!cd) return;
     const urlLang = p.get("lang");
     if (urlLang) { setLang(urlLang); saveDelta({ lang: urlLang }); }
+    if (urlAffiliate) setAffiliateId(urlAffiliate);
+    kioskForcedCoords.current = [cd[0], cd[1]]; // prevent GPS from overriding
     setTransitToCoords([cd[0], cd[1]]);
     saveDelta({ destination: { city: cd[2], lat: cd[0], lng: cd[1] } });
     setPhase("kiosk");
@@ -1795,12 +1804,15 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         });
     };
 
-    // Priority: GPS (actual location) → transitToCoords (route destination) → delta → Split
+    // Priority: forced coords (?kiosk= URL) → GPS → transitToCoords → delta → Split
     const delta = loadDelta();
     const fallbackLat = transitToCoords?.[0] || delta.destination?.lat || 43.508;
     const fallbackLng = transitToCoords?.[1] || delta.destination?.lng || 16.440;
 
-    if (navigator.geolocation) {
+    if (kioskForcedCoords.current) {
+      // ?kiosk= URL param forces specific location — never use GPS
+      fetchNearby(kioskForcedCoords.current[0], kioskForcedCoords.current[1]);
+    } else if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => fetchNearby(pos.coords.latitude, pos.coords.longitude),
         () => fetchNearby(fallbackLat, fallbackLng),
@@ -1928,6 +1940,28 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           </div>
         )}
 
+        {/* ═══ AFFILIATE BANNER — shown when entered via ?affiliate= ═══ */}
+        {affiliateId && AFFILIATE_DATA?.[affiliateId] && (() => {
+          const aff = AFFILIATE_DATA[affiliateId];
+          const L = (o) => o[lang] || o[lang === "at" ? "de" : "en"] || o.en || "";
+          return (
+            <div onClick={() => setSubScreen("affiliate")} style={{ cursor:"pointer", borderRadius:20, overflow:"hidden", marginBottom:16, position:"relative", height:160, border:`1px solid ${aff.color}30` }}>
+              <img src={aff.heroImg} alt={aff.name} style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} loading="lazy" />
+              <div style={{ position:"absolute", inset:0, background:"linear-gradient(to right, rgba(5,14,30,0.88) 0%, rgba(5,14,30,0.4) 60%, transparent 100%)" }} />
+              <div style={{ position:"absolute", top:0, left:0, bottom:0, padding:"20px 22px", display:"flex", flexDirection:"column", justifyContent:"center" }}>
+                <div style={{ ...dm, fontSize:9, color:aff.color, letterSpacing:3, textTransform:"uppercase", marginBottom:4 }}>
+                  {lang==="de"||lang==="at" ? "IHR DOMIZIL" : lang==="en" ? "YOUR STAY" : "VAŠ SMJEŠTAJ"}
+                </div>
+                <div style={{ fontSize:28, fontWeight:400, color:"#f0f9ff", lineHeight:1 }}>{aff.emoji} {aff.name}</div>
+                <div style={{ ...dm, fontSize:12, color:"rgba(240,249,255,0.65)", marginTop:5 }}>📍 {L(aff.address)}</div>
+                <div style={{ ...dm, fontSize:11, color:aff.color, marginTop:8, display:"flex", alignItems:"center", gap:6 }}>
+                  {lang==="de"||lang==="at" ? "Details & Aktivitäten" : lang==="en" ? "Details & Activities" : "Detalji & Aktivnosti"} →
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* ═══ ADRIATIC PULSE — unified weather/sea/UV board ═══ */}
         <Card style={{ marginBottom: 14, padding: 0, overflow: "hidden", position: "relative" }}>
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, opacity: 0.12, pointerEvents: "none" }}>
@@ -2038,6 +2072,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             { k: "activities", ic: IC.ticket, l: t("activities",lang), clr: "#22c55e", free: true },
             ...(kioskCity === "Split" || kioskCity === "Podstrana" || kioskCity === "Omiš" || kioskCity === "Makarska" || kioskCity === "Trogir" || kioskCity === "Rab" ? [{ k: "gems", ic: IC.gem, l: t("gems",lang), clr: C.gold, free: false }] : []),
             ...(kioskCity === "Rab" ? [{ k: "excursions", ic: IC.ticket, l: ({hr:"Izleti",de:"Ausflüge",en:"Excursions",it:"Escursioni"})[lang]||"Izleti", clr: "#0ea5e9", free: true }] : []),
+            ...(affiliateId && AFFILIATE_DATA?.[affiliateId] ? [{ k: "affiliate", ic: IC.gem, l: AFFILIATE_DATA[affiliateId].name, clr: AFFILIATE_DATA[affiliateId].color, free: true }] : []),
             { k: "chat", ic: IC.bot, l: t("aiGuide",lang), clr: "#a78bfa", free: false },
           ].map(t => {
             const count = nearbyData?.categories?.[t.k]?.length;
@@ -2379,6 +2414,52 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
   };
 
   const NEARBY_CATS = ["parking","food","shop","beach","pharmacy","bakery","culture","fuel"];
+  // ── Affiliate property data (used by KioskHome banner + KioskAffiliate) ──
+  const AFFILIATE_DATA = {
+    blackjack: {
+      name: "Black Jack", emoji: "🃏", color: "#0ea5e9",
+      address: { de: "Palit 315, Insel Rab, Kroatien", en: "Palit 315, Rab Island, Croatia", hr: "Palit 315, otok Rab, Hrvatska" },
+      tagline: { de: "Ihr Ferienparadies auf der Insel Rab", en: "Your island paradise on Rab", hr: "Vaš otočki raj na otoku Rabu" },
+      desc: {
+        de: "Black Jack liegt im ruhigen Dorf Palit, nur 2 km vom historischen Altstadtkern Rab — umgeben von Pinienwäldern und wenige Minuten von traumhaften Sandstränden entfernt. Das perfekte Domizil für Ihren Adriaurlaub.",
+        en: "Black Jack is nestled in peaceful Palit village, 2 km from Rab's historic old town — surrounded by pine forests with pristine Adriatic beaches just minutes away. The perfect base for your island escape.",
+        hr: "Black Jack smješten je u mirnom selu Palit, 2 km od stare jezgre Raba — okružen borovim šumama, s kristalno čistim plažama na dohvat ruke. Savršena baza za vaš odmor."
+      },
+      features: {
+        de: ["🌊 2 km zum Altstadtkern Rab","🏖️ Nächster Strand 800 m","🌲 Ruhige Pinienwald-Lage","🅿️ Kostenloser Parkplatz","❄️ Klimaanlage","📶 Gratis WLAN","🍳 Voll ausgestattete Küche","🌅 Terrasse mit Meerblick"],
+        en: ["🌊 2 km to Rab old town","🏖️ Nearest beach 800 m","🌲 Peaceful pine setting","🅿️ Free parking","❄️ Air conditioning","📶 Free WiFi","🍳 Fully equipped kitchen","🌅 Sea-view terrace"],
+        hr: ["🌊 2 km do staroga grada","🏖️ Plaža 800 m","🌲 Borova šuma, mirno","🅿️ Parkiranje gratis","❄️ Klimatizacija","📶 WiFi gratis","🍳 Opremljena kuhinja","🌅 Terasa, pogled na more"]
+      },
+      poi: [
+        { icon:"🏛️", de:"Rab Altstadt & 4 Türme",  en:"Rab Old Town & Towers",   hr:"Stari grad Rab & kule",     dist:"2 km" },
+        { icon:"🏖️", de:"Strand San Marino",        en:"San Marino Beach",         hr:"Plaža San Marino",          dist:"2.5 km" },
+        { icon:"🏖️", de:"Strand Pudarica",          en:"Pudarica Beach",           hr:"Plaža Pudarica",             dist:"3 km" },
+        { icon:"🦁", de:"Paradiesstrand Lopar",      en:"Lopar Paradise Beach",     hr:"Rajska plaža Lopar",         dist:"15 km" },
+        { icon:"⛵", de:"Jachthafen Rab",            en:"Rab Marina",               hr:"Marina Rab",                 dist:"2.2 km" },
+        { icon:"🍕", de:"Restaurants in Palit",      en:"Palit Restaurants",        hr:"Restorani Palit",            dist:"500 m" },
+        { icon:"🛒", de:"Tommy Supermarkt",          en:"Tommy Supermarket",        hr:"Tommy Supermarket",          dist:"1.5 km" },
+        { icon:"🏥", de:"Gesundheitszentrum Rab",    en:"Rab Health Centre",        hr:"Dom zdravlja Rab",           dist:"2 km" },
+      ],
+      excursions: [
+        { emoji:"🚢", de:"Bootstouren",           en:"Boat Tours",           hr:"Ture brodom",
+          gyg:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=boat+tour",
+          viator:"https://www.viator.com/searchResults/all?text=Rab+boat+tour&pid=P00292197" },
+        { emoji:"🤿", de:"Schnorcheln & Tauchen", en:"Diving & Snorkeling",  hr:"Ronjenje i snorkeling",
+          gyg:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=diving",
+          viator:"https://www.viator.com/searchResults/all?text=Rab+diving&pid=P00292197" },
+        { emoji:"🛶", de:"Kajak & SUP",           en:"Kayak & SUP",          hr:"Kajak & SUP",
+          gyg:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=kayak",
+          viator:"https://www.viator.com/searchResults/all?text=Rab+kayak&pid=P00292197" },
+        { emoji:"🏝️", de:"Insel-Hopping",         en:"Island Hopping",       hr:"Otočki obilazak",
+          gyg:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=island+hopping",
+          viator:"https://www.viator.com/searchResults/all?text=Rab+island+hopping&pid=P00292197" },
+      ],
+      booking: "https://www.booking.com/searchresults.html?ss=Rab%2C+Croatia&aid=101704203",
+      heroImg: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=80",
+      propImg: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=600&q=80",
+    }
+  };
+
   const Kiosk = () => {
     // ── Welcome/Transition screen ──
     if (kioskWelcome) {
@@ -2550,11 +2631,118 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
       );
     };
 
+    // ── AFFILIATE DATA ──────────────────────────────────────────────────
+    // ── KioskAffiliate: full property presentation ──────────────────────
+    const KioskAffiliate = () => {
+      const aff = affiliateId && AFFILIATE_DATA[affiliateId];
+      if (!aff) return <KioskHome />;
+      const L = (o) => o[lang] || o[lang === "at" ? "de" : "en"] || o.en || "";
+      const feats = (aff.features[lang] || aff.features[lang === "at" ? "de" : "en"] || aff.features.en);
+      return (
+        <>
+          <BackBtn onClick={() => setSubScreen("home")} />
+
+          {/* Hero */}
+          <div style={{ borderRadius: 20, overflow: "hidden", marginBottom: 16, position: "relative", height: 220 }}>
+            <img src={aff.heroImg} alt={aff.name} style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} loading="lazy" />
+            <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(5,14,30,0.92) 0%, rgba(5,14,30,0.3) 60%, transparent 100%)" }} />
+            <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"20px 24px" }}>
+              <div style={{ ...dm, fontSize:11, color:aff.color, letterSpacing:3, textTransform:"uppercase", marginBottom:4 }}>
+                {lang==="de"||lang==="at" ? "Ihr Feriendomizil" : lang==="en" ? "Your Holiday Home" : "Vaš odmor"}
+              </div>
+              <div style={{ fontSize:36, fontWeight:300, color:"#f0f9ff", lineHeight:1.1 }}>
+                {aff.emoji} {aff.name}
+              </div>
+              <div style={{ ...dm, fontSize:13, color:"rgba(240,249,255,0.7)", marginTop:6 }}>
+                📍 {L(aff.address)}
+              </div>
+            </div>
+          </div>
+
+          {/* Tagline */}
+          <div style={{ ...hf, fontSize:22, fontWeight:400, color:C.text, textAlign:"center", marginBottom:6, fontStyle:"italic" }}>
+            {L(aff.tagline)}
+          </div>
+          <div style={{ ...dm, fontSize:14, color:C.mut, lineHeight:1.7, marginBottom:20, textAlign:"center" }}>
+            {L(aff.desc)}
+          </div>
+
+          {/* Features grid */}
+          <div style={{ ...dm, fontSize:10, color:aff.color, letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:10 }}>
+            {lang==="de"||lang==="at" ? "AUSSTATTUNG" : lang==="en" ? "FEATURES" : "SADRŽAJ"}
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:20 }}>
+            {feats.map((f, i) => (
+              <div key={i} style={{ padding:"10px 12px", background:"rgba(14,165,233,0.04)", border:`1px solid ${C.bord}`, borderRadius:12, ...dm, fontSize:13, color:C.text }}>
+                {f}
+              </div>
+            ))}
+          </div>
+
+          {/* Property photo */}
+          <div style={{ borderRadius:16, overflow:"hidden", marginBottom:20, height:160 }}>
+            <img src={aff.propImg} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} loading="lazy" />
+          </div>
+
+          {/* Nearby POI */}
+          <div style={{ ...dm, fontSize:10, color:C.gold, letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:10 }}>
+            {lang==="de"||lang==="at" ? "IN DER NÄHE" : lang==="en" ? "NEARBY" : "U BLIZINI"}
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:20 }}>
+            {aff.poi.map((p, i) => (
+              <div key={i} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"11px 16px", background:"rgba(0,0,0,0.15)", border:`1px solid ${C.bord}`, borderRadius:12 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                  <span style={{ fontSize:20 }}>{p.icon}</span>
+                  <span style={{ ...dm, fontSize:14, color:C.text }}>{L(p)}</span>
+                </div>
+                <span style={{ ...dm, fontSize:12, color:aff.color, fontWeight:600 }}>{p.dist}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Excursions */}
+          <div style={{ ...dm, fontSize:10, color:"#22c55e", letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:10 }}>
+            {lang==="de"||lang==="at" ? "AUSFLÜGE & AKTIVITÄTEN" : lang==="en" ? "EXCURSIONS & ACTIVITIES" : "IZLETI & AKTIVNOSTI"}
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:20 }}>
+            {aff.excursions.map((ex, i) => (
+              <Card key={i} style={{ padding:"14px 12px", textAlign:"center" }}>
+                <div style={{ fontSize:28, marginBottom:6 }}>{ex.emoji}</div>
+                <div style={{ ...dm, fontSize:12, fontWeight:600, color:C.text, marginBottom:10 }}>{L(ex)}</div>
+                <div style={{ display:"flex", gap:6 }}>
+                  {ex.gyg && <a href={ex.gyg} target="_blank" rel="noopener noreferrer"
+                    style={{ flex:1, padding:"7px 4px", background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", borderRadius:8, color:C.accent, fontSize:10, fontWeight:700, textAlign:"center", textDecoration:"none", ...dm }}>GYG</a>}
+                  {ex.viator && <a href={ex.viator} target="_blank" rel="noopener noreferrer"
+                    style={{ flex:1, padding:"7px 4px", background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.15)", borderRadius:8, color:"#22c55e", fontSize:10, fontWeight:700, textAlign:"center", textDecoration:"none", ...dm }}>Viator</a>}
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Booking CTA */}
+          <Card style={{ background:`linear-gradient(135deg,rgba(0,85,166,0.12),rgba(14,165,233,0.06))`, border:"1px solid rgba(0,85,166,0.25)", padding:"22px 20px", marginBottom:24 }}>
+            <div style={{ ...dm, fontSize:11, color:"#60a5fa", letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:8 }}>BOOKING.COM</div>
+            <div style={{ fontSize:20, fontWeight:400, marginBottom:6 }}>
+              🏨 {lang==="de"||lang==="at" ? "Jetzt buchen — beste Preisgarantie" : lang==="en" ? "Book now — best price guarantee" : "Rezervirajte odmah — garancija najniže cijene"}
+            </div>
+            <div style={{ ...dm, fontSize:13, color:C.mut, marginBottom:16 }}>
+              {lang==="de"||lang==="at" ? "Kostenlose Stornierung · Keine Voraus­zahlung" : lang==="en" ? "Free cancellation · No prepayment needed" : "Besplatni otkaz · Nema predujma"}
+            </div>
+            <a href={aff.booking} target="_blank" rel="noopener noreferrer"
+              style={{ display:"block", padding:"16px", background:"linear-gradient(135deg,#003580,#0055A6)", borderRadius:14, color:"#fff", fontSize:16, fontWeight:700, textAlign:"center", textDecoration:"none", ...dm }}>
+              {lang==="de"||lang==="at" ? "Verfügbarkeit prüfen →" : lang==="en" ? "Check availability →" : "Provjeri dostupnost →"}
+            </a>
+          </Card>
+        </>
+      );
+    };
+
     if (subScreen === "home") return <KioskHome />;
     if (subScreen === "activities") return <KioskActivities />;
     if (subScreen === "excursions") return <KioskExcursions />;
     if (subScreen === "gems") return <KioskGems />;
     if (subScreen === "chat") return <KioskChat />;
+    if (subScreen === "affiliate" && affiliateId) return <KioskAffiliate />;
     if (PRACTICAL[subScreen] || NEARBY_CATS.includes(subScreen)) return <KioskDetail />;
     return <KioskHome />;
   };
