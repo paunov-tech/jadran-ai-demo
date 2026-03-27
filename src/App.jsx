@@ -2135,7 +2135,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {nearbyPlaces.map((place, i) => (
-            <Card key={i} style={{ padding: "16px 20px" }}>
+            <Card key={place.place_id || `${place.lat},${place.lng}` || i} style={{ padding: "16px 20px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 16, fontWeight: 500, marginBottom: 2 }}>{place.name}</div>
@@ -2165,9 +2165,10 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
                   {svKey && (
                     <div style={{ borderRadius: 10, overflow: "hidden", marginTop: 10, position: "relative", height: 130, background: "rgba(0,0,0,0.2)" }}>
                       <img
+                        key={`sv-${place.lat}-${place.lng}`}
                         src={`https://maps.googleapis.com/maps/api/streetview?size=600x260&location=${place.lat},${place.lng}&fov=80&key=${svKey}`}
                         alt={`Street View — ${place.name}`}
-                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "opacity 0.25s" }}
                         loading="lazy"
                         onError={e => { e.currentTarget.parentElement.style.display = "none"; }}
                       />
@@ -2187,11 +2188,11 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
                   )}
                   {/* Navigation buttons */}
                   <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                    <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}&travelmode=walking`, "_blank")}
+                    <button onClick={() => { window.location.href = `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}&travelmode=walking`; }}
                       style={{ ...dm, flex: 1, padding: "10px 14px", background: C.acDim, border: `1px solid rgba(14,165,233,0.15)`, borderRadius: 12, color: C.accent, fontSize: 13, cursor: "pointer", fontWeight: 600, textAlign: "center" }}>
                       🚶 {({hr:"Pješice",de:"Zu Fuß",en:"Walk",it:"A piedi"})[lang]||"Pješice"}
                     </button>
-                    <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}&travelmode=driving`, "_blank")}
+                    <button onClick={() => { window.location.href = `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}&travelmode=driving`; }}
                       style={{ ...dm, flex: 1, padding: "10px 14px", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.15)", borderRadius: 12, color: C.gold, fontSize: 13, cursor: "pointer", fontWeight: 600, textAlign: "center" }}>
                       🚗 {({hr:"Autom",de:"Mit Auto",en:"Drive",it:"In auto"})[lang]||"Autom"}
                     </button>
@@ -2997,7 +2998,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         <div style={{ position: "fixed", inset: 0, zIndex: 250, display: "flex", flexDirection: "column", background: "#000" }}
           onClick={() => setSvModal(null)}>
           {/* Header bar */}
-          <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "rgba(10,22,40,0.95)", borderBottom: "1px solid rgba(14,165,233,0.1)", flexShrink: 0 }}>
+          <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", paddingTop: "calc(12px + env(safe-area-inset-top, 0px))", background: "rgba(10,22,40,0.95)", borderBottom: "1px solid rgba(14,165,233,0.1)", flexShrink: 0 }}>
             <div style={{ ...dm, fontSize: 14, fontWeight: 600, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "calc(100% - 120px)" }}>
               🌍 {svModal.name}
             </div>
@@ -3020,11 +3021,11 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
           {/* Bottom navigation bar */}
           <div onClick={e => e.stopPropagation()} style={{ display: "flex", gap: 10, padding: "12px 16px", background: "rgba(10,22,40,0.95)", borderTop: "1px solid rgba(14,165,233,0.1)", flexShrink: 0 }}>
-            <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${svModal.lat},${svModal.lng}&travelmode=walking`, "_blank")}
+            <button onClick={() => { setSvModal(null); window.location.href = `https://www.google.com/maps/dir/?api=1&destination=${svModal.lat},${svModal.lng}&travelmode=walking`; }}
               style={{ ...dm, flex: 1, padding: "13px", background: C.acDim, border: `1px solid rgba(14,165,233,0.15)`, borderRadius: 14, color: C.accent, fontSize: 14, cursor: "pointer", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
               🚶 {({hr:"Navigiraj pješice",de:"Zu Fuß navigieren",en:"Walk there",it:"A piedi"})[lang]||"Navigiraj pješice"}
             </button>
-            <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${svModal.lat},${svModal.lng}&travelmode=driving`, "_blank")}
+            <button onClick={() => { setSvModal(null); window.location.href = `https://www.google.com/maps/dir/?api=1&destination=${svModal.lat},${svModal.lng}&travelmode=driving`; }}
               style={{ ...dm, padding: "13px 18px", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.15)", borderRadius: 14, color: C.gold, fontSize: 18, cursor: "pointer", flexShrink: 0 }}>
               🚗
             </button>
@@ -3088,11 +3089,11 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
                   </div>
                   {/* Navigate buttons — walking primary, driving secondary */}
                   <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                    <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedGem.lat},${selectedGem.lng}&travelmode=walking`, "_blank")}
+                    <button onClick={() => { setSelectedGem(null); window.location.href = `https://www.google.com/maps/dir/?api=1&destination=${selectedGem.lat},${selectedGem.lng}&travelmode=walking`; }}
                       style={{...dm,flex:1,padding:"13px",background:C.acDim,border:`1px solid rgba(14,165,233,0.15)`,borderRadius:14,color:C.accent,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6,fontWeight:600}}>
                       🚶 {({hr:"Vodi me pješice",de:"Zu Fuß navigieren",en:"Walk there",it:"A piedi"})[lang]||"Vodi me pješice"}
                     </button>
-                    <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedGem.lat},${selectedGem.lng}&travelmode=driving`, "_blank")}
+                    <button onClick={() => { setSelectedGem(null); window.location.href = `https://www.google.com/maps/dir/?api=1&destination=${selectedGem.lat},${selectedGem.lng}&travelmode=driving`; }}
                       style={{...dm,padding:"13px 16px",background:"rgba(251,191,36,0.06)",border:`1px solid rgba(251,191,36,0.15)`,borderRadius:14,color:C.gold,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                       🚗
                     </button>
