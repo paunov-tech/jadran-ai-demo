@@ -112,6 +112,31 @@ export const ZONES = [
   },
 ];
 
+// ═══ RAB ISLAND GEOFENCES ═══
+export const RAB_GEOFENCES = [
+  { id: 'rab-town', name: 'Rab Town', name_de: 'Stadt Rab', center: { lat: 44.7561, lng: 14.7642 }, radius: 1500, type: 'town',
+    description_en: 'Medieval old town with four iconic bell towers, waterfront promenade, restaurants and nightlife',
+    description_de: 'Mittelalterliche Altstadt mit vier ikonischen Glockentürmen, Uferpromenade, Restaurants und Nachtleben' },
+  { id: 'lopar', name: 'Lopar', name_de: 'Lopar', center: { lat: 44.8261, lng: 14.7281 }, radius: 2000, type: 'town',
+    description_en: 'Sandy beach paradise — home to famous Paradise Beach (Rajska Plaža), Geopark, family-friendly',
+    description_de: 'Sandstrandparadies — Heimat des berühmten Paradise Beach (Rajska Plaža), Geopark, familienfreundlich' },
+  { id: 'kampor', name: 'Kampor', name_de: 'Kampor', center: { lat: 44.7681, lng: 14.7161 }, radius: 1500, type: 'town',
+    description_en: 'Peaceful village with Franciscan Monastery of St. Euphemia, Suha Punta beaches, Kalifront forest',
+    description_de: 'Friedliches Dorf mit Franziskanerkloster St. Euphemia, Suha Punta Strände, Kalifront Wald' },
+  { id: 'barbat', name: 'Barbat na Rabu', name_de: 'Barbat auf Rab', center: { lat: 44.7361, lng: 14.7961 }, radius: 1500, type: 'town',
+    description_en: 'Southern village with Pudarica beach, nightlife, Livačina family beach',
+    description_de: 'Südliches Dorf mit Pudarica Strand, Nachtleben, Livačina Familienstrand' },
+  { id: 'supetarska-draga', name: 'Supetarska Draga', name_de: 'Supetarska Draga', center: { lat: 44.7861, lng: 14.7461 }, radius: 1200, type: 'town',
+    description_en: 'Quiet bay village, ACI Marina, sheltered beaches, olive groves',
+    description_de: 'Ruhiges Buchtdorf, ACI Marina, geschützte Strände, Olivenhaine' },
+  { id: 'mundanije', name: 'Mundanije', name_de: 'Mundanije', center: { lat: 44.7750, lng: 14.7550 }, radius: 800, type: 'village',
+    description_en: 'Interior village, starting point for Kamenjak hike (407m), panoramic views',
+    description_de: 'Dorf im Inselinneren, Ausgangspunkt für Kamenjak-Wanderung (407m), Panoramablick' },
+  { id: 'misnjak-ferry', name: 'Mišnjak Ferry Port', name_de: 'Fährhafen Mišnjak', center: { lat: 44.7150, lng: 14.8100 }, radius: 500, type: 'transport',
+    description_en: 'Main ferry port — Stinica-Mišnjak line (Rapska Plovidba), 15 min crossing',
+    description_de: 'Hauptfährhafen — Linie Stinica-Mišnjak (Rapska Plovidba), 15 Min. Überfahrt' },
+];
+
 // Check which zones the current position is inside
 export function checkZones(lat, lng, triggeredSet) {
   const results = [];

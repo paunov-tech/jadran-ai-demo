@@ -306,6 +306,56 @@ const LOCATIONS = {
 - Pelješki most: besplatan, ne morate kroz Neum
 - Magistrala Omiš-Makarska: vijuge, kamperi polako, odmorišta rijetka`,
 
+  rab: `LOKALNI VODIČ — OTOK RAB (PILOT DESTINACIJA):
+RAB JE SPECIFIČNA DESTINACIJA — koristi isključivo ove podatke:
+
+DOLAZAK NA RAB:
+- Glavna trajektna linija: Stinica → Mišnjak (Rapska Plovidba), svakih sat, 15 min, ~€25 auto+putnici. BEZ rezervacije! Ljeti doći 1-2h ranije.
+- Krk ruta: Lopar → Valbiska (Krk, spojen mostom s kopnom). Dobra ruta za Rijeku/sjever.
+- Katamaranm: Rijeka → Rab grad (~2h), samo ljeti.
+
+PLAŽE (Rab ima 30+ pješčanih plaža — raritet u Hrvatskoj!):
+- Rajska Plaža (Lopar): 2km pijeska, plitka, idealna za obitelji. DOLAZAK PRIJE 10h!
+- Banova Vila (Grad Rab): gradska plaža ispod zidina. Vaterpollo, kajaci, bar s muzikom.
+- Suha Punta (Kampor): kamenita, borova šuma, mir. Taxibot ili bicikl.
+- Pudarica (Barbat): pijesak, danju obitelj, noću žurka.
+- Sahara: naturistička, usamljena, sandstone formacije. Ponijeti vlastitu vodu.
+- Livačina (Lopar): pijesak, hlad od stabala, blizu Rajske.
+
+MUST SEE:
+- Stari grad Rab (4 zvonika): lađa od kamena, mletačka arhitektura — BESPLATNO
+- Katedrala sv. Marije: popeti na 26m zvonik za pogled na Kvarner (~€3)
+- Kamenjak (407m): najviša točka — panorama Kvarnera. Auto ili pješice. Restaurant gore = insider!
+- Geopark Rab (Lopar): UNESCO sandstone formacije, obalne staze
+- Franjevački samostan sv. Eufemije (Kampor): 1458. god., 27 scena na stropu
+- Goli Otok: "hrvatski Alcatraz", brodska tura
+- Kuća Rapske torte: tradicionalni spiralni kolač od badema — Ul. Stjepana Radića 5
+
+HRANA:
+- Rapska torta: MORA se probati (i kupiti cijela kao suvenir)
+- Konobe u starom gradu: svježa riba, hobotnica, crni rižoto
+- Restaurant Kamenjak na vrhu — pogled + hrana = nema bolje na otoku
+- Lokalna žlahtina vina (Krk) i maslinovo ulje
+
+AKTIVNOSTI:
+- Rab Trek & Lopar Trek pješačenje
+- Kajakanje (Banova Vila plaža)
+- Ronjenje (PADI tečajevi, zidovi/špilje/olupine)
+- Biciklizam (otok dovoljno mali za kruženje)
+- Rabska Fjera — srednovjekovni festival srpanj (armbrust turnir!)
+
+PRAKTIČNO:
+- Bankomat: centar Rab grada
+- Ljekarna: Rab grad
+- Supermarketi: Konzum i Tommy (Rab grad + Barbat)
+- WiFi: kafići i smještaj
+- Valuta: EUR (Hrvatska od 2023.)
+
+KADA POSJETITI:
+- Lipanj/rujan: savršeno, malo gužvi
+- Srpanj/kolovoz: vrhunac sezone, gužve, više cijene
+- Svibanj/listopad: mirno, sunce`,
+
   dubrovnik: `REGIONALNI FOKUS — DUBROVNIK & PELJEŠAC:
 - Gruž luka: taxi preskup! Bus 1A do Pile vrata (2€, 15 min)
 - Pile Gate: 10-13h = čep! Ulaz Ploče ili Buža (nitko ne zna)
@@ -991,6 +1041,15 @@ PRAVILA ZA KAMPOVE:
   // 5. LOCATION
   const locPrompt = LOCATIONS[region];
   if (locPrompt) parts.push(locPrompt);
+
+  // 5b. RAB DEEP KNOWLEDGE — inject when destination is Rab (kiosk or delta_context)
+  const destCity = delta_context?.destination?.city || "";
+  const isRabDest = destCity.toLowerCase().includes("rab") || region === "rab";
+  if (isRabDest && region !== "rab") {
+    // Already injected if region === "rab", only add when coming from kiosk/delta_context
+    const rabPrompt = LOCATIONS["rab"];
+    if (rabPrompt) parts.push(rabPrompt);
+  }
 
   // 6. NAUTICAL DATA (only for sailing)
   if (mode === "sailing") {
