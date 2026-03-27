@@ -778,6 +778,31 @@ export default function JadranUnified() {
     window.history.replaceState({}, "", "/");
   }, []); // eslint-disable-line
 
+  // ─── ?kiosk=rab&lang=de → direct kiosk demo mode (no onboarding) ───
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const kioskParam = p.get("kiosk");
+    if (!kioskParam) return;
+    const KIOSK_CITIES = {
+      "rab":       [44.7561, 14.7642, "Rab"],
+      "split":     [43.508,  16.440,  "Split"],
+      "dubrovnik": [42.650,  18.094,  "Dubrovnik"],
+      "makarska":  [43.298,  17.018,  "Makarska"],
+      "hvar":      [43.172,  16.441,  "Hvar"],
+      "zadar":     [44.119,  15.232,  "Zadar"],
+    };
+    const cd = KIOSK_CITIES[kioskParam.toLowerCase()];
+    if (!cd) return;
+    const urlLang = p.get("lang");
+    if (urlLang) { setLang(urlLang); saveDelta({ lang: urlLang }); }
+    setTransitToCoords([cd[0], cd[1]]);
+    saveDelta({ destination: { city: cd[2], lat: cd[0], lng: cd[1] } });
+    setPhase("kiosk");
+    setSubScreen("home");
+    setSplash(false);
+    window.history.replaceState({}, "", "/");
+  }, []); // eslint-disable-line
+
   // ─── PERSISTENCE: Load guest state from Firestore/localStorage ───
   const persistReady = useRef(false);
   useEffect(() => {
