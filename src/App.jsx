@@ -512,11 +512,11 @@ export default function JadranUnified() {
           const gArr = data.arrival || data.checkIn;
           const gDep = data.departure || data.checkOut;
           if (gArr || gDep) saveDelta({ arrival_date: gArr || null, departure_date: gDep || null });
-        } else if (roomCode.current && roomCode.current !== "DEMO") {
-          // No profile yet — show onboarding
+        } else if (roomCode.current && !roomCode.current.startsWith("dev_")) {
+          // No profile yet — show onboarding (only for real room codes, not standalone)
           setShowOnboarding(true);
         }
-      } else if (roomCode.current && roomCode.current !== "DEMO") {
+      } else if (roomCode.current && !roomCode.current.startsWith("dev_")) {
         setShowOnboarding(true);
       }
       // Mark ready AFTER initial state is applied
