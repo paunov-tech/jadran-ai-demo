@@ -978,17 +978,23 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           zIndex: 1, transition: "width 0.65s cubic-bezier(0.4,0,0.2,1)",
           boxShadow: `0 0 8px ${C.accent}55` }} />
         {phases.map((p, i) => {
-          const active = i === idx;
-          const done   = i < idx;
+          const active   = i === idx;
+          const done     = i < idx;
+          // Lock backwards navigation once in kiosk/post — Pre-Trip causes bugs
+          const locked   = phase !== "pre" && p.k === "pre";
           return (
             <div key={p.k} style={{ flex: 1, display: "flex", flexDirection: "column",
-              alignItems: "center", gap: 7, zIndex: 2, cursor: "pointer" }}
+              alignItems: "center", gap: 7, zIndex: 2,
+              cursor: locked ? "default" : "pointer",
+              opacity: locked ? 0.35 : 1,
+              pointerEvents: locked ? "none" : "auto" }}
               onClick={() => {
+                if (locked) return;
                 if (p.k === "kiosk" && phase !== "kiosk") { setKioskWelcome(true); setNearbyData(null); }
                 setPhase(p.k);
-                if (p.k === "pre")   setSubScreen("onboard");
+                if (p.k === "pre")        setSubScreen("onboard");
                 else if (p.k === "kiosk") setSubScreen("home");
-                else                 setSubScreen("summary");
+                else                      setSubScreen("summary");
               }}>
               <div style={{
                 width: active ? 46 : 34, height: active ? 46 : 34,
