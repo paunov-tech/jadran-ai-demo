@@ -2546,7 +2546,18 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         const cin = new Date(guestData.arrival);
         const cout = new Date(guestData.departure);
         if (now < cin) { setPhase("pre"); setSubScreen("pretrip"); }
-        else if (now <= cout) { setPhase("kiosk"); setSubScreen("home"); }
+        else if (now <= cout) {
+          setPhase("kiosk"); setSubScreen("home");
+          // Grant 72h AI trial — guest arrived, no trip button in this flow
+          if (!premium) {
+            try {
+              const until = Date.now() + 72 * 60 * 60 * 1000;
+              localStorage.setItem("jadran_ai_trial_until", String(until));
+              localStorage.setItem("jadran_ai_premium", "1");
+            } catch {}
+            setPremium(true);
+          }
+        }
         else { setPhase("post"); setSubScreen("summary"); }
         setInterests(new Set(guestData.interests || []));
         setShowOnboarding(false);
