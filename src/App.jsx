@@ -270,7 +270,12 @@ export default function JadranUnified() {
   const [phase, setPhase] = useState("pre"); // overridden by loadGuest on mount
   const [subScreen, setSubScreen] = useState("onboard"); // varies per phase
   const [premium, setPremium] = useState(() => {
-    try { return localStorage.getItem("jadran_ai_premium") === "1"; } catch { return false; }
+    try {
+      if (localStorage.getItem("jadran_ai_premium") === "1") return true;
+      // Restore active trial across page reloads
+      const until = Number(localStorage.getItem("jadran_ai_trial_until") || "0");
+      return until > Date.now();
+    } catch { return false; }
   });
   const [showPaywall, setShowPaywall] = useState(false);
   const [showRecovery, setShowRecovery] = useState(false);
@@ -349,6 +354,15 @@ export default function JadranUnified() {
     gpsStarted.current = true;
     setTripActive(true);
     saveDelta({ trip_started: true });
+    // Grant AI trial for full journey: 72h from departure
+    if (!premium) {
+      try {
+        const until = Date.now() + 72 * 60 * 60 * 1000;
+        localStorage.setItem("jadran_ai_trial_until", String(until));
+        localStorage.setItem("jadran_ai_premium", "1");
+      } catch {}
+      setPremium(true);
+    }
     startGPS({
       onCard: (card) => setGpsCards(prev => {
         const exists = prev.some(c => c.id === card.id);
@@ -1113,24 +1127,11 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
   /* ─── BOOKING CONFIRM ─── */
   const BookConfirm = () => showConfirm && (() => {
-    // Auto-unlock AI trial 24h on first booking confirmation
-    const trialKey = "jadran_ai_trial_until";
-    const alreadyPremium = premium;
-    const trialActive = (() => { try { const t = localStorage.getItem(trialKey); return t && Number(t) > Date.now(); } catch { return false; } })();
-    const grantTrial = () => {
-      const until = Date.now() + 24 * 60 * 60 * 1000; // 24h
-      try { localStorage.setItem(trialKey, String(until)); localStorage.setItem("jadran_ai_premium", "1"); } catch {}
-      setPremium(true);
-    };
-    if (!alreadyPremium && !trialActive) grantTrial();
-
     return (
       <div style={{ position:"fixed", inset:0, background:"rgba(5,14,30,0.88)", zIndex:250, display:"grid", placeItems:"center" }}
         onClick={() => setShowConfirm(null)}>
         <div onClick={e => e.stopPropagation()} style={{ background:C.card, borderRadius:24, padding:40,
           textAlign:"center", maxWidth:420, border:`1px solid rgba(14,165,233,0.15)` }}>
-
-          {/* Success checkmark */}
           <div className="check-anim" style={{ width:80, height:80, borderRadius:"50%",
             background:`linear-gradient(135deg,${C.accent},#0284c7)`, display:"grid", placeItems:"center",
             fontSize:40, margin:"0 auto 20px", color:"#fff", boxShadow:"0 8px 32px rgba(14,165,233,0.35)" }}>✓</div>
@@ -1139,29 +1140,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             {t("bookConfirm",lang)}
           </div>
           <div style={{ fontSize:18, color:C.accent, marginBottom:20 }}>{showConfirm}</div>
-
-          {/* AI trial gift — shown only when just granted */}
-          {!alreadyPremium && (
-            <div style={{ background:`linear-gradient(135deg, rgba(56,189,248,0.08), rgba(251,191,36,0.06))`,
-              border:`1px solid ${C.acBorder}`, borderRadius:16, padding:"16px 20px", marginBottom:20 }}>
-              <div style={{ fontSize:28, marginBottom:8 }}>🎁</div>
-              <div style={{ ...dm, fontSize:13, fontWeight:700, color:C.accent, letterSpacing:1, marginBottom:4 }}>
-                {({hr:"AI VODIČ — 24h GRATIS",de:"AI-GUIDE — 24h GRATIS",en:"AI GUIDE — 24h FREE",it:"GUIDA AI — 24h GRATIS",si:"AI VODIČ — 24h BREZPLAČNO",cz:"AI PRŮVODCE — 24h ZDARMA",pl:"AI PRZEWODNIK — 24h GRATIS"})[lang] || "AI GUIDE — 24h FREE"}
-              </div>
-              <div style={{ ...dm, fontSize:12, color:C.mut, lineHeight:1.5 }}>
-                {({hr:"Kao zahvalu za rezervaciju, AI vodič je aktivan do sutra.",de:"Als Dankeschön für Ihre Buchung ist der AI-Guide bis morgen aktiv.",en:"As a thank you for your booking, AI guide is active until tomorrow.",it:"Come ringraziamento per la prenotazione, la guida AI è attiva fino a domani.",si:"Kot zahvalo za rezervacijo je AI vodič aktiven do jutra.",cz:"Jako poděkování za rezervaci je AI průvodce aktivní do zítřka.",pl:"W podziękowaniu za rezerwację AI przewodnik jest aktywny do jutra."})[lang] || "As a thank you, AI guide is free for 24h."}
-              </div>
-            </div>
-          )}
-
-          <Btn primary onClick={() => { setShowConfirm(null); setSubScreen("chat"); }}>
-            {({hr:"Pitaj AI vodiča →",de:"AI-Guide fragen →",en:"Ask AI guide →",it:"Chiedi alla guida AI →",si:"Vprašaj AI vodiča →",cz:"Zeptat se AI průvodce →",pl:"Zapytaj AI przewodnika →"})[lang] || "Ask AI guide →"}
-          </Btn>
-          <button onClick={() => setShowConfirm(null)}
-            style={{ ...dm, display:"block", margin:"12px auto 0", background:"none", border:"none",
-              color:C.mut, fontSize:12, cursor:"pointer" }}>
-            {({hr:"Zatvori",de:"Schließen",en:"Close",it:"Chiudi",si:"Zapri",cz:"Zavřít",pl:"Zamknij"})[lang] || "Close"}
-          </button>
+          <Btn primary onClick={() => setShowConfirm(null)}>OK</Btn>
         </div>
       </div>
     );
@@ -1348,7 +1327,28 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
               🚀 {lang === "de" || lang === "at" ? "Reise starten" : lang === "en" ? "Start trip" : lang === "it" ? "Inizia viaggio" : "Krećem na put"}
             </button>
           ) : (
-            <Btn primary onClick={() => { setKioskWelcome(true); setNearbyData(null); setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home", lang, destination: transitDestCity || kioskCity, segment: transitSegUrl || "auto", lastAccess: new Date().toISOString() }); }}>{t("arrived",lang)}</Btn>
+            <>
+              {/* AI trial activated banner */}
+              <div style={{ ...dm, display:"flex", alignItems:"center", gap:10, padding:"10px 16px",
+                borderRadius:12, background:"rgba(167,139,250,0.08)", border:"1px solid rgba(167,139,250,0.18)",
+                marginBottom:10, textAlign:"left" }}>
+                <span style={{ fontSize:18 }}>🤖</span>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:12, color:"#a78bfa", fontWeight:600, marginBottom:1 }}>
+                    {({hr:"AI vodič aktivan · 72h",de:"AI-Guide aktiv · 72h",en:"AI guide active · 72h",it:"Guida AI attiva · 72h",si:"AI vodič aktiven · 72h",cz:"AI průvodce aktivní · 72h",pl:"AI przewodnik aktywny · 72h"})[lang] || "AI guide active · 72h"}
+                  </div>
+                  <div style={{ fontSize:11, color:C.mut }}>
+                    {({hr:"Pitat za granicu, gorivo, restorane…",de:"Fragen zu Grenze, Tanken, Restaurants…",en:"Ask about border, fuel, restaurants…",it:"Chiedi di confine, carburante, ristoranti…",si:"Vprašajte o meji, gorivu, restavracijah…",cz:"Ptejte se na hranici, palivo, restaurace…",pl:"Pytaj o granicę, paliwo, restauracje…"})[lang] || "Ask about border, fuel, restaurants…"}
+                  </div>
+                </div>
+                <button onClick={() => { setSubScreen("chat"); setPhase("kiosk"); }}
+                  style={{ ...dm, padding:"6px 12px", borderRadius:8, border:"1px solid rgba(167,139,250,0.25)",
+                    background:"rgba(167,139,250,0.10)", color:"#a78bfa", fontSize:11, cursor:"pointer", fontWeight:600, whiteSpace:"nowrap" }}>
+                  {({hr:"Pitaj →",de:"Fragen →",en:"Ask →",it:"Chiedi →",si:"Vprašaj →",cz:"Zeptat →",pl:"Pytaj →"})[lang] || "Ask →"}
+                </button>
+              </div>
+              <Btn primary onClick={() => { setKioskWelcome(true); setNearbyData(null); setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home", lang, destination: transitDestCity || kioskCity, segment: transitSegUrl || "auto", lastAccess: new Date().toISOString() }); }}>{t("arrived",lang)}</Btn>
+            </>
           )}
         </div>
 
