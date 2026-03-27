@@ -264,8 +264,10 @@ export default function DestinationExplorer({ language = "en", onStartChat }) {
           <span style={{ fontSize: 24, fontFamily: "'Playfair Display', serif", fontWeight: 700, letterSpacing: "-0.5px" }}>
             <span style={{ color: C.white }}>JADRAN</span><span style={{ color: C.gold }}>.ai</span>
           </span>
-          {view === "detail" && (
+          {view === "detail" ? (
             <span style={{ color: C.muted, fontSize: 13, marginLeft: 4 }}>← {t("All Destinations", "Alle Destinationen")}</span>
+          ) : (
+            <span style={{ color: C.muted, fontSize: 11, marginLeft: 4, letterSpacing: "0.5px" }}>{t("AI TRAVEL OPERATOR", "KI-REISEOPERATEUR")}</span>
           )}
         </div>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
@@ -283,18 +285,23 @@ export default function DestinationExplorer({ language = "en", onStartChat }) {
           {/* ── HERO ── */}
           <section style={{ padding: "56px 24px 48px", maxWidth: 860, margin: "0 auto", textAlign: "center" }}>
             <div className="fade-in">
-              <div style={{ display: "inline-block", padding: "4px 14px", borderRadius: 20, background: `${C.accent}18`, border: `1px solid ${C.accent}40`, fontSize: 12, color: C.accent, fontWeight: 600, letterSpacing: "1px", marginBottom: 20 }}>
-                {t("PRE-TRIP PLANNER · BOOK · DRIVE · ARRIVE · STAY · DEPART", "REISEPLANUNG · BUCHEN · FAHREN · ANKOMMEN · BLEIBEN · ABREISE")}
+              <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginBottom: 20 }}>
+                <div style={{ display: "inline-block", padding: "4px 14px", borderRadius: 20, background: `${C.accent}18`, border: `1px solid ${C.accent}40`, fontSize: 12, color: C.accent, fontWeight: 600, letterSpacing: "1px" }}>
+                  {t("AI TRAVEL OPERATOR · BOOK · DRIVE · ARRIVE · STAY · DEPART", "KI-REISEOPERATEUR · BUCHEN · FAHREN · ANKOMMEN · BLEIBEN · ABREISE")}
+                </div>
+                <div style={{ display: "inline-block", padding: "4px 14px", borderRadius: 20, background: `${C.gold}15`, border: `1px solid ${C.borderGold}`, fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: "0.5px" }}>
+                  🏛️ {t("Official Partner · TZ Rab", "Offizieller Partner · TZ Rab")}
+                </div>
               </div>
               <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(30px, 5.5vw, 56px)", fontWeight: 700, lineHeight: 1.08, marginBottom: 20 }}>
-                {t("Your Complete", "Deine komplette")}{" "}
-                <span style={{ color: C.accent, fontStyle: "italic" }}>{t("Adriatic Journey", "Adria-Reise")}</span>
-                <br />{t("starts here.", "beginnt hier.")}
+                {t("Your Complete", "Dein kompletter")}{" "}
+                <span style={{ color: C.accent, fontStyle: "italic" }}>{t("Adriatic Journey", "Adria-Urlaub")}</span>
+                <br />{t("— from home to home.", "— von zu Hause bis zurück.")}
               </h1>
-              <p style={{ fontSize: "clamp(15px, 2vw, 18px)", color: C.muted, maxWidth: 560, margin: "0 auto 32px", lineHeight: 1.6 }}>
+              <p style={{ fontSize: "clamp(15px, 2vw, 18px)", color: C.muted, maxWidth: 580, margin: "0 auto 32px", lineHeight: 1.6 }}>
                 {t(
-                  "Book accommodation with our partners. We guide you door-to-door, then turn into your local expert for the entire stay.",
-                  "Buche Unterkunft bei unseren Partnern. Wir begleiten dich von Tür zu Tür und werden dann dein lokaler Experte für den gesamten Aufenthalt."
+                  "We book your accommodation. Track you to the destination. Become your local guardian for the entire stay. Then bring you safely home.",
+                  "Wir buchen deine Unterkunft. Begleiten dich zur Destination. Werden dein lokaler Guardian. Und bringen dich sicher heim."
                 )}
               </p>
               <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "16px 40px", borderRadius: 32, background: `linear-gradient(135deg, ${C.accent}, #0085a8)`, color: "#fff", fontSize: 17, fontWeight: 700, textDecoration: "none", boxShadow: `0 8px 32px ${C.accent}50`, fontFamily: "inherit" }}>
