@@ -17,9 +17,10 @@ const isHost = path === "/host" || path === "/host/";
 const isAI = path === "/ai" || path === "/ai/";
 const isTZ = path === "/tz" || path === "/tz/";
 const isExplore = path === "/explore" || path === "/explore/";
+const isAdmin = path === "/admin" || path === "/admin/";
 const hasTrip = params.has("trip");
 
-const route = isHost ? "host" : isAI ? "ai" : isTZ ? "tz" : isExplore ? "explore" : hasTrip ? "trip" : (hasRoom || hasKiosk) ? "app" : "landing";
+const route = isHost ? "host" : isAI ? "ai" : isTZ ? "tz" : isExplore ? "explore" : isAdmin ? "admin" : hasTrip ? "trip" : (hasRoom || hasKiosk) ? "app" : "landing";
 
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null }; }
@@ -50,12 +51,13 @@ const App = React.lazy(() =>
   : route === "ai"   ? import('./StandaloneAI.jsx')
   : route === "tz"   ? import('./TZDashboard.jsx')
   : route === "explore" ? import('./DestinationExplorer.jsx')
+  : route === "admin" ? import('./AdminPanel.jsx')
   : route === "trip" ? import('./TripGuide.jsx')
   : route === "app"  ? import('./App.jsx')
   : import('./LandingPage.jsx')
 );
 
-const labels = { host: "Host Panel", ai: "Vodič", tz: "TZ Dashboard", explore: "Destinacije", trip: "JADRAN Trip", app: "JADRAN", landing: "JADRAN" };
+const labels = { host: "Host Panel", ai: "Vodič", tz: "TZ Dashboard", explore: "Destinacije", admin: "Admin", trip: "JADRAN Trip", app: "JADRAN", landing: "JADRAN" };
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
