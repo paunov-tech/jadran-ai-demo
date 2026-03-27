@@ -54,7 +54,7 @@ async function fetchYoloSensors() {
   if (!FB_KEY) return null;
   try {
     const r = await fetch(
-      `https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_sense?key=${FB_KEY}&pageSize=300`,
+      `https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_yolo?key=${FB_KEY}&pageSize=300`,
       { signal: AbortSignal.timeout(4000) }
     );
     if (!r.ok) return null;

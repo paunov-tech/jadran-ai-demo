@@ -403,7 +403,7 @@ async function fetchYoloCrowd() {
   const key = process.env.FIREBASE_API_KEY;
   if (!key) { console.warn("Sense: no FIREBASE_API_KEY"); return null; }
   try {
-    const url = `https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_sense?key=${key}&pageSize=300`;
+    const url = `https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_yolo?key=${key}&pageSize=300`;
     const r = await fetch(url);
     if (!r.ok) { console.warn("Sense: Firestore HTTP", r.status); return null; }
     const data = await r.json();

@@ -15,7 +15,7 @@ async function fetchSenseData() {
   const key = process.env.FIREBASE_API_KEY;
   if (!key) return null;
   try {
-    const url = `https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_sense?key=${key}&pageSize=300`;
+    const url = `https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_yolo?key=${key}&pageSize=300`;
     const r = await fetch(url);
     if (!r.ok) return null;
     const data = await r.json();
