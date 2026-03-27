@@ -38,17 +38,45 @@ const DIRECT_PARTNERS = [
   {
     id: "blackjack-rab",
     name: "Black Jack Rab",
+    email: "booking@blackjackrab.com",
     emoji: "🃏",
     destinationId: "rab",
     destinationName: "Rab",
     address: "Palit 315, Otok Rab",
     type: "direct",
-    description_en: "Private apartments in quiet Palit village, 3km from Rab Old Town. Book direct — your AI guide activates immediately and tracks you from home to doorstep.",
-    description_de: "Private Apartments im ruhigen Dorf Palit, 3km von der Altstadt. Direkt buchen — dein KI-Guide aktiviert sich sofort und begleitet dich von zu Hause bis zur Haustür.",
+    tagline_en: "Private retreat in peaceful Palit village",
+    tagline_de: "Privater Rückzugsort im ruhigen Dorf Palit",
+    description_en: "Stylish private apartments in quiet Palit village, just 3km from Rab's medieval Old Town and 400m from a secluded pebble beach. Surrounded by Mediterranean pine forest with stunning sea views. The only accommodation on Rab with a fully integrated AI travel companion — from your front door to ours.",
+    description_de: "Stilvolle private Apartments im ruhigen Dorf Palit, 3km von der mittelalterlichen Altstadt und 400m von einem abgelegenen Kieselstrand entfernt. Umgeben von mediterranem Kiefernwald mit Meerblick. Die einzige Unterkunft auf Rab mit integriertem KI-Reisebegleiter.",
+    images: [
+      "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=900&q=85",
+      "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=900&q=85",
+      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=900&q=85",
+      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=900&q=85",
+    ],
+    units: [
+      { icon: "🛏️", name_en: "Studio", name_de: "Studio", guests: 2, price_en: "from €65/night", price_de: "ab €65/Nacht" },
+      { icon: "🏡", name_en: "1-Bedroom Apt", name_de: "1-Zimmer", guests: 4, price_en: "from €90/night", price_de: "ab €90/Nacht" },
+      { icon: "🏠", name_en: "Family Suite", name_de: "Familiensuite", guests: 6, price_en: "from €130/night", price_de: "ab €130/Nacht" },
+    ],
+    amenities: [
+      { icon: "🤖", en: "AI guide included", de: "KI-Guide inklusive" },
+      { icon: "🌊", en: "400m to beach", de: "400m zum Strand" },
+      { icon: "🚗", en: "Free parking", de: "Kostenloses Parken" },
+      { icon: "❄️", en: "Air conditioning", de: "Klimaanlage" },
+      { icon: "📶", en: "Free WiFi", de: "Gratis WLAN" },
+      { icon: "🍳", en: "Full kitchen", de: "Vollküche" },
+      { icon: "🏊", en: "Pool", de: "Pool" },
+      { icon: "🌲", en: "Pine forest", de: "Kiefernwald" },
+      { icon: "🐾", en: "Pets allowed", de: "Haustiere OK" },
+      { icon: "🚢", en: "3km to ferry", de: "3km zur Fähre" },
+    ],
     perks_en: ["AI companion included", "Priority kiosk access", "Real-time transit guidance", "Local insider tips"],
     perks_de: ["KI-Begleiter inklusive", "Priority Kiosk-Zugang", "Echtzeit-Reisebegleitung", "Lokale Insider-Tipps"],
     rating: 4.8,
     reviews: 47,
+    priceFrom_en: "from €65/night",
+    priceFrom_de: "ab €65/Nacht",
   },
 ];
 
@@ -296,6 +324,7 @@ export default function DestinationExplorer({ language = "en", onStartChat }) {
               name: selectedAccom?.name || "Unknown",
               type: selectedAccom?.type || "affiliate",
               direct: selectedAccom?.direct || false,
+              email: selectedAccom?.email || "",
             },
             guestName: form.name.trim(),
             guestEmail: form.email.trim(),
@@ -360,8 +389,7 @@ export default function DestinationExplorer({ language = "en", onStartChat }) {
   };
 
   const goToTrip = () => {
-    const destId = selected?.id || selectedAccom?.destinationId || "rab";
-    window.location.href = `/?kiosk=${destId}&lang=${lang}&booking=${bookingId}`;
+    window.location.href = `/?trip=${encodeURIComponent(bookingId)}&lang=${lang}`;
   };
 
   // ── ITEM SUB HELPER ──
@@ -514,42 +542,115 @@ export default function DestinationExplorer({ language = "en", onStartChat }) {
             <p style={{ textAlign: "center", fontSize: 14, color: C.muted, marginBottom: 28, marginTop: -16 }}>
               {t("Direct bookings include your AI guide, priority kiosk access and full transit tracking.", "Direktbuchungen beinhalten KI-Guide, Priority-Kiosk und vollständiges Transit-Tracking.")}
             </p>
-            <div className="partner-row">
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {DIRECT_PARTNERS.map(p => {
                 const destObj = DESTINATIONS.find(d => d.id === p.destinationId);
-                const perks = lang === "de" ? p.perks_de : p.perks_en;
                 const desc = lang === "de" ? p.description_de : p.description_en;
+                const tagline = lang === "de" ? p.tagline_de : p.tagline_en;
+                const priceFrom = lang === "de" ? p.priceFrom_de : p.priceFrom_en;
+                const [heroImg, ...thumbImgs] = p.images || [];
                 return (
-                  <div key={p.id} className="partner-card" style={{ position: "relative", background: `linear-gradient(135deg, rgba(255,184,0,0.06), ${C.card})`, border: `1.5px solid ${C.borderGold}`, borderRadius: 20, padding: "28px 24px", overflow: "hidden" }}>
-                    <div style={{ position: "absolute", top: 14, right: 14, background: C.gold, color: "#000", fontSize: 9, fontWeight: 800, padding: "3px 10px", borderRadius: 20, letterSpacing: "1px" }}>DIRECT</div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                      <span style={{ fontSize: 36 }}>{p.emoji}</span>
-                      <div>
-                        <h3 style={{ fontSize: 18, fontWeight: 700, color: C.white }}>{p.name}</h3>
-                        <p style={{ fontSize: 12, color: C.muted }}>{p.address}</p>
+                  <div key={p.id} className="partner-card" style={{ background: `linear-gradient(135deg, rgba(255,184,0,0.05), ${C.card})`, border: `1.5px solid ${C.borderGold}`, borderRadius: 24, overflow: "hidden" }}>
+                    {/* HERO IMAGE */}
+                    <div style={{ position: "relative", height: 260, backgroundImage: `url(${heroImg})`, backgroundSize: "cover", backgroundPosition: "center" }}>
+                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(7,17,31,0.85) 100%)" }} />
+                      {/* DIRECT badge */}
+                      <div style={{ position: "absolute", top: 16, left: 16, background: C.gold, color: "#000", fontSize: 10, fontWeight: 800, padding: "4px 14px", borderRadius: 20, letterSpacing: "1px" }}>
+                        🃏 DIRECT · AI INCLUDED
+                      </div>
+                      {/* Price from */}
+                      <div style={{ position: "absolute", top: 16, right: 16, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)", color: C.white, fontSize: 13, fontWeight: 700, padding: "6px 14px", borderRadius: 20, border: `1px solid rgba(255,255,255,0.15)` }}>
+                        {priceFrom}
+                      </div>
+                      {/* Bottom info */}
+                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "20px 24px" }}>
+                        <h3 style={{ fontSize: 26, fontWeight: 800, color: C.white, marginBottom: 4, fontFamily: "'Playfair Display', serif" }}>{p.name}</h3>
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", fontStyle: "italic" }}>{tagline}</span>
+                          <span style={{ fontSize: 11, color: C.muted }}>📍 {p.address}</span>
+                        </div>
                       </div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                      <Stars rating={p.rating} />
-                      <span style={{ fontSize: 11, color: C.muted }}>{p.reviews} {t("reviews", "Bewertungen")}</span>
+
+                    {/* THUMBNAIL GALLERY */}
+                    {thumbImgs.length > 0 && (
+                      <div style={{ display: "grid", gridTemplateColumns: `repeat(${thumbImgs.length},1fr)`, gap: 3, height: 80 }}>
+                        {thumbImgs.map((img, i) => (
+                          <div key={i} style={{ backgroundImage: `url(${img})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* CARD BODY */}
+                    <div style={{ padding: "24px 28px 28px" }}>
+                      {/* Rating + reviews */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+                        <Stars rating={p.rating} />
+                        <span style={{ fontSize: 12, color: C.muted }}>{p.reviews} {t("verified reviews", "verifizierte Bewertungen")}</span>
+                        <span style={{ marginLeft: "auto", fontSize: 12, color: C.success, fontWeight: 700 }}>✓ {t("Available", "Verfügbar")}</span>
+                      </div>
+
+                      {/* Description */}
+                      <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.65, marginBottom: 20 }}>{desc}</p>
+
+                      {/* Unit types */}
+                      {p.units && (
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: "0.8px", marginBottom: 10 }}>{t("ACCOMMODATION TYPES", "UNTERKUNFTSTYPEN")}</div>
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
+                            {p.units.map(u => (
+                              <div key={u.name_en} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "12px 14px" }}>
+                                <div style={{ fontSize: 20, marginBottom: 6 }}>{u.icon}</div>
+                                <div style={{ fontSize: 13, fontWeight: 700, color: C.white, marginBottom: 2 }}>{lang === "de" ? u.name_de : u.name_en}</div>
+                                <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>👤 {t(`up to ${u.guests}`, `bis ${u.guests} Pers.`)}</div>
+                                <div style={{ fontSize: 12, color: C.gold, fontWeight: 700 }}>{lang === "de" ? u.price_de : u.price_en}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Amenities */}
+                      {p.amenities && (
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: "0.8px", marginBottom: 10 }}>{t("AMENITIES", "AUSSTATTUNG")}</div>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                            {p.amenities.map(a => (
+                              <span key={a.en} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, background: a.en === "AI guide included" ? `${C.accent}15` : C.surface, border: `1px solid ${a.en === "AI guide included" ? C.accent + "40" : C.border}`, fontSize: 12, color: a.en === "AI guide included" ? C.accent : C.muted, fontWeight: a.en === "AI guide included" ? 700 : 400 }}>
+                                {a.icon} {lang === "de" ? a.de : a.en}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* AI perks */}
+                      <div style={{ background: `${C.accent}08`, border: `1px solid ${C.accent}25`, borderRadius: 14, padding: "14px 18px", marginBottom: 20 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: C.accent, letterSpacing: "0.8px", marginBottom: 10 }}>🤖 {t("AI TRAVEL OPERATOR BENEFITS", "KI-REISEOPERATEUR VORTEILE")}</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                          {(lang === "de" ? p.perks_de : p.perks_en).map(pk => (
+                            <div key={pk} style={{ fontSize: 12, color: C.success, display: "flex", alignItems: "center", gap: 6 }}>
+                              <span style={{ color: C.success, flexShrink: 0 }}>✓</span> {pk}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* CTA */}
+                      <button
+                        className="aff-btn"
+                        onClick={() => startBooking({ name: p.name, type: "direct", direct: true, email: p.email, destinationId: p.destinationId, destinationName: p.destinationName }, destObj)}
+                        style={{ width: "100%", padding: "16px", borderRadius: 16, background: `linear-gradient(135deg, ${C.gold}, #e6a600)`, color: "#000", fontSize: 15, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", boxShadow: `0 6px 24px rgba(255,184,0,0.3)` }}>
+                        🃏 {t("Book Direct — AI Guide Included", "Direkt buchen — KI-Guide inklusive")}
+                        <div style={{ fontSize: 11, fontWeight: 600, marginTop: 4, opacity: 0.7 }}>{t("Best price · Instant confirmation · No booking fees", "Bestpreis · Sofortbestätigung · Keine Buchungsgebühren")}</div>
+                      </button>
                     </div>
-                    <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 16 }}>{desc}</p>
-                    <ul style={{ listStyle: "none", marginBottom: 20 }}>
-                      {perks.map(pk => (
-                        <li key={pk} style={{ fontSize: 13, color: C.success, marginBottom: 4 }}>✓ {pk}</li>
-                      ))}
-                    </ul>
-                    <button
-                      className="aff-btn"
-                      onClick={() => startBooking({ name: p.name, type: "direct", direct: true, destinationId: p.destinationId, destinationName: p.destinationName }, destObj)}
-                      style={{ width: "100%", padding: "13px", borderRadius: 14, background: `linear-gradient(135deg, ${C.gold}, #e6a600)`, color: "#000", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
-                      🃏 {t("Book Direct →", "Direkt buchen →")}
-                    </button>
                   </div>
                 );
               })}
+
               {/* Placeholder */}
-              <div style={{ background: `${C.card}80`, border: `1px dashed ${C.borderGold}`, borderRadius: 20, padding: "28px 24px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 280, textAlign: "center" }}>
+              <div style={{ background: `${C.card}80`, border: `1px dashed ${C.borderGold}`, borderRadius: 20, padding: "28px 24px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 200, textAlign: "center" }}>
                 <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.4 }}>🏨</div>
                 <p style={{ fontSize: 14, color: C.muted, marginBottom: 16 }}>{t("Your property here", "Ihre Unterkunft hier")}</p>
                 <a href="/host" style={{ padding: "9px 22px", borderRadius: 20, border: `1px solid ${C.borderGold}`, color: C.gold, fontSize: 12, fontWeight: 600, textDecoration: "none" }}>
