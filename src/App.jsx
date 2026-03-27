@@ -1112,19 +1112,60 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
   );
 
   /* ─── BOOKING CONFIRM ─── */
-  const BookConfirm = () => showConfirm && (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.88)", zIndex: 250, display: "grid", placeItems: "center" }} onClick={() => setShowConfirm(null)}>
-      <div onClick={e => e.stopPropagation()} style={{ background: C.card, borderRadius: 24, padding: 40, textAlign: "center", maxWidth: 400, border: `1px solid rgba(14,165,233,0.15)` }}>
-        <div className="check-anim" style={{ width: 80, height: 80, borderRadius: "50%", background: `linear-gradient(135deg,${C.accent},#0284c7)`, display: "grid", placeItems: "center", fontSize: 40, margin: "0 auto 20px", color: "#fff", boxShadow: "0 8px 32px rgba(14,165,233,0.35)" }}>✓</div>
-        <div style={{ fontSize: 22, fontWeight: 400, marginBottom: 6 }}>{t("bookSent",lang)}</div>
-        <div style={{ ...dm, color: C.mut, fontSize: 14, marginBottom: 16, lineHeight: 1.6 }}>
-          {t("bookConfirm",lang)}
+  const BookConfirm = () => showConfirm && (() => {
+    // Auto-unlock AI trial 24h on first booking confirmation
+    const trialKey = "jadran_ai_trial_until";
+    const alreadyPremium = premium;
+    const trialActive = (() => { try { const t = localStorage.getItem(trialKey); return t && Number(t) > Date.now(); } catch { return false; } })();
+    const grantTrial = () => {
+      const until = Date.now() + 24 * 60 * 60 * 1000; // 24h
+      try { localStorage.setItem(trialKey, String(until)); localStorage.setItem("jadran_ai_premium", "1"); } catch {}
+      setPremium(true);
+    };
+    if (!alreadyPremium && !trialActive) grantTrial();
+
+    return (
+      <div style={{ position:"fixed", inset:0, background:"rgba(5,14,30,0.88)", zIndex:250, display:"grid", placeItems:"center" }}
+        onClick={() => setShowConfirm(null)}>
+        <div onClick={e => e.stopPropagation()} style={{ background:C.card, borderRadius:24, padding:40,
+          textAlign:"center", maxWidth:420, border:`1px solid rgba(14,165,233,0.15)` }}>
+
+          {/* Success checkmark */}
+          <div className="check-anim" style={{ width:80, height:80, borderRadius:"50%",
+            background:`linear-gradient(135deg,${C.accent},#0284c7)`, display:"grid", placeItems:"center",
+            fontSize:40, margin:"0 auto 20px", color:"#fff", boxShadow:"0 8px 32px rgba(14,165,233,0.35)" }}>✓</div>
+          <div style={{ fontSize:22, fontWeight:400, marginBottom:6 }}>{t("bookSent",lang)}</div>
+          <div style={{ ...dm, color:C.mut, fontSize:14, marginBottom:16, lineHeight:1.6 }}>
+            {t("bookConfirm",lang)}
+          </div>
+          <div style={{ fontSize:18, color:C.accent, marginBottom:20 }}>{showConfirm}</div>
+
+          {/* AI trial gift — shown only when just granted */}
+          {!alreadyPremium && (
+            <div style={{ background:`linear-gradient(135deg, rgba(56,189,248,0.08), rgba(251,191,36,0.06))`,
+              border:`1px solid ${C.acBorder}`, borderRadius:16, padding:"16px 20px", marginBottom:20 }}>
+              <div style={{ fontSize:28, marginBottom:8 }}>🎁</div>
+              <div style={{ ...dm, fontSize:13, fontWeight:700, color:C.accent, letterSpacing:1, marginBottom:4 }}>
+                {({hr:"AI VODIČ — 24h GRATIS",de:"AI-GUIDE — 24h GRATIS",en:"AI GUIDE — 24h FREE",it:"GUIDA AI — 24h GRATIS",si:"AI VODIČ — 24h BREZPLAČNO",cz:"AI PRŮVODCE — 24h ZDARMA",pl:"AI PRZEWODNIK — 24h GRATIS"})[lang] || "AI GUIDE — 24h FREE"}
+              </div>
+              <div style={{ ...dm, fontSize:12, color:C.mut, lineHeight:1.5 }}>
+                {({hr:"Kao zahvalu za rezervaciju, AI vodič je aktivan do sutra.",de:"Als Dankeschön für Ihre Buchung ist der AI-Guide bis morgen aktiv.",en:"As a thank you for your booking, AI guide is active until tomorrow.",it:"Come ringraziamento per la prenotazione, la guida AI è attiva fino a domani.",si:"Kot zahvalo za rezervacijo je AI vodič aktiven do jutra.",cz:"Jako poděkování za rezervaci je AI průvodce aktivní do zítřka.",pl:"W podziękowaniu za rezerwację AI przewodnik jest aktywny do jutra."})[lang] || "As a thank you, AI guide is free for 24h."}
+              </div>
+            </div>
+          )}
+
+          <Btn primary onClick={() => { setShowConfirm(null); setSubScreen("chat"); }}>
+            {({hr:"Pitaj AI vodiča →",de:"AI-Guide fragen →",en:"Ask AI guide →",it:"Chiedi alla guida AI →",si:"Vprašaj AI vodiča →",cz:"Zeptat se AI průvodce →",pl:"Zapytaj AI przewodnika →"})[lang] || "Ask AI guide →"}
+          </Btn>
+          <button onClick={() => setShowConfirm(null)}
+            style={{ ...dm, display:"block", margin:"12px auto 0", background:"none", border:"none",
+              color:C.mut, fontSize:12, cursor:"pointer" }}>
+            {({hr:"Zatvori",de:"Schließen",en:"Close",it:"Chiudi",si:"Zapri",cz:"Zavřít",pl:"Zamknij"})[lang] || "Close"}
+          </button>
         </div>
-        <div style={{ fontSize: 18, color: C.accent, marginBottom: 4 }}>{showConfirm}</div>
-        <Btn primary style={{ marginTop: 16 }} onClick={() => setShowConfirm(null)}>OK</Btn>
       </div>
-    </div>
-  );
+    );
+  })();
 
   /* ══════════════════════════════
      PHASE 1: PRE-TRIP
@@ -1641,24 +1682,47 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           </div>
         )}
 
+        {/* ── AI Guide — primary CTA above grid ── */}
+        <div onClick={() => setSubScreen("chat")} style={{
+          marginBottom: 12, padding: "16px 20px", borderRadius: 16,
+          background: "linear-gradient(135deg, rgba(167,139,250,0.10), rgba(56,189,248,0.06))",
+          border: "1px solid rgba(167,139,250,0.22)",
+          display: "flex", alignItems: "center", gap: 14, cursor: "pointer",
+          boxShadow: "0 4px 20px rgba(167,139,250,0.10)",
+        }} className="glass">
+          <div style={{ width: 48, height: 48, borderRadius: 14, flexShrink: 0,
+            background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.20)",
+            display: "grid", placeItems: "center" }}>
+            <Icon d={IC.bot} size={24} color="#a78bfa" stroke={1.8} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ ...hf, fontSize: 18, fontWeight: 400, color: "#e2d9ff", marginBottom: 2 }}>
+              {t("aiGuide", lang)}
+            </div>
+            <div style={{ ...dm, fontSize: 12, color: "#a78bfa", opacity: 0.8 }}>
+              {({hr:"Pitajte bilo što o destinaciji",de:"Fragen Sie alles über Ihr Ziel",en:"Ask anything about your destination",it:"Chiedi qualsiasi cosa sulla destinazione",si:"Vprašajte karkoli o destinaciji",cz:"Zeptejte se na cokoliv o cíli",pl:"Zapytaj o cokolwiek o celu"})[lang] || "Ask anything about your destination"}
+            </div>
+          </div>
+          <div style={{ ...dm, fontSize: 18, color: "#a78bfa", opacity: 0.6 }}>→</div>
+        </div>
+
         {/* Quick tiles */}
         <SectionLabel>{t("quickAccess",lang)}</SectionLabel>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: 10, marginBottom: 24 }}>
           {[
-            { k: "parking", ic: IC.parking, l: t("parking",lang), clr: C.accent, free: true },
-            { k: "beach", ic: IC.beach, l: t("beaches",lang), clr: "#38bdf8", free: true },
-            { k: "food", ic: IC.food, l: ({hr:"Hrana",de:"Essen",en:"Food",it:"Cibo",si:"Hrana",cz:"Jídlo",pl:"Jedzenie"})[lang]||"Hrana", clr: C.terracotta, free: true },
-            { k: "shop", ic: IC.shop, l: ({hr:"Dućan",de:"Laden",en:"Shop",it:"Negozio",si:"Trgovina",cz:"Obchod",pl:"Sklep"})[lang]||"Dućan", clr: "#34d399", free: true },
-            { k: "bakery", ic: IC.bakery, l: ({hr:"Pekara",de:"Bäckerei",en:"Bakery",it:"Panetteria",si:"Pekarna",cz:"Pekárna",pl:"Piekarnia"})[lang]||"Pekara", clr: C.warm, free: true },
-            { k: "pharmacy", ic: IC.medic, l: ({hr:"Ljekarna",de:"Apotheke",en:"Pharmacy",it:"Farmacia",si:"Lekarna",cz:"Lékárna",pl:"Apteka"})[lang]||"Ljekarna", clr: "#f472b6", free: true },
-            { k: "culture", ic: IC.gem, l: ({hr:"Kultura",de:"Kultur",en:"Culture",it:"Cultura",si:"Kultura",cz:"Kultura",pl:"Kultura"})[lang]||"Kultura", clr: C.gold, free: true },
-            { k: "fuel", ic: IC.map, l: ({hr:"Gorivo",de:"Tanken",en:"Fuel",it:"Carburante",si:"Gorivo",cz:"Palivo",pl:"Paliwo"})[lang]||"Gorivo", clr: "#94a3b8", free: true },
-            { k: "emergency", ic: IC.medic, l: t("emergency",lang), clr: C.red, free: true },
-            { k: "activities", ic: IC.ticket, l: t("activities",lang), clr: "#22c55e", free: true },
-            ...(getDestRegion(kioskCity) ? [{ k: "gems", ic: IC.gem, l: t("gems",lang), clr: C.gold, free: false }] : []),
-            ...(kioskCity === "Rab" ? [{ k: "excursions", ic: IC.ticket, l: ({hr:"Izleti",de:"Ausflüge",en:"Excursions",it:"Escursioni"})[lang]||"Izleti", clr: "#0ea5e9", free: true }] : []),
-            ...(affiliateId && AFFILIATE_DATA?.[affiliateId] ? [{ k: "affiliate", ic: IC.gem, l: AFFILIATE_DATA[affiliateId].name, clr: AFFILIATE_DATA[affiliateId].color, free: true }] : []),
-            { k: "chat", ic: IC.bot, l: t("aiGuide",lang), clr: "#a78bfa", free: true },
+            { k: "parking",   ic: IC.parking, l: t("parking",lang),    clr: C.accent,    free: true },
+            { k: "beach",     ic: IC.beach,   l: t("beaches",lang),    clr: "#38bdf8",   free: true },
+            { k: "food",      ic: IC.food,    l: ({hr:"Hrana",de:"Essen",en:"Food",it:"Cibo",si:"Hrana",cz:"Jídlo",pl:"Jedzenie"})[lang]||"Hrana", clr: C.terracotta, free: true },
+            { k: "shop",      ic: IC.shop,    l: ({hr:"Dućan",de:"Laden",en:"Shop",it:"Negozio",si:"Trgovina",cz:"Obchod",pl:"Sklep"})[lang]||"Dućan", clr: "#34d399", free: true },
+            { k: "bakery",    ic: IC.bakery,  l: ({hr:"Pekara",de:"Bäckerei",en:"Bakery",it:"Panetteria",si:"Pekarna",cz:"Pekárna",pl:"Piekarnia"})[lang]||"Pekara", clr: C.warm, free: true },
+            { k: "pharmacy",  ic: IC.medic,   l: ({hr:"Ljekarna",de:"Apotheke",en:"Pharmacy",it:"Farmacia",si:"Lekarna",cz:"Lékárna",pl:"Apteka"})[lang]||"Ljekarna", clr: "#f472b6", free: true },
+            { k: "culture",   ic: IC.gem,     l: ({hr:"Kultura",de:"Kultur",en:"Culture",it:"Cultura",si:"Kultura",cz:"Kultura",pl:"Kultura"})[lang]||"Kultura", clr: C.gold, free: true },
+            { k: "fuel",      ic: IC.map,     l: ({hr:"Gorivo",de:"Tanken",en:"Fuel",it:"Carburante",si:"Gorivo",cz:"Palivo",pl:"Paliwo"})[lang]||"Gorivo", clr: "#94a3b8", free: true },
+            { k: "emergency", ic: IC.medic,   l: t("emergency",lang),  clr: C.red,       free: true },
+            { k: "activities",ic: IC.ticket,  l: t("activities",lang), clr: "#22c55e",   free: true },
+            ...(getDestRegion(kioskCity) ? [{ k:"gems", ic:IC.gem, l:t("gems",lang), clr:C.gold, free:false }] : []),
+            ...(kioskCity === "Rab" ? [{ k:"excursions", ic:IC.ticket, l:({hr:"Izleti",de:"Ausflüge",en:"Excursions",it:"Escursioni"})[lang]||"Izleti", clr:"#0ea5e9", free:true }] : []),
+            ...(affiliateId && AFFILIATE_DATA?.[affiliateId] ? [{ k:"affiliate", ic:IC.gem, l:AFFILIATE_DATA[affiliateId].name, clr:AFFILIATE_DATA[affiliateId].color, free:true }] : []),
           ].map(tile => {
             const count = nearbyData?.categories?.[tile.k]?.length;
             return (
