@@ -975,9 +975,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 12, marginBottom: 24 }}>
           {ACCOMMODATION.map((a, i) => (
             <a key={i} href={a.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
-              <Card style={{ cursor: "pointer", padding: 16, transition: "all 0.3s" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(0,85,166,0.3)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.transform = ""; }}>
+              <Card style={{ cursor: "pointer", padding: 16, transition: "all 0.3s" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                   <CityIcon name={a.name.hr || a.name.en} size={24} />
                   <Badge c="accent">{a.region.toUpperCase()}</Badge>
@@ -1418,29 +1416,41 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             ...(kioskCity === "Rab" ? [{ k: "excursions", ic: IC.ticket, l: ({hr:"Izleti",de:"Ausflüge",en:"Excursions",it:"Escursioni"})[lang]||"Izleti", clr: "#0ea5e9", free: true }] : []),
             ...(affiliateId && AFFILIATE_DATA?.[affiliateId] ? [{ k: "affiliate", ic: IC.gem, l: AFFILIATE_DATA[affiliateId].name, clr: AFFILIATE_DATA[affiliateId].color, free: true }] : []),
             { k: "chat", ic: IC.bot, l: t("aiGuide",lang), clr: "#a78bfa", free: true },
-          ].map(t => {
-            const count = nearbyData?.categories?.[t.k]?.length;
+          ].map(tile => {
+            const count = nearbyData?.categories?.[tile.k]?.length;
             return (
-            <div key={t.k} onClick={() => {
-              if (!t.free && !premium) setShowPaywall(true);
-              else setSubScreen(t.k);
-            }}
-              className="anim-card glass" style={{
-                background: "rgba(12,28,50,0.65)", borderRadius: 20, padding: "20px 12px 16px",
-                textAlign: "center", cursor: "pointer", position: "relative",
-                border: `1px solid ${C.bord}`, transition: "all 0.35s cubic-bezier(0.4,0,0.2,1)",
-                boxShadow: "0 4px 20px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.03)",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = t.clr + "33"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = `0 16px 48px rgba(0,0,0,0.25), 0 0 20px ${t.clr}12`; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.03)"; }}>
-              <div style={{ width: 44, height: 44, borderRadius: 14, background: t.clr + "12", display: "grid", placeItems: "center", margin: "0 auto 10px", border: `1px solid ${t.clr}15`, transition: "all 0.3s" }}>
-                <Icon d={t.ic} size={22} color={t.clr} stroke={1.6} />
+              <div key={tile.k}
+                onClick={() => { if (!tile.free && !premium) setShowPaywall(true); else setSubScreen(tile.k); }}
+                className="glass"
+                style={{
+                  background: C.card, borderRadius: 18,
+                  padding: "18px 10px 14px", textAlign: "center",
+                  cursor: "pointer", position: "relative",
+                  border: `1px solid ${C.bord}`,
+                  boxShadow: "0 2px 12px rgba(0,0,0,0.10)",
+                }}>
+                <div style={{
+                  width: 42, height: 42, borderRadius: 13,
+                  background: tile.clr + "10", border: `1px solid ${tile.clr}1c`,
+                  display: "grid", placeItems: "center", margin: "0 auto 9px",
+                }}>
+                  <Icon d={tile.ic} size={20} color={tile.clr} stroke={1.7} />
+                </div>
+                <div style={{ ...dm, fontSize: 11, fontWeight: 500, color: C.text, lineHeight: 1.3 }}>{tile.l}</div>
+                {count > 0 && (
+                  <div style={{ position:"absolute", top:6, left:6, ...dm, fontSize:9,
+                    color:C.accent, background:C.acDim, padding:"1px 5px",
+                    borderRadius:7, fontWeight:700, border:`1px solid ${C.acBorder}` }}>{count}</div>
+                )}
+                {!tile.free && !premium && (
+                  <div style={{ position:"absolute", top:7, right:7, ...dm, fontSize:8,
+                    color:C.gold, background:C.goDim, padding:"2px 6px",
+                    borderRadius:7, fontWeight:700, letterSpacing:0.5,
+                    border:`1px solid ${C.goBorder}` }}>PRO</div>
+                )}
               </div>
-              <div style={{ ...dm, fontSize: 12, fontWeight: 500, color: C.text }}>{t.l}</div>
-              {count > 0 && <div style={{ position: "absolute", top: 6, left: 6, ...dm, fontSize: 9, color: C.accent, background: C.acDim, padding: "1px 6px", borderRadius: 8, fontWeight: 700, border: "1px solid rgba(14,165,233,0.15)" }}>{count}</div>}
-              {!t.free && !premium && <div style={{ position: "absolute", top: 8, right: 8, ...dm, fontSize: 8, color: C.gold, background: C.goDim, padding: "2px 7px", borderRadius: 8, fontWeight: 600, letterSpacing: 0.5, border: `1px solid rgba(245,158,11,0.1)` }}>PRO</div>}
-            </div>
-          );})}
+            );
+          })}
         </div>
 
         {/* AI Tip — premium */}
@@ -1640,9 +1650,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 14, marginTop: 20 }}>
           {visibleGems.map((g, i) => (
             <Card key={i} style={{ cursor: "pointer", position: "relative" }}
-              onClick={() => { if (g.premium && !premium) setShowPaywall(true); else setSelectedGem(g); }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(251,191,36,0.25)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.3), 0 0 16px rgba(251,191,36,0.06)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
+              onClick={() => { if (g.premium && !premium) setShowPaywall(true); else setSelectedGem(g); }}>
               {g.premium && !premium && <div style={{ position: "absolute", inset: 0, background: "rgba(10,22,40,0.7)", borderRadius: 18, display: "grid", placeItems: "center", zIndex: 5 }}>
                 <div style={{ textAlign: "center" }}><div style={{ fontSize: 28 }}>🔒</div><div style={{ ...dm, fontSize: 12, color: C.gold }}>Premium</div></div>
               </div>}
@@ -1867,9 +1875,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             ].map((item, i) => (
               <div key={item.k} onClick={() => { setKioskWelcome(false); setSubScreen(item.k); }}
                 style={{ width: 68, cursor: "pointer", textAlign: "center", animation: `fadeUp 0.4s ease ${i * 0.1}s both` }}>
-                <div style={{ width: 56, height: 56, borderRadius: 16, background: C.card, border: `1px solid ${C.bord}`, display: "grid", placeItems: "center", fontSize: 24, margin: "0 auto 4px", transition: "border-color 0.2s" }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(14,165,233,0.3)"}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = C.bord}>
+                <div style={{ width: 56, height: 56, borderRadius: 16, background: C.card, border: `1px solid ${C.bord}`, display: "grid", placeItems: "center", fontSize: 24, margin: "0 auto 4px", transition: "border-color 0.2s" }}>
                   {item.emoji}
                 </div>
                 <div style={{ ...dm, fontSize: 10, color: C.mut }}>{item.label}</div>
@@ -1934,9 +1940,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           {/* Category cards */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 14, marginBottom: 20 }}>
             {RAB_EXCURSIONS.map((ex, i) => (
-              <Card key={i} style={{ padding: 0, overflow: "hidden", cursor: "pointer" }}
-                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.borderColor = ex.clr + "44"; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.borderColor = C.bord; }}>
+              <Card key={i} style={{ padding: 0, overflow: "hidden", cursor: "pointer" }}>
                 {/* Image header */}
                 <div style={{ height: 90, position: "relative", background: `linear-gradient(135deg,${ex.clr}22,rgba(12,28,50,0.9))`, overflow: "hidden" }}>
                   <img src={ex.img} alt={lbl(ex)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.35 }} loading="lazy" />
@@ -2187,9 +2191,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(140px,1fr))", gap: 10, marginBottom: 16, textAlign: "left" }}>
           {ACCOMMODATION.slice(0, 4).map((a, i) => (
             <a key={i} href={a.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
-              <div style={{ padding: "10px 12px", background: "rgba(0,85,166,0.04)", border: `1px solid rgba(0,85,166,0.1)`, borderRadius: 12, cursor: "pointer", transition: "all 0.3s" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(0,85,166,0.3)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(0,85,166,0.1)"; }}>
+              <div style={{ padding: "10px 12px", background: "rgba(0,85,166,0.04)", border: `1px solid rgba(0,85,166,0.1)`, borderRadius: 12, cursor: "pointer", transition: "all 0.3s" }}>
                 <CityIcon name={a.name.hr || a.name.en} size={18} />
                 <div style={{ ...dm, fontSize: 12, fontWeight: 500, marginTop: 4 }}>{a.name[lang] || a.name.hr}</div>
               </div>
@@ -2364,8 +2366,6 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         letterSpacing: 2, textTransform:"uppercase", transition:"all 0.3s",
         animation: "splash-tagline 0.5s ease 2.5s both",
       }}
-        onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.3)"; e.currentTarget.style.color = "rgba(14,165,233,0.5)"; }}
-        onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(186,230,253,0.1)"; e.currentTarget.style.color = "rgba(186,230,253,0.3)"; }}
       >{t("skipBtn",lang)}</button>
     </div>
   );
