@@ -2012,7 +2012,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
     // ── KioskAffiliate: full property presentation ──────────────────────
     const KioskAffiliate = () => {
       const aff = affiliateId && AFFILIATE_DATA[affiliateId];
-      if (!aff) return <KioskHome />;
+      if (!aff) return KioskHome();
       const L = (o) => o[lang] || o[lang === "at" ? "de" : "en"] || o.en || "";
       const feats = (aff.features[lang] || aff.features[lang === "at" ? "de" : "en"] || aff.features.en);
       return (
@@ -2114,14 +2114,14 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
       );
     };
 
-    if (subScreen === "home") return <KioskHome />;
-    if (subScreen === "activities") return <KioskActivities />;
-    if (subScreen === "excursions") return <KioskExcursions />;
-    if (subScreen === "gems") return <KioskGems />;
-    if (subScreen === "chat") return <KioskChat />;
-    if (subScreen === "affiliate" && affiliateId) return <KioskAffiliate />;
-    if (PRACTICAL[subScreen] || NEARBY_CATS.includes(subScreen)) return <KioskDetail />;
-    return <KioskHome />;
+    if (subScreen === "home") return KioskHome();
+    if (subScreen === "activities") return KioskActivities();
+    if (subScreen === "excursions") return KioskExcursions();
+    if (subScreen === "gems") return KioskGems();
+    if (subScreen === "chat") return KioskChat();
+    if (subScreen === "affiliate" && affiliateId) return KioskAffiliate();
+    if (PRACTICAL[subScreen] || NEARBY_CATS.includes(subScreen)) return KioskDetail();
+    return KioskHome();
   };
 
   /* ══════════════════════════════
