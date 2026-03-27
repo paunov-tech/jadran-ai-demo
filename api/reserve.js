@@ -246,8 +246,8 @@ export default async function handler(req, res) {
       createdAt: new Date().toISOString(),
     };
 
-    // Best-effort Firebase write (non-blocking for demo reliability)
-    fsWrite(id, flat).catch(() => {});
+    // Await Firebase write — serverless fn terminates on res.json() so fire-and-forget doesn't work
+    await fsWrite(id, flat);
 
     // Send confirmation emails (non-blocking)
     const partnerToken  = genConfirmToken(id, "partner");
@@ -256,21 +256,21 @@ export default async function handler(req, res) {
     const operatorConfirmUrl = `${BASE_URL}/api/confirm?id=${encodeURIComponent(id)}&token=${operatorToken}&role=operator`;
     const adminUrl = `${BASE_URL}/admin`;
 
-    // Email to partner (accommodation)
+    // Await emails before responding — serverless fn terminates on res.json()
+    const emailPromises = [];
     if (accommodationEmail) {
-      sendEmail(
+      emailPromises.push(sendEmail(
         accommodationEmail,
         `New booking request: ${guestName.trim()} — ${id}`,
         partnerEmailHtml(flat, partnerConfirmUrl)
-      ).catch(() => {});
+      ));
     }
-
-    // Email to operator (always)
-    sendEmail(
+    emailPromises.push(sendEmail(
       OPERATOR_EMAIL,
       `[Jadran.ai] New booking — ${id} · ${guestName.trim()} → ${destinationName || destination}`,
       operatorEmailHtml(flat, operatorConfirmUrl, adminUrl)
-    ).catch(() => {});
+    ));
+    await Promise.all(emailPromises).catch(() => {});
 
     return res.json({ id, booking: flat });
   }
