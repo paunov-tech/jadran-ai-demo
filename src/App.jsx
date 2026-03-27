@@ -1210,17 +1210,22 @@ export default function JadranUnified() {
         G.interests?.length ? `Interesi: ${G.interests.join(', ')}` : "",
         G.car ? "Ima auto" : "",
       ].filter(Boolean).join(". ");
+      const senseCtx = senseData ? [
+        senseData.beach ? `Plaža: ${senseData.beach.crowd} (${senseData.beach.occupancy_pct}% popunjenost, best time: ${senseData.beach.best_time})` : "",
+        senseData.parking ? `Parking: ${senseData.parking.free_spots}/${senseData.parking.total_spots} slobodnih mjesta (${senseData.parking.status})` : "",
+        senseData.marina ? `Marina: ${senseData.marina.free_moorings} slobodnih vezova (${senseData.marina.status})` : "",
+      ].filter(Boolean).join(" | ") : "";
       const sys = `Ti si lokalni turistički vodič za ${kioskCity}, Hrvatska. Adriatic coast.
 ${guestCtx ? guestCtx + "." : ""}
 VRIJEME: ${weather.temp}°C ${weather.icon}, UV ${weather.uv}, more ${weather.sea}°C, zalazak ${weather.sunset}.
 LOKACIJA: ${kioskCity}. Nearby: ${nearbyHighlights?.map(h => h.text).join(", ") || "loading..."}.
+${senseCtx ? "LIVE STATUS: " + senseCtx + "." : ""}
 Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i udaljenostima. Bez emoji.`;
       const res = await fetch("/api/chat", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ system: sys,
           messages: [...chatMsgs.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })), { role: "user", content: msg }],
           delta_context: loadDelta(),
-          guide_cards: guideCards?.length ? guideCards.slice(0, 8) : undefined,
           lang: lang || "hr",
         }),
       });
@@ -1938,9 +1943,12 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           </div>
         </Card>
 
-        {/* YOLO Sense — parking/marina/beach live status */}
+        {/* YOLO Sense — parking/marina/beach status */}
         {senseData && (
-          <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap", position: "relative" }}>
+            <div style={{ position: "absolute", top: -14, right: 0, fontSize: 9, color: senseData.source === "yolo" ? C.green : C.mut, letterSpacing: 0.5 }}>
+              {senseData.source === "yolo" ? "● LIVE" : "● ~procjena"}
+            </div>
             {senseData.parking && (
               <div style={{ flex: 1, minWidth: 90, padding: "10px 12px", borderRadius: 12, background: "rgba(14,165,233,0.04)", border: `1px solid ${C.bord}`, textAlign: "center" }}>
                 <div style={{ fontSize: 18 }}>🅿️</div>

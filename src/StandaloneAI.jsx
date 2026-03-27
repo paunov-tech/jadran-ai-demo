@@ -662,18 +662,25 @@ const [lang, setLang] = useState(() => {
     fetch("/api/navtex").then(r => r.json()).then(d => { if (d.zones) setNavtex(d); }).catch(() => {});
   }, [travelMode]);
 
-  // Fetch guide.js route intelligence (HERE Traffic + YOLO + weather) when trip context available
+  // Fetch guide.js route intelligence (HERE Traffic + YOLO + weather)
   // Refreshes every 3 min (matches guide.js cache TTL)
   useEffect(() => {
     const fetchGuide = () => {
       try {
         const delta = loadDelta();
         const oCoords = delta.from_coords;
-        const dLat = delta.destination?.lat;
-        const dLng = delta.destination?.lng;
-        if (!oCoords?.[0] || !dLat) return; // No route coords — skip
+        const destLat = delta.destination?.lat;
+        const destLng = delta.destination?.lng;
+        const regCoords = COORDS[region] || COORDS.split;
+
+        // Prefer full route (origin → destination). Fallback: destination-only (local conditions).
+        const dLat = destLat || regCoords.lat;
+        const dLng = destLng || regCoords.lon;
+        // If no origin, use a generic Central Europe departure (Vienna) — still gets destination weather + local traffic
+        const oLat = oCoords?.[0] || 48.21;
+        const oLng = oCoords?.[1] || 16.37;
         const seg = delta.segment || travelMode || "auto";
-        fetch(`/api/guide?oLat=${oCoords[0]}&oLng=${oCoords[1]}&dLat=${dLat}&dLng=${dLng}&seg=${seg}&lang=${lang}`)
+        fetch(`/api/guide?oLat=${oLat}&oLng=${oLng}&dLat=${dLat}&dLng=${dLng}&seg=${seg}&lang=${lang}`)
           .then(r => r.json())
           .then(d => { if (d.cards?.length) setGuideCards(d.cards); })
           .catch(() => {});
@@ -682,7 +689,7 @@ const [lang, setLang] = useState(() => {
     fetchGuide();
     const interval = setInterval(fetchGuide, 180000); // 3 min
     return () => clearInterval(interval);
-  }, [travelMode, lang]);
+  }, [travelMode, lang, region]);
   // Load ALL region images on mount (for visual picker grid)
   useEffect(() => {
     const cityMap = { split: "Split", makarska: "Makarska", dubrovnik: "Dubrovnik", zadar: "Zadar", istra: "Rovinj", kvarner: "Opatija" };
