@@ -26,7 +26,7 @@ async function sendEmail(to, subject, html) {
         "Authorization": `Bearer ${RESEND_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from: "JADRAN.ai Booking <onboarding@resend.dev>", to, subject, html }),
+      body: JSON.stringify({ from: "JADRAN.ai Booking <booking@jadran.ai>", to, subject, html }),
     });
     return r.ok;
   } catch { return false; }
