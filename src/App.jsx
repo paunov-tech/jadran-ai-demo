@@ -427,8 +427,19 @@ const GUEST_FALLBACK = {
   name: "Gost", first: "Gost", country: "HR", lang: "hr", flag: "🇭🇷",
   adults: 2, kids: 0, kidsAges: [], interests: ["gastro", "adventure"],
   arrival: null, departure: null, car: true, carPlate: "",
-  accommodation: "Apartman", host: "", hostPhone: "",
-  budget: 0, spent: 0, email: ""
+  accommodation: "Apartman", host: "", hostPhone: "", email: ""
+};
+
+// ─── Region helper: maps destination city → content region key ───
+const getDestRegion = (city) => {
+  if (!city) return null;
+  const c = (city || "").toLowerCase();
+  if (["split","podstrana","omiš","omis","makarska","trogir","hvar","brač","brac","vis","bol","supetar"].some(x => c.includes(x))) return "split";
+  if (["rovinj","pula","medulin","poreč","porec","umag","novigrad","labin","motovun"].some(x => c.includes(x))) return "istria";
+  if (["rab","opatija","krk","rijeka","crikvenica","lošinj","losinj","cres","novalja","pag","mali losinj"].some(x => c.includes(x))) return "kvarner";
+  if (["zadar","šibenik","sibenik","biograd","nin","vodice"].some(x => c.includes(x))) return "zadar";
+  if (["dubrovnik","korčula","korcula","pelješac"].some(x => c.includes(x))) return "dubrovnik";
+  return null;
 };
 
 const W_DEFAULT = { icon: "☀️", temp: 28, sea: 24, uv: 7, wind: "Z 8 km/h", sunset: "20:30", humidity: 50 };
@@ -498,6 +509,28 @@ const GEMS = [
     desc: {hr:"Najviši vrh jadranskih otoka (778m). Auto do vrha. Pogled na Hvar, Vis, Italiju.",de:"Höchster Gipfel der Adriainseln (778m). Auto bis zum Gipfel. Blick auf Hvar, Vis, Italien.",en:"Highest peak of the Adriatic islands (778m). Drive to the top. View of Hvar, Vis, Italy.",it:"Vetta più alta delle isole adriatiche (778m). Auto fino in cima. Vista su Hvar, Vis, Italia.",si:"Najvišji vrh jadranskih otokov (778m). Avto do vrha. Pogled na Hvar, Vis, Italijo.",cz:"Nejvyšší vrchol jadranských ostrovů (778m). Autem na vrchol. Výhled na Hvar, Vis, Itálii.",pl:"Najwyższy szczyt wysp adriatyckich (778m). Autem na szczyt. Widok na Hvar, Vis, Włochy."},
     tip: {hr:"Ferry 12h, auto 30min do vrha, zalazak, večera u Bolu.",de:"Fähre 12 Uhr, Auto 30 Min zum Gipfel, Sonnenuntergang, Abendessen in Bol.",en:"Ferry 12pm, car 30min to top, sunset, dinner in Bol.",it:"Traghetto 12, auto 30min in cima, tramonto, cena a Bol.",si:"Trajekt 12h, avto 30min do vrha, zahod, večerja v Bolu.",cz:"Trajekt 12h, auto 30min na vrchol, západ slunce, večeře v Bolu.",pl:"Prom 12, auto 30min na szczyt, zachód słońca, kolacja w Bolu."},
     best: {hr:"Zalazak",de:"Sonnenuntergang",en:"Sunset",it:"Tramonto",si:"Zahod",cz:"Západ slunce",pl:"Zachód słońca"}, diff: "Ferry+Auto" },
+
+  // ═══ KVARNER — RAB ═══
+  { name: "Rt Ciganka", emoji: "🏖️", lat: 44.7368, lng: 14.7012, region: "kvarner", premium: false,
+    type: {hr:"Tajna plaža",de:"Geheimstrand",en:"Secret beach",it:"Spiaggia segreta",si:"Skrita plaža",cz:"Tajná pláž",pl:"Tajna plaża"},
+    desc: {hr:"Najljepša divlja uvala na Rabu. Staza 25min kroz borovu šumu od Kampora. Kristalno more.",de:"Schönste wilde Bucht auf Rab. 25min Wanderweg durch Kiefernwald von Kampor. Kristallklares Meer.",en:"Most beautiful wild cove on Rab. 25min trail through pine forest from Kampor. Crystal clear sea.",it:"La baia più bella di Rab. Sentiero 25min attraverso pineta da Kampor. Mare cristallino.",si:"Najlepša divja skrivnost Raba. Pot 25min skozi borovi gozd od Kampora. Kristalno morje.",cz:"Nejkrásnější divoká zátoka na Rabu. Stezka 25min přes borový les z Kamporu. Křišťálové moře.",pl:"Najpiękniejsza dzika zatoczka na Rabu. Ścieżka 25min przez las sosnowy z Kamporu."},
+    tip: {hr:"Parking uz cestu kod Kamporu. Nosite vodu — nema sjene. Dno šljunak.",de:"Parken an der Straße bei Kampor. Wasser mitnehmen — kein Schatten. Kieselboden.",en:"Park on roadside near Kampor. Bring water — no shade. Pebble bottom.",it:"Parcheggio sul ciglio strada vicino Kampor. Portare acqua. Fondo ghiaia.",si:"Parkiranje ob cesti pri Kamporu. Vzemite vodo — ni sence.",cz:"Parkování u silnice u Kamporu. Vezměte vodu — žádný stín.",pl:"Parkowanie przy drodze koło Kamporu. Weź wodę — brak cienia."},
+    best: {hr:"Jutro",de:"Morgens",en:"Morning",it:"Mattina",si:"Zjutraj",cz:"Ráno",pl:"Rano"}, diff: {hr:"Lagano",de:"Leicht",en:"Easy",it:"Facile",si:"Lahko",cz:"Snadné",pl:"Łatwe"} },
+  { name: "Kampor — Stari Grad", emoji: "⛪", lat: 44.7467, lng: 14.7178, region: "kvarner", premium: false,
+    type: {hr:"Selo",de:"Dorf",en:"Village",it:"Villaggio",si:"Vas",cz:"Vesnice",pl:"Wioska"},
+    desc: {hr:"Mirno ribarsko selo 3km od Starog Grada. Autentična konoba, lokalni ribari, bez masovnog turizma.",de:"Ruhiges Fischerdorf 3km von der Altstadt. Authentische Konoba, lokale Fischer, kein Massentourismus.",en:"Quiet fishing village 3km from the Old Town. Authentic konoba, local fishermen, no mass tourism.",it:"Quieto villaggio di pescatori 3km dalla Città Vecchia. Konoba autentica, pescatori locali.",si:"Mirna ribiška vasica 3km od Starega mesta. Avtentična konoba, lokalni ribiči.",cz:"Klidná rybářská vesnice 3km od Starého města. Autentická konoba, místní rybáři.",pl:"Spokojna wioska rybacka 3km od Starego Miasta. Autentyczna konoba, lokalni rybacy."},
+    tip: {hr:"Konoba Rabljanin — pitajte za ribu dana. Rezervirajte do 10h.",de:"Konoba Rabljanin — fragen Sie nach dem Tagesfisch. Reservieren bis 10 Uhr.",en:"Konoba Rabljanin — ask for today's catch. Reserve by 10am.",it:"Konoba Rabljanin — chiedete il pesce del giorno. Prenotare entro le 10.",si:"Konoba Rabljanin — vprašajte za ribo dneva. Rezervirajte do 10h.",cz:"Konoba Rabljanin — zeptejte se na denní rybu. Rezervujte do 10h.",pl:"Konoba Rabljanin — zapytaj o dzisiejszy połów. Zarezerwuj do 10."},
+    best: {hr:"Ručak",de:"Mittagessen",en:"Lunch",it:"Pranzo",si:"Kosilo",cz:"Oběd",pl:"Obiad"}, diff: {hr:"Lagano",de:"Leicht",en:"Easy",it:"Facile",si:"Lahko",cz:"Snadné",pl:"Łatwe"} },
+  { name: "Glagoljska azbuka", emoji: "🗿", lat: 44.7545, lng: 14.7612, region: "kvarner", premium: true,
+    type: {hr:"Kulturna staza",de:"Kulturpfad",en:"Cultural trail",it:"Sentiero culturale",si:"Kulturna pot",cz:"Kulturní stezka",pl:"Szlak kulturowy"},
+    desc: {hr:"Staza kroz borovu šumu s 30 kamenih ploča glagoljske azbuks. Jedinstven kulturni monument Kvarnera.",de:"Pfad durch Kiefernwald mit 30 Steintafeln des glagolitischen Alphabets. Einzigartiges Kulturmonument.",en:"Trail through pine forest with 30 stone tablets of the Glagolitic alphabet. Unique cultural monument.",it:"Sentiero nel bosco di pini con 30 tavole di pietra dell'alfabeto glagolitico. Monumento unico.",si:"Pot skozi borovi gozd s 30 kamnitimi ploščami glagolice. Unikaten kulturni monument.",cz:"Stezka borovým lesem s 30 kamennými tabulemi hlaholice. Jedinečná kulturní památka.",pl:"Szlak przez sosnowy las z 30 kamiennymi tablicami głagolicy. Unikalny monument kulturowy."},
+    tip: {hr:"Start kod autobusne postaje Rab. Krug 4km, 1.5h. Idealno jutarnja šetnja.",de:"Start an der Busstation Rab. Rundweg 4km, 1,5h. Ideal als Morgenwanderung.",en:"Start at Rab bus station. Loop 4km, 1.5h. Perfect for a morning walk.",it:"Partenza alla fermata bus di Rab. Anello 4km, 1,5h. Ideale mattinata.",si:"Start pri avtobusni postaji Rab. Krog 4km, 1,5h.",cz:"Start u autobusového nádraží Rab. Okruh 4km, 1,5h.",pl:"Start przy dworcu autobusowym Rab. Pętla 4km, 1,5h."},
+    best: {hr:"Jutro",de:"Morgens",en:"Morning",it:"Mattina",si:"Zjutraj",cz:"Ráno",pl:"Rano"}, diff: {hr:"Lagano",de:"Leicht",en:"Easy",it:"Facile",si:"Lahko",cz:"Snadné",pl:"Łatwe"} },
+  { name: "Uvala Sv. Eufemija", emoji: "⛵", lat: 44.7489, lng: 14.7534, region: "kvarner", premium: true,
+    type: {hr:"Sidrište",de:"Ankerplatz",en:"Anchorage",it:"Ancoraggio",si:"Sidrišče",cz:"Kotviště",pl:"Kotwicowisko"},
+    desc: {hr:"Zaštićena uvala s kristalnim dnom. Nautičari sidre ovdje svako ljeto. Snorkeling do 15m vidljivosti.",de:"Geschützte Bucht mit kristallklarem Boden. Segler ankern hier jeden Sommer. Schnorcheln bis 15m Sicht.",en:"Sheltered cove with crystal-clear bottom. Sailors anchor here every summer. Snorkeling up to 15m visibility.",it:"Baia riparata con fondal cristallino. I velisti attraccano qui ogni estate. Snorkeling 15m visibilità.",si:"Zavarovana uvala s kristalnim dnom. Jadralci sidrijo tu vsako poletje.",cz:"Chráněná zátoka s křišťálovým dnem. Jachtaři kotvili každé léto. Šnorchlování 15m viditelnost.",pl:"Osłonięta zatoka z krystalicznym dnem. Żeglarze cumują tu co lato."},
+    tip: {hr:"VHF kanal 17. Anchor 4-8m, dobro dno za sidrenje. Dinghy na plažicu.",de:"VHF Kanal 17. Anker 4-8m, guter Ankergrund. Dinghy zum Strand.",en:"VHF channel 17. Anchor 4-8m, good holding. Dinghy to the beach.",it:"Canale VHF 17. Ancora 4-8m, buon fondale. Dinghy alla spiaggia.",si:"VHF kanal 17. Sidro 4-8m, dobro dno.",cz:"VHF kanál 17. Kotva 4-8m, dobrý kotevní důvod.",pl:"Kanał VHF 17. Kotwica 4-8m, dobre dno."},
+    best: {hr:"Cijeli dan",de:"Ganztags",en:"All day",it:"Tutto il giorno",si:"Cel dan",cz:"Celý den",pl:"Cały dzień"}, diff: {hr:"Brod",de:"Boot",en:"Boat",it:"Barca",si:"Čoln",cz:"Loď",pl:"Łódź"} },
 ];
 
 const GYG = (id) => `https://www.getyourguide.com/${id}/?partner_id=9OEGOYI&utm_medium=local_partners`;
@@ -575,6 +608,20 @@ const EXPERIENCES = [
     gyg: GYG("opatija-l1296?q=cres+island+boat") },
   { id: 32, name: "Opatija Evening Cruise", emoji: "🌙", price: 45, dur: "2h", rating: 4.8, cat: "premium", region: "kvarner",
     gyg: GYG("opatija-l1296?q=evening+cruise+kvarner") },
+
+  // ═══ KVARNER — RAB ═══
+  { id: 40, name: "Rab Old Town Walking Tour", emoji: "🏰", price: 20, dur: "1.5h", rating: 4.9, cat: "culture", region: "kvarner",
+    gyg: GYG("rab-island-l3038/rab-old-town-guided-tour-t279756"), viator: VIA("Rab/Old-Town-Walking-Tour/d50867") },
+  { id: 41, name: "Boat Tour 5 Beaches", emoji: "⛵", price: 55, dur: "6h", rating: 4.8, cat: "premium", region: "kvarner",
+    gyg: GYG("rab-island-l3038?q=boat+tour+beaches"), viator: VIA("Rab/Boat-Tour-5-Beaches/d50867") },
+  { id: 42, name: "Sea Kayaking Rab", emoji: "🛶", price: 35, dur: "3h", rating: 4.9, cat: "adventure", region: "kvarner",
+    gyg: GYG("rab-island-l3038?q=sea+kayaking"), viator: VIA("Rab/Sea-Kayak-Tour/d50867") },
+  { id: 43, name: "Snorkeling + Sunken Ship", emoji: "🤿", price: 45, dur: "4h", rating: 4.7, cat: "adventure", region: "kvarner",
+    gyg: GYG("rab-island-l3038?q=snorkeling+wreck") },
+  { id: 44, name: "E-Bike Rab Island Loop", emoji: "🚴", price: 40, dur: "4h", rating: 4.8, cat: "adventure", region: "kvarner",
+    gyg: GYG("rab-island-l3038?q=ebike+cycling+tour") },
+  { id: 45, name: "Sunset Sailing Rab", emoji: "🌅", price: 60, dur: "2.5h", rating: 5.0, cat: "premium", region: "kvarner",
+    gyg: GYG("rab-island-l3038?q=sunset+sailing+wine") },
 ];
 
 const BUNDLES = [
@@ -770,6 +817,10 @@ export default function JadranUnified() {
     if (tLat && tLng) { setTransitToCoords([tLat, tLng]); saveDelta({ destination: { city: to, lat: tLat, lng: tLng } }); urlToSet.current = true; }
     const urlLang = p.get("lang");
     if (urlLang) { setLang(urlLang); saveDelta({ lang: urlLang }); }
+    // Sprint 7B — persist dates from URL into DELTA (lifecycle hook)
+    const arrParam = p.get("arr");
+    const depParam = p.get("dep");
+    if (arrParam || depParam) saveDelta({ arrival_date: arrParam || null, departure_date: depParam || null });
     setPhase("pre");
     setSubScreen("transit");
     setSplash(false);
@@ -858,13 +909,16 @@ export default function JadranUnified() {
             country: data.country, flag: data.flag || "🌍", lang: data.lang || "en",
             adults: data.adults || 2, kids: data.kids || 0, kidsAges: data.kidsAges || [],
             interests: data.interests || ["gastro","adventure"],
-            arrival: data.arrival || data.checkIn || "2026-07-12",
-            departure: data.departure || data.checkOut || "2026-07-19",
+            arrival: data.arrival || data.checkIn || "",
+            departure: data.departure || data.checkOut || "",
             car: data.car || false, carPlate: data.carPlate || "",
             accommodation: data.accommodation || "Apartman", host: data.host || "",
-            hostPhone: data.hostPhone || "", budget: data.budget || 1200,
-            spent: data.spent || 0, email: data.email || "",
+            hostPhone: data.hostPhone || "", email: data.email || "",
           });
+          // Sync dates to DELTA so lifecycle works on QR path too
+          const gArr = data.arrival || data.checkIn;
+          const gDep = data.departure || data.checkOut;
+          if (gArr || gDep) saveDelta({ arrival_date: gArr || null, departure_date: gDep || null });
         } else if (roomCode.current && roomCode.current !== "DEMO") {
           // No profile yet — show onboarding
           setShowOnboarding(true);
@@ -2086,7 +2140,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             { k: "fuel", ic: IC.map, l: ({hr:"Gorivo",de:"Tanken",en:"Fuel",it:"Carburante",si:"Gorivo",cz:"Palivo",pl:"Paliwo"})[lang]||"Gorivo", clr: "#94a3b8", free: true },
             { k: "emergency", ic: IC.medic, l: t("emergency",lang), clr: C.red, free: true },
             { k: "activities", ic: IC.ticket, l: t("activities",lang), clr: "#22c55e", free: true },
-            ...(kioskCity === "Split" || kioskCity === "Podstrana" || kioskCity === "Omiš" || kioskCity === "Makarska" || kioskCity === "Trogir" || kioskCity === "Rab" ? [{ k: "gems", ic: IC.gem, l: t("gems",lang), clr: C.gold, free: false }] : []),
+            ...(getDestRegion(kioskCity) ? [{ k: "gems", ic: IC.gem, l: t("gems",lang), clr: C.gold, free: false }] : []),
             ...(kioskCity === "Rab" ? [{ k: "excursions", ic: IC.ticket, l: ({hr:"Izleti",de:"Ausflüge",en:"Excursions",it:"Escursioni"})[lang]||"Izleti", clr: "#0ea5e9", free: true }] : []),
             ...(affiliateId && AFFILIATE_DATA?.[affiliateId] ? [{ k: "affiliate", ic: IC.gem, l: AFFILIATE_DATA[affiliateId].name, clr: AFFILIATE_DATA[affiliateId].color, free: true }] : []),
             { k: "chat", ic: IC.bot, l: t("aiGuide",lang), clr: "#a78bfa", free: true },
@@ -2288,40 +2342,70 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
     );
   };
 
-  const KioskGems = () => (
-    <>
-      <BackBtn onClick={() => setSubScreen("home")} />
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-        <span style={{ fontSize: 36 }}>💎</span>
-        <div><div style={{ fontSize: 28, fontWeight: 400 }}>{t("gems",lang)}</div>
-          <div style={{ ...dm, fontSize: 13, color: C.mut }}>{t("localTip",lang)}</div></div>
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 14, marginTop: 20 }}>
-        {GEMS.map((g, i) => (
-          <Card key={i} style={{ cursor: "pointer", position: "relative" }}
-            onClick={() => { if (g.premium && !premium) setShowPaywall(true); else setSelectedGem(g); }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(251,191,36,0.25)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.3), 0 0 16px rgba(251,191,36,0.06)"; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
-            {g.premium && !premium && <div style={{ position: "absolute", inset: 0, background: "rgba(10,22,40,0.7)", borderRadius: 18, display: "grid", placeItems: "center", zIndex: 5 }}>
-              <div style={{ textAlign: "center" }}><div style={{ fontSize: 28 }}>🔒</div><div style={{ ...dm, fontSize: 12, color: C.gold }}>Premium</div></div>
-            </div>}
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-              <span style={{ fontSize: 32 }}>{g.emoji}</span>
-              <Badge c="gold">{(typeof g.type === "object" ? (g.type[lang] || g.type.hr) : g.type).toUpperCase()}</Badge>
-            </div>
-            <div style={{ fontSize: 18, fontWeight: 400, marginBottom: 4 }}>{g.name}</div>
-            <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.5 }}>{(typeof g.desc === "object" ? (g.desc[lang] || g.desc.hr) : g.desc).substring(0, 90)}...</div>
-            <div style={{ ...dm, display: "flex", gap: 12, marginTop: 10, fontSize: 12, color: C.mut }}>
-              <span>⏰ {typeof g.best === "object" ? (g.best[lang] || g.best.hr) : g.best}</span><span>📍 {typeof g.diff === "object" ? (g.diff[lang] || g.diff.hr) : g.diff}</span>
+  const KioskGems = () => {
+    const destRegion = getDestRegion(kioskCity);
+    const visibleGems = destRegion
+      ? GEMS.filter(g => g.region === destRegion)
+      : GEMS; // fallback: show all if region unknown
+    return (
+      <>
+        <BackBtn onClick={() => setSubScreen("home")} />
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+          <span style={{ fontSize: 36 }}>💎</span>
+          <div><div style={{ fontSize: 28, fontWeight: 400 }}>{t("gems",lang)}</div>
+            <div style={{ ...dm, fontSize: 13, color: C.mut }}>{t("localTip",lang)}</div></div>
+        </div>
+        {visibleGems.length === 0 && (
+          <Card style={{ textAlign: "center", padding: "28px 20px" }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>🗺️</div>
+            <div style={{ ...dm, fontSize: 14, color: C.mut }}>
+              {({hr:"AI vodič za ovu destinaciju dolazi uskoro!",de:"KI-Guide für dieses Ziel kommt bald!",en:"AI guide for this destination coming soon!",it:"Guida AI per questa destinazione in arrivo!"})[lang] || "Coming soon!"}
             </div>
           </Card>
-        ))}
-      </div>
-    </>
-  );
+        )}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: 14, marginTop: 20 }}>
+          {visibleGems.map((g, i) => (
+            <Card key={i} style={{ cursor: "pointer", position: "relative" }}
+              onClick={() => { if (g.premium && !premium) setShowPaywall(true); else setSelectedGem(g); }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(251,191,36,0.25)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.3), 0 0 16px rgba(251,191,36,0.06)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
+              {g.premium && !premium && <div style={{ position: "absolute", inset: 0, background: "rgba(10,22,40,0.7)", borderRadius: 18, display: "grid", placeItems: "center", zIndex: 5 }}>
+                <div style={{ textAlign: "center" }}><div style={{ fontSize: 28 }}>🔒</div><div style={{ ...dm, fontSize: 12, color: C.gold }}>Premium</div></div>
+              </div>}
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+                <span style={{ fontSize: 32 }}>{g.emoji}</span>
+                <Badge c="gold">{(typeof g.type === "object" ? (g.type[lang] || g.type.hr) : g.type).toUpperCase()}</Badge>
+              </div>
+              <div style={{ fontSize: 18, fontWeight: 400, marginBottom: 4 }}>{g.name}</div>
+              <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.5 }}>{(typeof g.desc === "object" ? (g.desc[lang] || g.desc.hr) : g.desc).substring(0, 90)}...</div>
+              <div style={{ ...dm, display: "flex", gap: 12, marginTop: 10, fontSize: 12, color: C.mut }}>
+                <span>⏰ {typeof g.best === "object" ? (g.best[lang] || g.best.hr) : g.best}</span><span>📍 {typeof g.diff === "object" ? (g.diff[lang] || g.diff.hr) : g.diff}</span>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </>
+    );
+  };
 
   const KioskActivities = () => {
-    const acts = viatorActs || VIATOR_FALLBACK;
+    const destRegion = getDestRegion(kioskCity);
+    // Build region-filtered static fallback from EXPERIENCES
+    const regionFallback = destRegion
+      ? EXPERIENCES.filter(e => e.region === destRegion).map(e => ({
+          productCode: `LOCAL-${e.id}`,
+          title: e.name,
+          description: "",
+          price: e.price,
+          rating: e.rating,
+          reviewCount: null,
+          duration: e.dur,
+          category: ({adventure:"Avantura",culture:"Kultura",gastro:"Gastro",premium:"Premium",nature:"Priroda"})[e.cat] || e.cat,
+          images: [],
+          bookingUrl: e.gyg || e.viator || "#",
+        }))
+      : VIATOR_FALLBACK;
+    const acts = viatorActs || (regionFallback.length > 0 ? regionFallback : VIATOR_FALLBACK);
     const CATCLR = { Kultura: "#a78bfa", Nautika: "#0ea5e9", Priroda: "#34d399", Avantura: "#f97316", Romantika: "#f472b6" };
     const STARS = (r) => r ? "★".repeat(Math.round(r)) + "☆".repeat(5 - Math.round(r)) : "★★★★★";
     return (
@@ -2766,13 +2850,23 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
   /* ══════════════════════════════
      PHASE 3: POST-STAY
      ══════════════════════════════ */
-  const PostStay = () => (
+  const PostStay = () => {
+    // Dynamic stay duration from guest data or DELTA
+    const delta = loadDelta();
+    const arrDate = G.arrival || delta.arrival_date;
+    const depDate = G.departure || delta.departure_date;
+    const stayNights = (arrDate && depDate)
+      ? Math.max(1, Math.round((new Date(depDate) - new Date(arrDate)) / 86400000))
+      : null;
+    const loyaltyPts = 125 + (stayNights ? stayNights * 15 : 0);
+    const loyaltyCode = G.name ? G.name.split(" ")[0].toUpperCase().slice(0,8) + new Date().getFullYear() : "JADRAN" + new Date().getFullYear();
+    return (
     <>
       <div style={{ textAlign: "center", padding: "28px 0 8px" }}>
         <div style={{ fontSize: 60, marginBottom: 12 }} className="emoji-float">🌅</div>
         <div style={{ ...hf, fontSize: 34, fontWeight: 400 }}>{t("thanks",lang)}, <span style={{ color: C.warm, fontStyle: "italic" }}>{G.first}</span>!</div>
         <div style={{ ...dm, color: C.mut, fontSize: 15, marginTop: 8, lineHeight: 1.6 }}>
-          {kioskCity} · {t("unforgettable",lang)}
+          {kioskCity}{stayNights ? ` · ${stayNights} ${stayNights === 1 ? ({hr:"noć",de:"Nacht",en:"night",it:"notte"})[lang]||"noć" : ({hr:"noći",de:"Nächte",en:"nights",it:"notti"})[lang]||"noći"}` : ""} · {t("unforgettable",lang)}
         </div>
       </div>
 
@@ -2782,12 +2876,12 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           <div style={{ ...dm, fontSize: 11, textTransform: "uppercase", letterSpacing: 3, color: C.gold, marginBottom: 4 }}>JADRAN LOYALTY</div>
           <div style={{ fontSize: 26, fontWeight: 300 }}>🌊 {LOYALTY.tier}</div>
           <div style={{ ...dm, fontSize: 13, color: C.mut, marginTop: 8 }}>
-            {LOYALTY.points} {t("points",lang)} → <strong style={{ color: C.gold }}>{LOYALTY.next}</strong> ({LOYALTY.nextPts})
+            {loyaltyPts} {t("points",lang)} → <strong style={{ color: C.gold }}>{LOYALTY.next}</strong> ({LOYALTY.nextPts})
           </div>
           <div style={{ height: 8, borderRadius: 4, background: "rgba(0,0,0,0.3)", overflow: "hidden", margin: "12px 0 6px" }}>
-            <div style={{ height: "100%", width: `${(LOYALTY.points / LOYALTY.nextPts) * 100}%`, borderRadius: 4, background: `linear-gradient(90deg,${C.accent},${C.gold})` }} />
+            <div style={{ height: "100%", width: `${Math.min(100, (loyaltyPts / LOYALTY.nextPts) * 100)}%`, borderRadius: 4, background: `linear-gradient(90deg,${C.accent},${C.gold})` }} />
           </div>
-          <div style={{ ...dm, fontSize: 11, color: C.mut }}>{t("more",lang)} {LOYALTY.nextPts - LOYALTY.points} {t("points",lang)}</div>
+          <div style={{ ...dm, fontSize: 11, color: C.mut }}>{t("more",lang)} {Math.max(0, LOYALTY.nextPts - loyaltyPts)} {t("points",lang)}</div>
         </Card>
 
         {/* Revenue summary — admin only (visible with ?admin=sial) */}
@@ -2807,7 +2901,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
       <Card style={{ textAlign: "center", border: `1px dashed rgba(14,165,233,0.15)`, marginBottom: 20 }}>
         <div style={{ fontSize: 20, fontWeight: 400, marginBottom: 4 }}>{t("inviteFriends",lang)}</div>
         <div style={{ ...dm, fontSize: 13, color: C.mut, marginBottom: 8 }}>{t("bothDiscount",lang)}</div>
-        <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: 6, color: C.accent, margin: "10px 0" }}>{LOYALTY.code}</div>
+        <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: 6, color: C.accent, margin: "10px 0" }}>{loyaltyCode}</div>
         <Btn primary>{t("shareCode",lang)}</Btn>
       </Card>
 
@@ -2841,7 +2935,8 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         </div>
       </Card>}
     </>
-  );
+    );
+  };
 
   /* ═══ MAIN RENDER ═══ */
 
@@ -2857,9 +2952,12 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           interests: guestData.interests || [], arrival: guestData.arrival || "",
           departure: guestData.departure || "", car: guestData.car || false,
           accommodation: guestData.accommodation || "", host: guestData.host || "",
-          hostPhone: guestData.hostPhone || "", budget: guestData.budget || 1200,
-          spent: guestData.spent || 0, email: guestData.email || "",
+          hostPhone: guestData.hostPhone || "", email: guestData.email || "",
         });
+        // Sprint 7B — persist dates into DELTA so lifecycle hook works on all paths
+        if (guestData.arrival || guestData.departure) {
+          saveDelta({ arrival_date: guestData.arrival || null, departure_date: guestData.departure || null });
+        }
         setLang(guestData.lang || "en");
         // Auto-set phase based on dates
         const now = new Date();

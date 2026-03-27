@@ -98,6 +98,9 @@ export default function LandingPage() {
   const [fromLPSugs, setFromLPSugs] = useState([]);
   const [toLPSugs, setToLPSugs] = useState([]);
   const fromTimerRef = useRef(null);
+  // Sprint 7B — date lifecycle hook
+  const [arrivalDate, setArrivalDate] = useState("");
+  const [departureDate, setDepartureDate] = useState("");
   const toTimerRef = useRef(null);
   const hereSuggest = (text, setter, timerRef) => {
     clearTimeout(timerRef.current);
@@ -452,6 +455,27 @@ export default function LandingPage() {
                         </div>
                       )}
                     </div>
+                    {/* DATES — lifecycle hook: arrival + departure */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+                      <div>
+                        <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>
+                          {lang === "de" || lang === "at" ? "Anreise" : lang === "en" ? "Arrival" : lang === "it" ? "Arrivo" : lang === "si" ? "Prihod" : lang === "cz" ? "Příjezd" : lang === "pl" ? "Przyjazd" : "Dolazak"}
+                        </div>
+                        <input type="date" value={arrivalDate}
+                          min={new Date().toISOString().slice(0, 10)}
+                          onChange={e => { setArrivalDate(e.target.value); if (departureDate && e.target.value > departureDate) setDepartureDate(""); }}
+                          style={{ width: "100%", padding: "11px 12px", borderRadius: 10, border: `1px solid ${arrivalDate ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: arrivalDate ? "#f0f4f8" : "#475569", fontSize: 14, outline: "none", boxSizing: "border-box", colorScheme: "dark" }} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>
+                          {lang === "de" || lang === "at" ? "Abreise" : lang === "en" ? "Departure" : lang === "it" ? "Partenza" : lang === "si" ? "Odhod" : lang === "cz" ? "Odjezd" : lang === "pl" ? "Wyjazd" : "Povratak"}
+                        </div>
+                        <input type="date" value={departureDate}
+                          min={arrivalDate || new Date().toISOString().slice(0, 10)}
+                          onChange={e => setDepartureDate(e.target.value)}
+                          style={{ width: "100%", padding: "11px 12px", borderRadius: 10, border: `1px solid ${departureDate ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: departureDate ? "#f0f4f8" : "#475569", fontSize: 14, outline: "none", boxSizing: "border-box", colorScheme: "dark" }} />
+                      </div>
+                    </div>
                     {/* CTA */}
                     <button
                       disabled={!depCity.trim() || !toLPCity.trim()}
@@ -460,14 +484,16 @@ export default function LandingPage() {
                         const fromCoordArr = depCoords ? [depCoords.lat, depCoords.lng] : null;
                         const dest = { city: toLPCity.trim() };
                         if (toCoords) { dest.lat = toCoords.lat; dest.lng = toCoords.lng; }
-                        saveDelta({ segment: seg, transport: selectedMode, from: depCity.trim(), from_coords: fromCoordArr, destination: dest, lang, phase: "transit" });
+                        saveDelta({ segment: seg, transport: selectedMode, from: depCity.trim(), from_coords: fromCoordArr, destination: dest, lang, phase: "transit", arrival_date: arrivalDate || null, departure_date: departureDate || null });
                         let url = `/?room=DEMO&go=transit&from=${encodeURIComponent(depCity.trim())}&to=${encodeURIComponent(toLPCity.trim())}&seg=${seg}&lang=${lang}`;
                         if (depCoords) url += `&fLat=${depCoords.lat}&fLng=${depCoords.lng}`;
                         if (toCoords) url += `&tLat=${toCoords.lat}&tLng=${toCoords.lng}`;
+                        if (arrivalDate) url += `&arr=${arrivalDate}`;
+                        if (departureDate) url += `&dep=${departureDate}`;
                         window.location.href = url;
                       }}
                       style={{ width: "100%", padding: "14px 20px", borderRadius: 12, background: depCity.trim() && toLPCity.trim() ? "linear-gradient(135deg, #f97316, #ea580c)" : "rgba(255,255,255,0.06)", border: "none", color: depCity.trim() && toLPCity.trim() ? "#fff" : "#475569", fontSize: 15, fontWeight: 700, cursor: depCity.trim() && toLPCity.trim() ? "pointer" : "default", fontFamily: F, letterSpacing: 0.5, transition: "all 0.2s" }}>
-                      Kreni sa mnom →
+                      {lang === "de" || lang === "at" ? "Los geht's →" : lang === "en" ? "Let's go →" : lang === "it" ? "Andiamo →" : "Kreni sa mnom →"}
                     </button>
                   </div>
                 )}
