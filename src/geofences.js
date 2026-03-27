@@ -152,6 +152,6 @@ export function detectPhase(lat, lng, destLat, destLng, homeLat, homeLng) {
   const toHome = homeLat ? distKm(lat, lng, homeLat, homeLng) : 999;
   if (toDest < 2) return "odmor";        // arrived
   if (toHome < 5) return "landing";       // still home
-  if (toDest < 200) return "transit";     // on the way
-  return "transit";
+  if (toDest < 200) return "transit";     // on the way (< 200km)
+  return "transit";                        // far from destination (>= 200km)
 }

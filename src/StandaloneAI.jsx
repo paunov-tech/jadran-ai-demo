@@ -391,7 +391,7 @@ function saveProfile(profile) {
 }
 
 function updateProfile(userMsg, aiMsg) {
-  const profile = loadProfile();
+  const profile = { ...loadProfile() };
   // Update visit/message counts
   profile.totalMsgs = (profile.totalMsgs || 0) + 1;
   profile.lastActive = Date.now();
@@ -502,7 +502,7 @@ const [lang, setLang] = useState(() => {
         msg_sent: "ViewContent",
         referral_share: "Lead",
       };
-      if (pixelMap[event] && window.fbq) fbq("track", pixelMap[event], props || {});
+      if (pixelMap[event] && window.fbq) window.fbq("track", pixelMap[event], props || {});
     } catch {}
   };
   const trackPurchase = (plan, amount, currency = "EUR") => {
@@ -976,11 +976,12 @@ const [lang, setLang] = useState(() => {
         }),
       });
       const data = await res.json();
-      if (data.url) window.location.href = data.url;
+      if (!data?.url) throw new Error("No checkout URL returned");
+      window.location.href = data.url;
     } catch (e) {
       console.error("Checkout error:", e);
+      setPayLoading(false);
     }
-    setPayLoading(false);
   };
 
   // ─── AI CHAT ───
@@ -1162,7 +1163,7 @@ const [lang, setLang] = useState(() => {
 
   // ═══ PAYWALL MODAL ═══
   const paywallJsx = showPaywall && (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)", zIndex: 300, display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "min(10dvh, 60px) 24px 24px" }}
+    <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.92)", zIndex: 300, display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "min(10dvh, 60px) 24px 24px" }}
       onClick={() => { setShowPaywall(false); setUpsellFeature(null); setShowRecovery(false); setRecoveryStatus(null); setRecoveryEmail(""); }}>
       <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "28px 20px", maxWidth: 480, width: "100%", border: "1px solid rgba(245,158,11,0.1)", maxHeight: "90dvh", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         <div style={{ textAlign: "center", marginBottom: 16 }}>
@@ -1353,7 +1354,7 @@ const [lang, setLang] = useState(() => {
 
   // ═══ INVITE WELCOME — what the referred friend sees ═══
   const inviteWelcomeJsx = showInviteWelcome && (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)", zIndex: 280, display: "grid", placeItems: "center", padding: 24 }}
+    <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.92)", zIndex: 280, display: "grid", placeItems: "center", padding: 24 }}
       onClick={() => setShowInviteWelcome(false)}>
       <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "32px 24px", maxWidth: 420, width: "100%", border: "1px solid rgba(34,197,94,0.15)", textAlign: "center" }}>
         <div style={{ fontSize: 40, marginBottom: 12 }}>🍻</div>
@@ -1410,7 +1411,7 @@ const [lang, setLang] = useState(() => {
   };
 
   const VerifyingOverlay = () => verifyingPayment && (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)", zIndex: 350, display: "grid", placeItems: "center", padding: 24 }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.92)", zIndex: 350, display: "grid", placeItems: "center", padding: 24 }}>
       <div style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "40px 32px", maxWidth: 360, width: "100%", textAlign: "center", border: `1px solid ${C.bord}` }}>
         <div style={{ width: 48, height: 48, borderRadius: "50%", border: `3px solid ${C.accent}`, borderTopColor: "transparent", margin: "0 auto 20px", animation: "spin 0.8s linear infinite" }}></div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -1424,7 +1425,7 @@ const [lang, setLang] = useState(() => {
 
   // ═══ POST-PURCHASE SUCCESS MODAL ═══
   const SuccessModal = () => showSuccess && (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)", zIndex: 400, display: "grid", placeItems: "center", padding: 24 }}
+    <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.92)", zIndex: 400, display: "grid", placeItems: "center", padding: 24 }}
       onClick={() => setShowSuccess(false)}>
       <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "32px 24px", maxWidth: 440, width: "100%", border: "1px solid rgba(34,197,94,0.15)", textAlign: "center" }}>
         <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(34,197,94,0.1)", display: "grid", placeItems: "center", margin: "0 auto 16px", fontSize: 32 }}>✅</div>
@@ -1539,7 +1540,7 @@ const [lang, setLang] = useState(() => {
 
   // ═══ SETUP SCREEN ═══
   if (step === "setup") return (
-    <div style={{ minHeight: "100vh", background: C.heroBg, fontFamily: "'Outfit',system-ui,sans-serif", color: C.text }}>
+    <div style={{ minHeight: "100dvh", background: C.heroBg, fontFamily: "'Outfit',system-ui,sans-serif", color: C.text }}>
 
       <div style={{ maxWidth: 540, margin: "0 auto", padding: "24px 24px", paddingTop: "max(24px, calc(env(safe-area-inset-top, 0px) + 16px))" }}>
         {/* Header */}
@@ -2594,8 +2595,6 @@ const [lang, setLang] = useState(() => {
         @supports not (height: 100dvh) { .jadran-chat { height: 100vh !important; } }
         ::selection { background: rgba(14,165,233,0.3); }
         @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
-        @keyframes seaV1 { 0%,100% { d: path('M0,20 C60,10 120,30 180,18 C240,6 300,28 360,15 C380,12 400,20 400,20 L400,80 L0,80 Z'); } 50% { d: path('M0,25 C60,32 120,14 180,26 C240,34 300,16 360,28 C380,30 400,22 400,22 L400,80 L0,80 Z'); } }
-        @keyframes seaV2 { 0%,100% { d: path('M0,30 C50,22 100,35 160,25 C220,15 280,32 340,22 C370,18 400,28 400,28 L400,80 L0,80 Z'); } 50% { d: path('M0,22 C50,32 100,18 160,30 C220,38 280,20 340,32 C370,35 400,24 400,24 L400,80 L0,80 Z'); } }
         @keyframes sunGlow { 0%,100% { box-shadow: 0 0 60px rgba(251,191,36,0.4), 0 0 120px rgba(251,191,36,0.15); } 50% { box-shadow: 0 0 80px rgba(251,191,36,0.5), 0 0 160px rgba(251,191,36,0.2); } }
         @keyframes fadeSlide { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeInDown { from { opacity: 0; transform: translateX(-50%) translateY(-16px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }

@@ -43,9 +43,6 @@ export default function HostPanel() {
   // QR modal
   const [qrModal, setQrModal] = useState(null);
 
-  // Detail view
-  const [viewApt, setViewApt] = useState(null);
-
   // Revenue dashboard
   const [activeTab, setActiveTab] = useState("apts"); // "apts" | "prihodi"
   const [revenues, setRevenues] = useState([]);
@@ -208,12 +205,13 @@ export default function HostPanel() {
           }} style={S.primaryBtn}>⬇️ Download QR</button>
           <button onClick={() => {
             const printWin = window.open("", "_blank");
+            const _printName = (qrModal.name || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
             printWin.document.write(`
-              <html><head><title>QR - ${qrModal.name}</title>
+              <html><head><title>QR - ${_printName}</title>
               <style>body{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:system-ui;background:#fff;}
               h2{margin-bottom:8px;} p{color:#666;font-size:14px;}</style></head>
               <body>
-                <h2>${qrModal.name}</h2>
+                <h2>${_printName}</h2>
                 <p>Skenirajte za turistički vodič</p>
                 <img src="${qrSvg(`https://jadran.ai?room=${qrModal.roomCode}`, 300)}" width="300" />
                 <p style="margin-top:16px;font-family:monospace;font-size:12px;">jadran.ai?room=${qrModal.roomCode}</p>
@@ -508,7 +506,7 @@ const ANIMS = `
 // ═══ STYLES ═══
 const S = {
   wrap: {
-    minHeight: "100vh", fontFamily: "'Outfit', system-ui, sans-serif", color: "#f0f9ff",
+    minHeight: "100dvh", fontFamily: "'Outfit', system-ui, sans-serif", color: "#f0f9ff",
   },
   loginCard: {
     zIndex: 10, textAlign: "center",
@@ -546,7 +544,7 @@ const S = {
     fontSize: 12, color: "rgba(255,255,255,0.5)", padding: "2px 0",
   },
   overlay: {
-    position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)",
+    position: "fixed", inset: 0, background: "rgba(5,14,30,0.92)",
     zIndex: 300, display: "grid", placeItems: "center", padding: 24,
   },
   modal: {

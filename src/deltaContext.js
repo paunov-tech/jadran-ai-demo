@@ -40,7 +40,7 @@ export function saveDelta(partial) {
     const current = loadDelta();
     const updated = { ...current, ...partial };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    window.__DELTA = updated; // debug
+    if (import.meta.env.DEV) window.__DELTA = updated;
     return updated;
   } catch {
     return { ...DEFAULTS, ...partial };
@@ -49,7 +49,7 @@ export function saveDelta(partial) {
 
 export function clearDelta() {
   try { localStorage.removeItem(STORAGE_KEY); } catch {}
-  window.__DELTA = null;
+  if (import.meta.env.DEV) window.__DELTA = null;
 }
 
 // Chat prompt block — injected into system prompt
@@ -61,7 +61,7 @@ export function deltaPromptBlock(delta) {
   if (delta.from) lines.push(`Polazište: ${delta.from}`);
   if (delta.destination?.city) lines.push(`Destinacija: ${delta.destination.city}`);
   const t = delta.travelers;
-  if (t) lines.push(`Putnici: ${t.adults} odraslih${t.kids > 0 ? `, ${t.kids} djece (${t.kids_ages.join(", ")} god)` : ""}`);
+  if (t) lines.push(`Putnici: ${t.adults} odraslih${t.kids > 0 ? `, ${t.kids} djece (${(t.kids_ages ?? t.kidsAges ?? []).join(", ")} god)` : ""}`);
   if (delta.arrival_date) lines.push(`Dolazak: ${delta.arrival_date}`);
   if (delta.budget) lines.push(`Budget: ${delta.budget}`);
   if (delta.interests?.length) lines.push(`Interesi: ${delta.interests.join(", ")}`);

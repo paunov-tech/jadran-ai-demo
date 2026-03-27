@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { loadGuest, updateGuest, getRoomCode } from "./guestStore";
 import GuestOnboarding from "./GuestOnboarding";
 import { loadDelta, saveDelta } from "./deltaContext";
-import { startGPS, stopGPS, resetTrip } from "./gpsEngine";
+import { startGPS } from "./gpsEngine";
 
 // ─── CITY COORDINATES (used by Leaflet map, no HERE SDK) ───
 const CITY_COORDS = {
@@ -69,8 +69,9 @@ const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteRea
       });
   }, [fromCoords?.[0], toCoords?.[0]]); // eslint-disable-line
 
+  const tmode = transportMode === "kamper" ? "truck" : "car";
   const src = fromCoords && toCoords
-    ? `/map.html?flat=${fromCoords[0]}&flon=${fromCoords[1]}&tlat=${toCoords[0]}&tlon=${toCoords[1]}&key=${import.meta.env.VITE_HERE_API_KEY}`
+    ? `/map.html?flat=${fromCoords[0]}&flon=${fromCoords[1]}&tlat=${toCoords[0]}&tlon=${toCoords[1]}&tmode=${tmode}&key=${import.meta.env.VITE_HERE_API_KEY}`
     : null;
 
   if (!src) return <div style={{ width: "100%", height: 300, background: "#0c1426", borderRadius: 14, display: "grid", placeItems: "center" }}><span style={{ fontSize: 13, color: "#64748b", fontFamily: "'DM Sans',sans-serif" }}>Učitavam mapu…</span></div>;
@@ -641,6 +642,7 @@ export default function JadranUnified() {
   const [kioskDay, setKioskDay] = useState(3);
   const [simHour, setSimHour] = useState(null);
   const [selectedGem, setSelectedGem] = useState(null);
+  const [svModal, setSvModal] = useState(null); // { lat, lng, name } — inline Street View overlay
   // Kiosk v2: location-aware nearby data
   const [nearbyData, setNearbyData] = useState(null); // { location, categories }
   const [nearbyLoading, setNearbyLoading] = useState(false);
@@ -978,10 +980,8 @@ export default function JadranUnified() {
           updateGuest(roomCode.current, { premium: true, premiumSessionId: sessionId, phase: 'kiosk' });
         }
       }).catch(() => {
-        // If verify fails, still unlock for UX (webhook will catch it)
-        setPremium(true);
-        try { localStorage.setItem("jadran_ai_premium", "1"); } catch {}
-        updateGuest(roomCode.current, { premium: true, premiumSessionId: sessionId });
+        // Verification failed — do NOT self-grant premium; webhook is authoritative
+        console.warn("[jadran] Payment verify failed — waiting for webhook confirmation");
       });
       // Clean URL (keep ?room= if present)
       const roomParam = new URLSearchParams(window.location.search).get('room');
@@ -1404,7 +1404,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
   /* ─── PAYWALL ─── */
   const Paywall = () => (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(16px)", zIndex: 300, display: "grid", placeItems: "center", padding: 24 }} onClick={() => { setShowPaywall(false); setShowRecovery(false); setRecoveryStatus(null); setRecoveryEmail(""); }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.88)", zIndex: 300, display: "grid", placeItems: "center", padding: 24 }} onClick={() => { setShowPaywall(false); setShowRecovery(false); setRecoveryStatus(null); setRecoveryEmail(""); }}>
       <div onClick={e => e.stopPropagation()} className="overlay-enter glass" style={{ background: "rgba(12,28,50,0.92)", borderRadius: 28, maxWidth: 440, width: "100%", padding: "40px 32px", border: `1px solid rgba(251,191,36,0.15)`, textAlign: "center" }}>
         <div style={{ fontSize: 48, marginBottom: 12 }}>💎</div>
         <div style={{ fontSize: 26, fontWeight: 400, marginBottom: 6 }}>{t("premiumTitle",lang)}</div>
@@ -1486,7 +1486,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
   /* ─── BOOKING CONFIRM ─── */
   const BookConfirm = () => showConfirm && (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(12px)", zIndex: 250, display: "grid", placeItems: "center" }} onClick={() => setShowConfirm(null)}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.88)", zIndex: 250, display: "grid", placeItems: "center" }} onClick={() => setShowConfirm(null)}>
       <div onClick={e => e.stopPropagation()} style={{ background: C.card, borderRadius: 24, padding: 40, textAlign: "center", maxWidth: 400, border: `1px solid rgba(14,165,233,0.15)` }}>
         <div className="check-anim" style={{ width: 80, height: 80, borderRadius: "50%", background: `linear-gradient(135deg,${C.accent},#0284c7)`, display: "grid", placeItems: "center", fontSize: 40, margin: "0 auto 20px", color: "#fff", boxShadow: "0 8px 32px rgba(14,165,233,0.35)" }}>✓</div>
         <div style={{ fontSize: 22, fontWeight: 400, marginBottom: 6 }}>{t("bookSent",lang)}</div>
@@ -1721,7 +1721,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
         {/* ── Arrival ── */}
         {geoArrival && arrivalCountdown !== null && (
-          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)", backdropFilter: "blur(16px)", zIndex: 300, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
+          <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.92)", zIndex: 300, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
             <div style={{ fontSize: 80 }}>⚓</div>
             <div style={{ ...hf, fontSize: 32, fontWeight: 300, textAlign: "center" }}>
               Dobrodošli,<br /><span style={{ color: C.warm, fontStyle: "italic" }}>{G.first}!</span>
@@ -1901,8 +1901,14 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         <Card style={{ marginBottom: 14, padding: 0, overflow: "hidden", position: "relative" }}>
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, opacity: 0.12, pointerEvents: "none" }}>
             <svg width="100%" height="60" viewBox="0 0 400 60" preserveAspectRatio="none" style={{ display: "block" }}>
-              <path fill={C.accent} style={{ animation: "seaPulse1 4s ease-in-out infinite" }} d="M0,30 C100,45 200,15 300,30 C350,37 375,25 400,30 L400,60 L0,60 Z" />
-              <path fill={C.accent} style={{ animation: "seaPulse2 5s ease-in-out infinite", opacity: 0.5 }} d="M0,35 C80,20 160,45 240,32 C320,20 360,40 400,35 L400,60 L0,60 Z" />
+              <path fill={C.accent} d="M0,30 C100,45 200,15 300,30 C350,37 375,25 400,30 L400,60 L0,60 Z">
+                <animate attributeName="d" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
+                  values="M0,30 C100,45 200,15 300,30 C350,37 375,25 400,30 L400,60 L0,60 Z;M0,35 C100,20 200,42 300,28 C350,22 375,38 400,32 L400,60 L0,60 Z;M0,30 C100,45 200,15 300,30 C350,37 375,25 400,30 L400,60 L0,60 Z" />
+              </path>
+              <path fill={C.accent} opacity="0.5" d="M0,35 C80,20 160,45 240,32 C320,20 360,40 400,35 L400,60 L0,60 Z">
+                <animate attributeName="d" dur="5s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
+                  values="M0,35 C80,20 160,45 240,32 C320,20 360,40 400,35 L400,60 L0,60 Z;M0,28 C80,42 160,22 240,38 C320,42 360,25 400,30 L400,60 L0,60 Z;M0,35 C80,20 160,45 240,32 C320,20 360,40 400,35 L400,60 L0,60 Z" />
+              </path>
             </svg>
           </div>
           <div style={{ padding: "16px 20px", position: "relative" }}>
@@ -1996,7 +2002,8 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             { k: "fuel", ic: IC.map, l: ({hr:"Gorivo",de:"Tanken",en:"Fuel",it:"Carburante",si:"Gorivo",cz:"Palivo",pl:"Paliwo"})[lang]||"Gorivo", clr: "#94a3b8", free: true },
             { k: "emergency", ic: IC.medic, l: t("emergency",lang), clr: C.red, free: true },
             { k: "activities", ic: IC.ticket, l: t("activities",lang), clr: "#22c55e", free: true },
-            ...(kioskCity === "Split" || kioskCity === "Podstrana" || kioskCity === "Omiš" || kioskCity === "Makarska" || kioskCity === "Trogir" ? [{ k: "gems", ic: IC.gem, l: t("gems",lang), clr: C.gold, free: false }] : []),
+            ...(kioskCity === "Split" || kioskCity === "Podstrana" || kioskCity === "Omiš" || kioskCity === "Makarska" || kioskCity === "Trogir" || kioskCity === "Rab" ? [{ k: "gems", ic: IC.gem, l: t("gems",lang), clr: C.gold, free: false }] : []),
+            ...(kioskCity === "Rab" ? [{ k: "excursions", ic: IC.ticket, l: ({hr:"Izleti",de:"Ausflüge",en:"Excursions",it:"Escursioni"})[lang]||"Izleti", clr: "#0ea5e9", free: true }] : []),
             { k: "chat", ic: IC.bot, l: t("aiGuide",lang), clr: "#a78bfa", free: false },
           ].map(t => {
             const count = nearbyData?.categories?.[t.k]?.length;
@@ -2056,6 +2063,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
     const staticData = PRACTICAL[subScreen]; // fallback for sun, emergency, routes
     const nearbyPlaces = nearbyData?.categories?.[subScreen] || [];
     const hasNearby = nearbyPlaces.length > 0;
+    const svKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
 
     // Category display config
     const CAT_DISPLAY = {
@@ -2141,18 +2149,45 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
                 {place.categories?.[0] && <span style={{ ...dm, fontSize: 10, color: C.mut, padding: "1px 6px", borderRadius: 6, border: `1px solid ${C.bord}` }}>{place.categories[0]}</span>}
               </div>
 
-              {/* Navigate button */}
+              {/* Street View thumbnail + Navigation */}
               {place.lat && place.lng && (
-                <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-                  <button onClick={() => window.open(`https://wego.here.com/directions/walk/${kioskCoords?.[0]||""},${kioskCoords?.[1]||""}/${place.lat},${place.lng}`, "_blank")}
-                    style={{ ...dm, flex: 1, padding: "10px 14px", background: C.acDim, border: `1px solid rgba(14,165,233,0.15)`, borderRadius: 12, color: C.accent, fontSize: 13, cursor: "pointer", fontWeight: 600, textAlign: "center" }}>
-                    🚶 {({hr:"Pješice",de:"Zu Fuß",en:"Walk",it:"A piedi"})[lang]||"Pješice"}
-                  </button>
-                  <button onClick={() => window.open(`https://wego.here.com/directions/drive/${kioskCoords?.[0]||""},${kioskCoords?.[1]||""}/${place.lat},${place.lng}`, "_blank")}
-                    style={{ ...dm, flex: 1, padding: "10px 14px", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.15)", borderRadius: 12, color: C.gold, fontSize: 13, cursor: "pointer", fontWeight: 600, textAlign: "center" }}>
-                    🚗 {({hr:"Autom",de:"Mit Auto",en:"Drive",it:"In auto"})[lang]||"Autom"}
-                  </button>
-                </div>
+                <>
+                  {/* Street View static preview — shows what the place looks like */}
+                  {svKey && (
+                    <div style={{ borderRadius: 10, overflow: "hidden", marginTop: 10, position: "relative", height: 130, background: "rgba(0,0,0,0.2)" }}>
+                      <img
+                        src={`https://maps.googleapis.com/maps/api/streetview?size=600x260&location=${place.lat},${place.lng}&fov=80&key=${svKey}`}
+                        alt={`Street View — ${place.name}`}
+                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                        loading="lazy"
+                        onError={e => { e.currentTarget.parentElement.style.display = "none"; }}
+                      />
+                      <div style={{ position: "absolute", bottom: 6, left: 8, ...dm, fontSize: 9, color: "rgba(255,255,255,0.6)", background: "rgba(0,0,0,0.45)", padding: "2px 8px", borderRadius: 6 }}>
+                        Street View
+                      </div>
+                      {/* Tap thumbnail → open inline Street View overlay */}
+                      <button
+                        onClick={() => setSvModal({ lat: place.lat, lng: place.lng, name: place.name })}
+                        style={{ position: "absolute", inset: 0, background: "transparent", border: "none", cursor: "pointer", width: "100%", height: "100%" }}
+                        title="Open Street View"
+                      />
+                      <div style={{ position: "absolute", bottom: 6, right: 8, ...dm, fontSize: 9, color: "rgba(255,255,255,0.7)", background: "rgba(0,0,0,0.45)", padding: "2px 8px", borderRadius: 6 }}>
+                        {({hr:"Tapni za prikaz",de:"Tippen",en:"Tap to view",it:"Tocca"})[lang]||"Tap"}
+                      </div>
+                    </div>
+                  )}
+                  {/* Navigation buttons */}
+                  <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                    <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}&travelmode=walking`, "_blank")}
+                      style={{ ...dm, flex: 1, padding: "10px 14px", background: C.acDim, border: `1px solid rgba(14,165,233,0.15)`, borderRadius: 12, color: C.accent, fontSize: 13, cursor: "pointer", fontWeight: 600, textAlign: "center" }}>
+                      🚶 {({hr:"Pješice",de:"Zu Fuß",en:"Walk",it:"A piedi"})[lang]||"Pješice"}
+                    </button>
+                    <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}&travelmode=driving`, "_blank")}
+                      style={{ ...dm, flex: 1, padding: "10px 14px", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.15)", borderRadius: 12, color: C.gold, fontSize: 13, cursor: "pointer", fontWeight: 600, textAlign: "center" }}>
+                      🚗 {({hr:"Autom",de:"Mit Auto",en:"Drive",it:"In auto"})[lang]||"Autom"}
+                    </button>
+                  </div>
+                </>
               )}
             </Card>
           ))}
@@ -2275,9 +2310,9 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
   const KioskChat = () => {
     const prompts = [t("chatPrompt1",lang), t("chatPrompt2",lang), t("chatPrompt3",lang), t("chatPrompt4",lang)];
     return (
-      <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 240px)" }}>
+      <div style={{ display: "flex", flexDirection: "column", height: "calc(100dvh - 240px)" }}>
         <BackBtn onClick={() => setSubScreen("home")} />
-        <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "8px 0", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
           {chatMsgs.length === 0 && (
             <div style={{ textAlign: "center", padding: "40px 20px" }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>🌊</div>
@@ -2366,8 +2401,123 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
       );
     }
 
+    // ── KioskExcursions: Rab affiliate excursions (GYG + Viator + Booking) ──
+    const KioskExcursions = () => {
+      const RAB_EXCURSIONS = [
+        { emoji: "🚢", en: "Boat Tours", de: "Bootstouren", hr: "Ture brodom",
+          gyg: "https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=boat+tour",
+          viator: "https://www.viator.com/searchResults/all?text=Rab+boat+tour&pid=P00292197",
+          img: "https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=400&q=75", clr: "#0ea5e9" },
+        { emoji: "🤿", en: "Snorkeling & Diving", de: "Schnorcheln & Tauchen", hr: "Ronjenje",
+          gyg: "https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=diving+snorkeling",
+          viator: "https://www.viator.com/searchResults/all?text=Rab+diving&pid=P00292197",
+          img: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=75", clr: "#38bdf8" },
+        { emoji: "🛶", en: "Kayaking & Paddling", de: "Kajak & Paddeln", hr: "Kajak",
+          gyg: "https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=kayak",
+          viator: "https://www.viator.com/searchResults/all?text=Rab+kayak&pid=P00292197",
+          img: "https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=400&q=75", clr: "#34d399" },
+        { emoji: "🏛️", en: "Cultural Tours", de: "Kulturelle Touren", hr: "Kulturne ture",
+          gyg: "https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=walking+tour",
+          viator: "https://www.viator.com/searchResults/all?text=Rab+walking+tour&pid=P00292197",
+          img: "https://images.unsplash.com/photo-1555990538-1e09e0e62c7e?w=400&q=75", clr: C.gold },
+        { emoji: "🏝️", en: "Island Hopping", de: "Insel-Hopping", hr: "Otočki obilazak",
+          gyg: "https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=island+hopping",
+          viator: "https://www.viator.com/searchResults/all?text=Rab+island+hopping&pid=P00292197",
+          img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=75", clr: "#a78bfa" },
+        { emoji: "🏠", en: "Find Accommodation", de: "Unterkunft finden", hr: "Smještaj",
+          booking: "https://www.booking.com/searchresults.html?ss=Rab%2C+Croatia&aid=101704203",
+          img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=75", clr: "#22c55e" },
+      ];
+      const lbl = (x) => lang === "de" || lang === "at" ? x.de : lang === "en" ? x.en : x.hr;
+      return (
+        <>
+          <BackBtn onClick={() => setSubScreen("home")} />
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+            <span style={{ fontSize: 36 }}>🚢</span>
+            <div>
+              <div style={{ fontSize: 28, fontWeight: 400 }}>
+                {lang === "de" || lang === "at" ? "Ausflüge & Aktivitäten" : lang === "en" ? "Excursions & Activities" : "Izleti & Aktivnosti"}
+              </div>
+              <div style={{ ...dm, fontSize: 13, color: C.mut }}>📍 Rab · GetYourGuide + Viator</div>
+            </div>
+          </div>
+
+          {/* Category cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 14, marginBottom: 20 }}>
+            {RAB_EXCURSIONS.map((ex, i) => (
+              <Card key={i} style={{ padding: 0, overflow: "hidden", cursor: "pointer" }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.borderColor = ex.clr + "44"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.borderColor = C.bord; }}>
+                {/* Image header */}
+                <div style={{ height: 90, position: "relative", background: `linear-gradient(135deg,${ex.clr}22,rgba(12,28,50,0.9))`, overflow: "hidden" }}>
+                  <img src={ex.img} alt={lbl(ex)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.35 }} loading="lazy" />
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", padding: "0 16px", gap: 10 }}>
+                    <span style={{ fontSize: 28 }}>{ex.emoji}</span>
+                    <span style={{ ...dm, fontSize: 15, fontWeight: 600, color: "#f0f4f8" }}>{lbl(ex)}</span>
+                  </div>
+                </div>
+                {/* Buttons */}
+                <div style={{ padding: "12px 14px", display: "flex", gap: 8 }}>
+                  {ex.gyg && (
+                    <a href={ex.gyg} target="_blank" rel="noopener noreferrer"
+                      style={{ flex: 1, padding: "9px 10px", background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 10, color: C.accent, fontSize: 12, fontWeight: 700, textAlign: "center", textDecoration: "none", ...dm }}>
+                      GetYourGuide
+                    </a>
+                  )}
+                  {ex.viator && (
+                    <a href={ex.viator} target="_blank" rel="noopener noreferrer"
+                      style={{ flex: 1, padding: "9px 10px", background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)", borderRadius: 10, color: "#22c55e", fontSize: 12, fontWeight: 700, textAlign: "center", textDecoration: "none", ...dm }}>
+                      Viator
+                    </a>
+                  )}
+                  {ex.booking && (
+                    <a href={ex.booking} target="_blank" rel="noopener noreferrer"
+                      style={{ flex: 1, padding: "9px 10px", background: "rgba(0,85,166,0.1)", border: "1px solid rgba(0,85,166,0.25)", borderRadius: 10, color: "#60a5fa", fontSize: 12, fontWeight: 700, textAlign: "center", textDecoration: "none", ...dm }}>
+                      Booking.com
+                    </a>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* GYG Widget — auto-hydrated by script in index.html */}
+          <Card style={{ padding: 20, overflow: "hidden" }}>
+            <div style={{ ...dm, fontSize: 12, color: C.mut, marginBottom: 12 }}>
+              {lang === "de" || lang === "at" ? "Alle Ausflüge auf Rab" : lang === "en" ? "All excursions on Rab" : "Svi izleti na Rabu"}
+            </div>
+            <div
+              data-gyg-href="https://widget.getyourguide.com/default/activities.frame"
+              data-gyg-locale-code={lang === "de" || lang === "at" ? "de-DE" : lang === "en" ? "en-US" : lang === "it" ? "it-IT" : "en-US"}
+              data-gyg-widget="activities"
+              data-gyg-number-of-items="4"
+              data-gyg-partner-id="9OEGOYI"
+              data-gyg-q="Rab Croatia"
+              data-gyg-cmp="jadran_kiosk_rab"
+            />
+          </Card>
+
+          {/* Booking.com — accommodations */}
+          <Card style={{ marginTop: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 400 }}>
+                🏨 {lang === "de" || lang === "at" ? "Unterkunft auf Rab" : lang === "en" ? "Accommodation on Rab" : "Smještaj na Rabu"}
+              </div>
+              <div style={{ ...dm, fontSize: 12, color: C.mut, marginTop: 2 }}>Booking.com · 4-5% provizija</div>
+            </div>
+            <a href="https://www.booking.com/searchresults.html?ss=Rab%2C+Croatia&aid=101704203"
+              target="_blank" rel="noopener noreferrer"
+              style={{ padding: "10px 18px", background: "linear-gradient(135deg,#003580,#0055A6)", borderRadius: 12, color: "#fff", fontSize: 13, fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap", ...dm }}>
+              {lang === "de" || lang === "at" ? "Suchen" : lang === "en" ? "Search" : "Traži"}
+            </a>
+          </Card>
+        </>
+      );
+    };
+
     if (subScreen === "home") return <KioskHome />;
     if (subScreen === "activities") return <KioskActivities />;
+    if (subScreen === "excursions") return <KioskExcursions />;
     if (subScreen === "gems") return <KioskGems />;
     if (subScreen === "chat") return <KioskChat />;
     if (PRACTICAL[subScreen] || NEARBY_CATS.includes(subScreen)) return <KioskDetail />;
@@ -2488,18 +2638,9 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
   /* ─── CINEMATIC SPLASH ─── */
   if (splash) return (
-    <div style={{ fontFamily: "'Cormorant Garamond','Georgia',serif", background: "#061020", color: "#e0f2fe", minHeight: "100vh", display: "grid", placeItems: "center", position: "relative", overflow: "hidden" }}>
+    <div style={{ fontFamily: "'Cormorant Garamond','Georgia',serif", background: "#061020", color: "#e0f2fe", minHeight: "100vh", minHeight: "100dvh", display: "grid", placeItems: "center", position: "relative", overflow: "hidden" }}>
       <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Outfit:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
       <style>{`
-        @keyframes splash-wave-1 { 0% { d: path('M0,160 C320,220 640,100 960,160 C1120,190 1280,130 1440,160 L1440,320 L0,320 Z'); }
-          50% { d: path('M0,180 C320,120 640,220 960,140 C1120,110 1280,200 1440,170 L1440,320 L0,320 Z'); }
-          100% { d: path('M0,160 C320,220 640,100 960,160 C1120,190 1280,130 1440,160 L1440,320 L0,320 Z'); } }
-        @keyframes splash-wave-2 { 0% { d: path('M0,200 C360,160 720,240 1080,190 C1260,170 1350,220 1440,200 L1440,320 L0,320 Z'); }
-          50% { d: path('M0,190 C360,240 720,160 1080,210 C1260,230 1350,180 1440,205 L1440,320 L0,320 Z'); }
-          100% { d: path('M0,200 C360,160 720,240 1080,190 C1260,170 1350,220 1440,200 L1440,320 L0,320 Z'); } }
-        @keyframes splash-wave-3 { 0% { d: path('M0,240 C400,220 800,260 1200,235 C1320,225 1380,250 1440,240 L1440,320 L0,320 Z'); }
-          50% { d: path('M0,235 C400,260 800,220 1200,245 C1320,255 1380,230 1440,242 L1440,320 L0,320 Z'); }
-          100% { d: path('M0,240 C400,220 800,260 1200,235 C1320,225 1380,250 1440,240 L1440,320 L0,320 Z'); } }
         @keyframes splash-logo-reveal { 0% { opacity:0; transform: scale(0.7) translateY(10px); filter: blur(8px); }
           60% { opacity:1; transform: scale(1.02) translateY(0); filter: blur(0); }
           100% { opacity:1; transform: scale(1) translateY(0); filter: blur(0); } }
@@ -2521,12 +2662,18 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
       {/* Animated waves at bottom */}
       <svg style={{ position:"absolute", bottom:0, left:0, width:"100%", height:"320px", opacity:0.12 }} viewBox="0 0 1440 320" preserveAspectRatio="none">
-        <path fill="#0ea5e9" style={{ animation:"splash-wave-1 6s ease-in-out infinite" }}
-          d="M0,160 C320,220 640,100 960,160 C1120,190 1280,130 1440,160 L1440,320 L0,320 Z" />
-        <path fill="#0284c7" style={{ animation:"splash-wave-2 7s ease-in-out infinite", opacity:0.6 }}
-          d="M0,200 C360,160 720,240 1080,190 C1260,170 1350,220 1440,200 L1440,320 L0,320 Z" />
-        <path fill="#075985" style={{ animation:"splash-wave-3 5s ease-in-out infinite", opacity:0.4 }}
-          d="M0,240 C400,220 800,260 1200,235 C1320,225 1380,250 1440,240 L1440,320 L0,320 Z" />
+        <path fill="#0ea5e9" d="M0,160 C320,220 640,100 960,160 C1120,190 1280,130 1440,160 L1440,320 L0,320 Z">
+          <animate attributeName="d" dur="6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
+            values="M0,160 C320,220 640,100 960,160 C1120,190 1280,130 1440,160 L1440,320 L0,320 Z;M0,180 C320,120 640,220 960,140 C1120,110 1280,200 1440,170 L1440,320 L0,320 Z;M0,160 C320,220 640,100 960,160 C1120,190 1280,130 1440,160 L1440,320 L0,320 Z" />
+        </path>
+        <path fill="#0284c7" opacity="0.6" d="M0,200 C360,160 720,240 1080,190 C1260,170 1350,220 1440,200 L1440,320 L0,320 Z">
+          <animate attributeName="d" dur="7s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
+            values="M0,200 C360,160 720,240 1080,190 C1260,170 1350,220 1440,200 L1440,320 L0,320 Z;M0,190 C360,240 720,160 1080,210 C1260,230 1350,180 1440,205 L1440,320 L0,320 Z;M0,200 C360,160 720,240 1080,190 C1260,170 1350,220 1440,200 L1440,320 L0,320 Z" />
+        </path>
+        <path fill="#075985" opacity="0.4" d="M0,240 C400,220 800,260 1200,235 C1320,225 1380,250 1440,240 L1440,320 L0,320 Z">
+          <animate attributeName="d" dur="5s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
+            values="M0,240 C400,220 800,260 1200,235 C1320,225 1380,250 1440,240 L1440,320 L0,320 Z;M0,235 C400,260 800,220 1200,245 C1320,255 1380,230 1440,242 L1440,320 L0,320 Z;M0,240 C400,220 800,260 1200,235 C1320,225 1380,250 1440,240 L1440,320 L0,320 Z" />
+        </path>
       </svg>
 
       {/* Floating particles */}
@@ -2613,7 +2760,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
     </div>
   );
   return (
-    <div style={{ fontFamily: "'Cormorant Garamond','Georgia',serif", background: `linear-gradient(160deg, ${C.bg} 0%, ${C.deep || C.bg} 50%, ${C.sky || C.bg} 100%)`, color: C.text, minHeight: "100vh", position: "relative", paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+    <div style={{ fontFamily: "'Cormorant Garamond','Georgia',serif", background: `linear-gradient(160deg, ${C.bg} 0%, ${C.deep || C.bg} 50%, ${C.sky || C.bg} 100%)`, color: C.text, minHeight: "100dvh", position: "relative", paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       {fonts}
 
       <style>{`
@@ -2629,8 +2776,6 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         @keyframes scale-in { from { opacity:0; transform: scale(0.9); } to { opacity:1; transform: scale(1); } }
         @keyframes slide-up { from { opacity:0; transform: translateY(40px); } to { opacity:1; transform: translateY(0); } }
         @keyframes check-pop { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
-        @keyframes seaPulse1 { 0%,100% { d: path('M0,30 C100,45 200,15 300,30 C350,37 375,25 400,30 L400,60 L0,60 Z'); } 50% { d: path('M0,35 C100,20 200,42 300,28 C350,22 375,38 400,32 L400,60 L0,60 Z'); } }
-        @keyframes seaPulse2 { 0%,100% { d: path('M0,35 C80,20 160,45 240,32 C320,20 360,40 400,35 L400,60 L0,60 Z'); } 50% { d: path('M0,28 C80,42 160,22 240,38 C320,42 360,25 400,30 L400,60 L0,60 Z'); } }
 
         .jadran-ambient {
           position: fixed; inset: 0; pointer-events: none; z-index: 0;
@@ -2661,6 +2806,34 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
         }
 
+        /* ── iOS / Android universal fixes ───────────────────────────────────── */
+        * { -webkit-tap-highlight-color: transparent !important; }
+        html { overscroll-behavior: none; }
+        body { overscroll-behavior: none; -webkit-overflow-scrolling: touch; }
+
+        /* Prevent 300ms tap delay on all interactive elements */
+        button, a, [role="button"], input, select, textarea, label {
+          touch-action: manipulation;
+        }
+
+        /* Prevent iOS auto-zoom on input focus (requires font-size ≥ 16px) */
+        input, select, textarea {
+          font-size: 16px !important;
+          -webkit-text-size-adjust: 100%;
+        }
+
+        /* 100dvh — handles iOS Safari address-bar show/hide correctly.
+           Fallback to 100vh for browsers that don't support dvh (iOS < 15.4) */
+        .dvh { min-height: 100vh; min-height: 100dvh; }
+        .dvh-exact { height: 100vh; height: 100dvh; }
+
+        /* Momentum scrolling on all overflow containers */
+        [style*="overflow-y: auto"], [style*="overflowY"] {
+          -webkit-overflow-scrolling: touch;
+          overscroll-behavior: contain;
+        }
+        /* ─────────────────────────────────────────────────────────────────────── */
+
         /* Scrollbar */
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -2672,18 +2845,20 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
         /* Animated cards */
         .anim-card { opacity: 1; }
-        .anim-card:nth-child(1) { }
-        .anim-card:nth-child(2) { }
         /* tiles render instantly — no staggered animation */
 
-        /* Button hover effects */
+        /* Button effects — disable hover transform on touch devices to prevent stuck states */
         button { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important; }
-        button:hover { transform: translateY(-1px); }
-        button:active { transform: translateY(0) scale(0.98); }
+        @media (hover: hover) {
+          button:hover { transform: translateY(-1px); }
+        }
+        button:active { transform: translateY(0) scale(0.98) !important; }
 
-        /* Card hover — premium lift */
-        .glass { transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important; }
-        .glass:hover { transform: translateY(-2px); box-shadow: 0 16px 48px rgba(0,0,0,0.25), 0 0 0 1px rgba(14,165,233,0.06), inset 0 1px 0 rgba(255,255,255,0.05) !important; }
+        /* Card hover — only on pointer devices */
+        .glass { transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important; }
+        @media (hover: hover) {
+          .glass:hover { transform: translateY(-2px); box-shadow: 0 16px 48px rgba(0,0,0,0.25), 0 0 0 1px rgba(14,165,233,0.06), inset 0 1px 0 rgba(255,255,255,0.05) !important; }
+        }
 
         /* Primary button glow */
         .btn-glow { position: relative; overflow: hidden; }
@@ -2808,9 +2983,49 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
       {showPaywall && <Paywall />}
       {showConfirm && <BookConfirm />}
 
+      {/* ── Inline Street View overlay ── */}
+      {svModal && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 250, display: "flex", flexDirection: "column", background: "#000" }}
+          onClick={() => setSvModal(null)}>
+          {/* Header bar */}
+          <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "rgba(10,22,40,0.95)", borderBottom: "1px solid rgba(14,165,233,0.1)", flexShrink: 0 }}>
+            <div style={{ ...dm, fontSize: 14, fontWeight: 600, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "calc(100% - 120px)" }}>
+              🌍 {svModal.name}
+            </div>
+            <button onClick={() => setSvModal(null)}
+              style={{ ...dm, background: "rgba(255,255,255,0.06)", border: `1px solid ${C.bord}`, borderRadius: 10, color: C.mut, fontSize: 13, padding: "5px 12px", cursor: "pointer" }}>
+              ✕ {({hr:"Zatvori",de:"Schließen",en:"Close",it:"Chiudi"})[lang]||"Zatvori"}
+            </button>
+          </div>
+
+          {/* Street View iframe — fills remaining height */}
+          <div onClick={e => e.stopPropagation()} style={{ flex: 1, position: "relative" }}>
+            <iframe
+              src={`https://www.google.com/maps/embed/v1/streetview?key=${import.meta.env.VITE_GOOGLE_MAPS_KEY}&location=${svModal.lat},${svModal.lng}&fov=80&pitch=0`}
+              title={`Street View — ${svModal.name}`}
+              style={{ width: "100%", height: "100%", border: "none", display: "block" }}
+              allow="fullscreen"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+
+          {/* Bottom navigation bar */}
+          <div onClick={e => e.stopPropagation()} style={{ display: "flex", gap: 10, padding: "12px 16px", background: "rgba(10,22,40,0.95)", borderTop: "1px solid rgba(14,165,233,0.1)", flexShrink: 0 }}>
+            <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${svModal.lat},${svModal.lng}&travelmode=walking`, "_blank")}
+              style={{ ...dm, flex: 1, padding: "13px", background: C.acDim, border: `1px solid rgba(14,165,233,0.15)`, borderRadius: 14, color: C.accent, fontSize: 14, cursor: "pointer", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+              🚶 {({hr:"Navigiraj pješice",de:"Zu Fuß navigieren",en:"Walk there",it:"A piedi"})[lang]||"Navigiraj pješice"}
+            </button>
+            <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${svModal.lat},${svModal.lng}&travelmode=driving`, "_blank")}
+              style={{ ...dm, padding: "13px 18px", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.15)", borderRadius: 14, color: C.gold, fontSize: 18, cursor: "pointer", flexShrink: 0 }}>
+              🚗
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Gem detail */}
       {selectedGem && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(16px) saturate(1.5)", zIndex: 200, display: "grid", placeItems: "center", padding: 24 }} onClick={() => setSelectedGem(null)}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.88)", zIndex: 200, display: "grid", placeItems: "center", padding: 24 }} onClick={() => setSelectedGem(null)}>
           <div onClick={e => e.stopPropagation()} className="overlay-enter glass" style={{ background: "rgba(12,28,50,0.92)", borderRadius: 24, maxWidth: 500, width: "100%", padding: 32, border: `1px solid rgba(251,191,36,0.12)` }}>
             <div style={{ fontSize: 52, textAlign: "center", marginBottom: 12 }}>{selectedGem.emoji}</div>
             <div style={{ fontSize: 26, fontWeight: 400, textAlign: "center", marginBottom: 16 }}>{selectedGem.name}</div>
@@ -2819,7 +3034,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
               {[{ l: "Najbolje doba", v: selectedGem.best }, { l: "Težina", v: selectedGem.diff }].map((x, i) => (
                 <div key={i} style={{ padding: "10px 14px", background: "rgba(0,0,0,0.2)", borderRadius: 10 }}>
                   <div style={{ ...dm, fontSize: 11, color: C.mut }}>{x.l}</div>
-                  <div style={{ ...dm, fontSize: 14, fontWeight: 600 }}>{x.v}</div>
+                  <div style={{ ...dm, fontSize: 14, fontWeight: 600 }}>{typeof x.v === "object" ? (x.v[lang] || x.v.hr || "") : (x.v || "")}</div>
                 </div>
               ))}
             </div>
@@ -2827,9 +3042,55 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
               <div style={{ ...dm, fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: 1, marginBottom: 4 }}>💡 LOCALS TIP</div>
               <div style={{ ...dm, fontSize: 14, lineHeight: 1.6 }}>{typeof selectedGem.tip === "object" ? (selectedGem.tip[lang] || selectedGem.tip.hr) : selectedGem.tip}</div>
             </Card>
-            {selectedGem.lat && <button onClick={() => navigateTo(selectedGem.lat, selectedGem.lng)}
-              style={{...dm,width:"100%",marginTop:12,padding:"14px",background:C.acDim,border:`1px solid rgba(14,165,233,0.15)`,borderRadius:14,color:C.accent,fontSize:15,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-              📍 {t("openMap",lang)}</button>}
+            {selectedGem.lat && (() => {
+              const gmKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
+              const svSrc = gmKey
+                ? `https://www.google.com/maps/embed/v1/streetview?key=${gmKey}&location=${selectedGem.lat},${selectedGem.lng}&fov=80&pitch=0`
+                : null;
+              return (
+                <>
+                  {/* Street View — tap header to expand fullscreen */}
+                  <div style={{ borderRadius: 14, overflow: "hidden", marginTop: 16, marginBottom: 4, border: `1px solid rgba(14,165,233,0.12)` }}>
+                    <button onClick={() => setSvModal({ lat: selectedGem.lat, lng: selectedGem.lng, name: selectedGem.name })}
+                      style={{ width: "100%", padding: "7px 12px", background: "rgba(14,165,233,0.06)", border: "none", borderBottom: "1px solid rgba(14,165,233,0.08)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", ...dm }}>
+                      <span style={{ fontSize: 11, color: C.accent, display: "flex", alignItems: "center", gap: 6 }}>
+                        <span>🌍</span>
+                        <span>{lang === "de" || lang === "at" ? "Umgebung ansehen — tippen zum Vergrößern" : lang === "en" ? "Look around — tap to expand" : lang === "it" ? "Guarda intorno — tocca per espandere" : "Pogledaj okolo — tapni za puni ekran"}</span>
+                      </span>
+                      <span style={{ fontSize: 11, color: C.mut }}>⛶</span>
+                    </button>
+                    {svSrc ? (
+                      <div style={{ position: "relative" }}>
+                        <iframe
+                          src={svSrc}
+                          title={`Street View — ${selectedGem.name}`}
+                          style={{ width: "100%", height: 220, border: "none", display: "block" }}
+                          loading="lazy"
+                          allow="fullscreen"
+                          referrerPolicy="no-referrer-when-downgrade"
+                        />
+                      </div>
+                    ) : (
+                      <button onClick={() => setSvModal({ lat: selectedGem.lat, lng: selectedGem.lng, name: selectedGem.name })}
+                        style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "14px", background: "rgba(14,165,233,0.04)", color: C.accent, fontSize: 13, border: "none", cursor: "pointer", ...dm }}>
+                        🌍 {lang === "de" || lang === "at" ? "In Street View öffnen" : lang === "en" ? "Open Street View" : lang === "it" ? "Apri Street View" : "Otvori Street View"}
+                      </button>
+                    )}
+                  </div>
+                  {/* Navigate buttons — walking primary, driving secondary */}
+                  <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                    <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedGem.lat},${selectedGem.lng}&travelmode=walking`, "_blank")}
+                      style={{...dm,flex:1,padding:"13px",background:C.acDim,border:`1px solid rgba(14,165,233,0.15)`,borderRadius:14,color:C.accent,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6,fontWeight:600}}>
+                      🚶 {({hr:"Vodi me pješice",de:"Zu Fuß navigieren",en:"Walk there",it:"A piedi"})[lang]||"Vodi me pješice"}
+                    </button>
+                    <button onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedGem.lat},${selectedGem.lng}&travelmode=driving`, "_blank")}
+                      style={{...dm,padding:"13px 16px",background:"rgba(251,191,36,0.06)",border:`1px solid rgba(251,191,36,0.15)`,borderRadius:14,color:C.gold,fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                      🚗
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
             <Btn style={{ width: "100%", marginTop: 8 }} onClick={() => setSelectedGem(null)}>{t("back",lang)}</Btn>
           </div>
         </div>
@@ -2843,7 +3104,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         const setImgIdx = setViatorImgIdx;
         const totalPrice = act.price ? (act.price * viatorPersons).toFixed(2) : "—";
         return (
-          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(20px)", zIndex: 200, overflowY: "auto", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "24px 16px" }}
+          <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.92)", zIndex: 200, overflowY: "auto", WebkitOverflowScrolling: "touch", display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "24px 16px" }}
             onClick={() => setSelectedViatorAct(null)}>
             <div onClick={e => e.stopPropagation()} className="overlay-enter glass"
               style={{ background: "rgba(12,28,50,0.96)", borderRadius: 24, maxWidth: 520, width: "100%", border: `1px solid ${C.bord}`, overflow: "hidden" }}>
@@ -2909,7 +3170,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
       {/* Experience booking */}
       {selectedExp && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(16px) saturate(1.5)", zIndex: 200, display: "grid", placeItems: "center", padding: 24 }} onClick={() => setSelectedExp(null)}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.88)", zIndex: 200, display: "grid", placeItems: "center", padding: 24 }} onClick={() => setSelectedExp(null)}>
           <div onClick={e => e.stopPropagation()} className="overlay-enter glass" style={{ background: "rgba(12,28,50,0.92)", borderRadius: 24, maxWidth: 440, width: "100%", padding: 32, border: `1px solid ${C.bord}` }}>
             <div style={{ fontSize: 52, textAlign: "center", marginBottom: 12 }}>{selectedExp.emoji}</div>
             <div style={{ fontSize: 24, fontWeight: 400, textAlign: "center", marginBottom: 16 }}>{selectedExp.name}</div>

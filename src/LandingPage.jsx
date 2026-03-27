@@ -17,7 +17,7 @@ const goToStripe = async (plan = "season", lang = "en") => {
     let utmData = {};
     try { utmData = JSON.parse(localStorage.getItem("jadran_utm") || "{}"); } catch {}
     // Save session so post-payment redirect enters chat
-    try { localStorage.setItem("jadran_session", JSON.stringify({ region: plan === "week" ? "split" : "split", travelMode: "apartment", lang })); } catch {}
+    try { localStorage.setItem("jadran_session", JSON.stringify({ region: plan === "week" ? "split" : "all", travelMode: "apartment", lang })); } catch {}
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -38,8 +38,6 @@ const L = {
   en: { badge: "AI guide · works instantly in your browser", h1a: "", h1b: "", h1c: "Your digital |J| guide.", sub: "Google Maps knows the roads. We know everything else.", destLabel: "Where to?", lenLabel: "Vehicle length?", cta: "Start Chat", pain1t: "Forget about fines", pain1d: "Our guide knows every underpass height and every old town width. Zero risk.", pain2t: "Bora won't surprise you", pain2d: "Connected to local weather stations. Dangerous wind triggers an instant warning.", pain3t: "What's not on Google", pain3d: "Family farms, wineries with free parking and empty coves only locals know.", demoTitle: "Smarter than any map.", trendTitle: "Trending on the Adriatic?", b2bTitle: "Own a property?", b2bDesc: "Share our QR code — your guests get a 24/7 guide in their language.", b2bBtn: "Generate free QR code", sticky: "From €9.99", stickyBuy: "BUY NOW", demoLabel: "SEE IT IN ACTION", demoDesc: "Hans asks:", demoQ: "Can I drive my camper to the center of Pula?", demoA: "Absolutely not! 🚨 Tow trucks — €60 fine. Park free at Gregovica.", demoCta: "Konoba Batelina — fresh fish, flat parking", demoTry: "Try for free", demoStory: "The guide warns instantly, finds free parking and recommends a restaurant with a discount. All in 3 seconds.", destLabel2: "DESTINATIONS", destTitle2: "Discover the Adriatic", destBook2: "Booking.com →", trendLabel2: "TRENDING", trendSub2: "Activities & excursions", trendAsk: "Ask guide", trendBook2: "Book now", freeInfo: "3 messages free · 8 languages · no registration", roomCode: "Room code", roomOpen: "Open", phoneName: "Jadran Guide" , tab1: "Camper Guide", tab1s: "Parking, routes, warnings", tab2: "Local Guide", tab2s: "Apartment, hotel or by car — beaches, restaurants", tab3: "Nautical Guide", tab3s: "Marinas, anchorages, wind", tab4: "Cruise Guide", tab4s: "Port day, minute-by-minute plan" },
   it: { badge: "Guida AI · funziona subito nel browser", h1a: "", h1b: "", h1c: "La tua |J| guida digitale.", sub: "Google Maps conosce le strade. Noi conosciamo tutto il resto.", destLabel: "Dove vai?", lenLabel: "Lunghezza?", cta: "Inizia Chat", pain1t: "Dimentica le multe", pain1d: "La nostra guida conosce ogni sottopasso e ogni centro storico.", pain2t: "La Bora non sorprende", pain2d: "Collegati alle stazioni meteo. Vento pericoloso = avviso immediato.", pain3t: "Cosa non c'è su Google", pain3d: "Agriturismi, cantine con parcheggio e calette vuote.", demoTitle: "Più smart di ogni mappa.", trendTitle: "Tendenze sull'Adriatico?", b2bTitle: "Affitti un alloggio?", b2bDesc: "Condividi il QR code — ospiti ottengono guida 24/7.", b2bBtn: "Genera QR gratuito", sticky: "Da 9,99€/settimana", stickyBuy: "ACQUISTA ORA", demoLabel: "GUARDALO IN AZIONE", demoDesc: "Hans chiede:", demoQ: "Posso col camper nel centro di Pola?", demoA: "Assolutamente no! 🚨 Carri attrezzi — multa 60€. Gratis a Gregovica.", demoCta: "Konoba Batelina — pesce fresco, parcheggio", demoTry: "Prova gratis", demoStory: "La guida avvisa subito, trova parcheggio gratuito e consiglia un ristorante con sconto. Tutto in 3 secondi.", destLabel2: "DESTINAZIONI", destTitle2: "Scoprite l'Adriatico", destBook2: "Booking.com →", trendLabel2: "POPOLARE", trendSub2: "Attività ed escursioni", trendAsk: "Chiedi alla guida", trendBook2: "Prenota", freeInfo: "3 messaggi gratis · 8 lingue · senza registrazione", roomCode: "Codice camera", roomOpen: "Apri", phoneName: "Guida Jadran" , tab1: "Guida camper", tab1s: "Parcheggi, percorsi, avvertenze", tab2: "Guida locale", tab2s: "Appartamento, hotel o in auto — spiagge, ristoranti", tab3: "Guida nautica", tab3s: "Porti turistici, ancoraggi, vento", tab4: "Guida crociera", tab4s: "Giorno in porto, piano al minuto" },
 };
-// AT = standard Hochdeutsch: identical content to DE, no dialect
-L.at = { ...L.de };
 
 const TRENDING = [
   { emoji: "🚤", title: "Limski kanal \u2014 tura brodom", sub: "Samo 12 mjesta", price: "45\u20AC", link: GYG("rovinj-l1299/from-rovinj-rovinj-motovun-and-groznjan-day-tour-t132468"), tag: "ISTRA" },
@@ -176,7 +174,7 @@ export default function LandingPage() {
 
   // Load trending images
   useEffect(() => {
-    const cities = [...new Set(TRENDING.map(t => t.city))];
+    const cities = [...new Set(TRENDING.map(t => t.tag))];
     cities.forEach(city => {
       fetch(`/api/cityimg?city=${encodeURIComponent(city)}`)
         .then(r => r.json())
@@ -348,7 +346,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ═══ HERO ═══ */}
-      <section style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", overflow: "hidden" }}>
+      <section style={{ position: "relative", minHeight: "100dvh", display: "flex", alignItems: "center", overflow: "hidden" }}>
         <video autoPlay muted loop playsInline style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.25 }}
           poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3Crect fill='%230a0e17'/%3E%3C/svg%3E">
           <source src="https://videos.pexels.com/video-files/1093662/1093662-sd_640_360_30fps.mp4" type="video/mp4" />
@@ -591,7 +589,7 @@ export default function LandingPage() {
                   onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.15)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"; e.currentTarget.style.transform = ""; }}>
                   <div style={{ height: 100, background: "linear-gradient(135deg, #0c2d48, #134e6f)", position: "relative", overflow: "hidden", display: "grid", placeItems: "center" }}>
-                    {trendImgs[t.city] && <img src={trendImgs[t.city]} alt={t.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.5 }} />}
+                    {trendImgs[t.tag] && <img src={trendImgs[t.tag]} alt={t.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.5 }} />}
                     <span style={{ position: "relative", fontSize: 32 }}>{t.emoji}</span>
                     <span style={{ position: "absolute", top: 8, left: 8, padding: "2px 8px", borderRadius: 6, background: "rgba(14,165,233,0.15)", color: "#38bdf8", fontSize: 9, fontWeight: 600, letterSpacing: 1 }}>{t.tag}</span>
                   </div>
@@ -671,7 +669,7 @@ export default function LandingPage() {
 
       {/* ═══ PLAN PICKER MODAL — Decoy Psychology ═══ */}
       {showPlanPicker && (
-        <div onClick={() => setShowPlanPicker(false)} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)", display: "grid", placeItems: "center", padding: 16 }}>
+        <div onClick={() => setShowPlanPicker(false)} style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(5,14,30,0.90)", display: "grid", placeItems: "center", padding: 16 }}>
           <div onClick={e => e.stopPropagation()} style={{ background: "#0f172a", borderRadius: 24, padding: "28px 18px", maxWidth: 480, width: "100%", border: "1px solid rgba(245,158,11,0.15)", boxShadow: "0 24px 64px rgba(0,0,0,0.5)", maxHeight: "90dvh", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
             <div style={{ textAlign: "center", marginBottom: 16 }}>
               <div style={{ fontSize: 28, marginBottom: 6 }}>🔒</div>
@@ -746,7 +744,7 @@ export default function LandingPage() {
 
       {/* ═══ LEGAL OVERLAY ═══ */}
       {legalPage && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)", overflowY: "auto", WebkitOverflowScrolling: "touch" }} onClick={() => setLegalPage(null)}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(5,14,30,0.95)", overflowY: "auto", WebkitOverflowScrolling: "touch" }} onClick={() => setLegalPage(null)}>
           <div style={{ maxWidth: 640, margin: "0 auto", padding: "60px 24px 100px", color: "#e2e8f0", fontFamily: B, fontSize: 13, lineHeight: 1.8 }} onClick={e => e.stopPropagation()}>
             <button onClick={() => setLegalPage(null)} style={{ position: "fixed", top: 16, right: 20, background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", fontSize: 20, width: 36, height: 36, borderRadius: "50%", cursor: "pointer", zIndex: 10000 }}>×</button>
             {legalPage === "impressum" ? (<>

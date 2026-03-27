@@ -73,7 +73,7 @@ export default function GuestOnboarding({ roomCode, onComplete }) {
   const [kids, setKids] = useState(0);
   const [interests, setInterests] = useState([]);
 
-  useEffect(() => { setTimeout(() => setAnim(true), 100); track("GuestOnboardingStarted", { roomCode }); }, []);
+  useEffect(() => { setTimeout(() => setAnim(true), 100); track("GuestOnboardingStarted", { roomCode }); }, [roomCode]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (country) setLang(langFromCountry(country)); }, [country]);
 
   const t = TX[lang] || TX.en;
@@ -99,7 +99,7 @@ export default function GuestOnboarding({ roomCode, onComplete }) {
     const countryObj = COUNTRIES.find(c => c.code === country);
     const guestData = {
       name: name.trim(),
-      first: name.trim().split(" ").pop(),
+      first: name.trim().split(" ")[0],
       country,
       flag: countryObj?.flag || "🌍",
       lang,
@@ -154,7 +154,7 @@ export default function GuestOnboarding({ roomCode, onComplete }) {
       <div style={S.bgGrad} />
       <div style={{ position:"absolute", bottom:0, left:0, right:0, height:"40%", background:"linear-gradient(0deg,rgba(14,165,233,0.06),transparent)", animation:"obWave 6s ease-in-out infinite" }} />
 
-      <div style={{ position:"relative", zIndex:10, display:"flex", alignItems:"center", justifyContent:"center", minHeight:"100vh", padding:16 }}>
+      <div style={{ position:"relative", zIndex:10, display:"flex", alignItems:"center", justifyContent:"center", minHeight:"100dvh", padding:16 }}>
         <div style={{
           width:"min(420px,92vw)", maxHeight:"90vh", overflowY:"auto",
           background:"rgba(15,30,50,0.85)", backdropFilter:"blur(40px)", WebkitBackdropFilter:"blur(40px)",

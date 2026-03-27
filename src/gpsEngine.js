@@ -271,7 +271,7 @@ function generateCards(lat, lng) {
     const kmh = lastPos.speed * 3.6;
     if (kmh < 5 && routePoints.length > 10) {
       // Stopped for a while — suggest rest
-      const lastMoving = routePoints.findLast(p => {
+      const lastMoving = [...routePoints].reverse().find(p => {
         // crude: if position changed significantly
         return distKm(p.lat, p.lng, lat, lng) > 0.1;
       });

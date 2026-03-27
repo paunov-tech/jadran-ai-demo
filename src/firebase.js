@@ -14,7 +14,11 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const hasConfig = true; // Always true — hardcoded fallback
+const hasConfig = !!(
+  import.meta.env.VITE_FB_API_KEY &&
+  import.meta.env.VITE_FB_PROJECT_ID &&
+  import.meta.env.VITE_FB_APP_ID
+);
 
 
 

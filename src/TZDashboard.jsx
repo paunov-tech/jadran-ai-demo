@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 
-const FB_KEY = ""; // unused, TZ Dashboard uses /api/tz-* endpoints
 const TZ_PINS = { "tz2026": "tz_makarska", "tzsplit": "tz_split", "tzpula": "tz_pula", "tzzadar": "tz_zadar", "tzdubrovnik": "tz_dubrovnik", "tzrab": "tz_rab", "tzrab2026": "tz_rab" };
 
 // Demo seed data for Rab pilot
@@ -70,6 +69,7 @@ export default function TZDashboard() {
   const [tzId, setTzId] = useState(null);
   const [screen, setScreen] = useState("overview"); // overview, pois, events, analytics, emergency, add-poi, add-event
   const [pois, setPois] = useState([]);
+  const [mockCatVals] = useState(() => ["parking","beach","food","shop","pharmacy"].map(() => Math.max(10, Math.round(Math.random() * 80 + 20))));
   const [events, setEvents] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -115,7 +115,8 @@ export default function TZDashboard() {
         const id = doc.name.split("/").pop();
         const fields = {};
         for (const [k, v] of Object.entries(doc.fields || {})) {
-          fields[k] = v.stringValue || v.integerValue || v.doubleValue || v.booleanValue || "";
+          fields[k] = "booleanValue" in v ? v.booleanValue
+            : v.stringValue ?? v.integerValue ?? v.doubleValue ?? "";
         }
         return { id, ...fields };
       });
@@ -153,7 +154,7 @@ export default function TZDashboard() {
         const seeded = [];
         for (const poi of RAB_SEED.pois) {
           const docId = `poi_rab_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
-          await firestoreWrite("jadran_poi", docId, { ...poi, tz_id: tzId, created: new Date().toISOString(), active: "true" });
+          await firestoreWrite("jadran_poi", docId, { ...poi, tz_id: tzId, created: new Date().toISOString(), active: true });
           seeded.push({ id: docId, ...poi, tz_id: tzId });
         }
         setPois(seeded);
@@ -210,7 +211,7 @@ export default function TZDashboard() {
 
   // ── Login Screen ──
   if (!tzId) return (
-    <div style={{ ...dm, background: C.bg, color: C.text, minHeight: "100vh", display: "grid", placeItems: "center", padding: 24 }}>
+    <div style={{ ...dm, background: C.bg, color: C.text, minHeight: "100dvh", display: "grid", placeItems: "center", padding: 24 }}>
       <Card style={{ maxWidth: 420, width: "100%", textAlign: "center" }}>
         <div style={{ fontSize: 48, marginBottom: 12 }}>🏛️</div>
         <div style={{ ...hf, fontSize: 28, fontWeight: 400, marginBottom: 4 }}>TZ Dashboard</div>
@@ -271,7 +272,7 @@ export default function TZDashboard() {
                   <div style={{ fontSize: 15, fontWeight: 500 }}>{p.name}</div>
                   <div style={{ ...dm, fontSize: 12, color: C.mut }}>{p.category} · {p.address || "—"}</div>
                 </div>
-                <span style={{ ...dm, fontSize: 10, padding: "3px 10px", borderRadius: 8, background: p.active !== "false" ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", color: p.active !== "false" ? C.green : C.red }}>{p.active !== "false" ? "Aktivno" : "Neaktivno"}</span>
+                <span style={{ ...dm, fontSize: 10, padding: "3px 10px", borderRadius: 8, background: (p.active !== "false" && p.active !== false) ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)", color: (p.active !== "false" && p.active !== false) ? C.green : C.red }}>{(p.active !== "false" && p.active !== false) ? "Aktivno" : "Neaktivno"}</span>
               </Card>
             ))}
           </>
@@ -497,7 +498,7 @@ export default function TZDashboard() {
             <SectionLabel>Top kategorije</SectionLabel>
             <Card style={{ marginBottom: 16 }}>
               {["parking", "beach", "food", "shop", "pharmacy"].map((cat, i) => {
-                const val = Math.max(10, Math.round(Math.random() * 80 + 20)); // placeholder
+                const val = mockCatVals[i];
                 return (
                   <div key={cat} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: i < 4 ? `1px solid ${C.bord}` : "none" }}>
                     <div style={{ ...dm, fontSize: 13, color: C.text, width: 80 }}>{cat}</div>
@@ -590,7 +591,7 @@ export default function TZDashboard() {
   };
 
   return (
-    <div style={{ ...dm, background: C.bg, color: C.text, minHeight: "100vh", display: "flex" }}>
+    <div style={{ ...dm, background: C.bg, color: C.text, minHeight: "100dvh", display: "flex" }}>
       {/* Sidebar */}
       <div style={{ width: 220, background: "rgba(12,28,50,0.95)", borderRight: `1px solid ${C.bord}`, padding: "20px 0", display: "flex", flexDirection: "column", position: "fixed", top: 0, bottom: 0 }}>
         <div style={{ padding: "0 20px 20px", borderBottom: `1px solid ${C.bord}` }}>

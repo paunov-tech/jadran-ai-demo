@@ -20,7 +20,7 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, info) { console.error("Error:", error, info); try { window.Sentry?.captureException(error, { extra: { componentStack: info?.componentStack } }); } catch {} }
   render() {
     if (this.state.error) return (
-      <div style={{ padding: 40, color: "#7dd3fc", background: "#0a1628", minHeight: "100vh", fontFamily: "'Outfit', system-ui, sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
+      <div style={{ padding: 40, color: "#7dd3fc", background: "#0a1628", minHeight: "100dvh", fontFamily: "'Outfit', system-ui, sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>🌊</div>
         <h2 style={{ fontSize: 22, fontWeight: 400, marginBottom: 8, color: "#f0f9ff" }}>Nešto nije u redu</h2>
         <p style={{ fontSize: 14, color: "#64748b", marginBottom: 24, maxWidth: 400 }}>Stranica se nije učitala ispravno. Pokušajte ponovo ili očistite cache.</p>
@@ -52,7 +52,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
       <React.Suspense fallback={
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#0a1628", color: "rgba(14,165,233,0.6)", fontFamily: "system-ui", fontSize: 18 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100dvh", background: "#0a1628", color: "rgba(14,165,233,0.6)", fontFamily: "system-ui", fontSize: 18 }}>
           🌊 {labels[route]}...
         </div>
       }>

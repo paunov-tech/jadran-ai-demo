@@ -22,6 +22,7 @@ var flon = parseFloat(p.get("flon") || "16.3738");
 var tlat = parseFloat(p.get("tlat") || "43.5081");
 var tlon = parseFloat(p.get("tlon") || "16.4402");
 var KEY = p.get("key") || "";
+var TMODE = p.get("tmode") || "car"; // "car" | "truck" (for campers)
 
 var platform = new H.service.Platform({ apikey: KEY });
 var defaultLayers = platform.createDefaultLayers();
@@ -55,15 +56,27 @@ map.getViewModel().setLookAtData({bounds: markerGroup.getBoundingBox()},{animate
 
 // Route via REST API — SDK decodes flexible polyline natively
 var routeUrl = "https://router.hereapi.com/v8/routes"
-  + "?transportMode=car&routingMode=fast"
+  + "?transportMode=" + TMODE + "&routingMode=fast"
   + "&origin=" + flat + "," + flon
   + "&destination=" + tlat + "," + tlon
   + "&return=polyline,summary"
   + "&apikey=" + KEY;
 
+// Error label helper
+function showRouteError(msg) {
+  var el = document.createElement("div");
+  el.style.cssText = "position:absolute;top:8px;left:50%;transform:translateX(-50%);padding:6px 14px;background:rgba(10,22,40,0.85);color:#94a3b8;font-size:12px;font-family:sans-serif;border-radius:8px;border:1px solid rgba(14,165,233,0.15);pointer-events:none;z-index:9;white-space:nowrap;";
+  el.textContent = msg;
+  document.getElementById("map").appendChild(el);
+}
+
 fetch(routeUrl)
-  .then(function(r) { return r.json(); })
+  .then(function(r) {
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return r.json();
+  })
   .then(function(data) {
+    if (!data.routes || !data.routes[0]) { showRouteError("Ruta nije dostupna"); return; }
     var sections = data.routes[0].sections;
     var lines = sections.map(function(s) {
       return H.geo.LineString.fromFlexiblePolyline(s.polyline);
@@ -78,7 +91,10 @@ fetch(routeUrl)
     if (bb && mb) bb = bb.mergeRect(mb);
     map.getViewModel().setLookAtData({bounds: bb || mb}, {animate: true});
   })
-  .catch(function(e) { console.warn("Route fetch error:", e); });
+  .catch(function(e) {
+    console.warn("Route fetch error:", e);
+    showRouteError("Ruta — provjeri internet vezu");
+  });
 
 // ── GPS LIVE DOT — receives position via postMessage ──
 var gpsIcon = new H.map.Icon('<svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="12" fill="rgba(59,130,246,0.15)" stroke="none"><animate attributeName="r" values="8;14;8" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite"/></circle><circle cx="14" cy="14" r="6" fill="#3b82f6" stroke="#fff" stroke-width="2"/></svg>', {size:{w:28,h:28},anchor:{x:14,y:14}});
