@@ -1197,7 +1197,7 @@ export default async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: 'Service temporarily unavailable' });
 
   try {
-    const { system, messages, mode, region: regionRaw, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, plan, deviceId, adriatic_region, delta_context } = req.body;
+    const { system, messages, mode, region: regionRaw, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, plan, deviceId, adriatic_region, delta_context, guide_cards } = req.body;
     // Map new Adriatic region keys to existing LOCATIONS keys
     const ADRIATIC_TO_LOCATION = { istra: "istra", kvarner: "kvarner", srednja_dalmacija: "split", juzna_dalmacija: "dubrovnik" };
     const region = regionRaw || (adriatic_region ? ADRIATIC_TO_LOCATION[adriatic_region] : undefined);
@@ -1336,6 +1336,18 @@ export default async function handler(req, res) {
     if (adriaticCtx && systemPrompt) systemPrompt = adriaticCtx + '\n' + systemPrompt;
     // Prepend DELTA_CONTEXT (structured trip info from onboarding)
     if (deltaCtxStr && systemPrompt) systemPrompt = deltaCtxStr + '\n' + systemPrompt;
+
+    // Inject GUIDE CARDS — live route intelligence (HERE Traffic + YOLO + Meteo)
+    if (guide_cards?.length && systemPrompt) {
+      const sev = { critical: 0, warning: 1, info: 2, tip: 3 };
+      const sorted = [...guide_cards].sort((a, b) => (sev[a.severity] ?? 4) - (sev[b.severity] ?? 4));
+      const lines = sorted.slice(0, 8).map(c => {
+        const icon = c.icon || (c.severity === "critical" ? "⛔" : c.severity === "warning" ? "⚠️" : "ℹ️");
+        return `${icon} [${(c.severity || "info").toUpperCase()}] ${c.title}: ${c.body} (${c.source || "live"})`;
+      });
+      const guideCtx = `[LIVE INTELLIGENCE — HERE Traffic + YOLO Sense + Meteo]\n${lines.join("\n")}\nOVO SU LIVE PODACI — integriraj ih u savjet bez prepisivanja izvora. Ako postoji kritično upozorenje, NAGLASI ga na početku odgovora.`;
+      systemPrompt = guideCtx + '\n\n' + systemPrompt;
+    }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',

@@ -1220,6 +1220,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         body: JSON.stringify({ system: sys,
           messages: [...chatMsgs.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })), { role: "user", content: msg }],
           delta_context: loadDelta(),
+          guide_cards: guideCards?.length ? guideCards.slice(0, 8) : undefined,
           lang: lang || "hr",
         }),
       });

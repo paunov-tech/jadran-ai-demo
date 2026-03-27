@@ -6,6 +6,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useRef } from "react";
 import { EXPERIENCES, GEMS, BOOKING_CITIES, CAMPER_WARNINGS, ISTRA_CAMPER_INTEL, DEEP_LOCAL, DUBROVNIK_INTEL, MARINAS, ANCHORAGES, CRUISE_PORTS, filterByRegion } from "./data.js";
+import { loadDelta } from "./deltaContext.js";
 
 
 // ── DEVICE FINGERPRINT (survives incognito/private browsing) ──
@@ -532,6 +533,7 @@ const [lang, setLang] = useState(() => {
   const [emergencyAlerts, setEmergencyAlerts] = useState([]);
   const [weatherTime, setWeatherTime] = useState(null);
   const [navtex, setNavtex] = useState(null);
+  const [guideCards, setGuideCards] = useState([]);
   const [notifPerm, setNotifPerm] = useState("default");
   const [lastAlert, setLastAlert] = useState(null);
   const [regionImgs, setRegionImgs] = useState({});
@@ -659,6 +661,28 @@ const [lang, setLang] = useState(() => {
     if (travelMode !== "sailing") return;
     fetch("/api/navtex").then(r => r.json()).then(d => { if (d.zones) setNavtex(d); }).catch(() => {});
   }, [travelMode]);
+
+  // Fetch guide.js route intelligence (HERE Traffic + YOLO + weather) when trip context available
+  // Refreshes every 3 min (matches guide.js cache TTL)
+  useEffect(() => {
+    const fetchGuide = () => {
+      try {
+        const delta = loadDelta();
+        const oCoords = delta.from_coords;
+        const dLat = delta.destination?.lat;
+        const dLng = delta.destination?.lng;
+        if (!oCoords?.[0] || !dLat) return; // No route coords — skip
+        const seg = delta.segment || travelMode || "auto";
+        fetch(`/api/guide?oLat=${oCoords[0]}&oLng=${oCoords[1]}&dLat=${dLat}&dLng=${dLng}&seg=${seg}&lang=${lang}`)
+          .then(r => r.json())
+          .then(d => { if (d.cards?.length) setGuideCards(d.cards); })
+          .catch(() => {});
+      } catch {}
+    };
+    fetchGuide();
+    const interval = setInterval(fetchGuide, 180000); // 3 min
+    return () => clearInterval(interval);
+  }, [travelMode, lang]);
   // Load ALL region images on mount (for visual picker grid)
   useEffect(() => {
     const cityMap = { split: "Split", makarska: "Makarska", dubrovnik: "Dubrovnik", zadar: "Zadar", istra: "Rovinj", kvarner: "Opatija" };
@@ -1123,6 +1147,8 @@ const [lang, setLang] = useState(() => {
           })() : undefined,
           userProfile: (() => { const p = loadProfile(); p.niche = travelMode || niche; p.region = region; return p; })(),
           emergencyAlerts: (emergencyAlerts.length && can("guardian")) ? emergencyAlerts.map(a => ({ type: a.type, severity: a.severity, region: a.region, title: a.title, description: a.description, count: a.count, source: a.source, url: a.url })).slice(0, 5) : undefined,
+          delta_context: (() => { try { const d = loadDelta(); return d.segment ? d : undefined; } catch { return undefined; } })(),
+          guide_cards: guideCards.length ? guideCards.slice(0, 8) : undefined,
           messages: [...msgs.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })), { role: "user", content: msg }],
         }),
       });
