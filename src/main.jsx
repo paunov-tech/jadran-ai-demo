@@ -7,12 +7,14 @@ import ReactDOM from 'react-dom/client'
 // ?room=XXXX    → Guest App (guide for apartment guests)
 // jadran.ai     → Landing Page (marketing + booking)
 const path = window.location.pathname;
-const hasRoom = new URLSearchParams(window.location.search).has("room");
+const params = new URLSearchParams(window.location.search);
+const hasRoom = params.has("room");
+const hasKiosk = params.has("kiosk");
 const isHost = path === "/host" || path === "/host/";
 const isAI = path === "/ai" || path === "/ai/";
 const isTZ = path === "/tz" || path === "/tz/";
 
-const route = isHost ? "host" : isAI ? "ai" : isTZ ? "tz" : hasRoom ? "app" : "landing";
+const route = isHost ? "host" : isAI ? "ai" : isTZ ? "tz" : (hasRoom || hasKiosk) ? "app" : "landing";
 
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null }; }
