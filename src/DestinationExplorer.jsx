@@ -588,34 +588,8 @@ export default function DestinationExplorer() {
                 </div>
               </div>
 
-              {/* ④ AI Best Buy placeholder */}
-              <div style={{ marginBottom:8 }}>
-                <div style={{ fontSize:9, color:"#fbbf24", letterSpacing:3, fontWeight:700, marginBottom:10 }}>
-                  🤖 AI BEST BUY · {curDest?.name.toUpperCase() || rData.id.toUpperCase()}
-                </div>
-                {/* Inject our affiliates first in AI section too */}
-                <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:4, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
-                  {affiliates.slice(0,1).map(aff => (
-                    <div key={"ai-"+aff.id} style={{ minWidth:170, height:130, borderRadius:14, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", border:`1px solid ${aff.badgeColor}25` }}>
-                      <img src={aff.img} alt={aff.name} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", opacity:0.6 }} />
-                      <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.94) 0%, rgba(5,13,26,0.4) 100%)" }} />
-                      <div style={{ position:"absolute", top:7, left:8, padding:"2px 8px", borderRadius:5, background:"rgba(251,191,36,0.18)", fontSize:8, fontWeight:700, color:"#fbbf24", letterSpacing:1 }}>AI PREPORUKA</div>
-                      <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 10px" }}>
-                        <div style={{ fontFamily:F, fontSize:15, fontWeight:400, color:"#fff", marginBottom:1 }}>{aff.name}</div>
-                        <div style={{ fontSize:9, color:"rgba(255,255,255,0.5)" }}>{t(aff.desc)}</div>
-                      </div>
-                    </div>
-                  ))}
-                  {/* Coming soon card */}
-                  <div style={{ minWidth:170, height:130, borderRadius:14, flexShrink:0, scrollSnapAlign:"start", border:"1px dashed rgba(251,191,36,0.18)", background:"rgba(251,191,36,0.02)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:4, padding:12 }}>
-                    <div style={{ fontSize:20, opacity:0.35 }}>🤖</div>
-                    <div style={{ fontSize:9, color:"#64748b", fontWeight:600, textAlign:"center", lineHeight:1.4 }}>
-                      {({hr:"AI traži best buy…",de:"KI sucht Angebote…",en:"AI scanning deals…",it:"AI scansiona offerte…"})[dl]||"AI scanning…"}
-                    </div>
-                    <div style={{ fontSize:8, color:"#1e3a5f" }}>Uskoro · Coming soon</div>
-                  </div>
-                </div>
-              </div>
+              {/* ④ AI Deals — live from n8n/Firestore */}
+              <DealCards region={rData.id} lang={lang} maxCards={3} />
 
             </div>
 

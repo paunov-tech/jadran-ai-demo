@@ -118,6 +118,15 @@ export function DealCards({ region = "all", lang = "de", C, maxCards = 6 }) {
             href={deal.cta_url || "#"}
             target={deal.source === "gyg" || deal.source === "viator" ? "_blank" : "_self"}
             rel="noopener noreferrer"
+            onClick={(e) => {
+              if (!deal.cta_url || deal.cta_url === "#") return;
+              e.preventDefault();
+              if (deal.source === "gyg" || deal.source === "viator") {
+                window.open(deal.cta_url, "_blank", "noopener,noreferrer");
+              } else {
+                window.location.href = deal.cta_url;
+              }
+            }}
             style={{
               minWidth: 260, maxWidth: 300, flexShrink: 0,
               borderRadius: 18, overflow: "hidden",
@@ -127,6 +136,7 @@ export function DealCards({ region = "all", lang = "de", C, maxCards = 6 }) {
               scrollSnapAlign: "start",
               transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
               background: colors.card,
+              cursor: "pointer",
             }}
           >
             {/* Image */}
