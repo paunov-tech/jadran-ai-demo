@@ -371,16 +371,6 @@ export default function DestinationExplorer() {
             </a>
           </div>
 
-          {/* Destination thumbnail strip — centered */}
-          <div style={{ display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap" }}>
-            {HERO_DESTS.map((hd, i) => (
-              <button key={hd.id} onClick={() => setHeroIdx(i)} style={{ flexShrink:0, width:64, height:46, borderRadius:10, overflow:"hidden", position:"relative", cursor:"pointer", border: i===heroIdx ? "2px solid rgba(14,165,233,0.8)" : "2px solid rgba(255,255,255,0.1)", transition:"all 0.3s", opacity: i===heroIdx ? 1 : 0.5, background:"none", padding:0 }}>
-                <img src={hd.img.replace("w=1400","w=200")} alt={hd.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
-                <div style={{ position:"absolute", inset:0, background:"rgba(5,13,26,0.25)" }} />
-                <div style={{ position:"absolute", bottom:3, left:0, right:0, textAlign:"center", fontSize:7, fontWeight:700, color:"#fff", letterSpacing:0.5, textShadow:"0 1px 3px rgba(0,0,0,0.9)" }}>{hd.name.toUpperCase()}</div>
-              </button>
-            ))}
-          </div>
 
         </div>
       </section>
