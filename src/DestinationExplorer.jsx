@@ -455,6 +455,14 @@ export default function DestinationExplorer() {
           {/* — AI Deals from n8n/Firestore — */}
           <DealCards region="all" lang={lang} />
 
+          {/* Viator Shop CTA */}
+          <a href="https://vi.me/qku0x" target="_blank" rel="noopener noreferrer" style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 18px", borderRadius:14, background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.15)", textDecoration:"none", marginTop:4 }}>
+            <span style={{ fontFamily:"'Outfit',sans-serif", fontSize:13, color:"#22c55e", fontWeight:600 }}>
+              {({hr:"Sve aktivnosti na Jadranu →", de:"Alle Aktivitäten auf der Adria →", en:"All Adriatic activities →", it:"Tutte le attività sull'Adriatico →"})[lang] || "Sve aktivnosti na Jadranu →"}
+            </span>
+            <span style={{ fontSize:18 }}>🎟️</span>
+          </a>
+
         </div>
       </section>
 

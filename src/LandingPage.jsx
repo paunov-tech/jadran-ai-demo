@@ -352,6 +352,7 @@ export default function LandingPage() {
               </div>
             </>}
           </div>
+          <a href="https://vi.me/qku0x" target="_blank" rel="noopener noreferrer" style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(34,197,94,0.2)", color: "#22c55e", fontSize: 11, textDecoration: "none", fontWeight: 600 }}>🎟️ Aktivnosti</a>
           <a href="/host" style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)", color: "#64748b", fontSize: 11, textDecoration: "none" }}>Host</a>
         </div>
       </nav>

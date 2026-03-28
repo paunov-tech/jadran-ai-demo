@@ -2503,6 +2503,14 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             />
           </Card>
 
+          {/* Viator Shop */}
+          <a href="https://vi.me/qku0x" target="_blank" rel="noopener noreferrer" style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", borderRadius:12, background:"rgba(34,197,94,0.07)", border:"1px solid rgba(34,197,94,0.18)", textDecoration:"none", marginTop:12 }}>
+            <span style={{ ...dm, fontSize:13, color:"#22c55e", fontWeight:600 }}>
+              {lang === "de" || lang === "at" ? "Viator Shop — alle Aktivitäten →" : lang === "en" ? "Viator Shop — all activities →" : "Viator Shop — sve aktivnosti →"}
+            </span>
+            <span style={{ fontSize:16 }}>🎟️</span>
+          </a>
+
           {/* Booking.com — accommodations */}
           <Card style={{ marginTop: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
