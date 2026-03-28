@@ -103,6 +103,28 @@ const GYG_OFFERS = [
   { title:{hr:"Degustacija vina — Pelješac",de:"Weinverkostung — Pelješac",en:"Wine tasting — Pelješac",it:"Degustazione vini — Pelješac"}, price:"35€", tag:"DUBROVNIK", img:"https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=400&q=75", link:"https://www.getyourguide.com/ston-l4159/?partner_id=9OEGOYI&q=wine" },
 ];
 
+// ─── CITY-LEVEL AFFILIATES (our contracted partners, appear first in city deals) ───
+const CITY_AFFILIATES = {
+  rab: [
+    { id:"blackjack", name:"Black Jack", img:"https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&q=75", badge:"NAŠI PARTNER", badgeColor:"#f97316", desc:{hr:"Gurman House · Palit, Rab",de:"Gurman House · Palit, Rab",en:"Gurman House · Palit, Rab",it:"Gurman House · Palit, Rab"}, cta:{hr:"Pogledaj meni",de:"Menü ansehen",en:"View menu",it:"Vedi menu"}, action:"bj" },
+    { id:"fjera", name:"Rabska Fjera", img:"https://images.unsplash.com/photos/KUCx92pIGCM?w=400&q=75", badge:"⚔️ RAB · 25–27.VII", badgeColor:"#fbbf24", desc:{hr:"Najveći medievalni festival HR",de:"Kroatiens größtes Mittelalterfest",en:"Croatia's largest medieval festival",it:"Il più grande festival medievale"}, cta:{hr:"AI Guide Rab",de:"AI Guide Rab",en:"AI Guide Rab",it:"AI Guide Rab"}, link:"/?kiosk=rab" },
+  ],
+};
+
+// ─── GYG DEALS PER CITY ───
+const CITY_GYG = {
+  rab:      [{ title:{hr:"Tura brodom — Rab",de:"Bootstour — Rab",en:"Boat tour — Rab",it:"Tour in barca — Rab"}, price:"45€", img:"https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=400&q=75", link:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=boat+tour" }],
+  split:    [{ title:{hr:"Blue Cave & 5 otoka",de:"Blaue Grotte & 5 Inseln",en:"Blue Cave & 5 islands",it:"Grotta Azzurra & 5 isole"}, price:"110€", img:"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=75", link:"https://www.getyourguide.com/split-l268/?partner_id=9OEGOYI&q=blue+cave" }],
+  dubrovnik:[{ title:{hr:"Kajak — zidine Dubrovnika",de:"Kajak — Dubrovnik Mauern",en:"Kayak — Dubrovnik walls",it:"Kayak — mura Dubrovnik"}, price:"40€", img:"https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=400&q=75", link:"https://www.getyourguide.com/dubrovnik-l213/?partner_id=9OEGOYI&q=kayak" }],
+  rovinj:   [{ title:{hr:"Lov na tartufe — Motovun",de:"Trüffeljagd — Motovun",en:"Truffle hunting — Motovun",it:"Caccia al tartufo"}, price:"45€", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=75", link:"https://www.getyourguide.com/istria-county-l1297/?partner_id=9OEGOYI&q=truffle" }],
+  motovun:  [{ title:{hr:"Lov na tartufe — Motovun",de:"Trüffeljagd — Motovun",en:"Truffle hunting — Motovun",it:"Caccia al tartufo"}, price:"45€", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=75", link:"https://www.getyourguide.com/istria-county-l1297/?partner_id=9OEGOYI&q=truffle" }],
+  hvar:     [{ title:{hr:"Tura brodom — Hvar & Blue Lagoon",de:"Bootstour — Hvar & Blaue Lagune",en:"Boat tour — Hvar & Blue Lagoon",it:"Tour in barca — Hvar"}, price:"65€", img:"https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=400&q=75", link:"https://www.getyourguide.com/hvar-l4149/?partner_id=9OEGOYI&q=boat+tour" }],
+  makarska: [{ title:{hr:"Izlet na Biokovo",de:"Ausflug auf Biokovo",en:"Biokovo excursion",it:"Escursione Biokovo"}, price:"35€", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=75", link:"https://www.getyourguide.com/makarska-l4150/?partner_id=9OEGOYI&q=biokovo" }],
+  zadar:    [{ title:{hr:"Krka & Šibenik vodopadi",de:"Krka & Šibenik Wasserfälle",en:"Krka & Šibenik waterfalls",it:"Cascate Krka & Šibenik"}, price:"55€", img:"https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=400&q=75", link:"https://www.getyourguide.com/zadar-l4157/?partner_id=9OEGOYI&q=krka" }],
+  pula:     [{ title:{hr:"Tura rimske arene — Pula",de:"Führung Röm. Arena — Pula",en:"Roman Arena tour — Pula",it:"Tour Arena Romana — Pola"}, price:"20€", img:"https://images.unsplash.com/photos/TBC4FLRxcKk?w=400&q=75", link:"https://www.getyourguide.com/pula-l4161/?partner_id=9OEGOYI&q=arena" }],
+  opatija:  [{ title:{hr:"Šetnja Lungomare & SPA",de:"Lungomare-Spaziergang & SPA",en:"Lungomare walk & SPA",it:"Passeggiata Lungomare & SPA"}, price:"30€", img:"https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=400&q=75", link:"https://www.getyourguide.com/opatija-l4163/?partner_id=9OEGOYI&q=spa" }],
+};
+
 // ─── HERO DESTINATIONS (cycling background) ───
 const HERO_DESTS = [
   { id:"dubrovnik", name:"Dubrovnik", img:"https://images.unsplash.com/photos/5maoPl591Sk?w=1400&q=85" },
@@ -196,6 +218,7 @@ export default function DestinationExplorer() {
   const [selectedMenuItem, setSelectedMenuItem] = useState(null);
   const [viatorDeals, setViatorDeals] = useState([]);
   const [viatorLoading, setViatorLoading] = useState(false);
+  const [activeDestId, setActiveDestId] = useState(null); // city within region sheet
   const heroRef = useRef(null);
 
   useEffect(() => { setTimeout(() => setVisible(true), 100); }, []);
@@ -242,7 +265,7 @@ export default function DestinationExplorer() {
   const destList = activeRegionData?.destinations ?? [];
 
   return (
-    <div style={{ background:"#050d1a", color:"#f0f4f8", fontFamily:B, minHeight:"100dvh", overflowX:"hidden" }}>
+    <div style={{ background:"#0a0e17", color:"#f0f4f8", fontFamily:B, minHeight:"100dvh", overflowX:"hidden" }}>
 
       {/* ── CSS ── */}
       <style>{`
@@ -285,14 +308,19 @@ export default function DestinationExplorer() {
       </nav>
 
       {/* ═══ HERO ═══ */}
-      <section ref={heroRef} style={{ position:"relative", height:"100dvh", overflow:"hidden" }}>
-        {/* Rotating cinematic backgrounds */}
+      <section ref={heroRef} style={{ position:"relative", height:"100dvh", overflow:"hidden", background:"#0a0e17" }}>
+        {/* Pexels Adriatic video — matches transit/pre-trip segment */}
+        <video autoPlay muted loop playsInline style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", opacity:0.28 }}
+          poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3Crect fill='%230a0e17'/%3E%3C/svg%3E">
+          <source src="https://videos.pexels.com/video-files/1093662/1093662-sd_640_360_30fps.mp4" type="video/mp4" />
+        </video>
+        {/* Rotating cinematic backgrounds on top of video */}
         {HERO_DESTS.map((hd, i) => (
-          <div key={hd.id} style={{ position:"absolute", inset:"-5%", backgroundImage:`url(${hd.img})`, backgroundSize:"cover", backgroundPosition:"center", filter:"brightness(0.35) saturate(1.6)", opacity: i === heroIdx ? 1 : 0, transition:"opacity 2s ease", willChange:"opacity" }} />
+          <div key={hd.id} style={{ position:"absolute", inset:"-5%", backgroundImage:`url(${hd.img})`, backgroundSize:"cover", backgroundPosition:"center", filter:"brightness(0.22) saturate(1.5)", opacity: i === heroIdx ? 0.6 : 0, transition:"opacity 2.5s ease", willChange:"opacity" }} />
         ))}
-        {/* Gradient overlays */}
-        <div style={{ position:"absolute", inset:0, background:"linear-gradient(180deg, rgba(5,13,26,0.5) 0%, rgba(5,13,26,0.05) 25%, rgba(5,13,26,0.15) 55%, rgba(5,13,26,0.85) 80%, #050d1a 100%)" }} />
-        <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 120% 80% at 50% 100%, rgba(14,165,233,0.06) 0%, transparent 70%)" }} />
+        {/* Gradient overlays — like LandingPage */}
+        <div style={{ position:"absolute", inset:0, background:"linear-gradient(180deg, rgba(10,14,23,0.55) 0%, rgba(10,14,23,0.2) 35%, rgba(10,14,23,0.15) 55%, rgba(10,14,23,0.92) 85%, #0a0e17 100%)" }} />
+        <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 120% 80% at 50% 100%, rgba(14,165,233,0.05) 0%, transparent 70%)" }} />
         {/* Top accent line */}
         <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:"linear-gradient(90deg, transparent, rgba(14,165,233,0.6), rgba(251,191,36,0.4), rgba(14,165,233,0.6), transparent)", backgroundSize:"200% 100%", animation:"gradShift 8s ease infinite" }} />
 
@@ -370,16 +398,16 @@ export default function DestinationExplorer() {
             </h2>
           </div>
 
-          {/* Region cards 2×2 — tap opens AI guide for that region */}
+          {/* Region cards 2×2 — tap opens region deals sheet */}
           <div style={{ display:"grid", gridTemplateColumns:"repeat(2, 1fr)", gap:14 }}>
             {REGIONS.map((r, i) => (
-              <a key={r.id} href={`/?kiosk=${r.liveCity}&lang=${lang}`}
-                className="explore-card"
+              <button key={r.id} className="explore-card"
+                onClick={() => { setActiveRegion(r.id); setActiveDestId(r.liveCity); }}
                 style={{ display:"block", borderRadius:18, overflow:"hidden", position:"relative",
                   height:150, border:"1px solid rgba(255,255,255,0.06)",
                   boxShadow:"0 4px 20px rgba(0,0,0,0.3)",
                   animation:`fadeUp 0.45s ease ${i * 0.07}s both`,
-                  cursor:"pointer", textDecoration:"none", color:"#fff",
+                  cursor:"pointer", background:"none", padding:0, textAlign:"left",
                 }}>
                 <img src={r.img} alt={r.id} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
                 <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.9) 0%, rgba(5,13,26,0.3) 100%)" }} />
@@ -387,7 +415,7 @@ export default function DestinationExplorer() {
                   <h3 style={{ fontFamily:F, fontSize:20, fontWeight:400, marginBottom:2, lineHeight:1.1, color:"#fff" }}>{r.id}</h3>
                   <p style={{ fontSize:10, color:"rgba(255,255,255,0.55)", fontWeight:300, lineHeight:1.3 }}>{t(r.tagline)}</p>
                 </div>
-              </a>
+              </button>
             ))}
           </div>
         </div>
@@ -433,8 +461,30 @@ export default function DestinationExplorer() {
             </div>
           </div>
 
-          {/* — Viator Best Deals — */}
+          {/* — GYG Best Experiences — */}
           <div style={{ marginBottom:28 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
+              <div style={{ fontSize:10, color:"#22c55e", letterSpacing:4, fontWeight:700 }}>GETYOURGUIDE</div>
+              <div style={{ flex:1, height:1, background:"linear-gradient(90deg, rgba(34,197,94,0.2), transparent)" }} />
+            </div>
+            <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:8, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
+              {GYG_OFFERS.map((o, i) => (
+                <a key={i} href={o.link} target="_blank" rel="noopener noreferrer"
+                  style={{ minWidth:170, height:150, borderRadius:14, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", textDecoration:"none", color:"#fff", border:"1px solid rgba(34,197,94,0.12)", animation:`fadeUp 0.4s ease ${i*0.05}s both` }}>
+                  <img src={o.img} alt={t(o.title)} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
+                  <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.92) 0%, rgba(5,13,26,0.15) 65%)" }} />
+                  <div style={{ position:"absolute", top:8, left:8, padding:"2px 7px", borderRadius:5, background:"rgba(34,197,94,0.18)", fontSize:8, fontWeight:700, color:"#22c55e", letterSpacing:1 }}>{o.tag}</div>
+                  <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 10px" }}>
+                    <div style={{ fontSize:12, fontWeight:600, lineHeight:1.3, marginBottom:3 }}>{t(o.title)}</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:"#22c55e" }}>{o.price}</div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* — Viator Best Deals — */}
+          <div style={{ marginBottom:16 }}>
             <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
               <div style={{ fontSize:10, color:"#0ea5e9", letterSpacing:4, fontWeight:700 }}>VIATOR DEALS</div>
               {viatorLoading && <div style={{ width:14, height:14, borderRadius:"50%", border:"2px solid rgba(14,165,233,0.3)", borderTopColor:"#0ea5e9", animation:"spin 0.8s linear infinite" }} />}
@@ -442,6 +492,17 @@ export default function DestinationExplorer() {
               {activeDest && <div style={{ fontSize:9, color:"#38bdf8", fontWeight:600, letterSpacing:1 }}>{activeDest.name.toUpperCase()}</div>}
             </div>
             <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:8, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
+              {/* Our affiliate injected in AI section — appears first */}
+              <a href="/?kiosk=rab&affiliate=blackjack&tk=sial2026&lang=de" target="_blank" rel="noopener noreferrer"
+                style={{ minWidth:170, height:150, borderRadius:14, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", textDecoration:"none", color:"#fff", border:"1px solid rgba(249,115,22,0.2)" }}>
+                <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&q=75" alt="Black Jack" loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
+                <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(10,22,40,0.94) 0%, rgba(10,22,40,0.3) 100%)" }} />
+                <div style={{ position:"absolute", top:8, left:8, padding:"2px 7px", borderRadius:5, background:"rgba(249,115,22,0.18)", fontSize:8, fontWeight:700, color:"#f97316", letterSpacing:1 }}>AI PREPORUKA</div>
+                <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 10px" }}>
+                  <div style={{ fontFamily:F, fontSize:14, fontWeight:400, marginBottom:2 }}>Black Jack · Rab</div>
+                  <div style={{ fontSize:10, fontWeight:600, color:"#f97316" }}>Gurman House</div>
+                </div>
+              </a>
               {/* Viator API results */}
               {viatorDeals.length > 0 ? viatorDeals.slice(0,6).map((p, i) => (
                 <a key={p.productCode || i} href={p.productUrl || "#"} target="_blank" rel="noopener noreferrer"
@@ -470,28 +531,6 @@ export default function DestinationExplorer() {
                   </div>
                 ))
               )}
-            </div>
-          </div>
-
-          {/* — GYG Best Experiences — */}
-          <div style={{ marginBottom:16 }}>
-            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
-              <div style={{ fontSize:10, color:"#22c55e", letterSpacing:4, fontWeight:700 }}>GETYOURGUIDE</div>
-              <div style={{ flex:1, height:1, background:"linear-gradient(90deg, rgba(34,197,94,0.2), transparent)" }} />
-            </div>
-            <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:8, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
-              {GYG_OFFERS.map((o, i) => (
-                <a key={i} href={o.link} target="_blank" rel="noopener noreferrer"
-                  style={{ minWidth:170, height:150, borderRadius:14, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", textDecoration:"none", color:"#fff", border:"1px solid rgba(34,197,94,0.12)", animation:`fadeUp 0.4s ease ${i*0.05}s both` }}>
-                  <img src={o.img} alt={t(o.title)} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
-                  <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.92) 0%, rgba(5,13,26,0.15) 65%)" }} />
-                  <div style={{ position:"absolute", top:8, left:8, padding:"2px 7px", borderRadius:5, background:"rgba(34,197,94,0.18)", fontSize:8, fontWeight:700, color:"#22c55e", letterSpacing:1 }}>{o.tag}</div>
-                  <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 10px" }}>
-                    <div style={{ fontSize:12, fontWeight:600, lineHeight:1.3, marginBottom:3 }}>{t(o.title)}</div>
-                    <div style={{ fontSize:13, fontWeight:700, color:"#22c55e" }}>{o.price}</div>
-                  </div>
-                </a>
-              ))}
               {/* AI Best Buy placeholder — will be filled by AI-found deals */}
               <div style={{ minWidth:170, height:150, borderRadius:14, flexShrink:0, scrollSnapAlign:"start", border:"1px dashed rgba(251,191,36,0.2)", background:"rgba(251,191,36,0.02)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:6, padding:14 }}>
                 <div style={{ fontSize:18, opacity:0.4 }}>🤖</div>
@@ -505,6 +544,180 @@ export default function DestinationExplorer() {
 
         </div>
       </section>
+
+      {/* ═══ REGION DEALS SHEET ═══ */}
+      {activeRegion && (() => {
+        const rData = REGIONS.find(r => r.id === activeRegion);
+        if (!rData) return null;
+        const curDest = rData.destinations.find(d => d.id === activeDestId) || rData.destinations[0];
+        const affiliates = CITY_AFFILIATES[activeDestId] || CITY_AFFILIATES[rData.liveCity] || [];
+        const gygDeals = CITY_GYG[activeDestId] || CITY_GYG[rData.liveCity] || [];
+        // Build deals: affiliates first, then GYG, then AI placeholder
+        return (
+        <div onClick={() => setActiveRegion(null)} style={{ position:"fixed", inset:0, zIndex:500, background:"rgba(3,8,16,0.88)", backdropFilter:"blur(14px)", WebkitBackdropFilter:"blur(14px)", display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
+          <div onClick={e => e.stopPropagation()} style={{ width:"100%", maxWidth:600, background:"#0a1628", borderRadius:"24px 24px 0 0", border:`1px solid ${rData.accent}20`, borderBottom:"none", maxHeight:"90dvh", display:"flex", flexDirection:"column", animation:"fadeUp 0.32s cubic-bezier(0.16,1,0.3,1)" }}>
+
+            {/* Header */}
+            <div style={{ padding:"20px 20px 0", flexShrink:0 }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+                <div>
+                  <div style={{ fontSize:10, color:rData.accent, letterSpacing:3, fontWeight:700, marginBottom:3 }}>{rData.id.toUpperCase()}</div>
+                  <div style={{ fontFamily:F, fontSize:22, fontWeight:400, color:"#f0f4f8" }}>
+                    {curDest ? curDest.name : rData.id}
+                  </div>
+                </div>
+                <button onClick={() => setActiveRegion(null)} style={{ width:32, height:32, borderRadius:"50%", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.08)", color:"#64748b", fontSize:15, cursor:"pointer", display:"grid", placeItems:"center" }}>✕</button>
+              </div>
+
+              {/* City tabs */}
+              <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:14, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
+                {rData.destinations.map(d => {
+                  const isActive = activeDestId === d.id;
+                  return (
+                    <button key={d.id} onClick={() => setActiveDestId(d.id)}
+                      style={{ flexShrink:0, scrollSnapAlign:"start", padding:"7px 16px", borderRadius:20, border:`1px solid ${isActive ? d.accent+"60" : "rgba(255,255,255,0.07)"}`, background: isActive ? `${d.accent}18` : "rgba(255,255,255,0.03)", color: isActive ? d.accent : "#64748b", fontSize:12, fontWeight:600, cursor:"pointer", whiteSpace:"nowrap", transition:"all 0.2s", fontFamily:B }}>
+                      {d.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Scrollable deals */}
+            <div style={{ overflowY:"auto", WebkitOverflowScrolling:"touch", flex:1, padding:"0 20px", paddingBottom:"calc(20px + env(safe-area-inset-bottom, 0px))" }}>
+
+              {/* ① Naši affiliati — first */}
+              {affiliates.length > 0 && (
+                <div style={{ marginBottom:20 }}>
+                  <div style={{ fontSize:9, color:"#f97316", letterSpacing:3, fontWeight:700, marginBottom:10 }}>NAŠI PARTNERI</div>
+                  <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:4, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
+                    {affiliates.map(aff => (
+                      aff.action === "bj"
+                        ? <button key={aff.id} onClick={e => { e.stopPropagation(); setShowBJ(true); setSelectedMenuItem(null); }}
+                            style={{ minWidth:180, height:140, borderRadius:14, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", border:`1px solid ${aff.badgeColor}30`, cursor:"pointer", background:"none", padding:0 }}>
+                            <img src={aff.img} alt={aff.name} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
+                            <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(10,22,40,0.95) 0%, rgba(10,22,40,0.3) 100%)" }} />
+                            <div style={{ position:"absolute", top:8, left:8, padding:"2px 8px", borderRadius:5, background:`${aff.badgeColor}20`, fontSize:8, fontWeight:700, color:aff.badgeColor, letterSpacing:1.2 }}>{aff.badge}</div>
+                            <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 12px", textAlign:"left" }}>
+                              <div style={{ fontFamily:F, fontSize:17, fontWeight:400, color:"#fff", marginBottom:2 }}>{aff.name}</div>
+                              <div style={{ fontSize:9, color:"rgba(255,255,255,0.5)", marginBottom:6 }}>{t(aff.desc)}</div>
+                              <div style={{ display:"inline-flex", alignItems:"center", gap:3, padding:"3px 8px", borderRadius:5, background:`${aff.badgeColor}18`, border:`1px solid ${aff.badgeColor}30`, fontSize:9, color:aff.badgeColor, fontWeight:700 }}>{t(aff.cta)} →</div>
+                            </div>
+                          </button>
+                        : <a key={aff.id} href={(aff.link || "#").replace("/?kiosk=rab", `/?kiosk=rab&lang=${lang}`)}
+                            style={{ minWidth:180, height:140, borderRadius:14, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", textDecoration:"none", color:"#fff", border:`1px solid ${aff.badgeColor}30`, display:"block" }}>
+                            <img src={aff.img} alt={aff.name} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
+                            <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.95) 0%, rgba(5,13,26,0.3) 100%)" }} />
+                            <div style={{ position:"absolute", top:8, left:8, padding:"2px 8px", borderRadius:5, background:`${aff.badgeColor}20`, fontSize:8, fontWeight:700, color:aff.badgeColor, letterSpacing:1.2 }}>{aff.badge}</div>
+                            <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 12px" }}>
+                              <div style={{ fontFamily:F, fontSize:17, fontWeight:400, marginBottom:2 }}>{aff.name}</div>
+                              <div style={{ fontSize:9, color:"rgba(255,255,255,0.5)", marginBottom:6 }}>{t(aff.desc)}</div>
+                              <div style={{ display:"inline-flex", alignItems:"center", gap:3, padding:"3px 8px", borderRadius:5, background:`${aff.badgeColor}18`, border:`1px solid ${aff.badgeColor}30`, fontSize:9, color:aff.badgeColor, fontWeight:700 }}>{t(aff.cta)} →</div>
+                            </div>
+                          </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ② GYG */}
+              {gygDeals.length > 0 && (
+                <div style={{ marginBottom:20 }}>
+                  <div style={{ fontSize:9, color:"#22c55e", letterSpacing:3, fontWeight:700, marginBottom:10 }}>GETYOURGUIDE</div>
+                  <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:4, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
+                    {gygDeals.map((o, i) => (
+                      <a key={i} href={o.link} target="_blank" rel="noopener noreferrer"
+                        style={{ minWidth:180, height:140, borderRadius:14, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", textDecoration:"none", color:"#fff", border:"1px solid rgba(34,197,94,0.15)", display:"block" }}>
+                        <img src={o.img} alt={t(o.title)} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
+                        <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.93) 0%, rgba(5,13,26,0.2) 65%)" }} />
+                        <div style={{ position:"absolute", top:8, left:8, padding:"2px 7px", borderRadius:5, background:"rgba(34,197,94,0.18)", fontSize:8, fontWeight:700, color:"#22c55e", letterSpacing:1 }}>GYG</div>
+                        <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 10px" }}>
+                          <div style={{ fontSize:12, fontWeight:600, lineHeight:1.3, marginBottom:3 }}>{t(o.title)}</div>
+                          <div style={{ fontSize:13, fontWeight:700, color:"#22c55e" }}>{o.price}</div>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ③ Viator */}
+              <div style={{ marginBottom:20 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
+                  <div style={{ fontSize:9, color:"#0ea5e9", letterSpacing:3, fontWeight:700 }}>VIATOR</div>
+                  {viatorLoading && <div style={{ width:12, height:12, borderRadius:"50%", border:"2px solid rgba(14,165,233,0.3)", borderTopColor:"#0ea5e9", animation:"spin 0.8s linear infinite" }} />}
+                </div>
+                <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:4, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
+                  {viatorDeals.length > 0
+                    ? viatorDeals.slice(0,4).map((p,i) => (
+                        <a key={p.productCode || i} href={p.productUrl || "#"} target="_blank" rel="noopener noreferrer"
+                          style={{ minWidth:170, height:140, borderRadius:14, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", textDecoration:"none", color:"#fff", border:"1px solid rgba(14,165,233,0.15)", display:"block" }}>
+                          <img src={p.images?.[0]?.variants?.find(v => v.width >= 300)?.url || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=60"} alt={p.title} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
+                          <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.93) 0%, rgba(5,13,26,0.15) 65%)" }} />
+                          <div style={{ position:"absolute", top:8, left:8, padding:"2px 7px", borderRadius:5, background:"rgba(14,165,233,0.2)", fontSize:8, fontWeight:700, color:"#38bdf8", letterSpacing:1 }}>VIATOR</div>
+                          <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 10px" }}>
+                            <div style={{ fontSize:12, fontWeight:600, lineHeight:1.3, marginBottom:3, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{p.title}</div>
+                            <div style={{ fontSize:12, fontWeight:700, color:"#22c55e" }}>{p.pricing?.summary?.fromPrice ? `od ${p.pricing.summary.fromPrice}€` : ""}</div>
+                          </div>
+                        </a>
+                      ))
+                    : Array.from({length:3}).map((_,i) => (
+                        <div key={i} style={{ minWidth:170, height:140, borderRadius:14, flexShrink:0, scrollSnapAlign:"start", border:"1px solid rgba(14,165,233,0.08)", background:"rgba(14,165,233,0.03)", overflow:"hidden", position:"relative" }}>
+                          <div style={{ position:"absolute", inset:0, background:"linear-gradient(90deg, transparent 0%, rgba(14,165,233,0.05) 50%, transparent 100%)", backgroundSize:"200% 100%", animation:"shimmer 1.8s ease infinite" }} />
+                          <div style={{ padding:"10px", height:"100%", display:"flex", flexDirection:"column", justifyContent:"flex-end", gap:5 }}>
+                            <div style={{ height:7, borderRadius:4, background:"rgba(255,255,255,0.06)", width:"55%" }} />
+                            <div style={{ height:9, borderRadius:4, background:"rgba(255,255,255,0.08)", width:"80%" }} />
+                          </div>
+                          <div style={{ position:"absolute", top:8, left:8, padding:"2px 7px", borderRadius:5, background:"rgba(14,165,233,0.12)", fontSize:8, fontWeight:700, color:"#38bdf8", letterSpacing:1 }}>VIATOR</div>
+                        </div>
+                      ))
+                  }
+                </div>
+              </div>
+
+              {/* ④ AI Best Buy placeholder */}
+              <div style={{ marginBottom:8 }}>
+                <div style={{ fontSize:9, color:"#fbbf24", letterSpacing:3, fontWeight:700, marginBottom:10 }}>
+                  🤖 AI BEST BUY · {curDest?.name.toUpperCase() || rData.id.toUpperCase()}
+                </div>
+                {/* Inject our affiliates first in AI section too */}
+                <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:4, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
+                  {affiliates.slice(0,1).map(aff => (
+                    <div key={"ai-"+aff.id} style={{ minWidth:170, height:130, borderRadius:14, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", border:`1px solid ${aff.badgeColor}25` }}>
+                      <img src={aff.img} alt={aff.name} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", opacity:0.6 }} />
+                      <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.94) 0%, rgba(5,13,26,0.4) 100%)" }} />
+                      <div style={{ position:"absolute", top:7, left:8, padding:"2px 8px", borderRadius:5, background:"rgba(251,191,36,0.18)", fontSize:8, fontWeight:700, color:"#fbbf24", letterSpacing:1 }}>AI PREPORUKA</div>
+                      <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 10px" }}>
+                        <div style={{ fontFamily:F, fontSize:15, fontWeight:400, color:"#fff", marginBottom:1 }}>{aff.name}</div>
+                        <div style={{ fontSize:9, color:"rgba(255,255,255,0.5)" }}>{t(aff.desc)}</div>
+                      </div>
+                    </div>
+                  ))}
+                  {/* Coming soon card */}
+                  <div style={{ minWidth:170, height:130, borderRadius:14, flexShrink:0, scrollSnapAlign:"start", border:"1px dashed rgba(251,191,36,0.18)", background:"rgba(251,191,36,0.02)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:4, padding:12 }}>
+                    <div style={{ fontSize:20, opacity:0.35 }}>🤖</div>
+                    <div style={{ fontSize:9, color:"#64748b", fontWeight:600, textAlign:"center", lineHeight:1.4 }}>
+                      {({hr:"AI traži best buy…",de:"KI sucht Angebote…",en:"AI scanning deals…",it:"AI scansiona offerte…"})[dl]||"AI scanning…"}
+                    </div>
+                    <div style={{ fontSize:8, color:"#1e3a5f" }}>Uskoro · Coming soon</div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Sticky CTA — Open AI guide */}
+            <div style={{ padding:"14px 20px", paddingBottom:"calc(14px + env(safe-area-inset-bottom, 0px))", borderTop:"1px solid rgba(255,255,255,0.05)", flexShrink:0, background:"#0a1628" }}>
+              <a href={`/?kiosk=${activeDestId || rData.liveCity}&lang=${lang}`}
+                style={{ display:"block", padding:"14px", borderRadius:14, background:`linear-gradient(135deg,${rData.accent},${rData.accent}cc)`, color:"#050d1a", fontSize:14, fontWeight:700, textDecoration:"none", textAlign:"center", boxShadow:`0 4px 20px ${rData.accent}30`, minHeight:48, lineHeight:"20px" }}>
+                {({hr:"Otvori AI vodič za",de:"KI-Guide öffnen für",en:"Open AI guide for",it:"Apri guida AI per"})[dl]||"Open AI guide for"} {curDest?.name || rData.id} →
+              </a>
+            </div>
+
+          </div>
+        </div>
+        );
+      })()}
 
       {/* ═══ BLACK JACK MODAL ═══ */}
       {showBJ && (
