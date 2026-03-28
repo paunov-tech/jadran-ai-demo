@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { DealCards } from "./DealCards";
 import { loadGuest, updateGuest, getRoomCode } from "./guestStore";
 import GuestOnboarding from "./GuestOnboarding";
 import { loadDelta, saveDelta } from "./deltaContext";
@@ -1862,6 +1863,9 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           return items.length ? <AlertTicker items={items} /> : null;
         })()}
 
+
+        {/* ── AI-curated deals from n8n/Firestore ── */}
+        <DealCards region={getDestRegion(kioskCity)} lang={lang} C={C} />
 
         {/* ── AI Guide — primary CTA above grid ── */}
         <div onClick={() => setSubScreen("chat")} style={{

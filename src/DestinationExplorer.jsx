@@ -3,6 +3,7 @@
 // Mediterranean luxury editorial · mobile-first · Apple-grade
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useRef } from "react";
+import { DealCards } from "./DealCards";
 
 // ─── FONTS ───
 const F = "'Playfair Display','Cormorant Garamond',Georgia,serif";
@@ -451,86 +452,8 @@ export default function DestinationExplorer() {
             </div>
           </div>
 
-          {/* — GYG Best Experiences — */}
-          <div style={{ marginBottom:28 }}>
-            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
-              <div style={{ fontSize:10, color:"#22c55e", letterSpacing:4, fontWeight:700 }}>GETYOURGUIDE</div>
-              <div style={{ flex:1, height:1, background:"linear-gradient(90deg, rgba(34,197,94,0.2), transparent)" }} />
-            </div>
-            <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:8, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
-              {GYG_OFFERS.map((o, i) => (
-                <a key={i} href={o.link} target="_blank" rel="noopener noreferrer"
-                  style={{ minWidth:170, height:150, borderRadius:14, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", textDecoration:"none", color:"#fff", border:"1px solid rgba(34,197,94,0.12)", animation:`fadeUp 0.4s ease ${i*0.05}s both` }}>
-                  <img src={o.img} alt={t(o.title)} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
-                  <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.92) 0%, rgba(5,13,26,0.15) 65%)" }} />
-                  <div style={{ position:"absolute", top:8, left:8, padding:"2px 7px", borderRadius:5, background:"rgba(34,197,94,0.18)", fontSize:8, fontWeight:700, color:"#22c55e", letterSpacing:1 }}>{o.tag}</div>
-                  <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 10px" }}>
-                    <div style={{ fontSize:12, fontWeight:600, lineHeight:1.3, marginBottom:3 }}>{t(o.title)}</div>
-                    <div style={{ fontSize:13, fontWeight:700, color:"#22c55e" }}>{o.price}</div>
-                  </div>
-                </a>
-              ))}
-            </div>
-          </div>
-
-          {/* — Viator Best Deals — */}
-          <div style={{ marginBottom:16 }}>
-            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
-              <div style={{ fontSize:10, color:"#0ea5e9", letterSpacing:4, fontWeight:700 }}>VIATOR DEALS</div>
-              {viatorLoading && <div style={{ width:14, height:14, borderRadius:"50%", border:"2px solid rgba(14,165,233,0.3)", borderTopColor:"#0ea5e9", animation:"spin 0.8s linear infinite" }} />}
-              <div style={{ flex:1, height:1, background:"linear-gradient(90deg, rgba(14,165,233,0.2), transparent)" }} />
-              {activeDest && <div style={{ fontSize:9, color:"#38bdf8", fontWeight:600, letterSpacing:1 }}>{activeDest.name.toUpperCase()}</div>}
-            </div>
-            <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:8, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
-              {/* Our affiliate injected in AI section — appears first */}
-              <a href="/?kiosk=rab&affiliate=blackjack&tk=sial2026&lang=de" target="_blank" rel="noopener noreferrer"
-                style={{ minWidth:170, height:150, borderRadius:14, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", textDecoration:"none", color:"#fff", border:"1px solid rgba(249,115,22,0.2)" }}>
-                <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&q=75" alt="Black Jack" loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
-                <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(10,22,40,0.94) 0%, rgba(10,22,40,0.3) 100%)" }} />
-                <div style={{ position:"absolute", top:8, left:8, padding:"2px 7px", borderRadius:5, background:"rgba(249,115,22,0.18)", fontSize:8, fontWeight:700, color:"#f97316", letterSpacing:1 }}>AI PREPORUKA</div>
-                <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 10px" }}>
-                  <div style={{ fontFamily:F, fontSize:14, fontWeight:400, marginBottom:2 }}>Black Jack · Rab</div>
-                  <div style={{ fontSize:10, fontWeight:600, color:"#f97316" }}>Gurman House</div>
-                </div>
-              </a>
-              {/* Viator API results */}
-              {viatorDeals.length > 0 ? viatorDeals.slice(0,6).map((p, i) => (
-                <a key={p.productCode || i} href={p.productUrl || "#"} target="_blank" rel="noopener noreferrer"
-                  style={{ minWidth:170, height:150, borderRadius:14, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", textDecoration:"none", color:"#fff", border:"1px solid rgba(14,165,233,0.15)", animation:`fadeUp 0.4s ease ${i*0.05}s both` }}>
-                  <img src={p.images?.[0]?.variants?.find(v => v.width >= 300)?.url || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=60"} alt={p.title} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
-                  <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.93) 0%, rgba(5,13,26,0.15) 65%)" }} />
-                  <div style={{ position:"absolute", top:8, left:8, padding:"2px 7px", borderRadius:5, background:"rgba(14,165,233,0.2)", fontSize:8, fontWeight:700, color:"#38bdf8", letterSpacing:1 }}>VIATOR</div>
-                  <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 10px" }}>
-                    <div style={{ fontSize:12, fontWeight:600, lineHeight:1.3, marginBottom:3, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{p.title}</div>
-                    <div style={{ fontSize:13, fontWeight:700, color:"#22c55e" }}>
-                      {p.pricing?.summary?.fromPrice ? `od ${p.pricing.summary.fromPrice}€` : ""}
-                    </div>
-                  </div>
-                </a>
-              )) : (
-                /* Placeholder shimmer cards while no API key or loading */
-                Array.from({length:4}).map((_,i) => (
-                  <div key={i} style={{ minWidth:170, height:150, borderRadius:14, flexShrink:0, scrollSnapAlign:"start", border:"1px solid rgba(14,165,233,0.08)", background:"rgba(14,165,233,0.03)", overflow:"hidden", position:"relative", animation:`fadeUp 0.4s ease ${i*0.05}s both` }}>
-                    <div style={{ position:"absolute", inset:0, background:"linear-gradient(90deg, transparent 0%, rgba(14,165,233,0.05) 50%, transparent 100%)", backgroundSize:"200% 100%", animation:"shimmer 1.8s ease infinite" }} />
-                    <div style={{ padding:"12px", height:"100%", display:"flex", flexDirection:"column", justifyContent:"flex-end", gap:6 }}>
-                      <div style={{ height:8, borderRadius:4, background:"rgba(255,255,255,0.06)", width:"60%" }} />
-                      <div style={{ height:10, borderRadius:4, background:"rgba(255,255,255,0.08)", width:"85%" }} />
-                      <div style={{ height:8, borderRadius:4, background:"rgba(34,197,94,0.15)", width:"35%" }} />
-                    </div>
-                    <div style={{ position:"absolute", top:8, left:8, padding:"2px 7px", borderRadius:5, background:"rgba(14,165,233,0.12)", fontSize:8, fontWeight:700, color:"#38bdf8", letterSpacing:1 }}>VIATOR</div>
-                  </div>
-                ))
-              )}
-              {/* AI Best Buy placeholder — will be filled by AI-found deals */}
-              <div style={{ minWidth:170, height:150, borderRadius:14, flexShrink:0, scrollSnapAlign:"start", border:"1px dashed rgba(251,191,36,0.2)", background:"rgba(251,191,36,0.02)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:6, padding:14 }}>
-                <div style={{ fontSize:18, opacity:0.4 }}>🤖</div>
-                <div style={{ fontSize:10, color:"#64748b", fontWeight:600, textAlign:"center", lineHeight:1.4 }}>
-                  {({hr:"AI pronalazi best buy…",de:"KI sucht beste Angebote…",en:"AI finding best deals…",it:"AI cerca le offerte migliori…"})[dl]||"AI finding deals…"}
-                </div>
-                <div style={{ fontSize:8, color:"#334155", textAlign:"center" }}>Uskoro · Coming soon</div>
-              </div>
-            </div>
-          </div>
+          {/* — AI Deals from n8n/Firestore — */}
+          <DealCards region="all" lang={lang} />
 
         </div>
       </section>
