@@ -18,7 +18,7 @@ import {
 import {
   FONT_LINK, dm, hf, makeTheme, GLOBAL_CSS,
   ThemeProvider,
-  Badge, Btn, Card, SectionLabel, BackBtn,
+  Badge, Btn, Card, SectionLabel, BackBtn, TabBar,
   IC, Icon, CITY_ICON_MAP, CityIcon,
 } from "./ui";
 
@@ -1016,7 +1016,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         <span style={{ fontSize: 12, color: "#cbd5e1", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.title}</span>
         {critical.length > 1 && <span style={{ fontSize: 9, color, flexShrink: 0, fontWeight: 700 }}>+{critical.length - 1}</span>}
         <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${color}18`, color, fontWeight: 700, flexShrink: 0 }}>{a.severity === "critical" ? "LIVE" : "⚠️"}</span>
-        <button onClick={() => setDismissedAlerts(s => new Set([...s, a.title]))} style={{ background: "none", border: "none", color: "#475569", fontSize: 16, cursor: "pointer", padding: "8px", flexShrink: 0, lineHeight: 1, minWidth: 32 }}>×</button>
+        <button onClick={() => setDismissedAlerts(s => new Set([...s, a.title]))} style={{ background: "none", border: "none", color: "#475569", fontSize: 18, cursor: "pointer", padding: "8px", flexShrink: 0, lineHeight: 1, minWidth: 44, minHeight: 44, display: "grid", placeItems: "center" }}>×</button>
       </div>
     );
   };
@@ -1095,8 +1095,8 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
   /* ─── PAYWALL ─── */
   const Paywall = () => (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.88)", zIndex: 300, display: "grid", placeItems: "center", padding: 24 }} onClick={() => { setShowPaywall(false); setShowRecovery(false); setRecoveryStatus(null); setRecoveryEmail(""); }}>
-      <div onClick={e => e.stopPropagation()} className="overlay-enter glass" style={{ background: "rgba(12,28,50,0.92)", borderRadius: 28, maxWidth: 440, width: "100%", padding: "40px 32px", border: `1px solid rgba(251,191,36,0.15)`, textAlign: "center" }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.88)", zIndex: 300, display: "grid", placeItems: "center", padding: "24px 16px", paddingTop: "calc(24px + env(safe-area-inset-top, 0px))", paddingBottom: "calc(24px + env(safe-area-inset-bottom, 0px))" }} onClick={() => { setShowPaywall(false); setShowRecovery(false); setRecoveryStatus(null); setRecoveryEmail(""); }}>
+      <div onClick={e => e.stopPropagation()} className="overlay-enter glass" style={{ background: "rgba(12,28,50,0.92)", borderRadius: 28, maxWidth: 440, width: "100%", padding: "40px 28px", border: `1px solid rgba(251,191,36,0.15)`, textAlign: "center", maxHeight: "calc(100dvh - 80px)", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         <div style={{ fontSize: 48, marginBottom: 12 }}>💎</div>
         <div style={{ fontSize: 26, fontWeight: 400, marginBottom: 6 }}>{t("premiumTitle",lang)}</div>
         <div style={{ ...dm, color: C.mut, fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>
@@ -2146,9 +2146,9 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
   const KioskChat = () => {
     const prompts = [t("chatPrompt1",lang), t("chatPrompt2",lang), t("chatPrompt3",lang), t("chatPrompt4",lang)];
     return (
-      <div style={{ display: "flex", flexDirection: "column", height: "calc(100dvh - 240px)" }}>
+      <div style={{ display: "flex", flexDirection: "column", height: "calc(100dvh - 200px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
         <BackBtn onClick={() => setSubScreen("home")} />
-        <div style={{ flex: 1, overflowY: "auto", padding: "8px 0", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
+        <div className="scroll-smooth" style={{ flex: 1, padding: "8px 0" }}>
           {chatMsgs.length === 0 && (
             <div style={{ textAlign: "center", padding: "40px 20px" }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>🌊</div>
@@ -2156,7 +2156,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
               <div style={{ ...dm, color: C.mut, fontSize: 14, marginBottom: 20 }}>{t("askDalmatia",lang)}</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
                 {prompts.map((p, i) => (
-                  <button key={i} onClick={() => setChatInput(p)} style={{ ...dm, padding: "10px 16px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, borderRadius: 14, color: C.text, fontSize: 14, cursor: "pointer" }}>{p}</button>
+                  <button key={i} onClick={() => setChatInput(p)} style={{ ...dm, padding: "11px 16px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, borderRadius: 14, color: C.text, fontSize: 14, cursor: "pointer", minHeight: 44, WebkitTapHighlightColor: "transparent" }}>{p}</button>
                 ))}
               </div>
             </div>
@@ -2167,13 +2167,17 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
               {m.text}
             </div>
           ))}
-          {chatLoading && <div style={{ ...dm, maxWidth: "78%", padding: "14px 18px", borderRadius: "18px 18px 18px 4px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, opacity: 0.5 }}>● ● ●</div>}
+          {chatLoading && <div style={{ ...dm, maxWidth: "78%", padding: "14px 18px", borderRadius: "18px 18px 18px 4px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}` }}>
+            <div style={{ display: "flex", gap: 4 }}>
+              {[0,1,2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: `pulse 1.2s ease ${i * 0.2}s infinite` }} />)}
+            </div>
+          </div>}
           <div ref={chatEnd} />
         </div>
-        <div style={{ display: "flex", gap: 10, padding: "12px 0", borderTop: `1px solid ${C.bord}` }}>
+        <div style={{ display: "flex", gap: 10, padding: "12px 0 4px", borderTop: `1px solid ${C.bord}`, background: `${C.bg}ee`, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", marginTop: "auto" }}>
           <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && doChat()}
-            placeholder={t("askPlaceholder",lang)} style={{ ...dm, flex: 1, padding: "14px 18px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, borderRadius: 18, color: C.text, fontSize: 16, outline: "none" }} />
-          <button onClick={doChat} style={{ padding: "14px 24px", background: `linear-gradient(135deg,${C.accent},#0284c7)`, border: "none", borderRadius: 18, color: "#fff", fontSize: 18, cursor: "pointer", fontWeight: 600 }}>→</button>
+            placeholder={t("askPlaceholder",lang)} style={{ ...dm, flex: 1, padding: "14px 18px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, borderRadius: 22, color: C.text, fontSize: 16, outline: "none", minHeight: 48 }} />
+          <button onClick={doChat} style={{ padding: "14px 22px", background: `linear-gradient(135deg,${C.accent},#0284c7)`, border: "none", borderRadius: 22, color: "#fff", fontSize: 18, cursor: "pointer", fontWeight: 600, minWidth: 52, minHeight: 48, display: "grid", placeItems: "center", boxShadow: "0 4px 16px rgba(14,165,233,0.25)" }}>→</button>
         </div>
       </div>
     );
@@ -2183,45 +2187,59 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
   const AFFILIATE_DATA = {
     blackjack: {
       name: "Black Jack", emoji: "🃏", color: "#0ea5e9",
-      address: { de: "Palit 315, Insel Rab, Kroatien", en: "Palit 315, Rab Island, Croatia", hr: "Palit 315, otok Rab, Hrvatska" },
-      tagline: { de: "Ihr Ferienparadies auf der Insel Rab", en: "Your island paradise on Rab", hr: "Vaš otočki raj na otoku Rabu" },
+      address: { de: "Palit 315, Insel Rab, Kroatien", en: "Palit 315, Rab Island, Croatia", hr: "Palit 315, otok Rab, Hrvatska", it: "Palit 315, Isola di Rab, Croazia" },
+      tagline: { de: "Gurman House — Ihr Genussparadies auf der Insel Rab", en: "Gurman House — Your gourmet paradise on Rab Island", hr: "Gurman House — Vaš gurmanski raj na otoku Rabu", it: "Gurman House — Il vostro paradiso gourmet sull'isola di Rab" },
       desc: {
-        de: "Black Jack liegt im ruhigen Dorf Palit, nur 2 km vom historischen Altstadtkern Rab — umgeben von Pinienwäldern und wenige Minuten von traumhaften Sandstränden entfernt. Das perfekte Domizil für Ihren Adriaurlaub.",
-        en: "Black Jack is nestled in peaceful Palit village, 2 km from Rab's historic old town — surrounded by pine forests with pristine Adriatic beaches just minutes away. The perfect base for your island escape.",
-        hr: "Black Jack smješten je u mirnom selu Palit, 2 km od stare jezgre Raba — okružen borovim šumama, s kristalno čistim plažama na dohvat ruke. Savršena baza za vaš odmor."
+        de: "Das Gurman House Black Jack liegt an der Hauptstraße von Rab nach Palit, direkt am Meer. Bekannt für exzellente Argentino-Steaks, Ćevapi mit Räucherkäse und die beste Pizza auf der Insel. Gemütliche Terrasse mit Meerblick — ein Geheimtipp abseits der Touristenpfade. Apartment-Zimmer mit Klimaanlage, voll ausgestatteter Küche und kostenlosem Parkplatz direkt am Haus.",
+        en: "Gurman House Black Jack sits on the main road from Rab to Palit, right by the sea. Famous for excellent Argentino steaks, ćevapi stuffed with smoked cheese, and the best pizza on the island. Cozy terrace with sea views — a hidden gem off the beaten path. Apartment rooms with air conditioning, fully equipped kitchen, and free parking on site.",
+        hr: "Gurman House Black Jack nalazi se na glavnoj cesti od Raba prema Palitu, tik uz more. Poznat po izvrsnim argentinskim steakovima, ćevapima s dimljenim sirom i najboljoj pizzi na otoku. Ugodna terasa s pogledom na more — skriveni dragulj izvan turističkih ruta. Apartmani s klimatizacijom, opremljenom kuhinjom i besplatnim parkingom.",
+        it: "Gurman House Black Jack si trova sulla strada principale da Rab a Palit, proprio sul mare. Famoso per gli eccellenti steak argentini, ćevapi con formaggio affumicato e la migliore pizza dell'isola. Terrazza accogliente con vista mare — una gemma nascosta fuori dai sentieri turistici."
       },
       features: {
-        de: ["🌊 2 km zum Altstadtkern Rab","🏖️ Nächster Strand 800 m","🌲 Ruhige Pinienwald-Lage","🅿️ Kostenloser Parkplatz","❄️ Klimaanlage","📶 Gratis WLAN","🍳 Voll ausgestattete Küche","🌅 Terrasse mit Meerblick"],
-        en: ["🌊 2 km to Rab old town","🏖️ Nearest beach 800 m","🌲 Peaceful pine setting","🅿️ Free parking","❄️ Air conditioning","📶 Free WiFi","🍳 Fully equipped kitchen","🌅 Sea-view terrace"],
-        hr: ["🌊 2 km do staroga grada","🏖️ Plaža 800 m","🌲 Borova šuma, mirno","🅿️ Parkiranje gratis","❄️ Klimatizacija","📶 WiFi gratis","🍳 Opremljena kuhinja","🌅 Terasa, pogled na more"]
+        de: ["🥩 Argentino Steaks & Grill","🧀 Ćevapi mit Räucherkäse","🍕 Beste Pizza auf Rab","🌊 Terrasse direkt am Meer","🅿️ Kostenloser Parkplatz","❄️ Klimaanlage","📶 Gratis WLAN","🍳 Voll ausgestattete Küche"],
+        en: ["🥩 Argentino steaks & grill","🧀 Ćevapi with smoked cheese","🍕 Best pizza on Rab","🌊 Seaside terrace","🅿️ Free parking","❄️ Air conditioning","📶 Free WiFi","🍳 Fully equipped kitchen"],
+        hr: ["🥩 Argentinski steakovi & roštilj","🧀 Ćevapi s dimljenim sirom","🍕 Najbolja pizza na Rabu","🌊 Terasa uz more","🅿️ Parkiranje gratis","❄️ Klimatizacija","📶 WiFi gratis","🍳 Opremljena kuhinja"],
+        it: ["🥩 Steak argentini & griglia","🧀 Ćevapi con formaggio affumicato","🍕 La migliore pizza di Rab","🌊 Terrazza sul mare","🅿️ Parcheggio gratuito","❄️ Aria condizionata","📶 WiFi gratuito","🍳 Cucina attrezzata"]
       },
       poi: [
-        { icon:"🏛️", de:"Rab Altstadt & 4 Türme",  en:"Rab Old Town & Towers",   hr:"Stari grad Rab & kule",     dist:"2 km" },
-        { icon:"🏖️", de:"Strand San Marino",        en:"San Marino Beach",         hr:"Plaža San Marino",          dist:"2.5 km" },
-        { icon:"🏖️", de:"Strand Pudarica",          en:"Pudarica Beach",           hr:"Plaža Pudarica",             dist:"3 km" },
-        { icon:"🦁", de:"Paradiesstrand Lopar",      en:"Lopar Paradise Beach",     hr:"Rajska plaža Lopar",         dist:"15 km" },
-        { icon:"⛵", de:"Jachthafen Rab",            en:"Rab Marina",               hr:"Marina Rab",                 dist:"2.2 km" },
-        { icon:"🍕", de:"Restaurants in Palit",      en:"Palit Restaurants",        hr:"Restorani Palit",            dist:"500 m" },
-        { icon:"🛒", de:"Tommy Supermarkt",          en:"Tommy Supermarket",        hr:"Tommy Supermarket",          dist:"1.5 km" },
-        { icon:"🏥", de:"Gesundheitszentrum Rab",    en:"Rab Health Centre",        hr:"Dom zdravlja Rab",           dist:"2 km" },
+        { icon:"🏛️", de:"Altstadt Rab & 4 Glockentürme",  en:"Rab Old Town & 4 Bell Towers",   hr:"Stari grad Rab & 4 zvonika",     it:"Centro storico di Rab & 4 campanili",   dist:"2 km" },
+        { icon:"⚔️", de:"Rabska Fjera (25-27. Juli)",      en:"Rabska Fjera (Jul 25-27)",        hr:"Rabska Fjera (25-27. srpnja)",     it:"Rabska Fjera (25-27 luglio)",           dist:"2 km" },
+        { icon:"🏖️", de:"Strand Sv. Ivan",                 en:"Sveti Ivan Beach",                hr:"Plaža Sv. Ivan",                    it:"Spiaggia Sv. Ivan",                     dist:"1.3 km" },
+        { icon:"🏖️", de:"Paradiesstrand Lopar",            en:"Paradise Beach Lopar",            hr:"Rajska plaža Lopar",                it:"Spiaggia Paradiso Lopar",               dist:"15 km" },
+        { icon:"🌲", de:"Park Komrčar (8.3 ha)",           en:"Komrčar Park (8.3 ha)",           hr:"Park Komrčar (8.3 ha)",             it:"Parco Komrčar (8.3 ha)",                dist:"1.5 km" },
+        { icon:"⛵", de:"Marina Rab (200 Plätze)",         en:"Marina Rab (200 berths)",         hr:"Marina Rab (200 vezova)",           it:"Marina Rab (200 posti)",                dist:"2.2 km" },
+        { icon:"🏝️", de:"Goli Otok (Kroat. Alcatraz)",     en:"Goli Otok (Croatian Alcatraz)",   hr:"Goli Otok",                         it:"Goli Otok (Alcatraz croata)",           dist:"5 km" },
+        { icon:"🍰", de:"Haus der Rab-Torte",              en:"House of Rab Cake",               hr:"Kuća rapske torte",                 it:"Casa della torta di Rab",               dist:"2 km" },
+        { icon:"🛒", de:"Tommy Supermarkt",                en:"Tommy Supermarket",               hr:"Tommy Supermarket",                 it:"Supermercato Tommy",                    dist:"1.5 km" },
+        { icon:"🏥", de:"Gesundheitszentrum Rab",          en:"Rab Health Centre",               hr:"Dom zdravlja Rab",                  it:"Centro sanitario Rab",                  dist:"2 km" },
       ],
+      // Rabska Fjera highlight
+      highlight: {
+        de: "🎪 Rabska Fjera — Das größte mittelalterliche Festival Kroatiens (seit 1364). Jedes Jahr 25.-27. Juli: Ritterspiele, Kostümumzüge, 700+ Teilnehmer, Armbrust-Turniere, mittelalterliche Handwerkskunst und Feuerwerk im Hafen von Rab. Ein unvergessliches Erlebnis!",
+        en: "🎪 Rabska Fjera — Croatia's largest medieval festival (since 1364). Every year Jul 25-27: knight tournaments, costume parades, 700+ participants, crossbow competitions, medieval crafts and fireworks in Rab harbour. An unforgettable experience!",
+        hr: "🎪 Rabska Fjera — Najveći srednjovjekovni festival u Hrvatskoj (od 1364). Svake godine 25.-27. srpnja: viteški turniri, povorke u kostimima, 700+ sudionika, natjecanja samostreličara, srednjovjekovni obrti i vatromet u luci Rab. Nezaboravno!",
+        it: "🎪 Rabska Fjera — Il più grande festival medievale della Croazia (dal 1364). Ogni anno 25-27 luglio: tornei cavallereschi, sfilate in costume, 700+ partecipanti, gare di balestra e fuochi d'artificio nel porto di Rab."
+      },
       excursions: [
-        { emoji:"🚢", de:"Bootstouren",           en:"Boat Tours",           hr:"Ture brodom",
+        { emoji:"🚢", de:"Bootstouren ab Rab",        en:"Boat Tours from Rab",     hr:"Ture brodom iz Raba",       it:"Tour in barca da Rab",
           gyg:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=boat+tour",
           viator:"https://www.viator.com/searchResults/all?text=Rab+boat+tour&pid=P00292197" },
-        { emoji:"🤿", de:"Schnorcheln & Tauchen", en:"Diving & Snorkeling",  hr:"Ronjenje i snorkeling",
+        { emoji:"🤿", de:"Schnorcheln & Tauchen",     en:"Diving & Snorkeling",     hr:"Ronjenje i snorkeling",     it:"Immersioni e snorkeling",
           gyg:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=diving",
           viator:"https://www.viator.com/searchResults/all?text=Rab+diving&pid=P00292197" },
-        { emoji:"🛶", de:"Kajak & SUP",           en:"Kayak & SUP",          hr:"Kajak & SUP",
+        { emoji:"🛶", de:"Kajak & SUP",               en:"Kayak & SUP",             hr:"Kajak & SUP",               it:"Kayak & SUP",
           gyg:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=kayak",
           viator:"https://www.viator.com/searchResults/all?text=Rab+kayak&pid=P00292197" },
-        { emoji:"🏝️", de:"Insel-Hopping",         en:"Island Hopping",       hr:"Otočki obilazak",
+        { emoji:"🏝️", de:"Insel-Hopping (Goli Otok)", en:"Island Hopping (Goli Otok)", hr:"Otočki obilazak (Goli Otok)", it:"Island Hopping (Goli Otok)",
           gyg:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=island+hopping",
           viator:"https://www.viator.com/searchResults/all?text=Rab+island+hopping&pid=P00292197" },
+        { emoji:"⚔️", de:"Rabska Fjera Stadtführung",  en:"Rabska Fjera Town Walk",  hr:"Rabska Fjera šetnja gradom", it:"Passeggiata Rabska Fjera",
+          gyg:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=rab+walking+tour",
+          viator:"https://www.viator.com/searchResults/all?text=Rab+walking+tour&pid=P00292197" },
       ],
       booking: "https://www.booking.com/searchresults.html?ss=Rab%2C+Croatia&aid=101704203",
-      heroImg: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=900&q=80",
-      propImg: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=600&q=80",
+      heroImg: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=900&q=80",
+      propImg: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80",
     }
   };
 
@@ -2258,11 +2276,11 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
               { emoji: "🍽️", k: "food", label: {hr:"Hrana",de:"Essen",en:"Food",it:"Cibo"}[lang]||"Hrana" },
             ].map((item, i) => (
               <div key={item.k} onClick={() => { setKioskWelcome(false); setSubScreen(item.k); }}
-                style={{ width: 68, cursor: "pointer", textAlign: "center", animation: `fadeUp 0.4s ease ${i * 0.1}s both` }}>
-                <div style={{ width: 56, height: 56, borderRadius: 16, background: C.card, border: `1px solid ${C.bord}`, display: "grid", placeItems: "center", fontSize: 24, margin: "0 auto 4px", transition: "border-color 0.2s" }}>
+                style={{ width: 76, cursor: "pointer", textAlign: "center", animation: `fadeUp 0.4s ease ${i * 0.1}s both`, WebkitTapHighlightColor: "transparent" }}>
+                <div style={{ width: 60, height: 60, borderRadius: 18, background: C.card, border: `1px solid ${C.bord}`, display: "grid", placeItems: "center", fontSize: 26, margin: "0 auto 6px", transition: "all 0.2s" }}>
                   {item.emoji}
                 </div>
-                <div style={{ ...dm, fontSize: 10, color: C.mut }}>{item.label}</div>
+                <div style={{ ...dm, fontSize: 11, color: C.mut, fontWeight: 500 }}>{item.label}</div>
               </div>
             ))}
           </div>
@@ -2303,6 +2321,10 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           gyg: "https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=island+hopping",
           viator: "https://www.viator.com/searchResults/all?text=Rab+island+hopping&pid=P00292197",
           img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=75", clr: "#a78bfa" },
+        { emoji: "⚔️", en: "Rabska Fjera & Old Town", de: "Rabska Fjera & Altstadt", hr: "Rabska Fjera & Stari grad",
+          gyg: "https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=rab+walking+tour",
+          viator: "https://www.viator.com/searchResults/all?text=Rab+walking+tour&pid=P00292197",
+          img: "https://images.unsplash.com/photo-1555990538-1e09e0e62c7e?w=400&q=75", clr: "#fbbf24" },
         { emoji: "🏠", en: "Find Accommodation", de: "Unterkunft finden", hr: "Smještaj",
           booking: "https://www.booking.com/searchresults.html?ss=Rab%2C+Croatia&aid=101704203",
           img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=75", clr: "#22c55e" },
@@ -2444,6 +2466,17 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           <div style={{ borderRadius:16, overflow:"hidden", marginBottom:20, height:160 }}>
             <img src={aff.propImg} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} loading="lazy" />
           </div>
+
+          {/* Rabska Fjera highlight */}
+          {aff.highlight && (
+            <Card warm style={{ marginBottom:20, padding:"20px 18px", position:"relative", overflow:"hidden" }}>
+              <div style={{ position:"absolute", top:0, right:0, width:80, height:80, opacity:0.06, fontSize:72, lineHeight:1 }}>⚔️</div>
+              <div style={{ ...dm, fontSize:10, color:"#fbbf24", letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:8 }}>
+                {lang==="de"||lang==="at" ? "HIGHLIGHT" : lang==="en" ? "HIGHLIGHT" : lang==="it" ? "IN EVIDENZA" : "ISTAKNUTO"}
+              </div>
+              <div style={{ ...dm, fontSize:14, color:C.text, lineHeight:1.7 }}>{L(aff.highlight)}</div>
+            </Card>
+          )}
 
           {/* Nearby POI */}
           <div style={{ ...dm, fontSize:10, color:C.gold, letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:10 }}>
@@ -2896,13 +2929,27 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
         {/* Content */}
         {phase === "pre" && <div className="page-enter">{PreTrip()}</div>}
-        {phase === "kiosk" && <div key={subScreen}>{Kiosk()}</div>}
+        {phase === "kiosk" && <div key={subScreen} style={{ paddingBottom: subScreen !== "chat" ? 80 : 0 }}>{Kiosk()}</div>}
         {phase === "post" && <div className="page-enter">{PostStay()}</div>}
 
-        <div style={{ ...dm, textAlign: "center", padding: "20px 0 28px", fontSize: 10, color: "rgba(100,116,139,0.3)", letterSpacing: 2, textTransform: "uppercase" }}>
+        <div style={{ ...dm, textAlign: "center", padding: "20px 0 28px", paddingBottom: phase === "kiosk" && subScreen !== "chat" ? 100 : 28, fontSize: 10, color: "rgba(100,116,139,0.3)", letterSpacing: 2, textTransform: "uppercase" }}>
           JADRAN · SIAL Consulting d.o.o.
         </div>
       </div>
+
+      {/* ── KIOSK BOTTOM TAB BAR ── */}
+      {phase === "kiosk" && !kioskWelcome && subScreen !== "chat" && (
+        <TabBar
+          active={subScreen === "affiliate" ? "home" : (["home","activities","gems","excursions"].includes(subScreen) ? subScreen : "home")}
+          onChange={(k) => { setSubScreen(k); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+          items={[
+            { key: "home", icon: IC.home, label: ({hr:"Početna",de:"Start",en:"Home",it:"Home",si:"Domov",cz:"Domů",pl:"Start"})[lang] || "Home" },
+            { key: "activities", icon: IC.ticket, label: ({hr:"Aktivnosti",de:"Aktivitäten",en:"Activities",it:"Attività",si:"Aktivnosti",cz:"Aktivity",pl:"Aktywności"})[lang] || "Activities" },
+            { key: "gems", icon: IC.gem, label: ({hr:"Biseri",de:"Geheimtipps",en:"Gems",it:"Gemme",si:"Dragulji",cz:"Perly",pl:"Perły"})[lang] || "Gems" },
+            { key: "chat", icon: IC.bot, label: "AI Chat" },
+          ]}
+        />
+      )}
 
       {/* Overlays */}
       {showPaywall && <Paywall />}
@@ -2913,12 +2960,12 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         <div style={{ position: "fixed", inset: 0, zIndex: 250, display: "flex", flexDirection: "column", background: "#000" }}
           onClick={() => setSvModal(null)}>
           {/* Header bar */}
-          <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", paddingTop: "calc(12px + env(safe-area-inset-top, 0px))", background: "rgba(10,22,40,0.95)", borderBottom: "1px solid rgba(14,165,233,0.1)", flexShrink: 0 }}>
+          <div onClick={e => e.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", paddingTop: "calc(12px + env(safe-area-inset-top, 0px))", background: "rgba(10,22,40,0.95)", borderBottom: "1px solid rgba(14,165,233,0.1)", flexShrink: 0, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}>
             <div style={{ ...dm, fontSize: 14, fontWeight: 600, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "calc(100% - 120px)" }}>
               🌍 {svModal.name}
             </div>
             <button onClick={() => setSvModal(null)}
-              style={{ ...dm, background: "rgba(255,255,255,0.06)", border: `1px solid ${C.bord}`, borderRadius: 10, color: C.mut, fontSize: 13, padding: "5px 12px", cursor: "pointer" }}>
+              style={{ ...dm, background: "rgba(255,255,255,0.06)", border: `1px solid ${C.bord}`, borderRadius: 10, color: C.mut, fontSize: 13, padding: "8px 14px", cursor: "pointer", minHeight: 40 }}>
               ✕ {({hr:"Zatvori",de:"Schließen",en:"Close",it:"Chiudi"})[lang]||"Zatvori"}
             </button>
           </div>
@@ -2935,13 +2982,13 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           </div>
 
           {/* Bottom navigation bar */}
-          <div onClick={e => e.stopPropagation()} style={{ display: "flex", gap: 10, padding: "12px 16px", background: "rgba(10,22,40,0.95)", borderTop: "1px solid rgba(14,165,233,0.1)", flexShrink: 0 }}>
+          <div onClick={e => e.stopPropagation()} style={{ display: "flex", gap: 10, padding: "12px 16px", paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))", background: "rgba(10,22,40,0.95)", borderTop: "1px solid rgba(14,165,233,0.1)", flexShrink: 0, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}>
             <button onClick={() => { setSvModal(null); window.location.href = `https://www.google.com/maps/dir/?api=1&destination=${svModal.lat},${svModal.lng}&travelmode=walking`; }}
-              style={{ ...dm, flex: 1, padding: "13px", background: C.acDim, border: `1px solid rgba(14,165,233,0.15)`, borderRadius: 14, color: C.accent, fontSize: 14, cursor: "pointer", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+              style={{ ...dm, flex: 1, padding: "14px", background: C.acDim, border: `1px solid rgba(14,165,233,0.15)`, borderRadius: 14, color: C.accent, fontSize: 14, cursor: "pointer", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, minHeight: 48 }}>
               🚶 {({hr:"Navigiraj pješice",de:"Zu Fuß navigieren",en:"Walk there",it:"A piedi"})[lang]||"Navigiraj pješice"}
             </button>
             <button onClick={() => { setSvModal(null); window.location.href = `https://www.google.com/maps/dir/?api=1&destination=${svModal.lat},${svModal.lng}&travelmode=driving`; }}
-              style={{ ...dm, padding: "13px 18px", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.15)", borderRadius: 14, color: C.gold, fontSize: 18, cursor: "pointer", flexShrink: 0 }}>
+              style={{ ...dm, padding: "14px 20px", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.15)", borderRadius: 14, color: C.gold, fontSize: 20, cursor: "pointer", flexShrink: 0, minHeight: 48, display: "grid", placeItems: "center" }}>
               🚗
             </button>
           </div>
@@ -3039,13 +3086,13 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
                   ? <img src={IMGS[imgIdx % IMGS.length]} alt={act.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   : <div style={{ height: "100%", display: "grid", placeItems: "center", fontSize: 72 }}>🏖️</div>}
                 {IMGS.length > 1 && <>
-                  <button onClick={e => { e.stopPropagation(); setImgIdx(p => Math.max(0, p - 1)); }} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: "50%", width: 34, height: 34, fontSize: 18, cursor: "pointer", display: "grid", placeItems: "center" }}>‹</button>
-                  <button onClick={e => { e.stopPropagation(); setImgIdx(p => (p + 1) % IMGS.length); }} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: "50%", width: 34, height: 34, fontSize: 18, cursor: "pointer", display: "grid", placeItems: "center" }}>›</button>
+                  <button onClick={e => { e.stopPropagation(); setImgIdx(p => Math.max(0, p - 1)); }} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: "50%", width: 44, height: 44, fontSize: 20, cursor: "pointer", display: "grid", placeItems: "center", backdropFilter: "blur(8px)" }}>‹</button>
+                  <button onClick={e => { e.stopPropagation(); setImgIdx(p => (p + 1) % IMGS.length); }} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: "50%", width: 44, height: 44, fontSize: 20, cursor: "pointer", display: "grid", placeItems: "center", backdropFilter: "blur(8px)" }}>›</button>
                   <div style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 4 }}>
                     {IMGS.map((_, i) => <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: i === imgIdx % IMGS.length ? "#fff" : "rgba(255,255,255,0.4)" }} />)}
                   </div>
                 </>}
-                <button onClick={() => setSelectedViatorAct(null)} style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: "50%", width: 34, height: 34, cursor: "pointer", fontSize: 18, display: "grid", placeItems: "center" }}>✕</button>
+                <button onClick={() => setSelectedViatorAct(null)} style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: "50%", width: 44, height: 44, cursor: "pointer", fontSize: 20, display: "grid", placeItems: "center", backdropFilter: "blur(8px)" }}>✕</button>
               </div>
 
               <div style={{ padding: "20px 24px 28px" }}>
@@ -3069,9 +3116,9 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, padding: "14px 18px", borderRadius: 14, background: "rgba(255,255,255,0.03)", border: `1px solid ${C.bord}` }}>
                   <div style={{ ...dm, fontSize: 14 }}>Broj osoba</div>
                   <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                    <button onClick={() => setViatorPersons(p => Math.max(1, p - 1))} style={{ width: 32, height: 32, borderRadius: "50%", border: `1px solid ${C.bord}`, background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 18, cursor: "pointer", display: "grid", placeItems: "center" }}>−</button>
+                    <button onClick={() => setViatorPersons(p => Math.max(1, p - 1))} style={{ width: 44, height: 44, borderRadius: "50%", border: `1px solid ${C.bord}`, background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 20, cursor: "pointer", display: "grid", placeItems: "center" }}>−</button>
                     <span style={{ fontSize: 20, fontWeight: 600, minWidth: 24, textAlign: "center" }}>{viatorPersons}</span>
-                    <button onClick={() => setViatorPersons(p => Math.min(20, p + 1))} style={{ width: 32, height: 32, borderRadius: "50%", border: `1px solid ${C.bord}`, background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 18, cursor: "pointer", display: "grid", placeItems: "center" }}>+</button>
+                    <button onClick={() => setViatorPersons(p => Math.min(20, p + 1))} style={{ width: 44, height: 44, borderRadius: "50%", border: `1px solid ${C.bord}`, background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 20, cursor: "pointer", display: "grid", placeItems: "center" }}>+</button>
                   </div>
                 </div>
 
@@ -3083,7 +3130,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
                 </div>
 
                 <button onClick={() => startViatorBooking(act, viatorBookDate, viatorPersons)} disabled={payLoading || !viatorBookDate}
-                  style={{ width: "100%", padding: "16px", borderRadius: 16, border: "none", background: payLoading ? "rgba(255,255,255,0.1)" : "linear-gradient(135deg,#16a34a,#22c55e)", color: "#fff", fontSize: 16, fontWeight: 700, cursor: payLoading || !viatorBookDate ? "not-allowed" : "pointer", opacity: viatorBookDate ? 1 : 0.5, ...dm, transition: "all 0.2s" }}>
+                  style={{ width: "100%", padding: "16px", borderRadius: 16, border: "none", background: payLoading ? "rgba(255,255,255,0.1)" : "linear-gradient(135deg,#16a34a,#22c55e)", color: "#fff", fontSize: 16, fontWeight: 700, cursor: payLoading || !viatorBookDate ? "not-allowed" : "pointer", opacity: viatorBookDate ? 1 : 0.5, ...dm, transition: "all 0.2s", minHeight: 52 }}>
                   {payLoading ? "⏳ Preusmjeravam…" : `🎟 Rezerviraj — ${totalPrice}€`}
                 </button>
                 <Btn style={{ width: "100%", marginTop: 10 }} onClick={() => setSelectedViatorAct(null)}>{t("back",lang)}</Btn>

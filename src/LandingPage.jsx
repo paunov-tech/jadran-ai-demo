@@ -98,6 +98,10 @@ export default function LandingPage() {
   const [fromLPSugs, setFromLPSugs] = useState([]);
   const [toLPSugs, setToLPSugs] = useState([]);
   const fromTimerRef = useRef(null);
+  const fromInputRef = useRef(null);
+  const toInputRef = useRef(null);
+  const [fromRect, setFromRect] = useState(null);
+  const [toRect, setToRect] = useState(null);
   // Sprint 7B — date lifecycle hook
   const [arrivalDate, setArrivalDate] = useState("");
   const [departureDate, setDepartureDate] = useState("");
@@ -126,6 +130,13 @@ export default function LandingPage() {
   const [cityImgs, setCityImgs] = useState({});
   const [carouselIdx, setCarouselIdx] = useState(0);
   const [showPlanPicker, setShowPlanPicker] = useState(false);
+  // Detect GDPR banner presence — offset sticky bar so they don't overlap
+  const [gdprVisible, setGdprVisible] = useState(() => { try { return !localStorage.getItem("jadran_consent"); } catch { return false; } });
+  useEffect(() => {
+    const check = () => { try { setGdprVisible(!localStorage.getItem("jadran_consent")); } catch {} };
+    const id = setInterval(check, 1000); // re-check after user clicks accept/decline
+    return () => clearInterval(id);
+  }, []);
   useEffect(() => {
     if (!showPlanPicker) return;
     const h = e => { if (e.key === "Escape") setShowPlanPicker(false); };
@@ -349,13 +360,13 @@ export default function LandingPage() {
       </nav>
 
       {/* ═══ HERO ═══ */}
-      <section style={{ position: "relative", minHeight: "100dvh", display: "flex", alignItems: "center", overflow: "hidden" }}>
+      <section style={{ position: "relative", minHeight: "100dvh", display: "flex", alignItems: selectedMode ? "flex-start" : "center", overflow: "hidden", paddingBottom: 70 }}>
         <video autoPlay muted loop playsInline style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.25 }}
           poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3Crect fill='%230a0e17'/%3E%3C/svg%3E">
           <source src="https://videos.pexels.com/video-files/1093662/1093662-sd_640_360_30fps.mp4" type="video/mp4" />
         </video>
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,14,23,0.6) 0%, rgba(10,14,23,0.3) 40%, rgba(10,14,23,0.95) 100%)" }} />
-        <div style={{ position: "relative", maxWidth: 680, margin: "0 auto", padding: "100px 24px 60px", textAlign: "center", opacity: anim ? 1 : 0, transform: anim ? "translateY(0)" : "translateY(40px)", transition: "all 1s cubic-bezier(0.16, 1, 0.3, 1)" }}>
+        <div style={{ position: "relative", maxWidth: 680, margin: "0 auto", padding: selectedMode ? "100px 24px 100px" : "100px 24px 60px", textAlign: "center", opacity: anim ? 1 : 0, transform: anim ? "translateY(0)" : "translateY(40px)", transition: "all 1s cubic-bezier(0.16, 1, 0.3, 1)" }}>
           <div style={{ display: "inline-block", padding: "5px 14px", borderRadius: 20, background: "rgba(250,204,21,0.1)", border: "1px solid rgba(250,204,21,0.15)", color: "#facc15", fontSize: 11, fontWeight: 600, marginBottom: 20, letterSpacing: 1 }}>{"\u26A1"} {tx("badge")}</div>
           <h1 style={{ fontFamily: F, fontSize: "clamp(28px, 5.5vw, 52px)", fontWeight: 800, lineHeight: 1.15, marginBottom: 18 }}>
             <span style={{ color: "#f87171" }}>{tx("h1a")}<br/>{tx("h1b")}</span><br/>
@@ -428,52 +439,56 @@ export default function LandingPage() {
 
                 {/* Route inputs — shown after transport tile click */}
                 {(routeStep === "city" || routeStep === "map") && (
-                  <div style={{ marginTop: 14, padding: "18px 20px", borderRadius: 16, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)", animation: "fadeIn 0.3s both" }}>
+                  <div style={{ marginTop: 14, padding: "16px 14px", borderRadius: 16, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)", animation: "fadeIn 0.3s both" }}>
                     {/* FROM */}
                     <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>Odakle krećeš?</div>
                     <div style={{ position: "relative", marginBottom: 12 }}>
-                      <input value={depCity} onChange={e => { setDepCity(e.target.value); hereSuggest(e.target.value, setFromLPSugs, fromTimerRef); }}
-                        onBlur={() => setTimeout(() => setFromLPSugs([]), 200)}
+                      <input ref={fromInputRef} value={depCity}
+                        onChange={e => { setDepCity(e.target.value); hereSuggest(e.target.value, setFromLPSugs, fromTimerRef); if (fromInputRef.current) setFromRect(fromInputRef.current.getBoundingClientRect()); }}
+                        onFocus={() => { if (fromInputRef.current) setFromRect(fromInputRef.current.getBoundingClientRect()); }}
+                        onBlur={() => setTimeout(() => setFromLPSugs([]), 150)}
                         placeholder="Počni kucati grad…"
                         style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${depCity ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 15, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
-                      {fromLPSugs.length > 0 && (
-                        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, marginTop: 4, zIndex: 50, overflow: "hidden" }}>
-                          {fromLPSugs.map(c => <div key={c.title} onMouseDown={() => { setDepCity(c.title); setDepCoords({lat: c.lat, lng: c.lng}); setFromLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c.title}</div>)}
+                      {fromLPSugs.length > 0 && fromRect && (
+                        <div style={{ position: "fixed", top: fromRect.bottom + 4, left: fromRect.left, width: fromRect.width, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, zIndex: 9999, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
+                          {fromLPSugs.map(c => <div key={c.title} onMouseDown={e => { e.preventDefault(); setDepCity(c.title); setDepCoords({lat: c.lat, lng: c.lng}); setFromLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c.title}</div>)}
                         </div>
                       )}
                     </div>
                     {/* TO */}
                     <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>Kuda ideš?</div>
                     <div style={{ position: "relative", marginBottom: 16 }}>
-                      <input value={toLPCity} onChange={e => { setToLPCity(e.target.value); hereSuggest(e.target.value, setToLPSugs, toTimerRef); }}
-                        onBlur={() => setTimeout(() => setToLPSugs([]), 200)}
+                      <input ref={toInputRef} value={toLPCity}
+                        onChange={e => { setToLPCity(e.target.value); hereSuggest(e.target.value, setToLPSugs, toTimerRef); if (toInputRef.current) setToRect(toInputRef.current.getBoundingClientRect()); }}
+                        onFocus={() => { if (toInputRef.current) setToRect(toInputRef.current.getBoundingClientRect()); }}
+                        onBlur={() => setTimeout(() => setToLPSugs([]), 150)}
                         placeholder="Počni kucati destinaciju…"
                         style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${toLPCity ? "rgba(249,115,22,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 15, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
-                      {toLPSugs.length > 0 && (
-                        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, marginTop: 4, zIndex: 50, overflow: "hidden" }}>
-                          {toLPSugs.map(c => <div key={c.title} onMouseDown={() => { setToLPCity(c.title); setToCoords({lat: c.lat, lng: c.lng}); setToLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c.title}</div>)}
+                      {toLPSugs.length > 0 && toRect && (
+                        <div style={{ position: "fixed", top: toRect.bottom + 4, left: toRect.left, width: toRect.width, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, zIndex: 9999, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
+                          {toLPSugs.map(c => <div key={c.title} onMouseDown={e => { e.preventDefault(); setToLPCity(c.title); setToCoords({lat: c.lat, lng: c.lng}); setToLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c.title}</div>)}
                         </div>
                       )}
                     </div>
                     {/* DATES — lifecycle hook: arrival + departure */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
-                      <div>
-                        <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>
+                    <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 11, color: "#64748b", marginBottom: 5 }}>
                           {lang === "de" || lang === "at" ? "Anreise" : lang === "en" ? "Arrival" : lang === "it" ? "Arrivo" : lang === "si" ? "Prihod" : lang === "cz" ? "Příjezd" : lang === "pl" ? "Przyjazd" : "Dolazak"}
                         </div>
                         <input type="date" value={arrivalDate}
                           min={new Date().toISOString().slice(0, 10)}
                           onChange={e => { setArrivalDate(e.target.value); if (departureDate && e.target.value > departureDate) setDepartureDate(""); }}
-                          style={{ width: "100%", padding: "11px 12px", borderRadius: 10, border: `1px solid ${arrivalDate ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: arrivalDate ? "#f0f4f8" : "#475569", fontSize: 14, outline: "none", boxSizing: "border-box", colorScheme: "dark" }} />
+                          style={{ width: "100%", padding: "10px 6px", borderRadius: 10, border: `1px solid ${arrivalDate ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: arrivalDate ? "#f0f4f8" : "#475569", fontSize: 12, outline: "none", boxSizing: "border-box", colorScheme: "dark" }} />
                       </div>
-                      <div>
-                        <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 11, color: "#64748b", marginBottom: 5 }}>
                           {lang === "de" || lang === "at" ? "Abreise" : lang === "en" ? "Departure" : lang === "it" ? "Partenza" : lang === "si" ? "Odhod" : lang === "cz" ? "Odjezd" : lang === "pl" ? "Wyjazd" : "Povratak"}
                         </div>
                         <input type="date" value={departureDate}
                           min={arrivalDate || new Date().toISOString().slice(0, 10)}
                           onChange={e => setDepartureDate(e.target.value)}
-                          style={{ width: "100%", padding: "11px 12px", borderRadius: 10, border: `1px solid ${departureDate ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: departureDate ? "#f0f4f8" : "#475569", fontSize: 14, outline: "none", boxSizing: "border-box", colorScheme: "dark" }} />
+                          style={{ width: "100%", padding: "10px 6px", borderRadius: 10, border: `1px solid ${departureDate ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: departureDate ? "#f0f4f8" : "#475569", fontSize: 12, outline: "none", boxSizing: "border-box", colorScheme: "dark" }} />
                       </div>
                     </div>
                     {/* CTA */}
@@ -651,7 +666,7 @@ export default function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer style={{ padding: "32px 24px", paddingBottom: "calc(32px + 52px)", textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.03)", background: "#080e1a" }}>
+      <footer style={{ padding: "32px 24px", paddingBottom: gdprVisible ? "calc(32px + 52px + 52px)" : "calc(32px + 52px)", textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.03)", background: "#080e1a" }}>
         {/* Payment trust — minimal */}
         <div style={{ marginBottom: 16, display: "flex", justifyContent: "center", alignItems: "center", gap: 6 }}>
           <span style={{ fontSize: 13, color: "#475569" }}>🛡️</span>
@@ -668,14 +683,14 @@ export default function LandingPage() {
 
       {/* ═══ STICKY BUY BAR — PREMIUM DESIGN ═══ */}
       {isPremium ? (
-        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99, paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+        <div style={{ position: "fixed", bottom: gdprVisible ? 52 : 0, left: 0, right: 0, zIndex: 99, paddingBottom: "env(safe-area-inset-bottom, 0px)", transition: "bottom 0.3s" }}>
           <div style={{ padding: "10px 20px", background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)", borderTop: "1px solid rgba(245,158,11,0.15)", display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}>
             <span style={{ padding: "4px 14px", borderRadius: 12, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.12)", color: "#f59e0b", fontSize: 11, fontWeight: 600 }}>⭐ {premLabel} {premDays !== null ? premDays + "d" : ""}</span>
             <span style={{ color: "#475569", fontSize: 10 }}>JADRAN.AI PREMIUM</span>
           </div>
         </div>
       ) : (
-        <div onClick={() => setShowPlanPicker(true)} style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 99, cursor: "pointer", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+        <div onClick={() => setShowPlanPicker(true)} style={{ position: "fixed", bottom: gdprVisible ? 52 : 0, left: 0, right: 0, zIndex: 99, cursor: "pointer", paddingBottom: "env(safe-area-inset-bottom, 0px)", transition: "bottom 0.3s" }}>
           <div style={{ position: "relative", overflow: "hidden", padding: "12px 20px", background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)", borderTop: "1px solid rgba(245,158,11,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 -8px 32px rgba(0,0,0,0.5)" }}>
             {/* Shimmer accent line */}
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg, transparent, #f59e0b, #fbbf24, #f59e0b, transparent)" }} />

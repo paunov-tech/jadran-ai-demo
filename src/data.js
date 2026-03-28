@@ -432,6 +432,9 @@ export const DEEP_LOCAL = {
     { id:"kl1", emoji:"🐑", spot:"Janjetina s otoka Cresa", intel:"Creska janjad su specifičnog okusa zbog trave aromatics. Naručite 24h unaprijed u bilo kojoj konobi na Cresu — nije na jelovniku ali uvijek postoji." },
     { id:"kl2", emoji:"🌲", spot:"Borova šuma Rab — jutarnja šetnja", intel:"3.5km staza od Raba prema Kamporu kroz najgušću borovu šumu Jadrana. Temperatura za 4-5°C niža nego na plaži. Idealno 7-9h." },
     { id:"kl3", emoji:"⛵", spot:"Prolaz Velebitski kanal — jutro", intel:"Krenite iz Raba prema Senju do 8h — jutarnji termal je miran. Poslijepodne bura jača do 6 Beauforta. Zimski prolazi isključivo s HAK potvrdom." },
+    { id:"kl4", emoji:"⚔️", spot:"Rabska Fjera — 25-27. srpnja", intel:"Najveći srednjovjekovni festival Hrvatske od 1364. Povorka kreće 21:30 s Trga Sv. Kristofora. 700+ kostimiranih sudionika, turnir samostreličara, vatromet u ponoć. Rezervirajte smještaj 3 tjedna ranije!" },
+    { id:"kl5", emoji:"🏛️", spot:"Rab — 4 zvonika u jednom kadru", intel:"Najljepši pogled na sva 4 zvonika: s Gornje ulice kod Sv. Andrije. Katedrala Sv. Marije (1175.) — posvećena od pape Aleksandra III. Ulaz na vrh zvonika 3€, 360° panorama." },
+    { id:"kl6", emoji:"🍰", spot:"Rapska torta — Kuća rapske torte", intel:"Recept iz 1177. — bademi, maraschino, naranča. Originalna se prodaje samo u Kući rapske torte u starom gradu. Košta 8-12€ komad, ali vrijedi svake kune." },
   ],
   istria: [
     { id:"il1", emoji:"🍄", spot:"Tržnica Pula — tartufi", intel:"Tartufi na tržnici u Puli koštaju 3x manje nego u restoranima. Bijeli tartuf sezona: rujan-prosinac. Domaći prodavači prepoznatljivi po košaricama s drvenim poklopcima." },

@@ -178,10 +178,78 @@ export const GLOBAL_CSS = `
   /* ── Animated card entrance ── */
   .anim-card { animation: fadeUp 0.38s cubic-bezier(0.4,0,0.2,1) both; }
 
-  /* ── Buttons ── */
-  button { transition: all 0.22s cubic-bezier(0.4,0,0.2,1) !important; }
+  /* ── Buttons — Apple haptic feel ── */
+  button { 
+    transition: all 0.22s cubic-bezier(0.4,0,0.2,1) !important; 
+    -webkit-user-select: none; user-select: none;
+  }
   @media (hover: hover) { button:hover { transform: translateY(-1px); } }
-  button:active { transform: translateY(0) scale(0.97) !important; }
+  button:active { transform: translateY(0) scale(0.96) !important; opacity: 0.85 !important; }
+  a:active { opacity: 0.7; }
+
+  /* ── Interactive card press — Apple spring ── */
+  .glass:active { transform: scale(0.98) !important; transition-duration: 0.1s !important; }
+
+  /* ── Safe area helpers ── */
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .safe-top    { padding-top: env(safe-area-inset-top, 0px); }
+  .safe-all    { padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+
+  /* ── Input focus — blue glow ring ── */
+  input:focus, textarea:focus, select:focus {
+    outline: none !important;
+    border-color: rgba(14,165,233,0.5) !important;
+    box-shadow: 0 0 0 3px rgba(14,165,233,0.12), 0 0 20px rgba(14,165,233,0.06) !important;
+    transition: border-color 0.2s, box-shadow 0.2s !important;
+  }
+
+  /* ── Samsung viewport fix — address bar resize ── */
+  @supports (height: 100dvh) {
+    .dvh      { min-height: 100dvh; }
+    .dvh-exact{ height: 100dvh; }
+  }
+
+  /* ── Prevent iOS rubber-band on fixed containers ── */
+  .no-bounce { overscroll-behavior: none; -webkit-overflow-scrolling: auto; }
+
+  /* ── Smooth momentum scroll ── */
+  .scroll-smooth {
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain; scroll-behavior: smooth;
+  }
+
+  /* ── Sticky elements with blur ── */
+  .sticky-blur {
+    position: sticky; top: 0; z-index: 10;
+    backdrop-filter: blur(20px) saturate(1.8);
+    -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  }
+
+  /* ── Bottom fixed bar (chat input, tab bar) ── */
+  .fixed-bottom {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    backdrop-filter: blur(24px) saturate(1.8);
+    -webkit-backdrop-filter: blur(24px) saturate(1.8);
+    z-index: 50;
+  }
+
+  /* ── Skeleton pulse (better than shimmer for cards) ── */
+  .skeleton {
+    background: linear-gradient(90deg, rgba(14,165,233,0.04) 25%, rgba(14,165,233,0.08) 50%, rgba(14,165,233,0.04) 75%);
+    background-size: 400% 100%; animation: shimmer 2s ease infinite;
+    border-radius: 8px;
+  }
+
+  /* ── Tab bar item ── */
+  .tab-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 6px 0; min-width: 56px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent; background: none; border: none;
+    transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+  }
+  .tab-item:active { transform: scale(0.9); }
+  .tab-item svg { transition: all 0.2s; }
 
   /* ── Primary button glow ── */
   .btn-glow { position:relative; overflow:hidden; }
@@ -246,6 +314,26 @@ export const GLOBAL_CSS = `
     .trip-btn { width: 100% !important; box-sizing: border-box; }
   }
   @media (max-width: 375px) { .phase-label { letter-spacing: 0.5px !important; font-size: 8px !important; } }
+
+  /* ── Tablet (iPad) ── */
+  @media (min-width: 768px) and (max-width: 1024px) {
+    .fixed-bottom { max-width: 500px; left: 50%; transform: translateX(-50%); border-radius: 20px 20px 0 0; border: 1px solid rgba(14,165,233,0.07); border-bottom: none; }
+  }
+
+  /* ── Desktop — hide mobile tab bar ── */
+  @media (min-width: 1025px) {
+    .fixed-bottom { max-width: 440px; left: 50%; transform: translateX(-50%); border-radius: 20px 20px 0 0; border: 1px solid rgba(14,165,233,0.07); border-bottom: none; box-shadow: 0 -4px 30px rgba(0,0,0,0.15); }
+  }
+
+  /* ── Samsung-specific: address bar compensation ── */
+  @supports (height: 1dvh) and (not (height: 1svh)) {
+    .dvh { min-height: 100dvh; }
+  }
+
+  /* ── iOS standalone (PWA) ── */
+  @media all and (display-mode: standalone) {
+    .safe-top { padding-top: max(env(safe-area-inset-top, 0px), 20px); }
+  }
 `;
 
 // ─── SVG ICON PATHS (24×24 Feather-style) ────────────────────
@@ -332,19 +420,21 @@ export const Btn = ({ primary, small, children, ...p }) => {
   const C = useC();
   return (
     <button {...p} className={`${primary ? "btn-glow" : ""} ${p.className || ""}`} style={{
-      padding: small ? "9px 16px" : "14px 26px",
+      padding: small ? "10px 18px" : "15px 28px",
+      minHeight: small ? 40 : 48,
       background: primary
         ? `linear-gradient(135deg, ${C.accent} 0%, #0284c7 100%)`
         : "rgba(14,165,233,0.04)",
       border: primary ? "none" : `1px solid ${C.bord}`,
       borderRadius: 14, color: primary ? "#fff" : C.text,
       fontSize: small ? 13 : 16, ...hf,
-      cursor: "pointer", fontWeight: 400,
+      cursor: "pointer", fontWeight: primary ? 500 : 400,
       letterSpacing: primary ? 0.4 : 0,
       boxShadow: primary
         ? `0 4px 20px rgba(14,165,233,0.22), inset 0 1px 0 rgba(255,255,255,0.12)`
         : "none",
       transition: "all 0.22s cubic-bezier(0.4,0,0.2,1)",
+      WebkitTapHighlightColor: "transparent",
       ...(p.style || {}),
     }}>
       {children}
@@ -391,12 +481,45 @@ export const BackBtn = ({ onClick, label }) => {
   const C = useC();
   return (
     <button onClick={onClick} style={{ ...dm, background: "none", border: "none",
-      color: C.accent, fontSize: 13, cursor: "pointer", padding: "10px 0",
+      color: C.accent, fontSize: 13, cursor: "pointer", padding: "12px 4px",
       display: "flex", alignItems: "center", gap: 6, opacity: 0.85,
-      transition: "opacity 0.2s" }}
+      transition: "opacity 0.2s", minHeight: 44, WebkitTapHighlightColor: "transparent" }}
       onMouseEnter={e => e.currentTarget.style.opacity = "1"}
       onMouseLeave={e => e.currentTarget.style.opacity = "0.85"}>
       {label || "← Natrag"}
     </button>
+  );
+};
+
+// ─── BOTTOM TAB BAR (Apple-style kiosk navigation) ────────
+export const TabBar = ({ items, active, onChange }) => {
+  const C = useC();
+  return (
+    <div className="fixed-bottom" style={{
+      display: "flex", justifyContent: "space-around", alignItems: "center",
+      background: `linear-gradient(180deg, ${C.bg}dd 0%, ${C.bg}f5 100%)`,
+      borderTop: `1px solid ${C.bord}`, padding: "6px 8px 2px",
+    }}>
+      {items.map(item => {
+        const isActive = item.key === active;
+        return (
+          <button key={item.key} className="tab-item" onClick={() => onChange(item.key)}
+            style={{ color: isActive ? C.accent : C.mut }}>
+            <div style={{
+              width: 28, height: 28, display: "grid", placeItems: "center",
+              borderRadius: 8,
+              background: isActive ? C.acDim : "transparent",
+              transition: "background 0.25s",
+            }}>
+              <Icon d={item.icon} size={20} color={isActive ? C.accent : C.mut} stroke={isActive ? 2 : 1.5} />
+            </div>
+            <span style={{ ...dm, fontSize: 10, fontWeight: isActive ? 700 : 400,
+              letterSpacing: 0.3, transition: "all 0.2s" }}>
+              {item.label}
+            </span>
+          </button>
+        );
+      })}
+    </div>
   );
 };
