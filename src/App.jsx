@@ -295,6 +295,7 @@ export default function JadranUnified() {
   const [kioskCoords, setKioskCoords] = useState(null); // [lat, lng] from GPS or fallback
   const [kioskWelcome, setKioskWelcome] = useState(false); // transition screen
   const [senseData, setSenseData] = useState(null); // YOLO Sense parking/marina/beach
+  const [showKioskLive, setShowKioskLive] = useState(false);
   const [selectedExp, setSelectedExp] = useState(null);
   const [booked, setBooked] = useState(new Set());
   // Viator activities
@@ -313,13 +314,26 @@ export default function JadranUnified() {
   const [arrivalCountdown, setArrivalCountdown] = useState(null); // seconds remaining
   const geoWatchRef = useRef(null);
   const arrivalFiredRef = useRef(false);
-  const [affiliateId, setAffiliateId] = useState(null); // e.g. "blackjack"
+  const [affiliateId, setAffiliateId] = useState(null); // e.g. "blackjack" — shows content
+  const verifiedAffiliate = useRef(false); // true only if tk= token validated — grants 72h
   const kioskForcedCoords = useRef(null); // set by ?kiosk= param — bypasses GPS
   const [chatMsgs, setChatMsgs] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(null);
   const [trialRemaining, setTrialRemaining] = useState(null); // ms left in 72h trial, null=not started
+
+  // ── FREE MESSAGE COUNTER — persisted in localStorage, survives refresh ──
+  const [freeMsgUsed, setFreeMsgUsed] = useState(() => {
+    try { return parseInt(localStorage.getItem("jadran_msg_count") || "0", 10); } catch { return 0; }
+  });
+  const incFreeMsg = () => {
+    setFreeMsgUsed(prev => {
+      const next = prev + 1;
+      try { localStorage.setItem("jadran_msg_count", String(next)); } catch {}
+      return next;
+    });
+  };
   const chatEnd = useRef(null);
   // Guest key: roomCode from URL, or deviceId for standalone users
   const roomCode = useRef((() => {
@@ -355,8 +369,10 @@ export default function JadranUnified() {
     gpsStarted.current = true;
     setTripActive(true);
     saveDelta({ trip_started: true });
-    // Grant AI trial for full journey: 72h from departure
-    if (!premium) {
+    // 72h trial ONLY for booking partners (affiliate) or real host QR guests
+    // Landing page users (DEMO/dev_) stay on 3 free messages
+    const isBookingGuest = verifiedAffiliate.current || (roomCode.current && roomCode.current !== "DEMO" && !roomCode.current.startsWith("dev_"));
+    if (!premium && isBookingGuest) {
       try {
         const until = Date.now() + 72 * 60 * 60 * 1000;
         localStorage.setItem("jadran_ai_trial_until", String(until));
@@ -458,18 +474,25 @@ export default function JadranUnified() {
       "blackjack": [44.7490, 14.7555, "Rab"], // Palit 315, Rab
     };
     const urlAffiliate = p.get("affiliate");
+    // Affiliate requires signed token to grant 72h trial (prevents URL guessing)
+    const AFFILIATE_TOKENS = { "blackjack": "sial2026" };
+    const urlToken = p.get("tk");
+    const isValidAffiliate = urlAffiliate && AFFILIATE_TOKENS[urlAffiliate] === urlToken;
     const cd = (urlAffiliate && AFFILIATE_COORDS[urlAffiliate]) || KIOSK_CITIES[kioskParam.toLowerCase()];
     if (!cd) return;
     const urlLang = p.get("lang");
     if (urlLang) { setLang(urlLang); saveDelta({ lang: urlLang }); }
-    if (urlAffiliate) setAffiliateId(urlAffiliate);
+    if (urlAffiliate) setAffiliateId(urlAffiliate); // show affiliate content regardless
+    if (isValidAffiliate) verifiedAffiliate.current = true;
     kioskForcedCoords.current = [cd[0], cd[1]]; // prevent GPS from overriding
     setTransitToCoords([cd[0], cd[1]]);
     saveDelta({ destination: { city: cd[2], lat: cd[0], lng: cd[1] } });
     setPhase("kiosk");
     setSubScreen("home");
     setSplash(false);
-    ensureTrialStart();
+    // Only grant 72h trial for verified affiliate partners (QR #1 with valid token)
+    // TZ QR without affiliate (QR #2) gets 3 free messages only
+    if (isValidAffiliate) ensureTrialStart();
     // Auto-unlock premium if arriving from a paid TripGuide booking
     const bookingId = p.get("booking");
     if (bookingId && bookingId.startsWith("JAD-")) {
@@ -510,18 +533,8 @@ export default function JadranUnified() {
           if (autoPhase === "pre") setSubScreen(data.subScreen || "onboard");
           else if (autoPhase === "kiosk") {
             setSubScreen(data.subScreen || "home");
-            // Grant 72h trial for QR guests in kiosk — they arrived, no trip button
-            if (!data.premium) {
-              try {
-                const existing = Number(localStorage.getItem("jadran_ai_trial_until") || "0");
-                if (existing <= Date.now()) { // don't reset active trial
-                  const until = Date.now() + 72 * 60 * 60 * 1000;
-                  localStorage.setItem("jadran_ai_trial_until", String(until));
-                  localStorage.setItem("jadran_ai_premium", "1");
-                  setPremium(true);
-                }
-              } catch {}
-            }
+            // QR guests without payment get 3 free messages (handled in doChat)
+            // Only pre-paid or booking guests get premium flag from Firestore
           }
           else setSubScreen(data.subScreen || "summary");
         }
@@ -918,6 +931,10 @@ export default function JadranUnified() {
 
   // ─── 72h AI TRIAL — set start timestamp on first kiosk entry ───
   const ensureTrialStart = () => {
+    // Only booking guests (affiliate partner or real host QR) get 72h trial
+    // Landing/TZ QR users stay on 3 free messages — no trial timer for them
+    const isBookingGuest = verifiedAffiliate.current || (roomCode.current && roomCode.current !== "DEMO" && !roomCode.current.startsWith("dev_"));
+    if (!isBookingGuest) return;
     try {
       if (!localStorage.getItem("jadran_trial_start")) {
         localStorage.setItem("jadran_trial_start", Date.now().toString());
@@ -951,9 +968,15 @@ export default function JadranUnified() {
 
   const doChat = async () => {
     if (!chatInput.trim()) return;
+    // ── 3 FREE MESSAGES GATE (persisted in localStorage) ──
+    if (!premium && freeMsgUsed >= 3) {
+      setShowPaywall(true);
+      return;
+    }
     const msg = chatInput.trim();
     setChatInput("");
     setChatMsgs(p => [...p, { role: "user", text: msg }]);
+    if (!premium) incFreeMsg(); // increment BEFORE API call
     setChatLoading(true);
     try {
       const langName = ({hr:"Hrvatski",de:"Deutsch",at:"Österreichisches Deutsch",en:"English",it:"Italiano",si:"Slovenščina",cz:"Čeština",pl:"Polski"})[lang] || "Hrvatski";
@@ -982,6 +1005,8 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           messages: [...chatMsgs.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })), { role: "user", content: msg }],
           delta_context: loadDelta(),
           lang: lang || "hr",
+          freeMsgUsed: premium ? -1 : freeMsgUsed, // -1 = premium, server can reject if > 3
+          deviceId: (() => { try { return localStorage.getItem("jadran_push_deviceId") || ""; } catch { return ""; } })(),
         }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -1328,6 +1353,60 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
       </>
     );
 
+    // Chat accessible from transit — same component, back goes to transit
+    if (subScreen === "chat") {
+      const prompts = [t("chatPrompt1",lang), t("chatPrompt2",lang), t("chatPrompt3",lang), t("chatPrompt4",lang)];
+      return (
+        <div style={{ display: "flex", flexDirection: "column", height: "calc(100dvh - 200px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+          <BackBtn onClick={() => setSubScreen("transit")} label={({hr:"← Natrag na rutu",de:"← Zurück zur Route",en:"← Back to route",it:"← Torna al percorso"})[lang] || "← Natrag na rutu"} />
+          <div className="scroll-smooth" style={{ flex: 1, padding: "8px 0" }}>
+            {chatMsgs.length === 0 && (
+              <div style={{ textAlign: "center", padding: "40px 20px" }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>🌊</div>
+                <div style={{ fontSize: 24, fontWeight: 300, marginBottom: 8 }}>{t("askAnything",lang)}</div>
+                <div style={{ ...dm, color: C.mut, fontSize: 14, marginBottom: 20 }}>{t("askDalmatia",lang)}</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+                  {prompts.map((p, i) => (
+                    <button key={i} onClick={() => setChatInput(p)} style={{ ...dm, padding: "11px 16px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, borderRadius: 14, color: C.text, fontSize: 14, cursor: "pointer", minHeight: 44 }}>{p}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {chatMsgs.map((m, i) => (
+              <div key={i} style={{ maxWidth: "78%", padding: "14px 18px", borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px", background: m.role === "user" ? "rgba(14,165,233,0.08)" : "rgba(186,230,253,0.03)", marginBottom: 10, marginLeft: m.role === "user" ? "auto" : 0, ...dm, fontSize: 15, lineHeight: 1.6, fontWeight: 300, border: `1px solid ${m.role === "user" ? "rgba(14,165,233,0.12)" : C.bord}`, whiteSpace: "pre-wrap" }}>
+                {m.role !== "user" && <div style={{ fontSize: 10, color: C.accent, marginBottom: 4, letterSpacing: 1, fontWeight: 700 }}>JADRAN AI</div>}
+                {m.text}
+              </div>
+            ))}
+            {chatLoading && <div style={{ ...dm, maxWidth: "78%", padding: "14px 18px", borderRadius: "18px 18px 18px 4px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}` }}>
+              <div style={{ display: "flex", gap: 4 }}>{[0,1,2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: `pulse 1.2s ease ${i * 0.2}s infinite` }} />)}</div>
+            </div>}
+            <div ref={chatEnd} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "12px 0 4px", borderTop: `1px solid ${C.bord}`, marginTop: "auto" }}>
+            {!premium && (() => {
+              const used = freeMsgUsed;
+              const left = Math.max(0, 3 - used);
+              return left > 0 ? (
+                <div style={{ ...dm, fontSize: 11, color: left === 1 ? C.gold : C.mut, textAlign: "center" }}>
+                  {({hr:`${left} od 3 besplatnih poruka`,de:`${left} von 3 kostenlosen Nachrichten`,en:`${left} of 3 free messages`,it:`${left} di 3 messaggi gratuiti`})[lang] || `${left}/3`}
+                </div>
+              ) : (
+                <div onClick={() => setShowPaywall(true)} style={{ ...dm, fontSize: 12, color: C.gold, textAlign: "center", padding: "6px 12px", cursor: "pointer", background: C.goDim, borderRadius: 10, border: `1px solid ${C.goBorder}` }}>
+                  ⭐ {({hr:"Nadogradi za neograničen chat",de:"Upgrade für unbegrenzten Chat",en:"Upgrade for unlimited chat",it:"Aggiorna per chat illimitata"})[lang] || "Upgrade →"}
+                </div>
+              );
+            })()}
+            <div style={{ display: "flex", gap: 10 }}>
+              <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && doChat()}
+                placeholder={t("askPlaceholder",lang)} style={{ ...dm, flex: 1, padding: "14px 18px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, borderRadius: 22, color: C.text, fontSize: 16, outline: "none", minHeight: 48 }} />
+              <button onClick={doChat} disabled={!premium && freeMsgUsed >= 3} style={{ padding: "14px 22px", background: (!premium && freeMsgUsed >= 3) ? C.mut : `linear-gradient(135deg,${C.accent},#0284c7)`, border: "none", borderRadius: 22, color: "#fff", fontSize: 18, cursor: "pointer", fontWeight: 600, minWidth: 52, minHeight: 48, display: "grid", placeItems: "center", opacity: (!premium && freeMsgUsed >= 3) ? 0.4 : 1 }}>→</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     if (subScreen === "transit") return (
       <>
         {/* ── HERE Map ── */}
@@ -1378,25 +1457,45 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             </button>
           ) : (
             <>
-              {/* AI trial activated banner */}
-              <div style={{ ...dm, display:"flex", alignItems:"center", gap:10, padding:"10px 16px",
-                borderRadius:12, background:"rgba(167,139,250,0.08)", border:"1px solid rgba(167,139,250,0.18)",
-                marginBottom:10, textAlign:"left" }}>
-                <span style={{ fontSize:18 }}>🤖</span>
-                <div style={{ flex:1 }}>
-                  <div style={{ fontSize:12, color:"#a78bfa", fontWeight:600, marginBottom:1 }}>
-                    {({hr:"AI vodič aktivan · 72h",de:"AI-Guide aktiv · 72h",en:"AI guide active · 72h",it:"Guida AI attiva · 72h",si:"AI vodič aktiven · 72h",cz:"AI průvodce aktivní · 72h",pl:"AI przewodnik aktywny · 72h"})[lang] || "AI guide active · 72h"}
+              {/* AI chat banner — adapted per user type */}
+              {(() => {
+                const isBooking = verifiedAffiliate.current || (roomCode.current && roomCode.current !== "DEMO" && !roomCode.current.startsWith("dev_"));
+                const used = freeMsgUsed;
+                const left = Math.max(0, 3 - used);
+                return (
+                  <div style={{ ...dm, display:"flex", alignItems:"center", gap:10, padding:"10px 16px",
+                    borderRadius:12, background: isBooking ? "rgba(167,139,250,0.08)" : "rgba(14,165,233,0.06)",
+                    border: `1px solid ${isBooking ? "rgba(167,139,250,0.18)" : C.acBorder}`,
+                    marginBottom:10, textAlign:"left" }}>
+                    <span style={{ fontSize:18 }}>🤖</span>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:12, color: isBooking ? "#a78bfa" : C.accent, fontWeight:600, marginBottom:1 }}>
+                        {isBooking
+                          ? ({hr:"AI vodič aktivan · 72h",de:"AI-Guide aktiv · 72h",en:"AI guide active · 72h",it:"Guida AI attiva · 72h"})[lang] || "AI guide active · 72h"
+                          : left > 0
+                            ? ({hr:`AI vodič · ${left} besplatna pitanja`,de:`AI-Guide · ${left} kostenlose Fragen`,en:`AI guide · ${left} free questions`,it:`Guida AI · ${left} domande gratuite`})[lang] || `AI guide · ${left} free`
+                            : ({hr:"AI vodič · Nadogradi",de:"AI-Guide · Upgrade",en:"AI guide · Upgrade",it:"Guida AI · Aggiorna"})[lang] || "Upgrade"
+                        }
+                      </div>
+                      <div style={{ fontSize:11, color:C.mut }}>
+                        {({hr:"Pitaj za granicu, gorivo, restorane…",de:"Fragen zu Grenze, Tanken, Restaurants…",en:"Ask about border, fuel, restaurants…",it:"Chiedi di confine, carburante, ristoranti…"})[lang] || "Ask about border, fuel, restaurants…"}
+                      </div>
+                    </div>
+                    <button onClick={() => {
+                      if (!premium && left <= 0) { setShowPaywall(true); return; }
+                      setSubScreen("chat");
+                    }}
+                      style={{ ...dm, padding:"6px 12px", borderRadius:8,
+                        border: `1px solid ${isBooking ? "rgba(167,139,250,0.25)" : C.acBorder}`,
+                        background: isBooking ? "rgba(167,139,250,0.10)" : C.acDim,
+                        color: isBooking ? "#a78bfa" : C.accent, fontSize:11, cursor:"pointer", fontWeight:600, whiteSpace:"nowrap" }}>
+                      {left <= 0 && !premium
+                        ? "⭐ Upgrade"
+                        : ({hr:"Pitaj →",de:"Fragen →",en:"Ask →",it:"Chiedi →"})[lang] || "Pitaj →"}
+                    </button>
                   </div>
-                  <div style={{ fontSize:11, color:C.mut }}>
-                    {({hr:"Pitat za granicu, gorivo, restorane…",de:"Fragen zu Grenze, Tanken, Restaurants…",en:"Ask about border, fuel, restaurants…",it:"Chiedi di confine, carburante, ristoranti…",si:"Vprašajte o meji, gorivu, restavracijah…",cz:"Ptejte se na hranici, palivo, restaurace…",pl:"Pytaj o granicę, paliwo, restauracje…"})[lang] || "Ask about border, fuel, restaurants…"}
-                  </div>
-                </div>
-                <button onClick={() => { setSubScreen("chat"); setPhase("kiosk"); }}
-                  style={{ ...dm, padding:"6px 12px", borderRadius:8, border:"1px solid rgba(167,139,250,0.25)",
-                    background:"rgba(167,139,250,0.10)", color:"#a78bfa", fontSize:11, cursor:"pointer", fontWeight:600, whiteSpace:"nowrap" }}>
-                  {({hr:"Pitaj →",de:"Fragen →",en:"Ask →",it:"Chiedi →",si:"Vprašaj →",cz:"Zeptat →",pl:"Pytaj →"})[lang] || "Ask →"}
-                </button>
-              </div>
+                );
+              })()}
               <Btn primary onClick={() => { ensureTrialStart(); setKioskWelcome(true); setNearbyData(null); setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home", lang, destination: transitDestCity || kioskCity, segment: transitSegUrl || "auto", lastAccess: new Date().toISOString() }); }}>{t("arrived",lang)}</Btn>
             </>
           )}
@@ -1602,19 +1701,6 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           </div>
         </div>
 
-        {/* Emergency alert from TZ Dashboard */}
-        {emergencyAlert && (
-          <div style={{ padding: "14px 18px", borderRadius: 14, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", marginBottom: 14, display: "flex", alignItems: "flex-start", gap: 12 }}>
-            <span style={{ fontSize: 22, flexShrink: 0 }}>🚨</span>
-            <div style={{ flex: 1 }}>
-              <div style={{ ...dm, fontSize: 11, color: C.red, fontWeight: 700, letterSpacing: 2, marginBottom: 4 }}>
-                {({hr:"HITNO UPOZORENJE",de:"NOTFALL-WARNUNG",en:"EMERGENCY ALERT",it:"AVVISO DI EMERGENZA",si:"NUJNO OPOZORILO",cz:"NOUZOVÉ VAROVÁNÍ",pl:"ALERT AWARYJNY"})[lang] || "HITNO UPOZORENJE"}
-              </div>
-              <div style={{ ...dm, fontSize: 14, color: C.text, lineHeight: 1.5 }}>{emergencyAlert}</div>
-            </div>
-            <button onClick={() => setEmergencyAlert(null)} style={{ background: "none", border: "none", color: C.mut, fontSize: 18, cursor: "pointer", padding: 4, flexShrink: 0 }}>✕</button>
-          </div>
-        )}
 
         {/* ═══ TRIAL EXPIRY BANNER — <12h remaining ═══ */}
         {!premium && trialRemaining !== null && trialRemaining > 0 && trialRemaining < 43200000 && (() => {
@@ -1705,59 +1791,42 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           </div>
         </Card>
 
-        {/* YOLO Sense — parking/marina/beach status */}
-        {senseData && (
-          <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap", position: "relative" }}>
-            <div style={{ position: "absolute", top: -14, right: 0, fontSize: 9, color: senseData.source === "yolo" ? C.green : C.mut, letterSpacing: 0.5 }}>
-              {senseData.source === "yolo" ? "● LIVE" : "● ~procjena"}
-            </div>
-            {senseData.parking && (
-              <div style={{ flex: 1, minWidth: 90, padding: "10px 12px", borderRadius: 12, background: "rgba(14,165,233,0.04)", border: `1px solid ${C.bord}`, textAlign: "center" }}>
-                <div style={{ fontSize: 18 }}>🅿️</div>
-                <div style={{ ...dm, fontSize: 16, fontWeight: 300, color: senseData.parking.status === "slobodno" ? C.green : senseData.parking.status === "umjereno" ? C.gold : C.red, marginTop: 2 }}>
-                  {senseData.parking.free_spots}/{senseData.parking.total_spots}
-                </div>
-                <div style={{ ...dm, fontSize: 9, color: C.mut, marginTop: 1 }}>
-                  {({hr:"slobodnih",de:"frei",en:"free",it:"liberi"})[lang] || "slobodnih"}
-                </div>
+        {/* Forecast strip — below Adriatic Pulse */}
+        <div style={{ display: "flex", gap: 2, marginBottom: 10, marginTop: -6 }}>
+          {(forecast || FORECAST_DEFAULT).map((d, i) => {
+            const locked = !premium && i >= 3;
+            return (
+              <div key={i} style={{ flex: 1, textAlign: "center", padding: "10px 4px", borderRadius: 12, position: "relative", cursor: locked ? "pointer" : "default", background: "rgba(14,165,233,0.03)", border: `1px solid ${C.bord}` }}
+                onClick={() => locked && setShowPaywall(true)}>
+                <div style={{ ...dm, fontSize: 10, color: C.mut, letterSpacing: 1 }}>{(FORECAST_DAYS[lang]||FORECAST_DAYS.hr)[d.di]}</div>
+                <div style={{ fontSize: 18, margin: "4px 0", filter: locked ? "blur(4px)" : "none" }}>{d.icon}</div>
+                <div style={{ ...dm, fontSize: 12, color: C.mut, filter: locked ? "blur(4px)" : "none" }}>{d.h}°</div>
+                {locked && <div style={{ position:"absolute", inset:0, display:"grid", placeItems:"center" }}><span style={{ ...dm, fontSize:9, color:C.gold, background:C.goDim, padding:"2px 5px", borderRadius:5, border:`1px solid ${C.goBorder}` }}>PRO</span></div>}
               </div>
-            )}
-            {senseData.marina && (
-              <div style={{ flex: 1, minWidth: 90, padding: "10px 12px", borderRadius: 12, background: "rgba(14,165,233,0.04)", border: `1px solid ${C.bord}`, textAlign: "center" }}>
-                <div style={{ fontSize: 18 }}>⛵</div>
-                <div style={{ ...dm, fontSize: 16, fontWeight: 300, color: senseData.marina.status === "slobodno" ? C.green : senseData.marina.status === "umjereno" ? C.gold : C.red, marginTop: 2 }}>
-                  {senseData.marina.free_moorings}
-                </div>
-                <div style={{ ...dm, fontSize: 9, color: C.mut, marginTop: 1 }}>
-                  {({hr:"vezova",de:"Plätze",en:"berths",it:"posti"})[lang] || "vezova"}
-                </div>
-              </div>
-            )}
-            {senseData.beach && (
-              <div style={{ flex: 1, minWidth: 90, padding: "10px 12px", borderRadius: 12, background: "rgba(14,165,233,0.04)", border: `1px solid ${C.bord}`, textAlign: "center" }}>
-                <div style={{ fontSize: 18 }}>🏖️</div>
-                <div style={{ ...dm, fontSize: 16, fontWeight: 300, color: senseData.beach.crowd === "mirno" ? C.green : senseData.beach.crowd === "malo gužve" ? C.accent : senseData.beach.crowd === "srednje gužve" ? C.gold : C.red, marginTop: 2 }}>
-                  {senseData.beach.occupancy_pct}%
-                </div>
-                <div style={{ ...dm, fontSize: 9, color: C.mut, marginTop: 1 }}>
-                  {({hr:"popunjenost",de:"Auslastung",en:"occupancy",it:"occupazione"})[lang] || "popunjenost"}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+            );
+          })}
+        </div>
 
-        {/* Nearby highlights bar */}
-        {nearbyHighlights.length > 0 && (
-          <div style={{ display: "flex", gap: 10, padding: "10px 14px", borderRadius: 12, background: "rgba(14,165,233,0.04)", border: `1px solid ${C.bord}`, flexWrap: "wrap", alignItems: "center", marginBottom: 14 }}>
-            {nearbyHighlights.map((h, i) => (
-              <React.Fragment key={i}>
-                {i > 0 && <span style={{ width: 1, height: 14, background: C.bord }} />}
-                <span style={{ ...dm, fontSize: 12, color: C.text }}>{h.icon} {h.text}</span>
-              </React.Fragment>
+        {/* Emergency/critical alerts — inline below forecast */}
+        {(emergencyAlert || alerts.some(a => (a.severity==="critical"||a.severity==="high") && !dismissedAlerts.has(a.title))) && (
+          <div style={{ marginBottom: 12 }}>
+            {emergencyAlert && (
+              <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                <span style={{ fontSize: 16, flexShrink: 0 }}>🚨</span>
+                <span style={{ ...dm, fontSize: 13, color: C.text, flex: 1, lineHeight: 1.4 }}>{emergencyAlert}</span>
+                <button onClick={() => setEmergencyAlert(null)} style={{ background: "none", border: "none", color: C.mut, fontSize: 16, cursor: "pointer", padding: 4, flexShrink: 0 }}>×</button>
+              </div>
+            )}
+            {alerts.filter(a => (a.severity==="critical"||a.severity==="high") && !dismissedAlerts.has(a.title)).slice(0,2).map((a,i) => (
+              <div key={i} style={{ padding: "10px 14px", borderRadius: 12, background: a.severity==="critical" ? "rgba(239,68,68,0.06)" : "rgba(245,158,11,0.06)", border: `1px solid ${a.severity==="critical" ? "rgba(239,68,68,0.18)" : "rgba(245,158,11,0.18)"}`, display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                <span style={{ fontSize: 14, flexShrink: 0 }}>{ALERT_ICONS[a.type] || "⚠️"}</span>
+                <span style={{ ...dm, fontSize: 12, color: "#cbd5e1", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.title}</span>
+                <button onClick={() => setDismissedAlerts(s => new Set([...s, a.title]))} style={{ background: "none", border: "none", color: C.mut, fontSize: 16, cursor: "pointer", padding: 4, flexShrink: 0 }}>×</button>
+              </div>
             ))}
           </div>
         )}
+
 
         {/* ── AI Guide — primary CTA above grid ── */}
         <div onClick={() => setSubScreen("chat")} style={{
@@ -1787,19 +1856,10 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         <SectionLabel>{t("quickAccess",lang)}</SectionLabel>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: 10, marginBottom: 24 }}>
           {[
-            { k: "parking",   ic: IC.parking, l: t("parking",lang),    clr: C.accent,    free: true },
-            { k: "beach",     ic: IC.beach,   l: t("beaches",lang),    clr: "#38bdf8",   free: true },
+            { k: "parking",   ic: IC.parking, l: t("parking",lang), clr: C.accent, free: true },
+            { k: "beach",     ic: IC.beach,   l: t("beaches",lang), clr: "#38bdf8", free: true },
             { k: "food",      ic: IC.food,    l: ({hr:"Hrana",de:"Essen",en:"Food",it:"Cibo",si:"Hrana",cz:"Jídlo",pl:"Jedzenie"})[lang]||"Hrana", clr: C.terracotta, free: true },
-            { k: "shop",      ic: IC.shop,    l: ({hr:"Dućan",de:"Laden",en:"Shop",it:"Negozio",si:"Trgovina",cz:"Obchod",pl:"Sklep"})[lang]||"Dućan", clr: "#34d399", free: true },
-            { k: "bakery",    ic: IC.bakery,  l: ({hr:"Pekara",de:"Bäckerei",en:"Bakery",it:"Panetteria",si:"Pekarna",cz:"Pekárna",pl:"Piekarnia"})[lang]||"Pekara", clr: C.warm, free: true },
-            { k: "pharmacy",  ic: IC.medic,   l: ({hr:"Ljekarna",de:"Apotheke",en:"Pharmacy",it:"Farmacia",si:"Lekarna",cz:"Lékárna",pl:"Apteka"})[lang]||"Ljekarna", clr: "#f472b6", free: true },
-            { k: "culture",   ic: IC.gem,     l: ({hr:"Kultura",de:"Kultur",en:"Culture",it:"Cultura",si:"Kultura",cz:"Kultura",pl:"Kultura"})[lang]||"Kultura", clr: C.gold, free: true },
-            { k: "fuel",      ic: IC.map,     l: ({hr:"Gorivo",de:"Tanken",en:"Fuel",it:"Carburante",si:"Gorivo",cz:"Palivo",pl:"Paliwo"})[lang]||"Gorivo", clr: "#94a3b8", free: true },
-            { k: "emergency", ic: IC.medic,   l: t("emergency",lang),  clr: C.red,       free: true },
-            { k: "activities",ic: IC.ticket,  l: t("activities",lang), clr: "#22c55e",   free: true },
-            ...(getDestRegion(kioskCity) ? [{ k:"gems", ic:IC.gem, l:t("gems",lang), clr:C.gold, free:false }] : []),
-            ...(kioskCity === "Rab" ? [{ k:"excursions", ic:IC.ticket, l:({hr:"Izleti",de:"Ausflüge",en:"Excursions",it:"Escursioni"})[lang]||"Izleti", clr:"#0ea5e9", free:true }] : []),
-            ...(affiliateId && AFFILIATE_DATA?.[affiliateId] ? [{ k:"affiliate", ic:IC.gem, l:AFFILIATE_DATA[affiliateId].name, clr:AFFILIATE_DATA[affiliateId].color, free:true }] : []),
+            { k: "emergency", ic: IC.medic,   l: ({hr:"Hitno",de:"Notfall",en:"Emergency",it:"Emergenza",si:"Nujno",cz:"Nouzové",pl:"Nagłe"})[lang]||"Hitno", clr: C.red, free: true },
           ].map(tile => {
             const count = nearbyData?.categories?.[tile.k]?.length;
             return (
@@ -1837,16 +1897,6 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           })}
         </div>
 
-        {/* AI Tip — premium */}
-        <Card glow style={{ background: `linear-gradient(135deg,${C.goDim},rgba(14,165,233,0.03))`, borderColor: "rgba(251,191,36,0.1)", marginBottom: 14, display: "flex", gap: 16, alignItems: "flex-start", cursor: premium ? "default" : "pointer", position: "relative", overflow: "hidden" }} onClick={() => !premium && setShowPaywall(true)}>
-          <div style={{ fontSize: 28 }}>{tipIcon}</div>
-          <div>
-            <div style={{ ...dm, fontSize: 10, color: C.gold, fontWeight: 700, letterSpacing: 2, marginBottom: 4 }}>{t("aiRec",lang)}</div>
-            {premium ? <div style={{ ...dm, fontSize: 15, color: C.text, lineHeight: 1.7, fontWeight: 300 }}>{tip}</div> : <div style={{ ...dm, fontSize: 15, color: C.text, lineHeight: 1.7, fontWeight: 300, filter: "blur(6px)", userSelect: "none" }}>{tip}</div>}
-            {!premium && <div style={{ ...dm, position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,22,40,0.3)", borderRadius: 22 }}><span style={{ background: C.goDim, padding: "8px 18px", borderRadius: 14, fontSize: 13, color: C.gold, fontWeight: 600, border: `1px solid rgba(245,158,11,0.15)` }}>⭐ Premium — 9.99€</span></div>}
-          </div>
-        </Card>
-
         {/* Extend Stay — Booking.com */}
         <Card style={{ marginBottom: 16, border: "1px dashed rgba(0,85,166,0.2)", background: "rgba(0,85,166,0.03)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -1868,7 +1918,9 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
   const KioskDetail = () => {
     const staticData = PRACTICAL[subScreen]; // fallback for sun, emergency, routes
-    const nearbyPlaces = nearbyData?.categories?.[subScreen] || [];
+    const nearbyPlaces = subScreen === "food"
+      ? [...(nearbyData?.categories?.food || []), ...(nearbyData?.categories?.shop || [])]
+      : (nearbyData?.categories?.[subScreen] || []);
     const hasNearby = nearbyPlaces.length > 0;
     const svKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
 
@@ -2174,10 +2226,26 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           </div>}
           <div ref={chatEnd} />
         </div>
-        <div style={{ display: "flex", gap: 10, padding: "12px 0 4px", borderTop: `1px solid ${C.bord}`, background: `${C.bg}ee`, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", marginTop: "auto" }}>
-          <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && doChat()}
-            placeholder={t("askPlaceholder",lang)} style={{ ...dm, flex: 1, padding: "14px 18px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, borderRadius: 22, color: C.text, fontSize: 16, outline: "none", minHeight: 48 }} />
-          <button onClick={doChat} style={{ padding: "14px 22px", background: `linear-gradient(135deg,${C.accent},#0284c7)`, border: "none", borderRadius: 22, color: "#fff", fontSize: 18, cursor: "pointer", fontWeight: 600, minWidth: 52, minHeight: 48, display: "grid", placeItems: "center", boxShadow: "0 4px 16px rgba(14,165,233,0.25)" }}>→</button>
+        <div style={{ display: "flex", gap: 10, padding: "12px 0 4px", borderTop: `1px solid ${C.bord}`, background: `${C.bg}ee`, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", marginTop: "auto", flexDirection: "column" }}>
+          {/* Free message counter */}
+          {!premium && (() => {
+            const used = freeMsgUsed;
+            const left = Math.max(0, 3 - used);
+            return left > 0 ? (
+              <div style={{ ...dm, fontSize: 11, color: left === 1 ? C.gold : C.mut, textAlign: "center", padding: "2px 0" }}>
+                {({hr:`${left} od 3 besplatnih poruka`,de:`${left} von 3 kostenlosen Nachrichten`,en:`${left} of 3 free messages`,it:`${left} di 3 messaggi gratuiti`})[lang] || `${left}/3`}
+              </div>
+            ) : (
+              <div onClick={() => setShowPaywall(true)} style={{ ...dm, fontSize: 12, color: C.gold, textAlign: "center", padding: "6px 12px", cursor: "pointer", background: C.goDim, borderRadius: 10, border: `1px solid ${C.goBorder}` }}>
+                ⭐ {({hr:"Nadogradi za neograničen chat",de:"Upgrade für unbegrenzten Chat",en:"Upgrade for unlimited chat",it:"Aggiorna per chat illimitata"})[lang] || "Upgrade →"}
+              </div>
+            );
+          })()}
+          <div style={{ display: "flex", gap: 10 }}>
+            <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && doChat()}
+              placeholder={t("askPlaceholder",lang)} style={{ ...dm, flex: 1, padding: "14px 18px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, borderRadius: 22, color: C.text, fontSize: 16, outline: "none", minHeight: 48 }} />
+            <button onClick={doChat} disabled={!premium && freeMsgUsed >= 3} style={{ padding: "14px 22px", background: (!premium && freeMsgUsed >= 3) ? C.mut : `linear-gradient(135deg,${C.accent},#0284c7)`, border: "none", borderRadius: 22, color: "#fff", fontSize: 18, cursor: (!premium && freeMsgUsed >= 3) ? "default" : "pointer", fontWeight: 600, minWidth: 52, minHeight: 48, display: "grid", placeItems: "center", boxShadow: "0 4px 16px rgba(14,165,233,0.25)", opacity: (!premium && freeMsgUsed >= 3) ? 0.4 : 1 }}>→</button>
+          </div>
         </div>
       </div>
     );
@@ -2862,67 +2930,8 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             </div>
           </div>
 
-          {/* Guest / Route context bar */}
-          <div style={{
-            display: "flex", justifyContent: "space-between", alignItems: "center",
-            flexWrap: "wrap", gap: 8, marginTop: 12, padding: "11px 15px",
-            background: "rgba(245,158,11,0.04)",
-            borderRadius: 14, border: `1px solid ${C.goBorder}`,
-          }}>
-            <div style={{ ...dm, display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 17 }}>{G.flag}</span>
-              <div>
-                {(() => {
-                  try {
-                    const d = JSON.parse(localStorage.getItem("jadran_delta_context") || "{}");
-                    const f = transitFromUrl || d.from;
-                    const to = transitToUrl || d.destination?.city;
-                    const s = transitSegUrl || d.segment;
-                    return f && to ? (
-                      <>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
-                          {SEG_ICON[s] || "🚗"} {f} → {to}
-                        </div>
-                        <div style={{ fontSize: 10, color: C.mut, marginTop: 1 }}>Sloboda ceste i mora</div>
-                      </>
-                    ) : (
-                      <>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{G.name}</div>
-                        <div style={{ fontSize: 10, color: C.mut, marginTop: 1 }}>{G.accommodation}</div>
-                      </>
-                    );
-                  } catch {
-                    return <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{G.name}</div>;
-                  }
-                })()}
-              </div>
-            </div>
-            {G.arrival && !transitFromUrl && (
-              <div style={{ ...dm, fontSize: 10, color: C.mut, textAlign: "right" }}>
-                {new Date(G.arrival).toLocaleDateString(dateLocale || "hr-HR", { day:"numeric", month:"short" })}
-                {" – "}
-                {new Date(G.departure).toLocaleDateString(dateLocale || "hr-HR", { day:"numeric", month:"short" })}
-              </div>
-            )}
-          </div>
-
-          {/* Accent divider */}
-          <div style={{ height: 1, marginTop: 14,
-            background: `linear-gradient(90deg, transparent, ${C.acBorder} 30%, ${C.goBorder} 70%, transparent)` }} />
-
-          {/* Demo mode notice */}
-          {!guestProfile && !transitFromUrl && (
-            <div style={{ ...dm, display: "flex", alignItems: "center", justifyContent: "space-between",
-              marginTop: 10, padding: "9px 14px", background: "rgba(245,158,11,0.05)",
-              borderRadius: 11, border: `1px solid ${C.goBorder}` }}>
-              <span style={{ fontSize: 11, color: C.warm }}>🎭 Primjer prikaza</span>
-              <a href="/host" style={{ ...dm, fontSize: 11, color: C.accent, textDecoration: "none", fontWeight: 600 }}>Host Panel →</a>
-            </div>
-          )}
         </div>
 
-        {/* Alerts Bar */}
-        {!(phase === "pre" && subScreen === "transit") && <AlertsBar />}
 
         {/* Phase Nav */}
         <PhaseNav />
@@ -2941,14 +2950,59 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
       {phase === "kiosk" && !kioskWelcome && subScreen !== "chat" && (
         <TabBar
           active={subScreen === "affiliate" ? "home" : (["home","activities","gems","excursions"].includes(subScreen) ? subScreen : "home")}
-          onChange={(k) => { setSubScreen(k); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+          onChange={(k) => {
+            if (k === "live") { setShowKioskLive(true); return; }
+            setSubScreen(k); window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
           items={[
-            { key: "home", icon: IC.home, label: ({hr:"Početna",de:"Start",en:"Home",it:"Home",si:"Domov",cz:"Domů",pl:"Start"})[lang] || "Home" },
+            { key: "home",       icon: IC.home,   label: ({hr:"Početna",de:"Start",en:"Home",it:"Home",si:"Domov",cz:"Domů",pl:"Start"})[lang] || "Home" },
+            { key: "chat",       icon: IC.bot,    label: "AI Chat" },
+            { key: "live",       icon: IC.map,    label: ({hr:"Live",de:"Live",en:"Live",it:"Live"})[lang] || "Live" },
             { key: "activities", icon: IC.ticket, label: ({hr:"Aktivnosti",de:"Aktivitäten",en:"Activities",it:"Attività",si:"Aktivnosti",cz:"Aktivity",pl:"Aktywności"})[lang] || "Activities" },
-            { key: "gems", icon: IC.gem, label: ({hr:"Biseri",de:"Geheimtipps",en:"Gems",it:"Gemme",si:"Dragulji",cz:"Perly",pl:"Perły"})[lang] || "Gems" },
-            { key: "chat", icon: IC.bot, label: "AI Chat" },
           ]}
         />
+      )}
+
+      {/* ── KIOSK LIVE OVERLAY ── */}
+      {showKioskLive && (
+        <div style={{ position:"fixed", inset:0, zIndex:300, background:"rgba(5,14,30,0.75)", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}
+          onClick={() => setShowKioskLive(false)}>
+          <div onClick={e => e.stopPropagation()}
+            style={{ position:"absolute", bottom:0, left:0, right:0, background:"#0a1628", borderRadius:"24px 24px 0 0", padding:"24px 20px", paddingBottom:"calc(24px + env(safe-area-inset-bottom, 0px))", animation:"fadeUp 0.28s ease" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+              <div style={{ fontSize:18, fontWeight:400 }}>🌊 Jadran Sense™ <span style={{ fontSize:10, color: senseData?.source==="yolo" ? "#22c55e" : "#64748b", letterSpacing:0.5 }}>● {senseData?.source==="yolo" ? "LIVE" : "~procjena"}</span></div>
+              <button onClick={() => setShowKioskLive(false)} style={{ background:"rgba(255,255,255,0.06)", border:`1px solid rgba(14,165,233,0.12)`, borderRadius:10, color:"#94a3b8", fontSize:13, padding:"8px 14px", cursor:"pointer" }}>✕</button>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
+              {senseData?.parking && (
+                <div style={{ padding:"16px 14px", borderRadius:16, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.12)", textAlign:"center" }}>
+                  <div style={{ fontSize:28, marginBottom:6 }}>🅿️</div>
+                  <div style={{ fontSize:22, fontWeight:300, color: senseData.parking.status==="slobodno"?"#22c55e":senseData.parking.status==="umjereno"?"#f59e0b":"#ef4444" }}>{senseData.parking.free_spots}/{senseData.parking.total_spots}</div>
+                  <div style={{ fontSize:11, color:"#64748b", marginTop:2 }}>({["hr","si"].includes(lang)?"slobodnih":lang==="de"?"frei":lang==="it"?"liberi":"free"})</div>
+                </div>
+              )}
+              {senseData?.beach && (
+                <div style={{ padding:"16px 14px", borderRadius:16, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.12)", textAlign:"center" }}>
+                  <div style={{ fontSize:28, marginBottom:6 }}>🏖️</div>
+                  <div style={{ fontSize:22, fontWeight:300, color: senseData.beach.crowd==="mirno"?"#22c55e":senseData.beach.crowd==="malo gužve"?"#38bdf8":senseData.beach.crowd==="srednje gužve"?"#f59e0b":"#ef4444" }}>{senseData.beach.occupancy_pct}%</div>
+                  <div style={{ fontSize:11, color:"#64748b", marginTop:2 }}>({["hr","si"].includes(lang)?"popunjenost":lang==="de"?"Auslastung":lang==="it"?"occupazione":"occupancy"})</div>
+                </div>
+              )}
+              {senseData?.marina && (
+                <div style={{ padding:"16px 14px", borderRadius:16, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.12)", textAlign:"center" }}>
+                  <div style={{ fontSize:28, marginBottom:6 }}>⛵</div>
+                  <div style={{ fontSize:22, fontWeight:300, color: senseData.marina.status==="slobodno"?"#22c55e":senseData.marina.status==="umjereno"?"#f59e0b":"#ef4444" }}>{senseData.marina.free_moorings}</div>
+                  <div style={{ fontSize:11, color:"#64748b", marginTop:2 }}>({["hr","si"].includes(lang)?"vezova":lang==="de"?"Plätze":lang==="it"?"posti":"berths"})</div>
+                </div>
+              )}
+              {!senseData && (
+                <div style={{ gridColumn:"1/-1", padding:"24px", textAlign:"center", color:"#64748b", fontSize:14 }}>
+                  {({hr:"Učitavanje...",de:"Laden...",en:"Loading...",it:"Caricamento..."})[lang]||"Loading..."}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Overlays */}
