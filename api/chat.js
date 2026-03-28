@@ -1440,7 +1440,15 @@ export default async function handler(req, res) {
         const icon = c.icon || (c.severity === "critical" ? "⛔" : c.severity === "warning" ? "⚠️" : "ℹ️");
         return `${icon} [${(c.severity || "info").toUpperCase()}] ${c.title}: ${c.body} (${c.source || "live"})`;
       });
-      const guideCtx = `[LIVE INTELLIGENCE — HERE Traffic + YOLO Sense + Meteo]\n${lines.join("\n")}\nOVO SU LIVE PODACI — integriraj ih u savjet bez prepisivanja izvora. Ako postoji kritično upozorenje, NAGLASI ga na početku odgovora.`;
+      const hasCritical = sorted.some(c => c.severity === "critical");
+      const hasWarning = sorted.some(c => c.severity === "warning");
+      const guideCtx = [
+        `[LIVE INTELLIGENCE — HERE Traffic + YOLO Sense + Meteo]`,
+        ...lines,
+        ``,
+        `PRAVILO: Ovi podaci su UVIJEK relevantni za putnički izvještaj. OBAVEZNO ih pomeni u svakom odgovoru koji se tiče rute, puta, vremena ili destinacije — ne čekaj da te pitaju. ${hasCritical ? "⛔ POSTOJI KRITIČNO UPOZORENJE — stavi na POČETAK odgovora." : hasWarning ? "⚠️ Postoje upozorenja — pomeni ih rano u odgovoru." : "Integriraj live podatke prirodno u savjet."}`,
+        `ZABRANA: Ne piši 'prema podacima' ili 'izvori kažu' — govori direktno kao iskusan lokalni vodič koji zna što se događa na cesti.`,
+      ].join("\n");
       systemPrompt = guideCtx + '\n\n' + systemPrompt;
     }
 

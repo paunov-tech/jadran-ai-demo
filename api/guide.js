@@ -29,18 +29,29 @@ const SEV = { critical: 0, warning: 1, info: 2, tip: 3 };
 
 async function fetchHereTraffic(oLat, oLng, dLat, dLng) {
   try {
-    const southLat = Math.min(oLat, dLat) - 0.3, northLat = Math.max(oLat, dLat) + 0.3;
-    const westLng = Math.min(oLng, dLng) - 0.3, eastLng = Math.max(oLng, dLng) + 0.3;
-    const r = await fetch(
-      `https://data.traffic.hereapi.com/v7/incidents?in=bbox:${westLng},${southLat},${eastLng},${northLat}&locationReferencing=shape&apiKey=${HERE_KEY}`,
-      { signal: AbortSignal.timeout(4000) }
-    );
-    if (!r.ok) return [];
+    if (!HERE_KEY) { console.warn("guide: HERE_API_KEY not set"); return []; }
+    // Routes from Central Europe to Adriatic deviate significantly west of the
+    // straight line (via Graz 15.4°E, Ljubljana 14.5°E, Zagreb 16.0°E).
+    // Expand west by 2.5° and east/north/south by 0.5° to cover real road corridor.
+    const southLat = Math.min(oLat, dLat) - 0.5;
+    const northLat = Math.max(oLat, dLat) + 0.5;
+    const westLng  = Math.min(oLng, dLng) - 2.5;   // was 0.3 — misses Ljubljana/Graz
+    const eastLng  = Math.max(oLng, dLng) + 0.5;
+    const url = `https://data.traffic.hereapi.com/v7/incidents?in=bbox:${westLng.toFixed(4)},${southLat.toFixed(4)},${eastLng.toFixed(4)},${northLat.toFixed(4)}&locationReferencing=shape&apiKey=${HERE_KEY}`;
+    console.log("guide: HERE bbox", westLng.toFixed(2), southLat.toFixed(2), eastLng.toFixed(2), northLat.toFixed(2));
+    const r = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (!r.ok) {
+      const errText = await r.text().catch(() => "");
+      console.warn(`guide: HERE traffic HTTP ${r.status}:`, errText.slice(0, 200));
+      return [];
+    }
     const data = await r.json();
-    return (data.results || []).map(i => ({
+    const incidents = data.results || data.items || [];
+    console.log("guide: HERE incidents count:", incidents.length);
+    return incidents.map(i => ({
       type: i.incidentDetails?.type || "UNKNOWN",
-      desc: i.incidentDetails?.description?.value || "",
-      road: i.location?.description?.value || "",
+      desc: i.incidentDetails?.description?.value || i.incidentDetails?.summary?.value || "",
+      road: i.location?.description?.value || i.location?.roadName?.value || "",
       severity: i.incidentDetails?.criticality || "minor",
       from: i.incidentDetails?.startTime,
       to: i.incidentDetails?.endTime,
