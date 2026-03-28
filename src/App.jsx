@@ -261,6 +261,37 @@ const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C, extraCa
 /* ══════════════════════════════════════════════════════════
 
 
+/* ─── ALERT TICKER — module-level, isolated re-renders ─── */
+const AlertTicker = React.memo(function AlertTicker({ items }) {
+  const [idx, setIdx] = React.useState(0);
+  React.useEffect(() => {
+    setIdx(0); // reset when items change
+    if (items.length <= 1) return;
+    const id = setInterval(() => setIdx(i => (i + 1) % items.length), 5000);
+    return () => clearInterval(id);
+  }, [items.length]);
+  if (!items.length) return null;
+  const item = items[Math.min(idx, items.length - 1)];
+  const isCrit = item.sev === "critical";
+  return (
+    <div style={{ display:"flex", alignItems:"center", gap:8, padding:"7px 12px", borderRadius:10,
+      background: isCrit ? "rgba(239,68,68,0.08)" : "rgba(245,158,11,0.07)",
+      border: `1px solid ${isCrit ? "rgba(239,68,68,0.22)" : "rgba(245,158,11,0.2)"}`,
+      marginBottom:10, minHeight:34, overflow:"hidden" }}>
+      <span style={{ fontSize:13, flexShrink:0, lineHeight:1 }}>{item.icon}</span>
+      <span key={idx} style={{ flex:1, fontSize:12, color:"#cbd5e1", fontFamily:"'Outfit',sans-serif",
+        overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
+        animation:"tickerFade 0.35s ease" }}>
+        {item.text}
+      </span>
+      {items.length > 1 && <span style={{ fontSize:9, color:"rgba(255,255,255,0.18)", flexShrink:0, fontFamily:"'Outfit',sans-serif" }}>{idx+1}/{items.length}</span>}
+      {item.dismiss && (
+        <button onClick={item.dismiss} style={{ background:"none", border:"none", color:"rgba(255,255,255,0.22)", fontSize:16, cursor:"pointer", padding:"4px", flexShrink:0, lineHeight:1, minWidth:28, minHeight:28, display:"grid", placeItems:"center" }}>×</button>
+      )}
+    </div>
+  );
+});
+
 /* ─── COMPONENT ─── */
 export default function JadranUnified() {
   // mounted
@@ -1791,41 +1822,45 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           </div>
         </Card>
 
-        {/* Forecast strip — below Adriatic Pulse */}
-        <div style={{ display: "flex", gap: 2, marginBottom: 10, marginTop: -6 }}>
-          {(forecast || FORECAST_DEFAULT).map((d, i) => {
-            const locked = !premium && i >= 3;
-            return (
-              <div key={i} style={{ flex: 1, textAlign: "center", padding: "10px 4px", borderRadius: 12, position: "relative", cursor: locked ? "pointer" : "default", background: "rgba(14,165,233,0.03)", border: `1px solid ${C.bord}` }}
-                onClick={() => locked && setShowPaywall(true)}>
-                <div style={{ ...dm, fontSize: 10, color: C.mut, letterSpacing: 1 }}>{(FORECAST_DAYS[lang]||FORECAST_DAYS.hr)[d.di]}</div>
-                <div style={{ fontSize: 18, margin: "4px 0", filter: locked ? "blur(4px)" : "none" }}>{d.icon}</div>
-                <div style={{ ...dm, fontSize: 12, color: C.mut, filter: locked ? "blur(4px)" : "none" }}>{d.h}°</div>
-                {locked && <div style={{ position:"absolute", inset:0, display:"grid", placeItems:"center" }}><span style={{ ...dm, fontSize:9, color:C.gold, background:C.goDim, padding:"2px 5px", borderRadius:5, border:`1px solid ${C.goBorder}` }}>PRO</span></div>}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Emergency/critical alerts — inline below forecast */}
-        {(emergencyAlert || alerts.some(a => (a.severity==="critical"||a.severity==="high") && !dismissedAlerts.has(a.title))) && (
-          <div style={{ marginBottom: 12 }}>
-            {emergencyAlert && (
-              <div style={{ padding: "10px 14px", borderRadius: 12, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                <span style={{ fontSize: 16, flexShrink: 0 }}>🚨</span>
-                <span style={{ ...dm, fontSize: 13, color: C.text, flex: 1, lineHeight: 1.4 }}>{emergencyAlert}</span>
-                <button onClick={() => setEmergencyAlert(null)} style={{ background: "none", border: "none", color: C.mut, fontSize: 16, cursor: "pointer", padding: 4, flexShrink: 0 }}>×</button>
-              </div>
-            )}
-            {alerts.filter(a => (a.severity==="critical"||a.severity==="high") && !dismissedAlerts.has(a.title)).slice(0,2).map((a,i) => (
-              <div key={i} style={{ padding: "10px 14px", borderRadius: 12, background: a.severity==="critical" ? "rgba(239,68,68,0.06)" : "rgba(245,158,11,0.06)", border: `1px solid ${a.severity==="critical" ? "rgba(239,68,68,0.18)" : "rgba(245,158,11,0.18)"}`, display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                <span style={{ fontSize: 14, flexShrink: 0 }}>{ALERT_ICONS[a.type] || "⚠️"}</span>
-                <span style={{ ...dm, fontSize: 12, color: "#cbd5e1", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.title}</span>
-                <button onClick={() => setDismissedAlerts(s => new Set([...s, a.title]))} style={{ background: "none", border: "none", color: C.mut, fontSize: 16, cursor: "pointer", padding: 4, flexShrink: 0 }}>×</button>
+        {/* 3-day forecast — expanded, multi-source aggregation */}
+        <div style={{ marginBottom: 10, marginTop: -4 }}>
+          <div style={{ ...dm, fontSize: 8, color: C.mut, letterSpacing: 2, textAlign: "right", marginBottom: 4, opacity: 0.5 }}>
+            openmeteo · meteoadriatic · sat
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {(forecast || FORECAST_DEFAULT).slice(0, 3).map((d, i) => (
+              <div key={i} style={{ flex: 1, textAlign: "center", padding: "14px 6px 12px", borderRadius: 14,
+                background: i === 0 ? "rgba(14,165,233,0.07)" : "rgba(14,165,233,0.03)",
+                border: `1px solid ${i === 0 ? "rgba(14,165,233,0.18)" : C.bord}` }}>
+                <div style={{ ...dm, fontSize: 10, color: i === 0 ? C.accent : C.mut, letterSpacing: 1, fontWeight: i === 0 ? 600 : 400, marginBottom: 8 }}>
+                  {i === 0
+                    ? ({hr:"Danas",de:"Heute",en:"Today",it:"Oggi",si:"Danes",cz:"Dnes",pl:"Dziś"})[lang]||"Today"
+                    : (FORECAST_DAYS[lang]||FORECAST_DAYS.hr)[d.di]}
+                </div>
+                <div style={{ fontSize: 30, margin: "0 0 8px" }}>{d.icon}</div>
+                <div style={{ ...dm, fontSize: 18, fontWeight: 400, color: C.text, lineHeight: 1 }}>{d.h}°</div>
+                <div style={{ ...dm, fontSize: 11, color: C.mut, marginTop: 3 }}>{d.l}°</div>
+                {i === 0 && (
+                  <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 3 }}>
+                    {weather.sea && <div style={{ ...dm, fontSize: 9, color: C.accent }}>🌊 {weather.sea}°</div>}
+                    {weather.uv >= 5 && <div style={{ ...dm, fontSize: 9, color: weather.uv >= 8 ? C.red : C.gold }}>UV {weather.uv}</div>}
+                    {weather.wind && <div style={{ ...dm, fontSize: 9, color: C.mut }}>{weather.wind}</div>}
+                  </div>
+                )}
               </div>
             ))}
           </div>
-        )}
+        </div>
+
+        {/* Critical alerts — single rotating line, CSS-animated, instant */}
+        {(() => {
+          const items = [
+            ...(emergencyAlert ? [{ icon:"🚨", text: emergencyAlert, sev:"critical", dismiss: () => setEmergencyAlert(null) }] : []),
+            ...alerts.filter(a => (a.severity==="critical"||a.severity==="high") && !dismissedAlerts.has(a.title))
+              .map(a => ({ icon: ALERT_ICONS[a.type]||"⚠️", text: a.title, sev: a.severity, dismiss: () => setDismissedAlerts(s => new Set([...s, a.title])) })),
+          ];
+          return items.length ? <AlertTicker items={items} /> : null;
+        })()}
 
 
         {/* ── AI Guide — primary CTA above grid ── */}
@@ -2599,12 +2634,103 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
       );
     };
 
+    // ── HITNO / Emergency screen ──
+    const KioskEmergency = () => {
+      const [ne, setNe] = React.useState(null); // nearbyEmergency
+      React.useEffect(() => {
+        const lat = nearbyData?.location?.lat || (kioskCoords?.[0]);
+        const lng = nearbyData?.location?.lng || (kioskCoords?.[1]);
+        if (!lat || !lng) return;
+        fetch(`/api/nearby?lat=${lat}&lng=${lng}&cats=hospital,clinic,pharmacy,vet&limit=6&lang=${lang}`)
+          .then(r => r.json()).then(setNe).catch(() => {});
+      }, []); // eslint-disable-line
+      const NUMS = [
+        { n:"112", l:{hr:"Hitna pomoć / Spašavanje",de:"Notruf / Rettung",en:"Emergency / Rescue",it:"Emergenza / Soccorso",si:"Nujna pomoč",cz:"Tísňové volání",pl:"Pogotowie"}, icon:"🚑", clr:"#ef4444" },
+        { n:"194", l:{hr:"Hitna medicinska",de:"Rettungsdienst",en:"Medical emergency",it:"Emergenza medica",si:"Reševalci",cz:"Záchranná služba",pl:"Pogotowie medyczne"}, icon:"🏥", clr:"#ef4444" },
+        { n:"192", l:{hr:"Policija",de:"Polizei",en:"Police",it:"Polizia",si:"Policija",cz:"Policie",pl:"Policja"}, icon:"🚓", clr:"#3b82f6" },
+        { n:"193", l:{hr:"Vatrogasci",de:"Feuerwehr",en:"Fire brigade",it:"Pompieri",si:"Gasilci",cz:"Hasiči",pl:"Straż pożarna"}, icon:"🚒", clr:"#f97316" },
+        { n:"1987", l:{hr:"HAK · ceste",de:"Straßenhilfe",en:"Road assistance",it:"Soccorso stradale",si:"Pomoč na cesti",cz:"Silniční pomoc",pl:"Pomoc drogowa"}, icon:"🛣️", clr:"#f59e0b" },
+      ];
+      const lbl = (o) => o[lang] || o[lang==="at"?"de":"en"] || o.en || o.hr;
+      const catGroups = [
+        { key:"hospital", icon:"🏥", l:{hr:"Bolnice",de:"Krankenhäuser",en:"Hospitals",it:"Ospedali",si:"Bolnišnice",cz:"Nemocnice",pl:"Szpitale"} },
+        { key:"clinic",   icon:"🩺", l:{hr:"Ambulante / Ordinacije",de:"Kliniken / Praxen",en:"Clinics / Practices",it:"Ambulatori / Studi",si:"Klinike",cz:"Kliniky",pl:"Kliniki"} },
+        { key:"pharmacy", icon:"💊", l:{hr:"Ljekarnice",de:"Apotheken",en:"Pharmacies",it:"Farmacie",si:"Lekarne",cz:"Lékárny",pl:"Apteki"} },
+        { key:"vet",      icon:"🐾", l:{hr:"Veterinari",de:"Tierärzte",en:"Veterinarians",it:"Veterinari",si:"Veterinarji",cz:"Veterináři",pl:"Weterynarze"} },
+      ];
+      const pharm = nearbyData?.categories?.pharmacy || [];
+      return (
+        <>
+          <BackBtn onClick={() => setSubScreen("home")} />
+          <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:18 }}>
+            <span style={{ fontSize:36 }}>🚨</span>
+            <div>
+              <div style={{ ...hf, fontSize:24, fontWeight:400, color:C.red }}>
+                {({hr:"Hitne službe",de:"Notfalldienste",en:"Emergency services",it:"Servizi di emergenza",si:"Nujne službe",cz:"Záchranné služby",pl:"Służby ratunkowe"})[lang]||"Emergency"}
+              </div>
+              <div style={{ ...dm, fontSize:11, color:C.mut }}>📍 {kioskCity}</div>
+            </div>
+          </div>
+
+          {/* Emergency numbers — always instant, no API needed */}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:20 }}>
+            {NUMS.map(num => (
+              <a key={num.n} href={`tel:${num.n}`}
+                style={{ padding:"14px 12px", borderRadius:14, background:`${num.clr}0a`, border:`1px solid ${num.clr}28`,
+                  textDecoration:"none", display:"flex", alignItems:"center", gap:10 }}>
+                <span style={{ fontSize:22, flexShrink:0 }}>{num.icon}</span>
+                <div style={{ minWidth:0 }}>
+                  <div style={{ ...dm, fontSize:18, fontWeight:600, color:num.clr, lineHeight:1 }}>{num.n}</div>
+                  <div style={{ ...dm, fontSize:10, color:C.mut, marginTop:2, lineHeight:1.3 }}>{lbl(num.l)}</div>
+                </div>
+              </a>
+            ))}
+          </div>
+
+          {/* Nearby services by category */}
+          {catGroups.map(cat => {
+            const places = cat.key === "pharmacy" ? pharm
+              : (ne?.categories?.[cat.key] || []);
+            if (!places.length && ne !== null) return null; // loaded but empty — skip
+            return (
+              <div key={cat.key} style={{ marginBottom:16 }}>
+                <div style={{ ...dm, fontSize:10, color:C.accent, letterSpacing:3, fontWeight:700, marginBottom:8 }}>
+                  {cat.icon} {lbl(cat.l).toUpperCase()}
+                </div>
+                {(!ne && cat.key !== "pharmacy") ? (
+                  // Loading shimmer
+                  <div style={{ height:60, borderRadius:12, background:"rgba(14,165,233,0.04)", border:`1px solid ${C.bord}`,
+                    backgroundImage:"linear-gradient(90deg,transparent 0%,rgba(14,165,233,0.06) 50%,transparent 100%)",
+                    backgroundSize:"200% 100%", animation:"shimmer 1.6s ease infinite" }} />
+                ) : (
+                  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                    {places.map((p, i) => (
+                      <div key={p.place_id||i} style={{ padding:"12px 14px", borderRadius:12, background:C.card, border:`1px solid ${C.bord}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                        <div style={{ minWidth:0 }}>
+                          <div style={{ ...dm, fontSize:14, color:C.text, fontWeight:500, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.name}</div>
+                          {p.address && <div style={{ ...dm, fontSize:11, color:C.mut, marginTop:1 }}>{p.address}</div>}
+                        </div>
+                        <div style={{ ...dm, fontSize:11, color:C.accent, flexShrink:0, marginLeft:8 }}>
+                          {p.distance ? `${p.distance}m` : p.walkMin ? `${p.walkMin}min` : ""}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </>
+      );
+    };
+
     if (subScreen === "home") return KioskHome();
     if (subScreen === "activities") return KioskActivities();
     if (subScreen === "excursions") return KioskExcursions();
     if (subScreen === "gems") return KioskGems();
     if (subScreen === "chat") return KioskChat();
     if (subScreen === "affiliate" && affiliateId) return KioskAffiliate();
+    if (subScreen === "emergency") return KioskEmergency();
     if (PRACTICAL[subScreen] || NEARBY_CATS.includes(subScreen)) return KioskDetail();
     return KioskHome();
   };

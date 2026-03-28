@@ -117,6 +117,7 @@ export const GLOBAL_CSS = `
   @keyframes float     { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
   @keyframes pulseGlow { 0%,100% { box-shadow:0 0 18px rgba(14,165,233,0.12); } 50% { box-shadow:0 0 36px rgba(14,165,233,0.28); } }
   @keyframes pulse     { 0%,100% { opacity:1; } 50% { opacity:0.45; } }
+  @keyframes tickerFade { from { opacity:0; transform:translateX(7px); } to { opacity:1; transform:translateX(0); } }
   @keyframes checkPop  { 0% { transform:scale(0) rotate(-10deg); } 60% { transform:scale(1.15) rotate(2deg); } 100% { transform:scale(1) rotate(0); } }
   @keyframes borderFlow {
     0%   { background-position: 0% 50%; }
