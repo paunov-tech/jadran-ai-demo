@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     const lat = parseFloat(req.query?.lat) || 44.7561; // fallback: Rab
     const lon = parseFloat(req.query?.lon) || 14.7642;
     const loc = req.query?.loc || "Rab";
-    const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,pressure_msl,cloud_cover&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=Europe/Zagreb&forecast_days=2`;
+    const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,pressure_msl,cloud_cover&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=Europe/Zagreb&forecast_days=2`;
     const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=sea_surface_temperature,wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period&hourly=wave_height,wave_period,swell_wave_height&timezone=Europe/Zagreb&forecast_days=1`;
 
     const [wxRes, marineRes] = await Promise.all([
@@ -116,7 +116,24 @@ export default async function handler(req, res) {
       l: Math.round(wx.daily.temperature_2m_min[i] || h - 8),
     }));
 
-    return res.status(200).json({ current, forecast });
+    // Hourly — next 12 slots from current hour
+    const nowHour = new Date().getHours();
+    const hourlyTimes = wx.hourly?.time || [];
+    const startIdx = hourlyTimes.findIndex(t => {
+      const h = new Date(t).getHours();
+      return h >= nowHour;
+    });
+    const si = startIdx >= 0 ? startIdx : 0;
+    const hourly = hourlyTimes.slice(si, si + 12).map((t, i) => ({
+      h: t.split("T")[1]?.substring(0, 5) || "",
+      temp: Math.round(wx.hourly.temperature_2m?.[si + i] ?? 20),
+      wind: Math.round(wx.hourly.wind_speed_10m?.[si + i] ?? 0),
+      gusts: Math.round(wx.hourly.wind_gusts_10m?.[si + i] ?? 0),
+      rain: Math.round(wx.hourly.precipitation_probability?.[si + i] ?? 0),
+      icon: wmoEmoji(wx.hourly.weather_code?.[si + i] ?? 0),
+    }));
+
+    return res.status(200).json({ current, forecast, hourly });
   } catch (err) {
     console.error('[WEATHER] Error:', err.message);
     return res.status(200).json({ current: null, forecast: null, error: err.message });

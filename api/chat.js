@@ -413,6 +413,18 @@ function buildWeatherCtx(weather) {
 
   let ctx = `TRENUTNO VRIJEME: ${parts.join(", ")}.`;
   if (flags.length) ctx += `\nINTERPRETACIJA ZA TURISTA: ${flags.join(" | ")}`;
+
+  // Hourly forecast — next 6 hours
+  if (Array.isArray(weather.hourly) && weather.hourly.length > 0) {
+    const slots = weather.hourly.slice(0, 6);
+    const rainSlots = slots.filter(h => h.rain >= 40);
+    const windSlots = slots.filter(h => h.gusts >= 50);
+    const hStr = slots.map(h => `${h.h} ${h.icon}${h.temp}°${h.rain >= 30 ? ` 🌧${h.rain}%` : ""}${h.gusts >= 50 ? ` 💨${h.gusts}` : ""}`).join(" | ");
+    ctx += `\nPROGNOZA NAREDNIH 6H: ${hStr}`;
+    if (rainSlots.length >= 2) ctx += `\n⚠️ KIŠA SE OČEKUJE: ${rainSlots.map(h => h.h).join(", ")} — savjetuj kišobran ili promjenu planova`;
+    if (windSlots.length >= 1) ctx += `\n⚠️ JAKI UDARI: ${windSlots.map(h => `${h.h} ${h.gusts}km/h`).join(", ")} — oprez za kampere i plovila`;
+  }
+
   ctx += `\nPRAVILO: Ove podatke UVIJEK prevedi u konkretne akcijske savjete za turista — ne izlistaj samo brojeve.`;
   return ctx;
 }
@@ -1283,6 +1295,10 @@ export default async function handler(req, res) {
       if (d.segment) parts.push(`Segment: ${d.segment}`);
       if (d.from) parts.push(`Iz: ${d.from}`);
       if (d.destination?.city) parts.push(`Destinacija: ${d.destination.city}${d.destination.region ? ` (${d.destination.region})` : ""}`);
+      if (d.route_km) {
+        const routeStr = `Ruta: ${d.route_km}km${d.route_hrs != null ? `, ~${d.route_hrs}h${d.route_mins ? d.route_mins + "min" : ""}` : ""}`;
+        parts.push(routeStr);
+      }
       if (d.travelers) parts.push(`Putnici: ${d.travelers.adults || 2} odraslih${d.travelers.kids?.length ? `, ${d.travelers.kids.length} djece` : ""}`);
       const phaseMap = { pretrip: "PRE-TRIP", transit: "TRANSIT (na putu)", arrival: "ARRIVAL", odmor: "STAY", departure: "DEPARTURE", landing: "LANDING" };
       if (d.phase) parts.push(`Faza: ${phaseMap[d.phase] || d.phase}`);

@@ -93,18 +93,38 @@ async function fetchYoloSensors() {
 
 async function fetchWeatherRoute(oLat, oLng, dLat, dLng) {
   try {
-    // Weather at midpoint + destination
+    // Weather at origin + midpoint + destination
     const mLat = (oLat + dLat) / 2, mLng = (oLng + dLng) / 2;
-    const [midR, dstR] = await Promise.all([
+    const hourlyFields = "temperature_2m,weather_code,wind_speed_10m,wind_gusts_10m,precipitation_probability";
+    const [oriR, midR, dstR] = await Promise.all([
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${oLat}&longitude=${oLng}&current=temperature_2m,weather_code,wind_speed_10m,wind_gusts_10m&hourly=${hourlyFields}&timezone=Europe/Zagreb&forecast_days=1`, { signal: AbortSignal.timeout(4000) }),
       fetch(`https://api.open-meteo.com/v1/forecast?latitude=${mLat}&longitude=${mLng}&current=temperature_2m,weather_code,wind_speed_10m,wind_gusts_10m&timezone=Europe/Zagreb`, { signal: AbortSignal.timeout(4000) }),
-      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${dLat}&longitude=${dLng}&current=temperature_2m,weather_code,wind_speed_10m,wind_gusts_10m,uv_index&timezone=Europe/Zagreb`, { signal: AbortSignal.timeout(4000) }),
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${dLat}&longitude=${dLng}&current=temperature_2m,weather_code,wind_speed_10m,wind_gusts_10m,uv_index&hourly=${hourlyFields}&timezone=Europe/Zagreb&forecast_days=1`, { signal: AbortSignal.timeout(4000) }),
     ]);
+    const ori = await oriR.json();
     const mid = await midR.json();
     const dst = await dstR.json();
     const wmo = (code) => code <= 1 ? "sunny" : code <= 3 ? "cloudy" : code <= 48 ? "fog" : code <= 67 ? "rain" : code <= 77 ? "snow" : code >= 95 ? "storm" : "overcast";
+
+    // Hourly rain risk at destination (next 6h)
+    const nowH = new Date().getHours();
+    const dstHourly = (dst.hourly?.time || []).map((t, i) => ({
+      h: new Date(t).getHours(),
+      rain: dst.hourly.precipitation_probability?.[i] || 0,
+      gusts: dst.hourly.wind_gusts_10m?.[i] || 0,
+      condition: wmo(dst.hourly.weather_code?.[i] || 0),
+    })).filter(s => s.h >= nowH && s.h < nowH + 6);
+
+    const oriHourly = (ori.hourly?.time || []).map((t, i) => ({
+      h: new Date(t).getHours(),
+      rain: ori.hourly.precipitation_probability?.[i] || 0,
+      gusts: ori.hourly.wind_gusts_10m?.[i] || 0,
+    })).filter(s => s.h >= nowH && s.h < nowH + 3);
+
     return {
+      origin: { temp: ori.current?.temperature_2m, wind: ori.current?.wind_speed_10m, gusts: ori.current?.wind_gusts_10m, condition: wmo(ori.current?.weather_code || 0), hourly: oriHourly },
       midpoint: { temp: mid.current?.temperature_2m, wind: mid.current?.wind_speed_10m, gusts: mid.current?.wind_gusts_10m, condition: wmo(mid.current?.weather_code || 0) },
-      destination: { temp: dst.current?.temperature_2m, wind: dst.current?.wind_speed_10m, gusts: dst.current?.wind_gusts_10m, uv: dst.current?.uv_index, condition: wmo(dst.current?.weather_code || 0) },
+      destination: { temp: dst.current?.temperature_2m, wind: dst.current?.wind_speed_10m, gusts: dst.current?.wind_gusts_10m, uv: dst.current?.uv_index, condition: wmo(dst.current?.weather_code || 0), hourly: dstHourly },
     };
   } catch (e) { console.warn("guide: weather error:", e.message); return null; }
 }
@@ -193,8 +213,46 @@ function generateCards(traffic, sense, weather, seg, lang) {
 
   // ── WEATHER ──
   if (weather) {
+    const o = weather.origin;
     const d = weather.destination;
     const m = weather.midpoint;
+
+    // Origin departure conditions card
+    if (o) {
+      const oIcon = o.condition === "sunny" ? "☀️" : o.condition === "rain" ? "🌧️" : o.condition === "snow" ? "🌨️" : o.condition === "fog" ? "🌫️" : o.condition === "storm" ? "⛈️" : "⛅";
+      const oRainHours = (o.hourly || []).filter(h => h.rain >= 40);
+      const oBody = de
+        ? `${oIcon} ${Math.round(o.temp)}°C, Wind ${Math.round(o.wind)} km/h${oRainHours.length ? ` · 🌧️ Regen erwartet ${oRainHours.length}h` : " · Gutes Fahrwetter"}`
+        : hr
+        ? `${oIcon} ${Math.round(o.temp)}°C, vjetar ${Math.round(o.wind)} km/h${oRainHours.length ? ` · 🌧️ kiša za ${oRainHours.length}h` : " · dobro za polazak"}`
+        : `${oIcon} ${Math.round(o.temp)}°C, wind ${Math.round(o.wind)} km/h${oRainHours.length ? ` · 🌧️ rain in ${oRainHours.length}h` : " · good conditions"}`;
+      cards.push({
+        id: "wx_origin",
+        severity: oRainHours.length >= 2 || o.condition === "storm" ? "warning" : "tip",
+        icon: oIcon,
+        title: de ? "Abfahrt — aktuelles Wetter" : hr ? "Polazak — trenutno vrijeme" : "Departure — current weather",
+        body: oBody,
+        source: "Open-Meteo",
+        ts: new Date().toISOString(),
+      });
+    }
+
+    // Rain alert at destination in next 6h
+    const dstRainHours = (d?.hourly || []).filter(h => h.rain >= 50);
+    if (dstRainHours.length >= 2) {
+      cards.push({
+        id: "wx_rain_dest",
+        severity: "warning",
+        icon: "🌧️",
+        title: de ? "Regen am Zielort erwartet" : hr ? "Kiša na destinaciji" : "Rain expected at destination",
+        body: de ? `Regenwahrscheinlichkeit ≥50% für ${dstRainHours.length}h. Kap-Regenschirm einpacken!`
+             : hr ? `Kiša ≥50% za ${dstRainHours.length}h. Ponesi kabanicu ili kišobran!`
+             : `Rain ≥50% for ${dstRainHours.length}h. Pack a rain jacket!`,
+        source: "Open-Meteo",
+        ts: new Date().toISOString(),
+      });
+    }
+
     // Storm/strong wind warning
     if (d?.condition === "storm" || m?.condition === "storm") {
       cards.push({

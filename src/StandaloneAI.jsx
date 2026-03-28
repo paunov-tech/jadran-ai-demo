@@ -616,7 +616,7 @@ const [lang, setLang] = useState(() => {
         .then(r => r.json())
         .then(d => {
           if (d.current?.temp) {
-            const w = { ...d.current, location: c.loc };
+            const w = { ...d.current, location: c.loc, hourly: d.hourly || [] };
             setWeather(w); setWeatherTime(new Date());
             if (notifPerm === "granted") {
               const a = [];
