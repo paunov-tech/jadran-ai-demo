@@ -262,37 +262,6 @@ const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C, extraCa
 /* ══════════════════════════════════════════════════════════
 
 
-/* ─── ALERT TICKER — module-level, isolated re-renders ─── */
-const AlertTicker = React.memo(function AlertTicker({ items }) {
-  const [idx, setIdx] = React.useState(0);
-  React.useEffect(() => {
-    setIdx(0); // reset when items change
-    if (items.length <= 1) return;
-    const id = setInterval(() => setIdx(i => (i + 1) % items.length), 5000);
-    return () => clearInterval(id);
-  }, [items.length]);
-  if (!items.length) return null;
-  const item = items[Math.min(idx, items.length - 1)];
-  const isCrit = item.sev === "critical";
-  return (
-    <div style={{ display:"flex", alignItems:"center", gap:8, padding:"7px 12px", borderRadius:10,
-      background: isCrit ? "rgba(239,68,68,0.08)" : "rgba(245,158,11,0.07)",
-      border: `1px solid ${isCrit ? "rgba(239,68,68,0.22)" : "rgba(245,158,11,0.2)"}`,
-      marginBottom:10, minHeight:34, overflow:"hidden" }}>
-      <span style={{ fontSize:13, flexShrink:0, lineHeight:1 }}>{item.icon}</span>
-      <span key={idx} style={{ flex:1, fontSize:12, color:"#cbd5e1", fontFamily:"'Outfit',sans-serif",
-        overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
-        animation:"tickerFade 0.35s ease" }}>
-        {item.text}
-      </span>
-      {items.length > 1 && <span style={{ fontSize:9, color:"rgba(255,255,255,0.18)", flexShrink:0, fontFamily:"'Outfit',sans-serif" }}>{idx+1}/{items.length}</span>}
-      {item.dismiss && (
-        <button onClick={item.dismiss} style={{ background:"none", border:"none", color:"rgba(255,255,255,0.22)", fontSize:16, cursor:"pointer", padding:"4px", flexShrink:0, lineHeight:1, minWidth:28, minHeight:28, display:"grid", placeItems:"center" }}>×</button>
-      )}
-    </div>
-  );
-});
-
 /* ─── COMPONENT ─── */
 export default function JadranUnified() {
   // mounted
@@ -327,7 +296,6 @@ export default function JadranUnified() {
   const [kioskCoords, setKioskCoords] = useState(null); // [lat, lng] from GPS or fallback
   const [kioskWelcome, setKioskWelcome] = useState(false); // transition screen
   const [senseData, setSenseData] = useState(null); // YOLO Sense parking/marina/beach
-  const [showKioskLive, setShowKioskLive] = useState(false);
   const [selectedExp, setSelectedExp] = useState(null);
   const [booked, setBooked] = useState(new Set());
   // Viator activities
@@ -1733,6 +1701,19 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           </div>
         </div>
 
+        {/* Emergency alert from TZ Dashboard */}
+        {emergencyAlert && (
+          <div style={{ padding: "14px 18px", borderRadius: 14, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", marginBottom: 14, display: "flex", alignItems: "flex-start", gap: 12 }}>
+            <span style={{ fontSize: 22, flexShrink: 0 }}>🚨</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ ...dm, fontSize: 11, color: C.red, fontWeight: 700, letterSpacing: 2, marginBottom: 4 }}>
+                {({hr:"HITNO UPOZORENJE",de:"NOTFALL-WARNUNG",en:"EMERGENCY ALERT",it:"AVVISO DI EMERGENZA",si:"NUJNO OPOZORILO",cz:"NOUZOVÉ VAROVÁNÍ",pl:"ALERT AWARYJNY"})[lang] || "HITNO UPOZORENJE"}
+              </div>
+              <div style={{ ...dm, fontSize: 14, color: C.text, lineHeight: 1.5 }}>{emergencyAlert}</div>
+            </div>
+            <button onClick={() => setEmergencyAlert(null)} style={{ background: "none", border: "none", color: C.mut, fontSize: 18, cursor: "pointer", padding: 4, flexShrink: 0 }}>✕</button>
+          </div>
+        )}
 
         {/* ═══ TRIAL EXPIRY BANNER — <12h remaining ═══ */}
         {!premium && trialRemaining !== null && trialRemaining > 0 && trialRemaining < 43200000 && (() => {
@@ -1823,46 +1804,59 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           </div>
         </Card>
 
-        {/* 3-day forecast — expanded, multi-source aggregation */}
-        <div style={{ marginBottom: 10, marginTop: -4 }}>
-          <div style={{ ...dm, fontSize: 8, color: C.mut, letterSpacing: 2, textAlign: "right", marginBottom: 4, opacity: 0.5 }}>
-            openmeteo · meteoadriatic · sat
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            {(forecast || FORECAST_DEFAULT).slice(0, 3).map((d, i) => (
-              <div key={i} style={{ flex: 1, textAlign: "center", padding: "14px 6px 12px", borderRadius: 14,
-                background: i === 0 ? "rgba(14,165,233,0.07)" : "rgba(14,165,233,0.03)",
-                border: `1px solid ${i === 0 ? "rgba(14,165,233,0.18)" : C.bord}` }}>
-                <div style={{ ...dm, fontSize: 10, color: i === 0 ? C.accent : C.mut, letterSpacing: 1, fontWeight: i === 0 ? 600 : 400, marginBottom: 8 }}>
-                  {i === 0
-                    ? ({hr:"Danas",de:"Heute",en:"Today",it:"Oggi",si:"Danes",cz:"Dnes",pl:"Dziś"})[lang]||"Today"
-                    : (FORECAST_DAYS[lang]||FORECAST_DAYS.hr)[d.di]}
+        {/* YOLO Sense — parking/marina/beach status */}
+        {senseData && (
+          <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap", position: "relative" }}>
+            <div style={{ position: "absolute", top: -14, right: 0, fontSize: 9, color: senseData.source === "yolo" ? C.green : C.mut, letterSpacing: 0.5 }}>
+              {senseData.source === "yolo" ? "● LIVE" : "● ~procjena"}
+            </div>
+            {senseData.parking && (
+              <div style={{ flex: 1, minWidth: 90, padding: "10px 12px", borderRadius: 12, background: "rgba(14,165,233,0.04)", border: `1px solid ${C.bord}`, textAlign: "center" }}>
+                <div style={{ fontSize: 18 }}>🅿️</div>
+                <div style={{ ...dm, fontSize: 16, fontWeight: 300, color: senseData.parking.status === "slobodno" ? C.green : senseData.parking.status === "umjereno" ? C.gold : C.red, marginTop: 2 }}>
+                  {senseData.parking.free_spots}/{senseData.parking.total_spots}
                 </div>
-                <div style={{ fontSize: 30, margin: "0 0 8px" }}>{d.icon}</div>
-                <div style={{ ...dm, fontSize: 18, fontWeight: 400, color: C.text, lineHeight: 1 }}>{d.h}°</div>
-                <div style={{ ...dm, fontSize: 11, color: C.mut, marginTop: 3 }}>{d.l}°</div>
-                {i === 0 && (
-                  <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 3 }}>
-                    {weather.sea && <div style={{ ...dm, fontSize: 9, color: C.accent }}>🌊 {weather.sea}°</div>}
-                    {weather.uv >= 5 && <div style={{ ...dm, fontSize: 9, color: weather.uv >= 8 ? C.red : C.gold }}>UV {weather.uv}</div>}
-                    {weather.wind && <div style={{ ...dm, fontSize: 9, color: C.mut }}>{weather.wind}</div>}
-                  </div>
-                )}
+                <div style={{ ...dm, fontSize: 9, color: C.mut, marginTop: 1 }}>
+                  {({hr:"slobodnih",de:"frei",en:"free",it:"liberi"})[lang] || "slobodnih"}
+                </div>
               </div>
+            )}
+            {senseData.marina && (
+              <div style={{ flex: 1, minWidth: 90, padding: "10px 12px", borderRadius: 12, background: "rgba(14,165,233,0.04)", border: `1px solid ${C.bord}`, textAlign: "center" }}>
+                <div style={{ fontSize: 18 }}>⛵</div>
+                <div style={{ ...dm, fontSize: 16, fontWeight: 300, color: senseData.marina.status === "slobodno" ? C.green : senseData.marina.status === "umjereno" ? C.gold : C.red, marginTop: 2 }}>
+                  {senseData.marina.free_moorings}
+                </div>
+                <div style={{ ...dm, fontSize: 9, color: C.mut, marginTop: 1 }}>
+                  {({hr:"vezova",de:"Plätze",en:"berths",it:"posti"})[lang] || "vezova"}
+                </div>
+              </div>
+            )}
+            {senseData.beach && (
+              <div style={{ flex: 1, minWidth: 90, padding: "10px 12px", borderRadius: 12, background: "rgba(14,165,233,0.04)", border: `1px solid ${C.bord}`, textAlign: "center" }}>
+                <div style={{ fontSize: 18 }}>🏖️</div>
+                <div style={{ ...dm, fontSize: 16, fontWeight: 300, color: senseData.beach.crowd === "mirno" ? C.green : senseData.beach.crowd === "malo gužve" ? C.accent : senseData.beach.crowd === "srednje gužve" ? C.gold : C.red, marginTop: 2 }}>
+                  {senseData.beach.occupancy_pct}%
+                </div>
+                <div style={{ ...dm, fontSize: 9, color: C.mut, marginTop: 1 }}>
+                  {({hr:"popunjenost",de:"Auslastung",en:"occupancy",it:"occupazione"})[lang] || "popunjenost"}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Nearby highlights bar */}
+        {nearbyHighlights.length > 0 && (
+          <div style={{ display: "flex", gap: 10, padding: "10px 14px", borderRadius: 12, background: "rgba(14,165,233,0.04)", border: `1px solid ${C.bord}`, flexWrap: "wrap", alignItems: "center", marginBottom: 14 }}>
+            {nearbyHighlights.map((h, i) => (
+              <React.Fragment key={i}>
+                {i > 0 && <span style={{ width: 1, height: 14, background: C.bord }} />}
+                <span style={{ ...dm, fontSize: 12, color: C.text }}>{h.icon} {h.text}</span>
+              </React.Fragment>
             ))}
           </div>
-        </div>
-
-        {/* Critical alerts — single rotating line, CSS-animated, instant */}
-        {(() => {
-          const items = [
-            ...(emergencyAlert ? [{ icon:"🚨", text: emergencyAlert, sev:"critical", dismiss: () => setEmergencyAlert(null) }] : []),
-            ...alerts.filter(a => (a.severity==="critical"||a.severity==="high") && !dismissedAlerts.has(a.title))
-              .map(a => ({ icon: ALERT_ICONS[a.type]||"⚠️", text: a.title, sev: a.severity, dismiss: () => setDismissedAlerts(s => new Set([...s, a.title])) })),
-          ];
-          return items.length ? <AlertTicker items={items} /> : null;
-        })()}
-
+        )}
 
         {/* ── AI-curated deals from n8n/Firestore ── */}
         <DealCards region={getDestRegion(kioskCity)} lang={lang} C={C} />
@@ -1895,10 +1889,19 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         <SectionLabel>{t("quickAccess",lang)}</SectionLabel>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: 10, marginBottom: 24 }}>
           {[
-            { k: "parking",   ic: IC.parking, l: t("parking",lang), clr: C.accent, free: true },
-            { k: "beach",     ic: IC.beach,   l: t("beaches",lang), clr: "#38bdf8", free: true },
+            { k: "parking",   ic: IC.parking, l: t("parking",lang),    clr: C.accent,    free: true },
+            { k: "beach",     ic: IC.beach,   l: t("beaches",lang),    clr: "#38bdf8",   free: true },
             { k: "food",      ic: IC.food,    l: ({hr:"Hrana",de:"Essen",en:"Food",it:"Cibo",si:"Hrana",cz:"Jídlo",pl:"Jedzenie"})[lang]||"Hrana", clr: C.terracotta, free: true },
-            { k: "emergency", ic: IC.medic,   l: ({hr:"Hitno",de:"Notfall",en:"Emergency",it:"Emergenza",si:"Nujno",cz:"Nouzové",pl:"Nagłe"})[lang]||"Hitno", clr: C.red, free: true },
+            { k: "shop",      ic: IC.shop,    l: ({hr:"Dućan",de:"Laden",en:"Shop",it:"Negozio",si:"Trgovina",cz:"Obchod",pl:"Sklep"})[lang]||"Dućan", clr: "#34d399", free: true },
+            { k: "bakery",    ic: IC.bakery,  l: ({hr:"Pekara",de:"Bäckerei",en:"Bakery",it:"Panetteria",si:"Pekarna",cz:"Pekárna",pl:"Piekarnia"})[lang]||"Pekara", clr: C.warm, free: true },
+            { k: "pharmacy",  ic: IC.medic,   l: ({hr:"Ljekarna",de:"Apotheke",en:"Pharmacy",it:"Farmacia",si:"Lekarna",cz:"Lékárna",pl:"Apteka"})[lang]||"Ljekarna", clr: "#f472b6", free: true },
+            { k: "culture",   ic: IC.gem,     l: ({hr:"Kultura",de:"Kultur",en:"Culture",it:"Cultura",si:"Kultura",cz:"Kultura",pl:"Kultura"})[lang]||"Kultura", clr: C.gold, free: true },
+            { k: "fuel",      ic: IC.map,     l: ({hr:"Gorivo",de:"Tanken",en:"Fuel",it:"Carburante",si:"Gorivo",cz:"Palivo",pl:"Paliwo"})[lang]||"Gorivo", clr: "#94a3b8", free: true },
+            { k: "emergency", ic: IC.medic,   l: t("emergency",lang),  clr: C.red,       free: true },
+            { k: "activities",ic: IC.ticket,  l: t("activities",lang), clr: "#22c55e",   free: true },
+            ...(getDestRegion(kioskCity) ? [{ k:"gems", ic:IC.gem, l:t("gems",lang), clr:C.gold, free:false }] : []),
+            ...(kioskCity === "Rab" ? [{ k:"excursions", ic:IC.ticket, l:({hr:"Izleti",de:"Ausflüge",en:"Excursions",it:"Escursioni"})[lang]||"Izleti", clr:"#0ea5e9", free:true }] : []),
+            ...(affiliateId && AFFILIATE_DATA?.[affiliateId] ? [{ k:"affiliate", ic:IC.gem, l:AFFILIATE_DATA[affiliateId].name, clr:AFFILIATE_DATA[affiliateId].color, free:true }] : []),
           ].map(tile => {
             const count = nearbyData?.categories?.[tile.k]?.length;
             return (
@@ -1936,6 +1939,16 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           })}
         </div>
 
+        {/* AI Tip — premium */}
+        <Card glow style={{ background: `linear-gradient(135deg,${C.goDim},rgba(14,165,233,0.03))`, borderColor: "rgba(251,191,36,0.1)", marginBottom: 14, display: "flex", gap: 16, alignItems: "flex-start", cursor: premium ? "default" : "pointer", position: "relative", overflow: "hidden" }} onClick={() => !premium && setShowPaywall(true)}>
+          <div style={{ fontSize: 28 }}>{tipIcon}</div>
+          <div>
+            <div style={{ ...dm, fontSize: 10, color: C.gold, fontWeight: 700, letterSpacing: 2, marginBottom: 4 }}>{t("aiRec",lang)}</div>
+            {premium ? <div style={{ ...dm, fontSize: 15, color: C.text, lineHeight: 1.7, fontWeight: 300 }}>{tip}</div> : <div style={{ ...dm, fontSize: 15, color: C.text, lineHeight: 1.7, fontWeight: 300, filter: "blur(6px)", userSelect: "none" }}>{tip}</div>}
+            {!premium && <div style={{ ...dm, position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,22,40,0.3)", borderRadius: 22 }}><span style={{ background: C.goDim, padding: "8px 18px", borderRadius: 14, fontSize: 13, color: C.gold, fontWeight: 600, border: `1px solid rgba(245,158,11,0.15)` }}>⭐ Premium — 9.99€</span></div>}
+          </div>
+        </Card>
+
         {/* Extend Stay — Booking.com */}
         <Card style={{ marginBottom: 16, border: "1px dashed rgba(0,85,166,0.2)", background: "rgba(0,85,166,0.03)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -1957,9 +1970,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
   const KioskDetail = () => {
     const staticData = PRACTICAL[subScreen]; // fallback for sun, emergency, routes
-    const nearbyPlaces = subScreen === "food"
-      ? [...(nearbyData?.categories?.food || []), ...(nearbyData?.categories?.shop || [])]
-      : (nearbyData?.categories?.[subScreen] || []);
+    const nearbyPlaces = nearbyData?.categories?.[subScreen] || [];
     const hasNearby = nearbyPlaces.length > 0;
     const svKey = import.meta.env.VITE_GOOGLE_MAPS_KEY;
 
@@ -2646,103 +2657,12 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
       );
     };
 
-    // ── HITNO / Emergency screen ──
-    const KioskEmergency = () => {
-      const [ne, setNe] = React.useState(null); // nearbyEmergency
-      React.useEffect(() => {
-        const lat = nearbyData?.location?.lat || (kioskCoords?.[0]);
-        const lng = nearbyData?.location?.lng || (kioskCoords?.[1]);
-        if (!lat || !lng) return;
-        fetch(`/api/nearby?lat=${lat}&lng=${lng}&cats=hospital,clinic,pharmacy,vet&limit=6&lang=${lang}`)
-          .then(r => r.json()).then(setNe).catch(() => {});
-      }, []); // eslint-disable-line
-      const NUMS = [
-        { n:"112", l:{hr:"Hitna pomoć / Spašavanje",de:"Notruf / Rettung",en:"Emergency / Rescue",it:"Emergenza / Soccorso",si:"Nujna pomoč",cz:"Tísňové volání",pl:"Pogotowie"}, icon:"🚑", clr:"#ef4444" },
-        { n:"194", l:{hr:"Hitna medicinska",de:"Rettungsdienst",en:"Medical emergency",it:"Emergenza medica",si:"Reševalci",cz:"Záchranná služba",pl:"Pogotowie medyczne"}, icon:"🏥", clr:"#ef4444" },
-        { n:"192", l:{hr:"Policija",de:"Polizei",en:"Police",it:"Polizia",si:"Policija",cz:"Policie",pl:"Policja"}, icon:"🚓", clr:"#3b82f6" },
-        { n:"193", l:{hr:"Vatrogasci",de:"Feuerwehr",en:"Fire brigade",it:"Pompieri",si:"Gasilci",cz:"Hasiči",pl:"Straż pożarna"}, icon:"🚒", clr:"#f97316" },
-        { n:"1987", l:{hr:"HAK · ceste",de:"Straßenhilfe",en:"Road assistance",it:"Soccorso stradale",si:"Pomoč na cesti",cz:"Silniční pomoc",pl:"Pomoc drogowa"}, icon:"🛣️", clr:"#f59e0b" },
-      ];
-      const lbl = (o) => o[lang] || o[lang==="at"?"de":"en"] || o.en || o.hr;
-      const catGroups = [
-        { key:"hospital", icon:"🏥", l:{hr:"Bolnice",de:"Krankenhäuser",en:"Hospitals",it:"Ospedali",si:"Bolnišnice",cz:"Nemocnice",pl:"Szpitale"} },
-        { key:"clinic",   icon:"🩺", l:{hr:"Ambulante / Ordinacije",de:"Kliniken / Praxen",en:"Clinics / Practices",it:"Ambulatori / Studi",si:"Klinike",cz:"Kliniky",pl:"Kliniki"} },
-        { key:"pharmacy", icon:"💊", l:{hr:"Ljekarnice",de:"Apotheken",en:"Pharmacies",it:"Farmacie",si:"Lekarne",cz:"Lékárny",pl:"Apteki"} },
-        { key:"vet",      icon:"🐾", l:{hr:"Veterinari",de:"Tierärzte",en:"Veterinarians",it:"Veterinari",si:"Veterinarji",cz:"Veterináři",pl:"Weterynarze"} },
-      ];
-      const pharm = nearbyData?.categories?.pharmacy || [];
-      return (
-        <>
-          <BackBtn onClick={() => setSubScreen("home")} />
-          <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:18 }}>
-            <span style={{ fontSize:36 }}>🚨</span>
-            <div>
-              <div style={{ ...hf, fontSize:24, fontWeight:400, color:C.red }}>
-                {({hr:"Hitne službe",de:"Notfalldienste",en:"Emergency services",it:"Servizi di emergenza",si:"Nujne službe",cz:"Záchranné služby",pl:"Służby ratunkowe"})[lang]||"Emergency"}
-              </div>
-              <div style={{ ...dm, fontSize:11, color:C.mut }}>📍 {kioskCity}</div>
-            </div>
-          </div>
-
-          {/* Emergency numbers — always instant, no API needed */}
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:20 }}>
-            {NUMS.map(num => (
-              <a key={num.n} href={`tel:${num.n}`}
-                style={{ padding:"14px 12px", borderRadius:14, background:`${num.clr}0a`, border:`1px solid ${num.clr}28`,
-                  textDecoration:"none", display:"flex", alignItems:"center", gap:10 }}>
-                <span style={{ fontSize:22, flexShrink:0 }}>{num.icon}</span>
-                <div style={{ minWidth:0 }}>
-                  <div style={{ ...dm, fontSize:18, fontWeight:600, color:num.clr, lineHeight:1 }}>{num.n}</div>
-                  <div style={{ ...dm, fontSize:10, color:C.mut, marginTop:2, lineHeight:1.3 }}>{lbl(num.l)}</div>
-                </div>
-              </a>
-            ))}
-          </div>
-
-          {/* Nearby services by category */}
-          {catGroups.map(cat => {
-            const places = cat.key === "pharmacy" ? pharm
-              : (ne?.categories?.[cat.key] || []);
-            if (!places.length && ne !== null) return null; // loaded but empty — skip
-            return (
-              <div key={cat.key} style={{ marginBottom:16 }}>
-                <div style={{ ...dm, fontSize:10, color:C.accent, letterSpacing:3, fontWeight:700, marginBottom:8 }}>
-                  {cat.icon} {lbl(cat.l).toUpperCase()}
-                </div>
-                {(!ne && cat.key !== "pharmacy") ? (
-                  // Loading shimmer
-                  <div style={{ height:60, borderRadius:12, background:"rgba(14,165,233,0.04)", border:`1px solid ${C.bord}`,
-                    backgroundImage:"linear-gradient(90deg,transparent 0%,rgba(14,165,233,0.06) 50%,transparent 100%)",
-                    backgroundSize:"200% 100%", animation:"shimmer 1.6s ease infinite" }} />
-                ) : (
-                  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                    {places.map((p, i) => (
-                      <div key={p.place_id||i} style={{ padding:"12px 14px", borderRadius:12, background:C.card, border:`1px solid ${C.bord}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                        <div style={{ minWidth:0 }}>
-                          <div style={{ ...dm, fontSize:14, color:C.text, fontWeight:500, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.name}</div>
-                          {p.address && <div style={{ ...dm, fontSize:11, color:C.mut, marginTop:1 }}>{p.address}</div>}
-                        </div>
-                        <div style={{ ...dm, fontSize:11, color:C.accent, flexShrink:0, marginLeft:8 }}>
-                          {p.distance ? `${p.distance}m` : p.walkMin ? `${p.walkMin}min` : ""}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </>
-      );
-    };
-
     if (subScreen === "home") return KioskHome();
     if (subScreen === "activities") return KioskActivities();
     if (subScreen === "excursions") return KioskExcursions();
     if (subScreen === "gems") return KioskGems();
     if (subScreen === "chat") return KioskChat();
     if (subScreen === "affiliate" && affiliateId) return KioskAffiliate();
-    if (subScreen === "emergency") return KioskEmergency();
     if (PRACTICAL[subScreen] || NEARBY_CATS.includes(subScreen)) return KioskDetail();
     return KioskHome();
   };
@@ -3068,8 +2988,67 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             </div>
           </div>
 
+          {/* Guest / Route context bar */}
+          <div style={{
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            flexWrap: "wrap", gap: 8, marginTop: 12, padding: "11px 15px",
+            background: "rgba(245,158,11,0.04)",
+            borderRadius: 14, border: `1px solid ${C.goBorder}`,
+          }}>
+            <div style={{ ...dm, display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 17 }}>{G.flag}</span>
+              <div>
+                {(() => {
+                  try {
+                    const d = JSON.parse(localStorage.getItem("jadran_delta_context") || "{}");
+                    const f = transitFromUrl || d.from;
+                    const to = transitToUrl || d.destination?.city;
+                    const s = transitSegUrl || d.segment;
+                    return f && to ? (
+                      <>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
+                          {SEG_ICON[s] || "🚗"} {f} → {to}
+                        </div>
+                        <div style={{ fontSize: 10, color: C.mut, marginTop: 1 }}>Sloboda ceste i mora</div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{G.name}</div>
+                        <div style={{ fontSize: 10, color: C.mut, marginTop: 1 }}>{G.accommodation}</div>
+                      </>
+                    );
+                  } catch {
+                    return <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>{G.name}</div>;
+                  }
+                })()}
+              </div>
+            </div>
+            {G.arrival && !transitFromUrl && (
+              <div style={{ ...dm, fontSize: 10, color: C.mut, textAlign: "right" }}>
+                {new Date(G.arrival).toLocaleDateString(dateLocale || "hr-HR", { day:"numeric", month:"short" })}
+                {" – "}
+                {new Date(G.departure).toLocaleDateString(dateLocale || "hr-HR", { day:"numeric", month:"short" })}
+              </div>
+            )}
+          </div>
+
+          {/* Accent divider */}
+          <div style={{ height: 1, marginTop: 14,
+            background: `linear-gradient(90deg, transparent, ${C.acBorder} 30%, ${C.goBorder} 70%, transparent)` }} />
+
+          {/* Demo mode notice */}
+          {!guestProfile && !transitFromUrl && (
+            <div style={{ ...dm, display: "flex", alignItems: "center", justifyContent: "space-between",
+              marginTop: 10, padding: "9px 14px", background: "rgba(245,158,11,0.05)",
+              borderRadius: 11, border: `1px solid ${C.goBorder}` }}>
+              <span style={{ fontSize: 11, color: C.warm }}>🎭 Primjer prikaza</span>
+              <a href="/host" style={{ ...dm, fontSize: 11, color: C.accent, textDecoration: "none", fontWeight: 600 }}>Host Panel →</a>
+            </div>
+          )}
         </div>
 
+        {/* Alerts Bar */}
+        {!(phase === "pre" && subScreen === "transit") && <AlertsBar />}
 
         {/* Phase Nav */}
         <PhaseNav />
@@ -3088,59 +3067,14 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
       {phase === "kiosk" && !kioskWelcome && subScreen !== "chat" && (
         <TabBar
           active={subScreen === "affiliate" ? "home" : (["home","activities","gems","excursions"].includes(subScreen) ? subScreen : "home")}
-          onChange={(k) => {
-            if (k === "live") { setShowKioskLive(true); return; }
-            setSubScreen(k); window.scrollTo({ top: 0, behavior: "smooth" });
-          }}
+          onChange={(k) => { setSubScreen(k); window.scrollTo({ top: 0, behavior: "smooth" }); }}
           items={[
-            { key: "home",       icon: IC.home,   label: ({hr:"Početna",de:"Start",en:"Home",it:"Home",si:"Domov",cz:"Domů",pl:"Start"})[lang] || "Home" },
-            { key: "chat",       icon: IC.bot,    label: "AI Chat" },
-            { key: "live",       icon: IC.map,    label: ({hr:"Live",de:"Live",en:"Live",it:"Live"})[lang] || "Live" },
+            { key: "home", icon: IC.home, label: ({hr:"Početna",de:"Start",en:"Home",it:"Home",si:"Domov",cz:"Domů",pl:"Start"})[lang] || "Home" },
             { key: "activities", icon: IC.ticket, label: ({hr:"Aktivnosti",de:"Aktivitäten",en:"Activities",it:"Attività",si:"Aktivnosti",cz:"Aktivity",pl:"Aktywności"})[lang] || "Activities" },
+            { key: "gems", icon: IC.gem, label: ({hr:"Biseri",de:"Geheimtipps",en:"Gems",it:"Gemme",si:"Dragulji",cz:"Perly",pl:"Perły"})[lang] || "Gems" },
+            { key: "chat", icon: IC.bot, label: "AI Chat" },
           ]}
         />
-      )}
-
-      {/* ── KIOSK LIVE OVERLAY ── */}
-      {showKioskLive && (
-        <div style={{ position:"fixed", inset:0, zIndex:300, background:"rgba(5,14,30,0.75)", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}
-          onClick={() => setShowKioskLive(false)}>
-          <div onClick={e => e.stopPropagation()}
-            style={{ position:"absolute", bottom:0, left:0, right:0, background:"#0a1628", borderRadius:"24px 24px 0 0", padding:"24px 20px", paddingBottom:"calc(24px + env(safe-area-inset-bottom, 0px))", animation:"fadeUp 0.28s ease" }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
-              <div style={{ fontSize:18, fontWeight:400 }}>🌊 Jadran Sense™ <span style={{ fontSize:10, color: senseData?.source==="yolo" ? "#22c55e" : "#64748b", letterSpacing:0.5 }}>● {senseData?.source==="yolo" ? "LIVE" : "~procjena"}</span></div>
-              <button onClick={() => setShowKioskLive(false)} style={{ background:"rgba(255,255,255,0.06)", border:`1px solid rgba(14,165,233,0.12)`, borderRadius:10, color:"#94a3b8", fontSize:13, padding:"8px 14px", cursor:"pointer" }}>✕</button>
-            </div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
-              {senseData?.parking && (
-                <div style={{ padding:"16px 14px", borderRadius:16, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.12)", textAlign:"center" }}>
-                  <div style={{ fontSize:28, marginBottom:6 }}>🅿️</div>
-                  <div style={{ fontSize:22, fontWeight:300, color: senseData.parking.status==="slobodno"?"#22c55e":senseData.parking.status==="umjereno"?"#f59e0b":"#ef4444" }}>{senseData.parking.free_spots}/{senseData.parking.total_spots}</div>
-                  <div style={{ fontSize:11, color:"#64748b", marginTop:2 }}>({["hr","si"].includes(lang)?"slobodnih":lang==="de"?"frei":lang==="it"?"liberi":"free"})</div>
-                </div>
-              )}
-              {senseData?.beach && (
-                <div style={{ padding:"16px 14px", borderRadius:16, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.12)", textAlign:"center" }}>
-                  <div style={{ fontSize:28, marginBottom:6 }}>🏖️</div>
-                  <div style={{ fontSize:22, fontWeight:300, color: senseData.beach.crowd==="mirno"?"#22c55e":senseData.beach.crowd==="malo gužve"?"#38bdf8":senseData.beach.crowd==="srednje gužve"?"#f59e0b":"#ef4444" }}>{senseData.beach.occupancy_pct}%</div>
-                  <div style={{ fontSize:11, color:"#64748b", marginTop:2 }}>({["hr","si"].includes(lang)?"popunjenost":lang==="de"?"Auslastung":lang==="it"?"occupazione":"occupancy"})</div>
-                </div>
-              )}
-              {senseData?.marina && (
-                <div style={{ padding:"16px 14px", borderRadius:16, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.12)", textAlign:"center" }}>
-                  <div style={{ fontSize:28, marginBottom:6 }}>⛵</div>
-                  <div style={{ fontSize:22, fontWeight:300, color: senseData.marina.status==="slobodno"?"#22c55e":senseData.marina.status==="umjereno"?"#f59e0b":"#ef4444" }}>{senseData.marina.free_moorings}</div>
-                  <div style={{ fontSize:11, color:"#64748b", marginTop:2 }}>({["hr","si"].includes(lang)?"vezova":lang==="de"?"Plätze":lang==="it"?"posti":"berths"})</div>
-                </div>
-              )}
-              {!senseData && (
-                <div style={{ gridColumn:"1/-1", padding:"24px", textAlign:"center", color:"#64748b", fontSize:14 }}>
-                  {({hr:"Učitavanje...",de:"Laden...",en:"Loading...",it:"Caricamento..."})[lang]||"Loading..."}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
       )}
 
       {/* Overlays */}
