@@ -8,26 +8,56 @@ import { useState, useEffect, useRef } from "react";
 const F = "'Playfair Display','Cormorant Garamond',Georgia,serif";
 const B = "'Outfit','system-ui',sans-serif";
 
-// ─── DESTINATIONS ───
-const DESTINATIONS = [
-  { id:"rab",       name:"Rab",               region:"Kvarner",   tagline:{hr:"Otok četiri zvonika",de:"Insel der vier Türme",en:"Island of four bell towers",it:"Isola dei quattro campanili"}, img:"https://images.unsplash.com/photos/KUCx92pIGCM?w=800&q=80", accent:"#fbbf24" },
-  { id:"blackjack", name:"Black Jack",        region:"Kvarner",   tagline:{hr:"Gurman House · Palit, Rab",de:"Gurman House · Palit, Rab",en:"Gurman House · Palit, Rab",it:"Gurman House · Palit, Rab"}, img:"https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80", accent:"#f97316", isPartner:true, partnerLink:"/?kiosk=rab&affiliate=blackjack&tk=sial2026&lang=de" },
-  { id:"split",     name:"Split",             region:"Dalmacija", tagline:{hr:"Dioklecijanova palača",de:"Diokletianpalast",en:"Diocletian's Palace",it:"Palazzo di Diocleziano"}, img:"https://images.unsplash.com/photos/QWHW4NQwXHE?w=800&q=80", accent:"#0ea5e9" },
-  { id:"dubrovnik", name:"Dubrovnik",         region:"Dalmacija", tagline:{hr:"Biser Jadrana",de:"Perle der Adria",en:"Pearl of the Adriatic",it:"Perla dell'Adriatico"}, img:"https://images.unsplash.com/photos/5maoPl591Sk?w=800&q=80", accent:"#f97316" },
-  { id:"rovinj",    name:"Rovinj",            region:"Istra",     tagline:{hr:"Najromantičniji grad",de:"Die romantischste Stadt",en:"Most romantic town",it:"La città più romantica"}, img:"https://images.unsplash.com/photos/R9VbQFaUnac?w=800&q=80", accent:"#fb923c" },
-  { id:"hvar",      name:"Hvar",              region:"Otoci",     tagline:{hr:"Lavanda i glamur",de:"Lavendel und Glamour",en:"Lavender and glamour",it:"Lavanda e glamour"}, img:"https://images.unsplash.com/photos/pRH473DZjCg?w=800&q=80", accent:"#a78bfa" },
-  { id:"makarska",  name:"Makarska",          region:"Dalmacija", tagline:{hr:"Rivijera iz snova",de:"Traumriviera",en:"Dream riviera",it:"Riviera dei sogni"}, img:"https://images.unsplash.com/photos/WaCCH_FGn1s?w=800&q=80", accent:"#38bdf8" },
-  { id:"zadar",     name:"Zadar",             region:"Dalmacija", tagline:{hr:"Najljepši zalazak sunca",de:"Schönster Sonnenuntergang",en:"Most beautiful sunset",it:"Tramonto più bello"}, img:"https://images.unsplash.com/photos/xsZrf0-iQ6E?w=800&q=80", accent:"#f59e0b" },
-  { id:"pula",      name:"Pula",              region:"Istra",     tagline:{hr:"Rimska arena",de:"Römische Arena",en:"Roman Arena",it:"Arena Romana"}, img:"https://images.unsplash.com/photos/TBC4FLRxcKk?w=800&q=80", accent:"#34d399" },
-  { id:"opatija",   name:"Opatija",           region:"Kvarner",   tagline:{hr:"Elegancija Kvarnera",de:"Eleganz des Kvarner",en:"Kvarner elegance",it:"Eleganza del Quarnero"}, img:"https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=800&q=80", accent:"#06b6d4" },
-];
-
-// ─── REGIONS ───
+// ─── REGIONS — 6 key destinations each ───
 const REGIONS = [
-  { id:"Istra",     img:"https://images.unsplash.com/photos/R9VbQFaUnac?w=800&q=80", accent:"#fb923c", tagline:{hr:"Tartufi, vino i rimska arena",de:"Trüffel, Wein und römische Arena",en:"Truffles, wine and Roman arena",it:"Tartufi, vino e arena romana"} },
-  { id:"Kvarner",   img:"https://images.unsplash.com/photos/KUCx92pIGCM?w=800&q=80", accent:"#0ea5e9", tagline:{hr:"Otoci, fjordovi i wellness",de:"Inseln, Fjorde und Wellness",en:"Islands, fjords and wellness",it:"Isole, fiordi e benessere"} },
-  { id:"Dalmacija", img:"https://images.unsplash.com/photos/5maoPl591Sk?w=800&q=80", accent:"#38bdf8", tagline:{hr:"Antički gradovi i kristalno more",de:"Antike Städte und kristallklares Meer",en:"Ancient towns and crystal-clear sea",it:"Città antiche e mare cristallino"} },
-  { id:"Otoci",     img:"https://images.unsplash.com/photos/pRH473DZjCg?w=800&q=80", accent:"#a78bfa", tagline:{hr:"Lavanda, glamur i daleki horizonti",de:"Lavendel, Glamour und weite Horizonte",en:"Lavender, glamour and far horizons",it:"Lavanda, glamour e orizzonti lontani"} },
+  {
+    id:"Istra", img:"https://images.unsplash.com/photos/R9VbQFaUnac?w=800&q=80", accent:"#fb923c", liveCity:"rovinj",
+    tagline:{ hr:"Tartufi, vino i rimska arena", de:"Trüffel, Wein und römische Arena", en:"Truffles, wine and Roman arena", it:"Tartufi, vino e arena romana" },
+    destinations:[
+      { id:"rovinj",   name:"Rovinj",   accent:"#fb923c", img:"https://images.unsplash.com/photos/R9VbQFaUnac?w=600&q=75",           tagline:{hr:"Najromantičniji grad",de:"Romantischste Stadt",en:"Most romantic town",it:"Città più romantica"} },
+      { id:"pula",     name:"Pula",     accent:"#34d399", img:"https://images.unsplash.com/photos/TBC4FLRxcKk?w=600&q=75",           tagline:{hr:"Rimska arena živi",de:"Die Arena lebt",en:"Roman Arena lives on",it:"L'Arena Romana vive"} },
+      { id:"porec",    name:"Poreč",    accent:"#fbbf24", img:"https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=600&q=75", tagline:{hr:"Eufrazijeva bazilika",de:"Euphrasius-Basilika",en:"Euphrasian Basilica",it:"Basilica Eufrasiana"} },
+      { id:"novigrad", name:"Novigrad", accent:"#06b6d4", img:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=75", tagline:{hr:"Ribarska idila",de:"Fischeridyll",en:"Fisherman's idyll",it:"Idillio da pescatore"} },
+      { id:"motovun",  name:"Motovun",  accent:"#a3e635", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=75", tagline:{hr:"Grad tartufa",de:"Trüffelstadt",en:"Truffle town",it:"Città dei tartufi"} },
+      { id:"labin",    name:"Labin",    accent:"#f472b6", img:"https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&q=75", tagline:{hr:"Istarski balkon",de:"Istrianischer Balkon",en:"Istrian balcony",it:"Balcone dell'Istria"} },
+    ]
+  },
+  {
+    id:"Kvarner", img:"https://images.unsplash.com/photos/KUCx92pIGCM?w=800&q=80", accent:"#0ea5e9", liveCity:"rab",
+    tagline:{ hr:"Otoci, fjordovi i wellness", de:"Inseln, Fjorde und Wellness", en:"Islands, fjords and wellness", it:"Isole, fiordi e benessere" },
+    destinations:[
+      { id:"rab",     name:"Rab",     accent:"#fbbf24", img:"https://images.unsplash.com/photos/KUCx92pIGCM?w=600&q=75",           tagline:{hr:"Otok četiri zvonika",de:"Insel der vier Türme",en:"Island of four bell towers",it:"Isola dei quattro campanili"} },
+      { id:"opatija", name:"Opatija", accent:"#06b6d4", img:"https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=600&q=75", tagline:{hr:"Elegancija Kvarnera",de:"Eleganz des Kvarners",en:"Kvarner elegance",it:"Eleganza del Quarnero"} },
+      { id:"krk",     name:"Krk",     accent:"#22c55e", img:"https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=600&q=75", tagline:{hr:"Kruna Kvarnera",de:"Krone des Kvarners",en:"Crown of the Kvarner",it:"Corona del Quarnero"} },
+      { id:"cres",    name:"Cres",    accent:"#84cc16", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=75", tagline:{hr:"Divlja priroda",de:"Wilde Natur",en:"Wild nature",it:"Natura selvaggia"} },
+      { id:"losinj",  name:"Lošinj",  accent:"#38bdf8", img:"https://images.unsplash.com/photo-1475776408506-9a5371e7a068?w=600&q=75", tagline:{hr:"Otok vitalnosti",de:"Insel der Vitalität",en:"Island of vitality",it:"Isola della vitalità"} },
+      { id:"rijeka",  name:"Rijeka",  accent:"#c084fc", img:"https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=75", tagline:{hr:"Luka i kultura",de:"Hafen und Kultur",en:"Port and culture",it:"Porto e cultura"} },
+    ]
+  },
+  {
+    id:"Dalmacija", img:"https://images.unsplash.com/photos/5maoPl591Sk?w=800&q=80", accent:"#38bdf8", liveCity:"split",
+    tagline:{ hr:"Antički gradovi i kristalno more", de:"Antike Städte und kristallklares Meer", en:"Ancient towns and crystal-clear sea", it:"Città antiche e mare cristallino" },
+    destinations:[
+      { id:"dubrovnik", name:"Dubrovnik", accent:"#f97316", img:"https://images.unsplash.com/photos/5maoPl591Sk?w=600&q=75",  tagline:{hr:"Biser Jadrana",de:"Perle der Adria",en:"Pearl of the Adriatic",it:"Perla dell'Adriatico"} },
+      { id:"split",     name:"Split",     accent:"#0ea5e9", img:"https://images.unsplash.com/photos/QWHW4NQwXHE?w=600&q=75", tagline:{hr:"Dioklecijanova palača",de:"Diokletianpalast",en:"Diocletian's Palace",it:"Palazzo di Diocleziano"} },
+      { id:"zadar",     name:"Zadar",     accent:"#f59e0b", img:"https://images.unsplash.com/photos/xsZrf0-iQ6E?w=600&q=75", tagline:{hr:"Najljepši zalazak",de:"Schönster Sonnenuntergang",en:"Most beautiful sunset",it:"Tramonto più bello"} },
+      { id:"sibenik",   name:"Šibenik",   accent:"#a78bfa", img:"https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=600&q=75", tagline:{hr:"UNESCO katedrale",de:"UNESCO-Kathedralen",en:"UNESCO cathedrals",it:"Cattedrali UNESCO"} },
+      { id:"trogir",    name:"Trogir",    accent:"#fb923c", img:"https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=600&q=75", tagline:{hr:"Otok-grad UNESCO",de:"Inselstadt UNESCO",en:"Island-city UNESCO",it:"Città-isola UNESCO"} },
+      { id:"makarska",  name:"Makarska",  accent:"#38bdf8", img:"https://images.unsplash.com/photos/WaCCH_FGn1s?w=600&q=75", tagline:{hr:"Rivijera iz snova",de:"Traumriviera",en:"Dream riviera",it:"Riviera dei sogni"} },
+    ]
+  },
+  {
+    id:"Otoci", img:"https://images.unsplash.com/photos/pRH473DZjCg?w=800&q=80", accent:"#a78bfa", liveCity:"rab",
+    tagline:{ hr:"Lavanda, glamur i čiste plaže", de:"Lavendel, Glamour und saubere Strände", en:"Lavender, glamour and pristine beaches", it:"Lavanda, glamour e spiagge incontaminate" },
+    destinations:[
+      { id:"rab",     name:"Rab",     accent:"#fbbf24", img:"https://images.unsplash.com/photos/KUCx92pIGCM?w=600&q=75",           tagline:{hr:"Četiri zvonika · čiste plaže",de:"Vier Türme · saubere Strände",en:"Four towers · pristine beaches",it:"Quattro campanili · spiagge incontaminate"} },
+      { id:"hvar",    name:"Hvar",    accent:"#a78bfa", img:"https://images.unsplash.com/photos/pRH473DZjCg?w=600&q=75",           tagline:{hr:"Lavanda i glamur",de:"Lavendel und Glamour",en:"Lavender and glamour",it:"Lavanda e glamour"} },
+      { id:"brac",    name:"Brač",    accent:"#fbbf24", img:"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&q=75", tagline:{hr:"Zlatni rat i mramor",de:"Goldenes Horn & Marmor",en:"Golden Horn & marble",it:"Corno d'oro e marmo"} },
+      { id:"korcula", name:"Korčula", accent:"#22c55e", img:"https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=600&q=75", tagline:{hr:"Rodni grad Marka Pola",de:"Geburtsort Marco Polos",en:"Marco Polo's birthplace",it:"Città natale di Marco Polo"} },
+      { id:"vis",     name:"Vis",     accent:"#38bdf8", img:"https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=600&q=75", tagline:{hr:"Autentični daleki otok",de:"Authentische ferne Insel",en:"Authentic far island",it:"Isola lontana autentica"} },
+      { id:"mljet",   name:"Mljet",   accent:"#34d399", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=75", tagline:{hr:"Nacionalni park · jezera",de:"Nationalpark · Seen",en:"National park · lakes",it:"Parco nazionale · laghi"} },
+    ]
+  },
 ];
 
 // ─── RABSKA FJERA ───
@@ -64,13 +94,13 @@ const SENSE = [
   { img:"https://images.unsplash.com/photos/xsZrf0-iQ6E?w=200&q=60", l:{hr:"Vrijeme i more",de:"Wetter & Meer",en:"Weather & sea",it:"Meteo e mare",pl:"Pogoda i morze",si:"Vreme in morje"}, v:{hr:"UV · Temperatura · Vjetar",de:"UV · Temperatur · Wind",en:"UV · Temperature · Wind",it:"UV · Temperatura · Vento",pl:"UV · Temperatura · Wiatr",si:"UV · Temperatura · Veter"} },
 ];
 
-// ─── OFFERS — real excursions with prices ───
-const OFFERS = [
+// ─── GYG OFFERS — GetYourGuide affiliate ───
+const GYG_OFFERS = [
   { title:{hr:"Tura brodom — Rab",de:"Bootstour — Rab",en:"Boat tour — Rab",it:"Tour in barca — Rab"}, price:"45€", tag:"RAB", img:"https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=400&q=75", link:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=boat+tour" },
   { title:{hr:"Blue Cave & 5 otoka",de:"Blaue Grotte & 5 Inseln",en:"Blue Cave & 5 islands",it:"Grotta Azzurra & 5 isole"}, price:"110€", tag:"SPLIT", img:"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=75", link:"https://www.getyourguide.com/split-l268/?partner_id=9OEGOYI&q=blue+cave" },
   { title:{hr:"Lov na tartufe — Motovun",de:"Trüffeljagd — Motovun",en:"Truffle hunting — Motovun",it:"Caccia al tartufo — Montona"}, price:"45€", tag:"ISTRA", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=75", link:"https://www.getyourguide.com/istria-county-l1297/?partner_id=9OEGOYI&q=truffle" },
-  { title:{hr:"Degustacija vina — Pelješac",de:"Weinverkostung — Pelješac",en:"Wine tasting — Pelješac",it:"Degustazione vini — Pelješac"}, price:"35€", tag:"DUBROVNIK", img:"https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=400&q=75", link:"https://www.getyourguide.com/ston-l4159/?partner_id=9OEGOYI&q=wine" },
   { title:{hr:"Kajak Dubrovnik zidine",de:"Kajak Dubrovnik Mauern",en:"Kayak Dubrovnik walls",it:"Kayak mura Dubrovnik"}, price:"40€", tag:"DUBROVNIK", img:"https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=400&q=75", link:"https://www.getyourguide.com/dubrovnik-l213/?partner_id=9OEGOYI&q=kayak" },
+  { title:{hr:"Degustacija vina — Pelješac",de:"Weinverkostung — Pelješac",en:"Wine tasting — Pelješac",it:"Degustazione vini — Pelješac"}, price:"35€", tag:"DUBROVNIK", img:"https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=400&q=75", link:"https://www.getyourguide.com/ston-l4159/?partner_id=9OEGOYI&q=wine" },
 ];
 
 // ─── HERO DESTINATIONS (cycling background) ───
@@ -157,12 +187,15 @@ export default function DestinationExplorer() {
   });
   const [langOpen, setLangOpen] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [activeRegion, setActiveRegion] = useState("all");
+  const [activeRegion, setActiveRegion] = useState(null);
+  const [activeDest, setActiveDest] = useState(null); // { id, name, img, liveCity }
   const [showBJ, setShowBJ] = useState(false);
   const [showLive, setShowLive] = useState(false);
-  const [activeTab, setActiveTab] = useState("explore"); // bottom bar active tab
+  const [activeTab, setActiveTab] = useState("explore");
   const [heroIdx, setHeroIdx] = useState(0);
   const [selectedMenuItem, setSelectedMenuItem] = useState(null);
+  const [viatorDeals, setViatorDeals] = useState([]);
+  const [viatorLoading, setViatorLoading] = useState(false);
   const heroRef = useRef(null);
 
   useEffect(() => { setTimeout(() => setVisible(true), 100); }, []);
@@ -181,10 +214,32 @@ export default function DestinationExplorer() {
     return () => { document.removeEventListener("keydown", h); document.body.style.overflow = ""; };
   }, [showBJ, showLive]);
 
+  // ─ Viator API fetch ─
+  useEffect(() => {
+    const key = import.meta.env.VITE_VIATOR_API_KEY;
+    if (!key) return;
+    setViatorLoading(true);
+    const destId = activeDest ? activeDest.id : (activeRegion ? REGIONS.find(r => r.id === activeRegion)?.liveCity : null);
+    fetch("https://api.viator.com/partner/products/search", {
+      method: "POST",
+      headers: { "exp-api-key": key, "Content-Type": "application/json", "Accept-Language": lang === "at" ? "de" : lang },
+      body: JSON.stringify({
+        filtering: { destination: destId || "769" }, // 769 = Croatia
+        sorting: { sort: "TRAVELER_RATING", order: "DESC" },
+        pagination: { start: 1, count: 6 },
+        currency: "EUR",
+      }),
+    })
+      .then(r => r.json())
+      .then(data => { setViatorDeals(data.products || []); setViatorLoading(false); })
+      .catch(() => setViatorLoading(false));
+  }, [activeDest, activeRegion, lang]);
+
   const t = (obj) => { const k = lang==="at"?"de":lang; return obj[k] || (["pl","si"].includes(lang) ? obj.en : null) || obj.hr || ""; };
   const dl = lang === "at" ? "de" : (["pl","si"].includes(lang) ? "en" : lang);
 
-  const filtered = activeRegion && activeRegion !== "all" ? DESTINATIONS.filter(d => d.region === activeRegion) : [];
+  const activeRegionData = REGIONS.find(r => r.id === activeRegion);
+  const destList = activeRegionData?.destinations ?? [];
 
   return (
     <div style={{ background:"#050d1a", color:"#f0f4f8", fontFamily:B, minHeight:"100dvh", overflowX:"hidden" }}>
@@ -205,6 +260,7 @@ export default function DestinationExplorer() {
         @keyframes gradShift { 0% { background-position:0% 50%; } 50% { background-position:100% 50%; } 100% { background-position:0% 50%; } }
         @keyframes countUp { from { opacity:0; transform:scale(0.8); } to { opacity:1; transform:scale(1); } }
         @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
         .explore-card { transition: all 0.35s cubic-bezier(0.4,0,0.2,1); }
         .explore-card:active { transform: scale(0.97) !important; }
         @media (hover:hover) { .explore-card:hover { transform: translateY(-6px); box-shadow: 0 24px 48px rgba(0,0,0,0.4) !important; } }
@@ -232,7 +288,7 @@ export default function DestinationExplorer() {
       <section ref={heroRef} style={{ position:"relative", height:"100dvh", overflow:"hidden" }}>
         {/* Rotating cinematic backgrounds */}
         {HERO_DESTS.map((hd, i) => (
-          <div key={hd.id} style={{ position:"absolute", inset:"-5%", backgroundImage:`url(${hd.img})`, backgroundSize:"cover", backgroundPosition:"center", filter:"brightness(0.28) saturate(1.4)", opacity: i === heroIdx ? 1 : 0, transition:"opacity 1.8s ease", willChange:"opacity" }} />
+          <div key={hd.id} style={{ position:"absolute", inset:"-5%", backgroundImage:`url(${hd.img})`, backgroundSize:"cover", backgroundPosition:"center", filter:"brightness(0.35) saturate(1.6)", opacity: i === heroIdx ? 1 : 0, transition:"opacity 2s ease", willChange:"opacity" }} />
         ))}
         {/* Gradient overlays */}
         <div style={{ position:"absolute", inset:0, background:"linear-gradient(180deg, rgba(5,13,26,0.5) 0%, rgba(5,13,26,0.05) 25%, rgba(5,13,26,0.15) 55%, rgba(5,13,26,0.85) 80%, #050d1a 100%)" }} />
@@ -240,11 +296,11 @@ export default function DestinationExplorer() {
         {/* Top accent line */}
         <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:"linear-gradient(90deg, transparent, rgba(14,165,233,0.6), rgba(251,191,36,0.4), rgba(14,165,233,0.6), transparent)", backgroundSize:"200% 100%", animation:"gradShift 8s ease infinite" }} />
 
-        {/* Content */}
-        <div style={{ position:"relative", zIndex:2, height:"100%", display:"flex", flexDirection:"column", justifyContent:"flex-end", padding:"0 24px 0", maxWidth:680, margin:"0 auto", opacity:visible?1:0, transform:visible?"translateY(0)":"translateY(30px)", transition:"all 1.1s cubic-bezier(0.16,1,0.3,1)" }}>
+        {/* Content — centered symmetric */}
+        <div style={{ position:"relative", zIndex:2, height:"100%", display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", textAlign:"center", padding:"0 24px", maxWidth:720, margin:"0 auto", width:"100%", opacity:visible?1:0, transform:visible?"translateY(0)":"translateY(24px)", transition:"all 1.1s cubic-bezier(0.16,1,0.3,1)" }}>
 
           {/* Live badge */}
-          <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"6px 18px", borderRadius:20, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.18)", marginBottom:24, alignSelf:"flex-start" }}>
+          <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"6px 18px", borderRadius:20, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.18)", marginBottom:24 }}>
             <div style={{ width:6, height:6, borderRadius:"50%", background:"#22c55e", boxShadow:"0 0 10px #22c55e", animation:"pulse 2s infinite", flexShrink:0 }} />
             <span style={{ fontSize:10, color:"#7dd3fc", fontWeight:600, letterSpacing:2 }}>
               {({hr:"JADRAN SENSE™ AKTIVAN",de:"JADRAN SENSE™ AKTIV",en:"JADRAN SENSE™ ACTIVE",it:"JADRAN SENSE™ ATTIVO",pl:"JADRAN SENSE™ AKTYWNY",si:"JADRAN SENSE™ AKTIVEN"})[dl] || "JADRAN SENSE™ ACTIVE"}
@@ -262,11 +318,11 @@ export default function DestinationExplorer() {
           </h1>
 
           {/* Currently showing */}
-          <div style={{ fontSize:13, color:"rgba(255,255,255,0.35)", marginBottom:20, fontWeight:300, letterSpacing:1 }}>
-            — {HERO_DESTS[heroIdx].name}
+          <div style={{ fontSize:12, color:"rgba(255,255,255,0.3)", marginBottom:16, fontWeight:300, letterSpacing:2 }}>
+            — {HERO_DESTS[heroIdx].name} —
           </div>
 
-          <p style={{ fontSize:"clamp(14px,2vw,16px)", color:"#94a3b8", lineHeight:1.75, maxWidth:500, marginBottom:36, fontWeight:300 }}>
+          <p style={{ fontSize:"clamp(14px,2vw,16px)", color:"#94a3b8", lineHeight:1.75, maxWidth:520, marginBottom:36, fontWeight:300 }}>
             {({
               hr:"Skrivene plaže, konobe od lokalaca, live stanje mora i parkinga — vaš AI vodič za savršeni Jadran.",
               de:"Versteckte Strände, lokale Restaurants, Live-Meer- und Parkdaten — Ihr KI-Guide für die perfekte Adria.",
@@ -277,24 +333,24 @@ export default function DestinationExplorer() {
             })[dl] || ""}
           </p>
 
-          {/* CTAs */}
-          <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginBottom:36 }}>
-            <a href="#destinations" style={{ padding:"15px 28px", background:"linear-gradient(135deg,#0ea5e9,#0284c7)", borderRadius:14, color:"#fff", fontSize:15, fontWeight:600, textDecoration:"none", fontFamily:F, letterSpacing:0.3, boxShadow:"0 4px 24px rgba(14,165,233,0.35), inset 0 1px 0 rgba(255,255,255,0.15)", minHeight:50, display:"inline-flex", alignItems:"center" }}>
+          {/* CTAs — centered */}
+          <div style={{ display:"flex", gap:12, flexWrap:"wrap", justifyContent:"center", marginBottom:32 }}>
+            <a href="#destinations" style={{ padding:"15px 32px", background:"linear-gradient(135deg,#0ea5e9,#0284c7)", borderRadius:14, color:"#fff", fontSize:15, fontWeight:600, textDecoration:"none", fontFamily:F, letterSpacing:0.3, boxShadow:"0 4px 24px rgba(14,165,233,0.4), inset 0 1px 0 rgba(255,255,255,0.15)", minHeight:50, display:"inline-flex", alignItems:"center" }}>
               {({hr:"Istraži destinacije",de:"Destinationen entdecken",en:"Explore destinations",it:"Esplora destinazioni",pl:"Odkryj destynacje",si:"Razišči destinacije"})[dl] || "Explore"} ↓
             </a>
             <a href="/landing" style={{ padding:"15px 28px", borderRadius:14, color:"#fbbf24", fontSize:15, fontWeight:500, textDecoration:"none", fontFamily:F, border:"1px solid rgba(251,191,36,0.3)", background:"rgba(251,191,36,0.06)", minHeight:50, display:"inline-flex", alignItems:"center", gap:8, letterSpacing:0.3, backdropFilter:"blur(8px)" }}>
-              ⭐ {({hr:"AI Travel Guardian",de:"AI Travel Guardian",en:"AI Travel Guardian",it:"AI Travel Guardian",pl:"AI Travel Guardian",si:"AI Travel Guardian"})[dl] || "AI Travel Guardian"} →
+              ⭐ AI Travel Guardian →
             </a>
           </div>
 
-          {/* Destination thumbnail strip */}
-          <div style={{ display:"flex", gap:8, paddingBottom:32, overflowX:"auto", scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", marginLeft:"-4px" }}>
+          {/* Destination thumbnail strip — centered */}
+          <div style={{ display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap" }}>
             {HERO_DESTS.map((hd, i) => (
-              <div key={hd.id} onClick={() => setHeroIdx(i)} style={{ flexShrink:0, scrollSnapAlign:"start", width:72, height:52, borderRadius:10, overflow:"hidden", position:"relative", cursor:"pointer", border: i===heroIdx ? "2px solid rgba(14,165,233,0.7)" : "2px solid transparent", transition:"all 0.3s", opacity: i===heroIdx ? 1 : 0.55 }}>
+              <button key={hd.id} onClick={() => setHeroIdx(i)} style={{ flexShrink:0, width:64, height:46, borderRadius:10, overflow:"hidden", position:"relative", cursor:"pointer", border: i===heroIdx ? "2px solid rgba(14,165,233,0.8)" : "2px solid rgba(255,255,255,0.1)", transition:"all 0.3s", opacity: i===heroIdx ? 1 : 0.5, background:"none", padding:0 }}>
                 <img src={hd.img.replace("w=1400","w=200")} alt={hd.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
-                <div style={{ position:"absolute", inset:0, background:"rgba(5,13,26,0.3)" }} />
-                <div style={{ position:"absolute", bottom:3, left:0, right:0, textAlign:"center", fontSize:7, fontWeight:600, color:"#fff", letterSpacing:0.5, textShadow:"0 1px 3px rgba(0,0,0,0.8)" }}>{hd.name.toUpperCase()}</div>
-              </div>
+                <div style={{ position:"absolute", inset:0, background:"rgba(5,13,26,0.25)" }} />
+                <div style={{ position:"absolute", bottom:3, left:0, right:0, textAlign:"center", fontSize:7, fontWeight:700, color:"#fff", letterSpacing:0.5, textShadow:"0 1px 3px rgba(0,0,0,0.9)" }}>{hd.name.toUpperCase()}</div>
+              </button>
             ))}
           </div>
 
@@ -302,107 +358,191 @@ export default function DestinationExplorer() {
       </section>
 
       {/* ═══ DESTINATIONS ═══ */}
-      <section id="destinations" style={{ padding:"60px 20px 40px", background:"linear-gradient(180deg, #071828 0%, #0a1e36 50%, #071828 100%)" }}>
+      <section id="destinations" style={{ padding:"56px 16px 40px", background:"linear-gradient(180deg, #071828 0%, #0a1e36 50%, #071828 100%)" }}>
         <div style={{ maxWidth:960, margin:"0 auto" }}>
-          <div style={{ textAlign:"center", marginBottom:32 }}>
+
+          <div style={{ textAlign:"center", marginBottom:28 }}>
             <div style={{ fontSize:10, color:"#0ea5e9", letterSpacing:4, fontWeight:700, marginBottom:8 }}>
-              {({hr:"DESTINACIJE",de:"REISEZIELE",en:"DESTINATIONS",it:"DESTINAZIONI"})[dl] || "DESTINATIONS"}
+              {({hr:"ISTRAŽI DESTINACIJE",de:"REISEZIELE ENTDECKEN",en:"EXPLORE DESTINATIONS",it:"ESPLORA DESTINAZIONI"})[dl] || "EXPLORE"}
             </div>
-            <h2 style={{ fontFamily:F, fontSize:"clamp(28px,5vw,42px)", fontWeight:400, marginBottom:12 }}>
-              {({hr:"Vaš sljedeći odmor",de:"Ihr nächster Urlaub",en:"Your next escape",it:"La vostra prossima fuga"})[dl] || ""}
-            </h2>
+            {activeRegionData ? (
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:10 }}>
+                <h2 style={{ fontFamily:F, fontSize:"clamp(24px,4vw,36px)", fontWeight:400 }}>{activeRegionData.id}</h2>
+                <button onClick={() => { setActiveRegion(null); setActiveDest(null); }} style={{ fontSize:11, color:"#64748b", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:8, padding:"4px 10px", cursor:"pointer", fontFamily:B }}>✕</button>
+              </div>
+            ) : (
+              <h2 style={{ fontFamily:F, fontSize:"clamp(24px,4vw,36px)", fontWeight:400 }}>
+                {({hr:"Odaberi regiju",de:"Region wählen",en:"Choose a region",it:"Scegli una regione"})[dl] || ""}
+              </h2>
+            )}
           </div>
 
-          {/* Region cards */}
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(2, 1fr)", gap:16, marginBottom: filtered.length ? 24 : 0 }}>
+          {/* Region cards 2×2 */}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(2, 1fr)", gap:14, marginBottom: destList.length ? 20 : 0 }}>
             {REGIONS.map((r, i) => {
               const isActive = activeRegion === r.id;
               return (
-                <button key={r.id} className="explore-card" onClick={() => setActiveRegion(isActive ? null : r.id)} style={{
-                  display:"block", borderRadius:20, overflow:"hidden", position:"relative",
-                  height:160, border: isActive ? `1px solid ${r.accent}60` : "1px solid rgba(255,255,255,0.06)",
-                  boxShadow: isActive ? `0 8px 32px ${r.accent}30` : "0 8px 32px rgba(0,0,0,0.25)",
-                  animation:`fadeUp 0.5s ease ${i * 0.08}s both`,
+                <button key={r.id} className="explore-card" onClick={() => { setActiveRegion(isActive ? null : r.id); setActiveDest(null); }} style={{
+                  display:"block", borderRadius:18, overflow:"hidden", position:"relative",
+                  height:150, border: isActive ? `2px solid ${r.accent}70` : "1px solid rgba(255,255,255,0.06)",
+                  boxShadow: isActive ? `0 8px 28px ${r.accent}28` : "0 4px 20px rgba(0,0,0,0.3)",
+                  animation:`fadeUp 0.45s ease ${i * 0.07}s both`,
                   cursor:"pointer", background:"none", padding:0, textAlign:"left",
                 }}>
                   <img src={r.img} alt={r.id} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
-                  <div style={{ position:"absolute", inset:0, background: isActive ? `linear-gradient(0deg, rgba(5,13,26,0.85) 0%, ${r.accent}22 100%)` : "linear-gradient(0deg, rgba(5,13,26,0.92) 0%, rgba(5,13,26,0.35) 100%)" }} />
-                  {isActive && <div style={{ position:"absolute", top:10, right:10, width:20, height:20, borderRadius:"50%", background:r.accent, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"#050d1a", fontWeight:700 }}>✓</div>}
-                  <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"16px 14px" }}>
-                    <h3 style={{ fontFamily:F, fontSize:22, fontWeight:400, marginBottom:3, lineHeight:1.1, color:"#fff" }}>{r.id}</h3>
-                    <p style={{ fontSize:11, color:"rgba(255,255,255,0.6)", fontWeight:300, lineHeight:1.3 }}>{t(r.tagline)}</p>
+                  <div style={{ position:"absolute", inset:0, background: isActive ? `linear-gradient(160deg, ${r.accent}30 0%, rgba(5,13,26,0.88) 100%)` : "linear-gradient(0deg, rgba(5,13,26,0.9) 0%, rgba(5,13,26,0.3) 100%)" }} />
+                  {isActive && <div style={{ position:"absolute", top:10, right:10, width:22, height:22, borderRadius:"50%", background:r.accent, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, color:"#050d1a", fontWeight:800, boxShadow:`0 0 12px ${r.accent}80` }}>✓</div>}
+                  <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"14px 14px" }}>
+                    <h3 style={{ fontFamily:F, fontSize:20, fontWeight:400, marginBottom:2, lineHeight:1.1, color:"#fff" }}>{r.id}</h3>
+                    <p style={{ fontSize:10, color:"rgba(255,255,255,0.55)", fontWeight:300, lineHeight:1.3 }}>{t(r.tagline)}</p>
                   </div>
                 </button>
               );
             })}
           </div>
 
-          {/* City grid — shown when region selected */}
-          {filtered.length > 0 && (
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(280px, 1fr))", gap:16 }}>
-              {filtered.map((d, i) => {
-                const cardProps = d.isPartner
-                  ? { href:"#", onClick: e => { e.preventDefault(); setShowBJ(true); setSelectedMenuItem(null); } }
-                  : { href:`/?kiosk=${d.id}&lang=${lang}` };
-                return (
-                <a key={d.id} {...cardProps} className="explore-card" style={{
-                  display:"block", borderRadius:20, overflow:"hidden", position:"relative",
-                  height:220, textDecoration:"none", color:"#fff",
-                  border: d.isPartner ? `1px solid ${d.accent}30` : "1px solid rgba(255,255,255,0.06)",
-                  boxShadow:"0 8px 32px rgba(0,0,0,0.25)",
-                  animation:`fadeUp 0.4s ease ${i * 0.08}s both`,
-                  cursor:"pointer",
-                }}>
-                  <img src={d.img} alt={d.name} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
-                  <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.92) 0%, rgba(5,13,26,0.3) 55%, rgba(5,13,26,0.15) 100%)" }} />
-                  <div style={{ position:"absolute", top:14, left:14, padding:"4px 10px", borderRadius:8, background:"rgba(0,0,0,0.5)", backdropFilter:"blur(8px)", fontSize:9, fontWeight:600, color:d.accent, letterSpacing:1.5, textTransform:"uppercase" }}>
-                    {d.isPartner ? "PARTNER • RAB" : d.region}
-                  </div>
-                  <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"20px 18px" }}>
-                    <h3 style={{ fontFamily:F, fontSize:24, fontWeight:400, marginBottom:4, lineHeight:1.1 }}>{d.name}</h3>
-                    <p style={{ fontSize:13, color:"rgba(255,255,255,0.65)", fontWeight:300 }}>{t(d.tagline)}</p>
-                    <div style={{ marginTop:10, display:"inline-flex", alignItems:"center", gap:4, padding:"6px 12px", borderRadius:8, background:`${d.accent}18`, border:`1px solid ${d.accent}30`, fontSize:11, color:d.accent, fontWeight:600 }}>
-                      {d.isPartner ? ({hr:"Pogledaj meni",de:"Menü ansehen",en:"View menu",it:"Vedi menu"})[dl]||"Menu" : ({hr:"Istraži",de:"Entdecken",en:"Explore",it:"Esplora"})[dl]||"Explore"} →
+          {/* 6 destination tiles — horizontal scroll, appears when region selected */}
+          {destList.length > 0 && (
+            <div>
+              <div style={{ fontSize:9, color:"#475569", letterSpacing:3, fontWeight:600, marginBottom:12, paddingLeft:2 }}>
+                {({hr:"6 KLJUČNIH MJESTA",de:"6 HIGHLIGHTS",en:"6 KEY PLACES",it:"6 LUOGHI CHIAVE"})[dl]||"6 KEY PLACES"} · {activeRegionData.id.toUpperCase()}
+              </div>
+              <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:12, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", marginLeft:"-2px" }}>
+                {destList.map((d, i) => (
+                  <a key={d.id} href={`/?kiosk=${d.id}&lang=${lang}`}
+                    onClick={e => { setActiveDest({ id: d.id, name: d.name, img: d.img, liveCity: d.id }); }}
+                    className="explore-card"
+                    style={{ minWidth:148, width:148, height:190, borderRadius:16, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", textDecoration:"none", color:"#fff",
+                      border: activeDest?.id === d.id ? `2px solid ${d.accent}70` : "1px solid rgba(255,255,255,0.07)",
+                      animation:`fadeUp 0.4s ease ${i * 0.05}s both`, cursor:"pointer",
+                    }}>
+                    <img src={d.img} alt={d.name} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
+                    <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.93) 0%, rgba(5,13,26,0.2) 65%)" }} />
+                    <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"12px 10px" }}>
+                      <div style={{ fontFamily:F, fontSize:17, fontWeight:400, lineHeight:1.1, marginBottom:3 }}>{d.name}</div>
+                      <div style={{ fontSize:9, color:"rgba(255,255,255,0.5)", lineHeight:1.3, marginBottom:8 }}>{t(d.tagline)}</div>
+                      <div style={{ display:"inline-flex", alignItems:"center", gap:3, padding:"4px 8px", borderRadius:6, background:`${d.accent}18`, border:`1px solid ${d.accent}35`, fontSize:9, color:d.accent, fontWeight:700 }}>
+                        {({hr:"Istraži",de:"Entdecken",en:"Explore",it:"Esplora"})[dl]||"Explore"} →
+                      </div>
                     </div>
-                  </div>
-                </a>
-                );
-              })}
+                  </a>
+                ))}
+              </div>
             </div>
           )}
         </div>
       </section>
 
-      {/* ═══ ISTAKNUTO ═══ */}
-      <section style={{ padding:"40px 20px 32px", background:"#050d1a" }}>
-        <div style={{ maxWidth:640, margin:"0 auto" }}>
-          <div style={{ fontSize:10, color:"#f59e0b", letterSpacing:4, fontWeight:700, marginBottom:16 }}>
-            {({hr:"ISTAKNUTO",de:"HIGHLIGHTS",en:"HIGHLIGHTS",it:"IN EVIDENZA",pl:"WYRÓŻNIONE",si:"IZPOSTAVLJENO"})[dl]||"HIGHLIGHTS"}
-          </div>
-          <div style={{ display:"flex", gap:12, overflowX:"auto", paddingBottom:8, WebkitOverflowScrolling:"touch", scrollSnapType:"x mandatory" }}>
-            {/* Fjera card */}
-            <a href={`/?kiosk=rab&lang=${lang}`} style={{ minWidth:200, borderRadius:16, overflow:"hidden", textDecoration:"none", color:"#fff", flexShrink:0, scrollSnapAlign:"start", position:"relative", height:140 }}>
-              <img src="https://images.unsplash.com/photos/KUCx92pIGCM?w=400&q=75" alt="Rabska Fjera" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
-              <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.9) 0%, rgba(5,13,26,0.3) 100%)" }} />
-              <div style={{ position:"absolute", top:10, left:10, fontSize:9, fontWeight:700, color:"#fbbf24", letterSpacing:2 }}>⚔️ RAB · {FJERA.date}</div>
-              <div style={{ position:"absolute", bottom:12, left:12 }}>
-                <div style={{ fontFamily:F, fontSize:16, fontWeight:600 }}>{t(FJERA.title)}</div>
-                <div style={{ fontSize:10, color:"rgba(255,255,255,0.55)", marginTop:2 }}>{t(FJERA.sub)}</div>
-              </div>
-            </a>
-            {/* Top 3 excursions */}
-            {OFFERS.slice(0,3).map((o,i) => (
-              <a key={i} href={o.link} target="_blank" rel="noopener noreferrer" style={{ minWidth:180, borderRadius:16, overflow:"hidden", textDecoration:"none", color:"#fff", flexShrink:0, scrollSnapAlign:"start", position:"relative", height:140 }}>
-                <img src={o.img} alt={t(o.title)} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
-                <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.88) 0%, rgba(5,13,26,0.2) 100%)" }} />
-                <div style={{ position:"absolute", top:8, left:8, padding:"2px 7px", borderRadius:5, background:"rgba(14,165,233,0.18)", fontSize:8, fontWeight:700, color:"#38bdf8", letterSpacing:1 }}>{o.tag}</div>
-                <div style={{ position:"absolute", bottom:10, left:10, right:10 }}>
-                  <div style={{ fontSize:13, fontWeight:600, lineHeight:1.3, marginBottom:3 }}>{t(o.title)}</div>
-                  <div style={{ fontSize:13, fontWeight:700, color:"#22c55e" }}>{o.price}</div>
+      {/* ═══ PARTNERI & BEST DEALS ═══ */}
+      <section style={{ padding:"40px 16px 32px", background:"#050d1a" }}>
+        <div style={{ maxWidth:960, margin:"0 auto" }}>
+
+          {/* — Naši partneri — */}
+          <div style={{ marginBottom:28 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
+              <div style={{ fontSize:10, color:"#f97316", letterSpacing:4, fontWeight:700 }}>NAŠI PARTNERI</div>
+              <div style={{ flex:1, height:1, background:"linear-gradient(90deg, rgba(249,115,22,0.2), transparent)" }} />
+            </div>
+            <div style={{ display:"flex", gap:12, overflowX:"auto", paddingBottom:8, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
+              {/* Black Jack */}
+              <button onClick={() => { setShowBJ(true); setSelectedMenuItem(null); }} style={{ minWidth:190, height:150, borderRadius:16, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", border:"1px solid rgba(249,115,22,0.25)", cursor:"pointer", background:"none", padding:0 }}>
+                <img src={BJ.img} alt="Black Jack" loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
+                <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(10,22,40,0.94) 0%, rgba(10,22,40,0.3) 100%)" }} />
+                <div style={{ position:"absolute", top:10, left:10, padding:"3px 8px", borderRadius:6, background:"rgba(249,115,22,0.18)", border:"1px solid rgba(249,115,22,0.3)", fontSize:8, fontWeight:700, color:"#f97316", letterSpacing:1.5 }}>NAŠI PARTNER</div>
+                <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"12px 12px", textAlign:"left" }}>
+                  <div style={{ fontFamily:F, fontSize:18, fontWeight:400, color:"#fff", marginBottom:2 }}>Black Jack</div>
+                  <div style={{ fontSize:9, color:"rgba(255,255,255,0.5)", marginBottom:8 }}>{BJ.address}</div>
+                  <div style={{ display:"inline-flex", alignItems:"center", gap:3, padding:"4px 9px", borderRadius:6, background:"rgba(249,115,22,0.15)", border:"1px solid rgba(249,115,22,0.3)", fontSize:9, color:"#f97316", fontWeight:700 }}>
+                    {({hr:"Pogledaj meni",de:"Menü ansehen",en:"View menu",it:"Vedi menu"})[dl]||"Menu"} →
+                  </div>
+                </div>
+              </button>
+              {/* Rab AI Guide */}
+              <a href={`/?kiosk=rab&lang=${lang}`} style={{ minWidth:190, height:150, borderRadius:16, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", textDecoration:"none", color:"#fff", border:"1px solid rgba(251,191,36,0.2)" }}>
+                <img src="https://images.unsplash.com/photos/KUCx92pIGCM?w=400&q=75" alt="Rab" loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
+                <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.92) 0%, rgba(5,13,26,0.3) 100%)" }} />
+                <div style={{ position:"absolute", top:10, left:10, padding:"3px 8px", borderRadius:6, background:"rgba(251,191,36,0.14)", border:"1px solid rgba(251,191,36,0.3)", fontSize:8, fontWeight:700, color:"#fbbf24", letterSpacing:1.5 }}>⚔️ RAB · {FJERA.date}</div>
+                <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"12px 12px" }}>
+                  <div style={{ fontFamily:F, fontSize:18, fontWeight:400, marginBottom:2 }}>{t(FJERA.title)}</div>
+                  <div style={{ fontSize:9, color:"rgba(255,255,255,0.5)", marginBottom:8 }}>{t(FJERA.sub).slice(0,42)}…</div>
+                  <div style={{ display:"inline-flex", alignItems:"center", gap:3, padding:"4px 9px", borderRadius:6, background:"rgba(251,191,36,0.1)", border:"1px solid rgba(251,191,36,0.25)", fontSize:9, color:"#fbbf24", fontWeight:700 }}>
+                    AI Guide Rab →
+                  </div>
                 </div>
               </a>
-            ))}
+            </div>
           </div>
+
+          {/* — Viator Best Deals — */}
+          <div style={{ marginBottom:28 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
+              <div style={{ fontSize:10, color:"#0ea5e9", letterSpacing:4, fontWeight:700 }}>VIATOR DEALS</div>
+              {viatorLoading && <div style={{ width:14, height:14, borderRadius:"50%", border:"2px solid rgba(14,165,233,0.3)", borderTopColor:"#0ea5e9", animation:"spin 0.8s linear infinite" }} />}
+              <div style={{ flex:1, height:1, background:"linear-gradient(90deg, rgba(14,165,233,0.2), transparent)" }} />
+              {activeDest && <div style={{ fontSize:9, color:"#38bdf8", fontWeight:600, letterSpacing:1 }}>{activeDest.name.toUpperCase()}</div>}
+            </div>
+            <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:8, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
+              {/* Viator API results */}
+              {viatorDeals.length > 0 ? viatorDeals.slice(0,6).map((p, i) => (
+                <a key={p.productCode || i} href={p.productUrl || "#"} target="_blank" rel="noopener noreferrer"
+                  style={{ minWidth:170, height:150, borderRadius:14, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", textDecoration:"none", color:"#fff", border:"1px solid rgba(14,165,233,0.15)", animation:`fadeUp 0.4s ease ${i*0.05}s both` }}>
+                  <img src={p.images?.[0]?.variants?.find(v => v.width >= 300)?.url || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=60"} alt={p.title} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
+                  <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.93) 0%, rgba(5,13,26,0.15) 65%)" }} />
+                  <div style={{ position:"absolute", top:8, left:8, padding:"2px 7px", borderRadius:5, background:"rgba(14,165,233,0.2)", fontSize:8, fontWeight:700, color:"#38bdf8", letterSpacing:1 }}>VIATOR</div>
+                  <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 10px" }}>
+                    <div style={{ fontSize:12, fontWeight:600, lineHeight:1.3, marginBottom:3, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{p.title}</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:"#22c55e" }}>
+                      {p.pricing?.summary?.fromPrice ? `od ${p.pricing.summary.fromPrice}€` : ""}
+                    </div>
+                  </div>
+                </a>
+              )) : (
+                /* Placeholder shimmer cards while no API key or loading */
+                Array.from({length:4}).map((_,i) => (
+                  <div key={i} style={{ minWidth:170, height:150, borderRadius:14, flexShrink:0, scrollSnapAlign:"start", border:"1px solid rgba(14,165,233,0.08)", background:"rgba(14,165,233,0.03)", overflow:"hidden", position:"relative", animation:`fadeUp 0.4s ease ${i*0.05}s both` }}>
+                    <div style={{ position:"absolute", inset:0, background:"linear-gradient(90deg, transparent 0%, rgba(14,165,233,0.05) 50%, transparent 100%)", backgroundSize:"200% 100%", animation:"shimmer 1.8s ease infinite" }} />
+                    <div style={{ padding:"12px", height:"100%", display:"flex", flexDirection:"column", justifyContent:"flex-end", gap:6 }}>
+                      <div style={{ height:8, borderRadius:4, background:"rgba(255,255,255,0.06)", width:"60%" }} />
+                      <div style={{ height:10, borderRadius:4, background:"rgba(255,255,255,0.08)", width:"85%" }} />
+                      <div style={{ height:8, borderRadius:4, background:"rgba(34,197,94,0.15)", width:"35%" }} />
+                    </div>
+                    <div style={{ position:"absolute", top:8, left:8, padding:"2px 7px", borderRadius:5, background:"rgba(14,165,233,0.12)", fontSize:8, fontWeight:700, color:"#38bdf8", letterSpacing:1 }}>VIATOR</div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* — GYG Best Experiences — */}
+          <div style={{ marginBottom:16 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
+              <div style={{ fontSize:10, color:"#22c55e", letterSpacing:4, fontWeight:700 }}>GETYOURGUIDE</div>
+              <div style={{ flex:1, height:1, background:"linear-gradient(90deg, rgba(34,197,94,0.2), transparent)" }} />
+            </div>
+            <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:8, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
+              {GYG_OFFERS.map((o, i) => (
+                <a key={i} href={o.link} target="_blank" rel="noopener noreferrer"
+                  style={{ minWidth:170, height:150, borderRadius:14, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", textDecoration:"none", color:"#fff", border:"1px solid rgba(34,197,94,0.12)", animation:`fadeUp 0.4s ease ${i*0.05}s both` }}>
+                  <img src={o.img} alt={t(o.title)} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
+                  <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.92) 0%, rgba(5,13,26,0.15) 65%)" }} />
+                  <div style={{ position:"absolute", top:8, left:8, padding:"2px 7px", borderRadius:5, background:"rgba(34,197,94,0.18)", fontSize:8, fontWeight:700, color:"#22c55e", letterSpacing:1 }}>{o.tag}</div>
+                  <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 10px" }}>
+                    <div style={{ fontSize:12, fontWeight:600, lineHeight:1.3, marginBottom:3 }}>{t(o.title)}</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:"#22c55e" }}>{o.price}</div>
+                  </div>
+                </a>
+              ))}
+              {/* AI Best Buy placeholder — will be filled by AI-found deals */}
+              <div style={{ minWidth:170, height:150, borderRadius:14, flexShrink:0, scrollSnapAlign:"start", border:"1px dashed rgba(251,191,36,0.2)", background:"rgba(251,191,36,0.02)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:6, padding:14 }}>
+                <div style={{ fontSize:18, opacity:0.4 }}>🤖</div>
+                <div style={{ fontSize:10, color:"#64748b", fontWeight:600, textAlign:"center", lineHeight:1.4 }}>
+                  {({hr:"AI pronalazi best buy…",de:"KI sucht beste Angebote…",en:"AI finding best deals…",it:"AI cerca le offerte migliori…"})[dl]||"AI finding deals…"}
+                </div>
+                <div style={{ fontSize:8, color:"#334155", textAlign:"center" }}>Uskoro · Coming soon</div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -500,33 +640,56 @@ export default function DestinationExplorer() {
         <div style={{ fontSize:10, color:"#1e293b", letterSpacing:0.5 }}>© 2026 SIAL Consulting d.o.o. · jadran.ai</div>
       </footer>
 
-      {/* ═══ LIVE OVERLAY ═══ */}
-      {showLive && (
-        <div onClick={() => setShowLive(false)} style={{ position:"fixed", inset:0, zIndex:500, background:"rgba(3,8,16,0.85)", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
-          <div onClick={e => e.stopPropagation()} style={{ width:"100%", maxWidth:560, background:"#0a1628", borderRadius:"24px 24px 0 0", border:"1px solid rgba(34,197,94,0.15)", borderBottom:"none", padding:"24px 20px", paddingBottom:"calc(24px + env(safe-area-inset-bottom, 0px))", animation:"fadeUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:20 }}>
-              <div style={{ width:8, height:8, borderRadius:"50%", background:"#22c55e", boxShadow:"0 0 10px #22c55e", animation:"pulse 2s infinite" }} />
-              <span style={{ fontSize:11, color:"#22c55e", fontWeight:700, letterSpacing:2 }}>JADRAN SENSE™</span>
-              <button onClick={() => setShowLive(false)} style={{ marginLeft:"auto", width:28, height:28, borderRadius:"50%", background:"rgba(255,255,255,0.06)", border:"none", color:"#64748b", fontSize:14, cursor:"pointer", display:"grid", placeItems:"center" }}>✕</button>
+      {/* ═══ LIVE OVERLAY — context-aware ═══ */}
+      {showLive && (() => {
+        const liveTarget = activeDest
+          ? activeDest.name
+          : activeRegionData
+            ? (activeRegionData.liveCity === "rab" ? "Rab" : activeRegionData.destinations.find(d => d.id === activeRegionData.liveCity)?.name || activeRegionData.id)
+            : "Jadran";
+        const liveImg = activeDest
+          ? activeDest.img
+          : (activeRegionData?.img || SENSE[0].img);
+        return (
+        <div onClick={() => setShowLive(false)} style={{ position:"fixed", inset:0, zIndex:500, background:"rgba(3,8,16,0.88)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
+          <div onClick={e => e.stopPropagation()} style={{ width:"100%", maxWidth:560, background:"#0a1628", borderRadius:"24px 24px 0 0", border:"1px solid rgba(34,197,94,0.18)", borderBottom:"none", overflow:"hidden", animation:"fadeUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
+            {/* Hero image strip */}
+            <div style={{ position:"relative", height:90, overflow:"hidden" }}>
+              <img src={liveImg.replace("w=800","w=600")} alt={liveTarget} style={{ width:"100%", height:"100%", objectFit:"cover", opacity:0.4 }} />
+              <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, #0a1628 0%, rgba(10,22,40,0.5) 100%)" }} />
+              <div style={{ position:"absolute", bottom:12, left:18, display:"flex", alignItems:"center", gap:8 }}>
+                <div style={{ width:8, height:8, borderRadius:"50%", background:"#22c55e", boxShadow:"0 0 10px #22c55e", animation:"pulse 2s infinite", flexShrink:0 }} />
+                <span style={{ fontSize:11, color:"#22c55e", fontWeight:700, letterSpacing:2 }}>JADRAN SENSE™</span>
+                <span style={{ fontSize:11, color:"rgba(255,255,255,0.5)", fontWeight:400 }}>· {liveTarget}</span>
+              </div>
+              <button onClick={() => setShowLive(false)} style={{ position:"absolute", top:12, right:14, width:28, height:28, borderRadius:"50%", background:"rgba(0,0,0,0.6)", border:"none", color:"#64748b", fontSize:14, cursor:"pointer", display:"grid", placeItems:"center" }}>✕</button>
             </div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-              {SENSE.map((s,i) => (
-                <div key={i} style={{ borderRadius:14, overflow:"hidden", position:"relative", height:110, border:"1px solid rgba(14,165,233,0.1)" }}>
-                  <img src={s.img} alt="" loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", opacity:0.2 }} />
-                  <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.92) 0%, rgba(5,13,26,0.5) 100%)" }} />
-                  <div style={{ position:"relative", padding:"12px 10px", height:"100%", display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
-                    <div style={{ fontSize:12, fontWeight:600, color:"#e2e8f0", marginBottom:2 }}>{t(s.l)}</div>
-                    <div style={{ fontSize:9, color:"#64748b", lineHeight:1.4 }}>{t(s.v)}</div>
+            <div style={{ padding:"16px 18px", paddingBottom:"calc(20px + env(safe-area-inset-bottom, 0px))" }}>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                {SENSE.map((s,i) => (
+                  <div key={i} style={{ borderRadius:14, overflow:"hidden", position:"relative", height:108, border:"1px solid rgba(14,165,233,0.1)" }}>
+                    <img src={s.img} alt="" loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", opacity:0.18 }} />
+                    <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.94) 0%, rgba(5,13,26,0.5) 100%)" }} />
+                    <div style={{ position:"relative", padding:"12px 10px", height:"100%", display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
+                      <div style={{ fontSize:12, fontWeight:600, color:"#e2e8f0", marginBottom:2 }}>{t(s.l)}</div>
+                      <div style={{ fontSize:9, color:"#64748b", lineHeight:1.4 }}>{t(s.v)}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ marginTop:14, fontSize:10, color:"#334155", textAlign:"center" }}>
-              165+ {({hr:"senzorskih točaka duž Jadrana",de:"Sensorpunkte entlang der Adria",en:"sensor points along the Adriatic",it:"punti sensoriali sull'Adriatico",pl:"punktów pomiarowych wzdłuż Adriatyku",si:"merilnih točk vzdolž Jadrana"})[dl]||"sensor points"}
+                ))}
+              </div>
+              {liveTarget === "Rab" && (
+                <a href={`/?kiosk=rab&go=live&lang=${lang}`} style={{ display:"block", marginTop:12, padding:"12px", borderRadius:12, background:"rgba(34,197,94,0.08)", border:"1px solid rgba(34,197,94,0.18)", textAlign:"center", textDecoration:"none", color:"#22c55e", fontSize:12, fontWeight:600 }}>
+                  {({hr:"Otvori live Rab →",de:"Live Rab öffnen →",en:"Open live Rab →",it:"Apri live Rab →"})[dl]||"Open live →"}
+                </a>
+              )}
+              <div style={{ marginTop:12, fontSize:9, color:"#1e3a5f", textAlign:"center" }}>
+                165+ {({hr:"senzorskih točaka · Jadran.ai",de:"Sensorpunkte · Jadran.ai",en:"sensor points · Jadran.ai",it:"punti sensoriali · Jadran.ai"})[dl]||"sensor points"}
+              </div>
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ═══ LANG PICKER OVERLAY ═══ */}
       {langOpen && (
