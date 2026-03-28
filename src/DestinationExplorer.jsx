@@ -1,1068 +1,575 @@
-// =========================================================
-// JADRAN.AI — AI Tourist Operator · Pre-Trip Hub
-// Flow: Explorer → (select destination) → Destination Detail
-//       → Prebooking Form → Confirmed (unique JAD-ID)
-//       → GO TO TRIP (/?kiosk=rab&booking=JAD-...)
-// =========================================================
-import { useState, useEffect } from "react";
-import { saveDelta } from "./deltaContext";
+// ═══════════════════════════════════════════════════════════════
+// JADRAN.AI — Destination Explorer  "/explore"
+// Mediterranean luxury editorial · mobile-first · Apple-grade
+// ═══════════════════════════════════════════════════════════════
+import { useState, useEffect, useRef } from "react";
 
-// ── AFFILIATE HELPERS ──
-const GYG  = (q) => `https://www.getyourguide.com/searchResults?q=${encodeURIComponent(q)}&partner_id=9OEGOYI`;
-const VIA  = (q) => `https://www.viator.com/searchResults/all?text=${encodeURIComponent(q)}&pid=P00292197`;
-const BKG  = (q) => `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(q)}&aid=101704203`;
-const BKGH = (id) => `https://www.booking.com/hotel/hr/${id}.html?aid=101704203`;
+// ─── FONTS ───
+const F = "'Playfair Display','Cormorant Garamond',Georgia,serif";
+const B = "'Outfit','system-ui',sans-serif";
 
-// ── BOOKING ID GENERATOR ──
-// Crockford base-32 charset — no 0/O/I/1 confusion
-const B32 = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const genId = (destId = "ADR") => {
-  const p = (destId || "ADR").slice(0, 3).toUpperCase();
-  const d = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-  const r = Array.from({ length: 6 }, () => B32[Math.floor(Math.random() * 32)]).join("");
-  return `JAD-${p}-${d}-${r}`;
-};
-
-// ── COLORS ──
-const C = {
-  bg: "#0a1628", surface: "#0f1e35", card: "#162240",
-  cardHover: "#1c2d52", accent: "#00b4d8", gold: "#FFB800",
-  white: "#f0f4f8", muted: "#7a8fa8", border: "rgba(0,180,216,0.12)",
-  borderGold: "rgba(255,184,0,0.35)", borderGoldBright: "rgba(255,184,0,0.7)",
-  success: "#22c55e", danger: "#ef4444",
-  gradBg: "linear-gradient(160deg, #07111f 0%, #0d2137 60%, #081523 100%)",
-};
-
-// ── DIRECT PARTNERS (only these visible on main explorer) ──
-const DIRECT_PARTNERS = [
-  {
-    id: "blackjack-rab",
-    name: "Black Jack Rab",
-    email: "booking@blackjackrab.com",
-    emoji: "🃏",
-    destinationId: "rab",
-    destinationName: "Rab",
-    address: "Palit 315, Otok Rab",
-    type: "direct",
-    tagline_en: "Private retreat in peaceful Palit village",
-    tagline_de: "Privater Rückzugsort im ruhigen Dorf Palit",
-    description_en: "Stylish private apartments in quiet Palit village, just 3km from Rab's medieval Old Town and 400m from a secluded pebble beach. Surrounded by Mediterranean pine forest with stunning sea views. The only accommodation on Rab with a fully integrated AI travel companion — from your front door to ours.",
-    description_de: "Stilvolle private Apartments im ruhigen Dorf Palit, 3km von der mittelalterlichen Altstadt und 400m von einem abgelegenen Kieselstrand entfernt. Umgeben von mediterranem Kiefernwald mit Meerblick. Die einzige Unterkunft auf Rab mit integriertem KI-Reisebegleiter.",
-    images: [
-      "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=900&q=85",
-      "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=900&q=85",
-      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=900&q=85",
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=900&q=85",
-    ],
-    units: [
-      { icon: "🛏️", name_en: "Studio", name_de: "Studio", guests: 2, price_en: "from €65/night", price_de: "ab €65/Nacht" },
-      { icon: "🏡", name_en: "1-Bedroom Apt", name_de: "1-Zimmer", guests: 4, price_en: "from €90/night", price_de: "ab €90/Nacht" },
-      { icon: "🏠", name_en: "Family Suite", name_de: "Familiensuite", guests: 6, price_en: "from €130/night", price_de: "ab €130/Nacht" },
-    ],
-    amenities: [
-      { icon: "🤖", en: "AI guide included", de: "KI-Guide inklusive" },
-      { icon: "🌊", en: "400m to beach", de: "400m zum Strand" },
-      { icon: "🚗", en: "Free parking", de: "Kostenloses Parken" },
-      { icon: "❄️", en: "Air conditioning", de: "Klimaanlage" },
-      { icon: "📶", en: "Free WiFi", de: "Gratis WLAN" },
-      { icon: "🍳", en: "Full kitchen", de: "Vollküche" },
-      { icon: "🏊", en: "Pool", de: "Pool" },
-      { icon: "🌲", en: "Pine forest", de: "Kiefernwald" },
-      { icon: "🐾", en: "Pets allowed", de: "Haustiere OK" },
-      { icon: "🚢", en: "3km to ferry", de: "3km zur Fähre" },
-    ],
-    perks_en: ["AI companion included", "Priority kiosk access", "Real-time transit guidance", "Local insider tips"],
-    perks_de: ["KI-Begleiter inklusive", "Priority Kiosk-Zugang", "Echtzeit-Reisebegleitung", "Lokale Insider-Tipps"],
-    rating: 4.8,
-    reviews: 47,
-    priceFrom_en: "from €65/night",
-    priceFrom_de: "ab €65/Nacht",
-  },
-];
-
-// ── DESTINATIONS ──
+// ─── DESTINATIONS ───
 const DESTINATIONS = [
-  {
-    id: "rab",
-    name: "Rab",
-    tagline_en: "Island of Happiness",
-    tagline_de: "Insel des Glücks",
-    hero: "https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=800&q=80",
-    heroDetail: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&q=80",
-    badge: "PILOT", badge_color: "#FFB800",
-    stats: { beaches: 30, cameras: 8, pois: 22 },
-    coords: { lat: 44.7561, lng: 14.7642 },
-    description_en: "30+ sandy beaches, medieval old town with four bell towers, and the famous Rabska Torta. Croatia's island paradise.",
-    description_de: "30+ Sandstrände, mittelalterliche Altstadt mit vier Glockentürmen und die berühmte Rabska Torta. Kroatiens Inselparadies.",
-    categories: [
-      {
-        id: "stay", icon: "🏠", title_en: "Accommodation", title_de: "Unterkunft", bookable: true,
-        items: [
-          { name: "🃏 Black Jack Rab", sub_en: "Palit 315 · AI companion included · Direct partner", sub_de: "Palit 315 · KI-Begleiter inklusive · Direktpartner",
-            direct: true, type: "direct", bookable: true, rating: 4.8 },
-          { name: "Arbiana Hotel", sub_en: "Old Town · sea view · 4★ · within city walls", sub_de: "Altstadt · Meerblick · 4★ · innerhalb der Stadtmauern",
-            booking: BKGH("arbiana"), bookable: true, type: "affiliate", rating: 4.6 },
-          { name: "Hotel International Rab", sub_en: "Town center · beach access · family rooms", sub_de: "Stadtzentrum · Strandzugang · Familienzimmer",
-            booking: BKGH("hotel-international-rab"), bookable: true, type: "affiliate", rating: 4.3 },
-          { name: "Valamar Padova Resort", sub_en: "Lopar · near Paradise Beach · pool · 4★", sub_de: "Lopar · nahe Paradiesstrand · Pool · 4★",
-            booking: BKGH("valamar-padova-rab"), bookable: true, type: "affiliate", rating: 4.4 },
-          { name: "Apartments in Lopar", sub_en: "Steps from Paradise Beach · budget-friendly", sub_de: "Direkt am Paradiesstrand · budgetfreundlich",
-            booking: BKG("Lopar Rab Island Croatia"), bookable: true, type: "affiliate", rating: 4.2 },
-          { name: "Camping San Marino Resort", sub_en: "Lopar · mobile homes · direct beach access", sub_de: "Lopar · Mobilheime · direkter Strandzugang",
-            booking: BKG("Rab camping San Marino"), bookable: true, type: "affiliate", rating: 4.3 },
-        ],
-      },
-      {
-        id: "beaches", icon: "🏖️", title_en: "Beaches", title_de: "Strände",
-        items: [
-          { name: "Paradise Beach (Rajska Plaža)", sub_en: "2km sandy · shallow · family paradise · arrive before 10h", sub_de: "2km Sand · flach · Familienparadies · vor 10 Uhr ankommen", rating: 4.7 },
-          { name: "Banova Vila", sub_en: "Below old town walls · kayaks · sunset bar", sub_de: "Unter den Stadtmauern · Kajaks · Sunset Bar", rating: 4.5 },
-          { name: "Suha Punta", sub_en: "Kalifront forest · pine shade · taxi boat access", sub_de: "Kalifront-Wald · Kiefernschatten · Taxiboot", rating: 4.6 },
-          { name: "Pudarica", sub_en: "Sandy by day · nightclub by night", sub_de: "Tagsüber Sand · nachts Nightclub", rating: 4.4 },
-          { name: "Sahara Beach", sub_en: "Secluded · naturist-friendly · sandstone formations", sub_de: "Abgelegen · FKK-freundlich · Sandsteinformationen", rating: 4.3 },
-          { name: "Livačina", sub_en: "Near Paradise Beach · natural tree shade · families", sub_de: "Nah am Paradiesstrand · natürlicher Schatten · Familien", rating: 4.5 },
-        ],
-      },
-      {
-        id: "excursions", icon: "🚢", title_en: "Excursions", title_de: "Ausflüge", affiliate: true,
-        items: [
-          { name: "Boat Tours around Rab", sub_en: "Hidden coves, caves & sea caves", sub_de: "Versteckte Buchten, Höhlen & Meereshöhlen", rating: 4.8,
-            gyg: GYG("Rab island boat tour"), viator: VIA("Rab boat tour") },
-          { name: "Goli Otok — Croatian Alcatraz", sub_en: "Haunting abandoned prison island · 1949–1989", sub_de: "Verlassene Gefängnisinsel · 1949–1989", rating: 4.6,
-            gyg: GYG("Goli Otok tour"), viator: VIA("Goli Otok") },
-          { name: "Sea Kayaking Adventure", sub_en: "Caves, cliffs & crystal water · half or full day", sub_de: "Höhlen, Klippen & Kristallwasser · halb oder ganzer Tag", rating: 4.7,
-            gyg: GYG("Rab kayak"), viator: VIA("Rab kayak") },
-          { name: "Island Hopping: Rab → Cres → Lošinj", sub_en: "Full day · 3 islands · swimming stops", sub_de: "Ganzer Tag · 3 Inseln · Baustopps", rating: 4.5,
-            gyg: GYG("Rab island hopping"), viator: VIA("Rab island hopping Croatia") },
-          { name: "Scuba Diving — PADI Courses", sub_en: "Walls, caves & wrecks · beginners welcome", sub_de: "Wände, Höhlen & Wracks · Anfänger willkommen", rating: 4.6,
-            gyg: GYG("Rab diving Croatia"), viator: VIA("Rab scuba diving") },
-        ],
-      },
-      {
-        id: "food", icon: "🍽️", title_en: "Food & Drink", title_de: "Essen & Trinken",
-        items: [
-          { name: "Rabska Torta", sub_en: "Ul. Stjepana Radića 5 · spiral almond cake · perfect souvenir", sub_de: "Ul. Stjepana Radića 5 · Spiralmandeltorte · Perfektes Souvenir", rating: 4.9, local: true },
-          { name: "Restaurant Kamenjak", sub_en: "407m hilltop · panoramic Kvarner Bay view", sub_de: "407m Gipfel · Panoramablick auf die Kvarner Bucht", rating: 4.8, local: true },
-          { name: "Konoba Santa Maria", sub_en: "Old town · fresh catch of the day · octopus salad", sub_de: "Altstadt · Frischer Fang des Tages · Tintenfischsalat", rating: 4.7, local: true },
-          { name: "Forum Bar & Restaurant", sub_en: "Old town square · café by day · cocktails by night", sub_de: "Altstadtplatz · Café am Tag · Cocktails am Abend", rating: 4.3, local: true },
-          { name: "Zlatni Zal Beach Bar", sub_en: "Banova Vila beach · cold Karlovačko · sunset views", sub_de: "Banova-Vila-Strand · kaltes Karlovačko · Sonnenuntergang", rating: 4.4, local: true },
-        ],
-      },
-      {
-        id: "sights", icon: "🏛️", title_en: "Must See", title_de: "Sehenswürdigkeiten",
-        items: [
-          { name: "Rab Old Town — Four Bell Towers", sub_en: "Venetian-Roman architecture · ship silhouette from sea", sub_de: "Venezianisch-römische Architektur · Schiffssilhouette vom Meer", rating: 4.8 },
-          { name: "Kamenjak Peak (407m)", sub_en: "Drive or hike · panoramic Kvarner Bay view · restaurant at top", sub_de: "Fahren oder wandern · Panorama · Restaurant am Gipfel", rating: 4.9 },
-          { name: "Cathedral of St Mary (26m tower)", sub_en: "Climb the bell tower · €3 · best photos at golden hour", sub_de: "Glockenturm besteigen · €3 · Beste Fotos zur goldenen Stunde", rating: 4.7 },
-          { name: "Geopark Rab — Lopar", sub_en: "UNESCO · sandstone formations · coastal hiking", sub_de: "UNESCO · Sandsteinformationen · Küstenwanderung", rating: 4.6 },
-          { name: "Franciscan Monastery of St. Euphemia", sub_en: "Kampor · 1458 · 27-scene painted ceiling", sub_de: "Kampor · 1458 · 27-szenen bemalte Decke", rating: 4.5 },
-          { name: "Komrčar Forest Park", sub_en: "8ha · pines & cypress · sea views · walking paths", sub_de: "8ha · Kiefern & Zypressen · Meerblick · Wanderwege", rating: 4.4 },
-        ],
-      },
-      {
-        id: "transport", icon: "⛴️", title_en: "Getting There", title_de: "Anreise",
-        items: [
-          { name: "Ferry Stinica → Mišnjak", sub_en: "Main line · 15 min · hourly · ~€25 car+passengers · NO advance booking · arrive early in summer!", sub_de: "Hauptlinie · 15 Min · stündlich · ~€25 · KEINE Vorausbuchung · Im Sommer früh ankommen!", important: true },
-          { name: "Ferry Lopar → Valbiska (Krk)", sub_en: "Car ferry · Krk connected to mainland by bridge · good for Rijeka route", sub_de: "Autofähre · Krk über Brücke mit Festland verbunden · gut für Rijeka-Route" },
-          { name: "Catamaran Rijeka → Rab Town", sub_en: "~2h · summer season only · foot passengers only", sub_de: "~2h · nur Sommersaison · nur Fußpassagiere" },
-          { name: "Taxi boats to beaches", sub_en: "From Rab harbor · Suha Punta, Kampor, hidden coves", sub_de: "Vom Hafen Rab · Suha Punta, Kampor, versteckte Buchten" },
-        ],
-      },
-    ],
-  },
-  { id: "split", name: "Split", tagline_en: "Heart of Dalmatia", tagline_de: "Herz Dalmatiens",
-    hero: "https://images.unsplash.com/photo-1592486058517-a9d8e6a95bf0?w=800&q=80",
-    badge: "COMING SOON", badge_color: "#334155", locked: true,
-    stats: { beaches: 15, cameras: 12, pois: 35 } },
-  { id: "dubrovnik", name: "Dubrovnik", tagline_en: "Pearl of the Adriatic", tagline_de: "Perle der Adria",
-    hero: "https://images.unsplash.com/photo-1555990793-da11153b2473?w=800&q=80",
-    badge: "COMING SOON", badge_color: "#334155", locked: true,
-    stats: { beaches: 10, cameras: 8, pois: 40 } },
-  { id: "zadar", name: "Zadar", tagline_en: "City of Sunsets", tagline_de: "Stadt der Sonnenuntergänge",
-    hero: "https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?w=800&q=80",
-    badge: "COMING SOON", badge_color: "#334155", locked: true,
-    stats: { beaches: 12, cameras: 6, pois: 28 } },
-  { id: "hvar", name: "Hvar", tagline_en: "Island of Sun", tagline_de: "Insel der Sonne",
-    hero: "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=800&q=80",
-    badge: "COMING SOON", badge_color: "#334155", locked: true,
-    stats: { beaches: 20, cameras: 7, pois: 32 } },
-  { id: "krk", name: "Krk", tagline_en: "Golden Island", tagline_de: "Goldene Insel",
-    hero: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
-    badge: "COMING SOON", badge_color: "#334155", locked: true,
-    stats: { beaches: 25, cameras: 10, pois: 30 } },
+  { id:"rab",       name:"Rab",               region:"Kvarner",   tagline:{hr:"Otok četiri zvonika",de:"Insel der vier Türme",en:"Island of four bell towers",it:"Isola dei quattro campanili"}, img:"https://images.unsplash.com/photos/KUCx92pIGCM?w=800&q=80", accent:"#fbbf24" },
+  { id:"blackjack", name:"Black Jack",        region:"Kvarner",   tagline:{hr:"Gurman House · Palit, Rab",de:"Gurman House · Palit, Rab",en:"Gurman House · Palit, Rab",it:"Gurman House · Palit, Rab"}, img:"https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80", accent:"#f97316", isPartner:true, partnerLink:"/?kiosk=rab&affiliate=blackjack&tk=sial2026&lang=de" },
+  { id:"split",     name:"Split",             region:"Dalmacija", tagline:{hr:"Dioklecijanova palača",de:"Diokletianpalast",en:"Diocletian's Palace",it:"Palazzo di Diocleziano"}, img:"https://images.unsplash.com/photos/QWHW4NQwXHE?w=800&q=80", accent:"#0ea5e9" },
+  { id:"dubrovnik", name:"Dubrovnik",         region:"Dalmacija", tagline:{hr:"Biser Jadrana",de:"Perle der Adria",en:"Pearl of the Adriatic",it:"Perla dell'Adriatico"}, img:"https://images.unsplash.com/photos/5maoPl591Sk?w=800&q=80", accent:"#f97316" },
+  { id:"rovinj",    name:"Rovinj",            region:"Istra",     tagline:{hr:"Najromantičniji grad",de:"Die romantischste Stadt",en:"Most romantic town",it:"La città più romantica"}, img:"https://images.unsplash.com/photos/R9VbQFaUnac?w=800&q=80", accent:"#fb923c" },
+  { id:"hvar",      name:"Hvar",              region:"Otoci",     tagline:{hr:"Lavanda i glamur",de:"Lavendel und Glamour",en:"Lavender and glamour",it:"Lavanda e glamour"}, img:"https://images.unsplash.com/photos/pRH473DZjCg?w=800&q=80", accent:"#a78bfa" },
+  { id:"makarska",  name:"Makarska",          region:"Dalmacija", tagline:{hr:"Rivijera iz snova",de:"Traumriviera",en:"Dream riviera",it:"Riviera dei sogni"}, img:"https://images.unsplash.com/photos/WaCCH_FGn1s?w=800&q=80", accent:"#38bdf8" },
+  { id:"zadar",     name:"Zadar",             region:"Dalmacija", tagline:{hr:"Najljepši zalazak sunca",de:"Schönster Sonnenuntergang",en:"Most beautiful sunset",it:"Tramonto più bello"}, img:"https://images.unsplash.com/photos/xsZrf0-iQ6E?w=800&q=80", accent:"#f59e0b" },
+  { id:"pula",      name:"Pula",              region:"Istra",     tagline:{hr:"Rimska arena",de:"Römische Arena",en:"Roman Arena",it:"Arena Romana"}, img:"https://images.unsplash.com/photos/TBC4FLRxcKk?w=800&q=80", accent:"#34d399" },
+  { id:"opatija",   name:"Opatija",           region:"Kvarner",   tagline:{hr:"Elegancija Kvarnera",de:"Eleganz des Kvarner",en:"Kvarner elegance",it:"Eleganza del Quarnero"}, img:"https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=800&q=80", accent:"#06b6d4" },
 ];
 
-// ── JOURNEY STAGES ──
-const JOURNEY = [
-  { num: "01", icon: "🏠", key: "book",
-    en: { title: "Book", sub: "Choose your destination and accommodation. Direct partner bookings activate your AI companion immediately." },
-    de: { title: "Buchen", sub: "Wähle Destination und Unterkunft. Direktbuchungen aktivieren den KI-Begleiter sofort." } },
-  { num: "02", icon: "🚗", key: "drive",
-    en: { title: "Drive", sub: "Real-time AI on every kilometer. Bura warnings, ferry queues, camper height alerts — door-to-door." },
-    de: { title: "Fahren", sub: "Echtzeit-KI auf jedem Kilometer. Bora, Fährenzeiten, Mautinfos — von Tür zu Tür." } },
-  { num: "03", icon: "🏝️", key: "arrive",
-    en: { title: "Arrive", sub: "App switches to Kiosk mode. Check-in info, first-day tips, live cameras — for all guests." },
-    de: { title: "Ankommen", sub: "App wechselt in Kiosk-Modus. Check-in, Tipps für den ersten Tag, Live-Kameras." } },
-  { num: "04", icon: "🍽️", key: "stay",
-    en: { title: "Stay", sub: "Beaches, restaurants, excursions on demand. Our partners always first — best deals." },
-    de: { title: "Bleiben", sub: "Strände, Restaurants, Ausflüge auf Abruf. Unsere Partner immer zuerst." } },
-  { num: "05", icon: "👋", key: "depart",
-    en: { title: "Depart", sub: "Departure reminder + extend your stay? Loyalty discount for returning guests." },
-    de: { title: "Abreise", sub: "Abreise-Erinnerung + Verlängerungsangebot. Treuerabatt für Stammgäste." } },
+// ─── REGIONS ───
+const REGIONS = [
+  { id:"Istra",     img:"https://images.unsplash.com/photos/R9VbQFaUnac?w=800&q=80", accent:"#fb923c", tagline:{hr:"Tartufi, vino i rimska arena",de:"Trüffel, Wein und römische Arena",en:"Truffles, wine and Roman arena",it:"Tartufi, vino e arena romana"} },
+  { id:"Kvarner",   img:"https://images.unsplash.com/photos/KUCx92pIGCM?w=800&q=80", accent:"#0ea5e9", tagline:{hr:"Otoci, fjordovi i wellness",de:"Inseln, Fjorde und Wellness",en:"Islands, fjords and wellness",it:"Isole, fiordi e benessere"} },
+  { id:"Dalmacija", img:"https://images.unsplash.com/photos/5maoPl591Sk?w=800&q=80", accent:"#38bdf8", tagline:{hr:"Antički gradovi i kristalno more",de:"Antike Städte und kristallklares Meer",en:"Ancient towns and crystal-clear sea",it:"Città antiche e mare cristallino"} },
+  { id:"Otoci",     img:"https://images.unsplash.com/photos/pRH473DZjCg?w=800&q=80", accent:"#a78bfa", tagline:{hr:"Lavanda, glamur i daleki horizonti",de:"Lavendel, Glamour und weite Horizonte",en:"Lavender, glamour and far horizons",it:"Lavanda, glamour e orizzonti lontani"} },
 ];
 
-// ── RATING STARS ──
-const Stars = ({ rating }) => {
-  const full = Math.floor(rating);
-  const half = rating % 1 >= 0.5;
-  return (
-    <span style={{ color: C.gold, fontSize: 11, letterSpacing: -1 }}>
-      {"★".repeat(full)}{half ? "½" : ""}
-      <span style={{ color: C.muted, marginLeft: 4, fontSize: 11 }}>{rating.toFixed(1)}</span>
-    </span>
-  );
+// ─── RABSKA FJERA ───
+const FJERA = {
+  title: { hr:"Rabska Fjera", de:"Rabska Fjera", en:"Rabska Fjera", it:"Rabska Fjera" },
+  sub: { hr:"Najveći srednjovjekovni festival Hrvatske · od 1364.", de:"Kroatiens größtes Mittelalterfest · seit 1364.", en:"Croatia's largest medieval festival · since 1364.", it:"Il più grande festival medievale della Croazia · dal 1364." },
+  date: "25 — 27. VII.",
+  facts: [
+    { n:"700+", l:{hr:"Kostimiranih sudionika",de:"Kostümierte Teilnehmer",en:"Costumed participants",it:"Partecipanti in costume"} },
+    { n:"100+", l:{hr:"Obrtničkih radionica",de:"Handwerksstätten",en:"Craft workshops",it:"Laboratori artigianali"} },
+    { n:"1364", l:{hr:"Godina osnivanja",de:"Gründungsjahr",en:"Year founded",it:"Anno di fondazione"} },
+  ],
+  highlights: [
+    { e:"⚔️", l:{hr:"Turnir samostreličara",de:"Armbrustturnier",en:"Crossbow tournament",it:"Torneo di balestra"} },
+    { e:"🏰", l:{hr:"Povorka kroz stari grad",de:"Parade durch die Altstadt",en:"Old town parade",it:"Sfilata nel centro storico"} },
+    { e:"🍖", l:{hr:"Srednjovjekovna jela",de:"Mittelalterliche Speisen",en:"Medieval cuisine",it:"Cucina medievale"} },
+    { e:"🎆", l:{hr:"Vatromet u ponoć",de:"Feuerwerk um Mitternacht",en:"Midnight fireworks",it:"Fuochi d'artificio a mezzanotte"} },
+  ],
 };
 
-// ── MAIN COMPONENT ──
-export default function DestinationExplorer({ language = "en", onStartChat }) {
+// ─── STATS ───
+const STATS = [
+  { n:"165+",  l:{hr:"Jadran Sense™ točaka",de:"Jadran Sense™ Punkte",en:"Jadran Sense™ points",it:"Punti Jadran Sense™",pl:"Punktów Jadran Sense™",si:"Jadran Sense™ točk"} },
+  { n:"8",     l:{hr:"Jezika",de:"Sprachen",en:"Languages",it:"Lingue",pl:"Języków",si:"Jezikov"} },
+  { n:"7",     l:{hr:"Regija",de:"Regionen",en:"Regions",it:"Regioni",pl:"Regionów",si:"Regij"} },
+  { n:"24/7",  l:{hr:"AI vodič",de:"KI-Guide",en:"AI guide",it:"Guida AI",pl:"Przewodnik AI",si:"AI vodič"} },
+];
+
+// ─── SENSE — image-driven, no emoji ───
+const SENSE = [
+  { img:"https://images.unsplash.com/photos/WaCCH_FGn1s?w=200&q=60", l:{hr:"Plaže uživo",de:"Live-Strände",en:"Live beaches",it:"Spiagge live",pl:"Plaże na żywo",si:"Plaže v živo"}, v:{hr:"Popunjenost · Stanje mora",de:"Auslastung · Meerzustand",en:"Occupancy · Sea conditions",it:"Occupazione · Condizioni mare",pl:"Obłożenie · Stan morza",si:"Zasedenost · Stanje morja"} },
+  { img:"https://images.unsplash.com/photos/TBC4FLRxcKk?w=200&q=60", l:{hr:"Parking uživo",de:"Live Parken",en:"Live parking",it:"Parcheggio live",pl:"Parking na żywo",si:"Parking v živo"}, v:{hr:"Slobodna mjesta · Cijene",de:"Freie Plätze · Preise",en:"Free spots · Prices",it:"Posti liberi · Prezzi",pl:"Wolne miejsca · Ceny",si:"Prosta mesta · Cene"} },
+  { img:"https://images.unsplash.com/photo-1540946485063-a40da27545f8?w=200&q=60", l:{hr:"Marine i vezovi",de:"Marinas & Liegeplätze",en:"Marinas & berths",it:"Marine e ormeggi",pl:"Mariny i miejsca cumowania",si:"Marine in privezi"}, v:{hr:"Slobodni vezovi · Uvjeti",de:"Freie Liegeplätze · Bedingungen",en:"Free berths · Conditions",it:"Posti liberi · Condizioni",pl:"Wolne miejsca · Warunki",si:"Prosti privezi · Pogoji"} },
+  { img:"https://images.unsplash.com/photos/xsZrf0-iQ6E?w=200&q=60", l:{hr:"Vrijeme i more",de:"Wetter & Meer",en:"Weather & sea",it:"Meteo e mare",pl:"Pogoda i morze",si:"Vreme in morje"}, v:{hr:"UV · Temperatura · Vjetar",de:"UV · Temperatur · Wind",en:"UV · Temperature · Wind",it:"UV · Temperatura · Vento",pl:"UV · Temperatura · Wiatr",si:"UV · Temperatura · Veter"} },
+];
+
+// ─── OFFERS — real excursions with prices ───
+const OFFERS = [
+  { title:{hr:"Tura brodom — Rab",de:"Bootstour — Rab",en:"Boat tour — Rab",it:"Tour in barca — Rab"}, price:"45€", tag:"RAB", img:"https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=400&q=75", link:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=boat+tour" },
+  { title:{hr:"Blue Cave & 5 otoka",de:"Blaue Grotte & 5 Inseln",en:"Blue Cave & 5 islands",it:"Grotta Azzurra & 5 isole"}, price:"110€", tag:"SPLIT", img:"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=75", link:"https://www.getyourguide.com/split-l268/?partner_id=9OEGOYI&q=blue+cave" },
+  { title:{hr:"Lov na tartufe — Motovun",de:"Trüffeljagd — Motovun",en:"Truffle hunting — Motovun",it:"Caccia al tartufo — Montona"}, price:"45€", tag:"ISTRA", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=75", link:"https://www.getyourguide.com/istria-county-l1297/?partner_id=9OEGOYI&q=truffle" },
+  { title:{hr:"Degustacija vina — Pelješac",de:"Weinverkostung — Pelješac",en:"Wine tasting — Pelješac",it:"Degustazione vini — Pelješac"}, price:"35€", tag:"DUBROVNIK", img:"https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=400&q=75", link:"https://www.getyourguide.com/ston-l4159/?partner_id=9OEGOYI&q=wine" },
+  { title:{hr:"Kajak Dubrovnik zidine",de:"Kajak Dubrovnik Mauern",en:"Kayak Dubrovnik walls",it:"Kayak mura Dubrovnik"}, price:"40€", tag:"DUBROVNIK", img:"https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=400&q=75", link:"https://www.getyourguide.com/dubrovnik-l213/?partner_id=9OEGOYI&q=kayak" },
+];
+
+// ─── HERO DESTINATIONS (cycling background) ───
+const HERO_DESTS = [
+  { id:"dubrovnik", name:"Dubrovnik", img:"https://images.unsplash.com/photos/5maoPl591Sk?w=1400&q=85" },
+  { id:"rab",       name:"Rab",       img:"https://images.unsplash.com/photos/KUCx92pIGCM?w=1400&q=85" },
+  { id:"rovinj",    name:"Rovinj",    img:"https://images.unsplash.com/photos/R9VbQFaUnac?w=1400&q=85" },
+  { id:"hvar",      name:"Hvar",      img:"https://images.unsplash.com/photos/pRH473DZjCg?w=1400&q=85" },
+  { id:"split",     name:"Split",     img:"https://images.unsplash.com/photos/QWHW4NQwXHE?w=1400&q=85" },
+  { id:"zadar",     name:"Zadar",     img:"https://images.unsplash.com/photos/xsZrf0-iQ6E?w=1400&q=85" },
+];
+
+const FLAGS = { hr:"🇭🇷", de:"🇩🇪", at:"🇦🇹", en:"🇬🇧", it:"🇮🇹", pl:"🇵🇱", si:"🇸🇮" };
+
+// ─── BLACK JACK MENU DATA ───
+const BJ = {
+  img: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80",
+  address: "Palit 315, Rab · 200m od plaže",
+  hours: { hr:"Pon–Ned 12:00–23:00", de:"Mo–So 12:00–23:00", en:"Mon–Sun 12:00–23:00", it:"Lun–Dom 12:00–23:00" },
+  phone: "+385 51 724 522",
+  link: "/?kiosk=rab&affiliate=blackjack&tk=sial2026&lang=de",
+  menu: [
+    {
+      section: { hr:"Predjela", de:"Vorspeisen", en:"Starters", it:"Antipasti" },
+      items: [
+        { id:"prsut", emoji:"🥩", name:{ hr:"Dalmatinski pršut", de:"Dalmatinischer Pršut", en:"Dalmatian prosciutto", it:"Prosciutto dalmata" }, desc:{ hr:"Domaći suhomesnati pršut, masline, kapari, domaće maslinovo ulje s Raba", de:"Hausgemachter Trockenschinken, Oliven, Kapern, heimisches Olivenöl aus Rab", en:"Home-cured dry prosciutto, olives, capers, Rab olive oil", it:"Prosciutto stagionato artigianale, olive, capperi, olio d'oliva di Rab" }, price:12 },
+        { id:"bruschette", emoji:"🍞", name:{ hr:"Bruschette s tartufima", de:"Bruschette mit Trüffel", en:"Truffle bruschette", it:"Bruschette al tartufo" }, desc:{ hr:"Prepečeni kruh s istarskom tartufnom kremom, cherry rajčicama i svježim bosiljkom", de:"Geröstetes Brot mit istrischer Trüffelcreme, Kirschtomaten und frischem Basilikum", en:"Toasted bread with Istrian truffle cream, cherry tomatoes and fresh basil", it:"Pane tostato con crema di tartufo istriano, pomodorini e basilico fresco" }, price:9 },
+        { id:"calamari", emoji:"🦑", name:{ hr:"Kalamari na roštilju", de:"Gegrillte Kalamari", en:"Grilled calamari", it:"Calamari alla griglia" }, desc:{ hr:"Svježi jadranski kalamari s limunom, peršinom i domaćim maslinovim uljem", de:"Frische Adriatische Kalamari mit Zitrone, Petersilie und heimischem Olivenöl", en:"Fresh Adriatic calamari with lemon, parsley and local olive oil", it:"Calamari adriatici freschi con limone, prezzemolo e olio locale" }, price:14 },
+      ]
+    },
+    {
+      section: { hr:"S roštilja", de:"Vom Grill", en:"From the grill", it:"Dalla griglia" },
+      items: [
+        { id:"ribeye", emoji:"🥩", name:{ hr:"Argentinski ribeye 300g", de:"Argentinisches Ribeye 300g", en:"Argentine ribeye 300g", it:"Ribeye argentino 300g" }, desc:{ hr:"Premium argentinsko meso na drvenom ugljenu, dimljeni maslac, rucola salata, pečeni češnjak", de:"Premium argentinisches Fleisch auf Holzkohle, Räucherbutter, Rucola-Salat, gerösteter Knoblauch", en:"Premium Argentine beef on charcoal, smoked butter, rocket salad, roasted garlic", it:"Manzo argentino premium alla brace, burro affumicato, rucola, aglio arrosto" }, price:28 },
+        { id:"cevapi", emoji:"🌭", name:{ hr:"Ćevapi s dimljenim sirom (8 kom)", de:"Ćevapi mit Räucherkäse (8 Stk)", en:"Ćevapi with smoked cheese (8 pcs)", it:"Ćevapi con formaggio affumicato (8 pz)" }, desc:{ hr:"Domaći goveđi ćevapi, dimljeni sir iz Dalmatinske zagore, ajvar, svježi luk, somun", de:"Hausgemachte Rindfleisch-Ćevapi, Räucherkäse aus dem dalmatinischen Hinterland, Ajvar, frische Zwiebeln, Somun-Brot", en:"Homemade beef ćevapi, smoked cheese from Dalmatian hinterland, ajvar, fresh onion, somun bread", it:"Ćevapi di manzo artigianali, formaggio affumicato della Dalmazia, ajvar, cipolla fresca, pane somun" }, price:16 },
+        { id:"mixed", emoji:"🍖", name:{ hr:"Mješano meso s roštilja", de:"Gemischtes Grillplatte", en:"Mixed grill platter", it:"Piatto misto alla griglia" }, desc:{ hr:"Ćevapi, pileći batak, svinjska rebra i povrće s roštilja — za 2 osobe", de:"Ćevapi, Hähnchenschenkel, Schweinerippchen und Grillgemüse — für 2 Personen", en:"Ćevapi, chicken thigh, pork ribs and grilled vegetables — for 2 persons", it:"Ćevapi, coscia di pollo, costine di maiale e verdure grigliate — per 2 persone" }, price:32 },
+      ]
+    },
+    {
+      section: { hr:"Pizze", de:"Pizzen", en:"Pizzas", it:"Pizze" },
+      items: [
+        { id:"margherita", emoji:"🍕", name:{ hr:"Margherita", de:"Margherita", en:"Margherita", it:"Margherita" }, desc:{ hr:"San Marzano rajčica, buffalo mozzarella, svježi bosiljak, ekstra djevičansko maslinovo ulje", de:"San-Marzano-Tomaten, Büffelmozzarella, frisches Basilikum, natives Olivenöl extra", en:"San Marzano tomato, buffalo mozzarella, fresh basil, extra virgin olive oil", it:"Pomodoro San Marzano, mozzarella di bufala, basilico fresco, olio extravergine" }, price:11 },
+        { id:"blackjack", emoji:"🃏", name:{ hr:"Pizza Black Jack", de:"Pizza Black Jack", en:"Pizza Black Jack", it:"Pizza Black Jack" }, desc:{ hr:"Dimljeni sir, ćevapčići, pepperoni, pečene paprike, češnjak ulje — naš signature", de:"Räucherkäse, Ćevapčići, Pepperoni, geröstete Paprika, Knoblauchöl — unser Signature-Gericht", en:"Smoked cheese, ćevapčići, pepperoni, roasted peppers, garlic oil — our signature", it:"Formaggio affumicato, ćevapčići, pepperoni, peperoni arrosto, olio all'aglio — la nostra specialty" }, price:15 },
+        { id:"frutti", emoji:"🦐", name:{ hr:"Frutti di mare", de:"Frutti di mare", en:"Frutti di mare", it:"Frutti di mare" }, desc:{ hr:"Mješavina jadranskih plodova mora, rajčica, češnjak, peršin, maslinovo ulje", de:"Mischung aus adriatischen Meeresfrüchten, Tomaten, Knoblauch, Petersilie, Olivenöl", en:"Adriatic seafood medley, tomato, garlic, parsley, olive oil", it:"Misto di frutti di mare adriatici, pomodoro, aglio, prezzemolo, olio d'oliva" }, price:16 },
+      ]
+    },
+    {
+      section: { hr:"Deserti", de:"Desserts", en:"Desserts", it:"Dolci" },
+      items: [
+        { id:"rozata", emoji:"🍮", name:{ hr:"Domaća rožata", de:"Hausgemachte Rožata", en:"Homemade rožata", it:"Rožata artigianale" }, desc:{ hr:"Tradicionalni dalmatinski krem karamel s ružinom vodicom i mjedom s Raba", de:"Traditioneller dalmatinischer Crème caramel mit Rosenwasser und Honig aus Rab", en:"Traditional Dalmatian crème caramel with rose water and Rab honey", it:"Crème caramel dalmata con acqua di rose e miele di Rab" }, price:7 },
+        { id:"smokva", emoji:"🍰", name:{ hr:"Torta od smokava", de:"Feigenkuchen", en:"Fig cake", it:"Torta di fichi" }, desc:{ hr:"Domaća torta s rabskim smokvama, mjedom i orasima — sezonski specijalitet", de:"Hausgemachter Kuchen mit Rab-Feigen, Honig und Walnüssen — Saisonspezialität", en:"Homemade cake with Rab figs, honey and walnuts — seasonal speciality", it:"Torta artigianale con fichi di Rab, miele e noci — specialità stagionale" }, price:8 },
+      ]
+    },
+    {
+      section: { hr:"Piće", de:"Getränke", en:"Drinks", it:"Bevande" },
+      items: [
+        { id:"vino", emoji:"🍷", name:{ hr:"Domaće vino (čaša)", de:"Hauswein (Glas)", en:"House wine (glass)", it:"Vino della casa (calice)" }, desc:{ hr:"Bijelo ili crno, lokalni vinari s otoka Raba i Pelješca", de:"Weiß oder Rot, lokale Winzer der Insel Rab und Pelješac", en:"White or red, local winemakers from Rab island and Pelješac", it:"Bianco o rosso, produttori locali dell'isola di Rab e Pelješac" }, price:5 },
+        { id:"pivo", emoji:"🍺", name:{ hr:"Lokalno pivo", de:"Lokales Bier", en:"Local beer", it:"Birra locale" }, desc:{ hr:"Karlovačko ili Ožujsko, servirano u hladnom vrču", de:"Karlovačko oder Ožujsko, serviert im kühlen Krug", en:"Karlovačko or Ožujsko, served in a chilled mug", it:"Karlovačko o Ožujsko, servita in una boccale fredda" }, price:4 },
+        { id:"sok", emoji:"🥤", name:{ hr:"Sok / Mineralna", de:"Saft / Mineralwasser", en:"Juice / Mineral water", it:"Succo / Acqua minerale" }, desc:{ hr:"Domaći sok od jabuke ili narančade, Jamnica mineralna voda", de:"Hausgemachter Apfel- oder Orangensaft, Jamnica Mineralwasser", en:"Homemade apple or orange juice, Jamnica mineral water", it:"Succo di mela o arancia artigianale, acqua minerale Jamnica" }, price:3 },
+      ]
+    },
+  ],
+  nearby: [
+    { id:"plaza", emoji:"🏖️", name:{ hr:"Gradska plaža", de:"Stadtstand", en:"Town beach", it:"Spiaggia cittadina" }, dist:"200m", tag:{ hr:"Pješice", de:"zu Fuß", en:"On foot", it:"A piedi" }, link:"/?kiosk=rab&go=beach&lang=de" },
+    { id:"starigard", emoji:"🏰", name:{ hr:"Stari grad Rab", de:"Altstadt Rab", en:"Rab Old Town", it:"Città vecchia di Rab" }, dist:"1.2 km", tag:{ hr:"4 zvonika", de:"4 Türme", en:"4 bell towers", it:"4 campanili" }, link:"/?kiosk=rab&go=oldtown&lang=de" },
+    { id:"kampovi", emoji:"⛺", name:{ hr:"Camping Padova III", de:"Camping Padova III", en:"Camping Padova III", it:"Camping Padova III" }, dist:"800m", tag:{ hr:"Kamp parking", de:"Campingstellplatz", en:"Camper pitch", it:"Piazzola camper" }, link:"/?kiosk=rab&go=camping&lang=de" },
+    { id:"marina", emoji:"⚓", name:{ hr:"Marina Rab", de:"Marina Rab", en:"Marina Rab", it:"Marina Rab" }, dist:"1.5 km", tag:{ hr:"48 vezova", de:"48 Liegeplätze", en:"48 berths", it:"48 ormeggi" }, link:"/?kiosk=rab&go=marina&lang=de" },
+    { id:"spilja", emoji:"🦇", name:{ hr:"Špilja Šupljara", de:"Höhle Šupljara", en:"Šupljara Cave", it:"Grotta Šupljara" }, dist:"3 km", tag:{ hr:"Prirodna atrakcija", de:"Naturdenkmal", en:"Natural attraction", it:"Attrazione naturale" }, link:"/?kiosk=rab&go=cave&lang=de" },
+  ],
+};
+
+export default function DestinationExplorer() {
   const [lang, setLang] = useState(() => {
-    if (language === "de") return "de";
     try {
-      const saved = localStorage.getItem("jadran_lang");
-      if (saved === "de" || saved === "en") return saved;
-    } catch {}
-    return (typeof navigator !== "undefined" && (navigator.language || "").slice(0, 2) === "de") ? "de" : "en";
+      const s = localStorage.getItem("jadran_lang"); if (s) return s;
+      const n = (navigator.language||"").toLowerCase();
+      if (n.includes("at")) return "at";
+      if (n.startsWith("de")) return "de";
+      if (n.startsWith("en")) return "en";
+      if (n.startsWith("it")) return "it";
+      if (n.startsWith("pl")) return "pl";
+      if (n.startsWith("sl")) return "si";
+    } catch {} return "hr";
   });
+  const [langOpen, setLangOpen] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [activeRegion, setActiveRegion] = useState("all");
+  const [showBJ, setShowBJ] = useState(false);
+  const [showLive, setShowLive] = useState(false);
+  const [activeTab, setActiveTab] = useState("explore"); // bottom bar active tab
+  const [heroIdx, setHeroIdx] = useState(0);
+  const [selectedMenuItem, setSelectedMenuItem] = useState(null);
+  const heroRef = useRef(null);
 
-  // Views: "explorer" | "destination" | "prebooking" | "confirmed"
-  const [view, setView] = useState("explorer");
-  const [selected, setSelected] = useState(null);       // DESTINATIONS entry
-  const [selectedAccom, setSelectedAccom] = useState(null); // accommodation object
-  const [activeCategory, setActiveCategory] = useState(null);
-
-  // Booking form state
-  const [form, setForm] = useState({ name: "", email: "", arrival: "", departure: "", guests: 2, notes: "" });
-  const [bookingId, setBookingId] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState(null);
-  const [copied, setCopied] = useState(false);
-
-  const t = (en, de) => lang === "de" ? de : en;
-
+  useEffect(() => { setTimeout(() => setVisible(true), 100); }, []);
+  useEffect(() => { try { localStorage.setItem("jadran_lang",lang); } catch {} }, [lang]);
   useEffect(() => {
-    try { localStorage.setItem("jadran_lang", lang); } catch {}
-  }, [lang]);
-
-  // Inject Google Fonts
-  useEffect(() => {
-    const id = "jadran-fonts";
-    if (!document.getElementById(id)) {
-      const link = document.createElement("link");
-      link.id = id; link.rel = "stylesheet";
-      link.href = "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=DM+Sans:wght@300;400;500;600&display=swap";
-      document.head.appendChild(link);
-    }
+    const id = setInterval(() => setHeroIdx(i => (i + 1) % HERO_DESTS.length), 4500);
+    return () => clearInterval(id);
   }, []);
-
-  const scrollTop = () => window.scrollTo({ top: 0, behavior: "instant" });
-
-  // ── NAVIGATION ──
-  const goBack = () => {
-    if (view === "prebooking") {
-      setView(selected ? "destination" : "explorer");
-    } else if (view === "destination") {
-      setView("explorer"); setSelected(null); setActiveCategory(null);
-    } else if (view === "confirmed") {
-      setView("explorer"); setSelected(null); setSelectedAccom(null); setBookingId(null);
-      setForm({ name: "", email: "", arrival: "", departure: "", guests: 2, notes: "" });
-    } else {
-      setView("explorer");
+  useEffect(() => {
+    const anyModal = showBJ || showLive;
+    const h = e => { if (e.key === "Escape") { setShowBJ(false); setSelectedMenuItem(null); setShowLive(false); } };
+    if (anyModal) {
+      document.addEventListener("keydown", h);
+      document.body.style.overflow = "hidden";
     }
-    scrollTop();
-  };
+    return () => { document.removeEventListener("keydown", h); document.body.style.overflow = ""; };
+  }, [showBJ, showLive]);
 
-  const selectDestination = (dest) => {
-    if (dest.locked) return;
-    setSelected(dest);
-    setActiveCategory(dest.categories?.[0] || null);
-    setView("destination");
-    scrollTop();
-  };
+  const t = (obj) => { const k = lang==="at"?"de":lang; return obj[k] || (["pl","si"].includes(lang) ? obj.en : null) || obj.hr || ""; };
+  const dl = lang === "at" ? "de" : (["pl","si"].includes(lang) ? "en" : lang);
 
-  const startBooking = (accom, destOverride) => {
-    if (destOverride) setSelected(destOverride);
-    setSelectedAccom(accom);
-    setSubmitError(null);
-    setView("prebooking");
-    scrollTop();
-  };
+  const filtered = activeRegion && activeRegion !== "all" ? DESTINATIONS.filter(d => d.region === activeRegion) : [];
 
-  // ── BOOKING SUBMISSION ──
-  const submitBooking = async () => {
-    if (!form.name.trim()) { setSubmitError(t("Name is required.", "Name ist erforderlich.")); return; }
-    if (!form.arrival)     { setSubmitError(t("Arrival date is required.", "Anreisedatum ist erforderlich.")); return; }
-    if (!form.departure)   { setSubmitError(t("Departure date is required.", "Abreisedatum ist erforderlich.")); return; }
-    if (form.arrival >= form.departure) { setSubmitError(t("Departure must be after arrival.", "Abreise muss nach Anreise sein.")); return; }
-
-    setSubmitting(true);
-    setSubmitError(null);
-
-    try {
-      const destId = selected?.id || selectedAccom?.destinationId || "ADR";
-      const clientId = genId(destId);
-      let finalId = clientId;
-
-      // Call API — best-effort (fallback to client-generated ID)
-      try {
-        const res = await fetch("/api/reserve", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            destination: destId,
-            destinationName: selected?.name || selectedAccom?.destinationName || destId,
-            accommodation: {
-              name: selectedAccom?.name || "Unknown",
-              type: selectedAccom?.type || "affiliate",
-              direct: selectedAccom?.direct || false,
-              email: selectedAccom?.email || "",
-            },
-            guestName: form.name.trim(),
-            guestEmail: form.email.trim(),
-            arrival: form.arrival,
-            departure: form.departure,
-            guests: form.guests,
-            lang,
-            deviceId: (() => { try { return localStorage.getItem("jadran_device_id") || ""; } catch { return ""; } })(),
-          }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.id) finalId = data.id;
-        }
-      } catch { /* API down — client ID is fine for demo */ }
-
-      // Persist booking
-      const booking = {
-        id: finalId,
-        destination: destId,
-        destinationName: selected?.name || selectedAccom?.destinationName || destId,
-        accommodation: { name: selectedAccom?.name, type: selectedAccom?.type, direct: selectedAccom?.direct },
-        guest: { name: form.name.trim(), email: form.email.trim() },
-        dates: { arrival: form.arrival, departure: form.departure, guests: form.guests },
-        lang,
-        createdAt: new Date().toISOString(),
-      };
-      try {
-        localStorage.setItem("jadran_booking", JSON.stringify(booking));
-        localStorage.setItem("jadran_booking_id", finalId);
-      } catch {}
-
-      // Save to delta_context so AI guide knows context on entry
-      try {
-        saveDelta({
-          destination: { city: selected?.name || selectedAccom?.destinationName, region: "kvarner" },
-          arrival_date: form.arrival,
-          departure_date: form.departure,
-          guest_name: form.name.trim(),
-          booking_id: finalId,
-          accommodation_name: selectedAccom?.name || "",
-          accommodation_direct: selectedAccom?.direct || false,
-          travelers: { adults: Number(form.guests) || 2, kids: 0, kids_ages: [] },
-          phase: "pretrip",
-        });
-      } catch {}
-
-      setBookingId(finalId);
-      setView("confirmed");
-      scrollTop();
-    } catch {
-      setSubmitError(t("Something went wrong. Please try again.", "Etwas ist schiefgelaufen. Bitte erneut versuchen."));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const copyId = async () => {
-    try { await navigator.clipboard.writeText(bookingId); } catch {}
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
-  };
-
-  const goToTrip = () => {
-    window.location.href = `/?trip=${encodeURIComponent(bookingId)}&lang=${lang}`;
-  };
-
-  // ── ITEM SUB HELPER ──
-  const sub = (item) => lang === "de" && item.sub_de ? item.sub_de : item.sub_en || item.sub || "";
-
-  // ═══════════════ RENDER ═══════════════
   return (
-    <div style={{ minHeight: "100dvh", background: C.gradBg, fontFamily: "'DM Sans', system-ui, sans-serif", color: C.white, overflowX: "hidden" }}>
+    <div style={{ background:"#050d1a", color:"#f0f4f8", fontFamily:B, minHeight:"100dvh", overflowX:"hidden" }}>
+
+      {/* ── CSS ── */}
       <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        @media (hover: hover) {
-          .dest-card:not(.locked):hover { transform: translateY(-6px) scale(1.015); box-shadow: 0 20px 48px rgba(0,0,0,0.5); }
-          .aff-btn:hover { transform: scale(1.04); filter: brightness(1.12); }
-          .item-card:hover { background: ${C.cardHover} !important; }
-          .partner-card:hover { border-color: ${C.borderGoldBright} !important; box-shadow: 0 0 24px rgba(255,184,0,0.15); }
-          .stage-card:hover { background: ${C.cardHover} !important; }
-          .lang-btn:hover { opacity: 0.85; }
-          .accom-book-btn:hover { background: ${C.accent} !important; color: #fff !important; }
-          .back-btn:hover { color: ${C.white} !important; }
-        }
-        .dest-card { transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s; cursor: pointer; }
-        .dest-card.locked { opacity: 0.42; cursor: not-allowed; }
-        .aff-btn { transition: transform 0.18s, filter 0.18s; cursor: pointer; border: none; outline: none; }
-        .item-card { transition: background 0.2s; }
-        .partner-card { transition: border-color 0.25s, box-shadow 0.25s; }
-        .stage-card { transition: background 0.2s; }
-        .lang-btn { transition: opacity 0.15s; }
-        .back-btn { transition: color 0.15s; }
-        .accom-book-btn { transition: background 0.18s, color 0.18s; }
-        .fade-in { opacity: 0; transform: translateY(14px); animation: fadeUp 0.45s ease forwards; }
-        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-        .pulse-dot { animation: pulse 2s infinite; }
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
-        @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-        .shimmer { background: linear-gradient(90deg,transparent,rgba(255,255,255,0.04),transparent) !important; background-size: 200% 100% !important; animation: shimmer 3s infinite !important; }
-        .pills-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 24px;
-          -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-        .pills-row::-webkit-scrollbar { display: none; }
-        .journey-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 0; }
-        @media (max-width: 860px) { .journey-grid { grid-template-columns: 1fr; } }
-        .dest-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(290px,1fr)); gap: 18px; }
-        .items-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); gap: 14px; }
-        .partner-row { display: grid; grid-template-columns: repeat(auto-fill,minmax(260px,1fr)); gap: 16px; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
-        input[type="text"],input[type="email"],input[type="date"],input[type="number"],textarea,select {
-          width: 100%; background: rgba(255,255,255,0.04); border: 1px solid ${C.border};
-          border-radius: 10px; color: ${C.white}; font-family: inherit; font-size: 15px; padding: 12px 14px;
-          outline: none; appearance: none; -webkit-appearance: none;
-        }
-        input:focus,textarea:focus,select:focus { border-color: ${C.accent}; }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7); cursor: pointer; }
-        .confirm-id { font-family: 'Courier New', monospace; font-size: clamp(18px,4vw,28px); font-weight: 800;
-          letter-spacing: 2px; color: ${C.white}; word-break: break-all; }
-        @keyframes checkPop { 0%{transform:scale(0)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} }
-        .check-anim { animation: checkPop 0.5s cubic-bezier(0.16,1,0.3,1) forwards; }
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@200;300;400;500;600;700&display=swap');
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        html { scroll-behavior: smooth; }
+        body { overscroll-behavior: none; }
+        @keyframes heroReveal { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        @keyframes shimmer { 0% { background-position:-200% 0; } 100% { background-position:200% 0; } }
+        @keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+        @keyframes waveFlow { 0% { transform:translateX(0); } 100% { transform:translateX(-50%); } }
+        @keyframes gradShift { 0% { background-position:0% 50%; } 50% { background-position:100% 50%; } 100% { background-position:0% 50%; } }
+        @keyframes countUp { from { opacity:0; transform:scale(0.8); } to { opacity:1; transform:scale(1); } }
+        @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+        .explore-card { transition: all 0.35s cubic-bezier(0.4,0,0.2,1); }
+        .explore-card:active { transform: scale(0.97) !important; }
+        @media (hover:hover) { .explore-card:hover { transform: translateY(-6px); box-shadow: 0 24px 48px rgba(0,0,0,0.4) !important; } }
+        .region-pill { transition: all 0.25s; }
+        .region-pill:active { transform: scale(0.95); }
+        .sense-card { transition: all 0.3s; }
+        @media (hover:hover) { .sense-card:hover { background: rgba(14,165,233,0.08) !important; border-color: rgba(14,165,233,0.25) !important; } }
+        ::-webkit-scrollbar { height:4px; width:4px; }
+        ::-webkit-scrollbar-thumb { background:rgba(14,165,233,0.2); border-radius:2px; }
+        input:focus { outline:none; border-color:rgba(14,165,233,0.5) !important; box-shadow:0 0 0 3px rgba(14,165,233,0.1) !important; }
       `}</style>
 
-      {/* ══ HEADER ══ */}
-      <header style={{ position: "sticky", top: 0, zIndex: 200, padding: "14px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(7,17,31,0.92)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", borderBottom: `1px solid ${C.border}` }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }} onClick={view === "explorer" ? undefined : goBack}>
-          <span style={{ fontSize: 22, fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
-            <span style={{ color: C.white }}>JADRAN</span><span style={{ color: C.gold }}>.ai</span>
-          </span>
-          {view !== "explorer" ? (
-            <button className="back-btn" onClick={goBack} style={{ background: "none", border: "none", color: C.muted, fontSize: 13, cursor: "pointer", fontFamily: "inherit", padding: "0 0 0 4px" }}>
-              ← {view === "destination" ? t("Destinations", "Destinationen") : view === "prebooking" ? t("Back", "Zurück") : t("Start over", "Neu starten")}
-            </button>
-          ) : (
-            <span style={{ color: C.muted, fontSize: 11, marginLeft: 4, letterSpacing: "0.5px" }}>{t("AI TRAVEL OPERATOR", "KI-REISEOPERATEUR")}</span>
-          )}
+      {/* ═══ NAV ═══ */}
+      <nav style={{ position:"fixed", top:0, left:0, right:0, zIndex:100, padding:"10px 20px", paddingTop:"max(10px, env(safe-area-inset-top, 10px))", display:"flex", justifyContent:"space-between", alignItems:"center", background:"rgba(5,13,26,0.75)", backdropFilter:"blur(24px) saturate(1.8)", WebkitBackdropFilter:"blur(24px) saturate(1.8)", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <div style={{ width:34, height:34, borderRadius:10, background:"linear-gradient(135deg,#0ea5e9,#0284c7)", display:"grid", placeItems:"center", fontSize:14, fontWeight:800, color:"#fff", fontFamily:F, boxShadow:"0 4px 16px rgba(14,165,233,0.3)" }}>J</div>
+          <span style={{ fontFamily:F, fontSize:15, fontWeight:600, letterSpacing:3, textTransform:"uppercase" }}>Jadran</span>
         </div>
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <button className="lang-btn" onClick={() => setLang("de")} style={{ padding: "4px 13px", borderRadius: 20, border: `1px solid ${lang === "de" ? C.accent : C.border}`, background: lang === "de" ? C.accent + "22" : "transparent", color: lang === "de" ? C.accent : C.muted, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>DE</button>
-          <button className="lang-btn" onClick={() => setLang("en")} style={{ padding: "4px 13px", borderRadius: 20, border: `1px solid ${lang === "en" ? C.accent : C.border}`, background: lang === "en" ? C.accent + "22" : "transparent", color: lang === "en" ? C.accent : C.muted, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>EN</button>
-          {bookingId ? (
-            <button onClick={goToTrip} style={{ marginLeft: 8, padding: "7px 18px", borderRadius: 20, background: `linear-gradient(135deg, ${C.accent}, #007fa0)`, color: "#fff", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
-              🚀 {t("GO TO TRIP", "ZUR REISE")}
-            </button>
-          ) : (
-            <a href="/" style={{ marginLeft: 8, padding: "7px 18px", borderRadius: 20, background: `linear-gradient(135deg, ${C.accent}, #007fa0)`, color: "#fff", fontSize: 13, fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap" }}>
-              {t("Go to the Trip →", "Zur Reise →")}
+        <div style={{ fontSize:12, color:"rgba(255,255,255,0.3)", fontWeight:300, letterSpacing:1 }}>
+          {HERO_DESTS[heroIdx]?.name}
+        </div>
+      </nav>
+
+      {/* ═══ HERO ═══ */}
+      <section ref={heroRef} style={{ position:"relative", height:"100dvh", overflow:"hidden" }}>
+        {/* Rotating cinematic backgrounds */}
+        {HERO_DESTS.map((hd, i) => (
+          <div key={hd.id} style={{ position:"absolute", inset:"-5%", backgroundImage:`url(${hd.img})`, backgroundSize:"cover", backgroundPosition:"center", filter:"brightness(0.28) saturate(1.4)", opacity: i === heroIdx ? 1 : 0, transition:"opacity 1.8s ease", willChange:"opacity" }} />
+        ))}
+        {/* Gradient overlays */}
+        <div style={{ position:"absolute", inset:0, background:"linear-gradient(180deg, rgba(5,13,26,0.5) 0%, rgba(5,13,26,0.05) 25%, rgba(5,13,26,0.15) 55%, rgba(5,13,26,0.85) 80%, #050d1a 100%)" }} />
+        <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 120% 80% at 50% 100%, rgba(14,165,233,0.06) 0%, transparent 70%)" }} />
+        {/* Top accent line */}
+        <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:"linear-gradient(90deg, transparent, rgba(14,165,233,0.6), rgba(251,191,36,0.4), rgba(14,165,233,0.6), transparent)", backgroundSize:"200% 100%", animation:"gradShift 8s ease infinite" }} />
+
+        {/* Content */}
+        <div style={{ position:"relative", zIndex:2, height:"100%", display:"flex", flexDirection:"column", justifyContent:"flex-end", padding:"0 24px 0", maxWidth:680, margin:"0 auto", opacity:visible?1:0, transform:visible?"translateY(0)":"translateY(30px)", transition:"all 1.1s cubic-bezier(0.16,1,0.3,1)" }}>
+
+          {/* Live badge */}
+          <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"6px 18px", borderRadius:20, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.18)", marginBottom:24, alignSelf:"flex-start" }}>
+            <div style={{ width:6, height:6, borderRadius:"50%", background:"#22c55e", boxShadow:"0 0 10px #22c55e", animation:"pulse 2s infinite", flexShrink:0 }} />
+            <span style={{ fontSize:10, color:"#7dd3fc", fontWeight:600, letterSpacing:2 }}>
+              {({hr:"JADRAN SENSE™ AKTIVAN",de:"JADRAN SENSE™ AKTIV",en:"JADRAN SENSE™ ACTIVE",it:"JADRAN SENSE™ ATTIVO",pl:"JADRAN SENSE™ AKTYWNY",si:"JADRAN SENSE™ AKTIVEN"})[dl] || "JADRAN SENSE™ ACTIVE"}
+            </span>
+          </div>
+
+          {/* Main headline */}
+          <h1 style={{ fontFamily:F, fontSize:"clamp(40px,8vw,72px)", fontWeight:400, lineHeight:1.05, marginBottom:6, letterSpacing:"-0.02em" }}>
+            <span style={{ display:"block", color:"rgba(240,244,248,0.45)", fontSize:"clamp(12px,2vw,15px)", fontFamily:B, fontWeight:300, letterSpacing:7, textTransform:"uppercase", marginBottom:16 }}>
+              {({hr:"Otkrijte",de:"Entdecken Sie",en:"Discover",it:"Scoprite",pl:"Odkryj",si:"Odkrijte"})[dl] || "Discover"}
+            </span>
+            <span style={{ background:"linear-gradient(135deg, #f0f4f8 10%, #7dd3fc 45%, #fbbf24 85%)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundSize:"200% 200%", animation:"gradShift 7s ease infinite" }}>
+              {({hr:"Hrvatski Jadran",de:"Kroatische Adria",en:"Croatian Adriatic",it:"Adriatico Croato",pl:"Chorwacka Adria",si:"Hrvaška Adria"})[dl] || "Croatian Adriatic"}
+            </span>
+          </h1>
+
+          {/* Currently showing */}
+          <div style={{ fontSize:13, color:"rgba(255,255,255,0.35)", marginBottom:20, fontWeight:300, letterSpacing:1 }}>
+            — {HERO_DESTS[heroIdx].name}
+          </div>
+
+          <p style={{ fontSize:"clamp(14px,2vw,16px)", color:"#94a3b8", lineHeight:1.75, maxWidth:500, marginBottom:36, fontWeight:300 }}>
+            {({
+              hr:"Skrivene plaže, konobe od lokalaca, live stanje mora i parkinga — vaš AI vodič za savršeni Jadran.",
+              de:"Versteckte Strände, lokale Restaurants, Live-Meer- und Parkdaten — Ihr KI-Guide für die perfekte Adria.",
+              en:"Hidden beaches, local restaurants, live sea & parking data — your AI guide to the perfect Adriatic.",
+              it:"Spiagge nascoste, ristoranti locali, dati live su mare e parcheggi — la tua guida AI per l'Adriatico perfetto.",
+              pl:"Ukryte plaże, lokalne restauracje, dane live o morzu i parkingach — Twój przewodnik AI po Adriatyku.",
+              si:"Skrite plaže, lokalni restavranti, podatki v živo — vaš AI vodnik za popolni Jadran.",
+            })[dl] || ""}
+          </p>
+
+          {/* CTAs */}
+          <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginBottom:36 }}>
+            <a href="#destinations" style={{ padding:"15px 28px", background:"linear-gradient(135deg,#0ea5e9,#0284c7)", borderRadius:14, color:"#fff", fontSize:15, fontWeight:600, textDecoration:"none", fontFamily:F, letterSpacing:0.3, boxShadow:"0 4px 24px rgba(14,165,233,0.35), inset 0 1px 0 rgba(255,255,255,0.15)", minHeight:50, display:"inline-flex", alignItems:"center" }}>
+              {({hr:"Istraži destinacije",de:"Destinationen entdecken",en:"Explore destinations",it:"Esplora destinazioni",pl:"Odkryj destynacje",si:"Razišči destinacije"})[dl] || "Explore"} ↓
             </a>
-          )}
-        </div>
-      </header>
-
-      {/* ════════════ VIEW: EXPLORER ════════════ */}
-      {view === "explorer" && (
-        <>
-          {/* HERO */}
-          <section style={{ padding: "56px 24px 40px", maxWidth: 820, margin: "0 auto", textAlign: "center" }}>
-            <div className="fade-in">
-              <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginBottom: 20 }}>
-                <span style={{ display: "inline-block", padding: "4px 14px", borderRadius: 20, background: `${C.accent}18`, border: `1px solid ${C.accent}40`, fontSize: 12, color: C.accent, fontWeight: 600, letterSpacing: "0.8px" }}>
-                  {t("AI TRAVEL OPERATOR · BOOK · DRIVE · ARRIVE · STAY · DEPART", "KI-REISEOPERATEUR · BUCHEN · FAHREN · ANKOMMEN · BLEIBEN · ABREISE")}
-                </span>
-                <span style={{ display: "inline-block", padding: "4px 14px", borderRadius: 20, background: `${C.gold}15`, border: `1px solid ${C.borderGold}`, fontSize: 12, color: C.gold, fontWeight: 700, letterSpacing: "0.5px" }}>
-                  🏛️ {t("Official Partner · TZ Rab", "Offizieller Partner · TZ Rab")}
-                </span>
-              </div>
-              <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(28px, 5.5vw, 54px)", fontWeight: 700, lineHeight: 1.1, marginBottom: 18 }}>
-                {t("Your Complete", "Dein kompletter")}{" "}
-                <span style={{ color: C.accent, fontStyle: "italic" }}>{t("Adriatic Journey", "Adria-Urlaub")}</span>
-                <br />{t("— from home to home.", "— von zu Hause bis zurück.")}
-              </h1>
-              <p style={{ fontSize: "clamp(15px, 2vw, 17px)", color: C.muted, maxWidth: 540, margin: "0 auto 28px", lineHeight: 1.65 }}>
-                {t(
-                  "We book your accommodation. Track you to the island. Become your local guardian for the entire stay. Then bring you safely home.",
-                  "Wir buchen deine Unterkunft. Begleiten dich zur Insel. Werden dein lokaler Guardian. Und bringen dich sicher heim."
-                )}
-              </p>
-              <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-                <button onClick={() => { const el = document.getElementById("partners-section"); el?.scrollIntoView({ behavior: "smooth" }); }}
-                  style={{ padding: "14px 36px", borderRadius: 28, background: `linear-gradient(135deg, ${C.accent}, #0085a8)`, color: "#fff", fontSize: 16, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "inherit", boxShadow: `0 8px 28px ${C.accent}45` }}>
-                  🏖️ {t("Start Planning", "Reise planen")}
-                </button>
-                <a href="/" style={{ padding: "14px 32px", borderRadius: 28, border: `1px solid ${C.border}`, color: C.muted, fontSize: 15, fontWeight: 500, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  {t("I already have a trip →", "Ich habe bereits eine Reise →")}
-                </a>
-              </div>
-            </div>
-          </section>
-
-          {/* JOURNEY TIMELINE */}
-          <section style={{ background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
-            <div className="journey-grid">
-              {JOURNEY.map((s, i) => {
-                const txt = lang === "de" ? s.de : s.en;
-                const isLast = i === JOURNEY.length - 1;
-                return (
-                  <div key={s.key} className="stage-card" style={{ padding: "28px 24px", borderRight: isLast ? "none" : `1px solid ${C.border}`, background: "transparent", position: "relative" }}>
-                    <div style={{ fontSize: 9, color: C.accent, fontWeight: 700, letterSpacing: "1px", marginBottom: 6 }}>{s.num}</div>
-                    <div style={{ fontSize: 26, marginBottom: 8 }}>{s.icon}</div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: C.white, marginBottom: 6 }}>{txt.title}</div>
-                    <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>{txt.sub}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-
-          {/* DIRECT PARTNERS — always visible */}
-          <section id="partners-section" style={{ padding: "52px 24px 40px", maxWidth: 1100, margin: "0 auto" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 32 }}>
-              <div style={{ height: 1, flex: 1, background: `linear-gradient(90deg, transparent, ${C.borderGold})` }} />
-              <span style={{ fontSize: 11, fontWeight: 800, color: C.gold, letterSpacing: "2px" }}>{t("OUR DIRECT PARTNERS", "DIREKTPARTNER")}</span>
-              <div style={{ height: 1, flex: 1, background: `linear-gradient(90deg, ${C.borderGold}, transparent)` }} />
-            </div>
-            <p style={{ textAlign: "center", fontSize: 14, color: C.muted, marginBottom: 28, marginTop: -16 }}>
-              {t("Direct bookings include your AI guide, priority kiosk access and full transit tracking.", "Direktbuchungen beinhalten KI-Guide, Priority-Kiosk und vollständiges Transit-Tracking.")}
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {DIRECT_PARTNERS.map(p => {
-                const destObj = DESTINATIONS.find(d => d.id === p.destinationId);
-                const desc = lang === "de" ? p.description_de : p.description_en;
-                const tagline = lang === "de" ? p.tagline_de : p.tagline_en;
-                const priceFrom = lang === "de" ? p.priceFrom_de : p.priceFrom_en;
-                const [heroImg, ...thumbImgs] = p.images || [];
-                return (
-                  <div key={p.id} className="partner-card" style={{ background: `linear-gradient(135deg, rgba(255,184,0,0.05), ${C.card})`, border: `1.5px solid ${C.borderGold}`, borderRadius: 24, overflow: "hidden" }}>
-                    {/* HERO IMAGE */}
-                    <div style={{ position: "relative", height: 260, backgroundImage: `url(${heroImg})`, backgroundSize: "cover", backgroundPosition: "center" }}>
-                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(7,17,31,0.85) 100%)" }} />
-                      {/* DIRECT badge */}
-                      <div style={{ position: "absolute", top: 16, left: 16, background: C.gold, color: "#000", fontSize: 10, fontWeight: 800, padding: "4px 14px", borderRadius: 20, letterSpacing: "1px" }}>
-                        🃏 DIRECT · AI INCLUDED
-                      </div>
-                      {/* Price from */}
-                      <div style={{ position: "absolute", top: 16, right: 16, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)", color: C.white, fontSize: 13, fontWeight: 700, padding: "6px 14px", borderRadius: 20, border: `1px solid rgba(255,255,255,0.15)` }}>
-                        {priceFrom}
-                      </div>
-                      {/* Bottom info */}
-                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "20px 24px" }}>
-                        <h3 style={{ fontSize: 26, fontWeight: 800, color: C.white, marginBottom: 4, fontFamily: "'Playfair Display', serif" }}>{p.name}</h3>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                          <span style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", fontStyle: "italic" }}>{tagline}</span>
-                          <span style={{ fontSize: 11, color: C.muted }}>📍 {p.address}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* THUMBNAIL GALLERY */}
-                    {thumbImgs.length > 0 && (
-                      <div style={{ display: "grid", gridTemplateColumns: `repeat(${thumbImgs.length},1fr)`, gap: 3, height: 80 }}>
-                        {thumbImgs.map((img, i) => (
-                          <div key={i} style={{ backgroundImage: `url(${img})`, backgroundSize: "cover", backgroundPosition: "center" }} />
-                        ))}
-                      </div>
-                    )}
-
-                    {/* CARD BODY */}
-                    <div style={{ padding: "24px 28px 28px" }}>
-                      {/* Rating + reviews */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-                        <Stars rating={p.rating} />
-                        <span style={{ fontSize: 12, color: C.muted }}>{p.reviews} {t("verified reviews", "verifizierte Bewertungen")}</span>
-                        <span style={{ marginLeft: "auto", fontSize: 12, color: C.success, fontWeight: 700 }}>✓ {t("Available", "Verfügbar")}</span>
-                      </div>
-
-                      {/* Description */}
-                      <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.65, marginBottom: 20 }}>{desc}</p>
-
-                      {/* Unit types */}
-                      {p.units && (
-                        <div style={{ marginBottom: 20 }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: "0.8px", marginBottom: 10 }}>{t("ACCOMMODATION TYPES", "UNTERKUNFTSTYPEN")}</div>
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10 }}>
-                            {p.units.map(u => (
-                              <div key={u.name_en} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: "12px 14px" }}>
-                                <div style={{ fontSize: 20, marginBottom: 6 }}>{u.icon}</div>
-                                <div style={{ fontSize: 13, fontWeight: 700, color: C.white, marginBottom: 2 }}>{lang === "de" ? u.name_de : u.name_en}</div>
-                                <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>👤 {t(`up to ${u.guests}`, `bis ${u.guests} Pers.`)}</div>
-                                <div style={{ fontSize: 12, color: C.gold, fontWeight: 700 }}>{lang === "de" ? u.price_de : u.price_en}</div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Amenities */}
-                      {p.amenities && (
-                        <div style={{ marginBottom: 20 }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: "0.8px", marginBottom: 10 }}>{t("AMENITIES", "AUSSTATTUNG")}</div>
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                            {p.amenities.map(a => (
-                              <span key={a.en} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 20, background: a.en === "AI guide included" ? `${C.accent}15` : C.surface, border: `1px solid ${a.en === "AI guide included" ? C.accent + "40" : C.border}`, fontSize: 12, color: a.en === "AI guide included" ? C.accent : C.muted, fontWeight: a.en === "AI guide included" ? 700 : 400 }}>
-                                {a.icon} {lang === "de" ? a.de : a.en}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* AI perks */}
-                      <div style={{ background: `${C.accent}08`, border: `1px solid ${C.accent}25`, borderRadius: 14, padding: "14px 18px", marginBottom: 20 }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: C.accent, letterSpacing: "0.8px", marginBottom: 10 }}>🤖 {t("AI TRAVEL OPERATOR BENEFITS", "KI-REISEOPERATEUR VORTEILE")}</div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-                          {(lang === "de" ? p.perks_de : p.perks_en).map(pk => (
-                            <div key={pk} style={{ fontSize: 12, color: C.success, display: "flex", alignItems: "center", gap: 6 }}>
-                              <span style={{ color: C.success, flexShrink: 0 }}>✓</span> {pk}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* CTA */}
-                      <button
-                        className="aff-btn"
-                        onClick={() => startBooking({ name: p.name, type: "direct", direct: true, email: p.email, destinationId: p.destinationId, destinationName: p.destinationName }, destObj)}
-                        style={{ width: "100%", padding: "16px", borderRadius: 16, background: `linear-gradient(135deg, ${C.gold}, #e6a600)`, color: "#000", fontSize: 15, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", boxShadow: `0 6px 24px rgba(255,184,0,0.3)` }}>
-                        🃏 {t("Book Direct — AI Guide Included", "Direkt buchen — KI-Guide inklusive")}
-                        <div style={{ fontSize: 11, fontWeight: 600, marginTop: 4, opacity: 0.7 }}>{t("Best price · Instant confirmation · No booking fees", "Bestpreis · Sofortbestätigung · Keine Buchungsgebühren")}</div>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* Placeholder */}
-              <div style={{ background: `${C.card}80`, border: `1px dashed ${C.borderGold}`, borderRadius: 20, padding: "28px 24px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 200, textAlign: "center" }}>
-                <div style={{ fontSize: 36, marginBottom: 12, opacity: 0.4 }}>🏨</div>
-                <p style={{ fontSize: 14, color: C.muted, marginBottom: 16 }}>{t("Your property here", "Ihre Unterkunft hier")}</p>
-                <a href="/host" style={{ padding: "9px 22px", borderRadius: 20, border: `1px solid ${C.borderGold}`, color: C.gold, fontSize: 12, fontWeight: 600, textDecoration: "none" }}>
-                  {t("Become a partner →", "Partner werden →")}
-                </a>
-              </div>
-            </div>
-          </section>
-
-          {/* DESTINATIONS GRID */}
-          <section style={{ padding: "0 24px 52px", maxWidth: 1100, margin: "0 auto" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 28 }}>
-              <div style={{ height: 1, flex: 1, background: `linear-gradient(90deg, transparent, ${C.border})` }} />
-              <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: "2px" }}>{t("CHOOSE YOUR DESTINATION", "REISEZIEL WÄHLEN")}</span>
-              <div style={{ height: 1, flex: 1, background: `linear-gradient(90deg, ${C.border}, transparent)` }} />
-            </div>
-            <p style={{ textAlign: "center", fontSize: 14, color: C.muted, marginBottom: 28, marginTop: -12 }}>
-              {t("Select a destination to see all accommodation, beaches, excursions and local tips.", "Wähle eine Destination für alle Unterkünfte, Strände, Ausflüge und lokale Tipps.")}
-            </p>
-            <div className="dest-grid">
-              {DESTINATIONS.map(dest => (
-                <div key={dest.id} className={`dest-card${dest.locked ? " locked" : ""}`} onClick={() => selectDestination(dest)}
-                  style={{ borderRadius: 20, overflow: "hidden", background: C.card, border: `1px solid ${C.border}`, position: "relative" }}>
-                  <div style={{ height: 180, backgroundImage: `url(${dest.hero})`, backgroundSize: "cover", backgroundPosition: "center", position: "relative" }}>
-                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.7))" }} />
-                    <div style={{ position: "absolute", top: 14, left: 14, background: dest.badge_color || C.accent, color: dest.id === "rab" ? "#000" : "#fff", fontSize: 9, fontWeight: 800, padding: "3px 10px", borderRadius: 20, letterSpacing: "1px" }}>
-                      {dest.badge}
-                    </div>
-                    {dest.locked && <div style={{ position: "absolute", inset: 0, backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)" }} />}
-                  </div>
-                  <div style={{ padding: "18px 20px 20px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                      <div>
-                        <h3 style={{ fontSize: 20, fontWeight: 700, color: C.white }}>{dest.name}</h3>
-                        <p style={{ fontSize: 13, color: C.accent, fontStyle: "italic" }}>{lang === "de" ? dest.tagline_de : dest.tagline_en}</p>
-                      </div>
-                    </div>
-                    {dest.description_en && (
-                      <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.55, marginBottom: 14 }}>
-                        {lang === "de" ? dest.description_de : dest.description_en}
-                      </p>
-                    )}
-                    {dest.stats && (
-                      <div style={{ display: "flex", gap: 12 }}>
-                        <span style={{ fontSize: 12, color: C.muted }}>🏖️ {dest.stats.beaches} {t("beaches", "Strände")}</span>
-                        <span style={{ fontSize: 12, color: C.muted }}>📍 {dest.stats.pois} POIs</span>
-                        <span style={{ fontSize: 12, color: C.muted }}>📷 {dest.stats.cameras} {t("cameras", "Kameras")}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* PARTNER PORTAL */}
-          <section style={{ background: C.surface, borderTop: `1px solid ${C.border}`, padding: "48px 24px" }}>
-            <div style={{ maxWidth: 720, margin: "0 auto", textAlign: "center" }}>
-              <div style={{ fontSize: 11, color: C.gold, fontWeight: 700, letterSpacing: "2px", marginBottom: 16 }}>B2B · DESTINATION PARTNER</div>
-              <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(22px, 4vw, 32px)", fontWeight: 700, color: C.white, marginBottom: 14 }}>
-                {t("Tourist board or property owner?", "Tourismusverband oder Unterkunft?")}
-              </h2>
-              <p style={{ fontSize: 15, color: C.muted, lineHeight: 1.65, marginBottom: 28, maxWidth: 580, margin: "0 auto 28px" }}>
-                {t("TZ Rab chose Jadran.ai as their official AI travel operator. Your destination could be next. Guests get an operator that guides them door-to-door and generates affiliate revenue for the destination.", "TZ Rab wählte Jadran.ai als offiziellen KI-Reiseoperateur. Deine Destination kann die nächste sein. Gäste erhalten einen Operateur von Tür zu Tür und generieren Affiliate-Einnahmen für die Destination.")}
-              </p>
-              <a href="/host" style={{ display: "inline-block", padding: "13px 34px", borderRadius: 24, background: `linear-gradient(135deg, ${C.gold}, #e6a600)`, color: "#000", fontSize: 15, fontWeight: 700, textDecoration: "none" }}>
-                {t("Become a destination partner →", "Destinationspartner werden →")}
-              </a>
-            </div>
-          </section>
-        </>
-      )}
-
-      {/* ════════════ VIEW: DESTINATION DETAIL ════════════ */}
-      {view === "destination" && selected && (
-        <>
-          {/* DESTINATION HERO */}
-          <div style={{ position: "relative", height: "clamp(260px, 40vw, 420px)", backgroundImage: `url(${selected.heroDetail || selected.hero})`, backgroundSize: "cover", backgroundPosition: "center" }}>
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(7,17,31,0.95) 100%)" }} />
-            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "28px 28px 36px", maxWidth: 900, margin: "0 auto" }}>
-              <div style={{ display: "inline-block", padding: "3px 12px", borderRadius: 20, background: selected.badge_color || C.accent, color: selected.id === "rab" ? "#000" : "#fff", fontSize: 9, fontWeight: 800, marginBottom: 10, letterSpacing: "1px" }}>
-                {selected.badge}
-              </div>
-              <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(28px, 6vw, 48px)", fontWeight: 700, marginBottom: 6 }}>
-                {selected.name}
-                <span style={{ color: C.accent, fontStyle: "italic", fontSize: "0.55em", marginLeft: 14 }}>
-                  {lang === "de" ? selected.tagline_de : selected.tagline_en}
-                </span>
-              </h1>
-              <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 13, color: C.muted }}>🏖️ {selected.stats?.beaches} {t("beaches", "Strände")}</span>
-                <span style={{ fontSize: 13, color: C.muted }}>📷 {selected.stats?.cameras} {t("live cameras", "Live-Kameras")}</span>
-                <span style={{ fontSize: 13, color: C.muted }}>📍 {selected.stats?.pois} POIs</span>
-              </div>
-            </div>
+            <a href="/landing" style={{ padding:"15px 28px", borderRadius:14, color:"#fbbf24", fontSize:15, fontWeight:500, textDecoration:"none", fontFamily:F, border:"1px solid rgba(251,191,36,0.3)", background:"rgba(251,191,36,0.06)", minHeight:50, display:"inline-flex", alignItems:"center", gap:8, letterSpacing:0.3, backdropFilter:"blur(8px)" }}>
+              ⭐ {({hr:"AI Travel Guardian",de:"AI Travel Guardian",en:"AI Travel Guardian",it:"AI Travel Guardian",pl:"AI Travel Guardian",si:"AI Travel Guardian"})[dl] || "AI Travel Guardian"} →
+            </a>
           </div>
 
-          {/* CATEGORY PILLS */}
-          <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: "0 24px", position: "sticky", top: 57, zIndex: 100 }}>
-            <div className="pills-row" style={{ maxWidth: 1100, margin: "0 auto", padding: "12px 0" }}>
-              {selected.categories?.map(cat => (
-                <button key={cat.id} onClick={() => setActiveCategory(cat)}
-                  style={{ flexShrink: 0, padding: "7px 18px", borderRadius: 20, border: `1px solid ${activeCategory?.id === cat.id ? C.accent : C.border}`, background: activeCategory?.id === cat.id ? `${C.accent}20` : "transparent", color: activeCategory?.id === cat.id ? C.accent : C.muted, fontSize: 13, fontWeight: activeCategory?.id === cat.id ? 600 : 400, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
-                  {cat.icon} {lang === "de" ? cat.title_de : cat.title_en}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* ITEMS */}
-          <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px 60px" }}>
-            {activeCategory && (
-              <div className="fade-in">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                  <h2 style={{ fontSize: 20, fontWeight: 600 }}>{activeCategory.icon} {lang === "de" ? activeCategory.title_de : activeCategory.title_en}</h2>
-                  {activeCategory.bookable && (
-                    <span style={{ fontSize: 12, color: C.accent, padding: "3px 10px", borderRadius: 12, border: `1px solid ${C.accent}40`, background: `${C.accent}10` }}>
-                      {t("Book any option below", "Buchung unten möglich")}
-                    </span>
-                  )}
-                </div>
-                <div className="items-grid">
-                  {activeCategory.items?.map(item => (
-                    <div key={item.name} className="item-card" style={{ background: item.direct ? `linear-gradient(135deg, rgba(255,184,0,0.06), ${C.card})` : C.card, border: item.direct ? `1.5px solid ${C.borderGold}` : `1px solid ${C.border}`, borderRadius: 14, padding: "16px 18px", position: "relative" }}>
-                      {item.direct && (
-                        <div style={{ position: "absolute", top: 10, right: 10, background: C.gold, color: "#000", fontSize: 8, fontWeight: 800, padding: "2px 8px", borderRadius: 12, letterSpacing: "1px" }}>DIRECT</div>
-                      )}
-                      <div style={{ fontWeight: 600, fontSize: 14, color: C.white, marginBottom: 4, paddingRight: item.direct ? 50 : 0 }}>{item.name}</div>
-                      <div style={{ fontSize: 12, color: C.muted, marginBottom: item.rating ? 8 : 12, lineHeight: 1.45 }}>{sub(item)}</div>
-                      {item.rating && <div style={{ marginBottom: 10 }}><Stars rating={item.rating} /></div>}
-                      {item.important && (
-                        <div style={{ fontSize: 11, color: "#f59e0b", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 8, padding: "5px 10px", marginBottom: 10 }}>
-                          ⚠️ {t("Important info", "Wichtiger Hinweis")}
-                        </div>
-                      )}
-                      {/* Accommodation: Book button */}
-                      {item.bookable && (
-                        item.direct ? (
-                          <button className="accom-book-btn" onClick={() => startBooking({ ...item, destinationId: selected.id, destinationName: selected.name })}
-                            style={{ width: "100%", padding: "10px", borderRadius: 10, background: `linear-gradient(135deg, ${C.gold}, #e6a600)`, color: "#000", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "inherit", marginTop: 4 }}>
-                            {t("Book Direct →", "Direkt buchen →")}
-                          </button>
-                        ) : (
-                          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                            {item.booking ? (
-                              <>
-                                <button className="accom-book-btn" onClick={() => startBooking({ ...item, destinationId: selected.id, destinationName: selected.name })}
-                                  style={{ flex: 1, padding: "9px 10px", borderRadius: 10, background: "transparent", color: C.accent, fontSize: 12, fontWeight: 600, border: `1px solid ${C.accent}`, cursor: "pointer", fontFamily: "inherit" }}>
-                                  {t("Plan my trip", "Reise planen")}
-                                </button>
-                                <a href={item.booking} target="_blank" rel="noopener noreferrer"
-                                  style={{ flex: 1, padding: "9px 10px", borderRadius: 10, background: "#003580", color: "#fff", fontSize: 12, fontWeight: 600, textDecoration: "none", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                  Booking.com →
-                                </a>
-                              </>
-                            ) : (
-                              <button className="accom-book-btn" onClick={() => startBooking({ ...item, destinationId: selected.id, destinationName: selected.name })}
-                                style={{ width: "100%", padding: "9px", borderRadius: 10, background: "transparent", color: C.accent, fontSize: 12, fontWeight: 600, border: `1px solid ${C.accent}`, cursor: "pointer", fontFamily: "inherit" }}>
-                                {t("Plan my trip →", "Reise planen →")}
-                              </button>
-                            )}
-                          </div>
-                        )
-                      )}
-                      {/* Excursions: GYG + Viator buttons */}
-                      {(item.gyg || item.viator) && (
-                        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                          {item.gyg && <a href={item.gyg} target="_blank" rel="noopener noreferrer" className="aff-btn" style={{ flex: 1, padding: "8px", borderRadius: 10, background: "#cc3300", color: "#fff", fontSize: 11, fontWeight: 600, textDecoration: "none", textAlign: "center" }}>GetYourGuide</a>}
-                          {item.viator && <a href={item.viator} target="_blank" rel="noopener noreferrer" className="aff-btn" style={{ flex: 1, padding: "8px", borderRadius: 10, background: "#117733", color: "#fff", fontSize: 11, fontWeight: 600, textDecoration: "none", textAlign: "center" }}>Viator</a>}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* STICKY BOOK BAR */}
-            <div style={{ marginTop: 40, padding: "20px 24px", background: C.surface, borderRadius: 16, border: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-              <div>
-                <p style={{ fontSize: 15, fontWeight: 600, color: C.white, marginBottom: 4 }}>
-                  {t(`Ready to book ${selected.name}?`, `Bereit für ${selected.name}?`)}
-                </p>
-                <p style={{ fontSize: 13, color: C.muted }}>
-                  {t("Choose accommodation above to get your unique trip ID and AI guide.", "Unterkunft oben wählen um Trip-ID und KI-Guide zu erhalten.")}
-                </p>
-              </div>
-              <button onClick={() => setActiveCategory(selected.categories?.find(c => c.id === "stay") || selected.categories?.[0])}
-                style={{ padding: "13px 32px", borderRadius: 24, background: `linear-gradient(135deg, ${C.accent}, #0085a8)`, color: "#fff", fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap" }}>
-                🏠 {t("Browse Accommodation", "Unterkunft wählen")}
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* ════════════ VIEW: PREBOOKING FORM ════════════ */}
-      {view === "prebooking" && (
-        <div style={{ maxWidth: 680, margin: "0 auto", padding: "40px 24px 80px" }}>
-
-          {/* STEP INDICATOR */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0, marginBottom: 40 }}>
-            {[
-              t("Destination", "Reiseziel"),
-              t("Details", "Details"),
-              t("Confirm", "Bestätigen"),
-            ].map((label, i) => (
-              <div key={label} style={{ display: "flex", alignItems: "center" }}>
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: i === 1 ? C.accent : i < 1 ? C.accent : C.card, border: `2px solid ${i <= 1 ? C.accent : C.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: i <= 1 ? "#fff" : C.muted }}>
-                    {i < 1 ? "✓" : i + 1}
-                  </div>
-                  <span style={{ fontSize: 11, color: i === 1 ? C.white : C.muted, fontWeight: i === 1 ? 600 : 400, whiteSpace: "nowrap" }}>{label}</span>
-                </div>
-                {i < 2 && <div style={{ width: 60, height: 1, background: i < 1 ? C.accent : C.border, margin: "0 8px 18px" }} />}
+          {/* Destination thumbnail strip */}
+          <div style={{ display:"flex", gap:8, paddingBottom:32, overflowX:"auto", scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", marginLeft:"-4px" }}>
+            {HERO_DESTS.map((hd, i) => (
+              <div key={hd.id} onClick={() => setHeroIdx(i)} style={{ flexShrink:0, scrollSnapAlign:"start", width:72, height:52, borderRadius:10, overflow:"hidden", position:"relative", cursor:"pointer", border: i===heroIdx ? "2px solid rgba(14,165,233,0.7)" : "2px solid transparent", transition:"all 0.3s", opacity: i===heroIdx ? 1 : 0.55 }}>
+                <img src={hd.img.replace("w=1400","w=200")} alt={hd.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+                <div style={{ position:"absolute", inset:0, background:"rgba(5,13,26,0.3)" }} />
+                <div style={{ position:"absolute", bottom:3, left:0, right:0, textAlign:"center", fontSize:7, fontWeight:600, color:"#fff", letterSpacing:0.5, textShadow:"0 1px 3px rgba(0,0,0,0.8)" }}>{hd.name.toUpperCase()}</div>
               </div>
             ))}
           </div>
 
-          {/* BOOKING SUMMARY */}
-          <div style={{ background: selectedAccom?.direct ? `linear-gradient(135deg, rgba(255,184,0,0.06), ${C.card})` : C.surface, border: `1.5px solid ${selectedAccom?.direct ? C.borderGold : C.border}`, borderRadius: 16, padding: "20px 24px", marginBottom: 32, position: "relative" }}>
-            {selectedAccom?.direct && (
-              <div style={{ position: "absolute", top: 12, right: 14, background: C.gold, color: "#000", fontSize: 9, fontWeight: 800, padding: "2px 10px", borderRadius: 12, letterSpacing: "1px" }}>DIRECT</div>
-            )}
-            <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-              <div style={{ fontSize: 32 }}>{selectedAccom?.direct ? "🃏" : "🏨"}</div>
-              <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: C.white, marginBottom: 2 }}>{selectedAccom?.name}</div>
-                <div style={{ fontSize: 13, color: C.muted, marginBottom: 6 }}>
-                  {selected ? (
-                    <><span style={{ color: C.accent }}>📍 {selected.name}</span> · {lang === "de" ? selected.tagline_de : selected.tagline_en}</>
-                  ) : (
-                    <span style={{ color: C.accent }}>📍 {selectedAccom?.destinationName}</span>
-                  )}
-                </div>
-                {selectedAccom?.direct ? (
-                  <div style={{ fontSize: 12, color: C.success }}>✓ {t("AI companion included with this booking", "KI-Begleiter bei dieser Buchung inklusive")}</div>
-                ) : (
-                  <div style={{ fontSize: 12, color: C.muted }}>
-                    {t("Register your trip to get AI guide access", "Reise registrieren für KI-Guide-Zugang")}
-                  </div>
-                )}
-              </div>
+        </div>
+      </section>
+
+      {/* ═══ DESTINATIONS ═══ */}
+      <section id="destinations" style={{ padding:"60px 20px 40px", background:"linear-gradient(180deg, #071828 0%, #0a1e36 50%, #071828 100%)" }}>
+        <div style={{ maxWidth:960, margin:"0 auto" }}>
+          <div style={{ textAlign:"center", marginBottom:32 }}>
+            <div style={{ fontSize:10, color:"#0ea5e9", letterSpacing:4, fontWeight:700, marginBottom:8 }}>
+              {({hr:"DESTINACIJE",de:"REISEZIELE",en:"DESTINATIONS",it:"DESTINAZIONI"})[dl] || "DESTINATIONS"}
             </div>
+            <h2 style={{ fontFamily:F, fontSize:"clamp(28px,5vw,42px)", fontWeight:400, marginBottom:12 }}>
+              {({hr:"Vaš sljedeći odmor",de:"Ihr nächster Urlaub",en:"Your next escape",it:"La vostra prossima fuga"})[dl] || ""}
+            </h2>
           </div>
 
-          {/* FORM */}
-          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "28px 28px" }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>
-              {selectedAccom?.direct ? t("Book Direct", "Direkt buchen") : t("Register Your Trip", "Reise registrieren")}
-            </h2>
-            <p style={{ fontSize: 13, color: C.muted, marginBottom: 28 }}>
-              {selectedAccom?.direct
-                ? t("Fill in your details and we'll connect you directly with the property.", "Fülle deine Daten aus und wir verbinden dich direkt mit der Unterkunft.")
-                : t("Register your trip dates to activate your AI guide with full context.", "Registriere deine Reisedaten um deinen KI-Guide zu aktivieren.")}
-            </p>
+          {/* Region cards */}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(2, 1fr)", gap:16, marginBottom: filtered.length ? 24 : 0 }}>
+            {REGIONS.map((r, i) => {
+              const isActive = activeRegion === r.id;
+              return (
+                <button key={r.id} className="explore-card" onClick={() => setActiveRegion(isActive ? null : r.id)} style={{
+                  display:"block", borderRadius:20, overflow:"hidden", position:"relative",
+                  height:160, border: isActive ? `1px solid ${r.accent}60` : "1px solid rgba(255,255,255,0.06)",
+                  boxShadow: isActive ? `0 8px 32px ${r.accent}30` : "0 8px 32px rgba(0,0,0,0.25)",
+                  animation:`fadeUp 0.5s ease ${i * 0.08}s both`,
+                  cursor:"pointer", background:"none", padding:0, textAlign:"left",
+                }}>
+                  <img src={r.img} alt={r.id} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
+                  <div style={{ position:"absolute", inset:0, background: isActive ? `linear-gradient(0deg, rgba(5,13,26,0.85) 0%, ${r.accent}22 100%)` : "linear-gradient(0deg, rgba(5,13,26,0.92) 0%, rgba(5,13,26,0.35) 100%)" }} />
+                  {isActive && <div style={{ position:"absolute", top:10, right:10, width:20, height:20, borderRadius:"50%", background:r.accent, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"#050d1a", fontWeight:700 }}>✓</div>}
+                  <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"16px 14px" }}>
+                    <h3 style={{ fontFamily:F, fontSize:22, fontWeight:400, marginBottom:3, lineHeight:1.1, color:"#fff" }}>{r.id}</h3>
+                    <p style={{ fontSize:11, color:"rgba(255,255,255,0.6)", fontWeight:300, lineHeight:1.3 }}>{t(r.tagline)}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
 
-            {submitError && (
-              <div style={{ padding: "10px 14px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)", borderRadius: 10, marginBottom: 20, fontSize: 13, color: "#f87171" }}>
-                {submitError}
-              </div>
-            )}
+          {/* City grid — shown when region selected */}
+          {filtered.length > 0 && (
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(280px, 1fr))", gap:16 }}>
+              {filtered.map((d, i) => {
+                const cardProps = d.isPartner
+                  ? { href:"#", onClick: e => { e.preventDefault(); setShowBJ(true); setSelectedMenuItem(null); } }
+                  : { href:`/?kiosk=${d.id}&lang=${lang}` };
+                return (
+                <a key={d.id} {...cardProps} className="explore-card" style={{
+                  display:"block", borderRadius:20, overflow:"hidden", position:"relative",
+                  height:220, textDecoration:"none", color:"#fff",
+                  border: d.isPartner ? `1px solid ${d.accent}30` : "1px solid rgba(255,255,255,0.06)",
+                  boxShadow:"0 8px 32px rgba(0,0,0,0.25)",
+                  animation:`fadeUp 0.4s ease ${i * 0.08}s both`,
+                  cursor:"pointer",
+                }}>
+                  <img src={d.img} alt={d.name} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
+                  <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.92) 0%, rgba(5,13,26,0.3) 55%, rgba(5,13,26,0.15) 100%)" }} />
+                  <div style={{ position:"absolute", top:14, left:14, padding:"4px 10px", borderRadius:8, background:"rgba(0,0,0,0.5)", backdropFilter:"blur(8px)", fontSize:9, fontWeight:600, color:d.accent, letterSpacing:1.5, textTransform:"uppercase" }}>
+                    {d.isPartner ? "PARTNER • RAB" : d.region}
+                  </div>
+                  <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"20px 18px" }}>
+                    <h3 style={{ fontFamily:F, fontSize:24, fontWeight:400, marginBottom:4, lineHeight:1.1 }}>{d.name}</h3>
+                    <p style={{ fontSize:13, color:"rgba(255,255,255,0.65)", fontWeight:300 }}>{t(d.tagline)}</p>
+                    <div style={{ marginTop:10, display:"inline-flex", alignItems:"center", gap:4, padding:"6px 12px", borderRadius:8, background:`${d.accent}18`, border:`1px solid ${d.accent}30`, fontSize:11, color:d.accent, fontWeight:600 }}>
+                      {d.isPartner ? ({hr:"Pogledaj meni",de:"Menü ansehen",en:"View menu",it:"Vedi menu"})[dl]||"Menu" : ({hr:"Istraži",de:"Entdecken",en:"Explore",it:"Esplora"})[dl]||"Explore"} →
+                    </div>
+                  </div>
+                </a>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <div>
-                <label style={{ fontSize: 12, color: C.muted, fontWeight: 500, display: "block", marginBottom: 6 }}>{t("Full name *", "Vollständiger Name *")}</label>
-                <input type="text" placeholder={t("e.g. Hans Müller", "z.B. Hans Müller")}
-                  value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+      {/* ═══ ISTAKNUTO ═══ */}
+      <section style={{ padding:"40px 20px 32px", background:"#050d1a" }}>
+        <div style={{ maxWidth:640, margin:"0 auto" }}>
+          <div style={{ fontSize:10, color:"#f59e0b", letterSpacing:4, fontWeight:700, marginBottom:16 }}>
+            {({hr:"ISTAKNUTO",de:"HIGHLIGHTS",en:"HIGHLIGHTS",it:"IN EVIDENZA",pl:"WYRÓŻNIONE",si:"IZPOSTAVLJENO"})[dl]||"HIGHLIGHTS"}
+          </div>
+          <div style={{ display:"flex", gap:12, overflowX:"auto", paddingBottom:8, WebkitOverflowScrolling:"touch", scrollSnapType:"x mandatory" }}>
+            {/* Fjera card */}
+            <a href={`/?kiosk=rab&lang=${lang}`} style={{ minWidth:200, borderRadius:16, overflow:"hidden", textDecoration:"none", color:"#fff", flexShrink:0, scrollSnapAlign:"start", position:"relative", height:140 }}>
+              <img src="https://images.unsplash.com/photos/KUCx92pIGCM?w=400&q=75" alt="Rabska Fjera" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
+              <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.9) 0%, rgba(5,13,26,0.3) 100%)" }} />
+              <div style={{ position:"absolute", top:10, left:10, fontSize:9, fontWeight:700, color:"#fbbf24", letterSpacing:2 }}>⚔️ RAB · {FJERA.date}</div>
+              <div style={{ position:"absolute", bottom:12, left:12 }}>
+                <div style={{ fontFamily:F, fontSize:16, fontWeight:600 }}>{t(FJERA.title)}</div>
+                <div style={{ fontSize:10, color:"rgba(255,255,255,0.55)", marginTop:2 }}>{t(FJERA.sub)}</div>
               </div>
-              <div>
-                <label style={{ fontSize: 12, color: C.muted, fontWeight: 500, display: "block", marginBottom: 6 }}>{t("Email (for confirmation)", "E-Mail (für Bestätigung)")}</label>
-                <input type="email" placeholder={t("your@email.com", "ihre@email.de")}
-                  value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-              </div>
-              <div className="form-grid">
-                <div>
-                  <label style={{ fontSize: 12, color: C.muted, fontWeight: 500, display: "block", marginBottom: 6 }}>{t("Arrival date *", "Anreisedatum *")}</label>
-                  <input type="date" min={new Date().toISOString().slice(0, 10)}
-                    value={form.arrival} onChange={e => setForm(f => ({ ...f, arrival: e.target.value }))} />
+            </a>
+            {/* Top 3 excursions */}
+            {OFFERS.slice(0,3).map((o,i) => (
+              <a key={i} href={o.link} target="_blank" rel="noopener noreferrer" style={{ minWidth:180, borderRadius:16, overflow:"hidden", textDecoration:"none", color:"#fff", flexShrink:0, scrollSnapAlign:"start", position:"relative", height:140 }}>
+                <img src={o.img} alt={t(o.title)} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
+                <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.88) 0%, rgba(5,13,26,0.2) 100%)" }} />
+                <div style={{ position:"absolute", top:8, left:8, padding:"2px 7px", borderRadius:5, background:"rgba(14,165,233,0.18)", fontSize:8, fontWeight:700, color:"#38bdf8", letterSpacing:1 }}>{o.tag}</div>
+                <div style={{ position:"absolute", bottom:10, left:10, right:10 }}>
+                  <div style={{ fontSize:13, fontWeight:600, lineHeight:1.3, marginBottom:3 }}>{t(o.title)}</div>
+                  <div style={{ fontSize:13, fontWeight:700, color:"#22c55e" }}>{o.price}</div>
                 </div>
-                <div>
-                  <label style={{ fontSize: 12, color: C.muted, fontWeight: 500, display: "block", marginBottom: 6 }}>{t("Departure date *", "Abreisedatum *")}</label>
-                  <input type="date" min={form.arrival || new Date().toISOString().slice(0, 10)}
-                    value={form.departure} onChange={e => setForm(f => ({ ...f, departure: e.target.value }))} />
-                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ BLACK JACK MODAL ═══ */}
+      {showBJ && (
+        <div onClick={() => { setShowBJ(false); setSelectedMenuItem(null); }} style={{ position:"fixed", inset:0, zIndex:500, background:"rgba(3,8,16,0.85)", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
+          <div onClick={e => e.stopPropagation()} style={{ width:"100%", maxWidth:560, maxHeight:"90dvh", background:"#0a1628", borderRadius:"24px 24px 0 0", border:"1px solid rgba(249,115,22,0.15)", borderBottom:"none", overflow:"hidden", display:"flex", flexDirection:"column", animation:"fadeUp 0.35s cubic-bezier(0.16,1,0.3,1)" }}>
+
+            {/* Header photo */}
+            <div style={{ position:"relative", height:160, flexShrink:0 }}>
+              <img src={BJ.img} alt="Black Jack" style={{ width:"100%", height:"100%", objectFit:"cover" }} />
+              <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, #0a1628 0%, rgba(10,22,40,0.6) 60%, rgba(10,22,40,0.2) 100%)" }} />
+              <button onClick={() => { setShowBJ(false); setSelectedMenuItem(null); }} style={{ position:"absolute", top:14, right:14, width:32, height:32, borderRadius:"50%", background:"rgba(0,0,0,0.6)", border:"1px solid rgba(255,255,255,0.1)", color:"#94a3b8", fontSize:16, cursor:"pointer", display:"grid", placeItems:"center" }}>✕</button>
+              <div style={{ position:"absolute", top:14, left:14, padding:"4px 10px", borderRadius:8, background:"rgba(249,115,22,0.15)", border:"1px solid rgba(249,115,22,0.25)", fontSize:9, fontWeight:700, color:"#f97316", letterSpacing:1.5 }}>PARTNER • RAB</div>
+              <div style={{ position:"absolute", bottom:14, left:18 }}>
+                <div style={{ fontFamily:F, fontSize:26, fontWeight:400 }}>Black Jack</div>
+                <div style={{ fontSize:11, color:"rgba(255,255,255,0.55)", marginTop:2 }}>{BJ.address}</div>
               </div>
-              <div>
-                <label style={{ fontSize: 12, color: C.muted, fontWeight: 500, display: "block", marginBottom: 6 }}>{t("Number of guests", "Anzahl der Gäste")}</label>
-                <select value={form.guests} onChange={e => setForm(f => ({ ...f, guests: Number(e.target.value) }))}>
-                  {[1,2,3,4,5,6,7,8].map(n => (
-                    <option key={n} value={n} style={{ background: C.card }}>{n} {n === 1 ? t("guest", "Gast") : t("guests", "Gäste")}</option>
+            </div>
+
+            {/* Info row */}
+            <div style={{ display:"flex", gap:16, padding:"12px 18px", borderBottom:"1px solid rgba(255,255,255,0.04)", flexShrink:0 }}>
+              <div style={{ fontSize:11, color:"#64748b" }}>🕐 {t(BJ.hours)}</div>
+              <div style={{ fontSize:11, color:"#64748b" }}>📞 {BJ.phone}</div>
+            </div>
+
+            {/* Scrollable body */}
+            <div style={{ overflowY:"auto", WebkitOverflowScrolling:"touch", flex:1, paddingBottom:"env(safe-area-inset-bottom, 16px)" }}>
+
+              {/* Menu sections */}
+              {BJ.menu.map((sec, si) => (
+                <div key={si} style={{ padding:"16px 18px 0" }}>
+                  <div style={{ fontSize:10, color:"#f97316", letterSpacing:3, fontWeight:700, marginBottom:10, textTransform:"uppercase" }}>{t(sec.section)}</div>
+                  <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:8 }}>
+                    {sec.items.map(item => {
+                      const isOpen = selectedMenuItem === item.id;
+                      return (
+                        <div key={item.id} onClick={() => setSelectedMenuItem(isOpen ? null : item.id)} style={{ borderRadius:14, border:`1px solid ${isOpen ? "rgba(249,115,22,0.25)" : "rgba(255,255,255,0.05)"}`, background: isOpen ? "rgba(249,115,22,0.04)" : "rgba(255,255,255,0.02)", cursor:"pointer", overflow:"hidden", transition:"all 0.2s" }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 14px" }}>
+                            <span style={{ fontSize:22, flexShrink:0 }}>{item.emoji}</span>
+                            <div style={{ flex:1, minWidth:0 }}>
+                              <div style={{ fontSize:14, fontWeight:600, color:"#e2e8f0", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{t(item.name)}</div>
+                              {!isOpen && <div style={{ fontSize:11, color:"#475569", marginTop:2, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{t(item.desc)}</div>}
+                            </div>
+                            <div style={{ flexShrink:0, textAlign:"right" }}>
+                              <div style={{ fontSize:16, fontWeight:700, color:"#22c55e", fontFamily:F }}>{item.price}€</div>
+                              <div style={{ fontSize:9, color:"#334155", marginTop:1 }}>{isOpen ? "▲" : "▼"}</div>
+                            </div>
+                          </div>
+                          {isOpen && (
+                            <div style={{ padding:"0 14px 14px 48px", fontSize:13, color:"#94a3b8", lineHeight:1.7, borderTop:"1px solid rgba(255,255,255,0.04)", paddingTop:10, marginLeft:0 }}>
+                              {t(item.desc)}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              {/* Nearby */}
+              <div style={{ padding:"16px 18px 0" }}>
+                <div style={{ fontSize:10, color:"#0ea5e9", letterSpacing:3, fontWeight:700, marginBottom:10, textTransform:"uppercase" }}>
+                  {({hr:"Mjesta u blizini",de:"In der Nähe",en:"Nearby",it:"Nelle vicinanze"})[dl]||"Nearby"}
+                </div>
+                <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:8, scrollSnapType:"x mandatory" }}>
+                  {BJ.nearby.map(n => (
+                    <a key={n.id} href={n.link.replace("lang=de", `lang=${lang}`)} onClick={e => e.stopPropagation()} style={{ minWidth:130, borderRadius:14, border:"1px solid rgba(14,165,233,0.1)", background:"rgba(14,165,233,0.03)", padding:"12px 12px 10px", textDecoration:"none", color:"#f0f4f8", scrollSnapAlign:"start", flexShrink:0, transition:"all 0.2s" }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.3)"; e.currentTarget.style.background = "rgba(14,165,233,0.07)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.1)"; e.currentTarget.style.background = "rgba(14,165,233,0.03)"; }}>
+                      <div style={{ fontSize:20, marginBottom:6 }}>{n.emoji}</div>
+                      <div style={{ fontSize:12, fontWeight:600, marginBottom:2, lineHeight:1.3 }}>{t(n.name)}</div>
+                      <div style={{ fontSize:10, color:"#38bdf8", marginBottom:2 }}>{n.dist}</div>
+                      <div style={{ fontSize:9, color:"#334155" }}>{t(n.tag)}</div>
+                    </a>
                   ))}
-                </select>
-              </div>
-              {selectedAccom?.direct && (
-                <div>
-                  <label style={{ fontSize: 12, color: C.muted, fontWeight: 500, display: "block", marginBottom: 6 }}>{t("Special requests (optional)", "Besondere Wünsche (optional)")}</label>
-                  <textarea rows={3} placeholder={t("Crib, late check-in, dietary needs...", "Kinderbett, später Check-in, Ernährungsbedürfnisse...")}
-                    value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                    style={{ resize: "vertical" }} />
                 </div>
-              )}
-            </div>
+              </div>
 
-            <div style={{ marginTop: 28, display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <button onClick={goBack} style={{ flex: "0 0 auto", padding: "13px 24px", borderRadius: 12, background: "transparent", color: C.muted, fontSize: 14, border: `1px solid ${C.border}`, cursor: "pointer", fontFamily: "inherit" }}>
-                ← {t("Back", "Zurück")}
-              </button>
-              <button onClick={submitBooking} disabled={submitting}
-                style={{ flex: 1, padding: "14px 24px", borderRadius: 12, background: submitting ? C.muted : `linear-gradient(135deg, ${C.accent}, #0085a8)`, color: "#fff", fontSize: 15, fontWeight: 700, border: "none", cursor: submitting ? "not-allowed" : "pointer", fontFamily: "inherit", minWidth: 180 }}>
-                {submitting ? t("Processing…", "Verarbeite…") : t("Confirm Reservation →", "Buchung bestätigen →")}
-              </button>
-            </div>
+              {/* CTA */}
+              <div style={{ padding:"16px 18px 20px" }}>
+                <a href={BJ.link} style={{ display:"block", padding:"14px", borderRadius:14, background:"linear-gradient(135deg,#f97316,#ea580c)", color:"#fff", fontSize:14, fontWeight:700, textDecoration:"none", textAlign:"center", boxShadow:"0 4px 20px rgba(249,115,22,0.3)", minHeight:48, lineHeight:"20px" }}>
+                  {({hr:"Otvori AI vodič za Rab →",de:"KI-Guide für Rab öffnen →",en:"Open AI guide for Rab →",it:"Apri guida AI per Rab →"})[dl]||"Open AI guide →"}
+                </a>
+              </div>
 
-            {!selectedAccom?.direct && (
-              <p style={{ fontSize: 12, color: C.muted, marginTop: 14, lineHeight: 1.6 }}>
-                {t("ℹ️ For non-direct bookings, please complete your accommodation booking on the provider's site. We'll set up your AI guide with the dates you enter here.", "ℹ️ Bei Nicht-Direktbuchungen schließe die Buchung bitte auf der Anbieterseite ab. Wir richten deinen KI-Guide mit den hier eingegebenen Daten ein.")}
-              </p>
-            )}
+            </div>
           </div>
         </div>
       )}
 
-      {/* ════════════ VIEW: CONFIRMED ════════════ */}
-      {view === "confirmed" && bookingId && (
-        <div style={{ maxWidth: 640, margin: "0 auto", padding: "48px 24px 80px", textAlign: "center" }}>
-          <div className="fade-in">
+      {/* ═══ FOOTER ═══ */}
+      <footer style={{ padding:"28px 20px", paddingBottom:"calc(80px + env(safe-area-inset-bottom, 0px))", textAlign:"center", background:"#030810", borderTop:"1px solid rgba(255,255,255,0.03)" }}>
+        <div style={{ fontSize:10, color:"#1e293b", letterSpacing:0.5 }}>© 2026 SIAL Consulting d.o.o. · jadran.ai</div>
+      </footer>
 
-            {/* CHECK MARK */}
-            <div className="check-anim" style={{ width: 80, height: 80, borderRadius: "50%", background: `${C.success}20`, border: `2px solid ${C.success}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, margin: "0 auto 24px" }}>
-              ✅
+      {/* ═══ LIVE OVERLAY ═══ */}
+      {showLive && (
+        <div onClick={() => setShowLive(false)} style={{ position:"fixed", inset:0, zIndex:500, background:"rgba(3,8,16,0.85)", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
+          <div onClick={e => e.stopPropagation()} style={{ width:"100%", maxWidth:560, background:"#0a1628", borderRadius:"24px 24px 0 0", border:"1px solid rgba(34,197,94,0.15)", borderBottom:"none", padding:"24px 20px", paddingBottom:"calc(24px + env(safe-area-inset-bottom, 0px))", animation:"fadeUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:20 }}>
+              <div style={{ width:8, height:8, borderRadius:"50%", background:"#22c55e", boxShadow:"0 0 10px #22c55e", animation:"pulse 2s infinite" }} />
+              <span style={{ fontSize:11, color:"#22c55e", fontWeight:700, letterSpacing:2 }}>JADRAN SENSE™</span>
+              <button onClick={() => setShowLive(false)} style={{ marginLeft:"auto", width:28, height:28, borderRadius:"50%", background:"rgba(255,255,255,0.06)", border:"none", color:"#64748b", fontSize:14, cursor:"pointer", display:"grid", placeItems:"center" }}>✕</button>
             </div>
-
-            <h1 style={{ fontFamily: "'Playfair Display', serif", fontSize: "clamp(24px, 5vw, 36px)", fontWeight: 700, marginBottom: 10 }}>
-              {selectedAccom?.direct ? t("Booking Request Sent!", "Buchungsanfrage gesendet!") : t("Trip Registered!", "Reise registriert!")}
-            </h1>
-            <p style={{ fontSize: 15, color: C.muted, marginBottom: 36, lineHeight: 1.6 }}>
-              {selectedAccom?.direct
-                ? t(`Your booking request for ${selectedAccom.name} has been sent. They will confirm within 24h.`, `Deine Buchungsanfrage für ${selectedAccom?.name} wurde gesendet. Bestätigung innerhalb von 24h.`)
-                : t("Your trip guide is ready. Save your booking ID — it's your key to the AI guide.", "Dein Reiseführer ist bereit. Speichere deine Booking-ID — sie ist dein Schlüssel zum KI-Guide.")}
-            </p>
-
-            {/* BOOKING ID CARD */}
-            <div style={{ background: C.surface, border: `1.5px solid ${C.accent}40`, borderRadius: 20, padding: "28px 24px", marginBottom: 32 }}>
-              <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, letterSpacing: "1px", marginBottom: 12, textTransform: "uppercase" }}>
-                {t("Your Booking ID", "Deine Booking-ID")}
-              </div>
-              <div className="confirm-id" style={{ marginBottom: 20 }}>{bookingId}</div>
-
-              {/* QR CODE */}
-              <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&bgcolor=0f1e35&color=00b4d8&data=${encodeURIComponent(`https://jadran.ai/?trip=${bookingId}`)}`}
-                  alt={`QR: ${bookingId}`}
-                  style={{ width: 130, height: 130, borderRadius: 14, border: `2px solid ${C.border}` }}
-                  onError={(e) => { e.target.style.display = "none"; }}
-                />
-              </div>
-              <p style={{ fontSize: 12, color: C.muted, marginBottom: 20 }}>
-                {t("Scan to open your trip guide on any device", "QR scannen um Trip-Guide auf jedem Gerät zu öffnen")}
-              </p>
-
-              <button onClick={copyId} style={{ padding: "10px 28px", borderRadius: 12, background: copied ? `${C.success}20` : "transparent", border: `1px solid ${copied ? C.success : C.border}`, color: copied ? C.success : C.muted, fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", transition: "all 0.2s" }}>
-                {copied ? t("✓ Copied!", "✓ Kopiert!") : t("📋 Copy ID", "📋 ID kopieren")}
-              </button>
-            </div>
-
-            {/* WHAT'S NEXT */}
-            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "24px", marginBottom: 32, textAlign: "left" }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: C.white, marginBottom: 16, textAlign: "center" }}>{t("What happens next", "Was passiert als nächstes")}</h3>
-              {[
-                selectedAccom?.direct
-                  ? { icon: "📧", en: "Accommodation confirms within 24h — you'll receive an email", de: "Unterkunft bestätigt innerhalb von 24h — du erhältst eine E-Mail" }
-                  : { icon: "💾", en: "Your trip ID is saved — share or bookmark it now", de: "Deine Trip-ID ist gespeichert — teile oder bookmarke sie jetzt" },
-                { icon: "🚗", en: "On travel day → click 'GO TO TRIP' below — AI activates with your full context", de: "Am Reisetag → unten 'ZUR REISE' klicken — KI aktiviert sich mit deinem Kontext" },
-                { icon: "🏝️", en: "On arrival → AI switches to local Kiosk mode automatically", de: "Bei Ankunft → KI wechselt automatisch in lokalen Kiosk-Modus" },
-                { icon: "👋", en: "On departure → AI reminds you about ferry times and offers loyalty discount for next year", de: "Bei Abreise → KI erinnert dich an Fährzeiten und bietet Treuerabatt für nächstes Jahr" },
-              ].map((step, i) => (
-                <div key={i} style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: i < 3 ? 14 : 0 }}>
-                  <span style={{ fontSize: 20, flexShrink: 0 }}>{step.icon}</span>
-                  <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.55 }}>{lang === "de" ? step.de : step.en}</p>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+              {SENSE.map((s,i) => (
+                <div key={i} style={{ borderRadius:14, overflow:"hidden", position:"relative", height:110, border:"1px solid rgba(14,165,233,0.1)" }}>
+                  <img src={s.img} alt="" loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", opacity:0.2 }} />
+                  <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.92) 0%, rgba(5,13,26,0.5) 100%)" }} />
+                  <div style={{ position:"relative", padding:"12px 10px", height:"100%", display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
+                    <div style={{ fontSize:12, fontWeight:600, color:"#e2e8f0", marginBottom:2 }}>{t(s.l)}</div>
+                    <div style={{ fontSize:9, color:"#64748b", lineHeight:1.4 }}>{t(s.v)}</div>
+                  </div>
                 </div>
               ))}
             </div>
-
-            {/* TRIP DETAILS SUMMARY */}
-            <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "16px 20px", marginBottom: 32, textAlign: "left" }}>
-              <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-                <div><span style={{ fontSize: 11, color: C.muted }}>{t("Guest", "Gast")}</span><div style={{ fontSize: 14, fontWeight: 600, color: C.white }}>{form.name}</div></div>
-                <div><span style={{ fontSize: 11, color: C.muted }}>{t("Accommodation", "Unterkunft")}</span><div style={{ fontSize: 14, fontWeight: 600, color: C.white }}>{selectedAccom?.name}</div></div>
-                <div><span style={{ fontSize: 11, color: C.muted }}>{t("Arrival", "Anreise")}</span><div style={{ fontSize: 14, fontWeight: 600, color: C.white }}>{form.arrival}</div></div>
-                <div><span style={{ fontSize: 11, color: C.muted }}>{t("Departure", "Abreise")}</span><div style={{ fontSize: 14, fontWeight: 600, color: C.white }}>{form.departure}</div></div>
-                <div><span style={{ fontSize: 11, color: C.muted }}>{t("Guests", "Gäste")}</span><div style={{ fontSize: 14, fontWeight: 600, color: C.white }}>{form.guests}</div></div>
-              </div>
-            </div>
-
-            {/* CTA */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <button onClick={goToTrip}
-                style={{ padding: "18px 36px", borderRadius: 28, background: `linear-gradient(135deg, ${C.accent}, #0085a8)`, color: "#fff", fontSize: 18, fontWeight: 800, border: "none", cursor: "pointer", fontFamily: "inherit", boxShadow: `0 8px 36px ${C.accent}50`, letterSpacing: "0.5px" }}>
-                🚀 {t("GO TO TRIP", "ZUR REISE")}
-              </button>
-              <p style={{ fontSize: 12, color: C.muted }}>
-                {t("Saves your booking context · AI activates immediately", "Buchungskontext wird gespeichert · KI aktiviert sich sofort")}
-              </p>
-              <button onClick={goBack} style={{ padding: "12px", borderRadius: 20, background: "transparent", color: C.muted, fontSize: 13, border: `1px solid ${C.border}`, cursor: "pointer", fontFamily: "inherit" }}>
-                {t("← Book another destination", "← Weitere Destination buchen")}
-              </button>
+            <div style={{ marginTop:14, fontSize:10, color:"#334155", textAlign:"center" }}>
+              165+ {({hr:"senzorskih točaka duž Jadrana",de:"Sensorpunkte entlang der Adria",en:"sensor points along the Adriatic",it:"punti sensoriali sull'Adriatico",pl:"punktów pomiarowych wzdłuż Adriatyku",si:"merilnih točk vzdolž Jadrana"})[dl]||"sensor points"}
             </div>
           </div>
         </div>
       )}
+
+      {/* ═══ LANG PICKER OVERLAY ═══ */}
+      {langOpen && (
+        <div onClick={() => setLangOpen(false)} style={{ position:"fixed", inset:0, zIndex:500, background:"rgba(3,8,16,0.85)", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
+          <div onClick={e => e.stopPropagation()} style={{ width:"100%", maxWidth:560, background:"#0a1628", borderRadius:"24px 24px 0 0", border:"1px solid rgba(255,255,255,0.08)", borderBottom:"none", padding:"24px 20px", paddingBottom:"calc(24px + env(safe-area-inset-bottom, 0px))", animation:"fadeUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
+            <div style={{ fontSize:11, color:"#64748b", fontWeight:600, letterSpacing:2, marginBottom:16, textTransform:"uppercase" }}>
+              {({hr:"Odaberi jezik",de:"Sprache wählen",en:"Choose language",it:"Scegli lingua",pl:"Wybierz język",si:"Izberi jezik"})[dl]||"Language"}
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:8 }}>
+              {Object.entries(FLAGS).map(([k,v]) => (
+                <button key={k} onClick={() => { setLang(k); setLangOpen(false); }} style={{ padding:"14px 8px", borderRadius:14, border:`1px solid ${lang===k ? "rgba(14,165,233,0.4)" : "rgba(255,255,255,0.06)"}`, background: lang===k ? "rgba(14,165,233,0.1)" : "rgba(255,255,255,0.02)", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:6 }}>
+                  <span style={{ fontSize:24 }}>{v}</span>
+                  <span style={{ fontSize:9, color: lang===k ? "#7dd3fc" : "#475569", fontWeight:600, letterSpacing:0.5 }}>{k.toUpperCase()}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ STICKY BOTTOM BAR ═══ */}
+      <div style={{ position:"fixed", bottom:0, left:0, right:0, zIndex:200, paddingBottom:"env(safe-area-inset-bottom, 0px)" }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", background:"rgba(5,8,16,0.96)", backdropFilter:"blur(24px) saturate(2)", WebkitBackdropFilter:"blur(24px) saturate(2)", borderTop:"1px solid rgba(14,165,233,0.12)", boxShadow:"0 -8px 32px rgba(0,0,0,0.4)" }}>
+          {[
+            { id:"explore", icon:"🗺️", label:{hr:"Istraži",de:"Erkunden",en:"Explore",it:"Esplora",pl:"Odkryj",si:"Razišči"}, action: () => { setActiveTab("explore"); document.getElementById("destinations")?.scrollIntoView({behavior:"smooth"}); } },
+            { id:"go",      icon:"✈️", label:{hr:"Kreni",de:"Los",en:"Go",it:"Vai",pl:"Jedź",si:"Pojdi"}, href:"/landing" },
+            { id:"live",    icon:"🌊", label:{hr:"Live",de:"Live",en:"Live",it:"Live",pl:"Live",si:"Živo"}, action: () => { setActiveTab("live"); setShowLive(true); } },
+            { id:"lang",    icon: FLAGS[lang]||"🌐", label:{hr:"Jezik",de:"Sprache",en:"Lang",it:"Lingua",pl:"Język",si:"Jezik"}, action: () => { setActiveTab("lang"); setLangOpen(true); } },
+          ].map(tab => {
+            const isActive = activeTab === tab.id;
+            const inner = (
+              <>
+                <span style={{ fontSize:22, lineHeight:1 }}>{tab.icon}</span>
+                <span style={{ fontSize:10, fontWeight:600, letterSpacing:0.3, color: isActive ? "#7dd3fc" : "#475569", marginTop:4 }}>{t(tab.label)}</span>
+                {isActive && <div style={{ position:"absolute", top:0, left:"25%", right:"25%", height:2, borderRadius:2, background:"linear-gradient(90deg,#0ea5e9,#38bdf8)" }} />}
+              </>
+            );
+            return tab.href
+              ? <a key={tab.id} href={tab.href} style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"12px 4px 10px", textDecoration:"none", color:"inherit", position:"relative", minHeight:60 }}>{inner}</a>
+              : <button key={tab.id} onClick={tab.action} style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"12px 4px 10px", background:"none", border:"none", cursor:"pointer", fontFamily:B, color:"inherit", position:"relative", minHeight:60 }}>{inner}</button>;
+          })}
+        </div>
+      </div>
     </div>
   );
 }
