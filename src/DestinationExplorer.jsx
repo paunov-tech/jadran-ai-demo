@@ -562,42 +562,8 @@ export default function DestinationExplorer() {
                 </div>
               )}
 
-              {/* ③ Viator */}
-              <div style={{ marginBottom:20 }}>
-                <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
-                  <div style={{ fontSize:9, color:"#0ea5e9", letterSpacing:3, fontWeight:700 }}>VIATOR</div>
-                  {viatorLoading && <div style={{ width:12, height:12, borderRadius:"50%", border:"2px solid rgba(14,165,233,0.3)", borderTopColor:"#0ea5e9", animation:"spin 0.8s linear infinite" }} />}
-                </div>
-                <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:4, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
-                  {viatorDeals.length > 0
-                    ? viatorDeals.slice(0,4).map((p,i) => (
-                        <a key={p.productCode || i} href={p.productUrl || "#"} target="_blank" rel="noopener noreferrer"
-                          style={{ minWidth:170, height:140, borderRadius:14, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", textDecoration:"none", color:"#fff", border:"1px solid rgba(14,165,233,0.15)", display:"block" }}>
-                          <img src={p.images?.[0]?.variants?.find(v => v.width >= 300)?.url || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=60"} alt={p.title} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
-                          <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.93) 0%, rgba(5,13,26,0.15) 65%)" }} />
-                          <div style={{ position:"absolute", top:8, left:8, padding:"2px 7px", borderRadius:5, background:"rgba(14,165,233,0.2)", fontSize:8, fontWeight:700, color:"#38bdf8", letterSpacing:1 }}>VIATOR</div>
-                          <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 10px" }}>
-                            <div style={{ fontSize:12, fontWeight:600, lineHeight:1.3, marginBottom:3, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{p.title}</div>
-                            <div style={{ fontSize:12, fontWeight:700, color:"#22c55e" }}>{p.pricing?.summary?.fromPrice ? `od ${p.pricing.summary.fromPrice}€` : ""}</div>
-                          </div>
-                        </a>
-                      ))
-                    : Array.from({length:3}).map((_,i) => (
-                        <div key={i} style={{ minWidth:170, height:140, borderRadius:14, flexShrink:0, scrollSnapAlign:"start", border:"1px solid rgba(14,165,233,0.08)", background:"rgba(14,165,233,0.03)", overflow:"hidden", position:"relative" }}>
-                          <div style={{ position:"absolute", inset:0, background:"linear-gradient(90deg, transparent 0%, rgba(14,165,233,0.05) 50%, transparent 100%)", backgroundSize:"200% 100%", animation:"shimmer 1.8s ease infinite" }} />
-                          <div style={{ padding:"10px", height:"100%", display:"flex", flexDirection:"column", justifyContent:"flex-end", gap:5 }}>
-                            <div style={{ height:7, borderRadius:4, background:"rgba(255,255,255,0.06)", width:"55%" }} />
-                            <div style={{ height:9, borderRadius:4, background:"rgba(255,255,255,0.08)", width:"80%" }} />
-                          </div>
-                          <div style={{ position:"absolute", top:8, left:8, padding:"2px 7px", borderRadius:5, background:"rgba(14,165,233,0.12)", fontSize:8, fontWeight:700, color:"#38bdf8", letterSpacing:1 }}>VIATOR</div>
-                        </div>
-                      ))
-                  }
-                </div>
-              </div>
-
-              {/* ④ AI Deals — live from n8n/Firestore */}
-              <DealCards region={rData.id} lang={lang} maxCards={3} />
+              {/* ③ AI Deals — live from n8n/Firestore (Viator + partners) */}
+              <DealCards region={activeDestId || rData.liveCity} lang={lang} maxCards={4} />
 
             </div>
 
