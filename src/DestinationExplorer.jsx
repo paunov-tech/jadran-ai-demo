@@ -365,71 +365,31 @@ export default function DestinationExplorer() {
             <div style={{ fontSize:10, color:"#0ea5e9", letterSpacing:4, fontWeight:700, marginBottom:8 }}>
               {({hr:"ISTRAŽI DESTINACIJE",de:"REISEZIELE ENTDECKEN",en:"EXPLORE DESTINATIONS",it:"ESPLORA DESTINAZIONI"})[dl] || "EXPLORE"}
             </div>
-            {activeRegionData ? (
-              <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:10 }}>
-                <h2 style={{ fontFamily:F, fontSize:"clamp(24px,4vw,36px)", fontWeight:400 }}>{activeRegionData.id}</h2>
-                <button onClick={() => { setActiveRegion(null); setActiveDest(null); }} style={{ fontSize:11, color:"#64748b", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:8, padding:"4px 10px", cursor:"pointer", fontFamily:B }}>✕</button>
-              </div>
-            ) : (
-              <h2 style={{ fontFamily:F, fontSize:"clamp(24px,4vw,36px)", fontWeight:400 }}>
-                {({hr:"Odaberi regiju",de:"Region wählen",en:"Choose a region",it:"Scegli una regione"})[dl] || ""}
-              </h2>
-            )}
+            <h2 style={{ fontFamily:F, fontSize:"clamp(24px,4vw,36px)", fontWeight:400 }}>
+              {({hr:"Odaberi regiju",de:"Region wählen",en:"Choose a region",it:"Scegli una regione"})[dl] || ""}
+            </h2>
           </div>
 
-          {/* Region cards 2×2 */}
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(2, 1fr)", gap:14, marginBottom: destList.length ? 20 : 0 }}>
-            {REGIONS.map((r, i) => {
-              const isActive = activeRegion === r.id;
-              return (
-                <button key={r.id} className="explore-card" onClick={() => { setActiveRegion(isActive ? null : r.id); setActiveDest(null); }} style={{
-                  display:"block", borderRadius:18, overflow:"hidden", position:"relative",
-                  height:150, border: isActive ? `2px solid ${r.accent}70` : "1px solid rgba(255,255,255,0.06)",
-                  boxShadow: isActive ? `0 8px 28px ${r.accent}28` : "0 4px 20px rgba(0,0,0,0.3)",
+          {/* Region cards 2×2 — tap opens AI guide for that region */}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(2, 1fr)", gap:14 }}>
+            {REGIONS.map((r, i) => (
+              <a key={r.id} href={`/?kiosk=${r.liveCity}&lang=${lang}`}
+                className="explore-card"
+                style={{ display:"block", borderRadius:18, overflow:"hidden", position:"relative",
+                  height:150, border:"1px solid rgba(255,255,255,0.06)",
+                  boxShadow:"0 4px 20px rgba(0,0,0,0.3)",
                   animation:`fadeUp 0.45s ease ${i * 0.07}s both`,
-                  cursor:"pointer", background:"none", padding:0, textAlign:"left",
+                  cursor:"pointer", textDecoration:"none", color:"#fff",
                 }}>
-                  <img src={r.img} alt={r.id} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
-                  <div style={{ position:"absolute", inset:0, background: isActive ? `linear-gradient(160deg, ${r.accent}30 0%, rgba(5,13,26,0.88) 100%)` : "linear-gradient(0deg, rgba(5,13,26,0.9) 0%, rgba(5,13,26,0.3) 100%)" }} />
-                  {isActive && <div style={{ position:"absolute", top:10, right:10, width:22, height:22, borderRadius:"50%", background:r.accent, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, color:"#050d1a", fontWeight:800, boxShadow:`0 0 12px ${r.accent}80` }}>✓</div>}
-                  <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"14px 14px" }}>
-                    <h3 style={{ fontFamily:F, fontSize:20, fontWeight:400, marginBottom:2, lineHeight:1.1, color:"#fff" }}>{r.id}</h3>
-                    <p style={{ fontSize:10, color:"rgba(255,255,255,0.55)", fontWeight:300, lineHeight:1.3 }}>{t(r.tagline)}</p>
-                  </div>
-                </button>
-              );
-            })}
+                <img src={r.img} alt={r.id} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
+                <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.9) 0%, rgba(5,13,26,0.3) 100%)" }} />
+                <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"14px 14px" }}>
+                  <h3 style={{ fontFamily:F, fontSize:20, fontWeight:400, marginBottom:2, lineHeight:1.1, color:"#fff" }}>{r.id}</h3>
+                  <p style={{ fontSize:10, color:"rgba(255,255,255,0.55)", fontWeight:300, lineHeight:1.3 }}>{t(r.tagline)}</p>
+                </div>
+              </a>
+            ))}
           </div>
-
-          {/* 6 destination tiles — horizontal scroll, appears when region selected */}
-          {destList.length > 0 && (
-            <div>
-              <div style={{ fontSize:9, color:"#475569", letterSpacing:3, fontWeight:600, marginBottom:12, paddingLeft:2 }}>
-                {({hr:"6 KLJUČNIH MJESTA",de:"6 HIGHLIGHTS",en:"6 KEY PLACES",it:"6 LUOGHI CHIAVE"})[dl]||"6 KEY PLACES"} · {activeRegionData.id.toUpperCase()}
-              </div>
-              <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:12, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", marginLeft:"-2px" }}>
-                {destList.map((d, i) => (
-                  <a key={d.id} href={`/?kiosk=${d.id}&lang=${lang}`}
-                    onClick={e => { setActiveDest({ id: d.id, name: d.name, img: d.img, liveCity: d.id }); }}
-                    className="explore-card"
-                    style={{ minWidth:148, width:148, height:190, borderRadius:16, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", textDecoration:"none", color:"#fff",
-                      border: activeDest?.id === d.id ? `2px solid ${d.accent}70` : "1px solid rgba(255,255,255,0.07)",
-                      animation:`fadeUp 0.4s ease ${i * 0.05}s both`, cursor:"pointer",
-                    }}>
-                    <img src={d.img} alt={d.name} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
-                    <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.93) 0%, rgba(5,13,26,0.2) 65%)" }} />
-                    <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"12px 10px" }}>
-                      <div style={{ fontFamily:F, fontSize:17, fontWeight:400, lineHeight:1.1, marginBottom:3 }}>{d.name}</div>
-                      <div style={{ fontSize:9, color:"rgba(255,255,255,0.5)", lineHeight:1.3, marginBottom:8 }}>{t(d.tagline)}</div>
-                      <div style={{ display:"inline-flex", alignItems:"center", gap:3, padding:"4px 8px", borderRadius:6, background:`${d.accent}18`, border:`1px solid ${d.accent}35`, fontSize:9, color:d.accent, fontWeight:700 }}>
-                        {({hr:"Istraži",de:"Entdecken",en:"Explore",it:"Esplora"})[dl]||"Explore"} →
-                      </div>
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </section>
 
