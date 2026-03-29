@@ -115,8 +115,17 @@ const CITY_AFFILIATES = {
 // ─── GYG DEALS PER CITY ───
 const CITY_GYG = {
   rab:      [{ title:{hr:"Tura brodom — Rab",de:"Bootstour — Rab",en:"Boat tour — Rab",it:"Tour in barca — Rab"}, price:"45€", img:"https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=400&q=75", link:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=boat+tour" }],
-  split:    [{ title:{hr:"Blue Cave & 5 otoka",de:"Blaue Grotte & 5 Inseln",en:"Blue Cave & 5 islands",it:"Grotta Azzurra & 5 isole"}, price:"110€", img:"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=75", link:"https://www.getyourguide.com/split-l268/?partner_id=9OEGOYI&q=blue+cave" }],
-  dubrovnik:[{ title:{hr:"Kajak — zidine Dubrovnika",de:"Kajak — Dubrovnik Mauern",en:"Kayak — Dubrovnik walls",it:"Kayak — mura Dubrovnik"}, price:"40€", img:"https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=400&q=75", link:"https://www.getyourguide.com/dubrovnik-l213/?partner_id=9OEGOYI&q=kayak" }],
+  split:    [
+    { title:{hr:"Blue Cave, Hvar & 5 otoka",de:"Blaue Grotte, Hvar & 5 Inseln",en:"Blue Cave, Hvar & 5 islands",it:"Grotta Azzurra, Hvar & 5 isole"}, price:"145€", rating:"4.6", reviews:"6325", img:"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=75", link:"https://www.getyourguide.com/activity/-t390071?partner_id=9OEGOYI" },
+  ],
+  dubrovnik:[
+    { title:{hr:"Game of Thrones tura + Lokrum",de:"Game of Thrones Tour + Lokrum",en:"Game of Thrones Tour + Lokrum",it:"Tour Game of Thrones + Lokrum"}, price:"20€", rating:"4.9", reviews:"4307", img:"https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=400&q=75", link:"https://www.getyourguide.com/activity/-t217212?partner_id=9OEGOYI" },
+    { title:{hr:"Crna Gora — Perast & Kotor brodom",de:"Montenegro — Perast & Kotor Bootstour",en:"Montenegro — Perast & Kotor boat tour",it:"Montenegro — Perast & Kotor in barca"}, price:"58€", rating:"4.6", reviews:"4127", img:"https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=400&q=75", link:"https://www.getyourguide.com/activity/-t131646?partner_id=9OEGOYI" },
+    { title:{hr:"Kajak — zidine Dubrovnika",de:"Kajak — Dubrovnik Mauern",en:"Kayak — Dubrovnik walls",it:"Kayak — mura Dubrovnik"}, price:"40€", img:"https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=400&q=75", link:"https://www.getyourguide.com/dubrovnik-l213/?partner_id=9OEGOYI&q=kayak" },
+  ],
+  zagreb:   [
+    { title:{hr:"Plitvice & Rastoke s ulazninom",de:"Plitvicer Seen & Rastoke mit Ticket",en:"Plitvice & Rastoke with ticket",it:"Plitvice & Rastoke con biglietto"}, price:"99€", rating:"4.9", reviews:"3015", img:"https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=400&q=75", link:"https://www.getyourguide.com/activity/-t406236?partner_id=9OEGOYI" },
+  ],
   rovinj:   [{ title:{hr:"Lov na tartufe — Motovun",de:"Trüffeljagd — Motovun",en:"Truffle hunting — Motovun",it:"Caccia al tartufo"}, price:"45€", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=75", link:"https://www.getyourguide.com/istria-county-l1297/?partner_id=9OEGOYI&q=truffle" }],
   motovun:  [{ title:{hr:"Lov na tartufe — Motovun",de:"Trüffeljagd — Motovun",en:"Truffle hunting — Motovun",it:"Caccia al tartufo"}, price:"45€", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=75", link:"https://www.getyourguide.com/istria-county-l1297/?partner_id=9OEGOYI&q=truffle" }],
   hvar:     [{ title:{hr:"Tura brodom — Hvar & Blue Lagoon",de:"Bootstour — Hvar & Blaue Lagune",en:"Boat tour — Hvar & Blue Lagoon",it:"Tour in barca — Hvar"}, price:"65€", img:"https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=400&q=75", link:"https://www.getyourguide.com/hvar-l4149/?partner_id=9OEGOYI&q=boat+tour" }],
@@ -483,7 +492,7 @@ export default function DestinationExplorer() {
         if (!rData) return null;
         const curDest = rData.destinations.find(d => d.id === activeDestId) || rData.destinations[0];
         const affiliates = CITY_AFFILIATES[activeDestId] || CITY_AFFILIATES[rData.liveCity] || [];
-        const gygDeals = [];
+        const gygDeals = CITY_GYG[activeDestId] || CITY_GYG[rData.liveCity] || [];
         // Build deals: affiliates first, then GYG, then AI placeholder
         return (
         <div onClick={() => setActiveRegion(null)} style={{ position:"fixed", inset:0, zIndex:500, background:"rgba(3,8,16,0.88)", backdropFilter:"blur(14px)", WebkitBackdropFilter:"blur(14px)", display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
@@ -569,7 +578,11 @@ export default function DestinationExplorer() {
                         <div style={{ position:"absolute", top:8, left:8, padding:"2px 7px", borderRadius:5, background:"rgba(34,197,94,0.18)", fontSize:8, fontWeight:700, color:"#22c55e", letterSpacing:1 }}>GYG</div>
                         <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"10px 10px" }}>
                           <div style={{ fontSize:12, fontWeight:600, lineHeight:1.3, marginBottom:3 }}>{t(o.title)}</div>
-                          <div style={{ fontSize:13, fontWeight:700, color:"#22c55e" }}>{o.price}</div>
+                          <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                            <span style={{ fontSize:13, fontWeight:700, color:"#22c55e" }}>{o.price}</span>
+                            {o.rating && <span style={{ fontSize:10, color:"#facc15" }}>★ {o.rating}</span>}
+                            {o.reviews && <span style={{ fontSize:9, color:"rgba(255,255,255,0.4)" }}>({Number(o.reviews).toLocaleString()})</span>}
+                          </div>
                         </div>
                       </a>
                     ))}
