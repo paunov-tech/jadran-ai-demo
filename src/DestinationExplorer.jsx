@@ -376,7 +376,7 @@ export default function DestinationExplorer() {
       </nav>
 
       {/* ═══ HERO ═══ */}
-      <section ref={heroRef} style={{ position:"relative", height:"100dvh", overflow:"hidden", background:"#0a0e17" }}>
+      <section ref={heroRef} style={{ position:"relative", height:"70dvh", overflow:"hidden", background:"#0a0e17" }}>
         {/* Pexels Adriatic video — matches transit/pre-trip segment */}
         <video autoPlay muted loop playsInline style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", opacity:0.28 }}
           poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3Crect fill='%230a0e17'/%3E%3C/svg%3E">
@@ -396,7 +396,7 @@ export default function DestinationExplorer() {
         <div style={{ position:"relative", zIndex:2, height:"100%", display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", textAlign:"center", padding:"0 24px", maxWidth:720, margin:"0 auto", width:"100%", opacity:visible?1:0, transform:visible?"translateY(0)":"translateY(24px)", transition:"all 1.1s cubic-bezier(0.16,1,0.3,1)" }}>
 
           {/* Live badge */}
-          <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"6px 18px", borderRadius:20, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.18)", marginBottom:24 }}>
+          <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"6px 18px", borderRadius:20, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.18)", marginBottom:14 }}>
             <div style={{ width:6, height:6, borderRadius:"50%", background:"#22c55e", boxShadow:"0 0 10px #22c55e", animation:"pulse 2s infinite", flexShrink:0 }} />
             <span style={{ fontSize:10, color:"#7dd3fc", fontWeight:600, letterSpacing:2 }}>
               {({hr:"JADRAN SENSE™ AKTIVAN",de:"JADRAN SENSE™ AKTIV",en:"JADRAN SENSE™ ACTIVE",it:"JADRAN SENSE™ ATTIVO",pl:"JADRAN SENSE™ AKTYWNY",si:"JADRAN SENSE™ AKTIVEN"})[dl] || "JADRAN SENSE™ ACTIVE"}
@@ -405,7 +405,7 @@ export default function DestinationExplorer() {
 
           {/* Main headline */}
           <h1 style={{ fontFamily:F, fontSize:"clamp(40px,8vw,72px)", fontWeight:400, lineHeight:1.05, marginBottom:6, letterSpacing:"-0.02em" }}>
-            <span style={{ display:"block", color:"rgba(240,244,248,0.45)", fontSize:"clamp(12px,2vw,15px)", fontFamily:B, fontWeight:300, letterSpacing:7, textTransform:"uppercase", marginBottom:16 }}>
+            <span style={{ display:"block", color:"rgba(240,244,248,0.45)", fontSize:"clamp(12px,2vw,15px)", fontFamily:B, fontWeight:300, letterSpacing:7, textTransform:"uppercase", marginBottom:8 }}>
               {({hr:"Otkrijte",de:"Entdecken Sie",en:"Discover",it:"Scoprite",pl:"Odkryj",si:"Odkrijte"})[dl] || "Discover"}
             </span>
             <span style={{ background:"linear-gradient(135deg, #f0f4f8 10%, #7dd3fc 45%, #fbbf24 85%)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundSize:"200% 200%", animation:"gradShift 7s ease infinite" }}>
@@ -414,11 +414,11 @@ export default function DestinationExplorer() {
           </h1>
 
           {/* Currently showing */}
-          <div style={{ fontSize:12, color:"rgba(255,255,255,0.3)", marginBottom:16, fontWeight:300, letterSpacing:2 }}>
+          <div style={{ fontSize:12, color:"rgba(255,255,255,0.3)", marginBottom:8, fontWeight:300, letterSpacing:2 }}>
             — {HERO_DESTS[heroIdx].name} —
           </div>
 
-          <p style={{ fontSize:"clamp(14px,2vw,16px)", color:"#94a3b8", lineHeight:1.75, maxWidth:520, marginBottom:36, fontWeight:300 }}>
+          <p style={{ fontSize:"clamp(14px,2vw,16px)", color:"#94a3b8", lineHeight:1.6, maxWidth:520, marginBottom:20, fontWeight:300 }}>
             {({
               hr:"Skrivene plaže, konobe od lokalaca, live stanje mora i parkinga — vaš AI vodič za savršeni Jadran.",
               de:"Versteckte Strände, lokale Restaurants, Live-Meer- und Parkdaten — Ihr KI-Guide für die perfekte Adria.",
@@ -430,7 +430,7 @@ export default function DestinationExplorer() {
           </p>
 
           {/* CTAs — centered */}
-          <div style={{ display:"flex", gap:12, flexWrap:"wrap", justifyContent:"center", marginBottom:32 }}>
+          <div style={{ display:"flex", gap:12, flexWrap:"wrap", justifyContent:"center", marginBottom:16 }}>
             <a href="#destinations" style={{ padding:"15px 32px", background:"linear-gradient(135deg,#0ea5e9,#0284c7)", borderRadius:14, color:"#fff", fontSize:15, fontWeight:600, textDecoration:"none", fontFamily:F, letterSpacing:0.3, boxShadow:"0 4px 24px rgba(14,165,233,0.4), inset 0 1px 0 rgba(255,255,255,0.15)", minHeight:50, display:"inline-flex", alignItems:"center" }}>
               {({hr:"Istraži destinacije",de:"Destinationen entdecken",en:"Explore destinations",it:"Esplora destinazioni",pl:"Odkryj destynacje",si:"Razišči destinacije"})[dl] || "Explore"} ↓
             </a>
@@ -444,11 +444,11 @@ export default function DestinationExplorer() {
       </section>
 
       {/* ═══ DESTINATIONS ═══ */}
-      <section id="destinations" style={{ padding:"56px 16px 40px", background:"linear-gradient(180deg, #071828 0%, #0a1e36 50%, #071828 100%)" }}>
+      <section id="destinations" style={{ padding:"32px 16px 28px", background:"linear-gradient(180deg, #071828 0%, #0a1e36 50%, #071828 100%)" }}>
         <div style={{ maxWidth:960, margin:"0 auto" }}>
 
-          <div style={{ textAlign:"center", marginBottom:28 }}>
-            <div style={{ fontSize:10, color:"#0ea5e9", letterSpacing:4, fontWeight:700, marginBottom:8 }}>
+          <div style={{ textAlign:"center", marginBottom:18 }}>
+            <div style={{ fontSize:10, color:"#0ea5e9", letterSpacing:4, fontWeight:700, marginBottom:6 }}>
               {({hr:"ISTRAŽI DESTINACIJE",de:"REISEZIELE ENTDECKEN",en:"EXPLORE DESTINATIONS",it:"ESPLORA DESTINAZIONI"})[dl] || "EXPLORE"}
             </div>
             <h2 style={{ fontFamily:F, fontSize:"clamp(24px,4vw,36px)", fontWeight:400 }}>
@@ -480,12 +480,12 @@ export default function DestinationExplorer() {
       </section>
 
       {/* ═══ PARTNERI & BEST DEALS ═══ */}
-      <section style={{ padding:"40px 16px 32px", background:"#050d1a" }}>
+      <section style={{ padding:"24px 16px 20px", background:"#050d1a" }}>
         <div style={{ maxWidth:960, margin:"0 auto" }}>
 
           {/* — Naši partneri — */}
-          <div style={{ marginBottom:28 }}>
-            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
+          <div style={{ marginBottom:16 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
               <div style={{ fontSize:10, color:"#f97316", letterSpacing:4, fontWeight:700 }}>NAŠI PARTNERI</div>
               <div style={{ flex:1, height:1, background:"linear-gradient(90deg, rgba(249,115,22,0.2), transparent)" }} />
             </div>
