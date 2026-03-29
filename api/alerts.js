@@ -398,7 +398,7 @@ async function aggregateAlerts() {
   const normalized = all.slice(0, 12).map(a => ({
     ...a,
     icon: TYPE_ICONS[a.type] || "⚠️",
-    message: a.description ? `${a.title} — ${a.description}`.slice(0, 120) : a.title?.slice(0, 120) || "",
+    message: a.description ? `${a.title} — ${a.description}`.slice(0, 500) : a.title?.slice(0, 500) || "",
   }));
 
   return {

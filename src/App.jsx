@@ -652,12 +652,19 @@ export default function JadranUnified() {
   // ─── ALERTS BAR ───
   const [alerts, setAlerts] = useState([]);
   const [dismissedAlerts, setDismissedAlerts] = useState(new Set());
+  const [navtexData, setNavtexData] = useState(null);
   useEffect(() => {
     const fetchAlerts = () => fetch("/api/alerts").then(r => r.json()).then(d => { if (d.alerts?.length) setAlerts(d.alerts); }).catch(() => {});
     fetchAlerts();
     const interval = setInterval(fetchAlerts, 300000); // 5 min
     return () => clearInterval(interval);
   }, []);
+  useEffect(() => {
+    if (phase !== "kiosk") return;
+    fetch("/api/navtex").then(r => r.json()).then(setNavtexData).catch(() => {});
+    const iv = setInterval(() => fetch("/api/navtex").then(r => r.json()).then(setNavtexData).catch(() => {}), 1800000); // 30 min
+    return () => clearInterval(iv);
+  }, [phase]);
 
   // ─── LEAFLET MAP: call hook unconditionally (React rules) ───
   const mapFromCity = transitFromUrl || COUNTRY_CITY[G.country] || "Wien";
@@ -1900,12 +1907,21 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           <div style={{ ...dm, fontSize: 18, color: "#a78bfa", opacity: 0.6 }}>→</div>
         </div>
 
-        {/* Critical alerts — single rotating line, CSS-animated, instant */}
+        {/* Alert ticker — all sources: Firestore, HAK/MeteoAlarm/HVZ/HERE, NAVTEX maritime, weather */}
         {(() => {
           const items = [
             ...(emergencyAlert ? [{ icon:"🚨", text: emergencyAlert, sev:"critical", dismiss: () => setEmergencyAlert(null) }] : []),
-            ...alerts.filter(a => (a.severity==="critical"||a.severity==="high") && !dismissedAlerts.has(a.title))
-              .map(a => ({ icon: ALERT_ICONS[a.type]||"⚠️", text: a.title, sev: a.severity, dismiss: () => setDismissedAlerts(s => new Set([...s, a.title])) })),
+            ...alerts.filter(a => (a.severity==="critical"||a.severity==="high"||a.severity==="medium") && !dismissedAlerts.has(a.title))
+              .map(a => ({ icon: ALERT_ICONS[a.type]||"⚠️", text: a.message || a.title, sev: a.severity, dismiss: () => setDismissedAlerts(s => new Set([...s, a.title])) })),
+            ...(navtexData?.warning ? [{ icon:"⚓", text: `NAVTEX: ${navtexData.warning}`, sev:"high" }] : []),
+            ...(navtexData?.jadranWarning ? [{ icon:"⚓", text: `Jadran upozorenje: ${navtexData.jadranWarning}`, sev:"high" }] : []),
+            ...(navtexData?.synoptic ? [{ icon:"🌊", text: `Stanje mora: ${navtexData.synoptic}`, sev:"medium" }] : []),
+            ...(weather?.windName?.toLowerCase().includes("bura") || weather?.windSpeed >= 15
+              ? [{ icon:"💨", text: `Bura: ${weather.windName||""} ${weather.windSpeed ? Math.round(weather.windSpeed*3.6)+"km/h" : ""}`.trim(), sev:"medium" }] : []),
+            ...(weather?.uv >= 7
+              ? [{ icon:"☀️", text: `UV indeks: ${weather.uv} — zaštitite se od sunca`, sev:"medium" }] : []),
+            ...(weather?.waveHeight >= 1.5
+              ? [{ icon:"🌊", text: `Valovi: ${weather.waveHeight}m — oprez na moru`, sev:"medium" }] : []),
           ];
           return items.length ? <AlertTicker items={items} /> : null;
         })()}
