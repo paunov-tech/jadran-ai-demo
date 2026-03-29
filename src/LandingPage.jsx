@@ -567,29 +567,39 @@ export default function LandingPage() {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14, marginBottom: 48 }}>
             {DESTINATIONS.map((d, i) => (
-              <a key={i} href={d.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
-                <div style={{
-                  borderRadius: 18, overflow: "hidden", position: "relative",
-                  background: "#0c2d48", border: "1px solid rgba(14,165,233,0.06)",
-                  cursor: "pointer", transition: "all 0.3s", minHeight: 200,
-                }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.2)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(0,0,0,0.3)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.06)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
-                  {cityImgs[d.city] && <div style={{
-                    position: "absolute", inset: 0,
-                    backgroundImage: `url(${cityImgs[d.city]})`,
-                    backgroundSize: "cover", backgroundPosition: "center",
-                    transition: "transform 0.5s",
-                  }} className="dest-img" />}
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(0deg, rgba(6,14,28,0.92) 0%, rgba(6,14,28,0.4) 50%, rgba(6,14,28,0.2) 100%)" }} />
-                  <div style={{ position: "relative", padding: 18, display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: 200 }}>
-                    <span style={{ fontSize: 9, color: "rgba(255,255,255,0.7)", padding: "2px 8px", borderRadius: 8, background: "rgba(14,165,233,0.15)", alignSelf: "flex-start", marginBottom: 8 }}>{d.region}</span>
-                    <div style={{ fontFamily: F, fontSize: 19, fontWeight: 700, marginBottom: 3, textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>{d.name}</div>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 8 }}>{d.desc[lang] || d.desc.de || d.desc.en}</div>
-                    <div style={{ fontSize: 12, color: "#0ea5e9", fontWeight: 600 }}>{tx("destBook2")}</div>
+              <div key={i} style={{ textDecoration: "none", color: "inherit" }}>
+                <a href={`/?kiosk=${d.city.toLowerCase()}&lang=${lang}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+                  <div style={{
+                    borderRadius: 18, overflow: "hidden", position: "relative",
+                    background: "#0c2d48", border: "1px solid rgba(14,165,233,0.06)",
+                    cursor: "pointer", transition: "all 0.3s", minHeight: 200,
+                  }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.2)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(0,0,0,0.3)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.06)"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
+                    {cityImgs[d.city] && <div style={{
+                      position: "absolute", inset: 0,
+                      backgroundImage: `url(${cityImgs[d.city]})`,
+                      backgroundSize: "cover", backgroundPosition: "center",
+                      transition: "transform 0.5s",
+                    }} className="dest-img" />}
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(0deg, rgba(6,14,28,0.92) 0%, rgba(6,14,28,0.4) 50%, rgba(6,14,28,0.2) 100%)" }} />
+                    <div style={{ position: "relative", padding: 18, display: "flex", flexDirection: "column", justifyContent: "flex-end", minHeight: 200 }}>
+                      <span style={{ fontSize: 9, color: "rgba(255,255,255,0.7)", padding: "2px 8px", borderRadius: 8, background: "rgba(14,165,233,0.15)", alignSelf: "flex-start", marginBottom: 8 }}>{d.region}</span>
+                      <div style={{ fontFamily: F, fontSize: 19, fontWeight: 700, marginBottom: 3, textShadow: "0 2px 8px rgba(0,0,0,0.4)" }}>{d.name}</div>
+                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 10 }}>{d.desc[lang] || d.desc.de || d.desc.en}</div>
+                      <div style={{ fontSize: 12, color: "#0ea5e9", fontWeight: 700 }}>
+                        {lang === "de" || lang === "at" ? "AI Guide öffnen →" : lang === "en" ? "Open AI Guide →" : lang === "it" ? "Apri AI Guide →" : "Otvori AI vodič →"}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </a>
+                </a>
+                <a href={d.link} target="_blank" rel="noopener noreferrer"
+                  style={{ display: "block", marginTop: 6, padding: "6px 12px", borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", textDecoration: "none", textAlign: "center" }}>
+                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", fontFamily: B }}>
+                    {lang === "de" || lang === "at" ? "Unterkunft suchen" : lang === "en" ? "Find accommodation" : lang === "it" ? "Cerca alloggio" : "Traži smještaj"} · Booking.com
+                  </span>
+                </a>
+              </div>
             ))}
           </div>
 
