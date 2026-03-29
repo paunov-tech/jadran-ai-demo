@@ -2186,50 +2186,14 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           </div>
         )}
 
-        {viatorLoading && (
-          <div style={{ textAlign: "center", padding: 40 }}>
-            <div style={{ width: 32, height: 32, border: `2px solid ${C.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin-slow 0.8s linear infinite", margin: "0 auto 12px" }} />
-            <div style={{ ...dm, fontSize: 13, color: C.mut }}>Učitavam aktivnosti…</div>
-          </div>
-        )}
+        <DealCards region={getDestRegion(kioskCity)} lang={lang} C={C} maxCards={6} />
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14, marginTop: 8 }}>
-          {acts.map((act, i) => {
-            const inWishlist = viatorWishlist.some(a => a.productCode === act.productCode);
-            const img = act.images?.[0];
-            return (
-              <Card key={act.productCode} style={{ padding: 0, overflow: "hidden", cursor: "pointer", animation: `fadeUp 0.4s ease ${i * 0.06}s both` }}
-                onClick={() => { setSelectedViatorAct(act); setViatorPersons(G.adults || 2); setViatorImgIdx(0); }}>
-                {/* Image */}
-                <div style={{ height: 140, position: "relative", overflow: "hidden", background: "linear-gradient(135deg,rgba(14,165,233,0.1),rgba(34,197,94,0.08))" }}>
-                  {img && <img src={img} alt={act.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />}
-                  {!img && <div style={{ height: "100%", display: "grid", placeItems: "center", fontSize: 48 }}>🏖️</div>}
-                  {/* Wishlist btn */}
-                  <button onClick={e => { e.stopPropagation(); toggleViatorWishlist(act); }}
-                    style={{ position: "absolute", top: 10, right: 10, width: 34, height: 34, borderRadius: "50%", border: "none", background: "rgba(0,0,0,0.45)", color: inWishlist ? "#22c55e" : "#fff", fontSize: 18, cursor: "pointer", display: "grid", placeItems: "center" }}>
-                    {inWishlist ? "♥" : "♡"}
-                  </button>
-                  {/* Category badge */}
-                  {act.category && <div style={{ position: "absolute", top: 10, left: 10, padding: "2px 10px", borderRadius: 10, background: "rgba(0,0,0,0.5)", color: CATCLR[act.category] || C.mut, fontSize: 10, fontWeight: 600, ...dm }}>{act.category.toUpperCase()}</div>}
-                </div>
-                <div style={{ padding: "12px 16px" }}>
-                  <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 6, lineHeight: 1.3 }}>{act.title}</div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ ...dm, fontSize: 12, color: C.mut }}>
-                      <span style={{ color: "#facc15", letterSpacing: -1 }}>{STARS(act.rating)}</span>{" "}
-                      {act.rating?.toFixed(1)} ({act.reviewCount > 1000 ? `${(act.reviewCount/1000).toFixed(1)}k` : act.reviewCount})
-                    </div>
-                    <div style={{ ...dm, fontSize: 12, color: C.mut }}>⏱ {act.duration}</div>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-                    <div style={{ fontSize: 20, fontWeight: 300, color: C.accent }}>{act.price}€ <span style={{ ...dm, fontSize: 11, color: C.mut }}>/ osobi</span></div>
-                    <div style={{ ...dm, fontSize: 12, padding: "6px 14px", borderRadius: 10, background: "rgba(34,197,94,0.1)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.2)", fontWeight: 600 }}>Rezerviraj →</div>
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
+        <a href="https://vi.me/qku0x" target="_blank" rel="noopener noreferrer" style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", borderRadius:12, background:"rgba(34,197,94,0.07)", border:"1px solid rgba(34,197,94,0.18)", textDecoration:"none", marginTop:4 }}>
+          <span style={{ ...dm, fontSize:13, color:"#22c55e", fontWeight:600 }}>
+            {lang === "de" || lang === "at" ? "Alle Aktivitäten auf Viator →" : lang === "en" ? "All activities on Viator →" : "Sve aktivnosti na Viatoru →"}
+          </span>
+          <span style={{ fontSize:16 }}>🎟️</span>
+        </a>
       </>
     );
   };
