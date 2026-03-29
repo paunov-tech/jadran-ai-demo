@@ -6,6 +6,17 @@ const CORS_ORIGINS = ["https://jadran.ai", "https://monte-negro.ai"];
 const CACHE = { data: null, ts: 0 };
 const CACHE_TTL = 600000; // 10 min
 
+// IP rate limiter — max 8 requests/hour (cache handles legit burst; this stops abuse)
+const _biRL = new Map();
+function biRateOk(ip) {
+  const now = Date.now(), WIN = 3600000;
+  for (const [k, v] of _biRL) { if (now > v.r) _biRL.delete(k); }
+  const e = _biRL.get(ip);
+  if (!e || now > e.r) { _biRL.set(ip, { c: 1, r: now + WIN }); return true; }
+  if (e.c >= 8) return false;
+  e.c++; return true;
+}
+
 // Known border crossing coordinates for camera filtering
 const BORDER_CAMERAS = {
   karavanke: { lat: 46.497, lng: 13.999, keywords: ["karavanke", "karawanken", "karavanken"] },
@@ -194,6 +205,9 @@ export default async function handler(req, res) {
 
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "GET") return res.status(405).json({ error: "GET only" });
+
+  const clientIp = (req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || "unknown").split(",")[0].trim();
+  if (!biRateOk(clientIp)) return res.status(429).json({ error: "Too many requests" });
 
   // Server-side cache
   if (CACHE.data && Date.now() - CACHE.ts < CACHE_TTL) {

@@ -1264,7 +1264,7 @@ export default async function handler(req, res) {
       const d = await r.json();
       if (!d.fields) return null;
       const o = {};
-      for (const [k,v] of Object.entries(d.fields)) o[k] = v.integerValue || v.stringValue || v.booleanValue || null;
+      for (const [k,v] of Object.entries(d.fields)) o[k] = v.integerValue || v.stringValue || v.booleanValue || v.timestampValue || null;
       return o;
     } catch { return null; }
   }
@@ -1334,12 +1334,24 @@ export default async function handler(req, res) {
     };
 
     // ── FAIR USAGE: Layer 3 — Tier-aware per-device limit ──
-    // SECURITY: Don't trust frontend plan claim without deviceId
-    // Without deviceId, default to free (prevents curl spoofing)
+    // SECURITY: Verify paid plan claims against Firestore jadran_premium — never trust frontend alone
     const promoCode = req.body.promoCode || "";
     const promo = PROMO_CODES[promoCode.toUpperCase()];
     const promoValid = promo && new Date(promo.expires) > new Date();
-    const tierPlan = promoValid ? promo.plan : (deviceId ? (plan || "free") : "free");
+    let tierPlan = "free";
+    if (promoValid) {
+      tierPlan = promo.plan;
+    } else if (deviceId && plan && plan !== "free") {
+      // Must verify against Firestore — plan field from request body is untrusted
+      try {
+        const premiumDoc = await _fsRead(`jadran_premium/${deviceId}`);
+        if (premiumDoc?.plan) {
+          const expiresAt = premiumDoc.expiresAt;
+          const notExpired = !expiresAt || new Date(expiresAt) > new Date();
+          if (notExpired) tierPlan = premiumDoc.plan; // use Firestore plan, not frontend claim
+        }
+      } catch (_) { /* Firestore unavailable — stay on free (fail-closed) */ }
+    }
     const tierCheck = tierRateOk(deviceId, tierPlan, clientIp);
     if (!tierCheck.ok) {
       const upgradeHint = tierPlan === "free" || tierPlan === "week"
@@ -1431,11 +1443,11 @@ export default async function handler(req, res) {
 
     let systemPrompt = '';
     try {
-      systemPrompt = mode && region
+      // SECURITY: Never use `system` field from req.body — always build server-side
+      systemPrompt = (mode && region)
         ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan, yoloCrowdData })
-        : (system || '');
+        : 'Ti si Jadran.ai, lokalni turistički vodič za hrvatsku obalu Jadrana. Kratki, korisni odgovori na jeziku korisnika.';
     } catch (promptErr) {
-      // If prompt building fails, use minimal fallback
       systemPrompt = 'Ti si Jadran.ai, lokalni turistički vodič za hrvatsku obalu Jadrana. Kratki, korisni odgovori.';
     }
     // Prepend Adriatic region context if available (precise geographic anchor for AI)
