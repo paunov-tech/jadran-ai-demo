@@ -360,14 +360,293 @@ async function fetchHAK() {
   }
 }
 
+// ═══ SOURCE 6: Jadrolinija — official Croatian ferry company disruptions ═══
+async function fetchJadrolinija() {
+  try {
+    const res = await fetch("https://www.jadrolinija.hr/aktualne-obavijesti", {
+      headers: { "User-Agent": "JadranAI/1.0", "Accept": "text/html" },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) return [];
+    const rawHtml = await res.text();
+    const html = rawHtml
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+      .replace(/\s+/g, " ");
+
+    const alerts = [];
+    const patterns = [
+      { regex: /otkazan[a-zčćšžđ]*\s+[^.]{10,150}/gi, type: "ferry_cancelled", severity: "critical" },
+      { regex: /obustav[a-zčćšžđ]*\s+(?:plovidbe?|prometa?)[^.]{5,120}/gi, type: "ferry_cancelled", severity: "critical" },
+      { regex: /ne\s+prometuje[^.]{5,120}/gi, type: "ferry_cancelled", severity: "critical" },
+      { regex: /kasnjen[a-zčćšžđ]*\s+[^.]{10,120}/gi, type: "ferry_disruption", severity: "high" },
+      { regex: /izmjen[a-zčćšžđ]*\s+(?:reda\s+vožnje|plovidbe)[^.]{10,120}/gi, type: "ferry_disruption", severity: "medium" },
+    ];
+    const regionMap = {
+      istra:    /istr|pula|rovinj|poreč|umag/i,
+      kvarner:  /krk|rab|cres|lošinj|rijeka|lopar|valbiska|jablanac|mišnjak|prizna/i,
+      zadar:    /zadar|šibenik|pag|biograd|ugljan|dugi\s+otok|ist|premuda|molat|iž/i,
+      split:    /split|hvar|brač|vis|šolta|stari\s+grad|jelsa|supetar|bol|milna/i,
+      makarska: /makarska|drvenik|sućuraj/i,
+      dubrovnik:/dubrovnik|korčula|lastovo|mljet|pelješac|sobra|vela\s+luka|ubli/i,
+    };
+
+    for (const { regex, type, severity } of patterns) {
+      const matches = html.match(regex) || [];
+      for (const match of matches.slice(0, 3)) {
+        const clean = match.trim();
+        if (clean.length < 10 || clean.length > 250) continue;
+        if (/[<>"=]/.test(clean)) continue;
+        let region = "";
+        for (const [r, rx] of Object.entries(regionMap)) {
+          if (rx.test(clean)) { region = r; break; }
+        }
+        if (alerts.some(a => a.title.includes(clean.slice(0, 40)))) continue;
+        alerts.push({
+          type, severity, region,
+          title: `Jadrolinija: ${clean.slice(0, 150)}`,
+          description: "Provjeri jadrolinija.hr za alternativne linije i ažurirani red vožnje.",
+          source: "Jadrolinija",
+          sourceUrl: "https://www.jadrolinija.hr/aktualne-obavijesti",
+          detectedAt: new Date().toISOString(),
+        });
+      }
+    }
+    console.log(`[ALERTS] Jadrolinija: ${alerts.length} events`);
+    return alerts.slice(0, 6);
+  } catch (err) {
+    console.error("[ALERTS] Jadrolinija error:", err.message);
+    return [];
+  }
+}
+
+// ═══ SOURCE 7: DHMZ — official Croatian weather warnings (county level) ═══
+async function fetchDHMZ() {
+  // DHMZ publishes CAP/XML warnings; try their warning RSS and HTML page
+  const urls = [
+    "https://meteo.hr/prognoza.php?section=prognoza_warning&param=upozorenja",
+    "https://meteo.hr/upozorenja.php",
+  ];
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, {
+        headers: { "User-Agent": "JadranAI/1.0", "Accept": "text/html" },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!res.ok) continue;
+      const rawHtml = await res.text();
+      if (!rawHtml || rawHtml.length < 500) continue;
+
+      const html = rawHtml
+        .replace(/<script[\s\S]*?<\/script>/gi, " ")
+        .replace(/<style[\s\S]*?<\/style>/gi, " ")
+        .replace(/<[^>]*>/g, " ")
+        .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+        .replace(/\s+/g, " ");
+
+      const alerts = [];
+      const patterns = [
+        { regex: /(?:crveno|red)\s+upozorenje[^.]{10,200}/gi, type: "weather", severity: "critical" },
+        { regex: /(?:narančasto|orange)\s+upozorenje[^.]{10,200}/gi, type: "weather", severity: "high" },
+        { regex: /(?:žuto|yellow)\s+upozorenje[^.]{10,200}/gi, type: "weather", severity: "medium" },
+        { regex: /olujn[a-zčćšžđ]*\s+(?:upozorenje|bura|nevrijeme)[^.]{5,150}/gi, type: "wind", severity: "high" },
+        { regex: /opasnost\s+od\s+(?:požara|poplave|oluje|snijega|magle)[^.]{5,150}/gi, type: "weather", severity: "high" },
+      ];
+      const regionMap = {
+        istra:    /istr|pula|rovinj|labin|pazin/i,
+        kvarner:  /kvarner|rijeka|krk|rab|cres|senj|primorje/i,
+        zadar:    /zadar|šibenik|biograd|nin|sjeverodalmatin/i,
+        split:    /split|trogir|hvar|brač|dalm/i,
+        makarska: /makarska|biokovo|omiš/i,
+        dubrovnik:/dubrovnik|korčula|pelješac|neretva/i,
+      };
+
+      for (const { regex, type, severity } of patterns) {
+        const matches = html.match(regex) || [];
+        for (const match of matches.slice(0, 3)) {
+          const clean = match.trim();
+          if (clean.length < 10 || clean.length > 250) continue;
+          if (/[<>"=]/.test(clean)) continue;
+          let region = "";
+          for (const [r, rx] of Object.entries(regionMap)) {
+            if (rx.test(clean)) { region = r; break; }
+          }
+          if (alerts.some(a => a.title.includes(clean.slice(0, 40)))) continue;
+          alerts.push({
+            type, severity, region,
+            title: `DHMZ: ${clean.slice(0, 150)}`,
+            description: "Izvor: Državni hidrometeorološki zavod. Detalji na meteo.hr.",
+            source: "DHMZ",
+            sourceUrl: url,
+            detectedAt: new Date().toISOString(),
+          });
+        }
+      }
+      if (alerts.length > 0) {
+        console.log(`[ALERTS] DHMZ: ${alerts.length} warnings`);
+        return alerts.slice(0, 5);
+      }
+    } catch (err) {
+      console.error("[ALERTS] DHMZ error:", err.message);
+    }
+  }
+  return [];
+}
+
+// ═══ SOURCE 8: EEA Bathing Water Quality — poor/insufficient Croatian beaches ═══
+async function fetchBathingWater() {
+  try {
+    // EEA DiscoData REST SQL API — returns beaches with quality problems in Croatia
+    const query = encodeURIComponent(
+      "SELECT TOP 30 BathingWaterName, annualQuality, municipality " +
+      "FROM [WISE_Bathing_Water_Quality_v3].[latest].[v_BathingWaterQuality] " +
+      "WHERE countryCode = 'HR' AND annualQuality IN ('Poor','Sufficient') " +
+      "AND BathingWaterName IS NOT NULL"
+    );
+    const url = `https://discodata.eea.europa.eu/sql?query=${query}&p=1&nrOfHits=30`;
+    const res = await fetch(url, {
+      headers: { "User-Agent": "JadranAI/1.0", "Accept": "application/json" },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const results = data?.results || data?.data || [];
+    if (!results.length) return [];
+
+    // Group by quality: Poor = critical, Sufficient = medium
+    const poorBeaches = results.filter(r => r.annualQuality === "Poor");
+    const sufficientBeaches = results.filter(r => r.annualQuality === "Sufficient");
+
+    const alerts = [];
+    const regionMap = {
+      istra:    /istr|pula|rovinj|poreč|umag|labin|fažana|medulin|rab|novigrad/i,
+      kvarner:  /kvarner|rijeka|opatija|crikvenica|senj|krk|cres|lošinj|rab|malinska/i,
+      zadar:    /zadar|šibenik|biograd|nin|pag|vodice|murter|primošten|tisno|pirovac|sibenik/i,
+      split:    /split|trogir|hvar|brač|solin|kaštela|vis|šolta|omiš|podstrana|dugi\s+rat/i,
+      makarska: /makarska|brela|baška\s+voda|tučepi|podgora|gradac|živogošće/i,
+      dubrovnik:/dubrovnik|korčula|pelješac|cavtat|ston|orebić|slano|mljet/i,
+    };
+
+    function beachRegion(name, municipality) {
+      const text = ((name || "") + " " + (municipality || "")).toLowerCase();
+      for (const [r, rx] of Object.entries(regionMap)) {
+        if (rx.test(text)) return r;
+      }
+      return "";
+    }
+
+    if (poorBeaches.length > 0) {
+      const names = poorBeaches.slice(0, 5).map(b => b.BathingWaterName).join(", ");
+      alerts.push({
+        type: "bathing_water",
+        severity: "high",
+        region: beachRegion(poorBeaches[0].BathingWaterName, poorBeaches[0].municipality),
+        title: `Loša kakvoća mora: ${names}`,
+        description: `${poorBeaches.length} plaža s ocjenom LOŠE prema EU direktivi o kupanju. Izvor: Europska agencija za okoliš (EEA). Preporuča se izbjegavanje kupanja.`,
+        source: "EEA Bathing Water",
+        sourceUrl: "https://www.eea.europa.eu/themes/water/europes-seas-and-coasts/bathing-water-quality",
+        detectedAt: new Date().toISOString(),
+      });
+    }
+    if (sufficientBeaches.length > 0) {
+      const names = sufficientBeaches.slice(0, 3).map(b => b.BathingWaterName).join(", ");
+      alerts.push({
+        type: "bathing_water",
+        severity: "medium",
+        region: beachRegion(sufficientBeaches[0].BathingWaterName, sufficientBeaches[0].municipality),
+        title: `Zadovoljavajuća kakvoća mora: ${names}`,
+        description: `${sufficientBeaches.length} plaža s ocjenom ZADOVOLJAVAJUĆE prema EU direktivi. Preporuča se oprez.`,
+        source: "EEA Bathing Water",
+        sourceUrl: "https://www.eea.europa.eu/themes/water/europes-seas-and-coasts/bathing-water-quality",
+        detectedAt: new Date().toISOString(),
+      });
+    }
+    console.log(`[ALERTS] Bathing water: ${alerts.length} quality issues (${poorBeaches.length} poor, ${sufficientBeaches.length} sufficient)`);
+    return alerts;
+  } catch (err) {
+    console.error("[ALERTS] Bathing water error:", err.message);
+    return [];
+  }
+}
+
+// ═══ SOURCE 9: Copernicus EFFIS — active fires & emergency activations (Croatia bbox) ═══
+async function fetchCopernicus() {
+  try {
+    // EFFIS WFS — fire news/incidents in Croatia bounding box (bbox: lon_min,lat_min,lon_max,lat_max)
+    const bbox = "13.2,42.3,19.5,46.6";
+    const url = `https://ies-ows.jrc.ec.europa.eu/effis?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature&TYPENAMES=ms:firenews&OUTPUTFORMAT=application/json&count=10&CQL_FILTER=ST_Intersects(ms:the_geom,SRID%3D4326%3BPOLYGON((13.2+42.3,19.5+42.3,19.5+46.6,13.2+46.6,13.2+42.3)))`;
+    const res = await fetch(url, {
+      headers: { "User-Agent": "JadranAI/1.0", "Accept": "application/json" },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const features = data?.features || [];
+    if (!features.length) return [];
+
+    const alerts = [];
+    const regionMap = {
+      istra:    /istr|pula|rovinj|poreč|umag|labin|pazin/i,
+      kvarner:  /kvarner|rijeka|krk|rab|cres|senj|lika/i,
+      zadar:    /zadar|šibenik|biograd|benkovac|knin|drniš/i,
+      split:    /split|trogir|omiš|sinj|klis|kaštela|makarska|brač|hvar/i,
+      makarska: /makarska|biokovo|omiš|vrgorac/i,
+      dubrovnik:/dubrovnik|korčula|pelješac|metković|imotski/i,
+    };
+
+    const cutoff = Date.now() - 3 * 24 * 3600 * 1000; // last 3 days
+    for (const f of features) {
+      const p = f.properties || {};
+      const fireDate = p.firedate || p.date || p.reportdate || "";
+      if (fireDate && new Date(fireDate).getTime() < cutoff) continue;
+
+      const area = parseFloat(p.area_ha || p.area || 0);
+      const severity = area > 500 ? "critical" : area > 50 ? "high" : "medium";
+      const country = (p.country || p.country_name || "").toUpperCase();
+      if (country && !["HR", "CROATIA", "HRVATSKA"].includes(country)) continue;
+
+      const location = p.region || p.municipality || p.county || p.firename || "";
+      let region = "";
+      for (const [r, rx] of Object.entries(regionMap)) {
+        if (rx.test(location)) { region = r; break; }
+      }
+
+      const areaStr = area > 0 ? ` (${Math.round(area)} ha)` : "";
+      alerts.push({
+        type: "fire",
+        severity,
+        region,
+        title: `Copernicus EFFIS: Požar${location ? " — " + location : ""}${areaStr}`,
+        description: `Satelitski podatak Copernicus EFFIS. ${p.country_name || "Hrvatska"}. Datum: ${fireDate || "nedavno"}. ${area > 0 ? "Površina: " + Math.round(area) + " ha." : ""}`,
+        source: "Copernicus EFFIS",
+        sourceUrl: "https://effis.jrc.ec.europa.eu/",
+        detectedAt: new Date().toISOString(),
+        lat: f.geometry?.coordinates?.[1],
+        lon: f.geometry?.coordinates?.[0],
+      });
+    }
+    console.log(`[ALERTS] Copernicus EFFIS: ${alerts.length} fire events`);
+    return alerts.slice(0, 5);
+  } catch (err) {
+    console.error("[ALERTS] Copernicus error:", err.message);
+    return [];
+  }
+}
+
 // Aggregate all sources
 async function aggregateAlerts() {
-  const [fires, weather, hvz, aa, hak] = await Promise.all([
+  const [fires, weather, hvz, aa, hak, jadrolinija, dhmz, bathingWater, copernicus] = await Promise.all([
     fetchFires(),
     fetchWeatherAlerts(),
     fetchHVZ(),
     fetchAuswaertigesAmt(),
     fetchHAK(),
+    fetchJadrolinija(),
+    fetchDHMZ(),
+    fetchBathingWater(),
+    fetchCopernicus(),
   ]);
 
   // Deduplicate fires by proximity (cluster within 0.05 degrees ≈ 5km)
@@ -389,24 +668,28 @@ async function aggregateAlerts() {
 
   // Sort by severity
   const severityOrder = { critical: 0, high: 1, medium: 2 };
-  const all = [...clustered, ...weather, ...hvz, ...aa, ...hak].sort((a, b) =>
+  const all = [...clustered, ...weather, ...hvz, ...aa, ...hak, ...jadrolinija, ...dhmz, ...bathingWater, ...copernicus].sort((a, b) =>
     (severityOrder[a.severity] || 3) - (severityOrder[b.severity] || 3)
   );
 
   // Normalize: add icon + message fields for frontend compatibility
-  const TYPE_ICONS = { fire:"🔥", wind:"🌬️", storm:"⛈", rain:"🌧️", heat:"🌡️", coastal:"🌊", flood:"💧", fog:"🌫️", snow:"❄️", road_closure:"⚠️", ferry_cancelled:"⛴", bura_closure:"🌬️", traffic_jam:"🚗", roadworks:"🔧", travel_advisory:"🇩🇪", weather:"⛈" };
-  const normalized = all.slice(0, 12).map(a => ({
+  const TYPE_ICONS = { fire:"🔥", wind:"🌬️", storm:"⛈", rain:"🌧️", heat:"🌡️", coastal:"🌊", flood:"💧", fog:"🌫️", snow:"❄️", road_closure:"⚠️", ferry_cancelled:"⛴️", ferry_disruption:"⛴️", bura_closure:"🌬️", traffic_jam:"🚗", roadworks:"🔧", travel_advisory:"🇩🇪", weather:"⛈", bathing_water:"🏊", dhmz_warning:"☁️" };
+  const normalized = all.slice(0, 20).map(a => ({
     ...a,
     icon: TYPE_ICONS[a.type] || "⚠️",
     message: a.description ? `${a.title} — ${a.description}`.slice(0, 500) : a.title?.slice(0, 500) || "",
   }));
 
   return {
-    fires: clustered.length + hvz.filter(a => a.type === "fire").length,
+    fires: clustered.length + hvz.filter(a => a.type === "fire").length + copernicus.length,
     weather: weather.length,
     hvz: hvz.length,
     aa: aa.length,
     hak: hak.length,
+    jadrolinija: jadrolinija.length,
+    dhmz: dhmz.length,
+    bathingWater: bathingWater.length,
+    copernicus: copernicus.length,
     total: normalized.length,
     alerts: normalized,
     updated: new Date().toISOString(),

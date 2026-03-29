@@ -870,7 +870,7 @@ function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, 
     if (matchedAlerts.length > 0) {
       const overrideLines = matchedAlerts.map(a => {
         const sev = a.severity === "critical" ? "🚨 KRITIČNO" : a.severity === "high" ? "⚠️ OPASNO" : "ℹ️ UPOZORENJE";
-        const tipo = a.type === "fire" ? "POŽAR" : a.type === "wind" ? "BURA/VJETAR" : a.type === "heat" ? "TOPLINSKI VAL" : a.type === "storm" ? "OLUJA" : a.type === "flood" ? "POPLAVA" : a.type === "coastal" ? "VALOVI" : a.type === "travel_advisory" ? "REISEHINWEIS (Auswärtiges Amt)" : "METEO";
+        const tipo = a.type === "fire" ? "POŽAR" : a.type === "wind" ? "BURA/VJETAR" : a.type === "heat" ? "TOPLINSKI VAL" : a.type === "storm" ? "OLUJA" : a.type === "flood" ? "POPLAVA" : a.type === "coastal" ? "VALOVI" : a.type === "travel_advisory" ? "REISEHINWEIS (Auswärtiges Amt)" : a.type === "ferry_cancelled" ? "TRAJEKT OTKAZAN" : a.type === "ferry_disruption" ? "TRAJEKT IZMJENA" : a.type === "bathing_water" ? "KAKVOĆA MORA" : a.type === "dhmz_warning" ? "DHMZ UPOZORENJE" : "METEO";
         const loc = a.region ? LOCATION_LEXICON[a.region]?.[0]?.toUpperCase() || a.region.toUpperCase() : "JADRAN";
         const detail = a.title || a.description || "";
         return `[${sev}] ${tipo} — ${loc}: ${detail} ${a.count ? `(${a.count} žarišta)` : ""} [Izvor: ${a.source || "N/A"}]`;
@@ -901,6 +901,15 @@ OBAVEZNA PRAVILA (ne smiju se zaobići):
    Za buru na Jablanac-Mišnjak: "Alternativa: ruta preko Krka (Valbiska-Lopar), izbjegava Velebitski kanal."
    Za kolone na autoputi: "Izbjegnite špicu, krenite prije 7h ili nakon 20h."
    Za trajektne gužve subotom: "Subota je najgori dan za trajekt. Ako možete, odgodite za nedjelju ujutro."
+10. Za TRAJEKT OTKAZAN (Jadrolinija): Odmah navedi otkaz, predloži alternativnu liniju ili rutu kopnom.
+    Primjeri alternativa: Hvar↔Split: probaj Stari Grad ili Hvar-Drvenik. Korčula: probaj Orebić-Dominče.
+    Lastovo: nema kopnene alternative. Uvijek provjeri jadrolinija.hr.
+11. Za KAKVOĆA MORA (EEA Bathing Water): Upozori da je službeni EU monitor označio plažu kao problematičnu.
+    Savjetuj kupanje na obližnjoj plaži s "Excellent" ocjenom. Plavo zastava plaže nisu isto kao EEA ocjena.
+12. Za COPERNICUS EFFIS POŽAR: Ovo je satelitski podatak EU sustava. Veća pouzdanost od FIRMS-a za veće požare.
+    Navedi površinu u ha ako je dostupna. Preporuči praćenje 112.hr i civilnaZastita.hr.
+13. Za DHMZ UPOZORENJE: Ovo je službeno upozorenje DHMZ (Državni hidrometeorološki zavod).
+    Citiraš ga kao "Prema DHMZ-u..." — to je najautoritativniji izvor za meteorološka upozorenja u Hrvatskoj.
 [END ALERT_OVERRIDE]
 `);
     } else if (emergencyAlerts.length > 0) {
