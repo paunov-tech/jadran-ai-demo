@@ -1651,6 +1651,17 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
   // ─── Emergency alerts from TZ Dashboard ───
   const [emergencyAlert, setEmergencyAlert] = useState(null);
+  const [emergencyNearby, setEmergencyNearby] = useState(null);
+  useEffect(() => {
+    if (subScreen !== "emergency") return;
+    const lat = nearbyData?.location?.lat || kioskCoords?.[0];
+    const lng = nearbyData?.location?.lng || kioskCoords?.[1];
+    if (!lat || !lng) return;
+    setEmergencyNearby(null);
+    fetch(`/api/nearby?lat=${lat}&lng=${lng}&cats=hospital,clinic,pharmacy,vet&limit=6&lang=${lang}`)
+      .then(r => r.json()).then(setEmergencyNearby).catch(() => {});
+  }, [subScreen]); // eslint-disable-line
+
   useEffect(() => {
     if (phase !== "kiosk") return;
     const FB_KEY = import.meta.env.VITE_FB_API_KEY;
@@ -2610,14 +2621,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
     // ── HITNO / Emergency screen ──
     const KioskEmergency = () => {
-      const [ne, setNe] = React.useState(null); // nearbyEmergency
-      React.useEffect(() => {
-        const lat = nearbyData?.location?.lat || (kioskCoords?.[0]);
-        const lng = nearbyData?.location?.lng || (kioskCoords?.[1]);
-        if (!lat || !lng) return;
-        fetch(`/api/nearby?lat=${lat}&lng=${lng}&cats=hospital,clinic,pharmacy,vet&limit=6&lang=${lang}`)
-          .then(r => r.json()).then(setNe).catch(() => {});
-      }, []); // eslint-disable-line
+      const ne = emergencyNearby;
       const NUMS = [
         { n:"112", l:{hr:"Hitna pomoć / Spašavanje",de:"Notruf / Rettung",en:"Emergency / Rescue",it:"Emergenza / Soccorso",si:"Nujna pomoč",cz:"Tísňové volání",pl:"Pogotowie"}, icon:"🚑", clr:"#ef4444" },
         { n:"194", l:{hr:"Hitna medicinska",de:"Rettungsdienst",en:"Medical emergency",it:"Emergenza medica",si:"Reševalci",cz:"Záchranná služba",pl:"Pogotowie medyczne"}, icon:"🏥", clr:"#ef4444" },
