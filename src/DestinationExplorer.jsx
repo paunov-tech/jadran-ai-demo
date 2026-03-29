@@ -108,7 +108,7 @@ const GYG_OFFERS = [
 const CITY_AFFILIATES = {
   rab: [
     { id:"blackjack", name:"Black Jack", img:"https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&q=75", badge:"NAŠI PARTNER", badgeColor:"#f97316", desc:{hr:"Gurman House · Palit, Rab",de:"Gurman House · Palit, Rab",en:"Gurman House · Palit, Rab",it:"Gurman House · Palit, Rab"}, cta:{hr:"Pogledaj meni",de:"Menü ansehen",en:"View menu",it:"Vedi menu"}, action:"bj" },
-    { id:"fjera", name:"Rabska Fjera", img:"https://images.unsplash.com/photos/KUCx92pIGCM?w=400&q=75", badge:"⚔️ RAB · 25–27.VII", badgeColor:"#fbbf24", desc:{hr:"Najveći medievalni festival HR",de:"Kroatiens größtes Mittelalterfest",en:"Croatia's largest medieval festival",it:"Il più grande festival medievale"}, cta:{hr:"AI Guide Rab",de:"AI Guide Rab",en:"AI Guide Rab",it:"AI Guide Rab"}, link:"/?kiosk=rab" },
+    { id:"fjera", name:"Rabska Fjera", img:"https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&q=75", badge:"⚔️ RAB · 25–27.VII", badgeColor:"#fbbf24", desc:{hr:"Najveći medievalni festival HR",de:"Kroatiens größtes Mittelalterfest",en:"Croatia's largest medieval festival",it:"Il più grande festival medievale"}, cta:{hr:"AI Guide Rab",de:"AI Guide Rab",en:"AI Guide Rab",it:"AI Guide Rab"}, link:"/?kiosk=rab" },
   ],
 };
 
@@ -124,6 +124,17 @@ const CITY_GYG = {
   zadar:    [{ title:{hr:"Krka & Šibenik vodopadi",de:"Krka & Šibenik Wasserfälle",en:"Krka & Šibenik waterfalls",it:"Cascate Krka & Šibenik"}, price:"55€", img:"https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=400&q=75", link:"https://www.getyourguide.com/zadar-l4157/?partner_id=9OEGOYI&q=krka" }],
   pula:     [{ title:{hr:"Tura rimske arene — Pula",de:"Führung Röm. Arena — Pula",en:"Roman Arena tour — Pula",it:"Tour Arena Romana — Pola"}, price:"20€", img:"https://images.unsplash.com/photos/TBC4FLRxcKk?w=400&q=75", link:"https://www.getyourguide.com/pula-l4161/?partner_id=9OEGOYI&q=arena" }],
   opatija:  [{ title:{hr:"Šetnja Lungomare & SPA",de:"Lungomare-Spaziergang & SPA",en:"Lungomare walk & SPA",it:"Passeggiata Lungomare & SPA"}, price:"30€", img:"https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?w=400&q=75", link:"https://www.getyourguide.com/opatija-l4163/?partner_id=9OEGOYI&q=spa" }],
+};
+
+// ─── CITY → FIRESTORE REGION KEY MAPPING ───
+const CITY_TO_FS = {
+  rovinj:'istra', pula:'istra', porec:'istra', novigrad:'istra', motovun:'istra', labin:'istra',
+  rab:'rab', krk:'rab', cres:'rab', losinj:'rab',
+  opatija:'opatija', rijeka:'opatija',
+  split:'split', sibenik:'split', trogir:'split', hvar:'split', brac:'split', vis:'split',
+  dubrovnik:'dubrovnik', korcula:'dubrovnik', mljet:'dubrovnik',
+  zadar:'zadar',
+  makarska:'makarska',
 };
 
 // ─── HERO DESTINATIONS (cycling background) ───
@@ -438,7 +449,7 @@ export default function DestinationExplorer() {
               </button>
               {/* Rab AI Guide */}
               <a href={`/?kiosk=rab&lang=${lang}`} style={{ minWidth:190, height:150, borderRadius:16, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", textDecoration:"none", color:"#fff", border:"1px solid rgba(251,191,36,0.2)" }}>
-                <img src="https://images.unsplash.com/photos/KUCx92pIGCM?w=400&q=75" alt="Rab" loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
+                <img src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&q=75" alt="Rabska Fjera" loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
                 <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.92) 0%, rgba(5,13,26,0.3) 100%)" }} />
                 <div style={{ position:"absolute", top:10, left:10, padding:"3px 8px", borderRadius:6, background:"rgba(251,191,36,0.14)", border:"1px solid rgba(251,191,36,0.3)", fontSize:8, fontWeight:700, color:"#fbbf24", letterSpacing:1.5 }}>⚔️ RAB · {FJERA.date}</div>
                 <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"12px 12px" }}>
@@ -490,14 +501,18 @@ export default function DestinationExplorer() {
                 <button onClick={() => setActiveRegion(null)} style={{ width:32, height:32, borderRadius:"50%", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.08)", color:"#64748b", fontSize:15, cursor:"pointer", display:"grid", placeItems:"center" }}>✕</button>
               </div>
 
-              {/* City tabs */}
+              {/* City tabs — photo cards (transit style) */}
               <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:14, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
                 {rData.destinations.map(d => {
                   const isActive = activeDestId === d.id;
                   return (
                     <button key={d.id} onClick={() => setActiveDestId(d.id)}
-                      style={{ flexShrink:0, scrollSnapAlign:"start", padding:"7px 16px", borderRadius:20, border:`1px solid ${isActive ? d.accent+"60" : "rgba(255,255,255,0.07)"}`, background: isActive ? `${d.accent}18` : "rgba(255,255,255,0.03)", color: isActive ? d.accent : "#64748b", fontSize:12, fontWeight:600, cursor:"pointer", whiteSpace:"nowrap", transition:"all 0.2s", fontFamily:B }}>
-                      {d.name}
+                      style={{ flexShrink:0, scrollSnapAlign:"start", width:90, height:72, borderRadius:14, overflow:"hidden", position:"relative", border:`2px solid ${isActive ? d.accent : "rgba(255,255,255,0.07)"}`, background:"none", padding:0, cursor:"pointer", transition:"all 0.2s", boxShadow: isActive ? `0 0 0 1px ${d.accent}40, 0 4px 16px rgba(0,0,0,0.4)` : "none", transform: isActive ? "scale(1.05)" : "scale(1)" }}>
+                      <img src={d.img} alt={d.name} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
+                      <div style={{ position:"absolute", inset:0, background: isActive ? `linear-gradient(0deg, rgba(5,13,26,0.82) 0%, rgba(5,13,26,0.25) 100%)` : "linear-gradient(0deg, rgba(5,13,26,0.92) 0%, rgba(5,13,26,0.55) 100%)" }} />
+                      <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"0 5px 6px", textAlign:"center" }}>
+                        <div style={{ fontSize:10, fontWeight:700, color: isActive ? d.accent : "rgba(255,255,255,0.75)", lineHeight:1.2, fontFamily:B }}>{d.name}</div>
+                      </div>
                     </button>
                   );
                 })}
@@ -563,7 +578,7 @@ export default function DestinationExplorer() {
               )}
 
               {/* ③ AI Deals — live from n8n/Firestore (Viator + partners) */}
-              <DealCards region={activeDestId || rData.liveCity} lang={lang} maxCards={4} />
+              <DealCards region={CITY_TO_FS[activeDestId] || CITY_TO_FS[rData.liveCity] || rData.liveCity} lang={lang} maxCards={4} />
 
             </div>
 
