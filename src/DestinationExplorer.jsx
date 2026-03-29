@@ -430,11 +430,11 @@ export default function DestinationExplorer() {
           </p>
 
           {/* CTAs — centered */}
-          <div style={{ display:"flex", gap:12, flexWrap:"wrap", justifyContent:"center", marginBottom:16 }}>
-            <a href="#destinations" style={{ padding:"15px 32px", background:"linear-gradient(135deg,#0ea5e9,#0284c7)", borderRadius:14, color:"#fff", fontSize:15, fontWeight:600, textDecoration:"none", fontFamily:F, letterSpacing:0.3, boxShadow:"0 4px 24px rgba(14,165,233,0.4), inset 0 1px 0 rgba(255,255,255,0.15)", minHeight:50, display:"inline-flex", alignItems:"center" }}>
+          <div style={{ display:"flex", gap:8, flexWrap:"wrap", justifyContent:"center", marginBottom:12 }}>
+            <a href="#destinations" style={{ padding:"11px 24px", background:"linear-gradient(135deg,#0ea5e9,#0284c7)", borderRadius:12, color:"#fff", fontSize:14, fontWeight:600, textDecoration:"none", fontFamily:F, letterSpacing:0.3, boxShadow:"0 4px 24px rgba(14,165,233,0.4), inset 0 1px 0 rgba(255,255,255,0.15)", display:"inline-flex", alignItems:"center" }}>
               {({hr:"Istraži destinacije",de:"Destinationen entdecken",en:"Explore destinations",it:"Esplora destinazioni",pl:"Odkryj destynacje",si:"Razišči destinacije"})[dl] || "Explore"} ↓
             </a>
-            <a href="/landing" style={{ padding:"15px 28px", borderRadius:14, color:"#fbbf24", fontSize:15, fontWeight:500, textDecoration:"none", fontFamily:F, border:"1px solid rgba(251,191,36,0.3)", background:"rgba(251,191,36,0.06)", minHeight:50, display:"inline-flex", alignItems:"center", gap:8, letterSpacing:0.3, backdropFilter:"blur(8px)" }}>
+            <a href="/landing" style={{ padding:"11px 20px", borderRadius:12, color:"#fbbf24", fontSize:14, fontWeight:500, textDecoration:"none", fontFamily:F, border:"1px solid rgba(251,191,36,0.3)", background:"rgba(251,191,36,0.06)", display:"inline-flex", alignItems:"center", gap:6, letterSpacing:0.3, backdropFilter:"blur(8px)" }}>
               ⭐ AI Travel Guardian →
             </a>
           </div>
