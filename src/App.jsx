@@ -1039,8 +1039,14 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           messages: [...chatMsgs.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })), { role: "user", content: msg }],
           delta_context: loadDelta(),
           lang: lang || "hr",
-          freeMsgUsed: premium ? -1 : freeMsgUsed, // -1 = premium, server can reject if > 3
+          freeMsgUsed: premium ? -1 : freeMsgUsed,
           deviceId: (() => { try { return localStorage.getItem("jadran_push_deviceId") || ""; } catch { return ""; } })(),
+          emergencyAlerts: alerts.filter(a => a.severity === "critical" || a.severity === "high" || a.severity === "medium")
+            .slice(0, 10).map(a => ({ type: a.type, severity: a.severity, region: a.region, title: a.title, description: a.description, count: a.count, source: a.source })),
+          navtexData: navtexData || undefined,
+          lastUserMessage: msg,
+          region: kioskCoords ? Object.entries({ istra:[45.1,13.9], kvarner:[45.0,14.5], zadar:[44.1,15.3], split:[43.5,16.5], makarska:[43.3,17.0], dubrovnik:[42.65,18.1] })
+            .sort(([,a],[,b]) => Math.hypot(kioskCoords[0]-a[0],kioskCoords[1]-a[1]) - Math.hypot(kioskCoords[0]-b[0],kioskCoords[1]-b[1]))[0]?.[0] : undefined,
         }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);

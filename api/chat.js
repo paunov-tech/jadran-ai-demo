@@ -870,7 +870,7 @@ function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, 
     if (matchedAlerts.length > 0) {
       const overrideLines = matchedAlerts.map(a => {
         const sev = a.severity === "critical" ? "🚨 KRITIČNO" : a.severity === "high" ? "⚠️ OPASNO" : "ℹ️ UPOZORENJE";
-        const tipo = a.type === "fire" ? "POŽAR" : a.type === "wind" ? "BURA/VJETAR" : a.type === "heat" ? "TOPLINSKI VAL" : a.type === "storm" ? "OLUJA" : a.type === "flood" ? "POPLAVA" : a.type === "coastal" ? "VALOVI" : a.type === "ferry_cancelled" ? "TRAJEKT OTKAZAN" : a.type === "ferry_disruption" ? "TRAJEKT IZMJENA" : a.type === "bathing_water" ? "KAKVOĆA MORA" : a.type === "dhmz_warning" ? "DHMZ UPOZORENJE" : "METEO";
+        const tipo = a.type === "fire" ? "POŽAR" : a.type === "wind" ? "BURA/VJETAR" : a.type === "heat" ? "TOPLINSKI VAL" : a.type === "storm" ? "OLUJA" : a.type === "flood" ? "POPLAVA" : a.type === "coastal" ? "VALOVI" : a.type === "ferry_cancelled" ? "TRAJEKT OTKAZAN" : a.type === "ferry_disruption" ? "TRAJEKT IZMJENA" : a.type === "bathing_water" ? "KAKVOĆA MORA" : a.type === "dhmz_warning" ? "DHMZ UPOZORENJE" : a.type === "air_quality" ? "KVALITET ZRAKA" : "METEO";
         const loc = a.region ? LOCATION_LEXICON[a.region]?.[0]?.toUpperCase() || a.region.toUpperCase() : "JADRAN";
         const detail = a.title || a.description || "";
         return `[${sev}] ${tipo} — ${loc}: ${detail} ${a.count ? `(${a.count} žarišta)` : ""} [Izvor: ${a.source || "N/A"}]`;
@@ -907,6 +907,11 @@ OBAVEZNA PRAVILA (ne smiju se zaobići):
     Navedi površinu u ha ako je dostupna. Preporuči praćenje 112.hr i civilnaZastita.hr.
 12. Za DHMZ UPOZORENJE: Ovo je službeno upozorenje DHMZ (Državni hidrometeorološki zavod).
     Citiraš ga kao "Prema DHMZ-u..." — to je najautoritativniji izvor za meteorološka upozorenja u Hrvatskoj.
+13. Za TRAJEKT OTKAZAN (Krilo/G&V Line): Katamarani Krilo i G&V Line nisu Jadrolinija — različite linije!
+    Krilo: Split-Hvar-Korčula-Dubrovnik. G&V: Ancona/Bari-Split ruta. Provjeri krilo.hr ili gv-line.hr.
+14. Za KVALITET ZRAKA (Copernicus CAMS): PM2.5/PM10 su čestice dima ili prašine.
+    Kritično (>75 µg/m³): Preporuči masku, zatvorene prostore, izbjegavanje napora vani.
+    Visoko (>35 µg/m³): Upozori osjetljive grupe (djeca, astma, stariji). Saharski prašak: ispiraj auto.
 [END ALERT_OVERRIDE]
 `);
     } else if (emergencyAlerts.length > 0) {

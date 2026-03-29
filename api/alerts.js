@@ -572,9 +572,109 @@ async function fetchCopernicus() {
   }
 }
 
+// ═══ SOURCE 10: Krilo / G&V Line — fast catamaran lines (Split-Hvar-Korčula-Dubrovnik) ═══
+async function fetchKrilo() {
+  const sources = [
+    { url: "https://www.krilo.hr/hr/novosti", name: "Krilo" },
+    { url: "https://www.gv-line.hr/hr/obavijesti", name: "G&V Line" },
+  ];
+  const alerts = [];
+  const regionMap = {
+    kvarner:  /krk|rab|cres|lošinj|rijeka/i,
+    zadar:    /zadar|šibenik|biograd|primošten|vodice/i,
+    split:    /split|hvar|brač|vis|šolta|stari\s+grad|jelsa|supetar|bol|milna/i,
+    makarska: /makarska|drvenik|sućuraj/i,
+    dubrovnik:/dubrovnik|korčula|lastovo|mljet|pelješac|sobra|vela\s+luka|ubli/i,
+  };
+  for (const { url, name } of sources) {
+    try {
+      const res = await fetch(url, { headers: { "User-Agent": "JadranAI/1.0" }, signal: AbortSignal.timeout(8000) });
+      if (!res.ok) continue;
+      const html = (await res.text())
+        .replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ")
+        .replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\s+/g, " ");
+      const patterns = [
+        { regex: /otkazan[a-zčćšžđ]*\s+[^.]{10,150}/gi, type: "ferry_cancelled", severity: "critical" },
+        { regex: /obustav[a-zčćšžđ]*\s+(?:plovidbe?|prometa?)[^.]{5,120}/gi, type: "ferry_cancelled", severity: "critical" },
+        { regex: /ne\s+prometuje[^.]{5,120}/gi, type: "ferry_cancelled", severity: "critical" },
+        { regex: /kasnjen[a-zčćšžđ]*\s+[^.]{10,120}/gi, type: "ferry_disruption", severity: "high" },
+        { regex: /izmjen[a-zčćšžđ]*\s+(?:reda\s+vožnje|plovidbe)[^.]{10,120}/gi, type: "ferry_disruption", severity: "medium" },
+      ];
+      for (const { regex, type, severity } of patterns) {
+        for (const match of (html.match(regex) || []).slice(0, 2)) {
+          const clean = match.trim();
+          if (clean.length < 10 || clean.length > 250 || /[<>"=]/.test(clean)) continue;
+          let region = "";
+          for (const [r, rx] of Object.entries(regionMap)) { if (rx.test(clean)) { region = r; break; } }
+          alerts.push({ type, severity, region,
+            title: `${name}: ${clean.slice(0, 150)}`,
+            description: `Provjeri ${url} za ažurirani red vožnje katamarana.`,
+            source: name, sourceUrl: url, detectedAt: new Date().toISOString() });
+        }
+      }
+    } catch (err) { console.error(`[ALERTS] ${name} error:`, err.message); }
+  }
+  console.log(`[ALERTS] Krilo/G&V: ${alerts.length} events`);
+  return alerts.slice(0, 4);
+}
+
+// ═══ SOURCE 11: Copernicus CAMS — air quality & wildfire smoke (AQI over Croatia) ═══
+async function fetchCAMS() {
+  try {
+    // CAMS European Air Quality Forecast API (open, no key needed for general AQ)
+    // Bounding box covers Adriatic coast: lat 42.3-46.6, lon 13.2-19.5
+    const url = "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=43.5,44.1,42.65&longitude=16.5,15.3,18.1&current=pm2_5,pm10,dust,uv_index,alder_pollen&domains=cams_europe";
+    const res = await fetch(url, { headers: { "User-Agent": "JadranAI/1.0" }, signal: AbortSignal.timeout(10000) });
+    if (!res.ok) return [];
+    const data = await res.json();
+
+    const alerts = [];
+    const locations = [
+      { name: "Split", region: "split" },
+      { name: "Zadar", region: "zadar" },
+      { name: "Dubrovnik", region: "dubrovnik" },
+    ];
+
+    // data is array if multiple locations; wrap single in array
+    const results = Array.isArray(data) ? data : [data];
+    for (let i = 0; i < results.length; i++) {
+      const d = results[i];
+      const loc = locations[i] || { name: "Jadran", region: "" };
+      const pm25 = d?.current?.pm2_5;
+      const pm10 = d?.current?.pm10;
+      const dust = d?.current?.dust;
+
+      // WHO thresholds: PM2.5 >35 = unhealthy, >75 = very unhealthy; PM10 >50 = moderate, >150 = unhealthy
+      if (pm25 >= 75 || pm10 >= 150) {
+        alerts.push({ type: "air_quality", severity: "critical", region: loc.region,
+          title: `Zagađen zrak: ${loc.name} — PM2.5 ${Math.round(pm25||0)} µg/m³, PM10 ${Math.round(pm10||0)} µg/m³`,
+          description: `Opasna razina čestica u zraku (WHO granica: PM2.5 25 µg/m³). Mogući uzrok: požar ili industrijske emisije. Izbjegavajte boravak na otvorenom. Izvor: Copernicus CAMS.`,
+          source: "Copernicus CAMS", sourceUrl: "https://atmosphere.copernicus.eu/", detectedAt: new Date().toISOString() });
+      } else if (pm25 >= 35 || pm10 >= 50) {
+        alerts.push({ type: "air_quality", severity: "high", region: loc.region,
+          title: `Povišene čestice u zraku: ${loc.name} — PM2.5 ${Math.round(pm25||0)} µg/m³`,
+          description: `Umjereno zagađenje zraka. Osjetljive osobe (djeca, stariji, astma) trebaju ograničiti boravak vani. Izvor: Copernicus CAMS.`,
+          source: "Copernicus CAMS", sourceUrl: "https://atmosphere.copernicus.eu/", detectedAt: new Date().toISOString() });
+      }
+      if (dust >= 50) {
+        alerts.push({ type: "air_quality", severity: "medium", region: loc.region,
+          title: `Saharski prašak: ${loc.name} — ${Math.round(dust)} µg/m³`,
+          description: `Povišena koncentracija saharskog prašaka. Može uzrokovati crvenilo očiju i respiratorne tegobe. Ispirajte auto vodom. Izvor: Copernicus CAMS.`,
+          source: "Copernicus CAMS", sourceUrl: "https://atmosphere.copernicus.eu/", detectedAt: new Date().toISOString() });
+      }
+    }
+    console.log(`[ALERTS] CAMS: ${alerts.length} air quality events`);
+    return alerts;
+  } catch (err) {
+    console.error("[ALERTS] CAMS error:", err.message);
+    return [];
+  }
+}
+
 // Aggregate all sources
 async function aggregateAlerts() {
-  const [fires, weather, hvz, hak, jadrolinija, dhmz, bathingWater, copernicus] = await Promise.all([
+  const [fires, weather, hvz, hak, jadrolinija, dhmz, bathingWater, copernicus, krilo, cams] = await Promise.all([
     fetchFires(),
     fetchWeatherAlerts(),
     fetchHVZ(),
@@ -583,6 +683,8 @@ async function aggregateAlerts() {
     fetchDHMZ(),
     fetchBathingWater(),
     fetchCopernicus(),
+    fetchKrilo(),
+    fetchCAMS(),
   ]);
 
   // Deduplicate fires by proximity (cluster within 0.05 degrees ≈ 5km)
@@ -604,12 +706,12 @@ async function aggregateAlerts() {
 
   // Sort by severity
   const severityOrder = { critical: 0, high: 1, medium: 2 };
-  const all = [...clustered, ...weather, ...hvz, ...hak, ...jadrolinija, ...dhmz, ...bathingWater, ...copernicus].sort((a, b) =>
+  const all = [...clustered, ...weather, ...hvz, ...hak, ...jadrolinija, ...dhmz, ...bathingWater, ...copernicus, ...krilo, ...cams].sort((a, b) =>
     (severityOrder[a.severity] || 3) - (severityOrder[b.severity] || 3)
   );
 
   // Normalize: add icon + message fields for frontend compatibility
-  const TYPE_ICONS = { fire:"🔥", wind:"🌬️", storm:"⛈", rain:"🌧️", heat:"🌡️", coastal:"🌊", flood:"💧", fog:"🌫️", snow:"❄️", road_closure:"⚠️", ferry_cancelled:"⛴️", ferry_disruption:"⛴️", bura_closure:"🌬️", traffic_jam:"🚗", roadworks:"🔧", weather:"⛈", bathing_water:"🏊", dhmz_warning:"☁️" };
+  const TYPE_ICONS = { fire:"🔥", wind:"🌬️", storm:"⛈", rain:"🌧️", heat:"🌡️", coastal:"🌊", flood:"💧", fog:"🌫️", snow:"❄️", road_closure:"⚠️", ferry_cancelled:"⛴️", ferry_disruption:"⛴️", bura_closure:"🌬️", traffic_jam:"🚗", roadworks:"🔧", weather:"⛈", bathing_water:"🏊", dhmz_warning:"☁️", air_quality:"😷" };
   const normalized = all.slice(0, 20).map(a => ({
     ...a,
     icon: TYPE_ICONS[a.type] || "⚠️",
@@ -625,6 +727,8 @@ async function aggregateAlerts() {
     dhmz: dhmz.length,
     bathingWater: bathingWater.length,
     copernicus: copernicus.length,
+    krilo: krilo.length,
+    cams: cams.length,
     total: normalized.length,
     alerts: normalized,
     updated: new Date().toISOString(),
