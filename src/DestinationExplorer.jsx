@@ -472,7 +472,7 @@ export default function DestinationExplorer() {
         if (!rData) return null;
         const curDest = rData.destinations.find(d => d.id === activeDestId) || rData.destinations[0];
         const affiliates = CITY_AFFILIATES[activeDestId] || CITY_AFFILIATES[rData.liveCity] || [];
-        const gygDeals = CITY_GYG[activeDestId] || CITY_GYG[rData.liveCity] || [];
+        const gygDeals = [];
         // Build deals: affiliates first, then GYG, then AI placeholder
         return (
         <div onClick={() => setActiveRegion(null)} style={{ position:"fixed", inset:0, zIndex:500, background:"rgba(3,8,16,0.88)", backdropFilter:"blur(14px)", WebkitBackdropFilter:"blur(14px)", display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
