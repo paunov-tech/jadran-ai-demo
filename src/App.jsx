@@ -612,7 +612,7 @@ export default function JadranUnified() {
   // ─── PUSH NOTIFICATIONS: register SW subscription on first load ───
   useEffect(() => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
-    const VAPID_PUBLIC = "BGjw0W1rv8Mr69DVizpHWpki-rbrHo9kSWOSF_cZjHwoy8yMcI3rMA2J_TbmOEm1xswDGHkRlQ-IZh1nANK5Ujc";
+    const VAPID_PUBLIC = "BJ2JAE5jwAipfCJU4x6sgWPYnDZAIFcg-_1XJU4F5-qUdCo1eHKSe8wsC56WZELnHUWAp-eNA4hcWs1YeLcKjXE";
     const stored = localStorage.getItem("jadran_push_deviceId");
     const deviceId = stored || `dev_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     if (!stored) localStorage.setItem("jadran_push_deviceId", deviceId);
