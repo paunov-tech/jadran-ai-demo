@@ -364,7 +364,7 @@ export default function LandingPage() {
           <source src="https://videos.pexels.com/video-files/1093662/1093662-sd_640_360_30fps.mp4" type="video/mp4" />
         </video>
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,14,23,0.6) 0%, rgba(10,14,23,0.3) 40%, rgba(10,14,23,0.95) 100%)" }} />
-        <div style={{ position: "relative", maxWidth: 680, margin: "0 auto", padding: selectedMode ? "100px 24px 100px" : "100px 24px 60px", textAlign: "center", opacity: anim ? 1 : 0, transform: anim ? "translateY(0)" : "translateY(40px)", transition: "all 1s cubic-bezier(0.16, 1, 0.3, 1)" }}>
+        <div style={{ position: "relative", maxWidth: 680, margin: "0 auto", padding: selectedMode ? "70px 24px 70px" : "70px 24px 40px", textAlign: "center", opacity: anim ? 1 : 0, transform: anim ? "translateY(0)" : "translateY(40px)", transition: "all 1s cubic-bezier(0.16, 1, 0.3, 1)" }}>
           <div style={{ display: "inline-block", padding: "5px 14px", borderRadius: 20, background: "rgba(250,204,21,0.1)", border: "1px solid rgba(250,204,21,0.15)", color: "#facc15", fontSize: 11, fontWeight: 600, marginBottom: 20, letterSpacing: 1 }}>{"\u26A1"} {tx("badge")}</div>
           <h1 style={{ fontFamily: F, fontSize: "clamp(28px, 5.5vw, 52px)", fontWeight: 800, lineHeight: 1.15, marginBottom: 18 }}>
             <span style={{ color: "#f87171" }}>{tx("h1a")}<br/>{tx("h1b")}</span><br/>
@@ -496,7 +496,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ PAIN RELIEF ═══ */}
-      <section style={{ background: "#f8fafc", color: "#0f172a", padding: "72px 24px" }}>
+      <section style={{ background: "#f8fafc", color: "#0f172a", padding: "48px 24px" }}>
         <div style={{ maxWidth: 960, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
           {[
             { icon: "\u26D4", t: tx("pain1t"), d: tx("pain1d"), c: "#ef4444" },
@@ -513,9 +513,9 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ LIVE DEMO ═══ */}
-      <section style={{ padding: "72px 24px", background: "linear-gradient(180deg, #0a1628, #0e3a5c)" }}>
+      <section style={{ padding: "48px 24px", background: "linear-gradient(180deg, #0a1628, #0e3a5c)" }}>
         <div style={{ maxWidth: 860, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <div style={{ textAlign: "center", marginBottom: 28 }}>
             <div style={{ fontSize: 9, color: "#0ea5e9", letterSpacing: 5, fontWeight: 600, marginBottom: 8 }}>{tx("demoLabel")}</div>
             <h2 style={{ fontFamily: F, fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 700 }}>{tx("demoTitle")}</h2>
           </div>
@@ -558,14 +558,14 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ DESTINATIONS + AFFILIATE ═══ */}
-      <section style={{ padding: "72px 24px", background: "#0a1628" }}>
+      <section style={{ padding: "48px 24px", background: "#0a1628" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           {/* Destination cards with photos */}
-          <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
             <div style={{ fontSize: 9, color: "#f59e0b", letterSpacing: 5, fontWeight: 600, marginBottom: 8 }}>{tx("destLabel2")}</div>
             <h2 style={{ fontFamily: F, fontSize: "clamp(20px, 3.5vw, 28px)", fontWeight: 700 }}>{tx("destTitle2")}</h2>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14, marginBottom: 48 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14, marginBottom: 32 }}>
             {DESTINATIONS.map((d, i) => (
               <div key={i} style={{ textDecoration: "none", color: "inherit" }}>
                 <a href={`/?kiosk=${d.city.toLowerCase()}&lang=${lang}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
@@ -635,7 +635,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ B2B ═══ */}
-      <section style={{ padding: "72px 24px", background: "linear-gradient(180deg, #0e3a5c, #0a1628)" }}>
+      <section style={{ padding: "48px 24px", background: "linear-gradient(180deg, #0e3a5c, #0a1628)" }}>
         <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
           <h2 style={{ fontFamily: F, fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 700, color: "#facc15", marginBottom: 14 }}>{tx("b2bTitle")}</h2>
           <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 28 }}>{tx("b2bDesc")}</p>
