@@ -376,7 +376,7 @@ export default function DestinationExplorer() {
       </nav>
 
       {/* ═══ HERO ═══ */}
-      <section ref={heroRef} style={{ position:"relative", height:"70dvh", overflow:"hidden", background:"#0a0e17" }}>
+      <section ref={heroRef} style={{ position:"relative", overflow:"hidden", background:"#0a0e17", minHeight:320 }}>
         {/* Pexels Adriatic video — matches transit/pre-trip segment */}
         <video autoPlay muted loop playsInline style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", opacity:0.28 }}
           poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3Crect fill='%230a0e17'/%3E%3C/svg%3E">
@@ -393,7 +393,7 @@ export default function DestinationExplorer() {
         <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:"linear-gradient(90deg, transparent, rgba(14,165,233,0.6), rgba(251,191,36,0.4), rgba(14,165,233,0.6), transparent)", backgroundSize:"200% 100%", animation:"gradShift 8s ease infinite" }} />
 
         {/* Content — centered symmetric */}
-        <div style={{ position:"relative", zIndex:2, height:"100%", display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center", textAlign:"center", padding:"0 24px", maxWidth:720, margin:"0 auto", width:"100%", opacity:visible?1:0, transform:visible?"translateY(0)":"translateY(24px)", transition:"all 1.1s cubic-bezier(0.16,1,0.3,1)" }}>
+        <div style={{ position:"relative", zIndex:2, display:"flex", flexDirection:"column", alignItems:"center", textAlign:"center", padding:"88px 24px 32px", maxWidth:720, margin:"0 auto", width:"100%", opacity:visible?1:0, transform:visible?"translateY(0)":"translateY(24px)", transition:"all 1.1s cubic-bezier(0.16,1,0.3,1)" }}>
 
           {/* Live badge */}
           <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"6px 18px", borderRadius:20, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.18)", marginBottom:14 }}>
