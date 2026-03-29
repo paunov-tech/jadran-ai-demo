@@ -127,6 +127,7 @@ export default function LandingPage() {
   const [cityImgs, setCityImgs] = useState({});
   const [carouselIdx, setCarouselIdx] = useState(0);
   const [showPlanPicker, setShowPlanPicker] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   // Detect GDPR banner presence — offset sticky bar so they don't overlap
   const [gdprVisible, setGdprVisible] = useState(() => { try { return !localStorage.getItem("jadran_consent"); } catch { return false; } });
   useEffect(() => {
@@ -333,28 +334,46 @@ export default function LandingPage() {
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
       {/* NAV */}
-      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, padding: "10px 20px", paddingTop: "max(10px, env(safe-area-inset-top, 10px))", display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(10,22,40,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 9, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", display: "grid", placeItems: "center", fontSize: 14, fontWeight: 800, color: "#fff" }}>J</div>
-          <span style={{ fontFamily: F, fontSize: 16, fontWeight: 700, letterSpacing: 2 }}>JADRAN</span>
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, paddingTop: "max(10px, env(safe-area-inset-top, 10px))", paddingBottom: 10, paddingLeft: 16, paddingRight: 16, display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(10,22,40,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+        {/* Left: hamburger */}
+        <button onClick={() => setMenuOpen(m => !m)} style={{ width: 36, height: 36, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, padding: 0, flexShrink: 0 }} aria-label="Meni">
+          <span style={{ display: "block", width: 18, height: 2, background: menuOpen ? "#0ea5e9" : "#94a3b8", borderRadius: 2, transition: "all 0.2s", transform: menuOpen ? "rotate(45deg) translateY(7px)" : "none" }} />
+          <span style={{ display: "block", width: 18, height: 2, background: menuOpen ? "transparent" : "#94a3b8", borderRadius: 2, transition: "all 0.2s" }} />
+          <span style={{ display: "block", width: 18, height: 2, background: menuOpen ? "#0ea5e9" : "#94a3b8", borderRadius: 2, transition: "all 0.2s", transform: menuOpen ? "rotate(-45deg) translateY(-7px)" : "none" }} />
+        </button>
+
+        {/* Center: JADRAN */}
+        <span style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", fontFamily: F, fontSize: 17, fontWeight: 700, letterSpacing: 3, color: "#f0f4f8", pointerEvents: "none" }}>JADRAN</span>
+
+        {/* Right: lang picker */}
+        <div style={{ position: "relative" }}>
+          <button onClick={() => setLangOpen(!langOpen)} style={{ padding: "4px 8px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, cursor: "pointer", fontSize: 16, lineHeight: 1, display: "flex", alignItems: "center", gap: 4 }}>
+            {curFlag}<span style={{ fontSize: 9, color: "#64748b" }}>▾</span>
+          </button>
+          {langOpen && <>
+            <div onClick={() => setLangOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 998 }} />
+            <div style={{ position: "absolute", top: "110%", right: 0, zIndex: 999, display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 2, padding: 6, background: "rgba(10,22,40,0.95)", backdropFilter: "blur(20px)", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
+              {FLAGS.map(([c,f]) => (
+                <button key={c} onClick={() => { setLang(c); setLangOpen(false); }} style={{ padding: "6px 8px", background: lang === c ? "rgba(14,165,233,0.15)" : "transparent", border: lang === c ? "1px solid rgba(14,165,233,0.3)" : "1px solid transparent", borderRadius: 8, cursor: "pointer", fontSize: 18, lineHeight: 1, transition: "all 0.15s" }}>{f}</button>
+              ))}
+            </div>
+          </>}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <div style={{ position: "relative" }}>
-            <button onClick={() => setLangOpen(!langOpen)} style={{ padding: "4px 8px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, cursor: "pointer", fontSize: 16, lineHeight: 1, display: "flex", alignItems: "center", gap: 4 }}>
-              {curFlag}<span style={{ fontSize: 9, color: "#64748b" }}>▾</span>
-            </button>
-            {langOpen && <>
-              <div onClick={() => setLangOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 998 }} />
-              <div style={{ position: "absolute", top: "110%", right: 0, zIndex: 999, display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 2, padding: 6, background: "rgba(10,22,40,0.95)", backdropFilter: "blur(20px)", borderRadius: 10, border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
-                {FLAGS.map(([c,f]) => (
-                  <button key={c} onClick={() => { setLang(c); setLangOpen(false); }} style={{ padding: "6px 8px", background: lang === c ? "rgba(14,165,233,0.15)" : "transparent", border: lang === c ? "1px solid rgba(14,165,233,0.3)" : "1px solid transparent", borderRadius: 8, cursor: "pointer", fontSize: 18, lineHeight: 1, transition: "all 0.15s" }}>{f}</button>
-                ))}
-              </div>
-            </>}
+
+        {/* Hamburger dropdown */}
+        {menuOpen && <>
+          <div onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 98 }} />
+          <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 12, zIndex: 99, minWidth: 200, background: "rgba(10,22,40,0.97)", backdropFilter: "blur(24px)", borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", boxShadow: "0 12px 40px rgba(0,0,0,0.5)", overflow: "hidden" }}>
+            <a href="https://vi.me/qku0x" target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", color: "#22c55e", fontSize: 14, fontWeight: 600, textDecoration: "none", borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.15s" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2z"/><path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/></svg>
+              Aktivnosti
+            </a>
+            <a href="/host" onClick={() => setMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", color: "#94a3b8", fontSize: 14, textDecoration: "none", transition: "background 0.15s" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Host / Partner
+            </a>
           </div>
-          <a href="https://vi.me/qku0x" target="_blank" rel="noopener noreferrer" style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(34,197,94,0.2)", color: "#22c55e", fontSize: 11, textDecoration: "none", fontWeight: 600 }}>🎟️ Aktivnosti</a>
-          <a href="/host" style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.06)", color: "#64748b", fontSize: 11, textDecoration: "none" }}>Host</a>
-        </div>
+        </>}
       </nav>
 
       {/* ═══ HERO ═══ */}
