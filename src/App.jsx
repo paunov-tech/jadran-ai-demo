@@ -262,33 +262,27 @@ const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C, extraCa
 /* ══════════════════════════════════════════════════════════
 
 
-/* ─── ALERT TICKER — module-level, isolated re-renders ─── */
+/* ─── ALERT TICKER — pure CSS scroll, no JS state during animation ─── */
 const AlertTicker = React.memo(function AlertTicker({ items }) {
-  const [idx, setIdx] = React.useState(0);
-  React.useEffect(() => {
-    setIdx(0); // reset when items change
-    if (items.length <= 1) return;
-    const id = setInterval(() => setIdx(i => (i + 1) % items.length), 5000);
-    return () => clearInterval(id);
-  }, [items.length]);
   if (!items.length) return null;
-  const item = items[Math.min(idx, items.length - 1)];
-  const isCrit = item.sev === "critical";
+  const isCritical = items.some(i => i.sev === "critical");
+  const borderColor = isCritical ? "rgba(239,68,66,0.3)" : "rgba(245,158,11,0.25)";
+  const bgColor     = isCritical ? "rgba(239,68,66,0.06)" : "rgba(245,158,11,0.05)";
+  const dotColor    = isCritical ? "#ef4444" : "#f59e0b";
+  const full = items.map(i => `${i.icon}  ${i.text}`).join("     ·     ");
+  const duration = Math.max(18, full.length * 0.13);
   return (
-    <div style={{ display:"flex", alignItems:"center", gap:8, padding:"7px 12px", borderRadius:10,
-      background: isCrit ? "rgba(239,68,68,0.08)" : "rgba(245,158,11,0.07)",
-      border: `1px solid ${isCrit ? "rgba(239,68,68,0.22)" : "rgba(245,158,11,0.2)"}`,
-      marginBottom:10, minHeight:34, overflow:"hidden" }}>
-      <span style={{ fontSize:13, flexShrink:0, lineHeight:1 }}>{item.icon}</span>
-      <span key={idx} style={{ flex:1, fontSize:12, color:"#cbd5e1", fontFamily:"'Outfit',sans-serif",
-        overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
-        animation:"tickerFade 0.35s ease" }}>
-        {item.text}
-      </span>
-      {items.length > 1 && <span style={{ fontSize:9, color:"rgba(255,255,255,0.18)", flexShrink:0, fontFamily:"'Outfit',sans-serif" }}>{idx+1}/{items.length}</span>}
-      {item.dismiss && (
-        <button onClick={item.dismiss} style={{ background:"none", border:"none", color:"rgba(255,255,255,0.22)", fontSize:16, cursor:"pointer", padding:"4px", flexShrink:0, lineHeight:1, minWidth:28, minHeight:28, display:"grid", placeItems:"center" }}>×</button>
-      )}
+    <div style={{ marginBottom:12, borderRadius:10, background:bgColor, border:`1px solid ${borderColor}`,
+      overflow:"hidden", contain:"layout paint", display:"flex", alignItems:"center", height:40 }}>
+      <div style={{ flexShrink:0, width:32, display:"flex", alignItems:"center", justifyContent:"center" }}>
+        <div style={{ width:6, height:6, borderRadius:"50%", background:dotColor, animation:"pulse 2s infinite" }} />
+      </div>
+      <div style={{ flex:1, overflow:"hidden", height:"100%", display:"flex", alignItems:"center" }}>
+        <div style={{ display:"flex", whiteSpace:"nowrap", animation:`ticker ${duration}s linear infinite`, willChange:"transform" }}>
+          <span style={{ paddingRight:80, fontSize:13, color:"#e2e8f0", fontFamily:"'Outfit',sans-serif" }}>{full}</span>
+          <span style={{ paddingRight:80, fontSize:13, color:"#e2e8f0", fontFamily:"'Outfit',sans-serif" }}>{full}</span>
+        </div>
+      </div>
     </div>
   );
 });

@@ -113,6 +113,7 @@ export const GLOBAL_CSS = `
   @keyframes shimmer   { 0% { background-position:-200% 0; } 100% { background-position:200% 0; } }
   @keyframes gradShift { 0% { background-position:0% 50%; } 50% { background-position:100% 50%; } 100% { background-position:0% 50%; } }
   @keyframes waveMov   { 0% { transform:translateX(0); } 100% { transform:translateX(-50%); } }
+  @keyframes ticker    { from { transform:translateX(0); } to { transform:translateX(-50%); } }
   @keyframes spinSlow  { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
   @keyframes float     { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
   @keyframes pulseGlow { 0%,100% { box-shadow:0 0 18px rgba(14,165,233,0.12); } 50% { box-shadow:0 0 36px rgba(14,165,233,0.28); } }
