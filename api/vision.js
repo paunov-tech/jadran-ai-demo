@@ -44,9 +44,26 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // Tier-aware vision limit (Gemini is expensive)
-  const { deviceId, plan } = req.body || {};
-  if (!visionTierOk(deviceId, plan || "free")) {
+  // Tier-aware vision limit — verify plan against Firestore, never trust frontend claim
+  const { deviceId, plan: planClaim } = req.body || {};
+  let verifiedPlan = "free";
+  if (deviceId && planClaim && planClaim !== "free") {
+    const FB_KEY = process.env.FIREBASE_API_KEY;
+    if (FB_KEY) {
+      try {
+        const r = await fetch(`https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_premium/${deviceId}?key=${FB_KEY}`);
+        if (r.ok) {
+          const d = await r.json();
+          if (d.fields?.plan?.stringValue) {
+            const expiresAt = d.fields?.expiresAt?.timestampValue || d.fields?.expiresAt?.stringValue;
+            const notExpired = !expiresAt || new Date(expiresAt) > new Date();
+            if (notExpired) verifiedPlan = d.fields.plan.stringValue;
+          }
+        }
+      } catch (_) { /* Firestore unavailable — stay free (fail-closed) */ }
+    }
+  }
+  if (!visionTierOk(deviceId, verifiedPlan)) {
     return res.status(429).json({ text: "Jadran Lens daily limit reached. Vision uses are limited to protect service quality." });
   }
 

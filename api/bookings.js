@@ -3,10 +3,10 @@
 
 const FB_PROJECT  = "molty-portal";
 const FB_KEY      = process.env.FIREBASE_API_KEY;
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "jadran-admin-2026";
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN; // No default — fail-closed if not configured
 
 const CORS = {
-  "Access-Control-Allow-Origin":  "*",
+  "Access-Control-Allow-Origin":  "https://jadran.ai",
   "Access-Control-Allow-Methods": "GET,OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type,x-admin-token",
 };
@@ -16,8 +16,9 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
 
+  if (!ADMIN_TOKEN) return res.status(503).json({ error: "Admin not configured" });
   const adminTok = req.headers["x-admin-token"];
-  if (adminTok !== ADMIN_TOKEN) return res.status(401).json({ error: "Unauthorized" });
+  if (!adminTok || adminTok !== ADMIN_TOKEN) return res.status(401).json({ error: "Unauthorized" });
 
   if (!FB_KEY) return res.status(200).json({ bookings: [] });
 

@@ -2,10 +2,21 @@
 // POST /api/viator-search  { destination, tags, count }
 // Returns { activities: [...] }
 
-const VIATOR_KEY = "D4EE562C-12E3-4512-A435-F14425A76E31";
+const VIATOR_KEY = process.env.VIATOR_API_KEY; // ROTATED: was hardcoded — move to Vercel env var
 const CORS_ORIGINS = ["https://jadran.ai", "https://monte-negro.ai"];
 const CACHE = new Map(); // key → { data, ts }
 const CACHE_TTL = 3600000; // 1h
+
+// Rate limit: 30 searches/hour per IP
+const _vsRL = new Map();
+function vsRateOk(ip) {
+  const now = Date.now(), WIN = 3600000;
+  for (const [k, v] of _vsRL) { if (now > v.r) _vsRL.delete(k); }
+  const e = _vsRL.get(ip);
+  if (!e || now > e.r) { _vsRL.set(ip, { c: 1, r: now + WIN }); return true; }
+  if (e.c >= 30) return false;
+  e.c++; return true;
+}
 
 const FALLBACK_ACTIVITIES = [
   {
@@ -76,6 +87,11 @@ export default async function handler(req, res) {
 
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+
+  const clientIp = (req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || "unknown").split(",")[0].trim();
+  if (!vsRateOk(clientIp)) return res.status(429).json({ activities: FALLBACK_ACTIVITIES, source: "fallback" });
+
+  if (!VIATOR_KEY) return res.status(200).json({ activities: FALLBACK_ACTIVITIES, source: "fallback" });
 
   const { destination = "Podstrana", tags, count = 10 } = req.body || {};
   const cacheKey = `${destination}_${JSON.stringify(tags)}_${count}`;

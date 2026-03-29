@@ -7,6 +7,17 @@ const RESEND_API = "https://api.resend.com/emails";
 const FROM = "JADRAN AI <noreply@jadran.ai>";
 const NOTIFY_EMAIL = "info@sialconsulting.com"; // fallback / always CC
 
+// Rate limit: 10 notifications/hour per IP (prevents Resend quota drain)
+const _notifyRL = new Map();
+function notifyRateOk(ip) {
+  const now = Date.now(), WIN = 3600000;
+  for (const [k, v] of _notifyRL) { if (now > v.r) _notifyRL.delete(k); }
+  const e = _notifyRL.get(ip);
+  if (!e || now > e.r) { _notifyRL.set(ip, { c: 1, r: now + WIN }); return true; }
+  if (e.c >= 10) return false;
+  e.c++; return true;
+}
+
 async function getHostEmail(roomCode) {
   if (!roomCode || !process.env.FIREBASE_API_KEY) return null;
   try {
@@ -47,6 +58,9 @@ export default async function handler(req, res) {
 
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+
+  const clientIp = (req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || "unknown").split(",")[0].trim();
+  if (!notifyRateOk(clientIp)) return res.status(429).json({ error: "Too many requests" });
 
   const { type, guestName, roomCode, dates } = req.body || {};
   if (!guestName || !roomCode) return res.status(400).json({ error: "guestName and roomCode required" });

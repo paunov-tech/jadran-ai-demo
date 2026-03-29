@@ -1,15 +1,6 @@
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', 'https://jadran.ai');
   res.setHeader('Cache-Control', 'no-store');
-
-  return res.status(200).json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    services: {
-      anthropic: !!process.env.ANTHROPIC_API_KEY,
-      gemini: !!process.env.GEMINI_API_KEY,
-      stripe: !!process.env.STRIPE_SECRET_KEY,
-      firebase: !!process.env.FIREBASE_API_KEY,
-    },
-  });
+  // Return minimal health info — don't leak which services are configured
+  return res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 }

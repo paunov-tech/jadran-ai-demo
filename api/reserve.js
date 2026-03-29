@@ -6,9 +6,20 @@
 import { randomBytes, createHmac } from "crypto";
 
 const RESEND_KEY     = process.env.RESEND_API_KEY;
-const CONFIRM_SECRET = process.env.CONFIRM_SECRET || "jadran2026demo";
+const CONFIRM_SECRET = process.env.CONFIRM_SECRET; // No default — fail-closed
 const BASE_URL       = "https://jadran.ai";
 const OPERATOR_EMAIL = "admin@jadran.ai";
+
+// Rate limit: 5 booking requests/hour per IP (prevents email spam flooding)
+const _resRL = new Map();
+function resRateOk(ip) {
+  const now = Date.now(), WIN = 3600000;
+  for (const [k, v] of _resRL) { if (now > v.r) _resRL.delete(k); }
+  const e = _resRL.get(ip);
+  if (!e || now > e.r) { _resRL.set(ip, { c: 1, r: now + WIN }); return true; }
+  if (e.c >= 5) return false;
+  e.c++; return true;
+}
 
 function genConfirmToken(id, role) {
   return createHmac("sha256", CONFIRM_SECRET)
@@ -137,7 +148,7 @@ const FB_PROJECT = "molty-portal";
 const FB_KEY     = process.env.FIREBASE_API_KEY;
 
 const CORS = {
-  "Access-Control-Allow-Origin":  "*",
+  "Access-Control-Allow-Origin":  "https://jadran.ai",
   "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
@@ -190,6 +201,8 @@ export default async function handler(req, res) {
   Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
   if (req.method === "OPTIONS") return res.status(200).end();
 
+  const clientIp = (req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || "unknown").split(",")[0].trim();
+
   // ── GET /api/reserve?id=JAD-... ──
   if (req.method === "GET") {
     const { id } = req.query;
@@ -201,6 +214,8 @@ export default async function handler(req, res) {
 
   // ── POST /api/reserve ──
   if (req.method === "POST") {
+    if (!resRateOk(clientIp)) return res.status(429).json({ error: "Too many requests. Try again later." });
+    if (!CONFIRM_SECRET) return res.status(503).json({ error: "Booking service not configured" });
     const {
       destination, destinationName,
       accommodation,

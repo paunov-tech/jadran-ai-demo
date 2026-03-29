@@ -28,6 +28,13 @@ export default async function handler(req, res) {
     const { activityName, price, quantity, roomCode, guestName, lang } = req.body;
     const origin = req.headers.origin || "https://jadran-ai-demo.vercel.app";
 
+    // Validate price: must be between €1.00 and €9,999.00
+    const priceNum = Number(price);
+    if (!priceNum || priceNum < 1 || priceNum > 9999) {
+      return res.status(400).json({ error: "Invalid price" });
+    }
+    const qty = Math.max(1, Math.min(100, Math.round(Number(quantity) || 1)));
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [{
@@ -37,9 +44,9 @@ export default async function handler(req, res) {
             name: activityName || "JADRAN AI Activity",
             description: `Booking via JADRAN AI Concierge · ${guestName || "Guest"}`,
           },
-          unit_amount: Math.round((price || 0) * 100),
+          unit_amount: Math.round(priceNum * 100),
         },
-        quantity: quantity || 1,
+        quantity: qty,
       }],
       mode: "payment",
       success_url: `${origin}?booking=success&activity=${encodeURIComponent(activityName || "")}&session_id={CHECKOUT_SESSION_ID}`,
@@ -49,6 +56,7 @@ export default async function handler(req, res) {
         guestName: guestName || "Guest",
         activityName: activityName || "Unknown",
         product: "jadran_ai_booking",
+        quantity: String(qty),
       },
       billing_address_collection: "auto",
     });

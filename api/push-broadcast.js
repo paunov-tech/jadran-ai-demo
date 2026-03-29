@@ -8,6 +8,16 @@ import webpush from "web-push";
 const PROJECT_ID = "molty-portal";
 const BATCH_SIZE = 50; // parallel sends per batch (avoid Vercel 10s timeout)
 
+// Global rate limit: max 20 broadcasts/hour to prevent notification spam
+let _broadcastCount = 0, _broadcastReset = 0;
+function broadcastRateOk() {
+  const now = Date.now();
+  if (now > _broadcastReset) { _broadcastCount = 1; _broadcastReset = now + 3600000; return true; }
+  if (_broadcastCount >= 20) return false;
+  _broadcastCount++;
+  return true;
+}
+
 function configureVapid() {
   const pub = process.env.VAPID_PUBLIC_KEY;
   const priv = process.env.VAPID_PRIVATE_KEY;
@@ -56,10 +66,13 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
-  // Auth — require secret unless not configured (dev mode)
+  // Auth — require secret (fail-closed if not configured)
   const secret = process.env.PUSH_SECRET;
-  const provided = req.headers["x-push-secret"] || req.body?.secret;
-  if (secret && provided !== secret) return res.status(401).json({ error: "Unauthorized" });
+  if (!secret) return res.status(503).json({ error: "Push not configured" });
+  const provided = req.headers["x-push-secret"]; // header only — don't accept in body
+  if (provided !== secret) return res.status(401).json({ error: "Unauthorized" });
+
+  if (!broadcastRateOk()) return res.status(429).json({ error: "Broadcast rate limit exceeded" });
 
   const { title, body, url: notifUrl, tag, icon, requireInteraction } = req.body || {};
   if (!title || !body) return res.status(400).json({ error: "title and body required" });

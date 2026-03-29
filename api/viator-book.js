@@ -42,8 +42,13 @@ export default async function handler(req, res) {
   const { productCode, title, price, date, persons = 1, roomCode, guestName, lang } = req.body || {};
   if (!productCode || !title || !price) return res.status(400).json({ error: "productCode, title, price required" });
 
-  const pricePerPerson = Math.round(Number(price) * MARKUP * 100); // cents, with markup
-  const quantity = Math.max(1, Math.round(Number(persons)));
+  // Validate price: must be between €1.00 and €9,999.00 per person
+  const priceNum = Number(price);
+  if (!priceNum || priceNum < 1 || priceNum > 9999) {
+    return res.status(400).json({ error: "Invalid price" });
+  }
+  const pricePerPerson = Math.round(priceNum * MARKUP * 100); // cents, with markup
+  const quantity = Math.max(1, Math.min(50, Math.round(Number(persons))));
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const reqOrigin = req.headers.origin || "https://jadran.ai";
 

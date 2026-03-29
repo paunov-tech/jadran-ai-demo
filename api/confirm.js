@@ -8,8 +8,8 @@ import { createHmac } from "crypto";
 
 const FB_PROJECT  = "molty-portal";
 const FB_KEY      = process.env.FIREBASE_API_KEY;
-const CONFIRM_SECRET = process.env.CONFIRM_SECRET || "jadran2026demo";
-const ADMIN_TOKEN    = process.env.ADMIN_TOKEN    || "jadran-admin-2026";
+const CONFIRM_SECRET = process.env.CONFIRM_SECRET; // No default — fail-closed
+const ADMIN_TOKEN    = process.env.ADMIN_TOKEN;    // No default — fail-closed
 const BASE_URL       = "https://jadran.ai";
 
 async function sendGuestEmail(to, subject, html) {
@@ -170,8 +170,9 @@ export default async function handler(req, res) {
 
   // ── POST — admin confirms from panel ──
   if (req.method === "POST") {
+    if (!ADMIN_TOKEN) return res.status(503).json({ error: "Admin not configured" });
     const adminTok = req.headers["x-admin-token"];
-    if (adminTok !== ADMIN_TOKEN) return res.status(401).json({ error: "Unauthorized" });
+    if (!adminTok || adminTok !== ADMIN_TOKEN) return res.status(401).json({ error: "Unauthorized" });
 
     const { id, role } = req.body || {};
     if (!id || !["partner", "operator"].includes(role)) {
@@ -206,6 +207,10 @@ export default async function handler(req, res) {
 
   // ── GET — email link confirm ──
   if (req.method === "GET") {
+    if (!CONFIRM_SECRET) {
+      res.setHeader("Content-Type", "text/html");
+      return res.status(503).send(htmlPage("Service Error", `<h1>Service not configured</h1>`));
+    }
     const { id, token, role } = req.query;
 
     if (!id || !token || !["partner", "operator"].includes(role)) {
