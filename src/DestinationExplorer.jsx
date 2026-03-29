@@ -393,7 +393,7 @@ export default function DestinationExplorer() {
         <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:"linear-gradient(90deg, transparent, rgba(14,165,233,0.6), rgba(251,191,36,0.4), rgba(14,165,233,0.6), transparent)", backgroundSize:"200% 100%", animation:"gradShift 8s ease infinite" }} />
 
         {/* Content — centered symmetric */}
-        <div style={{ position:"relative", zIndex:2, display:"flex", flexDirection:"column", alignItems:"center", textAlign:"center", padding:"120px 24px 32px", maxWidth:720, margin:"0 auto", width:"100%", opacity:visible?1:0, transform:visible?"translateY(0)":"translateY(24px)", transition:"all 1.1s cubic-bezier(0.16,1,0.3,1)" }}>
+        <div style={{ position:"relative", zIndex:2, display:"flex", flexDirection:"column", alignItems:"center", textAlign:"center", padding:"136px 24px 32px", maxWidth:720, margin:"0 auto", width:"100%", opacity:visible?1:0, transform:visible?"translateY(0)":"translateY(24px)", transition:"all 1.1s cubic-bezier(0.16,1,0.3,1)" }}>
 
           {/* Live badge */}
           <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"6px 18px", borderRadius:20, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.18)", marginBottom:14 }}>
