@@ -118,7 +118,7 @@ const CITY_AFFILIATES = {
 const CITY_GYG = {
   rab:      [{ title:{hr:"Tura brodom — Rab",de:"Bootstour — Rab",en:"Boat tour — Rab",it:"Tour in barca — Rab"}, price:"45€", img:"https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=400&q=75", link:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=boat+tour" }],
   split:    [
-    { gygId:"t390071", title:{hr:"Blue Cave, Hvar & 5 otoka",de:"Blaue Grotte, Hvar & 5 Inseln",en:"Blue Cave, Hvar & 5 islands",it:"Grotta Azzurra, Hvar & 5 isole"}, price:"145€", rating:"4.6", reviews:"6325", link:"https://www.getyourguide.com/activity/-t390071?partner_id=9OEGOYI" },
+    { gygId:"t326676", title:{hr:"Blue Cave, Hvar & 5 otoka",de:"Blaue Grotte, Hvar & 5 Inseln",en:"Blue Cave, Hvar & 5 islands",it:"Grotta Azzurra, Hvar & 5 isole"}, price:"145€", rating:"4.6", reviews:"6325", link:"https://www.getyourguide.com/activity/-t326676?partner_id=9OEGOYI" },
   ],
   dubrovnik:[
     { gygId:"t217212", title:{hr:"Game of Thrones tura + Lokrum",de:"Game of Thrones Tour + Lokrum",en:"Game of Thrones Tour + Lokrum",it:"Tour Game of Thrones + Lokrum"}, price:"20€", rating:"4.9", reviews:"4307", link:"https://www.getyourguide.com/activity/-t217212?partner_id=9OEGOYI" },
