@@ -113,22 +113,24 @@ const CITY_AFFILIATES = {
 };
 
 // ─── GYG DEALS PER CITY ───
+// gygId: renders official GYG widget with real activity image/price/rating
+// img: fallback for cities without a specific GYG activity widget
 const CITY_GYG = {
-  rab:      [{ title:{hr:"Tura brodom — Rab",de:"Bootstour — Rab",en:"Boat tour — Rab",it:"Tour in barca — Rab"}, price:"45€", img:"https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=400&q=75", link:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=boat+tour" }],
+  rab:      [{ title:{hr:"Tura brodom — Rab",de:"Bootstour — Rab",en:"Boat tour — Rab",it:"Tour in barca — Rab"}, price:"45€", img:"https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=400&q=75", link:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=boat+tour" }],
   split:    [
-    { title:{hr:"Blue Cave, Hvar & 5 otoka",de:"Blaue Grotte, Hvar & 5 Inseln",en:"Blue Cave, Hvar & 5 islands",it:"Grotta Azzurra, Hvar & 5 isole"}, price:"145€", rating:"4.6", reviews:"6325", img:"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=75", link:"https://www.getyourguide.com/activity/-t390071?partner_id=9OEGOYI" },
+    { gygId:"t390071", title:{hr:"Blue Cave, Hvar & 5 otoka",de:"Blaue Grotte, Hvar & 5 Inseln",en:"Blue Cave, Hvar & 5 islands",it:"Grotta Azzurra, Hvar & 5 isole"}, price:"145€", rating:"4.6", reviews:"6325", link:"https://www.getyourguide.com/activity/-t390071?partner_id=9OEGOYI" },
   ],
   dubrovnik:[
-    { title:{hr:"Game of Thrones tura + Lokrum",de:"Game of Thrones Tour + Lokrum",en:"Game of Thrones Tour + Lokrum",it:"Tour Game of Thrones + Lokrum"}, price:"20€", rating:"4.9", reviews:"4307", img:"https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=400&q=75", link:"https://www.getyourguide.com/activity/-t217212?partner_id=9OEGOYI" },
-    { title:{hr:"Crna Gora — Perast & Kotor brodom",de:"Montenegro — Perast & Kotor Bootstour",en:"Montenegro — Perast & Kotor boat tour",it:"Montenegro — Perast & Kotor in barca"}, price:"58€", rating:"4.6", reviews:"4127", img:"https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=400&q=75", link:"https://www.getyourguide.com/activity/-t131646?partner_id=9OEGOYI" },
+    { gygId:"t217212", title:{hr:"Game of Thrones tura + Lokrum",de:"Game of Thrones Tour + Lokrum",en:"Game of Thrones Tour + Lokrum",it:"Tour Game of Thrones + Lokrum"}, price:"20€", rating:"4.9", reviews:"4307", link:"https://www.getyourguide.com/activity/-t217212?partner_id=9OEGOYI" },
+    { gygId:"t131646", title:{hr:"Crna Gora — Perast & Kotor brodom",de:"Montenegro — Perast & Kotor Bootstour",en:"Montenegro — Perast & Kotor boat tour",it:"Montenegro — Perast & Kotor in barca"}, price:"58€", rating:"4.6", reviews:"4127", link:"https://www.getyourguide.com/activity/-t131646?partner_id=9OEGOYI" },
     { title:{hr:"Kajak — zidine Dubrovnika",de:"Kajak — Dubrovnik Mauern",en:"Kayak — Dubrovnik walls",it:"Kayak — mura Dubrovnik"}, price:"40€", img:"https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=400&q=75", link:"https://www.getyourguide.com/dubrovnik-l213/?partner_id=9OEGOYI&q=kayak" },
   ],
   zagreb:   [
-    { title:{hr:"Plitvice & Rastoke s ulazninom",de:"Plitvicer Seen & Rastoke mit Ticket",en:"Plitvice & Rastoke with ticket",it:"Plitvice & Rastoke con biglietto"}, price:"99€", rating:"4.9", reviews:"3015", img:"https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=400&q=75", link:"https://www.getyourguide.com/activity/-t406236?partner_id=9OEGOYI" },
+    { gygId:"t406236", title:{hr:"Plitvice & Rastoke s ulazninom",de:"Plitvicer Seen & Rastoke mit Ticket",en:"Plitvice & Rastoke with ticket",it:"Plitvice & Rastoke con biglietto"}, price:"99€", rating:"4.9", reviews:"3015", link:"https://www.getyourguide.com/activity/-t406236?partner_id=9OEGOYI" },
   ],
   rovinj:   [{ title:{hr:"Lov na tartufe — Motovun",de:"Trüffeljagd — Motovun",en:"Truffle hunting — Motovun",it:"Caccia al tartufo"}, price:"45€", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=75", link:"https://www.getyourguide.com/istria-county-l1297/?partner_id=9OEGOYI&q=truffle" }],
   motovun:  [{ title:{hr:"Lov na tartufe — Motovun",de:"Trüffeljagd — Motovun",en:"Truffle hunting — Motovun",it:"Caccia al tartufo"}, price:"45€", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=75", link:"https://www.getyourguide.com/istria-county-l1297/?partner_id=9OEGOYI&q=truffle" }],
-  hvar:     [{ title:{hr:"Tura brodom — Hvar & Blue Lagoon",de:"Bootstour — Hvar & Blaue Lagune",en:"Boat tour — Hvar & Blue Lagoon",it:"Tour in barca — Hvar"}, price:"65€", img:"https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=400&q=75", link:"https://www.getyourguide.com/hvar-l4149/?partner_id=9OEGOYI&q=boat+tour" }],
+  hvar:     [{ title:{hr:"Tura brodom — Hvar & Blue Lagoon",de:"Bootstour — Hvar & Blaue Lagune",en:"Boat tour — Hvar & Blue Lagoon",it:"Tour in barca — Hvar"}, price:"65€", img:"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=75", link:"https://www.getyourguide.com/hvar-l4149/?partner_id=9OEGOYI&q=boat+tour" }],
   makarska: [{ title:{hr:"Izlet na Biokovo",de:"Ausflug auf Biokovo",en:"Biokovo excursion",it:"Escursione Biokovo"}, price:"35€", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=75", link:"https://www.getyourguide.com/makarska-l4150/?partner_id=9OEGOYI&q=biokovo" }],
   zadar:    [{ title:{hr:"Krka & Šibenik vodopadi",de:"Krka & Šibenik Wasserfälle",en:"Krka & Šibenik waterfalls",it:"Cascate Krka & Šibenik"}, price:"55€", img:"https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=400&q=75", link:"https://www.getyourguide.com/zadar-l4157/?partner_id=9OEGOYI&q=krka" }],
   pula:     [{ title:{hr:"Tura rimske arene — Pula",de:"Führung Röm. Arena — Pula",en:"Roman Arena tour — Pula",it:"Tour Arena Romana — Pola"}, price:"20€", img:"https://images.unsplash.com/photo-1590523277543-a94d2e4eb00b?w=400&q=75", link:"https://www.getyourguide.com/pula-l4161/?partner_id=9OEGOYI&q=arena" }],
@@ -244,6 +246,16 @@ export default function DestinationExplorer() {
 
   useEffect(() => { setTimeout(() => setVisible(true), 100); }, []);
   useEffect(() => { try { localStorage.setItem("jadran_lang",lang); } catch {} }, [lang]);
+  // ─ GYG widget script loader ─
+  useEffect(() => {
+    if (document.querySelector('script[data-gyg-partner-id="9OEGOYI"]')) return;
+    const s = document.createElement("script");
+    s.src = "https://widget.getyourguide.com/dist/pa.umd.production.min.js";
+    s.async = true;
+    s.defer = true;
+    s.setAttribute("data-gyg-partner-id", "9OEGOYI");
+    document.head.appendChild(s);
+  }, []);
   useEffect(() => {
     const id = setInterval(() => setHeroIdx(i => (i + 1) % HERO_DESTS.length), 4500);
     return () => clearInterval(id);
@@ -570,7 +582,13 @@ export default function DestinationExplorer() {
                 <div style={{ marginBottom:20 }}>
                   <div style={{ fontSize:9, color:"#22c55e", letterSpacing:3, fontWeight:700, marginBottom:10 }}>GETYOURGUIDE</div>
                   <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:4, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
-                    {gygDeals.map((o, i) => (
+                    {gygDeals.map((o, i) => o.gygId ? (
+                      /* GYG official widget — loads real activity image, price & rating */
+                      <div key={i} style={{ minWidth:200, flexShrink:0, scrollSnapAlign:"start", borderRadius:14, overflow:"hidden", border:"1px solid rgba(34,197,94,0.15)" }}>
+                        <div data-gyg-widget="auto" data-gyg-partner-id="9OEGOYI" data-gyg-cmp={o.gygId} />
+                      </div>
+                    ) : (
+                      /* Static card fallback for activities without a specific widget ID */
                       <a key={i} href={o.link} target="_blank" rel="noopener noreferrer"
                         style={{ minWidth:180, height:140, borderRadius:14, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", textDecoration:"none", color:"#fff", border:"1px solid rgba(34,197,94,0.15)", display:"block" }}>
                         <img src={o.img} alt={t(o.title)} loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
