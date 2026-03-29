@@ -18,7 +18,7 @@ const REGIONS = [
       { id:"rovinj",   name:"Rovinj",   accent:"#fb923c", img:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=75",           tagline:{hr:"Najromantičniji grad",de:"Romantischste Stadt",en:"Most romantic town",it:"Città più romantica"} },
       { id:"pula",     name:"Pula",     accent:"#34d399", img:"https://images.unsplash.com/photo-1592486882552-9c2a022c529b?w=600&q=75",           tagline:{hr:"Rimska arena živi",de:"Die Arena lebt",en:"Roman Arena lives on",it:"L'Arena Romana vive"} },
       { id:"porec",    name:"Poreč",    accent:"#fbbf24", img:"https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=600&q=75", tagline:{hr:"Eufrazijeva bazilika",de:"Euphrasius-Basilika",en:"Euphrasian Basilica",it:"Basilica Eufrasiana"} },
-      { id:"novigrad", name:"Novigrad", accent:"#06b6d4", img:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=75", tagline:{hr:"Ribarska idila",de:"Fischeridyll",en:"Fisherman's idyll",it:"Idillio da pescatore"} },
+      { id:"novigrad", name:"Novigrad", accent:"#06b6d4", img:"https://images.unsplash.com/photo-1596394516093?w=600&q=75", tagline:{hr:"Ribarska idila",de:"Fischeridyll",en:"Fisherman's idyll",it:"Idillio da pescatore"} },
       { id:"motovun",  name:"Motovun",  accent:"#a3e635", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=75", tagline:{hr:"Grad tartufa",de:"Trüffelstadt",en:"Truffle town",it:"Città dei tartufi"} },
       { id:"labin",    name:"Labin",    accent:"#f472b6", img:"https://images.unsplash.com/photo-1475776408506-9a5371e7a068?w=600&q=75", tagline:{hr:"Istarski balkon",de:"Istrianischer Balkon",en:"Istrian balcony",it:"Balcone dell'Istria"} },
     ]
@@ -29,10 +29,10 @@ const REGIONS = [
     destinations:[
       { id:"rab",     name:"Rab",     accent:"#fbbf24", img:"https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=600&q=75",           tagline:{hr:"Otok četiri zvonika",de:"Insel der vier Türme",en:"Island of four bell towers",it:"Isola dei quattro campanili"} },
       { id:"opatija", name:"Opatija", accent:"#06b6d4", img:"https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=75", tagline:{hr:"Elegancija Kvarnera",de:"Eleganz des Kvarners",en:"Kvarner elegance",it:"Eleganza del Quarnero"} },
-      { id:"krk",     name:"Krk",     accent:"#22c55e", img:"https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=600&q=75", tagline:{hr:"Kruna Kvarnera",de:"Krone des Kvarners",en:"Crown of the Kvarner",it:"Corona del Quarnero"} },
-      { id:"cres",    name:"Cres",    accent:"#84cc16", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=75", tagline:{hr:"Divlja priroda",de:"Wilde Natur",en:"Wild nature",it:"Natura selvaggia"} },
-      { id:"losinj",  name:"Lošinj",  accent:"#38bdf8", img:"https://images.unsplash.com/photo-1475776408506-9a5371e7a068?w=600&q=75", tagline:{hr:"Otok vitalnosti",de:"Insel der Vitalität",en:"Island of vitality",it:"Isola della vitalità"} },
-      { id:"rijeka",  name:"Rijeka",  accent:"#c084fc", img:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=75", tagline:{hr:"Luka i kultura",de:"Hafen und Kultur",en:"Port and culture",it:"Porto e cultura"} },
+      { id:"krk",     name:"Krk",     accent:"#22c55e", img:"https://images.unsplash.com/photo-1564594736624?w=600&q=75", tagline:{hr:"Kruna Kvarnera",de:"Krone des Kvarners",en:"Crown of the Kvarner",it:"Corona del Quarnero"} },
+      { id:"cres",    name:"Cres",    accent:"#84cc16", img:"https://images.unsplash.com/photo-1598977054780?w=600&q=75", tagline:{hr:"Divlja priroda",de:"Wilde Natur",en:"Wild nature",it:"Natura selvaggia"} },
+      { id:"losinj",  name:"Lošinj",  accent:"#38bdf8", img:"https://images.unsplash.com/photo-1590073242678?w=600&q=75", tagline:{hr:"Otok vitalnosti",de:"Insel der Vitalität",en:"Island of vitality",it:"Isola della vitalità"} },
+      { id:"rijeka",  name:"Rijeka",  accent:"#c084fc", img:"https://images.unsplash.com/photo-1567359781514?w=600&q=75", tagline:{hr:"Luka i kultura",de:"Hafen und Kultur",en:"Port and culture",it:"Porto e cultura"} },
     ]
   },
   {
@@ -42,9 +42,9 @@ const REGIONS = [
       { id:"dubrovnik", name:"Dubrovnik", accent:"#f97316", img:"https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=600&q=75",  tagline:{hr:"Biser Jadrana",de:"Perle der Adria",en:"Pearl of the Adriatic",it:"Perla dell'Adriatico"} },
       { id:"split",     name:"Split",     accent:"#0ea5e9", img:"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&q=75", tagline:{hr:"Dioklecijanova palača",de:"Diokletianpalast",en:"Diocletian's Palace",it:"Palazzo di Diocleziano"} },
       { id:"zadar",     name:"Zadar",     accent:"#f59e0b", img:"https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=600&q=75", tagline:{hr:"Najljepši zalazak",de:"Schönster Sonnenuntergang",en:"Most beautiful sunset",it:"Tramonto più bello"} },
-      { id:"sibenik",   name:"Šibenik",   accent:"#a78bfa", img:"https://images.unsplash.com/photo-1592486882552-9c2a022c529b?w=600&q=75", tagline:{hr:"UNESCO katedrale",de:"UNESCO-Kathedralen",en:"UNESCO cathedrals",it:"Cattedrali UNESCO"} },
-      { id:"trogir",    name:"Trogir",    accent:"#fb923c", img:"https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=600&q=75", tagline:{hr:"Otok-grad UNESCO",de:"Inselstadt UNESCO",en:"Island-city UNESCO",it:"Città-isola UNESCO"} },
-      { id:"makarska",  name:"Makarska",  accent:"#38bdf8", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=75", tagline:{hr:"Rivijera iz snova",de:"Traumriviera",en:"Dream riviera",it:"Riviera dei sogni"} },
+      { id:"sibenik",   name:"Šibenik",   accent:"#a78bfa", img:"https://images.unsplash.com/photo-1595394395427?w=600&q=75", tagline:{hr:"UNESCO katedrale",de:"UNESCO-Kathedralen",en:"UNESCO cathedrals",it:"Cattedrali UNESCO"} },
+      { id:"trogir",    name:"Trogir",    accent:"#fb923c", img:"https://images.unsplash.com/photo-1593164842264?w=600&q=75", tagline:{hr:"Otok-grad UNESCO",de:"Inselstadt UNESCO",en:"Island-city UNESCO",it:"Città-isola UNESCO"} },
+      { id:"makarska",  name:"Makarska",  accent:"#38bdf8", img:"https://images.unsplash.com/photo-1573599852326?w=600&q=75", tagline:{hr:"Rivijera iz snova",de:"Traumriviera",en:"Dream riviera",it:"Riviera dei sogni"} },
     ]
   },
   {
@@ -52,11 +52,11 @@ const REGIONS = [
     tagline:{ hr:"Lavanda, glamur i čiste plaže", de:"Lavendel, Glamour und saubere Strände", en:"Lavender, glamour and pristine beaches", it:"Lavanda, glamour e spiagge incontaminate" },
     destinations:[
       { id:"rab",     name:"Rab",     accent:"#fbbf24", img:"https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=600&q=75",           tagline:{hr:"Četiri zvonika · čiste plaže",de:"Vier Türme · saubere Strände",en:"Four towers · pristine beaches",it:"Quattro campanili · spiagge incontaminate"} },
-      { id:"hvar",    name:"Hvar",    accent:"#a78bfa", img:"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&q=75",           tagline:{hr:"Lavanda i glamur",de:"Lavendel und Glamour",en:"Lavender and glamour",it:"Lavanda e glamour"} },
-      { id:"brac",    name:"Brač",    accent:"#fbbf24", img:"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&q=75", tagline:{hr:"Zlatni rat i mramor",de:"Goldenes Horn & Marmor",en:"Golden Horn & marble",it:"Corno d'oro e marmo"} },
+      { id:"hvar",    name:"Hvar",    accent:"#a78bfa", img:"https://images.unsplash.com/photo-1586349096874?w=600&q=75",           tagline:{hr:"Lavanda i glamur",de:"Lavendel und Glamour",en:"Lavender and glamour",it:"Lavanda e glamour"} },
+      { id:"brac",    name:"Brač",    accent:"#fbbf24", img:"https://images.unsplash.com/photo-1562602833?w=600&q=75", tagline:{hr:"Zlatni rat i mramor",de:"Goldenes Horn & Marmor",en:"Golden Horn & marble",it:"Corno d'oro e marmo"} },
       { id:"korcula", name:"Korčula", accent:"#22c55e", img:"https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=600&q=75", tagline:{hr:"Rodni grad Marka Pola",de:"Geburtsort Marco Polos",en:"Marco Polo's birthplace",it:"Città natale di Marco Polo"} },
-      { id:"vis",     name:"Vis",     accent:"#38bdf8", img:"https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=600&q=75", tagline:{hr:"Autentični daleki otok",de:"Authentische ferne Insel",en:"Authentic far island",it:"Isola lontana autentica"} },
-      { id:"mljet",   name:"Mljet",   accent:"#34d399", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=75", tagline:{hr:"Nacionalni park · jezera",de:"Nationalpark · Seen",en:"National park · lakes",it:"Parco nazionale · laghi"} },
+      { id:"vis",     name:"Vis",     accent:"#38bdf8", img:"https://images.unsplash.com/photo-1596178065887?w=600&q=75", tagline:{hr:"Autentični daleki otok",de:"Authentische ferne Insel",en:"Authentic far island",it:"Isola lontana autentica"} },
+      { id:"mljet",   name:"Mljet",   accent:"#34d399", img:"https://images.unsplash.com/photo-1570077188670?w=600&q=75", tagline:{hr:"Nacionalni park · jezera",de:"Nationalpark · Seen",en:"National park · lakes",it:"Parco nazionale · laghi"} },
     ]
   },
 ];
@@ -131,7 +131,7 @@ const CITY_GYG = {
   rovinj:   [{ title:{hr:"Lov na tartufe — Motovun",de:"Trüffeljagd — Motovun",en:"Truffle hunting — Motovun",it:"Caccia al tartufo"}, price:"45€", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=75", link:"https://www.getyourguide.com/istria-county-l1297/?partner_id=9OEGOYI&q=truffle" }],
   motovun:  [{ title:{hr:"Lov na tartufe — Motovun",de:"Trüffeljagd — Motovun",en:"Truffle hunting — Motovun",it:"Caccia al tartufo"}, price:"45€", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=75", link:"https://www.getyourguide.com/istria-county-l1297/?partner_id=9OEGOYI&q=truffle" }],
   hvar:     [{ title:{hr:"Tura brodom — Hvar & Blue Lagoon",de:"Bootstour — Hvar & Blaue Lagune",en:"Boat tour — Hvar & Blue Lagoon",it:"Tour in barca — Hvar"}, price:"65€", img:"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=75", link:"https://www.getyourguide.com/hvar-l4149/?partner_id=9OEGOYI&q=boat+tour" }],
-  makarska: [{ title:{hr:"Izlet na Biokovo",de:"Ausflug auf Biokovo",en:"Biokovo excursion",it:"Escursione Biokovo"}, price:"35€", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=75", link:"https://www.getyourguide.com/makarska-l4150/?partner_id=9OEGOYI&q=biokovo" }],
+  makarska: [{ title:{hr:"Izlet na Biokovo",de:"Ausflug auf Biokovo",en:"Biokovo excursion",it:"Escursione Biokovo"}, price:"35€", img:"https://images.unsplash.com/photo-1573599852326?w=400&q=75", link:"https://www.getyourguide.com/makarska-l4150/?partner_id=9OEGOYI&q=biokovo" }],
   zadar:    [{ title:{hr:"Krka & Šibenik vodopadi",de:"Krka & Šibenik Wasserfälle",en:"Krka & Šibenik waterfalls",it:"Cascate Krka & Šibenik"}, price:"55€", img:"https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=400&q=75", link:"https://www.getyourguide.com/zadar-l4157/?partner_id=9OEGOYI&q=krka" }],
   pula:     [{ title:{hr:"Tura rimske arene — Pula",de:"Führung Röm. Arena — Pula",en:"Roman Arena tour — Pula",it:"Tour Arena Romana — Pola"}, price:"20€", img:"https://images.unsplash.com/photo-1592486882552-9c2a022c529b?w=400&q=75", link:"https://www.getyourguide.com/pula-l4161/?partner_id=9OEGOYI&q=arena" }],
   opatija:  [{ title:{hr:"Šetnja Lungomare & SPA",de:"Lungomare-Spaziergang & SPA",en:"Lungomare walk & SPA",it:"Passeggiata Lungomare & SPA"}, price:"30€", img:"https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&q=75", link:"https://www.getyourguide.com/opatija-l4163/?partner_id=9OEGOYI&q=spa" }],
@@ -153,7 +153,7 @@ const HERO_DESTS = [
   { id:"dubrovnik", name:"Dubrovnik", img:"https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=1400&q=85" },
   { id:"rab",       name:"Rab",       img:"https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=1400&q=85" },
   { id:"rovinj",    name:"Rovinj",    img:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1400&q=85" },
-  { id:"hvar",      name:"Hvar",      img:"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1400&q=85" },
+  { id:"hvar",      name:"Hvar",      img:"https://images.unsplash.com/photo-1586349096874?w=1400&q=85" },
   { id:"split",     name:"Split",     img:"https://images.unsplash.com/photo-1592486882552-9c2a022c529b?w=1400&q=85" },
   { id:"zadar",     name:"Zadar",     img:"https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1400&q=85" },
 ];
