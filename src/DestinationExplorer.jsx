@@ -363,9 +363,13 @@ export default function DestinationExplorer() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h2"/><path d="M20 12h2"/><path d="M12 2v2"/><path d="M12 20v2"/><circle cx="12" cy="12" r="4"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M4.93 19.07l1.41-1.41"/><path d="M17.66 6.34l1.41-1.41"/></svg>
               {({hr:"Live",de:"Live",en:"Live",it:"Live",pl:"Live",si:"Živo"})[lang]||"Live"}
             </button>
-            <button onClick={() => { setMenuOpen(false); setActiveTab("lang"); setLangOpen(true); }} style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 18px", color:"#94a3b8", fontSize:14, background:"none", border:"none", cursor:"pointer", width:"100%", fontFamily:B, textAlign:"left" }}>
+            <button onClick={() => { setMenuOpen(false); setActiveTab("lang"); setLangOpen(true); }} style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 18px", color:"#94a3b8", fontSize:14, background:"none", border:"none", borderBottom:"1px solid rgba(255,255,255,0.05)", cursor:"pointer", width:"100%", fontFamily:B, textAlign:"left" }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
               {({hr:"Jezik",de:"Sprache",en:"Lang",it:"Lingua",pl:"Język",si:"Jezik"})[lang]||"Lang"}
+            </button>
+            <button onClick={() => { setMenuOpen(false); window.history.back(); }} style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 18px", color:"#64748b", fontSize:14, background:"none", border:"none", cursor:"pointer", width:"100%", fontFamily:B, textAlign:"left" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+              {({hr:"Nazad",de:"Zurück",en:"Back",it:"Indietro",pl:"Wstecz",si:"Nazaj"})[lang]||"Back"}
             </button>
           </div>
         </>}
