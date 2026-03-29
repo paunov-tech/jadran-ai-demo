@@ -237,6 +237,7 @@ export default function DestinationExplorer() {
   const [showBJ, setShowBJ] = useState(false);
   const [showLive, setShowLive] = useState(false);
   const [activeTab, setActiveTab] = useState("explore");
+  const [menuOpen, setMenuOpen] = useState(false);
   const [heroIdx, setHeroIdx] = useState(0);
   const [selectedMenuItem, setSelectedMenuItem] = useState(null);
   const [viatorDeals, setViatorDeals] = useState([]);
@@ -330,14 +331,44 @@ export default function DestinationExplorer() {
       `}</style>
 
       {/* ═══ NAV ═══ */}
-      <nav style={{ position:"fixed", top:0, left:0, right:0, zIndex:100, padding:"10px 20px", paddingTop:"max(10px, env(safe-area-inset-top, 10px))", display:"flex", justifyContent:"space-between", alignItems:"center", background:"rgba(5,13,26,0.75)", backdropFilter:"blur(24px) saturate(1.8)", WebkitBackdropFilter:"blur(24px) saturate(1.8)", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <div style={{ width:34, height:34, borderRadius:10, background:"linear-gradient(135deg,#0ea5e9,#0284c7)", display:"grid", placeItems:"center", fontSize:14, fontWeight:800, color:"#fff", fontFamily:F, boxShadow:"0 4px 16px rgba(14,165,233,0.3)" }}>J</div>
-          <span style={{ fontFamily:F, fontSize:15, fontWeight:600, letterSpacing:3, textTransform:"uppercase" }}>Jadran</span>
-        </div>
+      <nav style={{ position:"fixed", top:0, left:0, right:0, zIndex:300, paddingTop:"max(10px, env(safe-area-inset-top, 10px))", paddingBottom:10, paddingLeft:16, paddingRight:16, display:"flex", justifyContent:"space-between", alignItems:"center", background:"rgba(5,13,26,0.75)", backdropFilter:"blur(24px) saturate(1.8)", WebkitBackdropFilter:"blur(24px) saturate(1.8)", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
+        {/* Left: hamburger */}
+        <button onClick={() => setMenuOpen(m => !m)} style={{ width:36, height:36, background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:10, cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:5, padding:0, flexShrink:0 }} aria-label="Meni">
+          <span style={{ display:"block", width:18, height:2, background: menuOpen ? "#0ea5e9" : "#94a3b8", borderRadius:2, transition:"all 0.2s", transform: menuOpen ? "rotate(45deg) translateY(7px)" : "none" }} />
+          <span style={{ display:"block", width:18, height:2, background: menuOpen ? "transparent" : "#94a3b8", borderRadius:2, transition:"all 0.2s" }} />
+          <span style={{ display:"block", width:18, height:2, background: menuOpen ? "#0ea5e9" : "#94a3b8", borderRadius:2, transition:"all 0.2s", transform: menuOpen ? "rotate(-45deg) translateY(-7px)" : "none" }} />
+        </button>
+
+        {/* Center: JADRAN */}
+        <span style={{ position:"absolute", left:"50%", transform:"translateX(-50%)", fontFamily:F, fontSize:17, fontWeight:700, letterSpacing:3, textTransform:"uppercase", color:"#f0f4f8", pointerEvents:"none" }}>JADRAN</span>
+
+        {/* Right: current destination name */}
         <div style={{ fontSize:12, color:"rgba(255,255,255,0.3)", fontWeight:300, letterSpacing:1 }}>
           {HERO_DESTS[heroIdx]?.name}
         </div>
+
+        {/* Hamburger dropdown */}
+        {menuOpen && <>
+          <div onClick={() => setMenuOpen(false)} style={{ position:"fixed", inset:0, zIndex:298 }} />
+          <div style={{ position:"absolute", top:"calc(100% + 4px)", left:12, zIndex:299, minWidth:210, background:"rgba(5,13,26,0.97)", backdropFilter:"blur(24px)", WebkitBackdropFilter:"blur(24px)", borderRadius:14, border:"1px solid rgba(255,255,255,0.08)", boxShadow:"0 12px 40px rgba(0,0,0,0.6)", overflow:"hidden" }}>
+            <button onClick={() => { setMenuOpen(false); setActiveTab("explore"); document.getElementById("destinations")?.scrollIntoView({behavior:"smooth"}); }} style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 18px", color:"#7dd3fc", fontSize:14, fontWeight:600, background:"none", border:"none", borderBottom:"1px solid rgba(255,255,255,0.05)", cursor:"pointer", width:"100%", fontFamily:B, textAlign:"left" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              {({hr:"Istraži",de:"Erkunden",en:"Explore",it:"Esplora",pl:"Odkryj",si:"Razišči"})[lang]||"Explore"}
+            </button>
+            <a href="/landing" onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 18px", color:"#94a3b8", fontSize:14, textDecoration:"none", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              {({hr:"Kreni",de:"Los",en:"Go",it:"Vai",pl:"Jedź",si:"Pojdi"})[lang]||"Go"}
+            </a>
+            <button onClick={() => { setMenuOpen(false); setActiveTab("live"); setShowLive(true); }} style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 18px", color:"#22c55e", fontSize:14, fontWeight:600, background:"none", border:"none", borderBottom:"1px solid rgba(255,255,255,0.05)", cursor:"pointer", width:"100%", fontFamily:B, textAlign:"left" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h2"/><path d="M20 12h2"/><path d="M12 2v2"/><path d="M12 20v2"/><circle cx="12" cy="12" r="4"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M4.93 19.07l1.41-1.41"/><path d="M17.66 6.34l1.41-1.41"/></svg>
+              {({hr:"Live",de:"Live",en:"Live",it:"Live",pl:"Live",si:"Živo"})[lang]||"Live"}
+            </button>
+            <button onClick={() => { setMenuOpen(false); setActiveTab("lang"); setLangOpen(true); }} style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 18px", color:"#94a3b8", fontSize:14, background:"none", border:"none", cursor:"pointer", width:"100%", fontFamily:B, textAlign:"left" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              {({hr:"Jezik",de:"Sprache",en:"Lang",it:"Lingua",pl:"Język",si:"Jezik"})[lang]||"Lang"}
+            </button>
+          </div>
+        </>}
       </nav>
 
       {/* ═══ HERO ═══ */}
@@ -790,29 +821,6 @@ export default function DestinationExplorer() {
         </div>
       )}
 
-      {/* ═══ STICKY BOTTOM BAR ═══ */}
-      <div style={{ position:"fixed", bottom:0, left:0, right:0, zIndex:200, paddingBottom:"env(safe-area-inset-bottom, 0px)" }}>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", background:"rgba(5,8,16,0.96)", backdropFilter:"blur(24px) saturate(2)", WebkitBackdropFilter:"blur(24px) saturate(2)", borderTop:"1px solid rgba(14,165,233,0.12)", boxShadow:"0 -8px 32px rgba(0,0,0,0.4)" }}>
-          {[
-            { id:"explore", icon:"🗺️", label:{hr:"Istraži",de:"Erkunden",en:"Explore",it:"Esplora",pl:"Odkryj",si:"Razišči"}, action: () => { setActiveTab("explore"); document.getElementById("destinations")?.scrollIntoView({behavior:"smooth"}); } },
-            { id:"go",      icon:"✈️", label:{hr:"Kreni",de:"Los",en:"Go",it:"Vai",pl:"Jedź",si:"Pojdi"}, href:"/landing" },
-            { id:"live",    icon:"🌊", label:{hr:"Live",de:"Live",en:"Live",it:"Live",pl:"Live",si:"Živo"}, action: () => { setActiveTab("live"); setShowLive(true); } },
-            { id:"lang",    icon: FLAGS[lang]||"🌐", label:{hr:"Jezik",de:"Sprache",en:"Lang",it:"Lingua",pl:"Język",si:"Jezik"}, action: () => { setActiveTab("lang"); setLangOpen(true); } },
-          ].map(tab => {
-            const isActive = activeTab === tab.id;
-            const inner = (
-              <>
-                <span style={{ fontSize:22, lineHeight:1 }}>{tab.icon}</span>
-                <span style={{ fontSize:10, fontWeight:600, letterSpacing:0.3, color: isActive ? "#7dd3fc" : "#475569", marginTop:4 }}>{t(tab.label)}</span>
-                {isActive && <div style={{ position:"absolute", top:0, left:"25%", right:"25%", height:2, borderRadius:2, background:"linear-gradient(90deg,#0ea5e9,#38bdf8)" }} />}
-              </>
-            );
-            return tab.href
-              ? <a key={tab.id} href={tab.href} style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"12px 4px 10px", textDecoration:"none", color:"inherit", position:"relative", minHeight:60 }}>{inner}</a>
-              : <button key={tab.id} onClick={tab.action} style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"12px 4px 10px", background:"none", border:"none", cursor:"pointer", fontFamily:B, color:"inherit", position:"relative", minHeight:60 }}>{inner}</button>;
-          })}
-        </div>
-      </div>
     </div>
   );
 }
