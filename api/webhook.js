@@ -3,6 +3,19 @@ import Stripe from "stripe";
 // Vercel config: disable body parsing for raw webhook body
 export const config = { api: { bodyParser: false } };
 
+// Idempotency: track processed Stripe event IDs to prevent duplicate processing
+// In-memory is sufficient — Stripe guarantees at-least-once delivery, not at-most-once;
+// Firestore write itself is idempotent (same docId = upsert)
+const _processedEvents = new Map();
+function isAlreadyProcessed(eventId) {
+  const now = Date.now();
+  // Purge events older than 1 hour
+  for (const [id, ts] of _processedEvents) { if (now - ts > 3600000) _processedEvents.delete(id); }
+  if (_processedEvents.has(eventId)) return true;
+  _processedEvents.set(eventId, now);
+  return false;
+}
+
 // Firestore REST API write — zero dependencies, uses public API key
 // NOTE: Intentional duplication — Vercel serverless cannot import sibling files
 async function writePremium(deviceId, data) {
@@ -66,6 +79,10 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error("Webhook signature failed:", err.message);
     return res.status(400).json({ error: "Webhook verification failed" });
+  }
+
+  if (isAlreadyProcessed(event.id)) {
+    return res.status(200).json({ received: true, duplicate: true });
   }
 
   if (event.type === "checkout.session.completed") {

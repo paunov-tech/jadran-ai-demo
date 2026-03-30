@@ -986,7 +986,7 @@ const [lang, setLang] = useState(() => {
       // Generate/retrieve device ID for subscription binding
       let deviceId = deviceFp || localStorage.getItem("jadran_device_id");
       if (!deviceId) {
-        deviceId = "jd_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
+        const b = new Uint8Array(9); crypto.getRandomValues(b); deviceId = "jd_" + Array.from(b, x => x.toString(16).padStart(2,"0")).join("");
       }
       try { localStorage.setItem("jadran_device_id", deviceId); } catch {}
       // Retrieve UTM params for Stripe metadata
@@ -1078,7 +1078,7 @@ const [lang, setLang] = useState(() => {
         const ib = invitedBy || localStorage.getItem("jadran_invited_by");
         if (ib) {
           let did = localStorage.getItem("jadran_device_id");
-          if (!did) { did = "jd_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8); localStorage.setItem("jadran_device_id", did); }
+          if (!did) { const b = new Uint8Array(9); crypto.getRandomValues(b); did = "jd_" + Array.from(b, x => x.toString(16).padStart(2,"0")).join(""); localStorage.setItem("jadran_device_id", did); }
           fetch("/api/referral", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "convert", deviceId: did, invitedBy: ib }) })
             .then(r => r.json()).then(d => {
               if (d.ok && !d.already) {
@@ -1312,7 +1312,7 @@ const [lang, setLang] = useState(() => {
                     disabled={recoveryStatus === "loading" || !recoveryEmail.includes("@")}
                     onClick={() => {
                       setRecoveryStatus("loading"); setRecoveryError("");
-                      const did = localStorage.getItem("jadran_device_id") || deviceFp || "jd_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
+                      let did = localStorage.getItem("jadran_device_id") || deviceFp; if (!did) { const b = new Uint8Array(9); crypto.getRandomValues(b); did = "jd_" + Array.from(b, x => x.toString(16).padStart(2,"0")).join(""); }
                       try { localStorage.setItem("jadran_device_id", did); } catch {}
                       fetch("/api/recover", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: recoveryEmail.trim(), deviceId: did }) })
                         .then(r => r.json().then(d => ({ ok: r.ok, status: r.status, data: d })))

@@ -25,7 +25,7 @@ export const makeTheme = (hour) => {
     // ── NIGHT ── deep Adriatic, moonlit
     bg:          "#030c18",
     surface:     "#060f1e",
-    card:        "rgba(6,15,30,0.92)",
+    card:        "rgba(7,16,32,0.93)",
     cardHover:   "rgba(8,20,40,0.96)",
     accent:      "#38bdf8",
     acDim:       "rgba(56,189,248,0.10)",
@@ -36,7 +36,7 @@ export const makeTheme = (hour) => {
     text:        "#e2f4ff",
     textSub:     "#94a3b8",
     mut:         "#475569",
-    bord:        "rgba(148,163,184,0.07)",
+    bord:        "rgba(148,163,184,0.08)",
     bordHover:   "rgba(56,189,248,0.15)",
     red:         "#f87171",
     green:       "#4ade80",
@@ -53,7 +53,7 @@ export const makeTheme = (hour) => {
     // ── DAY ── Adriatic azure, sun-drenched
     bg:          "#071526",
     surface:     "#0a1c33",
-    card:        "rgba(10,22,42,0.88)",
+    card:        "rgba(10,22,44,0.90)",
     cardHover:   "rgba(12,26,50,0.94)",
     accent:      "#0ea5e9",
     acDim:       "rgba(14,165,233,0.10)",
@@ -172,8 +172,8 @@ export const GLOBAL_CSS = `
   }
   @media (hover: hover) {
     .glass:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 20px 56px rgba(0,0,0,0.28), 0 0 0 1px rgba(14,165,233,0.08), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+      transform: translateY(-2px) scale(1.005);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1), 0 20px 50px rgba(0,0,0,0.26), 0 0 0 1px rgba(14,165,233,0.1), inset 0 1px 0 rgba(255,255,255,0.08) !important;
     }
   }
 
@@ -186,11 +186,14 @@ export const GLOBAL_CSS = `
     -webkit-user-select: none; user-select: none;
   }
   @media (hover: hover) { button:hover { transform: translateY(-1px); } }
-  button:active { transform: translateY(0) scale(0.96) !important; opacity: 0.85 !important; }
+  button:active { transform: translateY(0) scale(0.95) !important; opacity: 0.88 !important; }
   a:active { opacity: 0.7; }
 
   /* ── Interactive card press — Apple spring ── */
-  .glass:active { transform: scale(0.98) !important; transition-duration: 0.1s !important; }
+  .glass:active { transform: scale(0.975) !important; transition-duration: 0.08s !important; }
+
+  /* ── GPU acceleration for cards with backdrop-filter ── */
+  .glass { -webkit-transform: translateZ(0); transform: translateZ(0); }
 
   /* ── Safe area helpers ── */
   .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
@@ -410,8 +413,8 @@ export const Badge = ({ c = "accent", children }) => {
   };
   const s = map[c] || map.accent;
   return (
-    <span style={{ ...dm, display:"inline-block", padding:"3px 10px", borderRadius:20,
-      fontSize:10, letterSpacing:0.8, fontWeight:600, textTransform:"uppercase",
+    <span style={{ ...dm, display:"inline-block", padding:"3px 9px", borderRadius:50,
+      fontSize:9, letterSpacing:1.2, fontWeight:700, textTransform:"uppercase",
       background: s.bg, color: s.color, border: `1px solid ${s.bord}` }}>
       {children}
     </span>
@@ -422,18 +425,18 @@ export const Btn = ({ primary, small, children, ...p }) => {
   const C = useC();
   return (
     <button {...p} className={`${primary ? "btn-glow" : ""} ${p.className || ""}`} style={{
-      padding: small ? "10px 18px" : "15px 28px",
+      padding: small ? "10px 22px" : "14px 32px",
       minHeight: small ? 40 : 48,
       background: primary
-        ? `linear-gradient(135deg, ${C.accent} 0%, #0284c7 100%)`
+        ? `linear-gradient(145deg, ${C.accent} 0%, #0284c7 60%, #0369a1 100%)`
         : "rgba(14,165,233,0.04)",
       border: primary ? "none" : `1px solid ${C.bord}`,
-      borderRadius: 14, color: primary ? "#fff" : C.text,
+      borderRadius: primary ? 50 : 14, color: primary ? "#fff" : C.text,
       fontSize: small ? 13 : 16, ...hf,
       cursor: "pointer", fontWeight: primary ? 500 : 400,
       letterSpacing: primary ? 0.4 : 0,
       boxShadow: primary
-        ? `0 4px 20px rgba(14,165,233,0.22), inset 0 1px 0 rgba(255,255,255,0.12)`
+        ? `0 1px 2px rgba(0,0,0,0.12), 0 4px 20px rgba(14,165,233,0.28), 0 8px 24px rgba(14,165,233,0.12), inset 0 1px 0 rgba(255,255,255,0.2)`
         : "none",
       transition: "all 0.22s cubic-bezier(0.4,0,0.2,1)",
       WebkitTapHighlightColor: "transparent",
@@ -451,12 +454,12 @@ export const Card = ({ children, glow, warm: isWarm, style: sx, ...p }) => {
       background: isWarm
         ? "linear-gradient(160deg, rgba(10,20,38,0.9), rgba(22,14,8,0.85))"
         : C.card,
-      borderRadius: 20,
+      borderRadius: 22,
       padding: 22,
       border: `1px solid ${isWarm ? C.goBorder : glow ? C.acBorder : C.bord}`,
       boxShadow: glow
-        ? `0 8px 32px rgba(0,0,0,0.22), 0 0 0 1px rgba(14,165,233,0.05), inset 0 1px 0 rgba(255,255,255,0.04)`
-        : `0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.03)`,
+        ? `0 1px 3px rgba(0,0,0,0.1), 0 8px 32px rgba(0,0,0,0.24), 0 0 0 1px rgba(14,165,233,0.08), inset 0 1px 0 rgba(255,255,255,0.08)`
+        : `0 1px 2px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.18), 0 16px 40px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.06)`,
       ...sx,
     }}>
       {children}
@@ -467,14 +470,13 @@ export const Card = ({ children, glow, warm: isWarm, style: sx, ...p }) => {
 export const SectionLabel = ({ children, extra }) => {
   const C = useC();
   return (
-    <div style={{ ...dm, fontSize: 10, color: C.mut, letterSpacing: 3.5,
-      textTransform: "uppercase", marginBottom: 14, fontWeight: 600,
+    <div style={{ ...dm, fontSize: 9, color: C.mut, letterSpacing: 4,
+      textTransform: "uppercase", marginBottom: 16, fontWeight: 700,
       display: "flex", alignItems: "center", gap: 10 }}>
-      <span style={{ width: 14, height: 1,
-        background: `linear-gradient(90deg, ${C.accent}, transparent)`,
-        flexShrink: 0 }} />
+      <span style={{ width: 3, height: 3, borderRadius: "50%",
+        background: C.accent, flexShrink: 0, opacity: 0.7 }} />
       {children}
-      {extra && <span style={{ color: C.accent, fontWeight: 700, letterSpacing: 1 }}>{extra}</span>}
+      {extra && <span style={{ marginLeft: 4, color: C.accent, fontWeight: 700, letterSpacing: 1 }}>{extra}</span>}
     </div>
   );
 };
@@ -509,8 +511,9 @@ export const TabBar = ({ items, active, onChange }) => {
             style={{ color: isActive ? C.accent : C.mut }}>
             <div style={{
               width: 28, height: 28, display: "grid", placeItems: "center",
-              borderRadius: 8,
+              borderRadius: 10,
               background: isActive ? C.acDim : "transparent",
+              boxShadow: isActive ? `0 0 12px rgba(14,165,233,0.15)` : "none",
               transition: "background 0.25s",
             }}>
               <Icon d={item.icon} size={20} color={isActive ? C.accent : C.mut} stroke={isActive ? 2 : 1.5} />

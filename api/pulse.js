@@ -102,7 +102,7 @@ export default async function handler(req, res) {
   const routeCorridor = detectRouteCorridor(fromCity, destCity, fromLat, fromLng, destLat, destLng);
 
   // ── Parallel data fetch (all fail gracefully) ──
-  console.warn(`[pulse] fetch — lat=${lat} lng=${lng} seg=${seg} lang=${lk} dest=${destCity}`);
+  console.log(`[pulse] fetch — seg=${seg} lang=${lk}`);
   const [trafficRes, yoloRes, weatherRes] = await Promise.allSettled([
     fetchRouteTraffic(lat, lng, destLat, destLng),
     fetchNearbyYolo(lat, lng),

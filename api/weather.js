@@ -19,9 +19,12 @@ export default async function handler(req, res) {
 
   try {
     // Accept region coordinates via query params (always passed by client)
-    const lat = parseFloat(req.query?.lat) || 44.7561; // fallback: Rab
-    const lon = parseFloat(req.query?.lon) || 14.7642;
-    const loc = req.query?.loc || "Rab";
+    const rawLat = parseFloat(req.query?.lat);
+    const rawLon = parseFloat(req.query?.lon);
+    // Validate bounds — fall back to Rab if invalid or out of range
+    const lat = (rawLat >= -90  && rawLat <= 90)  ? rawLat : 44.7561;
+    const lon = (rawLon >= -180 && rawLon <= 180) ? rawLon : 14.7642;
+    const loc = (typeof req.query?.loc === "string" ? req.query.loc : "").slice(0, 64) || "Rab";
     const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,pressure_msl,cloud_cover&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&timezone=Europe/Zagreb&forecast_days=2`;
     const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=sea_surface_temperature,wave_height,wave_direction,wave_period,swell_wave_height,swell_wave_direction,swell_wave_period&hourly=wave_height,wave_period,swell_wave_height&timezone=Europe/Zagreb&forecast_days=1`;
 

@@ -13,7 +13,7 @@ const goToStripe = async (plan = "season", lang = "en") => {
     try { window.plausible?.("checkout_click", { props: { plan, source: "landing" } }); } catch {}
     try { window.fbq?.("track", "AddPaymentInfo", { content_name: plan, currency: "EUR", value: plan === "vip" ? 49.99 : plan === "season" ? 19.99 : 9.99 }); } catch {}
     let deviceId;
-    try { deviceId = localStorage.getItem("jadran_device_id"); if (!deviceId) { deviceId = "jd_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8); localStorage.setItem("jadran_device_id", deviceId); } } catch { deviceId = "unknown"; }
+    try { deviceId = localStorage.getItem("jadran_device_id"); if (!deviceId) { const b = new Uint8Array(9); crypto.getRandomValues(b); deviceId = "jd_" + Array.from(b, x => x.toString(16).padStart(2,"0")).join(""); localStorage.setItem("jadran_device_id", deviceId); } } catch { deviceId = "unknown"; }
     let utmData = {};
     try { utmData = JSON.parse(localStorage.getItem("jadran_utm") || "{}"); } catch {}
     // Save session so post-payment redirect enters chat

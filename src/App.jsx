@@ -367,7 +367,7 @@ export default function JadranUnified() {
     const rc = getRoomCode();
     if (rc !== "DEMO") return rc;
     let did = ""; try { did = localStorage.getItem("jadran_push_deviceId") || ""; } catch {}
-    if (!did) { did = `dev_${Date.now()}_${Math.random().toString(36).slice(2)}`; try { localStorage.setItem("jadran_push_deviceId", did); } catch {} }
+    if (!did) { const b = new Uint8Array(9); crypto.getRandomValues(b); did = "dev_" + Array.from(b, x => x.toString(16).padStart(2,"0")).join(""); try { localStorage.setItem("jadran_push_deviceId", did); } catch {} }
     return did;
   })());
 
@@ -614,8 +614,8 @@ export default function JadranUnified() {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
     const VAPID_PUBLIC = "BJ2JAE5jwAipfCJU4x6sgWPYnDZAIFcg-_1XJU4F5-qUdCo1eHKSe8wsC56WZELnHUWAp-eNA4hcWs1YeLcKjXE";
     const stored = localStorage.getItem("jadran_push_deviceId");
-    const deviceId = stored || `dev_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-    if (!stored) localStorage.setItem("jadran_push_deviceId", deviceId);
+    let deviceId = stored;
+    if (!deviceId) { const b = new Uint8Array(9); crypto.getRandomValues(b); deviceId = "dev_" + Array.from(b, x => x.toString(16).padStart(2,"0")).join(""); localStorage.setItem("jadran_push_deviceId", deviceId); }
 
     const registerPush = async (reg) => {
       try {
