@@ -1483,8 +1483,8 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: walkieMode ? 200 : (TIER_LIMITS[tierPlan] || TIER_LIMITS.free).maxTokens,
+        model: tierPlan === 'vip' ? 'claude-opus-4-6' : 'claude-sonnet-4-20250514',
+        max_tokens: walkieMode ? 400 : (TIER_LIMITS[tierPlan] || TIER_LIMITS.free).maxTokens,
         temperature: 0.55,
         system: systemPrompt,
         messages: sanitizedMessages, // Tier-truncated + injection-sanitized

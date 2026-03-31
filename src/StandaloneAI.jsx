@@ -490,6 +490,8 @@ const [lang, setLang] = useState(() => {
   const [recoveryEmail, setRecoveryEmail] = useState("");
   const [recoveryStatus, setRecoveryStatus] = useState(null); // null | "loading" | "success" | "error" | "expired"
   const [recoveryError, setRecoveryError] = useState("");
+  const [showRestore, setShowRestore] = useState(false);   // session recovery banner
+  const [feedbackSent, setFeedbackSent] = useState({});    // msgIndex → true (flag sent)
 
   // Plausible analytics helper
   // Dual analytics: Plausible (privacy) + Meta Pixel (ads)
@@ -607,6 +609,14 @@ const [lang, setLang] = useState(() => {
       setMsgs([{ role: "assistant", text: ice }]);
     }
   }, []); // only on mount
+
+  // Session recovery: offer to restore previous chat if < 24h old
+  useEffect(() => {
+    try {
+      const h = JSON.parse(localStorage.getItem("jadran_chat_history") || "null");
+      if (h?.msgs?.length > 1 && (Date.now() - h.savedAt) < 86400000) setShowRestore(true);
+    } catch {}
+  }, []);
 
   // Fetch weather per region + auto-refresh every 60s
   useEffect(() => {
@@ -768,6 +778,15 @@ const [lang, setLang] = useState(() => {
           setDeviceFp(fp);
           let did = localStorage.getItem("jadran_device_id");
           if (!did) { did = fp; try { localStorage.setItem("jadran_device_id", fp); } catch {} }
+          // Load persisted profile from Firestore if local profile is sparse (new device/cleared storage)
+          const localProfile = loadProfile();
+          if ((localProfile.totalMsgs || 0) < 2) {
+            fetch(`/api/profile?deviceId=${encodeURIComponent(fp)}`)
+              .then(r => r.json())
+              .then(d => {
+                if (d.ok && d.profile?.totalMsgs > 0) saveProfile({ ...localProfile, ...d.profile });
+              }).catch(() => {});
+          }
         }
       });
       if (mc >= FREE_MSGS) setTrialExpired(true);
@@ -1015,6 +1034,31 @@ const [lang, setLang] = useState(() => {
     }
   };
 
+  // ─── SESSION RECOVERY ───
+  const restoreSession = () => {
+    try {
+      const h = JSON.parse(localStorage.getItem("jadran_chat_history") || "null");
+      if (h?.msgs?.length) {
+        setMsgs(h.msgs);
+        if (h.region) setRegion(h.region);
+        if (h.travelMode) setTravelMode(h.travelMode);
+      }
+    } catch {}
+    setShowRestore(false);
+    setStep("chat");
+  };
+
+  // ─── FEEDBACK ───
+  const sendFeedback = (index, aiText) => {
+    setFeedbackSent(p => ({ ...p, [index]: true }));
+    const did = deviceFp || (() => { try { return localStorage.getItem("jadran_device_id") || ""; } catch { return ""; } })();
+    const prevUser = [...msgs].slice(0, index).reverse().find(m => m.role === "user")?.text || "";
+    fetch("/api/feedback", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ deviceId: did, aiText: aiText.slice(0, 500), userMsg: prevUser, region, lang }),
+    }).catch(() => {});
+  };
+
   // ─── AI CHAT ───
   const sendMsg = async () => {
     if (!input.trim() || loading) return;
@@ -1171,6 +1215,16 @@ const [lang, setLang] = useState(() => {
       setMsgs(p => [...p, { role: "assistant", text: aiText }]);
       // Self-learning: extract signals and update profile
       updateProfile(msg, aiText);
+      // Save chat history for session recovery (next visit)
+      try {
+        const history = [...msgs, { role: "user", text: msg }, { role: "assistant", text: aiText }];
+        localStorage.setItem("jadran_chat_history", JSON.stringify({
+          msgs: history.slice(-10), region, travelMode, lang, savedAt: Date.now(),
+        }));
+      } catch {}
+      // Sync profile to Firestore (fire-and-forget)
+      const _did = deviceFp || (() => { try { return localStorage.getItem("jadran_device_id") || ""; } catch { return ""; } })();
+      if (_did) fetch("/api/profile", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ deviceId: _did, profile: loadProfile() }) }).catch(() => {});
       if (walkieMode) speak(aiText);
     } catch {
       setMsgs(p => [...p, { role: "assistant", text: t.errConnection }]);
@@ -2184,6 +2238,19 @@ const [lang, setLang] = useState(() => {
           </div>
         )}
 
+        {/* Session recovery banner */}
+        {showRestore && msgs.length === 0 && (
+          <div style={{ flexShrink: 0, padding: "10px 16px", background: isNight ? "rgba(14,165,233,0.07)" : "rgba(14,165,233,0.05)", borderBottom: `1px solid ${C.bord}`, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 12, color: C.accent }}>💬 {lang === "de" || lang === "at" ? "Gespräch fortsetzen?" : lang === "en" ? "Continue previous conversation?" : lang === "it" ? "Continua la conversazione?" : "Nastavi prethodni razgovor?"}</span>
+            <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+              <button onClick={restoreSession} style={{ padding: "5px 12px", borderRadius: 8, border: `1px solid ${C.accent}40`, background: `${C.accent}14`, color: C.accent, fontSize: 11, cursor: "pointer", fontFamily: "inherit", fontWeight: 700 }}>
+                {lang === "de" || lang === "at" ? "Ja" : lang === "en" ? "Yes" : lang === "it" ? "Sì" : "Da"}
+              </button>
+              <button onClick={() => { setShowRestore(false); try { localStorage.removeItem("jadran_chat_history"); } catch {} }} style={{ padding: "5px 10px", borderRadius: 8, border: `1px solid ${C.bord}`, background: "transparent", color: C.mut, fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>✕</button>
+            </div>
+          </div>
+        )}
+
         {/* Messages pushed to bottom via margin-top:auto */}
         <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 10 }}>
         {msgs.map((m, i) => (
@@ -2225,6 +2292,19 @@ const [lang, setLang] = useState(() => {
                   return <span key={k}>{part}</span>;
                 })}</div>;
               }) : m.text}
+              {m.role === "assistant" && i > 0 && (
+                <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
+                  <button
+                    onClick={() => sendFeedback(i, m.text)}
+                    style={{ padding: "2px 8px", borderRadius: 6, border: `1px solid ${feedbackSent[i] ? C.bord : C.bord}`, background: "transparent", color: feedbackSent[i] ? "#22c55e" : C.mut, fontSize: 10, cursor: feedbackSent[i] ? "default" : "pointer", fontFamily: "inherit", transition: "all 0.2s", opacity: feedbackSent[i] ? 1 : 0.5 }}
+                    onMouseEnter={e => { if (!feedbackSent[i]) { e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = "#f87171"; } }}
+                    onMouseLeave={e => { if (!feedbackSent[i]) { e.currentTarget.style.opacity = "0.5"; e.currentTarget.style.color = C.mut; } }}
+                    disabled={!!feedbackSent[i]}
+                  >
+                    {feedbackSent[i] ? "✓ hvala" : "⚑ netačno"}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         ))}
