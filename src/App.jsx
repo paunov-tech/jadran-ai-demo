@@ -5,6 +5,11 @@ import GuestOnboarding from "./GuestOnboarding";
 import { loadDelta, saveDelta } from "./deltaContext";
 import { startGPS } from "./gpsEngine";
 
+// ─── PARTNER / AFFILIATE DATA ─────────────────────────────────
+import {
+  AFFILIATE_TOKENS, AFFILIATE_COORDS, AFFILIATE_PINS, AFFILIATE_DATA,
+} from "./affiliates";
+
 // ─── DATA LAYER ───────────────────────────────────────────────
 import {
   CITY_COORDS, COUNTRY_CITY, getDestRegion, GUEST_FALLBACK,
@@ -287,6 +292,138 @@ const AlertTicker = React.memo(function AlertTicker({ items }) {
   );
 });
 
+/* ─── PARTNER STATS DASHBOARD COMPONENT ─── */
+function PartnerStatsDashboard({ partner }) {
+  const [data, setData] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const aff = AFFILIATE_DATA[partner] || {};
+  const pin = AFFILIATE_PINS[partner] || "";
+
+  React.useEffect(() => {
+    fetch(`/api/partner-stats?partner=${encodeURIComponent(partner)}&pin=${encodeURIComponent(pin)}`)
+      .then(r => r.json())
+      .then(d => { setData(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [partner, pin]);
+
+  const dm = { fontFamily: "'DM Sans', 'Outfit', sans-serif" };
+  const C = { bg: "#0c1a2e", card: "#0f2035", accent: "#0ea5e9", mut: "#64748b", text: "#e2f0ff" };
+
+  const dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  const langFlags = { hr:"🇭🇷", de:"🇩🇪", at:"🇦🇹", en:"🇬🇧", it:"🇮🇹", si:"🇸🇮", cz:"🇨🇿", pl:"🇵🇱" };
+
+  return (
+    <div style={{ background: C.bg, minHeight: "100dvh", color: C.text, ...dm, padding: "0 0 60px" }}>
+      {/* Header */}
+      <div style={{ background: "linear-gradient(135deg,#0c1a2e,#0d2744)", padding: "24px 20px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ fontSize: 11, color: C.mut, letterSpacing: 2, textTransform: "uppercase", marginBottom: 6 }}>Partner Analytics</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 28 }}>{aff.emoji || "🏪"}</span>
+          <div>
+            <div style={{ fontSize: 20, fontWeight: 700 }}>{aff.name || partner}</div>
+            <div style={{ fontSize: 12, color: C.mut }}>{aff.city || ""} · jadran.ai</div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding: "16px 16px 0" }}>
+        {loading && (
+          <div style={{ textAlign: "center", padding: 40, color: C.mut }}>Učitavam podatke…</div>
+        )}
+
+        {!loading && !data?.ok && (
+          <div style={{ background: "#1e0a0a", border: "1px solid #7f1d1d", borderRadius: 12, padding: 16, color: "#fca5a5", fontSize: 13 }}>
+            Greška pri učitavanju podataka. Provjeri API ključ.
+          </div>
+        )}
+
+        {!loading && data?.ok && (
+          <>
+            {/* KPI strip */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 14 }}>
+              {[
+                { label: "Ukupno pregleda", value: data.totalViews ?? 0, icon: "👁️" },
+                { label: "Zadnjih 7 dana",  value: data.views7d  ?? 0, icon: "📅" },
+                { label: "Zadnjih 30 dana", value: data.views30d ?? 0, icon: "📊" },
+              ].map(k => (
+                <div key={k.label} style={{ background: C.card, borderRadius: 12, padding: "14px 10px", textAlign: "center", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <div style={{ fontSize: 20 }}>{k.icon}</div>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: C.accent, marginTop: 4 }}>{k.value}</div>
+                  <div style={{ fontSize: 10, color: C.mut, marginTop: 2 }}>{k.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Feedback KPIs */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 14 }}>
+              <div style={{ background: C.card, borderRadius: 12, padding: "14px 14px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ fontSize: 11, color: C.mut, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Prosj. ocjena</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: 22, color: "#f59e0b" }}>★</span>
+                  <span style={{ fontSize: 22, fontWeight: 700, color: "#f59e0b" }}>{data.avgRating ?? "–"}</span>
+                </div>
+                <div style={{ fontSize: 11, color: C.mut, marginTop: 4 }}>{data.feedbackCount} feedback zapisa</div>
+              </div>
+              <div style={{ background: C.card, borderRadius: 12, padding: "14px 14px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ fontSize: 11, color: C.mut, letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Jezici gostiju</div>
+                {Object.entries(data.byLang || {}).sort((a,b) => b[1]-a[1]).slice(0,4).map(([lang, cnt]) => (
+                  <div key={lang} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
+                    <span style={{ fontSize: 13 }}>{langFlags[lang] || "🌐"} {lang.toUpperCase()}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: C.accent }}>{cnt}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Last 7 days chart */}
+            {data.byDay && (
+              <div style={{ background: C.card, borderRadius: 12, padding: "14px 14px", border: "1px solid rgba(255,255,255,0.06)", marginBottom: 14 }}>
+                <div style={{ fontSize: 11, color: C.mut, letterSpacing: 1, textTransform: "uppercase", marginBottom: 12 }}>Pregledi — zadnjih 7 dana</div>
+                <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 60 }}>
+                  {Object.entries(data.byDay).map(([day, cnt]) => {
+                    const maxVal = Math.max(...Object.values(data.byDay), 1);
+                    const pct = (cnt / maxVal) * 100;
+                    return (
+                      <div key={day} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                        <div style={{ fontSize: 10, color: C.accent, fontWeight: 600 }}>{cnt > 0 ? cnt : ""}</div>
+                        <div style={{ width: "100%", background: cnt > 0 ? C.accent : "rgba(255,255,255,0.06)", borderRadius: "4px 4px 0 0", height: `${Math.max(pct, 4)}%`, minHeight: 4, transition: "height 0.3s" }} />
+                        <div style={{ fontSize: 9, color: C.mut }}>{day}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Recent feedback */}
+            {data.recentFeedback?.length > 0 && (
+              <div style={{ background: C.card, borderRadius: 12, padding: "14px 14px", border: "1px solid rgba(255,255,255,0.06)", marginBottom: 14 }}>
+                <div style={{ fontSize: 11, color: C.mut, letterSpacing: 1, textTransform: "uppercase", marginBottom: 10 }}>Nedavni feedback</div>
+                {data.recentFeedback.map((fb, i) => (
+                  <div key={i} style={{ borderBottom: i < data.recentFeedback.length-1 ? "1px solid rgba(255,255,255,0.05)" : "none", paddingBottom: 10, marginBottom: 10 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                      <span style={{ color: "#f59e0b", fontSize: 12 }}>{"★".repeat(fb.rating)}{"☆".repeat(5-fb.rating)}</span>
+                      <span style={{ fontSize: 10, color: C.mut }}>{langFlags[fb.lang] || "🌐"} · {new Date(fb.ts).toLocaleDateString()}</span>
+                    </div>
+                    {fb.comment && <div style={{ fontSize: 12, color: "#cbd5e1", lineHeight: 1.5 }}>"{fb.comment}"</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {data.feedbackCount === 0 && data.totalViews === 0 && (
+              <div style={{ background: C.card, borderRadius: 12, padding: 20, textAlign: "center", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>📊</div>
+                <div style={{ fontSize: 14, color: C.mut }}>Nema podataka još. QR kod tek je skeniran!</div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ─── COMPONENT ─── */
 export default function JadranUnified() {
   // mounted
@@ -342,6 +479,7 @@ export default function JadranUnified() {
   const geoWatchRef = useRef(null);
   const arrivalFiredRef = useRef(false);
   const [affiliateId, setAffiliateId] = useState(null); // e.g. "blackjack" — shows content
+  const [statsPartnerId, setStatsPartnerId] = useState(null); // set when ?stats=X&pin=Y
   const [pfRating, setPfRating] = useState(0);      // partner feedback star rating
   const [pfComment, setPfComment] = useState("");    // partner feedback text
   const [pfDone, setPfDone] = useState(false);       // feedback submitted
@@ -500,20 +638,24 @@ export default function JadranUnified() {
       "hvar":      [43.172,  16.441,  "Hvar"],
       "zadar":     [44.119,  15.232,  "Zadar"],
     };
-    // Affiliate-specific coordinate overrides
-    const AFFILIATE_COORDS = {
-      "blackjack": [44.7534, 14.7835, "Rab"], // Palit 315, Rab — na kopnu
-    };
     const urlAffiliate = p.get("affiliate");
-    // Affiliate requires signed token to grant 72h trial (prevents URL guessing)
-    const AFFILIATE_TOKENS = { "blackjack": "sial2026" };
     const urlToken = p.get("tk");
     const isValidAffiliate = urlAffiliate && AFFILIATE_TOKENS[urlAffiliate] === urlToken;
     const cd = (urlAffiliate && AFFILIATE_COORDS[urlAffiliate]) || KIOSK_CITIES[kioskParam.toLowerCase()];
     if (!cd) return;
     const urlLang = p.get("lang");
     if (urlLang) { setLang(urlLang); saveDelta({ lang: urlLang }); }
-    if (urlAffiliate) setAffiliateId(urlAffiliate); // show affiliate content regardless
+    if (urlAffiliate) {
+      setAffiliateId(urlAffiliate); // show affiliate content regardless
+      // Fire-and-forget view counter
+      const guestLang = p.get("lang") || "?";
+      const devId = localStorage.getItem("jadran_device_id") || "unknown";
+      fetch("/api/partner-view", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ partner: urlAffiliate, event: "qr_open", lang: guestLang, deviceId: devId }),
+      }).catch(() => {});
+    }
     if (isValidAffiliate) verifiedAffiliate.current = true;
     kioskForcedCoords.current = [cd[0], cd[1]]; // prevent GPS from overriding
     setTransitToCoords([cd[0], cd[1]]);
@@ -536,6 +678,19 @@ export default function JadranUnified() {
       } catch {}
     }
     window.history.replaceState({}, "", "/");
+  }, []); // eslint-disable-line
+
+  // ─── ?stats=blackjack&pin=bj2026 → partner analytics dashboard ───
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const statsParam = p.get("stats");
+    if (!statsParam) return;
+    const pinParam = p.get("pin");
+    if (AFFILIATE_PINS[statsParam] && AFFILIATE_PINS[statsParam] === pinParam) {
+      setStatsPartnerId(statsParam);
+      setSplash(false);
+      window.history.replaceState({}, "", "/");
+    }
   }, []); // eslint-disable-line
 
   // ─── PERSISTENCE: Load guest state from Firestore/localStorage ───
@@ -2283,182 +2438,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
     );
   };
 
-  // ── Affiliate property data (used by KioskHome banner + KioskAffiliate) ──
-  const AFFILIATE_DATA = {
-    blackjack: {
-      name: "Black Jack", emoji: "🃏", color: "#0ea5e9",
-      address: { de: "Palit 315, Insel Rab, Kroatien", en: "Palit 315, Rab Island, Croatia", hr: "Palit 315, otok Rab, Hrvatska", it: "Palit 315, Isola di Rab, Croazia" },
-      tagline: { de: "Gurman House — Ihr Genussparadies auf der Insel Rab", en: "Gurman House — Your gourmet paradise on Rab Island", hr: "Gurman House — Vaš gurmanski raj na otoku Rabu", it: "Gurman House — Il vostro paradiso gourmet sull'isola di Rab" },
-      desc: {
-        de: "Das Gurman House Black Jack liegt an der Hauptstraße von Rab nach Palit, direkt am Meer. Bekannt für exzellente Argentino-Steaks, Ćevapi mit Räucherkäse und die beste Pizza auf der Insel. Gemütliche Terrasse mit Meerblick — ein Geheimtipp abseits der Touristenpfade. Apartment-Zimmer mit Klimaanlage, voll ausgestatteter Küche und kostenlosem Parkplatz direkt am Haus.",
-        en: "Gurman House Black Jack sits on the main road from Rab to Palit, right by the sea. Famous for excellent Argentino steaks, ćevapi stuffed with smoked cheese, and the best pizza on the island. Cozy terrace with sea views — a hidden gem off the beaten path. Apartment rooms with air conditioning, fully equipped kitchen, and free parking on site.",
-        hr: "Gurman House Black Jack nalazi se na glavnoj cesti od Raba prema Palitu, tik uz more. Poznat po izvrsnim argentinskim steakovima, ćevapima s dimljenim sirom i najboljoj pizzi na otoku. Ugodna terasa s pogledom na more — skriveni dragulj izvan turističkih ruta. Apartmani s klimatizacijom, opremljenom kuhinjom i besplatnim parkingom.",
-        it: "Gurman House Black Jack si trova sulla strada principale da Rab a Palit, proprio sul mare. Famoso per gli eccellenti steak argentini, ćevapi con formaggio affumicato e la migliore pizza dell'isola. Terrazza accogliente con vista mare — una gemma nascosta fuori dai sentieri turistici."
-      },
-      features: {
-        de: ["🥩 Argentino Steaks & Grill","🧀 Ćevapi mit Räucherkäse","🍕 Beste Pizza auf Rab","🌊 Terrasse direkt am Meer","🅿️ Kostenloser Parkplatz","❄️ Klimaanlage","📶 Gratis WLAN","🍳 Voll ausgestattete Küche"],
-        en: ["🥩 Argentino steaks & grill","🧀 Ćevapi with smoked cheese","🍕 Best pizza on Rab","🌊 Seaside terrace","🅿️ Free parking","❄️ Air conditioning","📶 Free WiFi","🍳 Fully equipped kitchen"],
-        hr: ["🥩 Argentinski steakovi & roštilj","🧀 Ćevapi s dimljenim sirom","🍕 Najbolja pizza na Rabu","🌊 Terasa uz more","🅿️ Parkiranje gratis","❄️ Klimatizacija","📶 WiFi gratis","🍳 Opremljena kuhinja"],
-        it: ["🥩 Steak argentini & griglia","🧀 Ćevapi con formaggio affumicato","🍕 La migliore pizza di Rab","🌊 Terrazza sul mare","🅿️ Parcheggio gratuito","❄️ Aria condizionata","📶 WiFi gratuito","🍳 Cucina attrezzata"]
-      },
-      poi: [
-        { icon:"🏛️", de:"Altstadt Rab & 4 Glockentürme",  en:"Rab Old Town & 4 Bell Towers",   hr:"Stari grad Rab & 4 zvonika",     it:"Centro storico di Rab & 4 campanili",   dist:"2 km" },
-        { icon:"⚔️", de:"Rabska Fjera (25-27. Juli)",      en:"Rabska Fjera (Jul 25-27)",        hr:"Rabska Fjera (25-27. srpnja)",     it:"Rabska Fjera (25-27 luglio)",           dist:"2 km" },
-        { icon:"🏖️", de:"Strand Sv. Ivan",                 en:"Sveti Ivan Beach",                hr:"Plaža Sv. Ivan",                    it:"Spiaggia Sv. Ivan",                     dist:"1.3 km" },
-        { icon:"🏖️", de:"Paradiesstrand Lopar",            en:"Paradise Beach Lopar",            hr:"Rajska plaža Lopar",                it:"Spiaggia Paradiso Lopar",               dist:"15 km" },
-        { icon:"🌲", de:"Park Komrčar (8.3 ha)",           en:"Komrčar Park (8.3 ha)",           hr:"Park Komrčar (8.3 ha)",             it:"Parco Komrčar (8.3 ha)",                dist:"1.5 km" },
-        { icon:"⛵", de:"Marina Rab (200 Plätze)",         en:"Marina Rab (200 berths)",         hr:"Marina Rab (200 vezova)",           it:"Marina Rab (200 posti)",                dist:"2.2 km" },
-        { icon:"🏝️", de:"Goli Otok (Kroat. Alcatraz)",     en:"Goli Otok (Croatian Alcatraz)",   hr:"Goli Otok",                         it:"Goli Otok (Alcatraz croata)",           dist:"5 km" },
-        { icon:"🍰", de:"Haus der Rab-Torte",              en:"House of Rab Cake",               hr:"Kuća rapske torte",                 it:"Casa della torta di Rab",               dist:"2 km" },
-        { icon:"🛒", de:"Tommy Supermarkt",                en:"Tommy Supermarket",               hr:"Tommy Supermarket",                 it:"Supermercato Tommy",                    dist:"1.5 km" },
-        { icon:"🏥", de:"Gesundheitszentrum Rab",          en:"Rab Health Centre",               hr:"Dom zdravlja Rab",                  it:"Centro sanitario Rab",                  dist:"2 km" },
-      ],
-      // Rabska Fjera highlight
-      highlight: {
-        de: "🎪 Rabska Fjera — Das größte mittelalterliche Festival Kroatiens (seit 1364). Jedes Jahr 25.-27. Juli: Ritterspiele, Kostümumzüge, 700+ Teilnehmer, Armbrust-Turniere, mittelalterliche Handwerkskunst und Feuerwerk im Hafen von Rab. Ein unvergessliches Erlebnis!",
-        en: "🎪 Rabska Fjera — Croatia's largest medieval festival (since 1364). Every year Jul 25-27: knight tournaments, costume parades, 700+ participants, crossbow competitions, medieval crafts and fireworks in Rab harbour. An unforgettable experience!",
-        hr: "🎪 Rabska Fjera — Najveći srednjovjekovni festival u Hrvatskoj (od 1364). Svake godine 25.-27. srpnja: viteški turniri, povorke u kostimima, 700+ sudionika, natjecanja samostreličara, srednjovjekovni obrti i vatromet u luci Rab. Nezaboravno!",
-        it: "🎪 Rabska Fjera — Il più grande festival medievale della Croazia (dal 1364). Ogni anno 25-27 luglio: tornei cavallereschi, sfilate in costume, 700+ partecipanti, gare di balestra e fuochi d'artificio nel porto di Rab."
-      },
-      excursions: [
-        { emoji:"🚢", de:"Bootstouren ab Rab",        en:"Boat Tours from Rab",     hr:"Ture brodom iz Raba",       it:"Tour in barca da Rab",
-          gyg:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=boat+tour",
-          viator:"https://www.viator.com/searchResults/all?text=Rab+boat+tour&pid=P00292197" },
-        { emoji:"🤿", de:"Schnorcheln & Tauchen",     en:"Diving & Snorkeling",     hr:"Ronjenje i snorkeling",     it:"Immersioni e snorkeling",
-          gyg:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=diving",
-          viator:"https://www.viator.com/searchResults/all?text=Rab+diving&pid=P00292197" },
-        { emoji:"🛶", de:"Kajak & SUP",               en:"Kayak & SUP",             hr:"Kajak & SUP",               it:"Kayak & SUP",
-          gyg:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=kayak",
-          viator:"https://www.viator.com/searchResults/all?text=Rab+kayak&pid=P00292197" },
-        { emoji:"🏝️", de:"Insel-Hopping (Goli Otok)", en:"Island Hopping (Goli Otok)", hr:"Otočki obilazak (Goli Otok)", it:"Island Hopping (Goli Otok)",
-          gyg:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=island+hopping",
-          viator:"https://www.viator.com/searchResults/all?text=Rab+island+hopping&pid=P00292197" },
-        { emoji:"⚔️", de:"Rabska Fjera Stadtführung",  en:"Rabska Fjera Town Walk",  hr:"Rabska Fjera šetnja gradom", it:"Passeggiata Rabska Fjera",
-          gyg:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=rab+walking+tour",
-          viator:"https://www.viator.com/searchResults/all?text=Rab+walking+tour&pid=P00292197" },
-      ],
-      booking: "https://www.booking.com/searchresults.html?ss=Rab%2C+Croatia&aid=101704203",
-      heroImg: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=900&q=80",
-      propImg: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80",
-      phone: "+385 51 724 522",
-      whatsapp: "38551724522",
-      droneVideoId: null, // set to YouTube video ID when drone footage is available
-      matterportId: null, // set to Matterport scan ID when 3D tour is scanned
-      rooms: [
-        {
-          id: "studio", emoji: "🛏️",
-          name: { hr:"Studio apartman", de:"Studio-Apartment", en:"Studio apartment", it:"Studio appartamento" },
-          guests: 2, beds: 1, sqm: 22,
-          img: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80",
-          amenities: {
-            hr:["❄️ Klima","📶 WiFi","🍳 Kuhinja","🚿 Kupaonica","🅿️ Parking"],
-            de:["❄️ Klimaanlage","📶 WLAN","🍳 Küche","🚿 Badezimmer","🅿️ Parkplatz"],
-            en:["❄️ A/C","📶 WiFi","🍳 Kitchen","🚿 Bathroom","🅿️ Parking"],
-            it:["❄️ Aria cond.","📶 WiFi","🍳 Cucina","🚿 Bagno","🅿️ Parcheggio"],
-          },
-          view: { hr:"Pogled na vrt", de:"Gartenblick", en:"Garden view", it:"Vista giardino" },
-          priceFrom: 65,
-          bookingNote: { hr:"min. 3 noći", de:"min. 3 Nächte", en:"min. 3 nights", it:"min. 3 notti" },
-        },
-        {
-          id: "apt_a", emoji: "🏠",
-          name: { hr:"Apartman A — za 4 osobe", de:"Apartment A — für 4 Personen", en:"Apartment A — for 4 guests", it:"Appartamento A — per 4 persone" },
-          guests: 4, beds: 2, sqm: 42,
-          img: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80",
-          amenities: {
-            hr:["❄️ Klima","📶 WiFi","🍳 Opremljena kuhinja","🛁 Kupaonica","🅿️ Parking","🌅 Pogled na more"],
-            de:["❄️ Klimaanlage","📶 WLAN","🍳 Voll ausgest. Küche","🛁 Badezimmer","🅿️ Parkplatz","🌅 Meerblick"],
-            en:["❄️ A/C","📶 WiFi","🍳 Fully equipped kitchen","🛁 Bathroom","🅿️ Parking","🌅 Sea view"],
-            it:["❄️ Aria cond.","📶 WiFi","🍳 Cucina attrezzata","🛁 Bagno","🅿️ Parcheggio","🌅 Vista mare"],
-          },
-          view: { hr:"Pogled na more", de:"Meerblick", en:"Sea view", it:"Vista mare" },
-          priceFrom: 95,
-          bookingNote: { hr:"min. 3 noći", de:"min. 3 Nächte", en:"min. 3 nights", it:"min. 3 notti" },
-        },
-        {
-          id: "apt_b", emoji: "🏡",
-          name: { hr:"Apartman B — za 6 osoba", de:"Apartment B — für 6 Personen", en:"Apartment B — for 6 guests", it:"Appartamento B — per 6 persone" },
-          guests: 6, beds: 3, sqm: 65,
-          img: "https://images.unsplash.com/photo-1560185007-c5ca9d2c014d?w=600&q=80",
-          amenities: {
-            hr:["❄️ Klima","📶 WiFi","🍳 Opremljena kuhinja","🛁 2 kupaonice","🅿️ Parking","🌅 Pogled na more","🏊 Terasa"],
-            de:["❄️ Klimaanlage","📶 WLAN","🍳 Voll ausgest. Küche","🛁 2 Badezimmer","🅿️ Parkplatz","🌅 Meerblick","🏊 Terrasse"],
-            en:["❄️ A/C","📶 WiFi","🍳 Fully equipped kitchen","🛁 2 bathrooms","🅿️ Parking","🌅 Sea view","🏊 Terrace"],
-            it:["❄️ Aria cond.","📶 WiFi","🍳 Cucina attrezzata","🛁 2 bagni","🅿️ Parcheggio","🌅 Vista mare","🏊 Terrazza"],
-          },
-          view: { hr:"Panoramski pogled na more", de:"Panorama-Meerblick", en:"Panoramic sea view", it:"Vista panoramica sul mare" },
-          priceFrom: 130,
-          bookingNote: { hr:"min. 5 noći ljeti", de:"min. 5 Nächte im Sommer", en:"min. 5 nights in summer", it:"min. 5 notti in estate" },
-        },
-      ],
-      hours: { hr:"Pon–Ned 12:00–23:00", de:"Mo–So 12:00–23:00", en:"Mon–Sun 12:00–23:00", it:"Lun–Dom 12:00–23:00" },
-      rating: 4.7,
-      reviewCount: 127,
-      gallery: [
-        "https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80",
-        "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=600&q=80",
-        "https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=600&q=80",
-        "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80",
-        "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80",
-        "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=80",
-      ],
-      testimonials: [
-        { name:"Klaus M.", flag:"🇩🇪", rating:5, text:{ de:"Das beste Steak auf der Insel! Die Terrasse mit Meerblick ist einfach traumhaft — wir kommen definitiv wieder.", en:"Best steak on the island! The sea-view terrace is simply dreamy — we'll definitely be back.", hr:"Najbolji steak na otoku! Terasa s pogledom na more je fantastična — svakako se vraćamo.", it:"La migliore bistecca sull'isola! La terrazza con vista mare è semplicemente meravigliosa." } },
-        { name:"Sarah B.", flag:"🇬🇧", rating:5, text:{ de:"Fantastische Pizzen und unglaublich freundliches Personal. Der Ćevapi mit Räucherkäse ist ein absolutes Muss!", en:"Fantastic pizzas and incredibly friendly staff. The ćevapi with smoked cheese is an absolute must!", hr:"Fantastične pizze i prijazno osoblje. Ćevapi s dimljenim sirom su apsolutno obavezni!", it:"Pizze fantastiche e personale incredibilmente gentile. Il ćevapi con formaggio affumicato è un must!" } },
-        { name:"Marta K.", flag:"🇵🇱", rating:5, text:{ de:"Perfekter Urlaubsabend — Fischplatte war köstlich. Gemütlich, günstig, authentisch kroatisch.", en:"Perfect holiday evening — the seafood platter was delicious. Cosy, affordable, authentically Croatian.", hr:"Savršena ljetna večer — riblje jelo je bilo izvrsno. Ugodna, pristupačna, autentično hrvatska kuhinja.", it:"Serata vacanziera perfetta — il piatto di pesce era delizioso. Accogliente, economico, autenticamente croato." } },
-      ],
-      dailySpecials: [
-        { day:0, emoji:"🥩", hr:"Nedjeljna goveđa plata (za 2)", de:"Sonntagsrinderplatte (für 2)", en:"Sunday beef platter (for 2)", it:"Piatto di manzo domenicale (x2)", price:32 },
-        { day:1, emoji:"🐟", hr:"Riba dana s prilogom", de:"Fisch des Tages mit Beilage", en:"Fish of the day with side", it:"Pesce del giorno con contorno", price:19 },
-        { day:2, emoji:"🍕", hr:"Pizza + salata + piće = 15€", de:"Pizza + Salat + Getränk = 15€", en:"Pizza + salad + drink = 15€", it:"Pizza + insalata + bevanda = 15€", price:15 },
-        { day:3, emoji:"🐙", hr:"Pečena hobotnica + crni rižot", de:"Gebackener Krake + schwarzes Risotto", en:"Baked octopus + black risotto", it:"Polpo al forno + risotto nero", price:24 },
-        { day:4, emoji:"🌭", hr:"Ćevapi večer — 10 kom + prilog", de:"Ćevapi-Abend — 10 Stk + Beilage", en:"Ćevapi night — 10 pcs + side", it:"Serata ćevapi — 10 pz + contorno", price:18 },
-        { day:5, emoji:"🦞", hr:"Jadranski tanjur za 2 — sve iz mora", de:"Adriatischer Teller für 2 — alles aus dem Meer", en:"Adriatic platter for 2 — all from the sea", it:"Piatto adriatico x2 — tutto dal mare", price:38 },
-        { day:6, emoji:"🔥", hr:"Subotnji roštilj mješano (za 2)", de:"Samstag-Grillplatte (für 2)", en:"Saturday BBQ mixed grill (for 2)", it:"Grigliata mista del sabato (x2)", price:36 },
-      ],
-      menu: [
-        {
-          section: { hr:"Predjela", de:"Vorspeisen", en:"Starters", it:"Antipasti" },
-          items: [
-            { emoji:"🥩", name:{ hr:"Dalmatinski pršut", de:"Dalmatinischer Pršut", en:"Dalmatian prosciutto", it:"Prosciutto dalmata" }, desc:{ hr:"Domaći suhomesnati pršut, masline, kapari, maslinovo ulje s Raba", de:"Hausgemachter Trockenschinken, Oliven, Kapern, Rab-Olivenöl", en:"Home-cured prosciutto, olives, capers, Rab olive oil", it:"Prosciutto artigianale, olive, capperi, olio di Rab" }, price:12 },
-            { emoji:"🍞", name:{ hr:"Bruschette s tartufima", de:"Bruschette mit Trüffel", en:"Truffle bruschette", it:"Bruschette al tartufo" }, desc:{ hr:"Prepečeni kruh s istarskom tartufnom kremom, cherry rajčicama i svježim bosiljkom", de:"Geröstetes Brot mit Trüffelcreme, Kirschtomaten und frischem Basilikum", en:"Toasted bread with truffle cream, cherry tomatoes and fresh basil", it:"Pane tostato con crema tartufata, pomodorini e basilico" }, price:9 },
-            { emoji:"🦑", name:{ hr:"Kalamari na roštilju", de:"Gegrillte Kalamari", en:"Grilled calamari", it:"Calamari alla griglia" }, desc:{ hr:"Svježi jadranski kalamari s limunom, peršinom i maslinovim uljem", de:"Frische Adriatische Kalamari mit Zitrone, Petersilie und Olivenöl", en:"Fresh Adriatic calamari with lemon, parsley and olive oil", it:"Calamari adriatici freschi con limone, prezzemolo e olio" }, price:14 },
-          ]
-        },
-        {
-          section: { hr:"S roštilja", de:"Vom Grill", en:"From the grill", it:"Dalla griglia" },
-          items: [
-            { emoji:"🥩", name:{ hr:"Argentinski ribeye 300g", de:"Argentinisches Ribeye 300g", en:"Argentine ribeye 300g", it:"Ribeye argentino 300g" }, desc:{ hr:"Premium argentinsko meso na drvenom ugljenu, dimljeni maslac, rucola, pečeni češnjak", de:"Premium-Rindfleisch auf Holzkohle, Räucherbutter, Rucola, gerösteter Knoblauch", en:"Premium Argentine beef on charcoal, smoked butter, rocket, roasted garlic", it:"Manzo argentino alla brace, burro affumicato, rucola, aglio arrosto" }, price:28 },
-            { emoji:"🌭", name:{ hr:"Ćevapi s dimljenim sirom (8 kom)", de:"Ćevapi mit Räucherkäse (8 Stk)", en:"Ćevapi with smoked cheese (8 pcs)", it:"Ćevapi con formaggio affumicato (8 pz)" }, desc:{ hr:"Domaći goveđi ćevapi, dimljeni sir iz Dalmatinske zagore, ajvar, svježi luk, somun", de:"Rindfleisch-Ćevapi, Räucherkäse aus dem Hinterland, Ajvar, Zwiebeln, Somun", en:"Beef ćevapi, smoked cheese from Dalmatian hinterland, ajvar, onion, somun bread", it:"Ćevapi di manzo, formaggio affumicato, ajvar, cipolla, pane somun" }, price:16 },
-            { emoji:"🍖", name:{ hr:"Mješano meso s roštilja (za 2)", de:"Gemischte Grillplatte (für 2)", en:"Mixed grill platter (for 2)", it:"Piatto misto alla griglia (per 2)" }, desc:{ hr:"Ćevapi, pileći batak, svinjska rebra i povrće s roštilja", de:"Ćevapi, Hähnchenschenkel, Schweinerippchen und Grillgemüse", en:"Ćevapi, chicken thigh, pork ribs and grilled vegetables", it:"Ćevapi, coscia di pollo, costine di maiale e verdure grigliate" }, price:32 },
-          ]
-        },
-        {
-          section: { hr:"Pizze", de:"Pizzen", en:"Pizzas", it:"Pizze" },
-          items: [
-            { emoji:"🍕", name:{ hr:"Margherita", de:"Margherita", en:"Margherita", it:"Margherita" }, desc:{ hr:"San Marzano rajčica, buffalo mozzarella, svježi bosiljak, maslinovo ulje", de:"San-Marzano-Tomaten, Büffelmozzarella, Basilikum, Olivenöl", en:"San Marzano tomato, buffalo mozzarella, fresh basil, olive oil", it:"Pomodoro San Marzano, mozzarella di bufala, basilico, olio" }, price:11 },
-            { emoji:"🃏", name:{ hr:"Pizza Black Jack", de:"Pizza Black Jack", en:"Pizza Black Jack", it:"Pizza Black Jack" }, desc:{ hr:"Dimljeni sir, ćevapčići, pepperoni, pečene paprike, češnjak ulje — naš signature", de:"Räucherkäse, Ćevapčići, Pepperoni, geröstete Paprika, Knoblauchöl — unser Signature", en:"Smoked cheese, ćevapčići, pepperoni, roasted peppers, garlic oil — our signature", it:"Formaggio affumicato, ćevapčići, pepperoni, peperoni arrosto — la nostra specialty" }, price:15 },
-            { emoji:"🦐", name:{ hr:"Frutti di mare", de:"Frutti di mare", en:"Frutti di mare", it:"Frutti di mare" }, desc:{ hr:"Mješavina jadranskih plodova mora, rajčica, češnjak, peršin, maslinovo ulje", de:"Adriatische Meeresfrüchte, Tomaten, Knoblauch, Petersilie, Olivenöl", en:"Adriatic seafood medley, tomato, garlic, parsley, olive oil", it:"Frutti di mare adriatici, pomodoro, aglio, prezzemolo, olio" }, price:16 },
-          ]
-        },
-        {
-          section: { hr:"Deserti", de:"Desserts", en:"Desserts", it:"Dolci" },
-          items: [
-            { emoji:"🍮", name:{ hr:"Domaća rožata", de:"Hausgemachte Rožata", en:"Homemade rožata", it:"Rožata artigianale" }, desc:{ hr:"Tradicionalni dalmatinski krem karamel s ružinom vodicom i mjedom s Raba", de:"Dalmatinischer Crème caramel mit Rosenwasser und Rab-Honig", en:"Dalmatian crème caramel with rose water and Rab honey", it:"Crème caramel dalmata con acqua di rose e miele di Rab" }, price:7 },
-            { emoji:"🍰", name:{ hr:"Torta od smokava", de:"Feigenkuchen", en:"Fig cake", it:"Torta di fichi" }, desc:{ hr:"Domaća torta s rabskim smokvama, mjedom i orasima — sezonski specijalitet", de:"Hausgemachter Kuchen mit Rab-Feigen, Honig und Walnüssen — Saisonspezialität", en:"Homemade cake with Rab figs, honey and walnuts — seasonal speciality", it:"Torta con fichi di Rab, miele e noci — stagionale" }, price:8 },
-          ]
-        },
-        {
-          section: { hr:"Piće", de:"Getränke", en:"Drinks", it:"Bevande" },
-          items: [
-            { emoji:"🍷", name:{ hr:"Domaće vino (čaša)", de:"Hauswein (Glas)", en:"House wine (glass)", it:"Vino della casa (calice)" }, desc:{ hr:"Bijelo ili crno, lokalni vinari s otoka Raba i Pelješca", de:"Weiß oder Rot, lokale Winzer der Insel Rab und Pelješac", en:"White or red, local winemakers from Rab and Pelješac", it:"Bianco o rosso, produttori locali di Rab e Pelješac" }, price:5 },
-            { emoji:"🍺", name:{ hr:"Lokalno pivo", de:"Lokales Bier", en:"Local beer", it:"Birra locale" }, desc:{ hr:"Karlovačko ili Ožujsko, servirano u hladnom vrču", de:"Karlovačko oder Ožujsko, im kühlen Krug", en:"Karlovačko or Ožujsko, served in a chilled mug", it:"Karlovačko o Ožujsko, servita fredda" }, price:4 },
-            { emoji:"🥤", name:{ hr:"Sok / Mineralna", de:"Saft / Mineralwasser", en:"Juice / Mineral water", it:"Succo / Acqua minerale" }, desc:{ hr:"Domaći voćni sok ili Jamnica mineralna voda", de:"Frisch gepresster Saft oder Jamnica Mineralwasser", en:"Freshly pressed juice or Jamnica mineral water", it:"Succo fresco o acqua minerale Jamnica" }, price:3 },
-          ]
-        },
-      ],
-    }
-  };
+  // AFFILIATE_DATA imported from ./affiliates
 
   const Kiosk = () => {
     // ── Welcome/Transition screen ──
@@ -3247,6 +3227,9 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
       }}
     />
   );
+
+  /* ─── PARTNER STATS DASHBOARD ─── */
+  if (statsPartnerId) return <PartnerStatsDashboard partner={statsPartnerId} />;
 
   /* ─── CINEMATIC SPLASH ─── */
   if (splash) return (
