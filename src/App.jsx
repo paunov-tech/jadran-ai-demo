@@ -2342,6 +2342,55 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
       propImg: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80",
       phone: "+385 51 724 522",
       whatsapp: "38551724522",
+      droneVideoId: null, // set to YouTube video ID when drone footage is available
+      matterportId: null, // set to Matterport scan ID when 3D tour is scanned
+      rooms: [
+        {
+          id: "studio", emoji: "🛏️",
+          name: { hr:"Studio apartman", de:"Studio-Apartment", en:"Studio apartment", it:"Studio appartamento" },
+          guests: 2, beds: 1, sqm: 22,
+          img: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80",
+          amenities: {
+            hr:["❄️ Klima","📶 WiFi","🍳 Kuhinja","🚿 Kupaonica","🅿️ Parking"],
+            de:["❄️ Klimaanlage","📶 WLAN","🍳 Küche","🚿 Badezimmer","🅿️ Parkplatz"],
+            en:["❄️ A/C","📶 WiFi","🍳 Kitchen","🚿 Bathroom","🅿️ Parking"],
+            it:["❄️ Aria cond.","📶 WiFi","🍳 Cucina","🚿 Bagno","🅿️ Parcheggio"],
+          },
+          view: { hr:"Pogled na vrt", de:"Gartenblick", en:"Garden view", it:"Vista giardino" },
+          priceFrom: 65,
+          bookingNote: { hr:"min. 3 noći", de:"min. 3 Nächte", en:"min. 3 nights", it:"min. 3 notti" },
+        },
+        {
+          id: "apt_a", emoji: "🏠",
+          name: { hr:"Apartman A — za 4 osobe", de:"Apartment A — für 4 Personen", en:"Apartment A — for 4 guests", it:"Appartamento A — per 4 persone" },
+          guests: 4, beds: 2, sqm: 42,
+          img: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=600&q=80",
+          amenities: {
+            hr:["❄️ Klima","📶 WiFi","🍳 Opremljena kuhinja","🛁 Kupaonica","🅿️ Parking","🌅 Pogled na more"],
+            de:["❄️ Klimaanlage","📶 WLAN","🍳 Voll ausgest. Küche","🛁 Badezimmer","🅿️ Parkplatz","🌅 Meerblick"],
+            en:["❄️ A/C","📶 WiFi","🍳 Fully equipped kitchen","🛁 Bathroom","🅿️ Parking","🌅 Sea view"],
+            it:["❄️ Aria cond.","📶 WiFi","🍳 Cucina attrezzata","🛁 Bagno","🅿️ Parcheggio","🌅 Vista mare"],
+          },
+          view: { hr:"Pogled na more", de:"Meerblick", en:"Sea view", it:"Vista mare" },
+          priceFrom: 95,
+          bookingNote: { hr:"min. 3 noći", de:"min. 3 Nächte", en:"min. 3 nights", it:"min. 3 notti" },
+        },
+        {
+          id: "apt_b", emoji: "🏡",
+          name: { hr:"Apartman B — za 6 osoba", de:"Apartment B — für 6 Personen", en:"Apartment B — for 6 guests", it:"Appartamento B — per 6 persone" },
+          guests: 6, beds: 3, sqm: 65,
+          img: "https://images.unsplash.com/photo-1560185007-c5ca9d2c014d?w=600&q=80",
+          amenities: {
+            hr:["❄️ Klima","📶 WiFi","🍳 Opremljena kuhinja","🛁 2 kupaonice","🅿️ Parking","🌅 Pogled na more","🏊 Terasa"],
+            de:["❄️ Klimaanlage","📶 WLAN","🍳 Voll ausgest. Küche","🛁 2 Badezimmer","🅿️ Parkplatz","🌅 Meerblick","🏊 Terrasse"],
+            en:["❄️ A/C","📶 WiFi","🍳 Fully equipped kitchen","🛁 2 bathrooms","🅿️ Parking","🌅 Sea view","🏊 Terrace"],
+            it:["❄️ Aria cond.","📶 WiFi","🍳 Cucina attrezzata","🛁 2 bagni","🅿️ Parcheggio","🌅 Vista mare","🏊 Terrazza"],
+          },
+          view: { hr:"Panoramski pogled na more", de:"Panorama-Meerblick", en:"Panoramic sea view", it:"Vista panoramica sul mare" },
+          priceFrom: 130,
+          bookingNote: { hr:"min. 5 noći ljeti", de:"min. 5 Nächte im Sommer", en:"min. 5 nights in summer", it:"min. 5 notti in estate" },
+        },
+      ],
       hours: { hr:"Pon–Ned 12:00–23:00", de:"Mo–So 12:00–23:00", en:"Mon–Sun 12:00–23:00", it:"Lun–Dom 12:00–23:00" },
       rating: 4.7,
       reviewCount: 127,
@@ -2724,6 +2773,103 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
               <div key={i} style={{ padding:"10px 12px", background:"rgba(14,165,233,0.04)", border:`1px solid ${C.bord}`, borderRadius:12, ...dm, fontSize:13, color:C.text }}>{f}</div>
             ))}
           </div>
+
+          {/* ── Smještaj / Accommodation ── */}
+          {aff.rooms?.length > 0 && (
+            <div style={{ marginBottom:24 }}>
+              <div style={{ ...dm, fontSize:10, color:"#22c55e", letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:10 }}>
+                {isDE ? "UNTERKUNFT" : lang==="en" ? "ACCOMMODATION" : lang==="it" ? "ALLOGGIO" : "SMJEŠTAJ"}
+              </div>
+              <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                {aff.rooms.map((room) => {
+                  const amen = room.amenities[lang] || room.amenities[lang === "at" ? "de" : "en"] || room.amenities.en;
+                  return (
+                    <Card key={room.id} style={{ padding:0, overflow:"hidden" }}>
+                      {/* Room photo */}
+                      <div style={{ position:"relative", height:140 }}>
+                        <img src={room.img} alt={L(room.name)} style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} loading="lazy" />
+                        <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(5,14,30,0.88) 0%, transparent 50%)" }} />
+                        <div style={{ position:"absolute", bottom:12, left:14, right:14, display:"flex", alignItems:"flex-end", justifyContent:"space-between" }}>
+                          <div>
+                            <div style={{ ...dm, fontSize:14, fontWeight:700, color:"#f0f9ff" }}>{room.emoji} {L(room.name)}</div>
+                            <div style={{ ...dm, fontSize:11, color:"rgba(240,249,255,0.6)", marginTop:2 }}>
+                              👤 {room.guests} · 🛏️ {room.beds} · 📐 {room.sqm}m² · {L(room.view)}
+                            </div>
+                          </div>
+                          <div style={{ textAlign:"right", flexShrink:0 }}>
+                            <div style={{ ...dm, fontSize:11, color:"rgba(255,255,255,0.5)" }}>
+                              {isDE ? "ab" : lang==="en" ? "from" : lang==="it" ? "da" : "od"}
+                            </div>
+                            <div style={{ ...dm, fontSize:18, fontWeight:700, color:"#22c55e" }}>€{room.priceFrom}</div>
+                            <div style={{ ...dm, fontSize:9, color:"rgba(255,255,255,0.4)" }}>
+                              {isDE ? "/Nacht" : lang==="en" ? "/night" : lang==="it" ? "/notte" : "/noć"}
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ position:"absolute", top:10, right:10, padding:"3px 8px", borderRadius:6, background:"rgba(34,197,94,0.18)", border:"1px solid rgba(34,197,94,0.3)", ...dm, fontSize:9, color:"#22c55e", fontWeight:700 }}>
+                          {L(room.bookingNote)}
+                        </div>
+                      </div>
+                      {/* Amenities */}
+                      <div style={{ padding:"10px 14px 12px", display:"flex", gap:6, flexWrap:"wrap" }}>
+                        {amen.map((a, ai) => (
+                          <span key={ai} style={{ padding:"3px 8px", borderRadius:8, background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.15)", ...dm, fontSize:11, color:"#86efac" }}>{a}</span>
+                        ))}
+                      </div>
+                      {/* Book buttons */}
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, padding:"0 14px 14px" }}>
+                        <a href={`https://wa.me/${aff.whatsapp}?text=${encodeURIComponent((isDE ? `Hallo! Ich interessiere mich für ${L(room.name)} bei Black Jack Rab.` : lang==="en" ? `Hello! I'm interested in ${L(room.name)} at Black Jack Rab.` : lang==="it" ? `Salve! Sono interessato/a a ${L(room.name)} al Black Jack Rab.` : `Pozdrav! Zanima me ${L(room.name)} u Black Jack Rabu.`))}`}
+                          target="_blank" rel="noopener noreferrer"
+                          style={{ padding:"10px 8px", borderRadius:10, background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.25)", ...dm, fontSize:12, fontWeight:700, color:"#25d366", textAlign:"center", textDecoration:"none" }}>
+                          💬 {isDE ? "Anfragen" : lang==="en" ? "Enquire" : lang==="it" ? "Informarsi" : "Upit"}
+                        </a>
+                        <a href={`tel:${aff.phone}`}
+                          style={{ padding:"10px 8px", borderRadius:10, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", ...dm, fontSize:12, fontWeight:700, color:C.accent, textAlign:"center", textDecoration:"none" }}>
+                          📞 {isDE ? "Anrufen" : lang==="en" ? "Call" : lang==="it" ? "Chiama" : "Pozovi"}
+                        </a>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── Pogled od gore / Aerial view ── */}
+          <div style={{ marginBottom:24 }}>
+            <div style={{ ...dm, fontSize:10, color:"#a78bfa", letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:10 }}>
+              {isDE ? "LAGE AUS DER VOGELPERSPEKTIVE" : lang==="en" ? "AERIAL VIEW · LOCATION" : lang==="it" ? "VISTA AEREA · POSIZIONE" : "POGLED ODOZGO · LOKACIJA"}
+            </div>
+            <div style={{ borderRadius:16, overflow:"hidden", position:"relative", height:220, border:`1px solid rgba(167,139,250,0.2)` }}>
+              <iframe
+                title="Black Jack Rab — aerial"
+                src="https://maps.google.com/maps?q=44.7490,14.7555&hl=hr&z=17&t=k&output=embed"
+                style={{ width:"100%", height:"100%", border:0, display:"block" }}
+                loading="lazy"
+                allowFullScreen
+              />
+              <div style={{ position:"absolute", bottom:10, left:10, padding:"4px 10px", borderRadius:8, background:"rgba(5,14,30,0.82)", border:"1px solid rgba(167,139,250,0.25)", ...dm, fontSize:10, color:"#c4b5fd" }}>
+                📍 Palit 315, Rab · 200m {isDE ? "vom Strand" : lang==="en" ? "from beach" : lang==="it" ? "dalla spiaggia" : "od plaže"}
+              </div>
+            </div>
+          </div>
+
+          {/* ── Virtual tour / Drone — slot ── */}
+          {aff.droneVideoId ? (
+            <div style={{ marginBottom:24 }}>
+              <div style={{ ...dm, fontSize:10, color:"#f97316", letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:10 }}>
+                {isDE ? "DROHNENAUFNAHME" : lang==="en" ? "DRONE FOOTAGE" : lang==="it" ? "RIPRESE DRONE" : "DRONE SNIMAK"}
+              </div>
+              <div style={{ borderRadius:16, overflow:"hidden", position:"relative", paddingTop:"56.25%" }}>
+                <iframe
+                  title="Black Jack drone"
+                  src={`https://www.youtube.com/embed/${aff.droneVideoId}?autoplay=0&rel=0`}
+                  style={{ position:"absolute", top:0, left:0, width:"100%", height:"100%", border:0 }}
+                  allowFullScreen
+                />
+              </div>
+            </div>
+          ) : null}
 
           {/* ── Menu ── */}
           {aff.menu?.length > 0 && (
