@@ -835,6 +835,86 @@ export default function DestinationExplorer() {
                     ))}
                   </div>
 
+                  {/* ── Ecosystem: how it works ── */}
+                  <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:18, padding:"24px 20px", marginBottom:32 }}>
+                    <div style={{ fontFamily:B, fontSize:10, fontWeight:700, color:"#0ea5e9", letterSpacing:2.5, marginBottom:16 }}>
+                      {({hr:"KAKO FUNKCIONIRA",de:"WIE ES FUNKTIONIERT",en:"HOW IT WORKS",it:"COME FUNZIONA"})[lang]||"HOW IT WORKS"}
+                    </div>
+
+                    {/* Flow diagram */}
+                    <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap", justifyContent:"center", marginBottom:20 }}>
+                      {[
+                        { icon:"📲", label:{hr:"Gost skenira QR",en:"Guest scans QR",de:"Gast scannt QR"} },
+                        { arrow:true },
+                        { icon:"🤖", label:{hr:"Otvara Jadran AI",en:"Opens Jadran AI",de:"Öffnet Jadran AI"} },
+                        { arrow:true },
+                        { icon:"🎯", label:{hr:"Vidi aktivnosti & atrakcije",en:"Sees activities & attractions",de:"Sieht Aktivitäten & Attraktionen"} },
+                        { arrow:true },
+                        { icon:"🍽️", label:{hr:"Dolazi kod vas",en:"Comes to your venue",de:"Kommt zu Ihnen"} },
+                      ].map((s,i) => s.arrow
+                        ? <div key={i} style={{ color:"#334155", fontSize:16 }}>›</div>
+                        : <div key={i} style={{ textAlign:"center", flex:"0 1 auto", minWidth:72 }}>
+                            <div style={{ fontSize:24, marginBottom:4 }}>{s.icon}</div>
+                            <div style={{ fontFamily:B, fontSize:10, color:"#64748b", lineHeight:1.4 }}>{s.label[lang]||s.label.en}</div>
+                          </div>
+                      )}
+                    </div>
+
+                    {/* Platform promotion */}
+                    <div style={{ background:"rgba(14,165,233,0.06)", borderRadius:12, padding:"14px 16px", marginBottom:16 }}>
+                      <div style={{ fontFamily:B, fontSize:12, fontWeight:700, color:"#e2e8f0", marginBottom:6 }}>
+                        {({hr:"Vaša promocija ide na sve platforme — bez vašeg truda",de:"Ihre Werbung auf allen Plattformen — ohne Ihren Aufwand",en:"Your promotion across all platforms — without your effort",it:"La vostra promozione su tutte le piattaforme — senza sforzo"})[lang]||"Your promotion across all platforms — without your effort"}
+                      </div>
+                      <div style={{ fontFamily:B, fontSize:12, color:"#64748b", lineHeight:1.7, marginBottom:12 }}>
+                        {({
+                          hr:"Jadran AI aplikaciju svakodnevno promovišemo plaćenim oglasima, organskim sadržajem i SEO-om na svim ključnim platformama. Svaki gost koji uđe kroz naš oglas odmah vidi vaš objekt kao preporuku. Vaš marketing — naš trošak.",
+                          en:"We promote the Jadran AI app daily through paid ads, organic content and SEO across all major platforms. Every guest who enters through our ad immediately sees your venue as a recommendation. Your marketing — our cost.",
+                          de:"Wir bewerben die Jadran AI App täglich durch bezahlte Anzeigen, organische Inhalte und SEO auf allen wichtigen Plattformen. Jeder Gast, der über unsere Anzeige einsteigt, sieht sofort Ihr Objekt als Empfehlung. Ihr Marketing — unsere Kosten.",
+                        })[lang]||"We promote the Jadran AI app daily through paid ads, organic content and SEO. Every guest who enters immediately sees your venue."}
+                      </div>
+                      <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                        {[
+                          { icon:"f", bg:"#1877f2", label:"Facebook" },
+                          { icon:"▶", bg:"linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)", label:"Instagram" },
+                          { icon:"♪", bg:"#010101", label:"TikTok" },
+                          { icon:"G", bg:"#4285f4", label:"Google" },
+                          { icon:"🌐", bg:"rgba(255,255,255,0.08)", label:"Web/SEO" },
+                        ].map((p,i) => (
+                          <div key={i} style={{ display:"flex", alignItems:"center", gap:6, padding:"5px 10px", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:8 }}>
+                            <div style={{ width:18, height:18, borderRadius:5, background:p.bg, display:"grid", placeItems:"center", fontSize:10, fontWeight:900, color:"#fff" }}>{p.icon}</div>
+                            <span style={{ fontFamily:B, fontSize:10, color:"#64748b", fontWeight:600 }}>{p.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* World brand integrations */}
+                    <div style={{ fontFamily:B, fontSize:10, fontWeight:700, color:"#334155", letterSpacing:2, marginBottom:10, textTransform:"uppercase" }}>
+                      {({hr:"Globalni partneri za zabavu i aktivnosti",de:"Globale Partner für Unterhaltung & Aktivitäten",en:"Global entertainment & activity partners",it:"Partner globali per intrattenimento e attività"})[lang]||"Global entertainment & activity partners"}
+                    </div>
+                    <div style={{ fontFamily:B, fontSize:12, color:"#64748b", lineHeight:1.7, marginBottom:14 }}>
+                      {({
+                        hr:"Integrirani smo s vodećim svjetskim platformama za turističke aktivnosti. Gost koji traži izlete, ronjenje ili ture odmah u istoj aplikaciji vidi gdje može večerati ili prenoćiti — vaš objekt je tu, u pravom trenutku.",
+                        en:"We are integrated with the world's leading tourist activity platforms. A guest searching for tours, diving or day trips immediately sees in the same app where to dine or stay — your venue is there, at the right moment.",
+                        de:"Wir sind mit den weltweit führenden Tourismusaktivitätsplattformen integriert. Ein Gast, der nach Ausflügen, Tauchen oder Touren sucht, sieht in derselben App sofort, wo er essen oder übernachten kann.",
+                      })[lang]||"Integrated with world-leading activity platforms — guests find dining and accommodation in the same app."}
+                    </div>
+                    <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+                      {[
+                        { name:"VIATOR", sub:{hr:"Turistički gigant · 300.000+ aktivnosti u 190 zemalja",en:"Tourism giant · 300,000+ activities in 190 countries",de:"Tourismus-Riese · 300.000+ Aktivitäten in 190 Ländern"}, color:"#f97316", icon:"🌍" },
+                        { name:"GetYourGuide", sub:{hr:"Vodeća platforma za ture i iskustva u Europi",en:"Europe's leading tours & experiences platform",de:"Europas führende Touren- & Erlebnisplattform"}, color:"#22c55e", icon:"🎟️" },
+                      ].map((p,i) => (
+                        <div key={i} style={{ flex:"1 1 200px", background:"rgba(255,255,255,0.03)", border:`1px solid ${p.color}25`, borderRadius:12, padding:"12px 14px", borderLeft:`3px solid ${p.color}` }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+                            <span style={{ fontSize:18 }}>{p.icon}</span>
+                            <div style={{ fontFamily:B, fontSize:13, fontWeight:800, color:"#e2e8f0" }}>{p.name}</div>
+                          </div>
+                          <div style={{ fontFamily:B, fontSize:10, color:"#475569", lineHeight:1.5 }}>{p.sub[lang]||p.sub.en}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Section label */}
                   <div style={{ fontFamily:B, fontSize:10, fontWeight:700, color:"#334155", letterSpacing:2, marginBottom:14, textTransform:"uppercase" }}>
                     {({hr:"Funkcije — klikni za detalje",de:"Funktionen — Klicken für Details",en:"Features — click for details",it:"Funzioni — clicca per dettagli"})[lang]||"Features — click for details"}
@@ -873,32 +953,73 @@ export default function DestinationExplorer() {
                   </div>
 
                   {/* SIAL Consulting section */}
-                  <div style={{ background:"rgba(14,165,233,0.04)", border:"1px solid rgba(14,165,233,0.12)", borderRadius:18, padding:"24px 24px", marginBottom:28 }}>
-                    <div style={{ display:"flex", alignItems:"flex-start", gap:16, flexWrap:"wrap" }}>
-                      <div style={{ width:52, height:52, borderRadius:14, background:"linear-gradient(135deg,#0ea5e9,#0284c7)", display:"grid", placeItems:"center", fontSize:26, flexShrink:0 }}>🏭</div>
-                      <div style={{ flex:1, minWidth:220 }}>
-                        <div style={{ fontFamily:B, fontSize:11, fontWeight:700, color:"#0ea5e9", letterSpacing:1.5, marginBottom:4 }}>SIAL CONSULTING d.o.o.</div>
-                        <div style={{ fontFamily:F, fontSize:17, fontWeight:400, color:"#e2e8f0", marginBottom:10 }}>
-                          {({hr:"Tehnološki partner za jugoistočnu Europu",de:"Technologiepartner für Südosteuropa",en:"Technology partner for Southeast Europe",it:"Partner tecnologico per il Sud-Est Europa"})[lang]||"Technology partner for Southeast Europe"}
+                  <div style={{ background:"rgba(14,165,233,0.03)", border:"1px solid rgba(14,165,233,0.12)", borderRadius:18, padding:"28px 24px", marginBottom:28 }}>
+                    {/* SIAL Logo */}
+                    <div style={{ marginBottom:20 }}>
+                      <img src="/sial-logo-light.svg" alt="SIAL Technology Consulting" style={{ height:48, maxWidth:"100%", display:"block" }} />
+                    </div>
+
+                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:12 }}>
+                      <div style={{ fontFamily:B, fontSize:9, fontWeight:700, color:"#475569", letterSpacing:1.5, background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:"3px 9px" }}>EU · SLOVENIJA</div>
+                      <div style={{ fontFamily:B, fontSize:9, fontWeight:700, color:"#0ea5e9", letterSpacing:1, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", borderRadius:6, padding:"3px 9px" }}>
+                        {({hr:"OVLAŠTENI ZASTUPNIK",en:"AUTHORISED REPRESENTATIVE",de:"AUTORISIERTER VERTRETER"})[lang]||"AUTHORISED REPRESENTATIVE"}
+                      </div>
+                    </div>
+
+                    <div style={{ fontFamily:F, fontSize:17, fontWeight:400, color:"#e2e8f0", marginBottom:12, lineHeight:1.4 }}>
+                      {({
+                        hr:"Od procesnih simulacija do ugradnje materijala — pokrivamo cijeli životni ciklus industrijskih postrojenja u JI Europi.",
+                        en:"From process simulation to material installation — we cover the full lifecycle of industrial plants across SE Europe.",
+                        de:"Von der Prozesssimulation bis zur Materialinstallation — wir decken den gesamten Lebenszyklus von Industrieanlagen in Südosteuropa ab.",
+                      })[lang]||"From process simulation to material installation — full lifecycle coverage across SE Europe."}
+                    </div>
+
+                    <div style={{ fontFamily:B, fontSize:13, color:"#64748b", lineHeight:1.8, marginBottom:20 }}>
+                      {({
+                        hr:"SIAL Technology Consulting je slovenačka EU kompanija s dugogodišnjim iskustvom u industrijskim rješenjima za jugoistočnu Europu. Kao ovlašteni zastupnik kompanije Calderys — svjetskog lidera s 160+ godina iskustva u vatrostalnim materijalima — posredujemo između globalne tehnologije i najvećih industrijskih objekata u regiji. Rafinerije, željezare, cementare, livnice, termoelektrane i staklare — svugdje gdje se radi na visokim temperaturama, SIAL donosi pravo rješenje. Uz digitalnu platformu Jadran AI, kombinujemo industrijsku stručnost s najnaprednijim AI rješenjima za turizam.",
+                        en:"SIAL Technology Consulting is a Slovenian EU company with extensive industrial expertise across Southeast Europe. As authorised representative of Calderys — the global leader with 160+ years in refractory solutions — we bridge world-class technology with the region's largest industrial facilities. Refineries, steel mills, cement plants, foundries, thermal power plants and glass factories — wherever high-temperature processes occur, SIAL brings the right solution. With the Jadran AI digital platform, we combine industrial expertise with cutting-edge AI solutions for tourism.",
+                        de:"SIAL Technology Consulting ist ein slowenisches EU-Unternehmen mit umfangreicher Industrieerfahrung in Südosteuropa. Als autorisierter Vertreter von Calderys — dem globalen Marktführer mit 160+ Jahren in Feuerfestlösungen — verbinden wir Weltklasse-Technologie mit den größten Industrieanlagen der Region. Raffinerien, Stahlwerke, Zementwerke, Gießereien, Wärmekraftwerke und Glaswerke — überall wo Hochtemperaturprozesse stattfinden, bringt SIAL die richtige Lösung.",
+                      })[lang]||"SIAL Technology Consulting is a Slovenian EU company bridging world-class industrial technology with SE Europe's largest facilities."}
+                    </div>
+
+                    {/* Industry sectors grid */}
+                    <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:16 }}>
+                      {[
+                        {hr:"⛽ Rafinerije",en:"⛽ Refineries",de:"⛽ Raffinerien"},
+                        {hr:"🏗️ Željezare",en:"🏗️ Steel mills",de:"🏗️ Stahlwerke"},
+                        {hr:"🏭 Cementare",en:"🏭 Cement plants",de:"🏭 Zementwerke"},
+                        {hr:"🔩 Livnice",en:"🔩 Foundries",de:"🔩 Gießereien"},
+                        {hr:"⚡ Termoelektrane",en:"⚡ Power plants",de:"⚡ Kraftwerke"},
+                        {hr:"🔵 Staklare",en:"🔵 Glass factories",de:"🔵 Glaswerke"},
+                      ].map((s,i) => (
+                        <div key={i} style={{ fontFamily:B, fontSize:10, fontWeight:600, color:"#94a3b8", background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:8, padding:"4px 10px" }}>
+                          {s[lang] || s.en}
                         </div>
-                        <div style={{ fontFamily:B, fontSize:13, color:"#64748b", lineHeight:1.7, marginBottom:14 }}>
-                          {({
-                            hr:"SIAL Consulting je hrvatska tehnološka kompanija koja razvija Jadran AI platformu i zastupa vodeće industrijske brendove u jugoistočnoj Europi.",
-                            de:"SIAL Consulting ist ein kroatisches Technologieunternehmen, das die Jadran AI Plattform entwickelt und führende Industriemarken in Südosteuropa vertritt.",
-                            en:"SIAL Consulting is a Croatian technology company developing the Jadran AI platform and representing leading industrial brands in Southeast Europe.",
-                            it:"SIAL Consulting è un'azienda tecnologica croata che sviluppa la piattaforma Jadran AI e rappresenta marchi industriali leader in Europa sud-orientale.",
-                          })[lang]||"SIAL Consulting is a Croatian technology company developing the Jadran AI platform and representing leading industrial brands in Southeast Europe."}
+                      ))}
+                    </div>
+
+                    {/* Service spectrum bar */}
+                    <div style={{ display:"flex", borderRadius:12, overflow:"hidden", border:"1px solid rgba(255,255,255,0.07)", marginBottom:16 }}>
+                      {[
+                        { icon:"💻", label:{hr:"Simulacija procesa",en:"Process simulation",de:"Prozesssimulation"} },
+                        { icon:"📡", label:{hr:"Digitalni monitoring",en:"Digital monitoring",de:"Digitales Monitoring"} },
+                        { icon:"📦", label:{hr:"Isporuka materijala",en:"Material supply",de:"Materiallieferung"} },
+                        { icon:"🔧", label:{hr:"Ugradnja",en:"Installation",de:"Montage"} },
+                      ].map((s,i,arr) => (
+                        <div key={i} style={{ flex:1, padding:"10px 6px", textAlign:"center", background: i % 2 === 0 ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.04)", borderRight: i < arr.length-1 ? "1px solid rgba(255,255,255,0.07)" : "none" }}>
+                          <div style={{ fontSize:16, marginBottom:4 }}>{s.icon}</div>
+                          <div style={{ fontFamily:B, fontSize:9, color:"#64748b", fontWeight:600, lineHeight:1.4 }}>{s.label[lang] || s.label.en}</div>
                         </div>
-                        <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
-                          {[
-                            { name:"Calderys", sub:{hr:"Vatrostalni materijali · 160+ godina iskustva · 50 pogona, 30+ zemalja",en:"Refractory solutions · 160+ years · 50 plants, 30+ countries",de:"Feuerfestlösungen · 160+ Jahre · 50 Werke, 30+ Länder"} },
-                            { name:"Dominion Deutschland", sub:{hr:"Inženjerska montaža vatrostalnih obloga · Ratingen, Njemačka",en:"Refractory lining engineering & installation · Ratingen, Germany",de:"Feuerfest-Auskleidungstechnik & Montage · Ratingen, Deutschland"} },
-                          ].map((p,i) => (
-                            <div key={i} style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:10, padding:"10px 14px", flex:"1 1 180px" }}>
-                              <div style={{ fontFamily:B, fontSize:12, fontWeight:700, color:"#e2e8f0", marginBottom:3 }}>{p.name}</div>
-                              <div style={{ fontFamily:B, fontSize:10, color:"#475569", lineHeight:1.5 }}>{p.sub[lang] || p.sub.en}</div>
-                            </div>
-                          ))}
+                      ))}
+                    </div>
+
+                    {/* Calderys partner badge */}
+                    <div style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 16px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:12 }}>
+                      <div style={{ width:36, height:36, borderRadius:10, background:"linear-gradient(135deg,#f97316,#ea580c)", display:"grid", placeItems:"center", fontSize:18, flexShrink:0 }}>🔥</div>
+                      <div>
+                        <div style={{ fontFamily:B, fontSize:12, fontWeight:700, color:"#e2e8f0", marginBottom:2 }}>Calderys — {({hr:"ovlašteni zastupnik za JI Europu",en:"authorised representative for SE Europe",de:"autorisierter Vertreter für Südosteuropa"})[lang]||"authorised representative for SE Europe"}</div>
+                        <div style={{ fontFamily:B, fontSize:10, color:"#475569" }}>
+                          {({hr:"Svjetski lider · vatrostalni materijali · 160+ god. iskustva · 50 pogona · 30+ zemalja",en:"World leader · refractory solutions · 160+ yrs experience · 50 plants · 30+ countries",de:"Weltmarktführer · Feuerfestlösungen · 160+ J. Erfahrung · 50 Werke · 30+ Länder"})[lang]||"World leader · refractory solutions · 160+ yrs · 50 plants · 30+ countries"}
                         </div>
                       </div>
                     </div>
