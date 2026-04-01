@@ -342,6 +342,10 @@ export default function JadranUnified() {
   const geoWatchRef = useRef(null);
   const arrivalFiredRef = useRef(false);
   const [affiliateId, setAffiliateId] = useState(null); // e.g. "blackjack" — shows content
+  const [pfRating, setPfRating] = useState(0);      // partner feedback star rating
+  const [pfComment, setPfComment] = useState("");    // partner feedback text
+  const [pfDone, setPfDone] = useState(false);       // feedback submitted
+  const [menuOpenSec, setMenuOpenSec] = useState(null); // which menu section is expanded
   const verifiedAffiliate = useRef(false); // true only if tk= token validated — grants 72h
   const kioskForcedCoords = useRef(null); // set by ?kiosk= param — bypasses GPS
   const [chatMsgs, setChatMsgs] = useState([]);
@@ -2334,8 +2338,76 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           viator:"https://www.viator.com/searchResults/all?text=Rab+walking+tour&pid=P00292197" },
       ],
       booking: "https://www.booking.com/searchresults.html?ss=Rab%2C+Croatia&aid=101704203",
-      heroImg: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=900&q=80",
-      propImg: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80",
+      heroImg: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=900&q=80",
+      propImg: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80",
+      phone: "+385 51 724 522",
+      whatsapp: "38551724522",
+      hours: { hr:"Pon–Ned 12:00–23:00", de:"Mo–So 12:00–23:00", en:"Mon–Sun 12:00–23:00", it:"Lun–Dom 12:00–23:00" },
+      rating: 4.7,
+      reviewCount: 127,
+      gallery: [
+        "https://images.unsplash.com/photo-1544025162-d76694265947?w=600&q=80",
+        "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=600&q=80",
+        "https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=600&q=80",
+        "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&q=80",
+        "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80",
+        "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&q=80",
+      ],
+      testimonials: [
+        { name:"Klaus M.", flag:"🇩🇪", rating:5, text:{ de:"Das beste Steak auf der Insel! Die Terrasse mit Meerblick ist einfach traumhaft — wir kommen definitiv wieder.", en:"Best steak on the island! The sea-view terrace is simply dreamy — we'll definitely be back.", hr:"Najbolji steak na otoku! Terasa s pogledom na more je fantastična — svakako se vraćamo.", it:"La migliore bistecca sull'isola! La terrazza con vista mare è semplicemente meravigliosa." } },
+        { name:"Sarah B.", flag:"🇬🇧", rating:5, text:{ de:"Fantastische Pizzen und unglaublich freundliches Personal. Der Ćevapi mit Räucherkäse ist ein absolutes Muss!", en:"Fantastic pizzas and incredibly friendly staff. The ćevapi with smoked cheese is an absolute must!", hr:"Fantastične pizze i prijazno osoblje. Ćevapi s dimljenim sirom su apsolutno obavezni!", it:"Pizze fantastiche e personale incredibilmente gentile. Il ćevapi con formaggio affumicato è un must!" } },
+        { name:"Marta K.", flag:"🇵🇱", rating:5, text:{ de:"Perfekter Urlaubsabend — Fischplatte war köstlich. Gemütlich, günstig, authentisch kroatisch.", en:"Perfect holiday evening — the seafood platter was delicious. Cosy, affordable, authentically Croatian.", hr:"Savršena ljetna večer — riblje jelo je bilo izvrsno. Ugodna, pristupačna, autentično hrvatska kuhinja.", it:"Serata vacanziera perfetta — il piatto di pesce era delizioso. Accogliente, economico, autenticamente croato." } },
+      ],
+      dailySpecials: [
+        { day:0, emoji:"🥩", hr:"Nedjeljna goveđa plata (za 2)", de:"Sonntagsrinderplatte (für 2)", en:"Sunday beef platter (for 2)", it:"Piatto di manzo domenicale (x2)", price:32 },
+        { day:1, emoji:"🐟", hr:"Riba dana s prilogom", de:"Fisch des Tages mit Beilage", en:"Fish of the day with side", it:"Pesce del giorno con contorno", price:19 },
+        { day:2, emoji:"🍕", hr:"Pizza + salata + piće = 15€", de:"Pizza + Salat + Getränk = 15€", en:"Pizza + salad + drink = 15€", it:"Pizza + insalata + bevanda = 15€", price:15 },
+        { day:3, emoji:"🐙", hr:"Pečena hobotnica + crni rižot", de:"Gebackener Krake + schwarzes Risotto", en:"Baked octopus + black risotto", it:"Polpo al forno + risotto nero", price:24 },
+        { day:4, emoji:"🌭", hr:"Ćevapi večer — 10 kom + prilog", de:"Ćevapi-Abend — 10 Stk + Beilage", en:"Ćevapi night — 10 pcs + side", it:"Serata ćevapi — 10 pz + contorno", price:18 },
+        { day:5, emoji:"🦞", hr:"Jadranski tanjur za 2 — sve iz mora", de:"Adriatischer Teller für 2 — alles aus dem Meer", en:"Adriatic platter for 2 — all from the sea", it:"Piatto adriatico x2 — tutto dal mare", price:38 },
+        { day:6, emoji:"🔥", hr:"Subotnji roštilj mješano (za 2)", de:"Samstag-Grillplatte (für 2)", en:"Saturday BBQ mixed grill (for 2)", it:"Grigliata mista del sabato (x2)", price:36 },
+      ],
+      menu: [
+        {
+          section: { hr:"Predjela", de:"Vorspeisen", en:"Starters", it:"Antipasti" },
+          items: [
+            { emoji:"🥩", name:{ hr:"Dalmatinski pršut", de:"Dalmatinischer Pršut", en:"Dalmatian prosciutto", it:"Prosciutto dalmata" }, desc:{ hr:"Domaći suhomesnati pršut, masline, kapari, maslinovo ulje s Raba", de:"Hausgemachter Trockenschinken, Oliven, Kapern, Rab-Olivenöl", en:"Home-cured prosciutto, olives, capers, Rab olive oil", it:"Prosciutto artigianale, olive, capperi, olio di Rab" }, price:12 },
+            { emoji:"🍞", name:{ hr:"Bruschette s tartufima", de:"Bruschette mit Trüffel", en:"Truffle bruschette", it:"Bruschette al tartufo" }, desc:{ hr:"Prepečeni kruh s istarskom tartufnom kremom, cherry rajčicama i svježim bosiljkom", de:"Geröstetes Brot mit Trüffelcreme, Kirschtomaten und frischem Basilikum", en:"Toasted bread with truffle cream, cherry tomatoes and fresh basil", it:"Pane tostato con crema tartufata, pomodorini e basilico" }, price:9 },
+            { emoji:"🦑", name:{ hr:"Kalamari na roštilju", de:"Gegrillte Kalamari", en:"Grilled calamari", it:"Calamari alla griglia" }, desc:{ hr:"Svježi jadranski kalamari s limunom, peršinom i maslinovim uljem", de:"Frische Adriatische Kalamari mit Zitrone, Petersilie und Olivenöl", en:"Fresh Adriatic calamari with lemon, parsley and olive oil", it:"Calamari adriatici freschi con limone, prezzemolo e olio" }, price:14 },
+          ]
+        },
+        {
+          section: { hr:"S roštilja", de:"Vom Grill", en:"From the grill", it:"Dalla griglia" },
+          items: [
+            { emoji:"🥩", name:{ hr:"Argentinski ribeye 300g", de:"Argentinisches Ribeye 300g", en:"Argentine ribeye 300g", it:"Ribeye argentino 300g" }, desc:{ hr:"Premium argentinsko meso na drvenom ugljenu, dimljeni maslac, rucola, pečeni češnjak", de:"Premium-Rindfleisch auf Holzkohle, Räucherbutter, Rucola, gerösteter Knoblauch", en:"Premium Argentine beef on charcoal, smoked butter, rocket, roasted garlic", it:"Manzo argentino alla brace, burro affumicato, rucola, aglio arrosto" }, price:28 },
+            { emoji:"🌭", name:{ hr:"Ćevapi s dimljenim sirom (8 kom)", de:"Ćevapi mit Räucherkäse (8 Stk)", en:"Ćevapi with smoked cheese (8 pcs)", it:"Ćevapi con formaggio affumicato (8 pz)" }, desc:{ hr:"Domaći goveđi ćevapi, dimljeni sir iz Dalmatinske zagore, ajvar, svježi luk, somun", de:"Rindfleisch-Ćevapi, Räucherkäse aus dem Hinterland, Ajvar, Zwiebeln, Somun", en:"Beef ćevapi, smoked cheese from Dalmatian hinterland, ajvar, onion, somun bread", it:"Ćevapi di manzo, formaggio affumicato, ajvar, cipolla, pane somun" }, price:16 },
+            { emoji:"🍖", name:{ hr:"Mješano meso s roštilja (za 2)", de:"Gemischte Grillplatte (für 2)", en:"Mixed grill platter (for 2)", it:"Piatto misto alla griglia (per 2)" }, desc:{ hr:"Ćevapi, pileći batak, svinjska rebra i povrće s roštilja", de:"Ćevapi, Hähnchenschenkel, Schweinerippchen und Grillgemüse", en:"Ćevapi, chicken thigh, pork ribs and grilled vegetables", it:"Ćevapi, coscia di pollo, costine di maiale e verdure grigliate" }, price:32 },
+          ]
+        },
+        {
+          section: { hr:"Pizze", de:"Pizzen", en:"Pizzas", it:"Pizze" },
+          items: [
+            { emoji:"🍕", name:{ hr:"Margherita", de:"Margherita", en:"Margherita", it:"Margherita" }, desc:{ hr:"San Marzano rajčica, buffalo mozzarella, svježi bosiljak, maslinovo ulje", de:"San-Marzano-Tomaten, Büffelmozzarella, Basilikum, Olivenöl", en:"San Marzano tomato, buffalo mozzarella, fresh basil, olive oil", it:"Pomodoro San Marzano, mozzarella di bufala, basilico, olio" }, price:11 },
+            { emoji:"🃏", name:{ hr:"Pizza Black Jack", de:"Pizza Black Jack", en:"Pizza Black Jack", it:"Pizza Black Jack" }, desc:{ hr:"Dimljeni sir, ćevapčići, pepperoni, pečene paprike, češnjak ulje — naš signature", de:"Räucherkäse, Ćevapčići, Pepperoni, geröstete Paprika, Knoblauchöl — unser Signature", en:"Smoked cheese, ćevapčići, pepperoni, roasted peppers, garlic oil — our signature", it:"Formaggio affumicato, ćevapčići, pepperoni, peperoni arrosto — la nostra specialty" }, price:15 },
+            { emoji:"🦐", name:{ hr:"Frutti di mare", de:"Frutti di mare", en:"Frutti di mare", it:"Frutti di mare" }, desc:{ hr:"Mješavina jadranskih plodova mora, rajčica, češnjak, peršin, maslinovo ulje", de:"Adriatische Meeresfrüchte, Tomaten, Knoblauch, Petersilie, Olivenöl", en:"Adriatic seafood medley, tomato, garlic, parsley, olive oil", it:"Frutti di mare adriatici, pomodoro, aglio, prezzemolo, olio" }, price:16 },
+          ]
+        },
+        {
+          section: { hr:"Deserti", de:"Desserts", en:"Desserts", it:"Dolci" },
+          items: [
+            { emoji:"🍮", name:{ hr:"Domaća rožata", de:"Hausgemachte Rožata", en:"Homemade rožata", it:"Rožata artigianale" }, desc:{ hr:"Tradicionalni dalmatinski krem karamel s ružinom vodicom i mjedom s Raba", de:"Dalmatinischer Crème caramel mit Rosenwasser und Rab-Honig", en:"Dalmatian crème caramel with rose water and Rab honey", it:"Crème caramel dalmata con acqua di rose e miele di Rab" }, price:7 },
+            { emoji:"🍰", name:{ hr:"Torta od smokava", de:"Feigenkuchen", en:"Fig cake", it:"Torta di fichi" }, desc:{ hr:"Domaća torta s rabskim smokvama, mjedom i orasima — sezonski specijalitet", de:"Hausgemachter Kuchen mit Rab-Feigen, Honig und Walnüssen — Saisonspezialität", en:"Homemade cake with Rab figs, honey and walnuts — seasonal speciality", it:"Torta con fichi di Rab, miele e noci — stagionale" }, price:8 },
+          ]
+        },
+        {
+          section: { hr:"Piće", de:"Getränke", en:"Drinks", it:"Bevande" },
+          items: [
+            { emoji:"🍷", name:{ hr:"Domaće vino (čaša)", de:"Hauswein (Glas)", en:"House wine (glass)", it:"Vino della casa (calice)" }, desc:{ hr:"Bijelo ili crno, lokalni vinari s otoka Raba i Pelješca", de:"Weiß oder Rot, lokale Winzer der Insel Rab und Pelješac", en:"White or red, local winemakers from Rab and Pelješac", it:"Bianco o rosso, produttori locali di Rab e Pelješac" }, price:5 },
+            { emoji:"🍺", name:{ hr:"Lokalno pivo", de:"Lokales Bier", en:"Local beer", it:"Birra locale" }, desc:{ hr:"Karlovačko ili Ožujsko, servirano u hladnom vrču", de:"Karlovačko oder Ožujsko, im kühlen Krug", en:"Karlovačko or Ožujsko, served in a chilled mug", it:"Karlovačko o Ožujsko, servita fredda" }, price:4 },
+            { emoji:"🥤", name:{ hr:"Sok / Mineralna", de:"Saft / Mineralwasser", en:"Juice / Mineral water", it:"Succo / Acqua minerale" }, desc:{ hr:"Domaći voćni sok ili Jamnica mineralna voda", de:"Frisch gepresster Saft oder Jamnica Mineralwasser", en:"Freshly pressed juice or Jamnica mineral water", it:"Succo fresco o acqua minerale Jamnica" }, price:3 },
+          ]
+        },
+      ],
     }
   };
 
@@ -2518,74 +2590,206 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
       );
     };
 
-    // ── AFFILIATE DATA ──────────────────────────────────────────────────
     // ── KioskAffiliate: full property presentation ──────────────────────
     const KioskAffiliate = () => {
       const aff = affiliateId && AFFILIATE_DATA[affiliateId];
       if (!aff) return KioskHome();
       const L = (o) => o[lang] || o[lang === "at" ? "de" : "en"] || o.en || "";
-      const feats = (aff.features[lang] || aff.features[lang === "at" ? "de" : "en"] || aff.features.en);
+      const isDE = lang === "de" || lang === "at";
+      const feats = aff.features[lang] || aff.features[lang === "at" ? "de" : "en"] || aff.features.en;
+      const today = new Date().getDay();
+      const special = aff.dailySpecials?.find(s => s.day === today);
+
+      const T = {
+        contact:     { de:"KONTAKT",              en:"CONTACT",             hr:"KONTAKT",               it:"CONTATTI" },
+        todaySpec:   { de:"TAGESGERICHT",          en:"TODAY'S SPECIAL",     hr:"JELO DANA",             it:"PIATTO DEL GIORNO" },
+        gallery:     { de:"GALERIE",               en:"GALLERY",             hr:"GALERIJA",              it:"GALLERIA" },
+        features:    { de:"AUSSTATTUNG",           en:"FEATURES",            hr:"SADRŽAJ",               it:"DOTAZIONI" },
+        menu:        { de:"SPEISEKARTE",           en:"MENU",                hr:"JELOVNIK",              it:"MENÙ" },
+        reviews:     { de:"GÄSTEBEWERTUNGEN",      en:"GUEST REVIEWS",       hr:"OCJENE GOSTIJU",        it:"RECENSIONI" },
+        nearby:      { de:"IN DER NÄHE",           en:"NEARBY",              hr:"U BLIZINI",             it:"NELLE VICINANZE" },
+        excursions:  { de:"AUSFLÜGE & AKTIVITÄTEN",en:"EXCURSIONS & ACTIVITIES",hr:"IZLETI & AKTIVNOSTI",it:"ESCURSIONI & ATTIVITÀ" },
+        highlight:   { de:"HIGHLIGHT",             en:"HIGHLIGHT",           hr:"ISTAKNUTO",             it:"IN EVIDENZA" },
+        openNow:     { de:"Jetzt geöffnet",        en:"Open now",            hr:"Otvoreno sada",         it:"Aperto ora" },
+        fbTitle:     { de:"War diese Präsentation hilfreich?", en:"Was this presentation helpful?", hr:"Je li ova prezentacija bila korisna?", it:"Questa presentazione è stata utile?" },
+        fbSend:      { de:"Absenden",              en:"Submit",              hr:"Pošalji",               it:"Invia" },
+        fbThanks:    { de:"Danke! Ihr Feedback hilft uns sehr.", en:"Thank you! Your feedback helps us improve.", hr:"Hvala! Vaše mišljenje nam je jako korisno.", it:"Grazie! Il tuo feedback ci aiuta a migliorare." },
+        fbPlaceholder:{ de:"Was hat Ihnen gefallen oder fehlt noch?", en:"What did you like or what's missing?", hr:"Što vam se svidjelo ili što nedostaje?", it:"Cosa ti è piaciuto o cosa manca?" },
+      };
+      const tl = k => T[k]?.[lang] || T[k]?.en || "";
+
+      const submitPF = async () => {
+        if (!pfRating) return;
+        try {
+          const deviceId = localStorage.getItem("jadran_device_id") || "unknown";
+          await fetch("/api/partner-feedback", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ partner: affiliateId, rating: pfRating, comment: pfComment, lang, deviceId }),
+          });
+        } catch {}
+        setPfDone(true);
+      };
+
       return (
         <>
           <BackBtn onClick={() => setSubScreen("home")} />
 
-          {/* Hero */}
-          <div style={{ borderRadius: 20, overflow: "hidden", marginBottom: 16, position: "relative", height: 220 }}>
+          {/* ── Hero ── */}
+          <div style={{ borderRadius:20, overflow:"hidden", marginBottom:16, position:"relative", height:230 }}>
             <img src={aff.heroImg} alt={aff.name} style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} loading="lazy" />
-            <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(5,14,30,0.92) 0%, rgba(5,14,30,0.3) 60%, transparent 100%)" }} />
-            <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"20px 24px" }}>
-              <div style={{ ...dm, fontSize:11, color:aff.color, letterSpacing:3, textTransform:"uppercase", marginBottom:4 }}>
-                {lang==="de"||lang==="at" ? "Ihr Feriendomizil" : lang==="en" ? "Your Holiday Home" : "Vaš odmor"}
+            <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(5,14,30,0.95) 0%, rgba(5,14,30,0.3) 60%, transparent 100%)" }} />
+            <div style={{ position:"absolute", top:14, left:14, padding:"4px 10px", borderRadius:8, background:"rgba(249,115,22,0.15)", border:"1px solid rgba(249,115,22,0.25)", fontSize:9, fontWeight:700, color:"#f97316", letterSpacing:1.5 }}>PARTNER • RAB</div>
+            <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"18px 22px" }}>
+              <div style={{ ...dm, fontSize:10, color:aff.color, letterSpacing:3, textTransform:"uppercase", marginBottom:4 }}>
+                {isDE ? "Ihr Feriendomizil" : lang==="en" ? "Your Holiday Home" : lang==="it" ? "La tua casa vacanze" : "Vaš odmor"}
               </div>
-              <div style={{ fontSize:36, fontWeight:300, color:"#f0f9ff", lineHeight:1.1 }}>
-                {aff.emoji} {aff.name}
-              </div>
-              <div style={{ ...dm, fontSize:13, color:"rgba(240,249,255,0.7)", marginTop:6 }}>
-                📍 {L(aff.address)}
+              <div style={{ fontSize:34, fontWeight:300, color:"#f0f9ff", lineHeight:1.1 }}>{aff.emoji} {aff.name}</div>
+              <div style={{ display:"flex", alignItems:"center", gap:10, marginTop:7, flexWrap:"wrap" }}>
+                <div style={{ ...dm, fontSize:12, color:"rgba(240,249,255,0.6)" }}>📍 {L(aff.address)}</div>
+                <div style={{ display:"flex", alignItems:"center", gap:3, padding:"2px 8px", borderRadius:10, background:"rgba(251,191,36,0.15)", border:"1px solid rgba(251,191,36,0.3)", flexShrink:0 }}>
+                  <span style={{ color:"#fbbf24", fontSize:12 }}>★</span>
+                  <span style={{ ...dm, fontSize:12, fontWeight:700, color:"#fbbf24" }}>{aff.rating}</span>
+                  <span style={{ ...dm, fontSize:10, color:"rgba(255,255,255,0.45)" }}>({aff.reviewCount})</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Tagline */}
-          <div style={{ ...hf, fontSize:22, fontWeight:400, color:C.text, textAlign:"center", marginBottom:6, fontStyle:"italic" }}>
-            {L(aff.tagline)}
-          </div>
-          <div style={{ ...dm, fontSize:14, color:C.mut, lineHeight:1.7, marginBottom:20, textAlign:"center" }}>
-            {L(aff.desc)}
+          {/* ── Contact strip ── */}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:16 }}>
+            <a href={`tel:${aff.phone}`}
+              style={{ padding:"13px 8px", borderRadius:14, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, textDecoration:"none" }}>
+              <span style={{ fontSize:22 }}>📞</span>
+              <span style={{ ...dm, fontSize:10, fontWeight:700, color:C.accent }}>{isDE ? "Anrufen" : lang==="en" ? "Call" : lang==="it" ? "Chiama" : "Zovi"}</span>
+            </a>
+            <a href={`https://wa.me/${aff.whatsapp}`} target="_blank" rel="noopener noreferrer"
+              style={{ padding:"13px 8px", borderRadius:14, background:"rgba(37,211,102,0.08)", border:"1px solid rgba(37,211,102,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, textDecoration:"none" }}>
+              <span style={{ fontSize:22 }}>💬</span>
+              <span style={{ ...dm, fontSize:10, fontWeight:700, color:"#25d366" }}>WhatsApp</span>
+            </a>
+            <a href="https://www.google.com/maps/search/?api=1&query=44.7490,14.7555" target="_blank" rel="noopener noreferrer"
+              style={{ padding:"13px 8px", borderRadius:14, background:"rgba(251,191,36,0.08)", border:"1px solid rgba(251,191,36,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, textDecoration:"none" }}>
+              <span style={{ fontSize:22 }}>🗺️</span>
+              <span style={{ ...dm, fontSize:10, fontWeight:700, color:C.gold }}>{isDE ? "Navigation" : lang==="en" ? "Navigate" : lang==="it" ? "Naviga" : "Navigacija"}</span>
+            </a>
           </div>
 
-          {/* Features grid */}
-          <div style={{ ...dm, fontSize:10, color:aff.color, letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:10 }}>
-            {lang==="de"||lang==="at" ? "AUSSTATTUNG" : lang==="en" ? "FEATURES" : "SADRŽAJ"}
+          {/* ── Open hours strip ── */}
+          <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 16px", borderRadius:12, background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.15)", marginBottom:20 }}>
+            <span style={{ fontSize:16 }}>🕐</span>
+            <div>
+              <span style={{ ...dm, fontSize:11, fontWeight:700, color:"#22c55e" }}>{tl("openNow")} · </span>
+              <span style={{ ...dm, fontSize:12, color:C.text }}>{L(aff.hours)}</span>
+            </div>
           </div>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:20 }}>
-            {feats.map((f, i) => (
-              <div key={i} style={{ padding:"10px 12px", background:"rgba(14,165,233,0.04)", border:`1px solid ${C.bord}`, borderRadius:12, ...dm, fontSize:13, color:C.text }}>
-                {f}
+
+          {/* ── Today's special ── */}
+          {special && (
+            <Card warm style={{ marginBottom:20, padding:"16px 18px" }}>
+              <div style={{ ...dm, fontSize:10, color:"#fbbf24", letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:10 }}>{tl("todaySpec")}</div>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                  <span style={{ fontSize:30 }}>{special.emoji}</span>
+                  <span style={{ ...dm, fontSize:15, fontWeight:600, color:C.text }}>{L(special)}</span>
+                </div>
+                {special.price && (
+                  <div style={{ padding:"6px 14px", borderRadius:10, background:"rgba(251,191,36,0.12)", border:"1px solid rgba(251,191,36,0.3)", ...dm, fontSize:16, fontWeight:700, color:"#fbbf24", flexShrink:0 }}>€{special.price}</div>
+                )}
               </div>
+            </Card>
+          )}
+
+          {/* ── Tagline + desc ── */}
+          <div style={{ ...hf, fontSize:20, fontWeight:400, color:C.text, textAlign:"center", marginBottom:6, fontStyle:"italic" }}>{L(aff.tagline)}</div>
+          <div style={{ ...dm, fontSize:14, color:C.mut, lineHeight:1.75, marginBottom:20 }}>{L(aff.desc)}</div>
+
+          {/* ── Photo gallery ── */}
+          {aff.gallery?.length > 0 && (
+            <div style={{ marginBottom:20 }}>
+              <div style={{ ...dm, fontSize:10, color:aff.color, letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:10 }}>{tl("gallery")}</div>
+              <div style={{ display:"flex", gap:8, overflowX:"auto", scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", paddingBottom:4 }}>
+                {aff.gallery.map((src, gi) => (
+                  <div key={gi} style={{ minWidth:160, height:112, borderRadius:14, overflow:"hidden", flexShrink:0, scrollSnapAlign:"start" }}>
+                    <img src={src} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} loading="lazy" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Features grid ── */}
+          <div style={{ ...dm, fontSize:10, color:aff.color, letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:10 }}>{tl("features")}</div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:24 }}>
+            {feats.map((f, i) => (
+              <div key={i} style={{ padding:"10px 12px", background:"rgba(14,165,233,0.04)", border:`1px solid ${C.bord}`, borderRadius:12, ...dm, fontSize:13, color:C.text }}>{f}</div>
             ))}
           </div>
 
-          {/* Property photo */}
+          {/* ── Menu ── */}
+          {aff.menu?.length > 0 && (
+            <div style={{ marginBottom:24 }}>
+              <div style={{ ...dm, fontSize:10, color:"#f97316", letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:10 }}>{tl("menu")}</div>
+              {aff.menu.map((sec, si) => (
+                <div key={si} style={{ marginBottom:6 }}>
+                  <button
+                    onClick={() => setMenuOpenSec(menuOpenSec === si ? null : si)}
+                    style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"13px 16px", background: menuOpenSec===si ? "rgba(249,115,22,0.09)" : "rgba(0,0,0,0.12)", border:`1px solid ${menuOpenSec===si ? "rgba(249,115,22,0.3)" : C.bord}`, borderRadius: menuOpenSec===si ? "12px 12px 0 0" : 12, cursor:"pointer", color:C.text, transition:"all 0.2s" }}>
+                    <span style={{ ...dm, fontSize:14, fontWeight:700 }}>{L(sec.section)}</span>
+                    <span style={{ fontSize:11, color:C.mut, display:"inline-block", transition:"transform 0.2s", transform: menuOpenSec===si ? "rotate(180deg)" : "rotate(0deg)" }}>▼</span>
+                  </button>
+                  {menuOpenSec === si && (
+                    <div style={{ border:`1px solid rgba(249,115,22,0.15)`, borderTop:"none", borderRadius:"0 0 12px 12px", overflow:"hidden" }}>
+                      {sec.items.map((item, ii) => (
+                        <div key={ii} style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", padding:"12px 16px", borderTop: ii>0 ? `1px solid ${C.bord}` : "none", background:"rgba(0,0,0,0.08)" }}>
+                          <div style={{ flex:1, minWidth:0, marginRight:12 }}>
+                            <div style={{ ...dm, fontSize:13, fontWeight:600, color:C.text, marginBottom:2 }}>{item.emoji} {L(item.name)}</div>
+                            <div style={{ ...dm, fontSize:11, color:C.mut, lineHeight:1.5 }}>{L(item.desc)}</div>
+                          </div>
+                          <div style={{ ...dm, fontSize:15, fontWeight:700, color:"#fbbf24", flexShrink:0, paddingTop:1 }}>€{item.price}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* ── Testimonials ── */}
+          {aff.testimonials?.length > 0 && (
+            <div style={{ marginBottom:24 }}>
+              <div style={{ ...dm, fontSize:10, color:C.gold, letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:10 }}>{tl("reviews")}</div>
+              <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                {aff.testimonials.map((t, ti) => (
+                  <Card key={ti} style={{ padding:"14px 16px" }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
+                      <span style={{ fontSize:18 }}>{t.flag}</span>
+                      <span style={{ ...dm, fontSize:13, fontWeight:700, color:C.text }}>{t.name}</span>
+                      <span style={{ ...dm, fontSize:13, color:"#fbbf24", marginLeft:"auto" }}>{"★".repeat(t.rating)}</span>
+                    </div>
+                    <div style={{ ...dm, fontSize:13, color:C.mut, lineHeight:1.65, fontStyle:"italic" }}>"{L(t.text)}"</div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Property photo ── */}
           <div style={{ borderRadius:16, overflow:"hidden", marginBottom:20, height:160 }}>
             <img src={aff.propImg} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} loading="lazy" />
           </div>
 
-          {/* Rabska Fjera highlight */}
+          {/* ── Fjera highlight ── */}
           {aff.highlight && (
             <Card warm style={{ marginBottom:20, padding:"20px 18px", position:"relative", overflow:"hidden" }}>
               <div style={{ position:"absolute", top:0, right:0, width:80, height:80, opacity:0.06, fontSize:72, lineHeight:1 }}>⚔️</div>
-              <div style={{ ...dm, fontSize:10, color:"#fbbf24", letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:8 }}>
-                {lang==="de"||lang==="at" ? "HIGHLIGHT" : lang==="en" ? "HIGHLIGHT" : lang==="it" ? "IN EVIDENZA" : "ISTAKNUTO"}
-              </div>
+              <div style={{ ...dm, fontSize:10, color:"#fbbf24", letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:8 }}>{tl("highlight")}</div>
               <div style={{ ...dm, fontSize:14, color:C.text, lineHeight:1.7 }}>{L(aff.highlight)}</div>
             </Card>
           )}
 
-          {/* Nearby POI */}
-          <div style={{ ...dm, fontSize:10, color:C.gold, letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:10 }}>
-            {lang==="de"||lang==="at" ? "IN DER NÄHE" : lang==="en" ? "NEARBY" : "U BLIZINI"}
-          </div>
+          {/* ── Nearby POI ── */}
+          <div style={{ ...dm, fontSize:10, color:C.gold, letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:10 }}>{tl("nearby")}</div>
           <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:20 }}>
             {aff.poi.map((p, i) => (
               <div key={i} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"11px 16px", background:"rgba(0,0,0,0.15)", border:`1px solid ${C.bord}`, borderRadius:12 }}>
@@ -2598,38 +2802,72 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             ))}
           </div>
 
-          {/* Excursions */}
-          <div style={{ ...dm, fontSize:10, color:"#22c55e", letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:10 }}>
-            {lang==="de"||lang==="at" ? "AUSFLÜGE & AKTIVITÄTEN" : lang==="en" ? "EXCURSIONS & ACTIVITIES" : "IZLETI & AKTIVNOSTI"}
-          </div>
+          {/* ── Excursions ── */}
+          <div style={{ ...dm, fontSize:10, color:"#22c55e", letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:10 }}>{tl("excursions")}</div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:20 }}>
             {aff.excursions.map((ex, i) => (
               <Card key={i} style={{ padding:"14px 12px", textAlign:"center" }}>
                 <div style={{ fontSize:28, marginBottom:6 }}>{ex.emoji}</div>
                 <div style={{ ...dm, fontSize:12, fontWeight:600, color:C.text, marginBottom:10 }}>{L(ex)}</div>
                 <div style={{ display:"flex", gap:6 }}>
-                  {ex.gyg && <a href={ex.gyg} target="_blank" rel="noopener noreferrer"
-                    style={{ flex:1, padding:"7px 4px", background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", borderRadius:8, color:C.accent, fontSize:10, fontWeight:700, textAlign:"center", textDecoration:"none", ...dm }}>GYG</a>}
-                  {ex.viator && <a href={ex.viator} target="_blank" rel="noopener noreferrer"
-                    style={{ flex:1, padding:"7px 4px", background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.15)", borderRadius:8, color:"#22c55e", fontSize:10, fontWeight:700, textAlign:"center", textDecoration:"none", ...dm }}>Viator</a>}
+                  {ex.gyg && <a href={ex.gyg} target="_blank" rel="noopener noreferrer" style={{ flex:1, padding:"7px 4px", background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", borderRadius:8, color:C.accent, fontSize:10, fontWeight:700, textAlign:"center", textDecoration:"none", ...dm }}>GYG</a>}
+                  {ex.viator && <a href={ex.viator} target="_blank" rel="noopener noreferrer" style={{ flex:1, padding:"7px 4px", background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.15)", borderRadius:8, color:"#22c55e", fontSize:10, fontWeight:700, textAlign:"center", textDecoration:"none", ...dm }}>Viator</a>}
                 </div>
               </Card>
             ))}
           </div>
 
-          {/* Booking CTA */}
-          <Card style={{ background:`linear-gradient(135deg,rgba(0,85,166,0.12),rgba(14,165,233,0.06))`, border:"1px solid rgba(0,85,166,0.25)", padding:"22px 20px", marginBottom:24 }}>
+          {/* ── Booking CTA ── */}
+          <Card style={{ background:"linear-gradient(135deg,rgba(0,85,166,0.12),rgba(14,165,233,0.06))", border:"1px solid rgba(0,85,166,0.25)", padding:"22px 20px", marginBottom:24 }}>
             <div style={{ ...dm, fontSize:11, color:"#60a5fa", letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:8 }}>BOOKING.COM</div>
             <div style={{ fontSize:20, fontWeight:400, marginBottom:6 }}>
-              🏨 {lang==="de"||lang==="at" ? "Jetzt buchen — beste Preisgarantie" : lang==="en" ? "Book now — best price guarantee" : "Rezervirajte odmah — garancija najniže cijene"}
+              🏨 {isDE ? "Jetzt buchen — beste Preisgarantie" : lang==="en" ? "Book now — best price guarantee" : lang==="it" ? "Prenota ora — miglior prezzo garantito" : "Rezervirajte odmah — garancija najniže cijene"}
             </div>
             <div style={{ ...dm, fontSize:13, color:C.mut, marginBottom:16 }}>
-              {lang==="de"||lang==="at" ? "Kostenlose Stornierung · Keine Voraus­zahlung" : lang==="en" ? "Free cancellation · No prepayment needed" : "Besplatni otkaz · Nema predujma"}
+              {isDE ? "Kostenlose Stornierung · Keine Vorauszahlung" : lang==="en" ? "Free cancellation · No prepayment needed" : lang==="it" ? "Cancellazione gratuita · Nessun pagamento anticipato" : "Besplatni otkaz · Nema predujma"}
             </div>
             <a href={aff.booking} target="_blank" rel="noopener noreferrer"
               style={{ display:"block", padding:"16px", background:"linear-gradient(135deg,#003580,#0055A6)", borderRadius:14, color:"#fff", fontSize:16, fontWeight:700, textAlign:"center", textDecoration:"none", ...dm }}>
-              {lang==="de"||lang==="at" ? "Verfügbarkeit prüfen →" : lang==="en" ? "Check availability →" : "Provjeri dostupnost →"}
+              {isDE ? "Verfügbarkeit prüfen →" : lang==="en" ? "Check availability →" : lang==="it" ? "Verifica disponibilità →" : "Provjeri dostupnost →"}
             </a>
+          </Card>
+
+          {/* ── USER TESTING FEEDBACK ── */}
+          <Card style={{ border:"1px solid rgba(14,165,233,0.2)", padding:"20px 18px", marginBottom:36 }}>
+            <div style={{ ...dm, fontSize:9, color:C.accent, letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:12 }}>
+              {isDE ? "BETA · IHR FEEDBACK" : lang==="en" ? "BETA · YOUR FEEDBACK" : lang==="it" ? "BETA · IL TUO FEEDBACK" : "BETA · VAŠE MIŠLJENJE"}
+            </div>
+            {pfDone ? (
+              <div style={{ textAlign:"center", padding:"10px 0" }}>
+                <div style={{ fontSize:38, marginBottom:8 }}>🙏</div>
+                <div style={{ ...dm, fontSize:14, color:C.text }}>{tl("fbThanks")}</div>
+              </div>
+            ) : (
+              <>
+                <div style={{ ...dm, fontSize:14, color:C.text, marginBottom:14 }}>{tl("fbTitle")}</div>
+                <div style={{ display:"flex", gap:6, marginBottom:14 }}>
+                  {[1,2,3,4,5].map(n => (
+                    <button key={n} onClick={() => setPfRating(n)}
+                      style={{ flex:1, padding:"10px 0", borderRadius:10, border:`1px solid ${pfRating>=n ? "rgba(251,191,36,0.55)" : C.bord}`, background: pfRating>=n ? "rgba(251,191,36,0.12)" : "transparent", fontSize:22, cursor:"pointer", transition:"all 0.15s", color: pfRating>=n ? "#fbbf24" : C.mut }}>
+                      {pfRating >= n ? "★" : "☆"}
+                    </button>
+                  ))}
+                </div>
+                {pfRating > 0 && (
+                  <textarea
+                    placeholder={tl("fbPlaceholder")}
+                    value={pfComment}
+                    onChange={e => setPfComment(e.target.value)}
+                    rows={3}
+                    style={{ width:"100%", padding:"10px 12px", background:"rgba(0,0,0,0.15)", border:`1px solid ${C.bord}`, borderRadius:10, color:C.text, fontSize:13, ...dm, resize:"none", outline:"none", boxSizing:"border-box", marginBottom:12 }}
+                  />
+                )}
+                <button onClick={submitPF} disabled={!pfRating}
+                  style={{ width:"100%", padding:"14px", borderRadius:12, background: pfRating ? C.accent : "rgba(14,165,233,0.12)", border:"none", color: pfRating ? "#fff" : C.mut, fontSize:15, fontWeight:700, cursor: pfRating ? "pointer" : "default", ...dm, opacity: pfRating ? 1 : 0.5, transition:"all 0.2s" }}>
+                  {tl("fbSend")} →
+                </button>
+              </>
+            )}
           </Card>
         </>
       );
