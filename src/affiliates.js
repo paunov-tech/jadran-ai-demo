@@ -16,11 +16,9 @@ export const AFFILIATE_COORDS = {
   "eufemija":      [45.0812, 13.6388, "Rovinj"],
 };
 
-// ─── STATS PIN (za analytics ploču ?stats=X&pin=Y) ──────────
-export const AFFILIATE_PINS = {
-  "blackjack":     "bj2026",
-  "eufemija":      "ev2026",
-};
+// ─── STATS PIN ───────────────────────────────────────────────
+// PINs are server-side only (Vercel env vars: PIN_BLACKJACK, PIN_EUFEMIJA)
+// NOT exported — never include in client bundle
 
 // ─── PARTNER DATA ────────────────────────────────────────────
 export const AFFILIATE_DATA = {

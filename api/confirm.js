@@ -6,6 +6,16 @@
 
 import { createHmac } from "crypto";
 
+// Prevent HTML/script injection in email templates
+function esc(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;");
+}
+
 const FB_PROJECT  = "molty-portal";
 const FB_KEY      = process.env.FIREBASE_API_KEY;
 const CONFIRM_SECRET = process.env.CONFIRM_SECRET; // No default — fail-closed
@@ -26,13 +36,13 @@ async function sendGuestEmail(to, subject, html) {
 }
 
 function guestConfirmedEmail(booking, tripUrl) {
-  const id = booking.id || "";
-  const name = booking.guestName || "Guest";
-  const accom = booking.accommodationName || "";
-  const dest = booking.destinationName || "";
-  const arrival = booking.arrival || "";
-  const departure = booking.departure || "";
-  const nights = booking.nights || "";
+  const id   = esc(booking.id || "");
+  const name = esc(booking.guestName || "Guest");
+  const accom = esc(booking.accommodationName || "");
+  const dest  = esc(booking.destinationName || "");
+  const arrival   = esc(booking.arrival || "");
+  const departure = esc(booking.departure || "");
+  const nights    = esc(booking.nights || "");
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><style>
@@ -272,16 +282,16 @@ export default async function handler(req, res) {
           <div class="icon">✅</div>
           <div class="badge" style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);color:#22c55e;">FULLY CONFIRMED</div>
           <h1>Booking Confirmed!</h1>
-          <p>Both sides have confirmed. Guest <strong>${booking.guestName}</strong> can now proceed to their trip guide.</p>
-          <p style="font-family:monospace;font-size:13px;color:#00b4d8;">${id}</p>
+          <p>Both sides have confirmed. Guest <strong>${esc(booking.guestName)}</strong> can now proceed to their trip guide.</p>
+          <p style="font-family:monospace;font-size:13px;color:#00b4d8;">${esc(id)}</p>
         `
         : `
           <div class="icon">👍</div>
           <div class="badge" style="background:rgba(0,180,216,0.15);border:1px solid rgba(0,180,216,0.4);color:#00b4d8;">PENDING</div>
           <h1>Your confirmation received</h1>
-          <p>Thank you! As ${roleLabel}, you've confirmed booking for <strong>${booking.guestName}</strong>.</p>
+          <p>Thank you! As ${esc(roleLabel)}, you've confirmed booking for <strong>${esc(booking.guestName)}</strong>.</p>
           <p>Waiting for the other side to confirm before the guest is notified.</p>
-          <p style="font-family:monospace;font-size:13px;color:#00b4d8;">${id}</p>
+          <p style="font-family:monospace;font-size:13px;color:#00b4d8;">${esc(id)}</p>
         `
     ));
   }

@@ -81,9 +81,8 @@ export default async function handler(req, res) {
     }
 
     if (matches.length === 0) {
-      // Check if there were expired ones
-      // Re-scan for any match to give better error
-      return res.status(404).json({ error: "No active JADRAN payment found for this email" });
+      // Generic message — don't reveal whether email exists in our system
+      return res.status(404).json({ error: "No active subscription found. Check your email address or contact support." });
     }
 
     // Pick best: highest tier, then latest expiry

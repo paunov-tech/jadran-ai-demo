@@ -2,6 +2,16 @@
 const ALLOWED = ["https://jadran.ai", "https://monte-negro.ai"];
 const FB_PROJECT = "molty-portal";
 
+// IP rate limit: max 20 view events per IP per hour (anti-botnet)
+const _ipRL = new Map();
+function ipRateOk(ip) {
+  const now = Date.now(), WIN = 3600000;
+  const e = _ipRL.get(ip);
+  if (!e || now > e.r) { _ipRL.set(ip, { c: 1, r: now + WIN }); return true; }
+  if (e.c >= 20) return false;
+  e.c++; return true;
+}
+
 // Dedup: skip write if same deviceId+partner wrote within 1 hour (per instance)
 const _dedup = new Map();
 const DEDUP_TTL = 3600000;
@@ -25,6 +35,9 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).end();
+
+  const clientIp = (req.headers["x-forwarded-for"] || "unknown").split(",")[0].trim();
+  if (!ipRateOk(clientIp)) return res.status(429).json({ ok: false, error: "rate limited" });
 
   const FB_KEY = process.env.FIREBASE_API_KEY;
   if (!FB_KEY) return res.status(200).json({ ok: false });

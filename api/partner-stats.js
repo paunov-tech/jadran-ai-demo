@@ -1,22 +1,39 @@
 // api/partner-stats.js — Aggregate stats for partner analytics dashboard
-// Auth: ?pin=bj2026 validated server-side (AFFILIATE_PINS stored in env or hardcoded)
+// Auth: ?pin=PIN validated server-side (pins in env vars only — never in client bundle)
 const FB_PROJECT = "molty-portal";
+const ALLOWED_ORIGINS = ["https://jadran.ai", "https://monte-negro.ai"];
 
-// Pins mirror affiliates.js — update both when adding new partners
+// Pins MUST be set as Vercel env vars: PIN_BLACKJACK, PIN_EUFEMIJA
+// Fallback pins are intentionally NOT set here — fail-closed
 const VALID_PINS = {
-  "blackjack": process.env.PIN_BLACKJACK || "bj2026",
-  "eufemija":  process.env.PIN_EUFEMIJA  || "ev2026",
+  "blackjack": process.env.PIN_BLACKJACK,
+  "eufemija":  process.env.PIN_EUFEMIJA,
 };
 
+// Rate limit: max 10 PIN attempts per IP per 15 min (brute force protection)
+const _pinRL = new Map();
+function pinRateOk(ip) {
+  const now = Date.now(), WIN = 900000;
+  const e = _pinRL.get(ip);
+  if (!e || now > e.r) { _pinRL.set(ip, { c: 1, r: now + WIN }); return true; }
+  if (e.c >= 10) return false;
+  e.c++; return true;
+}
+
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  const origin = req.headers.origin || "";
+  res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]);
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "GET") return res.status(405).end();
 
+  const clientIp = (req.headers["x-forwarded-for"] || "unknown").split(",")[0].trim();
+  if (!pinRateOk(clientIp)) return res.status(429).json({ error: "Too many attempts" });
+
   const { partner, pin } = req.query || {};
   if (!partner || !pin) return res.status(400).json({ error: "partner and pin required" });
-  if (VALID_PINS[partner] !== pin) return res.status(403).json({ error: "invalid pin" });
+  // If env var not set, reject all — never fall back to a hardcoded value
+  if (!VALID_PINS[partner] || VALID_PINS[partner] !== pin) return res.status(403).json({ error: "invalid pin" });
 
   const FB_KEY = process.env.FIREBASE_API_KEY;
   if (!FB_KEY) return res.status(200).json({ ok: false, views: 0, feedback: [] });

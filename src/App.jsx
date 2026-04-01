@@ -7,7 +7,7 @@ import { startGPS } from "./gpsEngine";
 
 // ─── PARTNER / AFFILIATE DATA ─────────────────────────────────
 import {
-  AFFILIATE_TOKENS, AFFILIATE_COORDS, AFFILIATE_PINS, AFFILIATE_DATA,
+  AFFILIATE_TOKENS, AFFILIATE_COORDS, AFFILIATE_DATA,
 } from "./affiliates";
 
 // ─── DATA LAYER ───────────────────────────────────────────────
@@ -293,14 +293,13 @@ const AlertTicker = React.memo(function AlertTicker({ items }) {
 });
 
 /* ─── PARTNER STATS DASHBOARD COMPONENT ─── */
-function PartnerStatsDashboard({ partner }) {
+function PartnerStatsDashboard({ partner, pin }) {
   const [data, setData] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const aff = AFFILIATE_DATA[partner] || {};
-  const pin = AFFILIATE_PINS[partner] || "";
 
   React.useEffect(() => {
-    fetch(`/api/partner-stats?partner=${encodeURIComponent(partner)}&pin=${encodeURIComponent(pin)}`)
+    fetch(`/api/partner-stats?partner=${encodeURIComponent(partner)}&pin=${encodeURIComponent(pin || "")}`)
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
@@ -486,7 +485,7 @@ export default function JadranUnified() {
   const geoWatchRef = useRef(null);
   const arrivalFiredRef = useRef(false);
   const [affiliateId, setAffiliateId] = useState(null); // e.g. "blackjack" — shows content
-  const [statsPartnerId, setStatsPartnerId] = useState(null); // set when ?stats=X&pin=Y
+  const [statsAccess, setStatsAccess] = useState(null); // {partner, pin} — set when ?stats=X&pin=Y
   const [pfRating, setPfRating] = useState(0);      // partner feedback star rating
   const [pfComment, setPfComment] = useState("");    // partner feedback text
   const [pfDone, setPfDone] = useState(false);       // feedback submitted
@@ -687,14 +686,15 @@ export default function JadranUnified() {
     window.history.replaceState({}, "", "/");
   }, []); // eslint-disable-line
 
-  // ─── ?stats=blackjack&pin=bj2026 → partner analytics dashboard ───
+  // ─── ?stats=blackjack&pin=... → partner analytics dashboard ───
+  // PIN validation is server-side only — never stored in client bundle
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     const statsParam = p.get("stats");
     if (!statsParam) return;
-    const pinParam = p.get("pin");
-    if (AFFILIATE_PINS[statsParam] && AFFILIATE_PINS[statsParam] === pinParam) {
-      setStatsPartnerId(statsParam);
+    const pinParam = p.get("pin") || "";
+    if (statsParam && pinParam) {
+      setStatsAccess({ partner: statsParam, pin: pinParam });
       setSplash(false);
       window.history.replaceState({}, "", "/");
     }
@@ -2711,11 +2711,22 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
               <span style={{ fontSize:22 }}>📞</span>
               <span style={{ ...dm, fontSize:10, fontWeight:700, color:C.accent }}>{isDE ? "Anrufen" : lang==="en" ? "Call" : lang==="it" ? "Chiama" : "Zovi"}</span>
             </a>
-            <a href={`https://wa.me/${aff.whatsapp}`} target="_blank" rel="noopener noreferrer"
-              style={{ padding:"13px 8px", borderRadius:14, background:"rgba(37,211,102,0.08)", border:"1px solid rgba(37,211,102,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, textDecoration:"none" }}>
-              <span style={{ fontSize:22 }}>💬</span>
-              <span style={{ ...dm, fontSize:10, fontWeight:700, color:"#25d366" }}>{isDE ? "Schreiben" : lang==="en" ? "Message" : lang==="it" ? "Scrivi" : "Poruka"}</span>
-            </a>
+            {(() => {
+              const isDesktop = typeof window !== "undefined" && !("ontouchstart" in window) && window.innerWidth > 768;
+              return isDesktop ? (
+                <button onClick={() => { navigator.clipboard?.writeText(aff.phone || ""); }}
+                  style={{ padding:"13px 8px", borderRadius:14, background:"rgba(37,211,102,0.08)", border:"1px solid rgba(37,211,102,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, cursor:"pointer" }}>
+                  <span style={{ fontSize:22 }}>📋</span>
+                  <span style={{ ...dm, fontSize:10, fontWeight:700, color:"#25d366" }}>{isDE ? "Kopieren" : lang==="en" ? "Copy no." : lang==="it" ? "Copia" : "Kopiraj"}</span>
+                </button>
+              ) : (
+                <a href={`https://wa.me/${aff.whatsapp}`} target="_blank" rel="noopener noreferrer"
+                  style={{ padding:"13px 8px", borderRadius:14, background:"rgba(37,211,102,0.08)", border:"1px solid rgba(37,211,102,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, textDecoration:"none" }}>
+                  <span style={{ fontSize:22 }}>💬</span>
+                  <span style={{ ...dm, fontSize:10, fontWeight:700, color:"#25d366" }}>{isDE ? "Schreiben" : lang==="en" ? "Message" : lang==="it" ? "Scrivi" : "Poruka"}</span>
+                </a>
+              );
+            })()}
             <a href="https://www.google.com/maps/search/?api=1&query=Palit+315,+Rab,+Croatia" target="_blank" rel="noopener noreferrer"
               style={{ padding:"13px 8px", borderRadius:14, background:"rgba(251,191,36,0.08)", border:"1px solid rgba(251,191,36,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, textDecoration:"none" }}>
               <span style={{ fontSize:22 }}>🗺️</span>
@@ -2743,12 +2754,20 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             </div>
           </div>
 
-          {/* ── Open hours strip ── */}
-          <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 16px", borderRadius:12, background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.15)", marginBottom:20 }}>
-            <span style={{ fontSize:16 }}>🕐</span>
-            <div>
-              <span style={{ ...dm, fontSize:11, fontWeight:700, color:"#22c55e" }}>{tl("openNow")} · </span>
-              <span style={{ ...dm, fontSize:12, color:C.text }}>{L(aff.hours)}</span>
+          {/* ── Open hours + response time ── */}
+          <div style={{ display:"flex", gap:8, marginBottom:20, flexWrap:"wrap" }}>
+            <div style={{ flex:1, display:"flex", alignItems:"center", gap:10, padding:"10px 16px", borderRadius:12, background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.15)", minWidth:0 }}>
+              <span style={{ fontSize:16 }}>🕐</span>
+              <div style={{ minWidth:0 }}>
+                <span style={{ ...dm, fontSize:11, fontWeight:700, color:"#22c55e" }}>{tl("openNow")} · </span>
+                <span style={{ ...dm, fontSize:12, color:C.text }}>{L(aff.hours)}</span>
+              </div>
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:7, padding:"10px 14px", borderRadius:12, background:"rgba(251,191,36,0.06)", border:"1px solid rgba(251,191,36,0.15)", flexShrink:0 }}>
+              <span style={{ fontSize:14 }}>💬</span>
+              <span style={{ ...dm, fontSize:11, fontWeight:700, color:"#fbbf24" }}>
+                {isDE ? "Antw. ~2h" : lang==="en" ? "Reply ~2h" : lang==="it" ? "Risposta ~2h" : "Odg. ~2h"}
+              </span>
             </div>
           </div>
 
@@ -3276,7 +3295,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
   );
 
   /* ─── PARTNER STATS DASHBOARD ─── */
-  if (statsPartnerId) return <PartnerStatsDashboard partner={statsPartnerId} />;
+  if (statsAccess) return <PartnerStatsDashboard partner={statsAccess.partner} pin={statsAccess.pin} />;
 
   /* ─── CINEMATIC SPLASH ─── */
   if (splash) return (
