@@ -1370,7 +1370,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           ✓ {t("payFeatures4",lang)}<br />
           ✓ {t("payFeatures5",lang)}
         </div>
-        <Btn primary style={{ width: "100%", marginBottom: 10 }} onClick={() => startPremiumCheckout(selectedPlan)}>
+        <Btn warm style={{ width: "100%", marginBottom: 10 }} onClick={() => startPremiumCheckout(selectedPlan)}>
           {payLoading ? "⏳..." : ({hr:`Otključaj ${selectedPlan==="week"?"Explorer":selectedPlan==="season"?"Sezonu":"VIP"} →`,de:`${selectedPlan==="week"?"Explorer":selectedPlan==="season"?"Saison":"VIP"} freischalten →`,en:`Unlock ${selectedPlan==="week"?"Explorer":selectedPlan==="season"?"Season":"VIP"} →`,it:`Sblocca ${selectedPlan==="week"?"Explorer":selectedPlan==="season"?"Stagione":"VIP"} →`})[lang]||`Unlock ${selectedPlan} →`}
         </Btn>
         <div style={{ ...dm, fontSize: 11, color: C.mut, marginBottom: 8 }}>{t("payVia",lang)}</div>

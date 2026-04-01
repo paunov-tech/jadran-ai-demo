@@ -25,8 +25,8 @@ export const makeTheme = (hour) => {
     // ── NIGHT ── deep Adriatic, moonlit
     bg:          "#030c18",
     surface:     "#060f1e",
-    card:        "rgba(7,16,32,0.93)",
-    cardHover:   "rgba(8,20,40,0.96)",
+    card:        "rgba(8,18,36,0.96)",
+    cardHover:   "rgba(8,20,40,0.98)",
     accent:      "#38bdf8",
     acDim:       "rgba(56,189,248,0.10)",
     acBorder:    "rgba(56,189,248,0.18)",
@@ -34,7 +34,7 @@ export const makeTheme = (hour) => {
     goDim:       "rgba(251,191,36,0.08)",
     goBorder:    "rgba(251,191,36,0.20)",
     text:        "#e2f4ff",
-    textSub:     "#94a3b8",
+    textSub:     "#b8d4e8",
     mut:         "#475569",
     bord:        "rgba(148,163,184,0.08)",
     bordHover:   "rgba(56,189,248,0.15)",
@@ -51,7 +51,7 @@ export const makeTheme = (hour) => {
     isNight:     true,
   } : {
     // ── DAY ── Adriatic azure, sun-drenched
-    bg:          "#071526",
+    bg:          "#041220",
     surface:     "#0a1c33",
     card:        "rgba(10,22,44,0.90)",
     cardHover:   "rgba(12,26,50,0.94)",
@@ -62,7 +62,7 @@ export const makeTheme = (hour) => {
     goDim:       "rgba(245,158,11,0.08)",
     goBorder:    "rgba(245,158,11,0.22)",
     text:        "#f0f9ff",
-    textSub:     "#7dd3fc",
+    textSub:     "#93c5fd",
     mut:         "#4d7fa0",
     bord:        "rgba(14,165,233,0.07)",
     bordHover:   "rgba(14,165,233,0.20)",
@@ -421,23 +421,28 @@ export const Badge = ({ c = "accent", children }) => {
   );
 };
 
-export const Btn = ({ primary, small, children, ...p }) => {
+export const Btn = ({ primary, warm: warmBtn, small, children, ...p }) => {
   const C = useC();
+  const isPrimary = primary || warmBtn;
   return (
-    <button {...p} className={`${primary ? "btn-glow" : ""} ${p.className || ""}`} style={{
+    <button {...p} className={`${isPrimary ? "btn-glow" : ""} ${p.className || ""}`} style={{
       padding: small ? "10px 22px" : "14px 32px",
       minHeight: small ? 40 : 48,
-      background: primary
-        ? `linear-gradient(145deg, ${C.accent} 0%, #0284c7 60%, #0369a1 100%)`
-        : "rgba(14,165,233,0.04)",
-      border: primary ? "none" : `1px solid ${C.bord}`,
-      borderRadius: primary ? 50 : 14, color: primary ? "#fff" : C.text,
+      background: warmBtn
+        ? `linear-gradient(145deg, ${C.terracotta} 0%, #ea6c10 60%, #c2550a 100%)`
+        : isPrimary
+          ? `linear-gradient(145deg, ${C.accent} 0%, #0284c7 60%, #0369a1 100%)`
+          : "rgba(14,165,233,0.04)",
+      border: isPrimary ? "none" : `1px solid ${C.bord}`,
+      borderRadius: isPrimary ? 50 : 14, color: isPrimary ? "#fff" : C.text,
       fontSize: small ? 13 : 16, ...hf,
-      cursor: "pointer", fontWeight: primary ? 500 : 400,
-      letterSpacing: primary ? 0.4 : 0,
-      boxShadow: primary
-        ? `0 1px 2px rgba(0,0,0,0.12), 0 4px 20px rgba(14,165,233,0.28), 0 8px 24px rgba(14,165,233,0.12), inset 0 1px 0 rgba(255,255,255,0.2)`
-        : "none",
+      cursor: "pointer", fontWeight: isPrimary ? 500 : 400,
+      letterSpacing: isPrimary ? 0.4 : 0,
+      boxShadow: warmBtn
+        ? `0 1px 2px rgba(0,0,0,0.14), 0 4px 20px rgba(251,146,60,0.35), 0 8px 24px rgba(251,146,60,0.15), inset 0 1px 0 rgba(255,255,255,0.2)`
+        : isPrimary
+          ? `0 1px 2px rgba(0,0,0,0.12), 0 4px 20px rgba(14,165,233,0.28), 0 8px 24px rgba(14,165,233,0.12), inset 0 1px 0 rgba(255,255,255,0.2)`
+          : "none",
       transition: "all 0.22s cubic-bezier(0.4,0,0.2,1)",
       WebkitTapHighlightColor: "transparent",
       ...(p.style || {}),
