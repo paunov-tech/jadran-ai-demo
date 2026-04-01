@@ -874,7 +874,7 @@ export default function DestinationExplorer() {
                 <span style={{ fontSize:18 }}>💬</span>
                 <span style={{ fontSize:9, fontWeight:700, color:"#25d366" }}>WhatsApp</span>
               </a>
-              <a href="https://www.google.com/maps/search/?api=1&query=44.7490,14.7555" target="_blank" rel="noopener noreferrer" style={{ padding:"9px 6px", borderRadius:12, background:"rgba(251,191,36,0.08)", border:"1px solid rgba(251,191,36,0.18)", display:"flex", flexDirection:"column", alignItems:"center", gap:3, textDecoration:"none" }}>
+              <a href="https://www.google.com/maps/search/?api=1&query=Palit+315,+Rab,+Croatia" target="_blank" rel="noopener noreferrer" style={{ padding:"9px 6px", borderRadius:12, background:"rgba(251,191,36,0.08)", border:"1px solid rgba(251,191,36,0.18)", display:"flex", flexDirection:"column", alignItems:"center", gap:3, textDecoration:"none" }}>
                 <span style={{ fontSize:18 }}>🗺️</span>
                 <span style={{ fontSize:9, fontWeight:700, color:"#fbbf24" }}>{({hr:"Navigacija",de:"Navigation",en:"Navigate",it:"Naviga"})[dl]||"Navigate"}</span>
               </a>
@@ -1006,7 +1006,7 @@ export default function DestinationExplorer() {
                 <div style={{ borderRadius:14, overflow:"hidden", height:180, border:"1px solid rgba(167,139,250,0.18)", position:"relative" }}>
                   <iframe
                     title="Black Jack aerial"
-                    src="https://maps.google.com/maps?q=44.7490,14.7555&hl=hr&z=17&t=k&output=embed"
+                    src="https://maps.google.com/maps?q=Palit+315,+Rab,+Croatia&hl=hr&z=17&t=k&output=embed"
                     style={{ width:"100%", height:"100%", border:0, display:"block" }}
                     loading="lazy"
                     allowFullScreen

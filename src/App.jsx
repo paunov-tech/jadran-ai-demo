@@ -2716,7 +2716,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
               <span style={{ fontSize:22 }}>💬</span>
               <span style={{ ...dm, fontSize:10, fontWeight:700, color:"#25d366" }}>WhatsApp</span>
             </a>
-            <a href="https://www.google.com/maps/search/?api=1&query=44.7490,14.7555" target="_blank" rel="noopener noreferrer"
+            <a href="https://www.google.com/maps/search/?api=1&query=Palit+315,+Rab,+Croatia" target="_blank" rel="noopener noreferrer"
               style={{ padding:"13px 8px", borderRadius:14, background:"rgba(251,191,36,0.08)", border:"1px solid rgba(251,191,36,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, textDecoration:"none" }}>
               <span style={{ fontSize:22 }}>🗺️</span>
               <span style={{ ...dm, fontSize:10, fontWeight:700, color:C.gold }}>{isDE ? "Navigation" : lang==="en" ? "Navigate" : lang==="it" ? "Naviga" : "Navigacija"}</span>
@@ -2843,7 +2843,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             <div style={{ borderRadius:16, overflow:"hidden", position:"relative", height:220, border:`1px solid rgba(167,139,250,0.2)` }}>
               <iframe
                 title="Black Jack Rab — aerial"
-                src="https://maps.google.com/maps?q=44.7490,14.7555&hl=hr&z=17&t=k&output=embed"
+                src="https://maps.google.com/maps?q=Palit+315,+Rab,+Croatia&hl=hr&z=17&t=k&output=embed"
                 style={{ width:"100%", height:"100%", border:0, display:"block" }}
                 loading="lazy"
                 allowFullScreen
