@@ -2944,18 +2944,6 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
                           <span key={ai} style={{ padding:"3px 8px", borderRadius:8, background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.15)", ...dm, fontSize:11, color:"#86efac" }}>{a}</span>
                         ))}
                       </div>
-                      {/* Book buttons */}
-                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, padding:"0 14px 14px" }}>
-                        <a href={`https://wa.me/${aff.whatsapp}?text=${encodeURIComponent((isDE ? `Hallo! Ich interessiere mich für ${L(room.name)} bei Black Jack Rab.` : lang==="en" ? `Hello! I'm interested in ${L(room.name)} at Black Jack Rab.` : lang==="it" ? `Salve! Sono interessato/a a ${L(room.name)} al Black Jack Rab.` : `Pozdrav! Zanima me ${L(room.name)} u Black Jack Rabu.`))}`}
-                          target="_blank" rel="noopener noreferrer"
-                          style={{ padding:"10px 8px", borderRadius:10, background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.25)", ...dm, fontSize:12, fontWeight:700, color:"#25d366", textAlign:"center", textDecoration:"none" }}>
-                          💬 {isDE ? "Anfragen" : lang==="en" ? "Enquire" : lang==="it" ? "Informarsi" : "Upit"}
-                        </a>
-                        <a href={`tel:${aff.phone}`}
-                          style={{ padding:"10px 8px", borderRadius:10, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", ...dm, fontSize:12, fontWeight:700, color:C.accent, textAlign:"center", textDecoration:"none" }}>
-                          📞 {isDE ? "Anrufen" : lang==="en" ? "Call" : lang==="it" ? "Chiama" : "Pozovi"}
-                        </a>
-                      </div>
                     </Card>
                   );
                 })}
