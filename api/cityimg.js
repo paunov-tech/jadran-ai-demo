@@ -1,7 +1,7 @@
 // Fetches Wikipedia thumbnail for a Croatian city
 // GET /api/cityimg?city=Split
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', (["https://jadran.ai","https://monte-negro.ai","https://greek-islands.ai"].includes(req.headers.origin) ? req.headers.origin : "https://jadran.ai"));
+  res.setHeader('Access-Control-Allow-Origin', (["https://jadran.ai","https://www.jadran.ai","https://monte-negro.ai","https://www.monte-negro.ai","https://greek-islands.ai"].includes(req.headers.origin) ? req.headers.origin : "https://jadran.ai"));
   res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800'); // cache 1 day client, 1 week CDN
   
   if (req.method === 'OPTIONS') return res.status(200).end();

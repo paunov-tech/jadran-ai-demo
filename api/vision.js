@@ -30,7 +30,7 @@ function visionTierOk(deviceId, plan) {
 // Vision API — Gemini 2.0 Flash multimodal
 // Analyzes photos: menus, signs, ferry schedules, landscapes
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', (["https://jadran.ai","https://monte-negro.ai","https://greek-islands.ai"].includes(req.headers.origin) ? req.headers.origin : "https://jadran.ai"));
+  res.setHeader('Access-Control-Allow-Origin', (["https://jadran.ai","https://www.jadran.ai","https://monte-negro.ai","https://www.monte-negro.ai","https://greek-islands.ai"].includes(req.headers.origin) ? req.headers.origin : "https://jadran.ai"));
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 

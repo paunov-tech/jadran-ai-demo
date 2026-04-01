@@ -872,6 +872,32 @@ export default function LandingPage() {
         </div>
       )}
 
+      {/* ═══ GDPR CONSENT BANNER ═══ */}
+      {gdprVisible && (
+        <div style={{ position:"fixed", bottom:0, left:0, right:0, zIndex:200, background:"rgba(8,14,26,0.97)", borderTop:"1px solid rgba(14,165,233,0.12)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", padding:"14px 20px", paddingBottom:"calc(14px + env(safe-area-inset-bottom, 0px))", display:"flex", flexWrap:"wrap", alignItems:"center", gap:10 }}>
+          <div style={{ flex:1, minWidth:200, fontSize:11, color:"#64748b", lineHeight:1.5, fontFamily:"'Outfit',sans-serif" }}>
+            {lang === "de" || lang === "at"
+              ? "Wir verwenden Cookies für Zahlungsabwicklung und anonyme Nutzungsanalyse (Plausible, cookielos). Keine Werbung."
+              : lang === "it"
+              ? "Utilizziamo cookie per pagamenti e analisi anonima (Plausible, senza cookie). Nessuna pubblicità."
+              : lang === "hr"
+              ? "Koristimo kolačiće za plaćanje i anonimnu analitiku (Plausible, bez kolačića). Bez oglašavanja."
+              : "We use cookies for payments and anonymous analytics (Plausible, cookieless). No ads."}
+            {" "}<span onClick={() => setLegalPage?.("privacy")} style={{ color:"#0ea5e9", cursor:"pointer", textDecoration:"underline" }}>Privacy</span>
+          </div>
+          <div style={{ display:"flex", gap:8, flexShrink:0 }}>
+            <button onClick={() => { try { localStorage.setItem("jadran_consent","1"); setGdprVisible(false); } catch {} }}
+              style={{ padding:"8px 18px", borderRadius:20, background:"linear-gradient(135deg,#0ea5e9,#0284c7)", border:"none", color:"#fff", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif", minHeight:36 }}>
+              {lang === "de" || lang === "at" ? "Akzeptieren" : lang === "it" ? "Accetta" : lang === "hr" ? "Prihvati" : "Accept"}
+            </button>
+            <button onClick={() => { try { localStorage.setItem("jadran_consent","minimal"); setGdprVisible(false); } catch {} }}
+              style={{ padding:"8px 14px", borderRadius:20, background:"transparent", border:"1px solid rgba(255,255,255,0.1)", color:"#475569", fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif", minHeight:36 }}>
+              {lang === "de" || lang === "at" ? "Ablehnen" : lang === "it" ? "Rifiuta" : lang === "hr" ? "Odbij" : "Decline"}
+            </button>
+          </div>
+        </div>
+      )}
+
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
         ::selection { background: rgba(14,165,233,0.3); }

@@ -441,6 +441,13 @@ export default function JadranUnified() {
   const [subScreen, setSubScreen] = useState("onboard"); // varies per phase
   const [premium, setPremium] = useState(() => {
     try {
+      // Check plan expiry first — auto-clears expired paid plans
+      const exp = Number(localStorage.getItem("jadran_premium_exp") || "0");
+      if (exp > 0 && exp < Date.now()) {
+        localStorage.removeItem("jadran_ai_premium");
+        localStorage.removeItem("jadran_premium_exp");
+        return false;
+      }
       if (localStorage.getItem("jadran_ai_premium") === "1") return true;
       // Restore active trial across page reloads
       const until = Number(localStorage.getItem("jadran_ai_trial_until") || "0");
@@ -913,7 +920,11 @@ export default function JadranUnified() {
           setSplash(false);
           setPhase('kiosk');
           setSubScreen('home');
-          try { localStorage.setItem("jadran_ai_premium", "1"); } catch {}
+          try {
+            localStorage.setItem("jadran_ai_premium", "1");
+            const days = parseInt(data.days || "7");
+            localStorage.setItem("jadran_premium_exp", String(Date.now() + days * 86400000));
+          } catch {}
           updateGuest(roomCode.current, { premium: true, premiumSessionId: sessionId, phase: 'kiosk' });
         }
       }).catch(() => {
@@ -1403,7 +1414,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             </div>
           );
         })()}
-        <Btn warm style={{ width: "100%", marginBottom: 10 }} onClick={() => startPremiumCheckout(selectedPlan)}>
+        <Btn warm disabled={payLoading} style={{ width: "100%", marginBottom: 10, opacity: payLoading ? 0.6 : 1 }} onClick={() => !payLoading && startPremiumCheckout(selectedPlan)}>
           {payLoading ? "⏳..." : ({hr:`Otključaj ${selectedPlan==="week"?"Explorer":selectedPlan==="season"?"Sezonu":"VIP"} →`,de:`${selectedPlan==="week"?"Explorer":selectedPlan==="season"?"Saison":"VIP"} freischalten →`,en:`Unlock ${selectedPlan==="week"?"Explorer":selectedPlan==="season"?"Season":"VIP"} →`,it:`Sblocca ${selectedPlan==="week"?"Explorer":selectedPlan==="season"?"Stagione":"VIP"} →`})[lang]||`Unlock ${selectedPlan} →`}
         </Btn>
         {/* Anthropic / Claude badge */}
