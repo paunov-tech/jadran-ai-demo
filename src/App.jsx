@@ -1339,7 +1339,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           const plans = [
             { id:"week",   price:"9.99€",  days:7,  label:{hr:"Explorer",de:"Explorer",en:"Explorer",it:"Explorer"},     sub:{hr:"7 dana",de:"7 Tage",en:"7 days",it:"7 giorni"} },
             { id:"season", price:"19.99€", days:30, label:{hr:"Sezona",de:"Saison",en:"Season",it:"Stagione"},           sub:{hr:"30 dana",de:"30 Tage",en:"30 days",it:"30 giorni"}, badge:{hr:"NAJPOPULARNIJE",de:"BELIEBTESTE",en:"MOST POPULAR",it:"PIÙ POPOLARE"} },
-            { id:"vip",    price:"49.99€", days:30, label:{hr:"VIP Sezona",de:"VIP-Saison",en:"VIP Season",it:"Stagione VIP"}, sub:{hr:"30 dana · AI Opus",de:"30 Tage · AI Opus",en:"30 days · AI Opus",it:"30 giorni · AI Opus"} },
+            { id:"vip",    price:"49.99€", days:30, label:{hr:"VIP Sezona",de:"VIP-Saison",en:"VIP Season",it:"Stagione VIP"}, sub:{hr:"30 dana · Claude Opus · 300 msg",de:"30 Tage · Claude Opus · 300 Msg",en:"30 days · Claude Opus · 300 msg",it:"30 giorni · Claude Opus · 300 msg"} },
           ];
           return (
             <div style={{ display:"flex", gap:8, marginBottom:18 }}>
@@ -1363,16 +1363,52 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             </div>
           );
         })()}
-        <div style={{ ...dm, fontSize: 12, color: C.mut, lineHeight: 1.8, marginBottom: 18, textAlign: "left" }}>
-          ✓ {t("payFeatures1",lang)}<br />
-          ✓ {t("payFeatures2",lang)}<br />
-          ✓ {t("payFeatures3",lang)}<br />
-          ✓ {t("payFeatures4",lang)}<br />
-          ✓ {t("payFeatures5",lang)}
-        </div>
+        {(() => {
+          const pf = {
+            week: {
+              hr:["AI Vodič (Claude) — chat 24/7","8 jezika, bez registracije","Rute i navigacija (kamper / nautika)","Preporuke restorana, plaža i parkinga","Vremenska upozorenja"],
+              de:["AI-Guide (Claude) — Chat 24/7","8 Sprachen, ohne Registrierung","Routen & Navigation (Camper / Nautik)","Restaurant-, Strand- und Parkempfehlungen","Wetterwarnungen"],
+              en:["AI Guide (Claude) — chat 24/7","8 languages, no registration","Routes & navigation (camper / nautical)","Restaurant, beach & parking tips","Weather alerts"],
+              it:["Guida AI (Claude) — chat 24/7","8 lingue, senza registrazione","Percorsi e navigazione (camper / nautica)","Consigli ristoranti, spiagge e parcheggi","Avvisi meteo"],
+              si:["AI Vodič (Claude) — klepet 24/7","8 jezikov, brez registracije","Poti in navigacija","Priporočila restavracij in plaž","Vremenska opozorila"],
+              cz:["AI Průvodce (Claude) — chat 24/7","8 jazyků, bez registrace","Trasy a navigace","Doporučení restaurací a pláží","Meteorologická upozornění"],
+              pl:["Przewodnik AI (Claude) — czat 24/7","8 języków, bez rejestracji","Trasy i nawigacja","Polecenia restauracji i plaż","Alerty pogodowe"],
+            },
+            season: {
+              hr:["Sve iz Explorera +","6 Hidden Gems sa lokalnim savjetima","Analiza fotografija mjesta (Lens)","Glasovni asistent (Walkie)","Rezervacije aktivnosti s vodičem","Guardian — sigurnosna upozorenja","Loyalty bodovi i popusti"],
+              de:["Alles aus Explorer +","6 Hidden Gems mit lokalen Tipps","Fotoanalyse von Orten (Lens)","Sprachassistent (Walkie)","Aktivitätsbuchungen mit Guide","Guardian — Sicherheitswarnungen","Treuepunkte & Rabatte"],
+              en:["Everything in Explorer +","6 Hidden Gems with local tips","Photo analysis of places (Lens)","Voice assistant (Walkie)","Guided activity bookings","Guardian — safety alerts","Loyalty points & discounts"],
+              it:["Tutto di Explorer +","6 Gemme nascoste con consigli locali","Analisi foto dei luoghi (Lens)","Assistente vocale (Walkie)","Prenotazione attività guidate","Guardian — avvisi di sicurezza","Punti fedeltà e sconti"],
+              si:["Vse iz Explorerja +","6 skritih draguljev","Analiza fotografij (Lens)","Glasovni asistent (Walkie)","Rezervacije aktivnosti","Guardian — varnostna opozorila","Točke zvestobe in popusti"],
+              cz:["Vše z Exploreru +","6 skrytých perel","Analýza fotografií (Lens)","Hlasový asistent (Walkie)","Rezervace aktivit s průvodcem","Guardian — bezpečnostní upozornění","Věrnostní body a slevy"],
+              pl:["Wszystko z Explorera +","6 ukrytych pereł","Analiza zdjęć (Lens)","Asystent głosowy (Walkie)","Rezerwacje aktywności z przewodnikiem","Guardian — alerty bezpieczeństwa","Punkty lojalnościowe i zniżki"],
+            },
+            vip: {
+              hr:["Sve iz Sezone +","Claude Opus — najmoćniji AI model","300 poruka dnevno (3× više od Sezone)","Prioritetni odgovori bez čekanja","VIP podrška"],
+              de:["Alles aus Season +","Claude Opus — leistungsstärkstes AI-Modell","300 Nachrichten/Tag (3× mehr als Season)","Prioritätsantworten ohne Wartezeit","VIP-Support"],
+              en:["Everything in Season +","Claude Opus — most powerful AI model","300 messages/day (3× more than Season)","Priority responses, no queue","VIP support"],
+              it:["Tutto di Season +","Claude Opus — modello AI più potente","300 messaggi/giorno (3× di Season)","Risposte prioritarie, nessuna coda","Supporto VIP"],
+              si:["Vse iz Sezone +","Claude Opus — najmočnejši AI model","300 sporočil/dan","Prednostni odgovori","VIP podpora"],
+              cz:["Vše ze Season +","Claude Opus — nejmocnější AI model","300 zpráv/den","Prioritní odpovědi bez čekání","VIP podpora"],
+              pl:["Wszystko z Season +","Claude Opus — najpotężniejszy model AI","300 wiadomości/dzień","Odpowiedzi priorytetowe","Wsparcie VIP"],
+            },
+          };
+          const list = (pf[selectedPlan]||pf.season)[lang] || (pf[selectedPlan]||pf.season).en;
+          return (
+            <div style={{ ...dm, fontSize: 12, color: C.mut, lineHeight: 1.9, marginBottom: 18, textAlign: "left" }}>
+              {list.map((f, i) => <div key={i}>✓ {f}</div>)}
+            </div>
+          );
+        })()}
         <Btn warm style={{ width: "100%", marginBottom: 10 }} onClick={() => startPremiumCheckout(selectedPlan)}>
           {payLoading ? "⏳..." : ({hr:`Otključaj ${selectedPlan==="week"?"Explorer":selectedPlan==="season"?"Sezonu":"VIP"} →`,de:`${selectedPlan==="week"?"Explorer":selectedPlan==="season"?"Saison":"VIP"} freischalten →`,en:`Unlock ${selectedPlan==="week"?"Explorer":selectedPlan==="season"?"Season":"VIP"} →`,it:`Sblocca ${selectedPlan==="week"?"Explorer":selectedPlan==="season"?"Stagione":"VIP"} →`})[lang]||`Unlock ${selectedPlan} →`}
         </Btn>
+        {/* Anthropic / Claude badge */}
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:5, marginBottom:6 }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-label="Anthropic"><path d="M14.25 2h-4.5L3 22h4.5l1.5-4.5h6l1.5 4.5H21L14.25 2zm-5.5 12 3.25-9.5 3.25 9.5H8.75z" fill="#D97706"/></svg>
+          <span style={{ ...dm, fontSize:10, fontWeight:700, color:"#D97706", letterSpacing:0.5 }}>Claude</span>
+          <span style={{ ...dm, fontSize:10, color:C.mut }}>by Anthropic</span>
+        </div>
         <div style={{ ...dm, fontSize: 11, color: C.mut, marginBottom: 8 }}>{t("payVia",lang)}</div>
 
         {/* Recovery */}

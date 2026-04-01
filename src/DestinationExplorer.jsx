@@ -1414,6 +1414,10 @@ export default function DestinationExplorer() {
 
       {/* ═══ FOOTER ═══ */}
       <footer style={{ padding:"28px 20px", paddingBottom:"calc(80px + env(safe-area-inset-bottom, 0px))", textAlign:"center", background:"#030810", borderTop:"1px solid rgba(255,255,255,0.03)" }}>
+        <div style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:5, marginBottom:8 }}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-label="Anthropic"><path d="M14.25 2h-4.5L3 22h4.5l1.5-4.5h6l1.5 4.5H21L14.25 2zm-5.5 12 3.25-9.5 3.25 9.5H8.75z" fill="#92400e"/></svg>
+          <span style={{ fontSize:10, fontWeight:600, color:"#92400e", letterSpacing:0.3 }}>Claude by Anthropic</span>
+        </div>
         <div style={{ fontSize:10, color:"#1e293b", letterSpacing:0.5 }}>© 2026 SIAL Consulting d.o.o. · jadran.ai</div>
       </footer>
 
