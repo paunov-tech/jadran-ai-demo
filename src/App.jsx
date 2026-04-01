@@ -2350,11 +2350,11 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
                   )}
                   {/* Navigation buttons */}
                   <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                    <button onClick={() => { window.location.href = `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}&travelmode=walking`; }}
+                    <button onClick={() => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}&travelmode=walking`, '_blank', 'noopener,noreferrer'); }}
                       style={{ ...dm, flex: 1, padding: "10px 14px", background: C.acDim, border: `1px solid rgba(14,165,233,0.15)`, borderRadius: 12, color: C.accent, fontSize: 13, cursor: "pointer", fontWeight: 600, textAlign: "center" }}>
                       🚶 {({hr:"Pješice",de:"Zu Fuß",en:"Walk",it:"A piedi"})[lang]||"Pješice"}
                     </button>
-                    <button onClick={() => { window.location.href = `https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}&travelmode=driving`; }}
+                    <button onClick={() => { window.open(`https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}&travelmode=driving`, '_blank', 'noopener,noreferrer'); }}
                       style={{ ...dm, flex: 1, padding: "10px 14px", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.15)", borderRadius: 12, color: C.gold, fontSize: 13, cursor: "pointer", fontWeight: 600, textAlign: "center" }}>
                       🚗 {({hr:"Autom",de:"Mit Auto",en:"Drive",it:"In auto"})[lang]||"Autom"}
                     </button>
@@ -2474,9 +2474,9 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
   const KioskChat = () => {
     const prompts = [t("chatPrompt1",lang), t("chatPrompt2",lang), t("chatPrompt3",lang), t("chatPrompt4",lang)];
     return (
-      <div style={{ display: "flex", flexDirection: "column", height: "calc(100dvh - 200px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+      <div style={{ display: "flex", flexDirection: "column", height: "calc(100dvh - 130px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
         <BackBtn onClick={() => setSubScreen("home")} />
-        <div className="scroll-smooth" style={{ flex: 1, padding: "8px 0" }}>
+        <div className="scroll-smooth" style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
           {chatMsgs.length === 0 && (
             <div style={{ textAlign: "center", padding: "40px 20px" }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>🌊</div>
@@ -2502,7 +2502,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           </div>}
           <div ref={chatEnd} />
         </div>
-        <div style={{ display: "flex", gap: 10, padding: "12px 0 4px", borderTop: `1px solid ${C.bord}`, background: `${C.bg}ee`, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", marginTop: "auto", flexDirection: "column" }}>
+        <div style={{ display: "flex", gap: 10, padding: "12px 0 4px", borderTop: `1px solid ${C.bord}`, background: `${C.bg}ee`, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", flexShrink: 0, flexDirection: "column" }}>
           {/* Free message counter */}
           {!premium && (() => {
             const used = freeMsgUsed;
@@ -2787,9 +2787,9 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           </div>
 
           {/* ── Contact strip ── */}
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginBottom:16 }}>
+          <div style={{ display:"flex", gap:8, marginBottom:16 }}>
             <a href={`tel:${aff.phone}`}
-              style={{ padding:"13px 8px", borderRadius:14, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, textDecoration:"none" }}>
+              style={{ flex:"1 1 0", minWidth:0, padding:"13px 8px", borderRadius:14, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, textDecoration:"none" }}>
               <span style={{ fontSize:22 }}>📞</span>
               <span style={{ ...dm, fontSize:10, fontWeight:700, color:C.accent }}>{isDE ? "Anrufen" : lang==="en" ? "Call" : lang==="it" ? "Chiama" : "Zovi"}</span>
             </a>
@@ -2797,20 +2797,20 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
               const isDesktop = typeof window !== "undefined" && !("ontouchstart" in window) && window.innerWidth > 768;
               return isDesktop ? (
                 <button onClick={() => { navigator.clipboard?.writeText(aff.phone || ""); }}
-                  style={{ padding:"13px 8px", borderRadius:14, background:"rgba(37,211,102,0.08)", border:"1px solid rgba(37,211,102,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, cursor:"pointer" }}>
+                  style={{ flex:"1 1 0", minWidth:0, padding:"13px 8px", borderRadius:14, background:"rgba(37,211,102,0.08)", border:"1px solid rgba(37,211,102,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, cursor:"pointer" }}>
                   <span style={{ fontSize:22 }}>📋</span>
                   <span style={{ ...dm, fontSize:10, fontWeight:700, color:"#25d366" }}>{isDE ? "Kopieren" : lang==="en" ? "Copy no." : lang==="it" ? "Copia" : "Kopiraj"}</span>
                 </button>
               ) : (
                 <a href={`https://wa.me/${aff.whatsapp}`} target="_blank" rel="noopener noreferrer"
-                  style={{ padding:"13px 8px", borderRadius:14, background:"rgba(37,211,102,0.08)", border:"1px solid rgba(37,211,102,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, textDecoration:"none" }}>
+                  style={{ flex:"1 1 0", minWidth:0, padding:"13px 8px", borderRadius:14, background:"rgba(37,211,102,0.08)", border:"1px solid rgba(37,211,102,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, textDecoration:"none" }}>
                   <span style={{ fontSize:22 }}>💬</span>
                   <span style={{ ...dm, fontSize:10, fontWeight:700, color:"#25d366" }}>{isDE ? "Schreiben" : lang==="en" ? "Message" : lang==="it" ? "Scrivi" : "Poruka"}</span>
                 </a>
               );
             })()}
             <a href="https://www.google.com/maps/search/?api=1&query=Palit+315,+Rab,+Croatia" target="_blank" rel="noopener noreferrer"
-              style={{ padding:"13px 8px", borderRadius:14, background:"rgba(251,191,36,0.08)", border:"1px solid rgba(251,191,36,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, textDecoration:"none" }}>
+              style={{ flex:"1 1 0", minWidth:0, padding:"13px 8px", borderRadius:14, background:"rgba(251,191,36,0.08)", border:"1px solid rgba(251,191,36,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, textDecoration:"none" }}>
               <span style={{ fontSize:22 }}>🗺️</span>
               <span style={{ ...dm, fontSize:10, fontWeight:700, color:C.gold }}>{isDE ? "Navigation" : lang==="en" ? "Navigate" : lang==="it" ? "Naviga" : "Navigacija"}</span>
             </a>
@@ -3579,6 +3579,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           active={subScreen === "affiliate" ? "home" : (["home","activities","gems","excursions"].includes(subScreen) ? subScreen : "home")}
           onChange={(k) => {
             if (k === "live") { setShowKioskLive(true); return; }
+            if (k === "explore") { window.location.href = "/explore"; return; }
             setSubScreen(k); window.scrollTo({ top: 0, behavior: "smooth" });
           }}
           items={[
@@ -3586,6 +3587,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             { key: "chat",       icon: IC.bot,    label: "AI Chat" },
             { key: "live",       icon: IC.map,    label: ({hr:"Live",de:"Live",en:"Live",it:"Live"})[lang] || "Live" },
             { key: "activities", icon: IC.ticket, label: ({hr:"Aktivnosti",de:"Aktivitäten",en:"Activities",it:"Attività",si:"Aktivnosti",cz:"Aktivity",pl:"Aktywności"})[lang] || "Activities" },
+            { key: "explore",    icon: IC.search, label: ({hr:"Destinacije",de:"Ziele",en:"Explore",it:"Esplora",si:"Cilji",cz:"Cíle",pl:"Cele"})[lang] || "Explore" },
           ]}
         />
       )}
