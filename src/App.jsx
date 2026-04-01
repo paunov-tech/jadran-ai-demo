@@ -502,7 +502,7 @@ export default function JadranUnified() {
     };
     // Affiliate-specific coordinate overrides
     const AFFILIATE_COORDS = {
-      "blackjack": [44.7490, 14.7555, "Rab"], // Palit 315, Rab
+      "blackjack": [44.7534, 14.7835, "Rab"], // Palit 315, Rab — na kopnu
     };
     const urlAffiliate = p.get("affiliate");
     // Affiliate requires signed token to grant 72h trial (prevents URL guessing)
