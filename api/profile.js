@@ -4,7 +4,7 @@ const FB_PROJECT = "molty-portal";
 
 async function fsRead(key, path) {
   try {
-    const r = await fetch(`https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/${path}?key=${key}`);
+    const r = await fetch(`https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/${path}?key=${key}`, { signal: AbortSignal.timeout(5000) });
     if (!r.ok) return null;
     const d = await r.json();
     if (!d.fields) return null;
@@ -27,7 +27,7 @@ async function fsWrite(key, path, data) {
     }
     const r = await fetch(
       `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/${path}?key=${key}`,
-      { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
+      { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(5000) }
     );
     return r.ok;
   } catch { return false; }

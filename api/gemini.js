@@ -56,16 +56,22 @@ export default async function handler(req, res) {
     };
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-    
-    
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
 
-    const data = await response.json();
+    let response, data;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(15000),
+      });
+      if (response.status !== 429) break;
+      if (attempt === 0) await new Promise(r => setTimeout(r, 1500));
+    }
+    if (response.status === 429) {
+      return res.status(429).json({ text: '', error: 'Gemini rate limit — pokušajte za nekoliko sekundi.' });
+    }
+    data = await response.json();
     
     // Debug: log full response structure
     

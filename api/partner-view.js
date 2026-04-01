@@ -2,6 +2,22 @@
 const ALLOWED = ["https://jadran.ai", "https://monte-negro.ai"];
 const FB_PROJECT = "molty-portal";
 
+// Dedup: skip write if same deviceId+partner wrote within 1 hour (per instance)
+const _dedup = new Map();
+const DEDUP_TTL = 3600000;
+function isDup(deviceId, partner) {
+  const key = `${deviceId}:${partner}`;
+  const now = Date.now();
+  const last = _dedup.get(key);
+  if (last && now - last < DEDUP_TTL) return true;
+  _dedup.set(key, now);
+  // Lazy cleanup
+  if (_dedup.size > 5000) {
+    for (const [k, v] of _dedup) { if (now - v > DEDUP_TTL) _dedup.delete(k); }
+  }
+  return false;
+}
+
 export default async function handler(req, res) {
   const origin = req.headers.origin || "";
   res.setHeader("Access-Control-Allow-Origin", ALLOWED.includes(origin) ? origin : ALLOWED[0]);
@@ -15,6 +31,9 @@ export default async function handler(req, res) {
 
   const { partner, event = "view", lang = "", deviceId = "unknown" } = req.body || {};
   if (!partner) return res.status(400).json({ error: "partner required" });
+
+  // Dedup: repeated QR scans from same device within 1h don't inflate stats
+  if (isDup(String(deviceId), String(partner))) return res.status(200).json({ ok: true, dedup: true });
 
   try {
     const docId = `pv_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -31,7 +50,7 @@ export default async function handler(req, res) {
     };
     await fetch(
       `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/jadran_partner_views/${docId}?key=${FB_KEY}`,
-      { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
+      { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(5000) }
     );
     return res.status(200).json({ ok: true });
   } catch {

@@ -136,6 +136,7 @@ export default async function handler(req, res) {
       icon: wmoEmoji(wx.hourly.weather_code?.[si + i] ?? 0),
     }));
 
+    res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=60");
     return res.status(200).json({ current, forecast, hourly });
   } catch (err) {
     console.error('[WEATHER] Error:', err.message);

@@ -57,8 +57,8 @@ export default async function handler(req, res) {
     };
 
     const [viewsRes, fbRes] = await Promise.all([
-      fetch(viewsUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(viewsQuery) }),
-      fetch(fbUrl,    { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(fbQuery) }),
+      fetch(viewsUrl, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(viewsQuery), signal: AbortSignal.timeout(8000) }),
+      fetch(fbUrl,    { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(fbQuery),  signal: AbortSignal.timeout(8000) }),
     ]);
 
     const [viewsDocs, fbDocs] = await Promise.all([viewsRes.json(), fbRes.json()]);
