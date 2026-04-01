@@ -1,31 +1,57 @@
 {
-  "name": "JADRAN — Lokalni vodič za Jadran",
+  "name": "JADRAN AI — Adriatic Travel Guide",
   "short_name": "JADRAN",
-  "description": "AI turistički vodič za hrvatsku obalu Jadrana. Kamperi, jedriličari, turisti.",
-  "start_url": "/",
+  "description": "AI travel guide for the Adriatic coast. Campers, sailors, tourists — beaches, marinas, hidden gems, 8 languages.",
+  "start_url": "/?source=pwa",
+  "id": "/?source=pwa",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "orientation": "portrait",
-  "background_color": "#0a1628",
+  "background_color": "#030c18",
   "theme_color": "#0ea5e9",
-  "lang": "hr",
+  "lang": "en",
+  "dir": "ltr",
   "categories": ["travel", "navigation", "lifestyle"],
+  "iarc_rating_id": "",
   "icons": [
-    { "src": "/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },
-    { "src": "/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
-  "screenshots": [],
+  "screenshots": [
+    {
+      "src": "/og-image.jpg",
+      "sizes": "1200x630",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "JADRAN AI — Adriatic Travel Guide"
+    }
+  ],
   "shortcuts": [
     {
-      "name": "Kamper vodič",
+      "name": "Camper Guide",
+      "short_name": "Camper",
       "url": "/ai?niche=camper",
-      "description": "Parking, dump station, legalna noćenja",
+      "description": "Parking, bridge heights, overnight stops",
       "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
     },
     {
-      "name": "Lokalni vodič",
+      "name": "Nautical Guide",
+      "short_name": "Nautical",
+      "url": "/ai?niche=nautical",
+      "description": "Marinas, anchorages, wind alerts",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Local Guide",
+      "short_name": "Local",
       "url": "/ai?niche=local",
-      "description": "Plaže, restorani, skrivena mjesta",
+      "description": "Beaches, restaurants, hidden gems",
       "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
     }
-  ]
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "edge_side_panel": { "preferred_width": 400 }
 }
