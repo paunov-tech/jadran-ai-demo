@@ -519,7 +519,7 @@ export default function JadranUnified() {
     setTransitToCoords([cd[0], cd[1]]);
     saveDelta({ destination: { city: cd[2], lat: cd[0], lng: cd[1] } });
     setPhase("kiosk");
-    setSubScreen("home");
+    setSubScreen(urlAffiliate ? "affiliate" : "home");
     setSplash(false);
     // Only grant 72h trial for verified affiliate partners (QR #1 with valid token)
     // TZ QR without affiliate (QR #2) gets 3 free messages only

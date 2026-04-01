@@ -166,7 +166,31 @@ const BJ = {
   address: "Palit 315, Rab · 200m od plaže",
   hours: { hr:"Pon–Ned 12:00–23:00", de:"Mo–So 12:00–23:00", en:"Mon–Sun 12:00–23:00", it:"Lun–Dom 12:00–23:00" },
   phone: "+385 51 724 522",
-  link: "/?kiosk=rab&affiliate=blackjack&tk=sial2026&lang=de",
+  whatsapp: "38551724522",
+  rating: 4.7,
+  reviewCount: 127,
+  link: "/?kiosk=rab&affiliate=blackjack&tk=sial2026",
+  gallery: [
+    "https://images.unsplash.com/photo-1544025162-d76694265947?w=500&q=75",
+    "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=500&q=75",
+    "https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=500&q=75",
+    "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&q=75",
+    "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=500&q=75",
+  ],
+  testimonials: [
+    { name:"Klaus M.", flag:"🇩🇪", rating:5, text:{ hr:"Najbolji steak na otoku! Terasa s pogledom na more je fantastična.", de:"Das beste Steak auf der Insel! Die Terrasse mit Meerblick ist einfach traumhaft.", en:"Best steak on the island! The sea-view terrace is simply dreamy.", it:"La migliore bistecca sull'isola! La terrazza è semplicemente meravigliosa." } },
+    { name:"Sarah B.", flag:"🇬🇧", rating:5, text:{ hr:"Fantastične pizze i prijazno osoblje. Ćevapi s dimljenim sirom su apsolutno obavezni!", de:"Fantastische Pizzen und freundliches Personal. Der Ćevapi mit Räucherkäse ist ein Muss!", en:"Fantastic pizzas and friendly staff. The ćevapi with smoked cheese is an absolute must!", it:"Pizze fantastiche e personale gentile. Il ćevapi con formaggio affumicato è un must!" } },
+    { name:"Marta K.", flag:"🇵🇱", rating:5, text:{ hr:"Savršena ljetna večer — riblje jelo je bilo izvrsno. Ugodna i autentična.", de:"Perfekter Urlaubsabend — die Fischplatte war köstlich. Gemütlich und authentisch.", en:"Perfect holiday evening — the seafood was delicious. Cosy and authentically Croatian.", it:"Serata perfetta — il pesce era delizioso. Accogliente e autenticamente croata." } },
+  ],
+  dailySpecials: [
+    { day:0, emoji:"🥩", hr:"Nedjeljna goveđa plata (za 2)", de:"Sonntagsrinderplatte (für 2)", en:"Sunday beef platter (for 2)", it:"Piatto di manzo domenicale", price:32 },
+    { day:1, emoji:"🐟", hr:"Riba dana s prilogom", de:"Fisch des Tages mit Beilage", en:"Fish of the day with side", it:"Pesce del giorno con contorno", price:19 },
+    { day:2, emoji:"🍕", hr:"Pizza + salata + piće = 15€", de:"Pizza + Salat + Getränk = 15€", en:"Pizza + salad + drink = 15€", it:"Pizza + insalata + bevanda = 15€", price:15 },
+    { day:3, emoji:"🐙", hr:"Pečena hobotnica + crni rižot", de:"Gebackener Krake + schwarzes Risotto", en:"Baked octopus + black risotto", it:"Polpo al forno + risotto nero", price:24 },
+    { day:4, emoji:"🌭", hr:"Ćevapi večer — 10 kom + prilog", de:"Ćevapi-Abend — 10 Stk + Beilage", en:"Ćevapi night — 10 pcs + side", it:"Serata ćevapi — 10 pz + contorno", price:18 },
+    { day:5, emoji:"🦞", hr:"Jadranski tanjur za 2 — sve iz mora", de:"Adriatischer Teller für 2 — alles aus dem Meer", en:"Adriatic platter for 2 — all from the sea", it:"Piatto adriatico x2 — tutto dal mare", price:38 },
+    { day:6, emoji:"🔥", hr:"Subotnji roštilj mješano (za 2)", de:"Samstag-Grillplatte (für 2)", en:"Saturday BBQ mixed grill (for 2)", it:"Grigliata mista del sabato", price:36 },
+  ],
   menu: [
     {
       section: { hr:"Predjela", de:"Vorspeisen", en:"Starters", it:"Antipasti" },
@@ -662,34 +686,87 @@ export default function DestinationExplorer() {
       })()}
 
       {/* ═══ BLACK JACK MODAL ═══ */}
-      {showBJ && (
-        <div onClick={() => { setShowBJ(false); setSelectedMenuItem(null); }} style={{ position:"fixed", inset:0, zIndex:500, background:"rgba(3,8,16,0.85)", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
-          <div onClick={e => e.stopPropagation()} style={{ width:"100%", maxWidth:560, maxHeight:"90dvh", background:"#0a1628", borderRadius:"24px 24px 0 0", border:"1px solid rgba(249,115,22,0.15)", borderBottom:"none", overflow:"hidden", display:"flex", flexDirection:"column", animation:"fadeUp 0.35s cubic-bezier(0.16,1,0.3,1)" }}>
+      {showBJ && (() => {
+        const today = new Date().getDay();
+        const special = BJ.dailySpecials.find(s => s.day === today);
+        return (
+        <div onClick={() => { setShowBJ(false); setSelectedMenuItem(null); }} style={{ position:"fixed", inset:0, zIndex:500, background:"rgba(3,8,16,0.88)", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)", display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
+          <div onClick={e => e.stopPropagation()} style={{ width:"100%", maxWidth:560, maxHeight:"92dvh", background:"#0a1628", borderRadius:"24px 24px 0 0", border:"1px solid rgba(249,115,22,0.15)", borderBottom:"none", overflow:"hidden", display:"flex", flexDirection:"column", animation:"fadeUp 0.35s cubic-bezier(0.16,1,0.3,1)" }}>
 
-            {/* Header photo */}
-            <div style={{ position:"relative", height:160, flexShrink:0 }}>
+            {/* ── Hero photo ── */}
+            <div style={{ position:"relative", height:180, flexShrink:0 }}>
               <img src={BJ.img} alt="Black Jack" style={{ width:"100%", height:"100%", objectFit:"cover" }} />
-              <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, #0a1628 0%, rgba(10,22,40,0.6) 60%, rgba(10,22,40,0.2) 100%)" }} />
+              <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, #0a1628 0%, rgba(10,22,40,0.5) 60%, rgba(10,22,40,0.15) 100%)" }} />
               <button onClick={() => { setShowBJ(false); setSelectedMenuItem(null); }} style={{ position:"absolute", top:14, right:14, width:32, height:32, borderRadius:"50%", background:"rgba(0,0,0,0.6)", border:"1px solid rgba(255,255,255,0.1)", color:"#94a3b8", fontSize:16, cursor:"pointer", display:"grid", placeItems:"center" }}>✕</button>
               <div style={{ position:"absolute", top:14, left:14, padding:"4px 10px", borderRadius:8, background:"rgba(249,115,22,0.15)", border:"1px solid rgba(249,115,22,0.25)", fontSize:9, fontWeight:700, color:"#f97316", letterSpacing:1.5 }}>PARTNER • RAB</div>
-              <div style={{ position:"absolute", bottom:14, left:18 }}>
-                <div style={{ fontFamily:F, fontSize:26, fontWeight:400 }}>Black Jack</div>
-                <div style={{ fontSize:11, color:"rgba(255,255,255,0.55)", marginTop:2 }}>{BJ.address}</div>
+              <div style={{ position:"absolute", bottom:12, left:18, right:18 }}>
+                <div style={{ fontFamily:F, fontSize:28, fontWeight:400, color:"#f0f9ff" }}>🃏 Black Jack</div>
+                <div style={{ display:"flex", alignItems:"center", gap:10, marginTop:4, flexWrap:"wrap" }}>
+                  <div style={{ fontSize:11, color:"rgba(255,255,255,0.5)" }}>{BJ.address}</div>
+                  <div style={{ display:"flex", alignItems:"center", gap:3, padding:"2px 7px", borderRadius:8, background:"rgba(251,191,36,0.15)", border:"1px solid rgba(251,191,36,0.3)" }}>
+                    <span style={{ color:"#fbbf24", fontSize:11 }}>★</span>
+                    <span style={{ fontSize:11, fontWeight:700, color:"#fbbf24" }}>{BJ.rating}</span>
+                    <span style={{ fontSize:10, color:"rgba(255,255,255,0.4)" }}>({BJ.reviewCount})</span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Info row */}
-            <div style={{ display:"flex", gap:16, padding:"12px 18px", borderBottom:"1px solid rgba(255,255,255,0.04)", flexShrink:0 }}>
-              <div style={{ fontSize:11, color:"#64748b" }}>🕐 {t(BJ.hours)}</div>
-              <div style={{ fontSize:11, color:"#64748b" }}>📞 {BJ.phone}</div>
+            {/* ── Contact strip ── */}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:6, padding:"10px 14px", borderBottom:"1px solid rgba(255,255,255,0.04)", flexShrink:0 }}>
+              <a href={`tel:${BJ.phone}`} style={{ padding:"9px 6px", borderRadius:12, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.18)", display:"flex", flexDirection:"column", alignItems:"center", gap:3, textDecoration:"none" }}>
+                <span style={{ fontSize:18 }}>📞</span>
+                <span style={{ fontSize:9, fontWeight:700, color:"#38bdf8" }}>{({hr:"Pozovi",de:"Anrufen",en:"Call",it:"Chiama"})[dl]||"Call"}</span>
+              </a>
+              <a href={`https://wa.me/${BJ.whatsapp}`} target="_blank" rel="noopener noreferrer" style={{ padding:"9px 6px", borderRadius:12, background:"rgba(37,211,102,0.08)", border:"1px solid rgba(37,211,102,0.18)", display:"flex", flexDirection:"column", alignItems:"center", gap:3, textDecoration:"none" }}>
+                <span style={{ fontSize:18 }}>💬</span>
+                <span style={{ fontSize:9, fontWeight:700, color:"#25d366" }}>WhatsApp</span>
+              </a>
+              <a href="https://www.google.com/maps/search/?api=1&query=44.7490,14.7555" target="_blank" rel="noopener noreferrer" style={{ padding:"9px 6px", borderRadius:12, background:"rgba(251,191,36,0.08)", border:"1px solid rgba(251,191,36,0.18)", display:"flex", flexDirection:"column", alignItems:"center", gap:3, textDecoration:"none" }}>
+                <span style={{ fontSize:18 }}>🗺️</span>
+                <span style={{ fontSize:9, fontWeight:700, color:"#fbbf24" }}>{({hr:"Navigacija",de:"Navigation",en:"Navigate",it:"Naviga"})[dl]||"Navigate"}</span>
+              </a>
             </div>
 
-            {/* Scrollable body */}
+            {/* ── Scrollable body ── */}
             <div style={{ overflowY:"auto", WebkitOverflowScrolling:"touch", flex:1, paddingBottom:"env(safe-area-inset-bottom, 16px)" }}>
+
+              {/* Hours + today's special */}
+              <div style={{ padding:"12px 16px 0" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom: special ? 10 : 0, padding:"8px 12px", borderRadius:10, background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.12)" }}>
+                  <span style={{ fontSize:14 }}>🕐</span>
+                  <span style={{ fontSize:11, fontWeight:700, color:"#22c55e" }}>{({hr:"Otvoreno",de:"Geöffnet",en:"Open",it:"Aperto"})[dl]||"Open"} · </span>
+                  <span style={{ fontSize:11, color:"#94a3b8" }}>{t(BJ.hours)}</span>
+                </div>
+                {special && (
+                  <div style={{ marginTop:10, padding:"12px 14px", borderRadius:12, background:"rgba(251,191,36,0.06)", border:"1px solid rgba(251,191,36,0.2)" }}>
+                    <div style={{ fontSize:9, color:"#fbbf24", letterSpacing:3, fontWeight:700, marginBottom:8, textTransform:"uppercase" }}>{({hr:"JELO DANA",de:"TAGESGERICHT",en:"TODAY'S SPECIAL",it:"PIATTO DEL GIORNO"})[dl]||"TODAY'S SPECIAL"}</div>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <span style={{ fontSize:24 }}>{special.emoji}</span>
+                        <span style={{ fontSize:13, fontWeight:600, color:"#e2e8f0" }}>{t(special)}</span>
+                      </div>
+                      <span style={{ fontSize:15, fontWeight:700, color:"#fbbf24" }}>€{special.price}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Photo gallery */}
+              <div style={{ padding:"14px 0 0 16px" }}>
+                <div style={{ fontSize:9, color:"#f97316", letterSpacing:3, fontWeight:700, marginBottom:8, textTransform:"uppercase" }}>{({hr:"GALERIJA",de:"GALERIE",en:"GALLERY",it:"GALLERIA"})[dl]||"GALLERY"}</div>
+                <div style={{ display:"flex", gap:8, overflowX:"auto", scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", paddingRight:16, paddingBottom:4 }}>
+                  {BJ.gallery.map((src, gi) => (
+                    <div key={gi} style={{ minWidth:130, height:90, borderRadius:12, overflow:"hidden", flexShrink:0, scrollSnapAlign:"start" }}>
+                      <img src={src} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} loading="lazy" />
+                    </div>
+                  ))}
+                </div>
+              </div>
 
               {/* Menu sections */}
               {BJ.menu.map((sec, si) => (
-                <div key={si} style={{ padding:"16px 18px 0" }}>
+                <div key={si} style={{ padding:"16px 16px 0" }}>
                   <div style={{ fontSize:10, color:"#f97316", letterSpacing:3, fontWeight:700, marginBottom:10, textTransform:"uppercase" }}>{t(sec.section)}</div>
                   <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:8 }}>
                     {sec.items.map(item => {
@@ -708,7 +785,7 @@ export default function DestinationExplorer() {
                             </div>
                           </div>
                           {isOpen && (
-                            <div style={{ padding:"0 14px 14px 48px", fontSize:13, color:"#94a3b8", lineHeight:1.7, borderTop:"1px solid rgba(255,255,255,0.04)", paddingTop:10, marginLeft:0 }}>
+                            <div style={{ padding:"0 14px 14px", paddingLeft:48, fontSize:13, color:"#94a3b8", lineHeight:1.7, borderTop:"1px solid rgba(255,255,255,0.04)", paddingTop:10 }}>
                               {t(item.desc)}
                             </div>
                           )}
@@ -719,8 +796,25 @@ export default function DestinationExplorer() {
                 </div>
               ))}
 
+              {/* Testimonials */}
+              <div style={{ padding:"16px 16px 0" }}>
+                <div style={{ fontSize:10, color:"#fbbf24", letterSpacing:3, fontWeight:700, marginBottom:10, textTransform:"uppercase" }}>{({hr:"OCJENE GOSTIJU",de:"GÄSTEBEWERTUNGEN",en:"GUEST REVIEWS",it:"RECENSIONI"})[dl]||"REVIEWS"}</div>
+                <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                  {BJ.testimonials.map((rv, ri) => (
+                    <div key={ri} style={{ padding:"12px 14px", borderRadius:14, background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.05)" }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
+                        <span style={{ fontSize:16 }}>{rv.flag}</span>
+                        <span style={{ fontSize:12, fontWeight:700, color:"#e2e8f0" }}>{rv.name}</span>
+                        <span style={{ fontSize:12, color:"#fbbf24", marginLeft:"auto" }}>{"★".repeat(rv.rating)}</span>
+                      </div>
+                      <div style={{ fontSize:12, color:"#64748b", lineHeight:1.6, fontStyle:"italic" }}>"{t(rv.text)}"</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Nearby */}
-              <div style={{ padding:"16px 18px 0" }}>
+              <div style={{ padding:"16px 16px 0" }}>
                 <div style={{ fontSize:10, color:"#0ea5e9", letterSpacing:3, fontWeight:700, marginBottom:10, textTransform:"uppercase" }}>
                   {({hr:"Mjesta u blizini",de:"In der Nähe",en:"Nearby",it:"Nelle vicinanze"})[dl]||"Nearby"}
                 </div>
@@ -739,8 +833,8 @@ export default function DestinationExplorer() {
               </div>
 
               {/* CTA */}
-              <div style={{ padding:"16px 18px 20px" }}>
-                <a href={BJ.link} style={{ display:"block", padding:"14px", borderRadius:14, background:"linear-gradient(135deg,#f97316,#ea580c)", color:"#fff", fontSize:14, fontWeight:700, textDecoration:"none", textAlign:"center", boxShadow:"0 4px 20px rgba(249,115,22,0.3)", minHeight:48, lineHeight:"20px" }}>
+              <div style={{ padding:"16px 16px 20px" }}>
+                <a href={`${BJ.link}&lang=${lang}`} style={{ display:"block", padding:"14px", borderRadius:14, background:"linear-gradient(135deg,#f97316,#ea580c)", color:"#fff", fontSize:14, fontWeight:700, textDecoration:"none", textAlign:"center", boxShadow:"0 4px 20px rgba(249,115,22,0.3)", minHeight:48, lineHeight:"20px" }}>
                   {({hr:"Otvori AI vodič za Rab →",de:"KI-Guide für Rab öffnen →",en:"Open AI guide for Rab →",it:"Apri guida AI per Rab →"})[dl]||"Open AI guide →"}
                 </a>
               </div>
@@ -748,7 +842,8 @@ export default function DestinationExplorer() {
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ═══ FOOTER ═══ */}
       <footer style={{ padding:"28px 20px", paddingBottom:"calc(80px + env(safe-area-inset-bottom, 0px))", textAlign:"center", background:"#030810", borderTop:"1px solid rgba(255,255,255,0.03)" }}>
