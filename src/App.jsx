@@ -2666,9 +2666,22 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         setPfDone(true);
       };
 
+      const shareAffiliate = () => {
+        const url = `https://jadran.ai/?kiosk=${(AFFILIATE_COORDS[affiliateId]?.[2] || "rab").toLowerCase()}&affiliate=${affiliateId}&tk=${AFFILIATE_TOKENS[affiliateId] || ""}`;
+        const txt = isDE ? `${aff.name} auf Rab — Gurman House entdecken` : lang==="en" ? `${aff.name} on Rab — Discover Gurman House` : lang==="it" ? `${aff.name} a Rab — Scopri Gurman House` : `${aff.name} na Rabu — Otkrijte Gurman House`;
+        if (navigator.share) { navigator.share({ title: aff.name, text: txt, url }); }
+        else { navigator.clipboard?.writeText(url).then(() => alert(isDE ? "Link kopiert!" : lang==="en" ? "Link copied!" : "Link kopiran!")); }
+      };
+
       return (
         <>
-          <BackBtn onClick={() => setSubScreen("home")} />
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <BackBtn onClick={() => setSubScreen("home")} />
+            <button onClick={shareAffiliate} style={{ ...dm, background:"none", border:"1px solid rgba(255,255,255,0.1)", borderRadius:20, padding:"8px 14px", fontSize:12, color:C.mut, cursor:"pointer", display:"flex", alignItems:"center", gap:6, marginRight:4 }}>
+              <span style={{ fontSize:14 }}>↗</span>
+              {isDE ? "Teilen" : lang==="en" ? "Share" : lang==="it" ? "Condividi" : "Dijeli"}
+            </button>
+          </div>
 
           {/* ── Hero ── */}
           <div style={{ borderRadius:20, overflow:"hidden", marginBottom:16, position:"relative", height:230 }}>
@@ -2701,13 +2714,33 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             <a href={`https://wa.me/${aff.whatsapp}`} target="_blank" rel="noopener noreferrer"
               style={{ padding:"13px 8px", borderRadius:14, background:"rgba(37,211,102,0.08)", border:"1px solid rgba(37,211,102,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, textDecoration:"none" }}>
               <span style={{ fontSize:22 }}>💬</span>
-              <span style={{ ...dm, fontSize:10, fontWeight:700, color:"#25d366" }}>WhatsApp</span>
+              <span style={{ ...dm, fontSize:10, fontWeight:700, color:"#25d366" }}>{isDE ? "Schreiben" : lang==="en" ? "Message" : lang==="it" ? "Scrivi" : "Poruka"}</span>
             </a>
             <a href="https://www.google.com/maps/search/?api=1&query=Palit+315,+Rab,+Croatia" target="_blank" rel="noopener noreferrer"
               style={{ padding:"13px 8px", borderRadius:14, background:"rgba(251,191,36,0.08)", border:"1px solid rgba(251,191,36,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, textDecoration:"none" }}>
               <span style={{ fontSize:22 }}>🗺️</span>
               <span style={{ ...dm, fontSize:10, fontWeight:700, color:C.gold }}>{isDE ? "Navigation" : lang==="en" ? "Navigate" : lang==="it" ? "Naviga" : "Navigacija"}</span>
             </a>
+          </div>
+
+          {/* ── Trust badges ── */}
+          <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap" }}>
+            <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(L(aff.address))}`} target="_blank" rel="noopener noreferrer"
+              style={{ display:"flex", alignItems:"center", gap:5, padding:"6px 10px", borderRadius:10, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", textDecoration:"none" }}>
+              <span style={{ fontSize:13 }}>🗺️</span>
+              <span style={{ ...dm, fontSize:11, color:"#94a3b8" }}>Google Maps</span>
+            </a>
+            <a href={`https://www.tripadvisor.com/Search?q=${encodeURIComponent(aff.name + " " + (AFFILIATE_COORDS[affiliateId]?.[2] || "Rab"))}`} target="_blank" rel="noopener noreferrer"
+              style={{ display:"flex", alignItems:"center", gap:5, padding:"6px 10px", borderRadius:10, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", textDecoration:"none" }}>
+              <span style={{ fontSize:13 }}>🦉</span>
+              <span style={{ ...dm, fontSize:11, color:"#94a3b8" }}>TripAdvisor</span>
+            </a>
+            <div style={{ display:"flex", alignItems:"center", gap:5, padding:"6px 10px", borderRadius:10, background:"rgba(14,165,233,0.05)", border:"1px solid rgba(14,165,233,0.12)" }}>
+              <span style={{ fontSize:11 }}>✓</span>
+              <span style={{ ...dm, fontSize:11, color:C.accent, fontWeight:600 }}>
+                {isDE ? "Verifizierter Partner" : lang==="en" ? "Verified Partner" : lang==="it" ? "Partner Verificato" : "Verificirani partner"}
+              </span>
+            </div>
           </div>
 
           {/* ── Open hours strip ── */}
