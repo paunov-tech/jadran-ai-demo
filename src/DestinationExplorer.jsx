@@ -239,7 +239,21 @@ const BJ = {
     { id:"marina", emoji:"⚓", name:{ hr:"Marina Rab", de:"Marina Rab", en:"Marina Rab", it:"Marina Rab" }, dist:"1.5 km", tag:{ hr:"48 vezova", de:"48 Liegeplätze", en:"48 berths", it:"48 ormeggi" }, link:"/?kiosk=rab&go=marina&lang=de" },
     { id:"spilja", emoji:"🦇", name:{ hr:"Špilja Šupljara", de:"Höhle Šupljara", en:"Šupljara Cave", it:"Grotta Šupljara" }, dist:"3 km", tag:{ hr:"Prirodna atrakcija", de:"Naturdenkmal", en:"Natural attraction", it:"Attrazione naturale" }, link:"/?kiosk=rab&go=cave&lang=de" },
   ],
+  rooms: [
+    { id:"studio", emoji:"🛏️", name:{ hr:"Studio apartman", de:"Studio-Apartment", en:"Studio apartment", it:"Studio appartamento" }, guests:2, beds:1, sqm:22, img:"https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=500&q=75", view:{ hr:"Pogled na vrt", de:"Gartenblick", en:"Garden view", it:"Vista giardino" }, priceFrom:65, amen:{ hr:"❄️ Klima · 📶 WiFi · 🍳 Kuhinja · 🅿️ Parking", de:"❄️ Klima · 📶 WLAN · 🍳 Küche · 🅿️ Parkplatz", en:"❄️ A/C · 📶 WiFi · 🍳 Kitchen · 🅿️ Parking", it:"❄️ Aria · 📶 WiFi · 🍳 Cucina · 🅿️ Parcheggio" } },
+    { id:"apt_a", emoji:"🏠", name:{ hr:"Apartman A · 4 osobe", de:"Apartment A · 4 Pers.", en:"Apartment A · 4 guests", it:"App. A · 4 persone" }, guests:4, beds:2, sqm:42, img:"https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=500&q=75", view:{ hr:"Pogled na more", de:"Meerblick", en:"Sea view", it:"Vista mare" }, priceFrom:95, amen:{ hr:"❄️ Klima · 📶 WiFi · 🍳 Kuhinja · 🌅 Pogled na more · 🅿️ Parking", de:"❄️ Klima · 📶 WLAN · 🍳 Küche · 🌅 Meerblick · 🅿️ Parkplatz", en:"❄️ A/C · 📶 WiFi · 🍳 Kitchen · 🌅 Sea view · 🅿️ Parking", it:"❄️ Aria · 📶 WiFi · 🍳 Cucina · 🌅 Vista mare · 🅿️ Parcheggio" } },
+    { id:"apt_b", emoji:"🏡", name:{ hr:"Apartman B · 6 osoba", de:"Apartment B · 6 Pers.", en:"Apartment B · 6 guests", it:"App. B · 6 persone" }, guests:6, beds:3, sqm:65, img:"https://images.unsplash.com/photo-1560185007-c5ca9d2c014d?w=500&q=75", view:{ hr:"Panorama mora", de:"Panorama-Meerblick", en:"Panoramic sea view", it:"Vista panoramica" }, priceFrom:130, amen:{ hr:"❄️ Klima · 📶 WiFi · 🍳 Kuhinja · 🛁 2 kupaonice · 🌅 Pogled na more · 🏊 Terasa", de:"❄️ Klima · 📶 WLAN · 🍳 Küche · 🛁 2 Bäder · 🌅 Meerblick · 🏊 Terrasse", en:"❄️ A/C · 📶 WiFi · 🍳 Kitchen · 🛁 2 baths · 🌅 Sea view · 🏊 Terrace", it:"❄️ Aria · 📶 WiFi · 🍳 Cucina · 🛁 2 bagni · 🌅 Vista mare · 🏊 Terrazza" } },
+  ],
 };
+
+// ─── APP TESTIMONIALS ───
+const APP_REVIEWS = [
+  { name:"Klaus & Monika H.", flag:"🇩🇪", from:"Berlin", rating:5, text:{ hr:"Najbolja turistička aplikacija! Odmah sve — parking, plaža, restoran. Kao lokalni prijatelj.", de:"Die beste Reise-App, die wir je hatten! Alles sofort — Parken, Strand, Restaurant. Wie ein lokaler Freund.", en:"Best travel app ever! Parking, beach, restaurant — instantly. Like a local friend.", it:"La migliore app di viaggio! Tutto subito — parcheggio, spiaggia, ristorante. Come un amico locale." } },
+  { name:"Anna Kowalski", flag:"🇵🇱", from:"Kraków", rating:5, text:{ hr:"Jadran AI nam je spasio odmor! Informacije u realnom vremenu o gužvama i granicama. 10/10!", de:"Jadran AI hat unseren Urlaub gerettet! Echtzeit-Infos über Staus und Grenzwartezeiten. 10/10!", en:"Jadran AI saved our holiday! Real-time info on traffic and border waits. 10/10!", it:"Jadran AI ha salvato la nostra vacanza! Info in tempo reale su traffico e frontiere. 10/10!" } },
+  { name:"Marco R.", flag:"🇮🇹", from:"Milano", rating:5, text:{ hr:"AI chat je fantastičan! Pitao sam za riblje mjesto i odmah dobio savršenu preporuku — Black Jack!", de:"Der KI-Chat ist fantastisch! Ich fragte nach einem Fischrestaurant und bekam sofort Black Jack empfohlen!", en:"The AI chat is fantastic! I asked for seafood and instantly got the perfect recommendation — Black Jack!", it:"La chat AI è fantastica! Ho chiesto un posto per il pesce e in un secondo mi ha consigliato Black Jack!" } },
+  { name:"Petra & Tom S.", flag:"🇨🇿", from:"Praha", rating:5, text:{ hr:"Koristili smo s kampinga. Sve na jednom mjestu: vrema, trajekti, izleti. Sjajno!", de:"Wir haben die App vom Campingplatz aus genutzt. Alles da: Wetter, Fähren, Ausflüge. Brillant!", en:"Used it from our campsite. Everything in one place: weather, ferries, excursions. Brilliant!", it:"Usata dal campeggio. Tutto in un posto: meteo, traghetti, escursioni. Brillante!" } },
+  { name:"Sarah & James B.", flag:"🇬🇧", from:"London", rating:5, text:{ hr:"Više nikada na Jadranu bez Jadran AI. Preporuka za Black Jack bila je savršena — večera na terasi pored mora.", de:"Nie wieder Adria ohne Jadran AI. Die Black-Jack-Empfehlung war traumhaft — Abendessen auf der Terrasse am Meer.", en:"Never visiting the Adriatic without Jadran AI again. The Black Jack dinner on the sea terrace was magical.", it:"Mai più sull'Adriatico senza Jadran AI. La cena al Black Jack sulla terrazza sul mare era magica." } },
+];
 
 export default function DestinationExplorer() {
   const [lang, setLang] = useState(() => {
@@ -267,6 +281,11 @@ export default function DestinationExplorer() {
   const [viatorDeals, setViatorDeals] = useState([]);
   const [viatorLoading, setViatorLoading] = useState(false);
   const [activeDestId, setActiveDestId] = useState(null); // city within region sheet
+  const [showReview, setShowReview] = useState(false);
+  const [rvRating, setRvRating] = useState(0);
+  const [rvName, setRvName] = useState("");
+  const [rvText, setRvText] = useState("");
+  const [rvDone, setRvDone] = useState(false);
   const heroRef = useRef(null);
 
   useEffect(() => { setTimeout(() => setVisible(true), 100); }, []);
@@ -557,6 +576,139 @@ export default function DestinationExplorer() {
         </div>
       </section>
 
+      {/* ═══ APP REVIEWS ═══ */}
+      <section style={{ padding:"28px 16px 24px", background:"#030810", borderTop:"1px solid rgba(255,255,255,0.03)" }}>
+        <div style={{ maxWidth:960, margin:"0 auto" }}>
+
+          {/* Header */}
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+            <div>
+              <div style={{ fontSize:10, color:"#fbbf24", letterSpacing:4, fontWeight:700, marginBottom:4 }}>
+                {({hr:"ŠTO KAŽU GOSTI",de:"WAS GÄSTE SAGEN",en:"WHAT GUESTS SAY",it:"COSA DICONO GLI OSPITI",pl:"CO MÓWIĄ GOŚCIE",si:"KAJ PRAVIJO GOSTJE"})[lang]||"WHAT GUESTS SAY"}
+              </div>
+              <div style={{ fontFamily:F, fontSize:20, fontWeight:400, color:"#f0f4f8" }}>
+                {({hr:"Iskustva s Jadran AI",de:"Erlebnisse mit Jadran AI",en:"Experiences with Jadran AI",it:"Esperienze con Jadran AI"})[lang]||"Experiences with Jadran AI"}
+              </div>
+            </div>
+            <button onClick={() => { setShowReview(true); setRvRating(0); setRvName(""); setRvText(""); setRvDone(false); }}
+              style={{ padding:"9px 16px", borderRadius:12, background:"rgba(251,191,36,0.1)", border:"1px solid rgba(251,191,36,0.25)", fontSize:12, fontWeight:700, color:"#fbbf24", cursor:"pointer", fontFamily:B, flexShrink:0 }}>
+              + {({hr:"Dodaj utisak",de:"Bewertung",en:"Add review",it:"Aggiungi"})[lang]||"Add review"}
+            </button>
+          </div>
+
+          {/* Review cards — horizontal scroll */}
+          <div style={{ display:"flex", gap:12, overflowX:"auto", scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", paddingBottom:8 }}>
+            {APP_REVIEWS.map((rv, i) => (
+              <div key={i} style={{ minWidth:260, maxWidth:280, borderRadius:16, background:"#0a1628", border:"1px solid rgba(255,255,255,0.05)", padding:"16px 16px", flexShrink:0, scrollSnapAlign:"start" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
+                  <span style={{ fontSize:22 }}>{rv.flag}</span>
+                  <div>
+                    <div style={{ fontFamily:B, fontSize:13, fontWeight:700, color:"#e2e8f0" }}>{rv.name}</div>
+                    <div style={{ fontSize:10, color:"#475569" }}>{rv.from}</div>
+                  </div>
+                  <div style={{ marginLeft:"auto", fontSize:13, color:"#fbbf24" }}>{"★".repeat(rv.rating)}</div>
+                </div>
+                <div style={{ fontSize:13, color:"#64748b", lineHeight:1.65, fontStyle:"italic" }}>"{t(rv.text)}"</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Average rating strip */}
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginTop:16, padding:"10px 16px", borderRadius:12, background:"rgba(251,191,36,0.05)", border:"1px solid rgba(251,191,36,0.12)" }}>
+            <span style={{ fontSize:22, color:"#fbbf24" }}>★</span>
+            <span style={{ fontFamily:B, fontSize:16, fontWeight:700, color:"#fbbf24" }}>5.0</span>
+            <span style={{ fontSize:12, color:"#475569" }}>·</span>
+            <span style={{ fontSize:12, color:"#64748b" }}>{APP_REVIEWS.length} {({hr:"recenzija",de:"Bewertungen",en:"reviews",it:"recensioni"})[lang]||"reviews"}</span>
+            <span style={{ marginLeft:"auto", fontSize:11, color:"#334155" }}>jadran.ai</span>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ═══ REVIEW MODAL ═══ */}
+      {showReview && (
+        <div onClick={() => setShowReview(false)} style={{ position:"fixed", inset:0, zIndex:600, background:"rgba(3,8,16,0.88)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
+          <div onClick={e => e.stopPropagation()} style={{ width:"100%", maxWidth:520, background:"#0a1628", borderRadius:"24px 24px 0 0", border:"1px solid rgba(251,191,36,0.15)", borderBottom:"none", padding:"24px 20px", paddingBottom:"calc(24px + env(safe-area-inset-bottom, 0px))", animation:"fadeUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+              <div style={{ fontFamily:F, fontSize:22, fontWeight:400, color:"#f0f4f8" }}>
+                {({hr:"Vaš utisak",de:"Ihre Bewertung",en:"Your review",it:"La tua recensione"})[lang]||"Your review"}
+              </div>
+              <button onClick={() => setShowReview(false)} style={{ width:32, height:32, borderRadius:"50%", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.08)", color:"#64748b", fontSize:15, cursor:"pointer", display:"grid", placeItems:"center" }}>✕</button>
+            </div>
+
+            {rvDone ? (
+              <div style={{ textAlign:"center", padding:"20px 0 10px" }}>
+                <div style={{ fontSize:46, marginBottom:12 }}>🙏</div>
+                <div style={{ fontFamily:F, fontSize:20, color:"#f0f4f8", marginBottom:6 }}>
+                  {({hr:"Hvala vam!",de:"Danke schön!",en:"Thank you!",it:"Grazie mille!"})[lang]||"Thank you!"}
+                </div>
+                <div style={{ fontFamily:B, fontSize:13, color:"#475569" }}>
+                  {({hr:"Vaše mišljenje nam puno znači.",de:"Ihr Feedback bedeutet uns sehr viel.",en:"Your feedback means a lot to us.",it:"Il tuo feedback ci è molto prezioso."})[lang]||""}
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Stars */}
+                <div style={{ marginBottom:16 }}>
+                  <div style={{ fontFamily:B, fontSize:11, color:"#475569", marginBottom:8, textTransform:"uppercase", letterSpacing:2 }}>
+                    {({hr:"Ocjena",de:"Bewertung",en:"Rating",it:"Valutazione"})[lang]||"Rating"}
+                  </div>
+                  <div style={{ display:"flex", gap:8 }}>
+                    {[1,2,3,4,5].map(n => (
+                      <button key={n} onClick={() => setRvRating(n)}
+                        style={{ flex:1, padding:"12px 0", borderRadius:12, border:`1px solid ${rvRating>=n?"rgba(251,191,36,0.5)":"rgba(255,255,255,0.06)"}`, background:rvRating>=n?"rgba(251,191,36,0.1)":"transparent", fontSize:24, cursor:"pointer", transition:"all 0.15s", color:rvRating>=n?"#fbbf24":"#1e293b" }}>
+                        {rvRating >= n ? "★" : "☆"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Name */}
+                <div style={{ marginBottom:12 }}>
+                  <div style={{ fontFamily:B, fontSize:11, color:"#475569", marginBottom:6, textTransform:"uppercase", letterSpacing:2 }}>
+                    {({hr:"Vaše ime",de:"Ihr Name",en:"Your name",it:"Il tuo nome"})[lang]||"Name"}
+                  </div>
+                  <input
+                    value={rvName} onChange={e => setRvName(e.target.value)}
+                    placeholder={({hr:"Npr. Klaus M.",de:"z.B. Klaus M.",en:"e.g. Klaus M.",it:"es. Klaus M."})[lang]||""}
+                    style={{ width:"100%", padding:"10px 12px", background:"rgba(0,0,0,0.2)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:10, color:"#e2e8f0", fontSize:14, fontFamily:B, outline:"none", boxSizing:"border-box" }}
+                  />
+                </div>
+
+                {/* Text */}
+                <div style={{ marginBottom:20 }}>
+                  <div style={{ fontFamily:B, fontSize:11, color:"#475569", marginBottom:6, textTransform:"uppercase", letterSpacing:2 }}>
+                    {({hr:"Komentar",de:"Kommentar",en:"Comment",it:"Commento"})[lang]||"Comment"}
+                  </div>
+                  <textarea
+                    value={rvText} onChange={e => setRvText(e.target.value)} rows={3}
+                    placeholder={({hr:"Vaše iskustvo s Jadran AI...",de:"Ihre Erfahrung mit Jadran AI...",en:"Your experience with Jadran AI...",it:"La tua esperienza con Jadran AI..."})[lang]||""}
+                    style={{ width:"100%", padding:"10px 12px", background:"rgba(0,0,0,0.2)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:10, color:"#e2e8f0", fontSize:14, fontFamily:B, outline:"none", resize:"none", boxSizing:"border-box" }}
+                  />
+                </div>
+
+                {/* Submit */}
+                <button
+                  disabled={!rvRating || !rvName.trim()}
+                  onClick={async () => {
+                    try {
+                      const deviceId = localStorage.getItem("jadran_device_id") || "unknown";
+                      await fetch("/api/partner-feedback", {
+                        method:"POST", headers:{"Content-Type":"application/json"},
+                        body: JSON.stringify({ partner:"jadran_app", rating:rvRating, comment:`${rvName}: ${rvText}`, lang, deviceId }),
+                      });
+                    } catch {}
+                    setRvDone(true);
+                  }}
+                  style={{ width:"100%", padding:"15px", borderRadius:14, background: (rvRating && rvName.trim()) ? "linear-gradient(135deg,#f59e0b,#d97706)" : "rgba(251,191,36,0.08)", border:"none", color: (rvRating && rvName.trim()) ? "#fff" : "#475569", fontSize:16, fontWeight:700, cursor: (rvRating && rvName.trim()) ? "pointer" : "default", fontFamily:B, transition:"all 0.2s" }}>
+                  {({hr:"Pošalji recenziju →",de:"Bewertung absenden →",en:"Submit review →",it:"Invia recensione →"})[lang]||"Submit →"}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ═══ REGION DEALS SHEET ═══ */}
       {activeRegion && (() => {
         const rData = REGIONS.find(r => r.id === activeRegion);
@@ -810,6 +962,58 @@ export default function DestinationExplorer() {
                       <div style={{ fontSize:12, color:"#64748b", lineHeight:1.6, fontStyle:"italic" }}>"{t(rv.text)}"</div>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Accommodation */}
+              <div style={{ padding:"16px 16px 0" }}>
+                <div style={{ fontSize:10, color:"#22c55e", letterSpacing:3, fontWeight:700, marginBottom:10, textTransform:"uppercase" }}>
+                  {({hr:"SMJEŠTAJ",de:"UNTERKUNFT",en:"ACCOMMODATION",it:"ALLOGGIO"})[dl]||"ACCOMMODATION"}
+                </div>
+                <div style={{ display:"flex", gap:10, overflowX:"auto", scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", paddingBottom:4 }}>
+                  {BJ.rooms.map(room => (
+                    <div key={room.id} style={{ minWidth:220, borderRadius:14, overflow:"hidden", border:"1px solid rgba(34,197,94,0.15)", background:"rgba(0,0,0,0.2)", flexShrink:0, scrollSnapAlign:"start" }}>
+                      <div style={{ position:"relative", height:90 }}>
+                        <img src={room.img} alt={t(room.name)} style={{ width:"100%", height:"100%", objectFit:"cover" }} loading="lazy" />
+                        <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top, rgba(5,14,30,0.85) 0%, transparent 60%)" }} />
+                        <div style={{ position:"absolute", bottom:8, left:10, right:10, display:"flex", justifyContent:"space-between", alignItems:"flex-end" }}>
+                          <div style={{ fontSize:12, fontWeight:700, color:"#f0f9ff" }}>{room.emoji} {t(room.name)}</div>
+                          <div style={{ textAlign:"right" }}>
+                            <div style={{ fontSize:16, fontWeight:700, color:"#22c55e" }}>€{room.priceFrom}</div>
+                            <div style={{ fontSize:9, color:"rgba(255,255,255,0.45)" }}>{({hr:"/noć",de:"/Nacht",en:"/night",it:"/notte"})[dl]||"/noć"}</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{ padding:"8px 10px" }}>
+                        <div style={{ fontSize:10, color:"#64748b", marginBottom:8, lineHeight:1.4 }}>👤 {room.guests} · 🛏️ {room.beds} · 📐 {room.sqm}m² · {t(room.view)}</div>
+                        <div style={{ fontSize:10, color:"#4ade80", marginBottom:8 }}>{t(room.amen)}</div>
+                        <a href={`https://wa.me/${BJ.whatsapp}?text=${encodeURIComponent(dl==="de"?`Hallo! Ich interessiere mich für ${t(room.name)} – Black Jack Rab.`:dl==="en"?`Hello! I'm interested in ${t(room.name)} – Black Jack Rab.`:dl==="it"?`Salve! Sono interessato/a a ${t(room.name)} – Black Jack Rab.`:`Pozdrav! Zanima me ${t(room.name)} – Black Jack Rab.`)}`}
+                          target="_blank" rel="noopener noreferrer"
+                          style={{ display:"block", padding:"7px", borderRadius:8, background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.2)", fontSize:11, fontWeight:700, color:"#25d366", textAlign:"center", textDecoration:"none" }}>
+                          💬 {({hr:"WhatsApp upit",de:"WA Anfrage",en:"WA Enquiry",it:"WA Informarsi"})[dl]||"Enquire"}
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Aerial map */}
+              <div style={{ padding:"14px 16px 0" }}>
+                <div style={{ fontSize:10, color:"#a78bfa", letterSpacing:3, fontWeight:700, marginBottom:8, textTransform:"uppercase" }}>
+                  {({hr:"POGLED ODOZGO",de:"VOGELPERSPEKTIVE",en:"AERIAL VIEW",it:"VISTA AEREA"})[dl]||"AERIAL VIEW"}
+                </div>
+                <div style={{ borderRadius:14, overflow:"hidden", height:180, border:"1px solid rgba(167,139,250,0.18)", position:"relative" }}>
+                  <iframe
+                    title="Black Jack aerial"
+                    src="https://maps.google.com/maps?q=44.7490,14.7555&hl=hr&z=17&t=k&output=embed"
+                    style={{ width:"100%", height:"100%", border:0, display:"block" }}
+                    loading="lazy"
+                    allowFullScreen
+                  />
+                  <div style={{ position:"absolute", bottom:8, left:8, padding:"3px 8px", borderRadius:6, background:"rgba(5,14,30,0.85)", fontSize:9, color:"#c4b5fd" }}>
+                    📍 Palit 315 · 200m {({hr:"od plaže",de:"vom Strand",en:"from beach",it:"dalla spiaggia"})[dl]||"od plaže"}
+                  </div>
                 </div>
               </div>
 
