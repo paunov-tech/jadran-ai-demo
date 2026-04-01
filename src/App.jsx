@@ -448,6 +448,7 @@ export default function JadranUnified() {
     } catch { return false; }
   });
   const [showPaywall, setShowPaywall] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState("season"); // default to mid-tier (decoy effect)
   const [showRecovery, setShowRecovery] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState("");
   const [recoveryStatus, setRecoveryStatus] = useState(null); // null | "loading" | "success" | "error" | "expired"
@@ -1333,19 +1334,44 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         <div style={{ ...dm, color: C.mut, fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>
           {t("premiumDesc",lang)}
         </div>
-        <div style={{ background: C.goDim, borderRadius: 16, padding: "20px", border: `1px solid rgba(251,191,36,0.12)`, marginBottom: 20 }}>
-          <div style={{ fontSize: 40, fontWeight: 300, color: C.gold }}>9.99€</div>
-          <div style={{ ...dm, fontSize: 13, color: C.mut }}>{t("entireStay",lang)}</div>
-        </div>
-        <div style={{ ...dm, fontSize: 13, color: C.mut, lineHeight: 1.8, marginBottom: 20, textAlign: "left" }}>
+        {/* Plan selector — 3 tiers, season default (decoy) */}
+        {(() => {
+          const plans = [
+            { id:"week",   price:"9.99€",  days:7,  label:{hr:"Explorer",de:"Explorer",en:"Explorer",it:"Explorer"},     sub:{hr:"7 dana",de:"7 Tage",en:"7 days",it:"7 giorni"} },
+            { id:"season", price:"19.99€", days:30, label:{hr:"Sezona",de:"Saison",en:"Season",it:"Stagione"},           sub:{hr:"30 dana",de:"30 Tage",en:"30 days",it:"30 giorni"}, badge:{hr:"NAJPOPULARNIJE",de:"BELIEBTESTE",en:"MOST POPULAR",it:"PIÙ POPOLARE"} },
+            { id:"vip",    price:"49.99€", days:30, label:{hr:"VIP Sezona",de:"VIP-Saison",en:"VIP Season",it:"Stagione VIP"}, sub:{hr:"30 dana · AI Opus",de:"30 Tage · AI Opus",en:"30 days · AI Opus",it:"30 giorni · AI Opus"} },
+          ];
+          return (
+            <div style={{ display:"flex", gap:8, marginBottom:18 }}>
+              {plans.map(p => {
+                const active = selectedPlan === p.id;
+                return (
+                  <div key={p.id} onClick={() => setSelectedPlan(p.id)}
+                    style={{ flex:1, borderRadius:14, padding:"12px 8px", textAlign:"center", cursor:"pointer", position:"relative",
+                      background: active ? C.goDim : "rgba(255,255,255,0.03)",
+                      border: active ? `1.5px solid ${C.gold}` : "1.5px solid rgba(255,255,255,0.08)",
+                      transition:"all 0.2s" }}>
+                    {p.badge && <div style={{ position:"absolute", top:-10, left:"50%", transform:"translateX(-50%)", background:C.gold, color:"#0a0f1a", fontSize:8, fontWeight:800, letterSpacing:1, padding:"2px 8px", borderRadius:20, whiteSpace:"nowrap", ...dm }}>
+                      {p.badge[lang]||p.badge.en}
+                    </div>}
+                    <div style={{ ...dm, fontSize:18, fontWeight:700, color: active ? C.gold : C.text, marginBottom:1 }}>{p.price}</div>
+                    <div style={{ ...dm, fontSize:11, fontWeight:700, color: active ? C.gold : C.text, marginBottom:2 }}>{p.label[lang]||p.label.en}</div>
+                    <div style={{ ...dm, fontSize:9, color:C.mut }}>{p.sub[lang]||p.sub.en}</div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+        <div style={{ ...dm, fontSize: 12, color: C.mut, lineHeight: 1.8, marginBottom: 18, textAlign: "left" }}>
           ✓ {t("payFeatures1",lang)}<br />
           ✓ {t("payFeatures2",lang)}<br />
           ✓ {t("payFeatures3",lang)}<br />
           ✓ {t("payFeatures4",lang)}<br />
           ✓ {t("payFeatures5",lang)}
         </div>
-        <Btn primary style={{ width: "100%", marginBottom: 10 }} onClick={startPremiumCheckout}>
-          {payLoading ? "⏳..." : t("unlockPremium",lang)}
+        <Btn primary style={{ width: "100%", marginBottom: 10 }} onClick={() => startPremiumCheckout(selectedPlan)}>
+          {payLoading ? "⏳..." : ({hr:`Otključaj ${selectedPlan==="week"?"Explorer":selectedPlan==="season"?"Sezonu":"VIP"} →`,de:`${selectedPlan==="week"?"Explorer":selectedPlan==="season"?"Saison":"VIP"} freischalten →`,en:`Unlock ${selectedPlan==="week"?"Explorer":selectedPlan==="season"?"Season":"VIP"} →`,it:`Sblocca ${selectedPlan==="week"?"Explorer":selectedPlan==="season"?"Stagione":"VIP"} →`})[lang]||`Unlock ${selectedPlan} →`}
         </Btn>
         <div style={{ ...dm, fontSize: 11, color: C.mut, marginBottom: 8 }}>{t("payVia",lang)}</div>
 
