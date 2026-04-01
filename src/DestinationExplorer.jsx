@@ -286,6 +286,10 @@ export default function DestinationExplorer() {
   const [rvName, setRvName] = useState("");
   const [rvText, setRvText] = useState("");
   const [rvDone, setRvDone] = useState(false);
+  const [b2bUnlocked, setB2bUnlocked] = useState(false);
+  const [b2bPin, setB2bPin] = useState("");
+  const [b2bWrong, setB2bWrong] = useState(false);
+  const [activeFeature, setActiveFeature] = useState(null);
   const heroRef = useRef(null);
 
   useEffect(() => { setTimeout(() => setVisible(true), 100); }, []);
@@ -305,8 +309,8 @@ export default function DestinationExplorer() {
     return () => clearInterval(id);
   }, []);
   useEffect(() => {
-    const anyModal = showBJ || showLive;
-    const h = e => { if (e.key === "Escape") { setShowBJ(false); setSelectedMenuItem(null); setShowLive(false); } };
+    const anyModal = showBJ || showLive || activeFeature;
+    const h = e => { if (e.key === "Escape") { setShowBJ(false); setSelectedMenuItem(null); setShowLive(false); setActiveFeature(null); } };
     if (anyModal) {
       document.addEventListener("keydown", h);
       document.body.style.overflow = "hidden";
@@ -709,105 +713,243 @@ export default function DestinationExplorer() {
         </div>
       )}
 
-      {/* ═══ B2B — POSTANI PARTNER ═══ */}
-      <section style={{ padding:"40px 16px 48px", background:"linear-gradient(160deg, #050d1a 0%, #0a1628 50%, #061018 100%)", borderTop:"1px solid rgba(14,165,233,0.08)" }}>
-        <div style={{ maxWidth:960, margin:"0 auto" }}>
+      {/* ═══ B2B — POSTANI PARTNER (password-gated) ═══ */}
+      {(() => {
+        const B2B_PIN = "SIAL2026";
 
-          {/* Header */}
-          <div style={{ textAlign:"center", marginBottom:36 }}>
-            <div style={{ display:"inline-block", padding:"5px 14px", borderRadius:20, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", fontSize:10, fontWeight:700, color:"#0ea5e9", letterSpacing:2.5, marginBottom:14 }}>
-              {({hr:"ZA PARTNERE",de:"FÜR PARTNER",en:"FOR PARTNERS",it:"PER I PARTNER",pl:"DLA PARTNERÓW",si:"ZA PARTNERJE"})[lang]||"FOR PARTNERS"}
-            </div>
-            <div style={{ fontFamily:F, fontSize:"clamp(26px,5vw,40px)", fontWeight:400, color:"#f0f4f8", lineHeight:1.15, marginBottom:12 }}>
-              {({hr:"Dovedi goste koji kupuju",de:"Bringen Sie kaufkräftige Gäste",en:"Bring guests who spend",it:"Porta ospiti che acquistano",pl:"Przyciągnij gości, którzy kupują",si:"Pritegni goste, ki trošijo"})[lang]||"Bring guests who spend"}
-            </div>
-            <div style={{ fontFamily:B, fontSize:15, color:"#475569", maxWidth:540, margin:"0 auto", lineHeight:1.7 }}>
-              {({
-                hr:"Jadran AI svaki dan pomažemo desetak tisuća gostiju da pronađu savršena mjesta. Vaš objekt, jelovnik i smještaj — direktno u njihovim rukama u pravom trenutku.",
-                de:"Jadran AI hilft täglich Tausenden von Gästen, perfekte Orte zu finden. Ihr Betrieb, Ihre Speisekarte und Unterkunft — direkt in ihren Händen im richtigen Moment.",
-                en:"Jadran AI helps thousands of guests daily find perfect places. Your venue, menu and accommodation — directly in their hands at the right moment.",
-                it:"Jadran AI aiuta migliaia di ospiti ogni giorno a trovare posti perfetti. La vostra struttura, menù e alloggio — direttamente nelle loro mani al momento giusto.",
-                pl:"Jadran AI pomaga tysiącom gości dziennie znaleźć idealne miejsca. Twój lokal, menu i zakwaterowanie — bezpośrednio w ich rękach we właściwym momencie.",
-                si:"Jadran AI vsak dan pomaga tisočem gostov najti popolna mesta. Vaš objekt, meni in nastanitev — neposredno v njihovih rokah v pravem trenutku.",
-              })[lang]||"Jadran AI helps thousands of guests daily find perfect places."}
-            </div>
-          </div>
+        // ── Feature card detail data ──
+        const FEATURES = [
+          { icon:"📱", color:"#0ea5e9",
+            title:{hr:"QR kod za printanje",de:"Druckbarer QR-Code",en:"Printable QR code",it:"QR code stampabile"},
+            body:{hr:"Gosti skeniraju kod za stolom ili na ulazu i odmah vide vaš kompletni profil — jelovnik, sobe, radno vrijeme.",de:"Gäste scannen den Code am Tisch oder Eingang und sehen sofort Ihr komplettes Profil — Speisekarte, Zimmer, Öffnungszeiten.",en:"Guests scan the code at the table or entrance and instantly see your full profile — menu, rooms, hours.",it:"Gli ospiti scansionano il codice al tavolo o all'ingresso e vedono subito il profilo completo — menù, camere, orari."},
+            detail:{hr:["Generirani QR kod za printanje (A4, stola, prozora)","Direktno vodi na vaš AI profil — nema apova ni registracije","Svaki sken se mjeri — vidite točno tko i kada","Radi na svim pametnim telefonima bez instalacije","Dostupan odmah, gotov za printanje u 24h"],en:["Print-ready QR code (A4, table card, window sticker)","Links directly to your AI profile — no app, no registration","Every scan is tracked — see exactly who and when","Works on all smartphones without installation","Ready immediately, print-ready within 24h"],de:["Druckfertiger QR-Code (A4, Tischkarte, Fensteraufkleber)","Führt direkt zu Ihrem KI-Profil — keine App, keine Registrierung","Jeder Scan wird gemessen — sehen Sie genau wer und wann","Funktioniert auf allen Smartphones ohne Installation","Sofort verfügbar, druckfertig in 24h"]} },
+          { icon:"🤖", color:"#a78bfa",
+            title:{hr:"AI šalje goste k vama",de:"KI empfiehlt Ihr Haus",en:"AI recommends you",it:"L'AI ti consiglia"},
+            body:{hr:"Kad gost pita AI za restoran, roštilj ili smještaj — vaš objekt je prva preporuka. 24/7, na 8 jezika.",de:"Wenn ein Gast die KI nach einem Restaurant, Grill oder Unterkunft fragt — Ihr Betrieb ist die erste Empfehlung. 24/7, in 8 Sprachen.",en:"When a guest asks AI for a restaurant, grill or accommodation — your venue is the first recommendation. 24/7, in 8 languages.",it:"Quando un ospite chiede all'AI un ristorante, grill o alloggio — il vostro locale è il primo consigliato. 24/7, in 8 lingue."},
+            detail:{hr:["Vaš objekt je prioritetno ugrađen u AI bazu znanja","AI odgovara na upite gostiju i preporučuje vas po imenu","Radi 24/7 — i kad vaš osoblje spava","Na 8 jezika: HR, EN, DE, IT, PL, NL, SI, FR","Kontekstualne preporuke — pravo mjesto, pravo vrijeme"],en:["Your venue is priority-embedded in the AI knowledge base","AI answers guest queries and recommends you by name","Active 24/7 — even when your staff is offline","In 8 languages: HR, EN, DE, IT, PL, NL, SI, FR","Contextual recommendations — right place, right time"],de:["Ihr Betrieb ist prioritär in der KI-Wissensbasis hinterlegt","KI beantwortet Gastanfragen und empfiehlt Sie namentlich","Aktiv 24/7 — auch wenn Ihr Personal schläft","In 8 Sprachen: HR, EN, DE, IT, PL, NL, SI, FR","Kontextuelle Empfehlungen — richtiger Ort, richtige Zeit"]} },
+          { icon:"📊", color:"#22c55e",
+            title:{hr:"Analytics u realnom vremenu",de:"Echtzeit-Analytics",en:"Real-time analytics",it:"Analytics in tempo reale"},
+            body:{hr:"Pratite koliko gostiju vidi vaš profil, kojim jezicima govore i koje ocjene daju — sve na jednom dashboardu.",de:"Verfolgen Sie, wie viele Gäste Ihr Profil sehen, welche Sprachen sie sprechen und welche Bewertungen sie geben.",en:"Track how many guests view your profile, what languages they speak, and what ratings they give — all in one dashboard.",it:"Monitorate quanti ospiti vedono il profilo, che lingue parlano e che valutazioni danno — tutto in un dashboard."},
+            detail:{hr:["Dashboard dostupan na privatnom URL-u s PIN-om","Grafikon posjeta po danima (zadnjih 7 dana)","Statistika po jezicima — znate odakle dolaze gosti","Prikaz ocjena i komentara gostiju","Ukupni i tjedni/mjesečni trendovi"],en:["Dashboard accessible at a private URL with PIN","Daily visit chart (last 7 days)","Language breakdown — know where your guests come from","Guest ratings and comments feed","Total and weekly/monthly trends"],de:["Dashboard über private URL mit PIN zugänglich","Tägliches Besucherdiagramm (letzte 7 Tage)","Sprachaufschlüsselung — wissen woher Ihre Gäste kommen","Gästebewertungen und Kommentare","Gesamt- und Wochen-/Monatstrends"]} },
+          { icon:"🌍", color:"#f59e0b",
+            title:{hr:"8 jezika automatski",de:"8 Sprachen automatisch",en:"8 languages automatically",it:"8 lingue automaticamente"},
+            body:{hr:"Vaš jelovnik, opis i ponuda automatski se prevode za Nijemce, Britance, Talijane, Poljake i sve ostale goste.",de:"Ihre Speisekarte, Beschreibung und Angebote werden automatisch für Deutsche, Briten, Italiener, Polen und alle anderen Gäste übersetzt.",en:"Your menu, description and offers are automatically translated for Germans, British, Italians, Poles and all other guests.",it:"Il vostro menù, descrizione e offerte vengono tradotti automaticamente per tedeschi, britannici, italiani, polacchi e tutti gli altri ospiti."},
+            detail:{hr:["Automatski prijevod: HR, EN, DE, IT, PL, NL, SI, FR","AI detektira jezik gosta automatski","Kontekstualni prijevod — ne doslovni, već turistički prirodan","Jelovnik, cijene, opis soba, radno vrijeme — sve prevedeno","Nema troškova prevoditelja, nema ažuriranja ručno"],en:["Automatic translation: HR, EN, DE, IT, PL, NL, SI, FR","AI auto-detects guest language","Contextual translation — natural tourist language, not literal","Menu, prices, room descriptions, hours — all translated","No translator costs, no manual updates"],de:["Automatische Übersetzung: HR, EN, DE, IT, PL, NL, SI, FR","KI erkennt die Gastsprache automatisch","Kontextuelle Übersetzung — natürliche Touristensprache","Speisekarte, Preise, Zimmerbeschreibungen, Zeiten — alles übersetzt","Keine Übersetzerkosten, keine manuellen Updates"]} },
+          { icon:"🔔", color:"#f43f5e",
+            title:{hr:"Push obavijesti za goste",de:"Push-Benachrichtigungen",en:"Push notifications for guests",it:"Notifiche push per gli ospiti"},
+            body:{hr:"Pošaljite push obavijest svim gostima koji su posjetili vaš profil — posebna ponuda, večernji event, slobodni stol.",de:"Senden Sie Push-Benachrichtigungen an alle Gäste, die Ihr Profil besucht haben — Sonderangebot, Abendveranstaltung, freier Tisch.",en:"Send a push notification to all guests who visited your profile — special offer, evening event, free table.",it:"Invia notifiche push a tutti gli ospiti che hanno visitato il profilo — offerta speciale, evento serale, tavolo libero."},
+            detail:{hr:["Web Push — radi bez instalacije appa","Dosežete goste i kad nisu na vašem profilu","Idealno za: 'Večeras slobodan stol', 'Happy hour 17-19h'","Ciljane kampanje po jeziku — Nijemcima na njemačkom","GDPR-compliant opt-in sustav"],en:["Web Push — works without app installation","Reach guests even when they're not on your profile","Perfect for: 'Table available tonight', 'Happy hour 5-7pm'","Targeted campaigns by language","GDPR-compliant opt-in system"],de:["Web Push — funktioniert ohne App-Installation","Gäste erreichen, auch wenn sie nicht auf Ihrem Profil sind","Perfekt für: 'Heute Abend Tisch frei', 'Happy Hour 17-19h'","Zielgerichtete Kampagnen nach Sprache","DSGVO-konformes Opt-in-System"]} },
+          { icon:"🎙️", color:"#06b6d4",
+            title:{hr:"Voice AI asistent",de:"Sprach-KI-Assistent",en:"Voice AI assistant",it:"Assistente AI vocale"},
+            body:{hr:"Gost može govoriti s AI asistentom na svom jeziku — pita za preporuke, radno vrijeme, rezervacije. Vaš objekt odgovara.",de:"Der Gast kann mit dem KI-Assistenten in seiner Sprache sprechen — fragt nach Empfehlungen, Öffnungszeiten, Reservierungen.",en:"Guests can speak with the AI assistant in their language — asking for recommendations, hours, reservations. Your venue responds.",it:"Gli ospiti possono parlare con l'assistente AI nella propria lingua — chiedendo consigli, orari, prenotazioni."},
+            detail:{hr:["Glasovni unos na 8 jezika — gost govori, AI razumije","Preporučuje vaš objekt u glasovnom odgovoru","Radi na svim mobilnim uređajima (Web Speech API)","Bez instalacije — direktno u pregledniku","Idealno za starije goste koji ne tipkaju dobro"],en:["Voice input in 8 languages — guest speaks, AI understands","Recommends your venue in the voice response","Works on all mobile devices (Web Speech API)","No installation — directly in the browser","Ideal for guests who prefer speaking to typing"],de:["Spracheingabe in 8 Sprachen — Gast spricht, KI versteht","Empfiehlt Ihren Betrieb in der Sprachantwort","Funktioniert auf allen Mobilgeräten (Web Speech API)","Keine Installation — direkt im Browser","Ideal für Gäste, die lieber sprechen als tippen"]} },
+        ];
 
-          {/* Stats strip */}
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:32 }}>
-            {[
-              { n:"8", u:{hr:"jezika",de:"Sprachen",en:"languages",it:"lingue"}, i:"🌍" },
-              { n:"34%", u:{hr:"više upita",de:"mehr Anfragen",en:"more enquiries",it:"più richieste"}, i:"📈" },
-              { n:"4.9★", u:{hr:"prosj. ocjena",de:"Ø Bewertung",en:"avg. rating",it:"valutazione media"}, i:"⭐" },
-              { n:"24/7", u:{hr:"AI preporuke",de:"KI-Empfehlungen",en:"AI referrals",it:"referenze AI"}, i:"🤖" },
-            ].map((s,i) => (
-              <div key={i} style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:14, padding:"16px 10px", textAlign:"center" }}>
-                <div style={{ fontSize:20, marginBottom:4 }}>{s.i}</div>
-                <div style={{ fontFamily:B, fontSize:22, fontWeight:700, color:"#0ea5e9" }}>{s.n}</div>
-                <div style={{ fontFamily:B, fontSize:10, color:"#475569", marginTop:2 }}>{s.u[lang] || s.u.en}</div>
-              </div>
-            ))}
-          </div>
+        // ── Tech stack cards ──
+        const TECH = [
+          { icon:"⚡", color:"#8b5cf6", name:"Gemini 2.0 Flash", tag:"Google AI",
+            desc:{hr:"Najnoviji Googleov multimodalni AI model. Razumije tekst, slike i lokacijski kontekst u realnom vremenu — 8× brži od GPT-4.",en:"Google's latest multimodal AI model. Understands text, images and location context in real-time — 8× faster than GPT-4.",de:"Googles neuestes multimodales KI-Modell. Versteht Text, Bilder und Standortkontext in Echtzeit — 8× schneller als GPT-4."} },
+          { icon:"📡", color:"#0ea5e9", name:"HERE Maps Engine", tag:"Precision Nav",
+            desc:{hr:"HERE Technologies geolokacijski motor za precizno navođenje, promet u realnom vremenu i pretragu objekata u okolici.",en:"HERE Technologies geolocation engine for precision navigation, real-time traffic and nearby venue search.",de:"HERE Technologies Geolokalisierungsmotor für präzise Navigation, Echtzeit-Verkehr und Suche nach nahegelegenen Betrieben."} },
+          { icon:"🔒", color:"#22c55e", name:"Offline-first PWA", tag:"Always Works",
+            desc:{hr:"Progresivna web aplikacija — radi bez interneta nakon prvog učitavanja. Gost ima vaš profil čak i u uvali bez signala.",en:"Progressive web app — works offline after first load. Guest has your profile even in a cove without signal.",de:"Progressive Web App — funktioniert offline nach dem ersten Laden. Gast hat Ihr Profil auch in einer Bucht ohne Signal."} },
+          { icon:"🔥", color:"#f97316", name:"Firebase Firestore", tag:"Real-time DB",
+            desc:{hr:"Google-ova NoSQL baza podataka u realnom vremenu — sinhronizacija profila, statistika i ocjena trenutno, bez osvježavanja.",en:"Google's real-time NoSQL database — profile, stats and ratings sync instantly, no page refresh needed.",de:"Googles Echtzeit-NoSQL-Datenbank — Profil, Statistiken und Bewertungen synchronisieren sofort, ohne Seitenaktualisierung."} },
+          { icon:"🚀", color:"#e2e8f0", name:"Vercel Edge Network", tag:"Global CDN",
+            desc:{hr:"Serverless deployment na 100+ edge lokacija širom svijeta. Jadran AI se učitava za &lt;1s od Berlina, Londona, Varšave.",en:"Serverless deployment on 100+ edge locations worldwide. Jadran AI loads in &lt;1s from Berlin, London, Warsaw.",de:"Serverless-Deployment auf 100+ Edge-Standorten weltweit. Jadran AI lädt in &lt;1s aus Berlin, London, Warschau."} },
+          { icon:"🔐", color:"#f43f5e", name:"HMAC-SHA256 Auth", tag:"Bank-grade",
+            desc:{hr:"Booking potvrde kriptografski potpisane HMAC-SHA256 algoritmom. Svaki token je jedinstven i ne može se krivotvoriti.",en:"Booking confirmations cryptographically signed with HMAC-SHA256. Every token is unique and unforgeable.",de:"Buchungsbestätigungen kryptografisch mit HMAC-SHA256 signiert. Jedes Token ist einzigartig und nicht fälschbar."} },
+        ];
 
-          {/* Value props — 2×2 grid */}
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(240px, 1fr))", gap:14, marginBottom:32 }}>
-            {[
-              { icon:"📱", color:"#0ea5e9",
-                title:{hr:"QR kod za printanje",de:"Druckbarer QR-Code",en:"Printable QR code",it:"QR code stampabile"},
-                body:{hr:"Gosti skeniraju kod za stolom ili na ulazu i odmah vide vaš kompletni profil — jelovnik, sobe, radno vrijeme.",de:"Gäste scannen den Code am Tisch oder Eingang und sehen sofort Ihr komplettes Profil — Speisekarte, Zimmer, Öffnungszeiten.",en:"Guests scan the code at the table or entrance and instantly see your full profile — menu, rooms, hours.",it:"Gli ospiti scansionano il codice al tavolo o all'ingresso e vedono subito il profilo completo — menù, camere, orari."} },
-              { icon:"🤖", color:"#a78bfa",
-                title:{hr:"AI šalje goste k vama",de:"KI empfiehlt Ihr Haus",en:"AI recommends you",it:"L'AI ti consiglia"},
-                body:{hr:"Kad gost pita AI za restoran, roštilj ili smještaj — vaš objekt je prva preporuka. 24/7, na 8 jezika.",de:"Wenn ein Gast die KI nach einem Restaurant, Grill oder Unterkunft fragt — Ihr Betrieb ist die erste Empfehlung. 24/7, in 8 Sprachen.",en:"When a guest asks AI for a restaurant, grill or accommodation — your venue is the first recommendation. 24/7, in 8 languages.",it:"Quando un ospite chiede all'AI un ristorante, grill o alloggio — il vostro locale è il primo consigliato. 24/7, in 8 lingue."} },
-              { icon:"📊", color:"#22c55e",
-                title:{hr:"Analytics u realnom vremenu",de:"Echtzeit-Analytics",en:"Real-time analytics",it:"Analytics in tempo reale"},
-                body:{hr:"Pratite koliko gostiju vidi vaš profil, kojim jezicima govore i koje ocjene daju — sve na jednom dashboardu.",de:"Verfolgen Sie, wie viele Gäste Ihr Profil sehen, welche Sprachen sie sprechen und welche Bewertungen sie geben.",en:"Track how many guests view your profile, what languages they speak, and what ratings they give — all in one dashboard.",it:"Monitorate quanti ospiti vedono il profilo, che lingue parlano e che valutazioni danno — tutto in un dashboard."} },
-              { icon:"🌍", color:"#f59e0b",
-                title:{hr:"8 jezika automatski",de:"8 Sprachen automatisch",en:"8 languages automatically",it:"8 lingue automaticamente"},
-                body:{hr:"Vaš jelovnik, opis i ponuda automatski se prevode za Nijemce, Britance, Talijane, Poljake i sve ostale goste.",de:"Ihre Speisekarte, Beschreibung und Angebote werden automatisch für Deutsche, Briten, Italiener, Polen und alle anderen Gäste übersetzt.",en:"Your menu, description and offers are automatically translated for Germans, British, Italians, Poles and all other guests.",it:"Il vostro menù, descrizione e offerte vengono tradotti automaticamente per tedeschi, britannici, italiani, polacchi e tutti gli altri ospiti."} },
-            ].map((v,i) => (
-              <div key={i} style={{ background:"rgba(255,255,255,0.02)", border:`1px solid rgba(255,255,255,0.06)`, borderRadius:16, padding:"20px 18px", borderTop:`2px solid ${v.color}` }}>
-                <div style={{ fontSize:28, marginBottom:10 }}>{v.icon}</div>
-                <div style={{ fontFamily:B, fontSize:15, fontWeight:700, color:"#e2e8f0", marginBottom:8 }}>{v.title[lang] || v.title.en}</div>
-                <div style={{ fontFamily:B, fontSize:13, color:"#475569", lineHeight:1.65 }}>{v.body[lang] || v.body.en}</div>
-              </div>
-            ))}
-          </div>
+        const cardHover = { cursor:"pointer", transition:"transform 0.18s, box-shadow 0.18s" };
 
-          {/* Partner testimonial — Black Jack */}
-          <div style={{ background:"rgba(249,115,22,0.04)", border:"1px solid rgba(249,115,22,0.15)", borderRadius:18, padding:"22px 22px", marginBottom:28 }}>
-            <div style={{ display:"flex", alignItems:"flex-start", gap:14 }}>
-              <div style={{ width:48, height:48, borderRadius:14, background:"linear-gradient(135deg,#f97316,#ea580c)", display:"grid", placeItems:"center", fontSize:24, flexShrink:0 }}>🃏</div>
-              <div style={{ flex:1 }}>
-                <div style={{ fontFamily:B, fontSize:13, fontWeight:700, color:"#f97316", marginBottom:4 }}>Black Jack Gurman House · Rab</div>
-                <div style={{ fontFamily:B, fontSize:13, color:"#64748b", lineHeight:1.7, fontStyle:"italic", marginBottom:10 }}>
-                  "{({
-                    hr:"Od kad smo uveli Jadran AI QR kod na stolove, WhatsApp upita je porastao za 40%. Turisti iz Njemačke, Engleske i Italije nam pišu na svom jeziku — mi odgovaramo na hrvatskom i svima je jasno.",
-                    de:"Seit wir den Jadran AI QR-Code auf den Tischen haben, sind WhatsApp-Anfragen um 40% gestiegen. Touristen aus Deutschland, England und Italien schreiben in ihrer Sprache — wir antworten auf Kroatisch und alle verstehen es.",
-                    en:"Since we put Jadran AI QR codes on the tables, WhatsApp enquiries went up 40%. Tourists from Germany, England and Italy write in their language — we reply in Croatian and everyone understands.",
-                    it:"Da quando abbiamo messo il QR code Jadran AI sui tavoli, le richieste WhatsApp sono aumentate del 40%. I turisti da Germania, Inghilterra e Italia scrivono nella loro lingua — rispondiamo in croato e tutti capiscono.",
-                  })[lang]||"Since adding Jadran AI QR codes to our tables, WhatsApp enquiries went up 40%."}"
+        return (
+          <section style={{ padding:"40px 16px 48px", background:"linear-gradient(160deg, #050d1a 0%, #0a1628 50%, #061018 100%)", borderTop:"1px solid rgba(14,165,233,0.08)" }}>
+            <div style={{ maxWidth:960, margin:"0 auto" }}>
+
+              {/* ── LOCK GATE ── */}
+              {!b2bUnlocked ? (
+                <div style={{ textAlign:"center", padding:"48px 20px" }}>
+                  <div style={{ display:"inline-block", padding:"5px 14px", borderRadius:20, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", fontSize:10, fontWeight:700, color:"#0ea5e9", letterSpacing:2.5, marginBottom:20 }}>
+                    {({hr:"ZA PARTNERE",de:"FÜR PARTNER",en:"FOR PARTNERS",it:"PER I PARTNER"})[lang]||"FOR PARTNERS"}
+                  </div>
+                  <div style={{ fontFamily:F, fontSize:"clamp(22px,4vw,34px)", fontWeight:400, color:"#f0f4f8", marginBottom:10 }}>
+                    {({hr:"Partner program",de:"Partner-Programm",en:"Partner Programme",it:"Programma partner"})[lang]||"Partner Programme"}
+                  </div>
+                  <div style={{ fontFamily:B, fontSize:14, color:"#475569", marginBottom:32 }}>
+                    {({hr:"Zaštićen pristup — unesite šifru",de:"Geschützter Zugang — Passwort eingeben",en:"Protected access — enter password",it:"Accesso protetto — inserire password"})[lang]||"Protected access — enter password"}
+                  </div>
+                  <div style={{ display:"inline-flex", gap:10, alignItems:"center", flexWrap:"wrap", justifyContent:"center" }}>
+                    <input
+                      type="password"
+                      value={b2bPin}
+                      onChange={e => { setB2bPin(e.target.value); setB2bWrong(false); }}
+                      onKeyDown={e => { if (e.key === "Enter") { if (b2bPin === B2B_PIN) { setB2bUnlocked(true); setB2bWrong(false); } else { setB2bWrong(true); setB2bPin(""); } } }}
+                      placeholder={({hr:"Unesite šifru…",de:"Passwort eingeben…",en:"Enter password…",it:"Inserisci password…"})[lang]||"Enter password…"}
+                      style={{ padding:"12px 18px", borderRadius:12, border:`1px solid ${b2bWrong ? "#f43f5e" : "rgba(14,165,233,0.25)"}`, background:"rgba(255,255,255,0.04)", color:"#e2e8f0", fontFamily:B, fontSize:15, outline:"none", width:220 }}
+                    />
+                    <button
+                      onClick={() => { if (b2bPin === B2B_PIN) { setB2bUnlocked(true); setB2bWrong(false); } else { setB2bWrong(true); setB2bPin(""); } }}
+                      style={{ padding:"12px 24px", borderRadius:12, background:"linear-gradient(135deg,#0ea5e9,#0284c7)", border:"none", color:"#fff", fontFamily:B, fontSize:15, fontWeight:700, cursor:"pointer" }}>
+                      {({hr:"Pristup",de:"Zugang",en:"Access",it:"Accedi"})[lang]||"Access"}
+                    </button>
+                  </div>
+                  {b2bWrong && <div style={{ fontFamily:B, fontSize:12, color:"#f43f5e", marginTop:12 }}>
+                    {({hr:"Pogrešna šifra",de:"Falsches Passwort",en:"Wrong password",it:"Password errata"})[lang]||"Wrong password"}
+                  </div>}
                 </div>
-                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                  <div style={{ fontFamily:B, fontSize:11, fontWeight:700, color:"#94a3b8" }}>Miroslav P. — Vlasnik</div>
-                  <div style={{ fontSize:11, color:"#fbbf24" }}>★★★★★</div>
+              ) : (
+                <>
+                  {/* Header */}
+                  <div style={{ textAlign:"center", marginBottom:36 }}>
+                    <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"5px 14px", borderRadius:20, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", fontSize:10, fontWeight:700, color:"#0ea5e9", letterSpacing:2.5, marginBottom:14 }}>
+                      {({hr:"ZA PARTNERE",de:"FÜR PARTNER",en:"FOR PARTNERS",it:"PER I PARTNER"})[lang]||"FOR PARTNERS"}
+                      <span style={{ fontSize:10, color:"#22c55e" }}>✓</span>
+                    </div>
+                    <div style={{ fontFamily:F, fontSize:"clamp(26px,5vw,40px)", fontWeight:400, color:"#f0f4f8", lineHeight:1.15, marginBottom:12 }}>
+                      {({hr:"Dovedi goste koji kupuju",de:"Bringen Sie kaufkräftige Gäste",en:"Bring guests who spend",it:"Porta ospiti che acquistano"})[lang]||"Bring guests who spend"}
+                    </div>
+                    <div style={{ fontFamily:B, fontSize:15, color:"#475569", maxWidth:540, margin:"0 auto", lineHeight:1.7 }}>
+                      {({
+                        hr:"Jadran AI svaki dan pomaže tisućama gostiju da pronađu savršena mjesta. Vaš objekt, jelovnik i smještaj — direktno u njihovim rukama u pravom trenutku.",
+                        de:"Jadran AI hilft täglich Tausenden von Gästen, perfekte Orte zu finden. Ihr Betrieb, Ihre Speisekarte und Unterkunft — direkt in ihren Händen im richtigen Moment.",
+                        en:"Jadran AI helps thousands of guests daily find perfect places. Your venue, menu and accommodation — directly in their hands at the right moment.",
+                        it:"Jadran AI aiuta migliaia di ospiti ogni giorno a trovare posti perfetti. La vostra struttura, menù e alloggio — direttamente nelle loro mani al momento giusto.",
+                      })[lang]||"Jadran AI helps thousands of guests daily find perfect places."}
+                    </div>
+                  </div>
+
+                  {/* Stats strip */}
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:32 }}>
+                    {[
+                      { n:"8", u:{hr:"jezika",de:"Sprachen",en:"languages",it:"lingue"}, i:"🌍" },
+                      { n:"34%", u:{hr:"više upita",de:"mehr Anfragen",en:"more enquiries",it:"più richieste"}, i:"📈" },
+                      { n:"4.9★", u:{hr:"prosj. ocjena",de:"Ø Bewertung",en:"avg. rating",it:"valutazione media"}, i:"⭐" },
+                      { n:"24/7", u:{hr:"AI preporuke",de:"KI-Empfehlungen",en:"AI referrals",it:"referenze AI"}, i:"🤖" },
+                    ].map((s,i) => (
+                      <div key={i} style={{ background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:14, padding:"16px 10px", textAlign:"center" }}>
+                        <div style={{ fontSize:20, marginBottom:4 }}>{s.i}</div>
+                        <div style={{ fontFamily:B, fontSize:22, fontWeight:700, color:"#0ea5e9" }}>{s.n}</div>
+                        <div style={{ fontFamily:B, fontSize:10, color:"#475569", marginTop:2 }}>{s.u[lang] || s.u.en}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Section label */}
+                  <div style={{ fontFamily:B, fontSize:10, fontWeight:700, color:"#334155", letterSpacing:2, marginBottom:14, textTransform:"uppercase" }}>
+                    {({hr:"Funkcije — klikni za detalje",de:"Funktionen — Klicken für Details",en:"Features — click for details",it:"Funzioni — clicca per dettagli"})[lang]||"Features — click for details"}
+                  </div>
+
+                  {/* Feature cards — 2×3 grid, each clickable */}
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(240px, 1fr))", gap:14, marginBottom:32 }}>
+                    {FEATURES.map((v,i) => (
+                      <div key={i} onClick={() => setActiveFeature(v)}
+                        style={{ ...cardHover, background:"rgba(255,255,255,0.02)", border:`1px solid rgba(255,255,255,0.06)`, borderRadius:16, padding:"20px 18px", borderTop:`2px solid ${v.color}`, position:"relative" }}>
+                        <div style={{ fontSize:28, marginBottom:10 }}>{v.icon}</div>
+                        <div style={{ fontFamily:B, fontSize:15, fontWeight:700, color:"#e2e8f0", marginBottom:8 }}>{v.title[lang] || v.title.en}</div>
+                        <div style={{ fontFamily:B, fontSize:13, color:"#475569", lineHeight:1.65 }}>{v.body[lang] || v.body.en}</div>
+                        <div style={{ position:"absolute", top:14, right:14, fontSize:10, color:"#334155" }}>›</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Tech stack section */}
+                  <div style={{ fontFamily:B, fontSize:10, fontWeight:700, color:"#334155", letterSpacing:2, marginBottom:14, textTransform:"uppercase" }}>
+                    {({hr:"Tehnologija",de:"Technologie",en:"Technology stack",it:"Stack tecnologico"})[lang]||"Technology stack"}
+                  </div>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(220px, 1fr))", gap:12, marginBottom:36 }}>
+                    {TECH.map((t,i) => (
+                      <div key={i} style={{ background:"rgba(255,255,255,0.015)", border:"1px solid rgba(255,255,255,0.05)", borderRadius:14, padding:"16px 16px", borderLeft:`3px solid ${t.color}` }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
+                          <span style={{ fontSize:20 }}>{t.icon}</span>
+                          <div>
+                            <div style={{ fontFamily:B, fontSize:13, fontWeight:700, color:"#e2e8f0" }}>{t.name}</div>
+                            <div style={{ fontFamily:B, fontSize:9, color:t.color, fontWeight:700, letterSpacing:1 }}>{t.tag}</div>
+                          </div>
+                        </div>
+                        <div style={{ fontFamily:B, fontSize:12, color:"#475569", lineHeight:1.6 }} dangerouslySetInnerHTML={{ __html: t.desc[lang] || t.desc.en }} />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* SIAL Consulting section */}
+                  <div style={{ background:"rgba(14,165,233,0.04)", border:"1px solid rgba(14,165,233,0.12)", borderRadius:18, padding:"24px 24px", marginBottom:28 }}>
+                    <div style={{ display:"flex", alignItems:"flex-start", gap:16, flexWrap:"wrap" }}>
+                      <div style={{ width:52, height:52, borderRadius:14, background:"linear-gradient(135deg,#0ea5e9,#0284c7)", display:"grid", placeItems:"center", fontSize:26, flexShrink:0 }}>🏭</div>
+                      <div style={{ flex:1, minWidth:220 }}>
+                        <div style={{ fontFamily:B, fontSize:11, fontWeight:700, color:"#0ea5e9", letterSpacing:1.5, marginBottom:4 }}>SIAL CONSULTING d.o.o.</div>
+                        <div style={{ fontFamily:F, fontSize:17, fontWeight:400, color:"#e2e8f0", marginBottom:10 }}>
+                          {({hr:"Tehnološki partner za jugoistočnu Europu",de:"Technologiepartner für Südosteuropa",en:"Technology partner for Southeast Europe",it:"Partner tecnologico per il Sud-Est Europa"})[lang]||"Technology partner for Southeast Europe"}
+                        </div>
+                        <div style={{ fontFamily:B, fontSize:13, color:"#64748b", lineHeight:1.7, marginBottom:14 }}>
+                          {({
+                            hr:"SIAL Consulting je hrvatska tehnološka kompanija koja razvija Jadran AI platformu i zastupa vodeće industrijske brendove u jugoistočnoj Europi.",
+                            de:"SIAL Consulting ist ein kroatisches Technologieunternehmen, das die Jadran AI Plattform entwickelt und führende Industriemarken in Südosteuropa vertritt.",
+                            en:"SIAL Consulting is a Croatian technology company developing the Jadran AI platform and representing leading industrial brands in Southeast Europe.",
+                            it:"SIAL Consulting è un'azienda tecnologica croata che sviluppa la piattaforma Jadran AI e rappresenta marchi industriali leader in Europa sud-orientale.",
+                          })[lang]||"SIAL Consulting is a Croatian technology company developing the Jadran AI platform and representing leading industrial brands in Southeast Europe."}
+                        </div>
+                        <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+                          {[
+                            { name:"Calderys", sub:{hr:"Vatrostalni materijali · 160+ godina iskustva · 50 pogona, 30+ zemalja",en:"Refractory solutions · 160+ years · 50 plants, 30+ countries",de:"Feuerfestlösungen · 160+ Jahre · 50 Werke, 30+ Länder"} },
+                            { name:"Dominion Deutschland", sub:{hr:"Inženjerska montaža vatrostalnih obloga · Ratingen, Njemačka",en:"Refractory lining engineering & installation · Ratingen, Germany",de:"Feuerfest-Auskleidungstechnik & Montage · Ratingen, Deutschland"} },
+                          ].map((p,i) => (
+                            <div key={i} style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:10, padding:"10px 14px", flex:"1 1 180px" }}>
+                              <div style={{ fontFamily:B, fontSize:12, fontWeight:700, color:"#e2e8f0", marginBottom:3 }}>{p.name}</div>
+                              <div style={{ fontFamily:B, fontSize:10, color:"#475569", lineHeight:1.5 }}>{p.sub[lang] || p.sub.en}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* CTA */}
+                  <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}>
+                    <a href="mailto:partneri@jadran.ai?subject=Partner%20prijava&body=Naziv%20objekta%3A%0AAdresa%3A%0AKontakt%20osoba%3A%0ATelefon%3A"
+                      style={{ display:"inline-flex", alignItems:"center", gap:10, padding:"16px 32px", background:"linear-gradient(135deg, #0ea5e9, #0284c7)", borderRadius:18, color:"#fff", fontFamily:B, fontSize:16, fontWeight:700, textDecoration:"none", boxShadow:"0 8px 32px rgba(14,165,233,0.3)" }}>
+                      🤝 {({hr:"Postani partner — besplatno",de:"Partner werden — kostenlos",en:"Become a partner — free",it:"Diventa partner — gratis"})[lang]||"Become a partner — free"}
+                    </a>
+                    <div style={{ fontFamily:B, fontSize:11, color:"#334155" }}>
+                      {({hr:"Odgovaramo unutar 24h · partneri@jadran.ai",de:"Antwort innerhalb 24h · partneri@jadran.ai",en:"Reply within 24h · partneri@jadran.ai",it:"Risposta entro 24h · partneri@jadran.ai"})[lang]||"Reply within 24h · partneri@jadran.ai"}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* ── Feature detail modal ── */}
+            {activeFeature && (
+              <div onClick={() => setActiveFeature(null)}
+                style={{ position:"fixed", inset:0, zIndex:600, background:"rgba(3,8,16,0.92)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)", display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+                <div onClick={e => e.stopPropagation()}
+                  style={{ width:"100%", maxWidth:520, background:"#0a1628", borderRadius:24, border:`1px solid ${activeFeature.color}30`, padding:"32px 28px", maxHeight:"85dvh", overflowY:"auto", animation:"fadeUp 0.28s cubic-bezier(0.16,1,0.3,1)" }}>
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:24 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+                      <div style={{ width:52, height:52, borderRadius:16, background:`${activeFeature.color}18`, border:`1px solid ${activeFeature.color}40`, display:"grid", placeItems:"center", fontSize:26 }}>{activeFeature.icon}</div>
+                      <div>
+                        <div style={{ fontFamily:B, fontSize:17, fontWeight:700, color:"#e2e8f0" }}>{activeFeature.title[lang] || activeFeature.title.en}</div>
+                        <div style={{ fontFamily:B, fontSize:11, color:activeFeature.color, fontWeight:700, letterSpacing:1, marginTop:2 }}>FEATURE DETAILS</div>
+                      </div>
+                    </div>
+                    <button onClick={() => setActiveFeature(null)}
+                      style={{ background:"rgba(255,255,255,0.06)", border:"none", color:"#64748b", fontSize:20, width:36, height:36, borderRadius:10, cursor:"pointer", display:"grid", placeItems:"center" }}>×</button>
+                  </div>
+                  <div style={{ fontFamily:B, fontSize:14, color:"#64748b", lineHeight:1.7, marginBottom:22 }}>{activeFeature.body[lang] || activeFeature.body.en}</div>
+                  <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                    {(activeFeature.detail[lang] || activeFeature.detail.en).map((item, i) => (
+                      <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"12px 14px", background:"rgba(255,255,255,0.03)", borderRadius:12, border:"1px solid rgba(255,255,255,0.05)" }}>
+                        <div style={{ width:22, height:22, borderRadius:7, background:`${activeFeature.color}20`, border:`1px solid ${activeFeature.color}40`, display:"grid", placeItems:"center", fontSize:12, flexShrink:0, color:activeFeature.color, fontWeight:700 }}>{i+1}</div>
+                        <div style={{ fontFamily:B, fontSize:13, color:"#94a3b8", lineHeight:1.6 }}>{item}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* CTA */}
-          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}>
-            <a href="mailto:partneri@jadran.ai?subject=Partner%20prijava&body=Naziv%20objekta%3A%0AAdresa%3A%0AKontakt%20osoba%3A%0ATelefon%3A"
-              style={{ display:"inline-flex", alignItems:"center", gap:10, padding:"16px 32px", background:"linear-gradient(135deg, #0ea5e9, #0284c7)", borderRadius:18, color:"#fff", fontFamily:B, fontSize:16, fontWeight:700, textDecoration:"none", boxShadow:"0 8px 32px rgba(14,165,233,0.3)" }}>
-              🤝 {({hr:"Postani partner — besplatno",de:"Partner werden — kostenlos",en:"Become a partner — free",it:"Diventa partner — gratis",pl:"Zostań partnerem — bezpłatnie",si:"Postani partner — brezplačno"})[lang]||"Become a partner — free"}
-            </a>
-            <div style={{ fontFamily:B, fontSize:11, color:"#334155" }}>
-              {({hr:"Odgovaramo unutar 24h · partneri@jadran.ai",de:"Antwort innerhalb 24h · partneri@jadran.ai",en:"Reply within 24h · partneri@jadran.ai",it:"Risposta entro 24h · partneri@jadran.ai",pl:"Odpowiedź w 24h · partneri@jadran.ai",si:"Odgovor v 24h · partneri@jadran.ai"})[lang]||"Reply within 24h · partneri@jadran.ai"}
-            </div>
-          </div>
-
-        </div>
-      </section>
+            )}
+          </section>
+        );
+      })()}
 
       {/* ═══ REGION DEALS SHEET ═══ */}
       {activeRegion && (() => {
