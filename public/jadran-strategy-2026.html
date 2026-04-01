@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JADRAN AI — Strateški izvještaj 2026</title>
+<style>
+  :root {
+    --navy:    #0a1628;
+    --navyD:   #060e1c;
+    --blue:    #0ea5e9;
+    --blueD:   #0284c7;
+    --gold:    #fbbf24;
+    --goldD:   #d97706;
+    --green:   #22c55e;
+    --red:     #ef4444;
+    --purple:  #a78bfa;
+    --orange:  #fb923c;
+    --text:    #1e293b;
+    --muted:   #64748b;
+    --border:  #e2e8f0;
+    --bg:      #f8fafc;
+    --card:    #ffffff;
+    --teal:    #0891b2;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  /* ── ACTION BAR ── */
+  .action-bar {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--navyD);
+    padding: 11px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.4);
+  }
+  .action-bar .logo { font-size: 16px; font-weight: 800; color: #fff; letter-spacing: 1px; }
+  .action-bar .logo span { color: var(--gold); }
+  .action-bar .doc-meta { font-size: 11px; color: rgba(255,255,255,0.45); letter-spacing: 0.5px; }
+  .btn-row { display: flex; gap: 10px; }
+  .btn-dl {
+    padding: 8px 18px; border-radius: 8px; border: none;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    letter-spacing: 0.3px; transition: opacity .15s;
+  }
+  .btn-dl:hover { opacity: .85; }
+  .btn-pdf  { background: var(--blue); color: #fff; }
+  .btn-back { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.15); }
+
+  /* ── LAYOUT ── */
+  .page-wrap { max-width: 900px; margin: 0 auto; padding: 28px 24px 80px; }
+
+  /* ── COVER ── */
+  .cover {
+    background: linear-gradient(135deg, var(--navy) 0%, #0c1f3f 60%, #0a1628 100%);
+    border-radius: 16px; padding: 52px 48px 44px;
+    margin-bottom: 32px; position: relative; overflow: hidden;
+  }
+  .cover::before {
+    content: ""; position: absolute; top: -60px; right: -60px;
+    width: 300px; height: 300px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(14,165,233,0.12), transparent 70%);
+  }
+  .cover-tag {
+    display: inline-block; padding: 4px 12px; border-radius: 20px;
+    background: rgba(14,165,233,0.15); border: 1px solid rgba(14,165,233,0.3);
+    color: var(--blue); font-size: 11px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; margin-bottom: 18px;
+  }
+  .cover h1 { font-size: 34px; font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 10px; }
+  .cover h1 span { color: var(--gold); }
+  .cover .sub { font-size: 15px; color: rgba(255,255,255,0.6); margin-bottom: 28px; font-weight: 300; }
+  .cover-kpis { display: flex; gap: 24px; flex-wrap: wrap; }
+  .kpi { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 14px 20px; }
+  .kpi .val { font-size: 22px; font-weight: 800; color: var(--gold); }
+  .kpi .lbl { font-size: 10px; color: rgba(255,255,255,0.45); letter-spacing: 0.8px; text-transform: uppercase; margin-top: 2px; }
+
+  /* ── TOC ── */
+  .toc { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px 28px; margin-bottom: 32px; }
+  .toc h3 { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 32px; }
+  .toc-item { font-size: 13px; color: var(--blueD); text-decoration: none; display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+  .toc-item:hover { color: var(--blue); }
+  .toc-num { font-size: 10px; font-weight: 700; color: var(--muted); min-width: 18px; }
+
+  /* ── SECTION ── */
+  .section { margin-bottom: 36px; }
+  .section-header {
+    display: flex; align-items: center; gap: 14px;
+    border-bottom: 2px solid var(--navy); padding-bottom: 10px; margin-bottom: 20px;
+  }
+  .section-num {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--navy); color: var(--gold);
+    font-size: 13px; font-weight: 800; display: grid; place-items: center; flex-shrink: 0;
+  }
+  .section-header h2 { font-size: 18px; font-weight: 800; color: var(--navy); }
+  .section-header .badge {
+    margin-left: auto; padding: 3px 10px; border-radius: 20px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+  }
+  .badge-critical { background: #fef2f2; color: var(--red); border: 1px solid #fecaca; }
+  .badge-high     { background: #fff7ed; color: var(--orange); border: 1px solid #fed7aa; }
+  .badge-strategy { background: #f0fdf4; color: var(--green); border: 1px solid #bbf7d0; }
+  .badge-investor { background: #fefce8; color: var(--goldD); border: 1px solid #fde68a; }
+
+  /* ── CARD ── */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; }
+  .card-title { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 12px; }
+
+  /* ── TABLES ── */
+  .tbl-wrap { overflow-x: auto; margin-bottom: 16px; border-radius: 10px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead tr { background: var(--navy); color: #fff; }
+  thead th { padding: 10px 14px; text-align: left; font-weight: 700; font-size: 11px; letter-spacing: 0.3px; }
+  tbody tr:nth-child(even) { background: #f8fafc; }
+  tbody tr:hover { background: #f0f9ff; }
+  tbody td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .tc { color: var(--green); font-weight: 700; }
+  .tx { color: var(--red); font-weight: 700; }
+  .tm { color: var(--muted); }
+
+  /* ── SWOT ── */
+  .swot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .swot-box { border-radius: 12px; padding: 18px 20px; }
+  .swot-s { background: #f0fdf4; border: 1px solid #bbf7d0; }
+  .swot-w { background: #fef2f2; border: 1px solid #fecaca; }
+  .swot-o { background: #eff6ff; border: 1px solid #bfdbfe; }
+  .swot-t { background: #fff7ed; border: 1px solid #fed7aa; }
+  .swot-head { font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .swot-s .swot-head { color: #15803d; }
+  .swot-w .swot-head { color: #b91c1c; }
+  .swot-o .swot-head { color: #1d4ed8; }
+  .swot-t .swot-head { color: #c2410c; }
+  .swot-icon { font-size: 18px; }
+  .swot-item { font-size: 12px; line-height: 1.5; margin-bottom: 7px; padding-left: 14px; position: relative; color: var(--text); }
+  .swot-item::before { content: "▸"; position: absolute; left: 0; opacity: 0.5; }
+
+  /* ── COMPETITOR BAR ── */
+  .comp-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .comp-name { font-size: 12px; font-weight: 700; min-width: 110px; color: var(--navy); }
+  .comp-bar-wrap { flex: 1; background: #e2e8f0; border-radius: 4px; height: 8px; overflow: hidden; }
+  .comp-bar { height: 8px; border-radius: 4px; }
+  .comp-score { font-size: 12px; font-weight: 700; min-width: 36px; text-align: right; }
+
+  /* ── PRICING ── */
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px; }
+  .price-card { border-radius: 12px; padding: 20px 16px; text-align: center; position: relative; }
+  .price-card.featured { border: 2px solid var(--gold); transform: scale(1.03); }
+  .price-card:not(.featured) { border: 1px solid var(--border); }
+  .price-badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); padding: 3px 12px; background: var(--gold); color: var(--navyD); font-size: 10px; font-weight: 800; border-radius: 20px; white-space: nowrap; }
+  .price-name { font-size: 13px; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
+  .price-val { font-size: 28px; font-weight: 800; color: var(--blueD); }
+  .price-val span { font-size: 14px; font-weight: 400; color: var(--muted); }
+  .price-desc { font-size: 11px; color: var(--muted); margin-bottom: 14px; }
+  .price-features { text-align: left; }
+  .price-feat { font-size: 11px; padding: 4px 0; border-bottom: 1px solid var(--border); display: flex; gap: 6px; }
+  .price-feat:last-child { border-bottom: none; }
+
+  /* ── AFFILIATE OFFER ── */
+  .affiliate-offer {
+    background: linear-gradient(135deg, #0c1f3f 0%, #0a1628 100%);
+    border: 1px solid rgba(14,165,233,0.3); border-radius: 14px;
+    padding: 28px 32px; margin-bottom: 16px; color: #fff;
+  }
+  .affiliate-offer h3 { font-size: 18px; font-weight: 800; color: var(--gold); margin-bottom: 6px; }
+  .affiliate-offer .price-big { font-size: 42px; font-weight: 800; color: #fff; line-height: 1; margin: 16px 0 4px; }
+  .affiliate-offer .price-big span { font-size: 18px; color: rgba(255,255,255,0.5); }
+  .affiliate-offer .note { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 20px; }
+  .incl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .incl-item { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: rgba(255,255,255,0.85); display: flex; gap: 8px; align-items: flex-start; }
+  .incl-ic { font-size: 16px; flex-shrink: 0; }
+
+  /* ── INVESTOR ── */
+  .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .metric-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; text-align: center; }
+  .metric-val { font-size: 22px; font-weight: 800; color: var(--navy); }
+  .metric-lbl { font-size: 10px; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; margin-top: 3px; }
+  .metric-sub { font-size: 11px; color: var(--green); font-weight: 600; margin-top: 2px; }
+
+  .timeline { border-left: 3px solid var(--border); padding-left: 24px; }
+  .tl-item { position: relative; margin-bottom: 20px; }
+  .tl-dot { position: absolute; left: -32px; top: 2px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--card); }
+  .tl-dot.done { background: var(--green); box-shadow: 0 0 0 2px #bbf7d0; }
+  .tl-dot.now  { background: var(--blue); box-shadow: 0 0 0 2px #bae6fd; }
+  .tl-dot.soon { background: var(--gold); box-shadow: 0 0 0 2px #fde68a; }
+  .tl-dot.plan { background: var(--muted); box-shadow: 0 0 0 2px #cbd5e1; }
+  .tl-phase { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--muted); }
+  .tl-title { font-size: 13px; font-weight: 700; color: var(--navy); margin: 2px 0; }
+  .tl-desc { font-size: 12px; color: var(--muted); }
+
+  /* ── CHANNEL CARDS ── */
+  .channel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .channel-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .channel-card h4 { font-size: 12px; font-weight: 800; color: var(--navy); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .channel-card li { font-size: 12px; color: var(--muted); padding: 3px 0 3px 14px; position: relative; }
+  .channel-card li::before { content: "→"; position: absolute; left: 0; color: var(--blue); font-size: 10px; }
+  ul { list-style: none; }
+
+  /* ── HIGHLIGHT BOX ── */
+  .highlight { border-radius: 10px; padding: 16px 20px; margin-bottom: 14px; }
+  .hl-navy  { background: #f0f9ff; border-left: 4px solid var(--blue); }
+  .hl-gold  { background: #fffbeb; border-left: 4px solid var(--gold); }
+  .hl-green { background: #f0fdf4; border-left: 4px solid var(--green); }
+  .hl-red   { background: #fef2f2; border-left: 4px solid var(--red); }
+  .highlight strong { display: block; font-size: 12px; font-weight: 800; margin-bottom: 4px; color: var(--navy); }
+  .highlight p, .highlight li { font-size: 12px; color: var(--text); line-height: 1.6; }
+
+  /* ── SCORE BADGE ── */
+  .score-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--navy); color: #fff; border-radius: 10px;
+    padding: 12px 20px; font-size: 13px; font-weight: 700;
+    margin-top: 8px;
+  }
+  .score-badge .num { font-size: 28px; font-weight: 800; color: var(--gold); }
+
+  /* ── PRINT ── */
+  @media print {
+    .action-bar { display: none !important; }
+    body { background: #fff; }
+    .page-wrap { padding: 0; max-width: 100%; }
+    .cover { border-radius: 0; }
+    a { color: inherit !important; text-decoration: none !important; }
+  }
+
+  /* ── UTILS ── */
+  .mt8  { margin-top: 8px; }
+  .mt16 { margin-top: 16px; }
+  .mt24 { margin-top: 24px; }
+  .mb8  { margin-bottom: 8px; }
+  .mb16 { margin-bottom: 16px; }
+  .flex { display: flex; }
+  .gap8 { gap: 8px; }
+  .items-center { align-items: center; }
+  .text-muted { color: var(--muted); font-size: 12px; }
+  .text-sm { font-size: 12px; }
+  .fw700 { font-weight: 700; }
+  .color-green { color: var(--green); }
+  .color-red { color: var(--red); }
+  .color-gold { color: var(--goldD); }
+  .color-blue { color: var(--blueD); }
+  hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  p { font-size: 13px; line-height: 1.7; margin-bottom: 10px; }
+  p:last-child { margin-bottom: 0; }
+  .page-break { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<!-- ── ACTION BAR ── -->
+<div class="action-bar">
+  <div>
+    <div class="logo">JADRAN<span>.</span>AI</div>
+    <div class="doc-meta">STRATEŠKI IZVJEŠTAJ · POVJERLJIVO · APRIL 2026</div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-dl btn-back" onclick="history.back()">← Natrag</button>
+    <button class="btn-dl btn-pdf" onclick="window.print()">⬇ Preuzmi PDF</button>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+  <!-- ══ COVER ══ -->
+  <div class="cover">
+    <div class="cover-tag">Povjerljivo · Interni dokument</div>
+    <h1>JADRAN<span>.AI</span><br>Strateški izvještaj 2026</h1>
+    <div class="sub">Komparativna analiza · SWOT · Affiliate program · Investitorski pitch · Go-to-Market</div>
+    <div class="cover-kpis">
+      <div class="kpi"><div class="val">20M+</div><div class="lbl">Turista godišnje Jadran</div></div>
+      <div class="kpi"><div class="val">€0</div><div class="lbl">Direktna AI konkurencija</div></div>
+      <div class="kpi"><div class="val">93%</div><div class="lbl">Bruto marža</div></div>
+      <div class="kpi"><div class="val">7.8/10</div><div class="lbl">Ocjena konkurentnosti</div></div>
+      <div class="kpi"><div class="val">€200/mj</div><div class="lbl">Affiliate partner cijena</div></div>
+    </div>
+  </div>
+
+  <!-- ══ TOC ══ -->
+  <div class="toc">
+    <h3>Sadržaj</h3>
+    <div class="toc-grid">
+      <a class="toc-item" href="#s1"><span class="toc-num">01</span> Pozicioniranje i kategorija</a>
+      <a class="toc-item" href="#s5"><span class="toc-num">05</span> SWOT analiza</a>
+      <a class="toc-item" href="#s2"><span class="toc-num">02</span> Komparativna analiza konkurencije</a>
+      <a class="toc-item" href="#s6"><span class="toc-num">06</span> Affiliate partner program</a>
+      <a class="toc-item" href="#s3"><span class="toc-num">03</span> Tržišne praznine</a>
+      <a class="toc-item" href="#s7"><span class="toc-num">07</span> Investitorski pitch</a>
+      <a class="toc-item" href="#s4"><span class="toc-num">04</span> Cijenovni model (B2C)</a>
+      <a class="toc-item" href="#s8"><span class="toc-num">08</span> Go-to-Market plan</a>
+    </div>
+  </div>
+
+  <!-- ══ S1: POZICIONIRANJE ══ -->
+  <div class="section" id="s1">
+    <div class="section-header">
+      <div class="section-num">01</div>
+      <h2>Pozicioniranje i kategorija</h2>
+      <span class="badge badge-strategy">Strateški</span>
+    </div>
+    <div class="highlight hl-navy">
+      <strong>Jedina rečenica koja definira jadran.ai</strong>
+      <p>"Jedini AI destinacijski operater koji zamjenjuje 4–5 zasebnih app za turiste na Jadranu — godišnje 20M posjetitelja, €0 direktne AI konkurencije u regiji."</p>
+    </div>
+    <div class="card">
+      <div class="card-title">Što jadran.ai pokriva — jedinstven skup funkcija</div>
+      <div class="tbl-wrap" style="margin-bottom:0">
+        <table>
+          <thead><tr><th>Segment</th><th>Ključne funkcije</th><th>Konkurencija koja to radi</th></tr></thead>
+          <tbody>
+            <tr><td><strong>🏕️ Kamper turist</strong></td><td>Visine mostova, parkiranje kamp-auta, overnight stops, uspon/nagib</td><td class="color-red">Nitko za Jadran</td></tr>
+            <tr><td><strong>⛵ Jedriličar / nautičar</strong></td><td>Marine, sidrišta, bura upozorenja, plime, lučke takse</td><td class="color-red">Navionics (karte, bez AI)</td></tr>
+            <tr><td><strong>🏖️ Turist / izletnik</strong></td><td>Plaže, restorani, hidden gems, aktivnosti, booking</td><td class="tm">Layla/Mindtrip (globalno, plitko)</td></tr>
+            <tr><td><strong>🏨 B2B TZ / hoteli</strong></td><td>White-label kiosk, QR onboarding, partner dashboard</td><td class="color-red">Nitko po ovoj cijeni</td></tr>
+            <tr><td><strong>🚢 Kruzer putnik</strong></td><td>"Imam 6h u Splitu, što sada?" — nula planiranja unaprijed</td><td class="color-red">Potpuno neopsluživani</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="highlight hl-gold">
+      <strong>Kategorija koju jadran.ai stvara</strong>
+      <p><strong>"Hyper-local AI destinacijski operater"</strong> — nije travel AI asistent (previše generičan), nije booking platforma (previše transakcijalan), nije turistički vodič (previše statičan). Kombinacija sva tri, s AI-om kao temeljom.</p>
+    </div>
+  </div>
+
+  <!-- ══ S2: KOMPARATIVNA ANALIZA ══ -->
+  <div class="section page-break" id="s2">
+    <div class="section-header">
+      <div class="section-num">02</div>
+      <h2>Komparativna analiza konkurencije</h2>
+      <span class="badge badge-strategy">Analiza</span>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Platforma</th><th>AI Chat</th><th>Jadran specifično</th><th>Nautika</th><th>Kamper</th><th>Rezervacije</th><th>B2B</th><th>Cijena</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background:#fffbeb">
+            <td><strong>⭐ jadran.ai</strong></td>
+            <td class="tc">Claude Opus</td><td class="tc">Puna dubina</td><td class="tc">Marine+bura</td><td class="tc">Visine+parking</td><td class="tc">Integrirano</td><td class="tc">TZ+hoteli</td><td><strong>€9.99/7d</strong></td>
+          </tr>
+          <tr><td>Layla AI</td><td class="tm">Proprietary</td><td class="tx">Ništa</td><td class="tx">Ništa</td><td class="tx">Ništa</td><td class="tm">Preko OTA</td><td class="tx">Ne</td><td>$9.99/mj</td></tr>
+          <tr><td>Mindtrip</td><td class="tm">GPT-4</td><td class="tx">Ništa</td><td class="tx">Ništa</td><td class="tx">Ništa</td><td class="tm">Priceline</td><td class="tx">Ne</td><td>Besplatno</td></tr>
+          <tr><td>Park4Night</td><td class="tx">Nema</td><td class="tm">Djelomično</td><td class="tx">Ništa</td><td class="tc">Samo mjesta</td><td class="tx">Ne</td><td class="tx">Ne</td><td>£9.99/god</td></tr>
+          <tr><td>Navionics</td><td class="tx">Nema</td><td class="tm">Karte Jadrana</td><td class="tc">Ekspert</td><td class="tx">Ništa</td><td class="tx">Ne</td><td class="tx">Ne</td><td>$49.99/god</td></tr>
+          <tr><td>Windy</td><td class="tx">Nema</td><td class="tx">Ništa</td><td class="tm">Samo vjetar</td><td class="tx">Ništa</td><td class="tx">Ne</td><td class="tx">Ne</td><td>$18.99/god</td></tr>
+          <tr><td>Roadtrippers</td><td class="tm">Djelomično</td><td class="tx">EU nije podržano</td><td class="tx">Ništa</td><td class="tm">Samo SAD</td><td class="tx">Ne</td><td class="tx">Ne</td><td>$35.99/god</td></tr>
+          <tr><td>Quicktext</td><td class="tc">Da</td><td class="tx">Ništa</td><td class="tx">Ništa</td><td class="tx">Ništa</td><td class="tm">Preko hotela</td><td class="tc">Hoteli</td><td>$499+/mj</td></tr>
+          <tr><td>Besty AI</td><td class="tc">Da</td><td class="tx">Ništa</td><td class="tx">Ništa</td><td class="tx">Ništa</td><td class="tm">Preko PMS</td><td class="tm">STR</td><td>€5-15/obj/mj</td></tr>
+          <tr><td>GetYourGuide</td><td class="tx">Nema</td><td class="tm">Sadržaj</td><td class="tx">Ništa</td><td class="tx">Ništa</td><td class="tc">Ekspert</td><td class="tm">Operateri</td><td>Provizija 20-30%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-title" style="margin-bottom:12px">Competitive score po dimenziji (jadran.ai vs. prosjek tržišta)</div>
+    <div style="padding: 4px 0">
+      <div class="comp-row"><span class="comp-name">AI kvalitet</span><div class="comp-bar-wrap"><div class="comp-bar" style="width:90%;background:linear-gradient(90deg,#0ea5e9,#0284c7)"></div></div><span class="comp-score color-blue">9.0</span></div>
+      <div class="comp-row"><span class="comp-name">Lokalna dubina</span><div class="comp-bar-wrap"><div class="comp-bar" style="width:95%;background:linear-gradient(90deg,#0ea5e9,#0284c7)"></div></div><span class="comp-score color-blue">9.5</span></div>
+      <div class="comp-row"><span class="comp-name">Nautika + kamper</span><div class="comp-bar-wrap"><div class="comp-bar" style="width:85%;background:linear-gradient(90deg,#0ea5e9,#0284c7)"></div></div><span class="comp-score color-blue">8.5</span></div>
+      <div class="comp-row"><span class="comp-name">B2B model</span><div class="comp-bar-wrap"><div class="comp-bar" style="width:80%;background:linear-gradient(90deg,#22c55e,#16a34a)"></div></div><span class="comp-score color-green">8.0</span></div>
+      <div class="comp-row"><span class="comp-name">Otkrivljivost (App Store)</span><div class="comp-bar-wrap"><div class="comp-bar" style="width:35%;background:linear-gradient(90deg,#ef4444,#b91c1c)"></div></div><span class="comp-score color-red">3.5</span></div>
+      <div class="comp-row"><span class="comp-name">Brand prepoznatljivost</span><div class="comp-bar-wrap"><div class="comp-bar" style="width:25%;background:linear-gradient(90deg,#ef4444,#b91c1c)"></div></div><span class="comp-score color-red">2.5</span></div>
+      <div class="comp-row"><span class="comp-name">Offline support</span><div class="comp-bar-wrap"><div class="comp-bar" style="width:20%;background:linear-gradient(90deg,#f97316,#ea580c)"></div></div><span class="comp-score" style="color:var(--orange)">2.0</span></div>
+      <div class="comp-row"><span class="comp-name">Monetizacija</span><div class="comp-bar-wrap"><div class="comp-bar" style="width:88%;background:linear-gradient(90deg,#22c55e,#16a34a)"></div></div><span class="comp-score color-green">8.8</span></div>
+    </div>
+
+    <div style="margin-top:16px;text-align:center">
+      <div class="score-badge">Ukupna ocjena konkurentnosti <span class="num">7.8</span> / 10</div>
+    </div>
+  </div>
+
+  <!-- ══ S3: TRŽIŠNE PRAZNINE ══ -->
+  <div class="section page-break" id="s3">
+    <div class="section-header">
+      <div class="section-num">03</div>
+      <h2>5 ključnih tržišnih praznina</h2>
+      <span class="badge badge-strategy">Prilike</span>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:16px">
+        <div style="font-size:28px;flex-shrink:0">🎯</div>
+        <div><div class="card-title">1. "Adriatic Stack" — nema ga nigdje</div>
+        <p class="text-sm">Jedrilica + kamper + turist + AI chat danas zahtijeva 3–5 zasebnih aplikacija. jadran.ai = jedna platforma. Nijemci koji kampiraju i jedre istovremeno (česta persona) nemaju nikakvu alternativu.</p></div>
+      </div>
+      <hr>
+      <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:16px">
+        <div style="font-size:28px;flex-shrink:0">🌍</div>
+        <div><div class="card-title">2. Lokalna dubina vs. globalna površnost</div>
+        <p class="text-sm">Layla i Mindtrip su "mile wide, inch deep" za Jadran. Hallucination risk za konkretne lokalne detalje — visine mostova, marine, bura upozorenja. jadran.ai ima kuriranu, provjerenu lokalnu bazu znanja.</p></div>
+      </div>
+      <hr>
+      <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:16px">
+        <div style="font-size:28px;flex-shrink:0">🏛️</div>
+        <div><div class="card-title">3. B2B turističke zajednice — neosvojeno</div>
+        <p class="text-sm">Quicktext ($499/mj) i Asksuite ($199+/mj) su preskupi za TZ ured i obiteljski hotel. Besty je property-level, ne destinacijski. <strong>Nema ni jednog igrača koji prodaje AI destinacijski operater direktno TZ uredima</strong> po pristupačnoj cijeni.</p></div>
+      </div>
+      <hr>
+      <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:16px">
+        <div style="font-size:28px;flex-shrink:0">🚢</div>
+        <div><div class="card-title">4. Kruzer turisti — potpuno neopsluživani</div>
+        <p class="text-sm">Dubrovnik + Split = 1.5M+ kruzer putnika godišnje, svaki s 4–8h na kopnu, nula planiranja unaprijed. Prosječna potrošnja: €150-300/dan. Nijedna aplikacija nema flow za ovu personu. <strong>Zero direct competitor.</strong></p></div>
+      </div>
+      <hr>
+      <div style="display:flex;align-items:flex-start;gap:16px">
+        <div style="font-size:28px;flex-shrink:0">🇩🇪</div>
+        <div><div class="card-title">5. Roadtrippers ne podržava Europu</div>
+        <p class="text-sm">Eksplicitno isključuju europski tržište. Nijemci, Austrijanci, Nizozemci su #1 kamper turisti na Jadranu — bez ijednog lokalnog digitalnog alata. 3M+ europskih kampera koji godišnje posjete Jadran.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ S4: CIJENOVNI MODEL ══ -->
+  <div class="section" id="s4">
+    <div class="section-header">
+      <div class="section-num">04</div>
+      <h2>B2C cijenovni model</h2>
+      <span class="badge badge-strategy">Monetizacija</span>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="price-name">Explorer</div>
+        <div class="price-val">€9.99<span>/7 dana</span></div>
+        <div class="price-desc">Savršeno za kratki boravak</div>
+        <div class="price-features">
+          <div class="price-feat"><span class="tc">✓</span> AI chat — neograničen</div>
+          <div class="price-feat"><span class="tc">✓</span> Lokalni vodiči</div>
+          <div class="price-feat"><span class="tc">✓</span> Aktivnosti i rezervacije</div>
+          <div class="price-feat"><span class="tx">✗</span> Foto analiza (Lens)</div>
+          <div class="price-feat"><span class="tx">✗</span> Glasovni mod</div>
+          <div class="price-feat"><span class="tx">✗</span> Claude Opus (VIP)</div>
+        </div>
+      </div>
+      <div class="price-card featured">
+        <div class="price-badge">⭐ Najpopularnije</div>
+        <div class="price-name">Season</div>
+        <div class="price-val">€19.99<span>/30 dana</span></div>
+        <div class="price-desc">Idealno za cjelokupni odmor</div>
+        <div class="price-features">
+          <div class="price-feat"><span class="tc">✓</span> AI chat — neograničen</div>
+          <div class="price-feat"><span class="tc">✓</span> Lokalni vodiči</div>
+          <div class="price-feat"><span class="tc">✓</span> Aktivnosti i rezervacije</div>
+          <div class="price-feat"><span class="tc">✓</span> Foto analiza (Lens)</div>
+          <div class="price-feat"><span class="tc">✓</span> Glasovni mod (Walkie)</div>
+          <div class="price-feat"><span class="tx">✗</span> Claude Opus (VIP)</div>
+        </div>
+      </div>
+      <div class="price-card">
+        <div class="price-name">VIP</div>
+        <div class="price-val">€49.99<span>/30 dana</span></div>
+        <div class="price-desc">Puna snaga Claude Opus AI</div>
+        <div class="price-features">
+          <div class="price-feat"><span class="tc">✓</span> AI chat — 300 msg/mj</div>
+          <div class="price-feat"><span class="tc">✓</span> Sve iz Season plana</div>
+          <div class="price-feat"><span class="tc">✓</span> Claude Opus AI model</div>
+          <div class="price-feat"><span class="tc">✓</span> Prioritetni odgovori</div>
+          <div class="price-feat"><span class="tc">✓</span> Guardian sigurnost</div>
+          <div class="price-feat"><span class="tc">✓</span> B2B / Enterprise</div>
+        </div>
+      </div>
+    </div>
+    <div class="highlight hl-navy">
+      <strong>Zašto ovaj pricing funkcionira</strong>
+      <p>Prosječan boravak turista na Jadranu: 7–14 dana. Explorer plan savršeno se poklapa s kratkim boravkom (<strong>€1.43/dan</strong>). Season pokriva cijeli ljetni odmor po cijeni jednog restoranskog obroka. Decoy efekat — Season je prikazan kao "default" što prirodno povećava prosječnu vrijednost narudžbe.</p>
+    </div>
+  </div>
+
+  <!-- ══ S5: SWOT ══ -->
+  <div class="section page-break" id="s5">
+    <div class="section-header">
+      <div class="section-num">05</div>
+      <h2>SWOT analiza</h2>
+      <span class="badge badge-strategy">Strateški</span>
+    </div>
+    <div class="swot-grid">
+      <div class="swot-box swot-s">
+        <div class="swot-head"><span class="swot-icon">💪</span> Snage (Strengths)</div>
+        <div class="swot-item">Jedina hyper-lokalna AI platforma za Jadran — kombinirani nautika + kamper ne postoji ni kod jednog konkurenta</div>
+        <div class="swot-item">Claude Opus AI — najsnažniji dostupni model, bolji od Layla/Mindtrip proprietary rješenja</div>
+        <div class="swot-item">Tri segmenta u jednoj app — jedrilica koja kamperuje može koristiti oba moda</div>
+        <div class="swot-item">Freemium s trip-aligned cijenom — €9.99/7d idealno se poklapa s prosječnim boravkom</div>
+        <div class="swot-item">B2B model bez konkurencije — TZ Rab kao referenca, Quicktext/Asksuite 10× skuplje</div>
+        <div class="swot-item">8 jezika, bez registracije — najniža frikcija na tržištu</div>
+        <div class="swot-item">Diversificirani prihodi — Viator + GYG affiliate + direktne rezervacije + Stripe</div>
+        <div class="swot-item">Sezonski model — kratka sezona → kratki planovi logični, ne godišnji</div>
+      </div>
+      <div class="swot-box swot-w">
+        <div class="swot-head"><span class="swot-icon">⚠️</span> Slabosti (Weaknesses)</div>
+        <div class="swot-item">Nema App Store listinga — Park4Night ima 9M korisnika dijelom zbog app store SEO. PWABuilder rješava ovo.</div>
+        <div class="swot-item">Sezonski prihodi — 3–4 ljetna mjeseca = 80%+ prihoda, nema prihoda zimi</div>
+        <div class="swot-item">Nema offline moda — turisti na otocima s lošim signalom (Navionics ima offline)</div>
+        <div class="swot-item">Bez branda na globalnoj razini — Layla ima 1.1M korisnika, Mindtrip ima Sequoia backing</div>
+        <div class="swot-item">Ovisnost o jednom tržištu — 100% Jadran, jedan loš sezon = prihodni udar</div>
+        <div class="swot-item">Nema analytics ni error trackinga (Sentry nije implementiran)</div>
+        <div class="swot-item">Kompleksnost triju segmenata — teže komunicirati jedinstvenu vrijednosnu ponudu u oglasima</div>
+        <div class="swot-item">Bootstrap — ograničeni marketinški budžet za akviziciju</div>
+      </div>
+      <div class="swot-box swot-o">
+        <div class="swot-head"><span class="swot-icon">🚀</span> Prilike (Opportunities)</div>
+        <div class="swot-item">Roadtrippers ne podržava Europu — 3M+ europskih kampera bez lokalnog digitalnog alata</div>
+        <div class="swot-item">TripAdvisor u strukturalnoj krizi — lokalne destinacije traže alternativne marketinške kanale</div>
+        <div class="swot-item">EU AI Act → transparentnost — Anthropic/Claude su compliant, trust signal za B2B</div>
+        <div class="swot-item">Ekspanzija: monte-negro.ai + greek-islands.ai domene već postoje u kodu</div>
+        <div class="swot-item">1.5M kruzer putnika Dubrovnik/Split godišnje — zero direct competitor, max spend</div>
+        <div class="swot-item">Partnership s charter kompanijama — QR u svaki brod kao standardna oprema</div>
+        <div class="swot-item">Travel AI investment trend na vrhuncu — Mindtrip $19M, Layla raste eksponencijalno</div>
+        <div class="swot-item">HTZ partnership — ako prihvate, 200+ TZ ureda dolazi automatski</div>
+      </div>
+      <div class="swot-box swot-t">
+        <div class="swot-head"><span class="swot-icon">🛡️</span> Prijetnje (Threats)</div>
+        <div class="swot-item">Layla AI ili Mindtrip ekspanzija u Adriatik — imaju brand, resurse, 1M+ korisnika</div>
+        <div class="swot-item">Google Gemini + Maps integracija — ima sve podatke, distribuciju i brand</div>
+        <div class="swot-item">GetYourGuide kao vertikalni AI — €1B prihod, raste 30% YoY, mogući AI concierge</div>
+        <div class="swot-item">Navionics širi sadržaj — ako Garmin doda restoran/kulturni sloj, gubi nautički segment</div>
+        <div class="swot-item">Sezonska ranjivost — hladna sezona (loše vrijeme, recesija u DE/AT) = direktan udar</div>
+        <div class="swot-item">Mindtrip potpuno besplatan — teško konkurirati s nultom cijenom generičnog alata</div>
+        <div class="swot-item">LLM commoditizacija — ako Claude postane ChatGPT plugin s Croatia znanjem, diferencijacija slabi</div>
+        <div class="swot-item">GDPR / regulativa — Hrvatska u EU, misstep u obradi podataka = kazna + reputacijski rizik</div>
+      </div>
+    </div>
+    <div class="highlight hl-gold mt16">
+      <strong>Strateški zaključak SWOT-a</strong>
+      <p>Kratkoročni prioritet: iskoristiti S1+S5 (AI+B2B moat) za brzo osvajanje 5+ TZ partnerstava dok T1+T2 (Layla, Google) nisu ušli u regiju. Ranjivost W1 (App Store) rješava se PWABuilder-om ovaj tjedan. Dugoročno: O4 (ekspanzija ME+GR) smanjuje T5 (sezonsku ranjivost).</p>
+    </div>
+  </div>
+
+  <!-- ══ S6: AFFILIATE PROGRAM ══ -->
+  <div class="section page-break" id="s6">
+    <div class="section-header">
+      <div class="section-num">06</div>
+      <h2>Affiliate partner program</h2>
+      <span class="badge badge-investor">B2B SaaS</span>
+    </div>
+
+    <div class="affiliate-offer">
+      <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:6px">Affiliate partner — godišnji paket</div>
+      <h3>Platforma za destinacijski marketing<br>namijenjena turističkim zajednicama i hotelima</h3>
+      <div class="price-big">€200<span>/mjesečno</span></div>
+      <div class="note">Godišnji ugovor · €2,400/god · Uključuje onboarding i postavljanje sadržaja</div>
+      <div class="incl-grid">
+        <div class="incl-item"><span class="incl-ic">🤖</span><span>AI kiosk s vašim brendom i destinacijskim sadržajem — 24/7</span></div>
+        <div class="incl-item"><span class="incl-ic">🌐</span><span>8 jezika automatizirano — njemački, engleski, talijanski i još 5</span></div>
+        <div class="incl-item"><span class="incl-ic">📱</span><span>QR kod za smještajne objekte, rive, recepcije i info punktove</span></div>
+        <div class="incl-item"><span class="incl-ic">📊</span><span>Mjestečni izvještaj — broj upita, top teme, konverzije aktivnosti</span></div>
+        <div class="incl-item"><span class="incl-ic">🎯</span><span>Integrirani affiliate prihodi od aktivnosti (Viator/GYG) idu destinaciji</span></div>
+        <div class="incl-item"><span class="incl-ic">⚡</span><span>Postavljanje za 48h — bez IT znanja, bez razvoja</span></div>
+        <div class="incl-item"><span class="incl-ic">🔒</span><span>Privatni partner URL + password-protected B2B sekcija</span></div>
+        <div class="incl-item"><span class="incl-ic">📞</span><span>Dedicirani account manager, WhatsApp podrška, SLA 24h</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Komparacija s konkurencijom — B2B paket</div>
+      <div class="tbl-wrap" style="margin-bottom:0">
+        <table>
+          <thead><tr><th>Rješenje</th><th>Cijena/mj</th><th>Adriatik know-how</th><th>Višejezičnost</th><th>Setup</th><th>Za TZ urede</th></tr></thead>
+          <tbody>
+            <tr style="background:#fffbeb"><td><strong>⭐ jadran.ai affiliate</strong></td><td><strong class="color-green">€200</strong></td><td class="tc">Duboko lokalno</td><td class="tc">8 jezika</td><td class="tc">48h</td><td class="tc">Idealno</td></tr>
+            <tr><td>Quicktext</td><td class="color-red">$499+</td><td class="tx">Ništa</td><td class="tc">Višejezično</td><td class="tm">2–4 tjedna</td><td class="tm">Hoteli, ne TZ</td></tr>
+            <tr><td>Asksuite</td><td class="color-red">$199+</td><td class="tx">Ništa</td><td class="tc">Višejezično</td><td class="tm">1–2 tjedna</td><td class="tm">Hoteli, ne TZ</td></tr>
+            <tr><td>Besty AI</td><td class="tm">€5-15/obj</td><td class="tx">Ništa</td><td class="tc">Da</td><td class="tc">Brzo</td><td class="tx">Samo kratki najam</td></tr>
+            <tr><td>Custom razvoj</td><td class="color-red">€2,000+</td><td class="tx">Ništa</td><td class="tm">Nerijetko ne</td><td class="color-red">3–6 mj</td><td class="tm">Moguće</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Ciljani partneri — pipeline</div>
+      <div class="tbl-wrap" style="margin-bottom:0">
+        <table>
+          <thead><tr><th>Partner</th><th>Tip</th><th>Status</th><th>Potencijal</th><th>Sljedeći korak</th></tr></thead>
+          <tbody>
+            <tr><td><strong>TZ Rab</strong></td><td>Turistička zajednica</td><td><span style="color:var(--green);font-weight:700">✓ Referenca</span></td><td>€2,400/god</td><td>Case study + brojevi</td></tr>
+            <tr><td>TZ Split</td><td>Turistička zajednica</td><td><span style="color:var(--gold);font-weight:700">Pitati</span></td><td>€2,400/god</td><td>Direktni poziv, TZ Rab referenca</td></tr>
+            <tr><td>TZ Dubrovnik</td><td>Turistička zajednica</td><td><span style="color:var(--gold);font-weight:700">Pitati</span></td><td>€2,400/god</td><td>Kruzer pitch — 1.5M putnika</td></tr>
+            <tr><td>TZ Hvar</td><td>Turistička zajednica</td><td><span style="color:var(--gold);font-weight:700">Pitati</span></td><td>€2,400/god</td><td>Nautički pitch — marina Hvar</td></tr>
+            <tr><td>TZ Makarska</td><td>Turistička zajednica</td><td><span style="color:var(--gold);font-weight:700">Pitati</span></td><td>€2,400/god</td><td>Kamper pitch — Makarsk. rivijera</td></tr>
+            <tr><td>HTZ (nationalno)</td><td>Hrvatska turistička zajednica</td><td><span style="color:var(--muted);font-weight:700">Dugoročno</span></td><td>€24,000+/god</td><td>Ako HTZ → svi TZ ured automatski</td></tr>
+            <tr><td>Charter kompanije</td><td>Nautika</td><td><span style="color:var(--gold);font-weight:700">Pitati</span></td><td>€4,800+/god</td><td>QR u svaki brod — Nausys listing</td></tr>
+            <tr><td>Boutique hoteli</td><td>Smještaj</td><td><span style="color:var(--muted);font-weight:700">Pipeline</span></td><td>€200-400/mj</td><td>Besty AI referenca, Booking.com</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="highlight hl-green">
+      <strong>Prihodni potencijal B2B — konzervativna procjena</strong>
+      <p>5 TZ partnerstava × €200/mj = <strong>€1,000/mj MRR</strong> samo od TZ ureda.<br>
+      10 charter kompanija × €400/mj = <strong>€4,000/mj MRR</strong>.<br>
+      20 boutique hotela × €200/mj = <strong>€4,000/mj MRR</strong>.<br>
+      <strong>Konzervativni Y1 B2B target: €9,000/mj MRR = €108,000/god</strong> — bez B2C prihoda.</p>
+    </div>
+  </div>
+
+  <!-- ══ S7: INVESTOR PITCH ══ -->
+  <div class="section page-break" id="s7">
+    <div class="section-header">
+      <div class="section-num">07</div>
+      <h2>Investitorski pitch</h2>
+      <span class="badge badge-investor">Povjerljivo</span>
+    </div>
+
+    <div class="highlight hl-gold">
+      <strong>Priča u jednoj rečenici — elevator pitch</strong>
+      <p>"Jadran.ai je jedini AI destinacijski operater koji zamjenjuje 4–5 zasebnih app za turiste na Jadranu — godišnje 20M posjetitelja, €0 direktne AI konkurencije, 93% bruto marža, monetiziran od dana 1."</p>
+    </div>
+
+    <div class="card-title mb8">Tržišna veličina (TAM / SAM / SOM)</div>
+    <div class="tbl-wrap mb16">
+      <table>
+        <thead><tr><th>Razina</th><th>Definicija</th><th>Veličina</th><th>Izvor procjene</th></tr></thead>
+        <tbody>
+          <tr><td><strong>TAM</strong></td><td>Europski AI travel software tržište 2026.</td><td><strong>€2.4B</strong></td><td>Phocuswright, 2024 projekcija</td></tr>
+          <tr><td><strong>SAM</strong></td><td>Adriatički turizam AI tools (HR/ME/GR/AL)</td><td><strong>€180M</strong></td><td>20M turista × €9 avg spend</td></tr>
+          <tr><td><strong>SOM Y3</strong></td><td>Realistična 3-godišnja meta</td><td><strong>€4.2M</strong></td><td>0.1% konv. od 4.2M CRO turista koji plaćaju</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-title mb8">Unit economics</div>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-val">€18</div><div class="metric-lbl">ARPU (mix Explorer/Season)</div><div class="metric-sub">po plaćenom korisniku</div></div>
+      <div class="metric-card"><div class="metric-val">€1.20</div><div class="metric-lbl">COGS po korisniku</div><div class="metric-sub">Claude API + Vercel + Stripe</div></div>
+      <div class="metric-card"><div class="metric-val" style="color:var(--green)">93%</div><div class="metric-lbl">Bruto marža</div><div class="metric-sub">SaaS-level</div></div>
+      <div class="metric-card"><div class="metric-val">€200</div><div class="metric-lbl">CAC (B2B TZ)</div><div class="metric-sub">direktna prodaja, 1 sastanak</div></div>
+    </div>
+    <div class="metric-grid" style="margin-top:-4px">
+      <div class="metric-card"><div class="metric-val">€500-2K</div><div class="metric-lbl">B2B LTV / god</div><div class="metric-sub">godišnji ugovor TZ/hotel</div></div>
+      <div class="metric-card"><div class="metric-val" style="color:var(--green)">2.5×-10×</div><div class="metric-lbl">LTV/CAC ratio B2B</div><div class="metric-sub">zdravo SaaS benchmark ≥ 3</div></div>
+      <div class="metric-card"><div class="metric-val">5 mj</div><div class="metric-lbl">Payback period</div><div class="metric-sub">break-even po B2B klijentu</div></div>
+      <div class="metric-card"><div class="metric-val">€0</div><div class="metric-lbl">Direktna AI konk.</div><div class="metric-sub">u regiji danas</div></div>
+    </div>
+
+    <div class="card-title mt16 mb8">Comparables — travel AI tržište</div>
+    <div class="tbl-wrap mb16">
+      <table>
+        <thead><tr><th>Kompanija</th><th>Status</th><th>Ključna razlika vs. jadran.ai</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Layla AI</strong></td><td>$10M+ procjena, 1.1M korisnika</td><td>Globalni fokus, nema lokalnu dubinu, nema nautiku/kamper</td></tr>
+          <tr><td><strong>Mindtrip</strong></td><td>$19M raised (Sequoia)</td><td>Besplatan model, bez monetizacije od dana 1</td></tr>
+          <tr><td><strong>GetYourGuide</strong></td><td>€1B prihod, 30% YoY rast</td><td>Distribution partner jadran.ai, ne competitor</td></tr>
+          <tr><td><strong>Quicktext</strong></td><td>$802M booking requests za klijente</td><td>B2B hotel-only, 10× skuplje, bez lokalne dubine</td></tr>
+          <tr><td><strong>jadran.ai</strong></td><td><strong>Monetiziran od dana 1, 93% marža</strong></td><td>Vertical + hyper-local + B2C + B2B + sezonski pricing</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-title mb8">Investitor tipovi i gdje ih naći</div>
+    <div class="tbl-wrap mb16">
+      <table>
+        <thead><tr><th>Tip investitora</th><th>Zašto odgovaraju</th><th>Ticket</th><th>Gdje</th></tr></thead>
+        <tbody>
+          <tr><td><strong>CRO/regijski angels</strong></td><td>Poznaju tržište, kratki decision cycle</td><td>€50K–€200K</td><td>HUB385, CRANE mreža, Fil Rouge Capital</td></tr>
+          <tr><td><strong>Travel tech VC</strong></td><td>Specijalizirani, strateški kontakti</td><td>€500K–€2M</td><td>Plug and Play Travel, SOSV, Tusk Ventures</td></tr>
+          <tr><td><strong>EU fondovi</strong></td><td>Bespovratna sredstva za digitalne startupe</td><td>€50K–€500K</td><td>HAMAG-BICRO, HBOR, EU Horizon</td></tr>
+          <tr><td><strong>Strateški kupci</strong></td><td>Booking.com, GYG, TripAdvisor — exit opcija</td><td>Akvizicija</td><td>Direktno, nakon dokazane traction</td></tr>
+          <tr><td><strong>AngelList / Syndicate</strong></td><td>Online pitch, brza vidljivost u tech zajednici</td><td>€25K–€150K</td><td>angel.co, Crunchbase profil</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-title mb8">Što trebate pokazati investitorima (traction)</div>
+    <div class="card">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Odmah dostupno</div>
+          <ul>
+            <li class="channel-card" style="padding:6px 0 6px 14px;border:none;margin:0;background:none;border-radius:0;border-bottom:1px solid var(--border)">TZ Rab — prva B2B referenca</li>
+            <li class="channel-card" style="padding:6px 0 6px 14px;border:none;margin:0;background:none;border-radius:0;border-bottom:1px solid var(--border)">Stripe dashboard — MRR i ukupni prihod</li>
+            <li class="channel-card" style="padding:6px 0 6px 14px;border:none;margin:0;background:none;border-radius:0;border-bottom:1px solid var(--border)">Broj aktivnih korisnika i chat sesija</li>
+            <li class="channel-card" style="padding:6px 0 6px 14px;border:none;margin:0;background:none;border-radius:0">Konverzija free → paid (funnel %)</li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Pripremiti do pitch-a</div>
+          <ul>
+            <li class="channel-card" style="padding:6px 0 6px 14px;border:none;margin:0;background:none;border-radius:0;border-bottom:1px solid var(--border)">Case study TZ Rab — ROI u brojevima</li>
+            <li class="channel-card" style="padding:6px 0 6px 14px;border:none;margin:0;background:none;border-radius:0;border-bottom:1px solid var(--border)">NPS survey (5 pitanja, 20+ odgovora)</li>
+            <li class="channel-card" style="padding:6px 0 6px 14px;border:none;margin:0;background:none;border-radius:0;border-bottom:1px solid var(--border)">LOI (letter of intent) od 1+ TZ partnera</li>
+            <li class="channel-card" style="padding:6px 0 6px 14px;border:none;margin:0;background:none;border-radius:0">12-mjesečni financijski plan (P&amp;L)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ S8: GO-TO-MARKET ══ -->
+  <div class="section page-break" id="s8">
+    <div class="section-header">
+      <div class="section-num">08</div>
+      <h2>Go-to-Market plan</h2>
+      <span class="badge badge-strategy">Akcijski plan</span>
+    </div>
+
+    <div class="channel-grid mb16">
+      <div class="channel-card">
+        <h4>🧳 B2C — turisti odmah (besplatno)</h4>
+        <ul>
+          <li>Product Hunt launch — tech zajednica, buzz</li>
+          <li>Nomadlist.com listing — digital nomadi + kamperi</li>
+          <li>Reddit: r/croatia, r/sailing, r/vandwellers</li>
+          <li>AllTrails / Komoot profil + link</li>
+          <li>WhatsApp grupe putnika — viralni kanal</li>
+        </ul>
+      </div>
+      <div class="channel-card">
+        <h4>🏛️ B2B — TZ uredi i hoteli</h4>
+        <ul>
+          <li>TZ Split, Dubrovnik, Hvar, Makarska — direktni pitch</li>
+          <li>HTZ nacionalno — strateški partner</li>
+          <li>Booking.com Connectivity Partner program</li>
+          <li>G2.com / Capterra profil (B2B SaaS review)</li>
+          <li>Feria de Turismo / Internorga 2027 sajam</li>
+        </ul>
+      </div>
+      <div class="channel-card">
+        <h4>⛵ Nautički segment</h4>
+        <ul>
+          <li>Nausys listing — svi charter operateri</li>
+          <li>Sailing forums: YBW.com, Cruising Anarchy</li>
+          <li>Catamaran Society, Sunsail, Neilson partnership</li>
+          <li>Navionics/Windy korisnici — cross-promotion</li>
+          <li>Adriatic Sailing Facebook grupe (40K+ članova)</li>
+        </ul>
+      </div>
+      <div class="channel-card">
+        <h4>🏕️ Kamper segment (DE/AT/NL)</h4>
+        <ul>
+          <li>Camping.de forum — #1 DE kamper zajednica</li>
+          <li>ADAC forum — 21M članova, godišnji kamper test</li>
+          <li>Promobil.de — DE kamper medij, 100K čitatelja</li>
+          <li>ACSI App partnerstvo — 8M+ europskih kampera</li>
+          <li>Park4Night zajednica cross-post</li>
+        </ul>
+      </div>
+      <div class="channel-card">
+        <h4>📱 App Store vidljivost</h4>
+        <ul>
+          <li>Google Play — PWABuilder .aab (ovaj tjedan)</li>
+          <li>Apple App Store — iOS wrapper (Capacitor)</li>
+          <li>Add to Home Screen PWA prompt</li>
+          <li>App Store ASO: ključne riječi "Croatia travel AI"</li>
+        </ul>
+      </div>
+      <div class="channel-card">
+        <h4>📰 PR i mediji</h4>
+        <ul>
+          <li>Jutarnji list / 24sata — tech sekcija (HR mediji)</li>
+          <li>Practical Boat Owner, Yachting Monthly (UK)</li>
+          <li>Anthropic partner program — Claude success story</li>
+          <li>TZ Rab case study — press release</li>
+          <li>Startup.hr, Bug.hr, CroStartup zajednica</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card-title mb8">Roadmap — ključni milestones</div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot done"></div>
+        <div class="tl-phase">Završeno · Q1 2026</div>
+        <div class="tl-title">MVP, Stripe plaćanje, TZ Rab referenca, 8 jezika, B2B kiosk</div>
+        <div class="tl-desc">Sigurnosni audit (6 ranjivosti), GDPR, Anthropic badge, SWOT analiza</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot now"></div>
+        <div class="tl-phase">Ovo Tjedan · April 2026</div>
+        <div class="tl-title">Google Play launch (PWABuilder), UI bug fixes, produkcijsko izdanje</div>
+        <div class="tl-desc">4 UI bugfixa, manifest.json, PNG ikone, offline SW v5</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot soon"></div>
+        <div class="tl-phase">Ovaj Mjesec · April–Maj 2026</div>
+        <div class="tl-title">Apple App Store, 3 nova TZ partnera, Product Hunt launch</div>
+        <div class="tl-desc">iOS wrapper (Capacitor), pitch deck, Sentry error tracking, NPS survey</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot soon"></div>
+        <div class="tl-phase">Pred Sezonu · Jun 2026</div>
+        <div class="tl-title">Offline mod, Kruzer flow ("6h u gradu"), Charter partnership</div>
+        <div class="tl-desc">Service worker cache, Nausys listing, HAMAG-BICRO prijava</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot plan"></div>
+        <div class="tl-phase">Sezona · Jul–Sep 2026</div>
+        <div class="tl-title">Prva investicijska runda, monte-negro.ai ekspanzija</div>
+        <div class="tl-desc">Traction data, 5+ TZ partnera, LOI od strateškog kupca ili VC</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot plan"></div>
+        <div class="tl-phase">Post-Sezona · Q4 2026</div>
+        <div class="tl-title">greek-islands.ai, zimski B2B revenue, HTZ partnerstvo</div>
+        <div class="tl-desc">Diversifikacija tržišta, smanjenje sezonske ovisnosti</div>
+      </div>
+    </div>
+
+    <div class="highlight hl-green mt24">
+      <strong>Strateška matrica — odgovor na konkurenciju</strong>
+      <p><strong>Kratkoročno (do kraja sezone 2026):</strong> Osvoji 5+ TZ partnera (TZ Rab referenca → Split, Dubrovnik, Hvar, Makarska). Kruzer flow — nepostojeća kategorija. Google Play + App Store listing.<br><br>
+      <strong>Srednjoročno (2027):</strong> Ekspanzija na Crnu Goru (monte-negro.ai) i Grčke otoke (greek-islands.ai). Offline mod — obrana od Navionics ekspanzije. Charter partnership program — QR u svaki brod.<br><br>
+      <strong>Dugoročno:</strong> Pozicioniranje kao <em>"Adriatic travel data layer"</em> koji drugi (GYG, Booking.com) licenciraju — ili exit prema strateškom kupcu.</p>
+    </div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <div style="text-align:center;padding:32px 0 8px;border-top:1px solid var(--border)">
+    <div style="font-size:12px;font-weight:700;color:var(--navy);letter-spacing:1px">JADRAN.AI · SIAL Consulting d.o.o.</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:4px">Strateški izvještaj · April 2026 · Povjerljivo · Distribucija samo ovlaštenim primateljima</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:2px">Powered by <strong>Claude by Anthropic</strong> · jadran.ai</div>
+  </div>
+
+</div>
+
+<script>
+  // Smooth anchor scroll
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const el = document.querySelector(a.getAttribute('href'));
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+</script>
+</body>
+</html>
