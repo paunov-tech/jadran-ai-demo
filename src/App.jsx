@@ -412,9 +412,16 @@ function PartnerStatsDashboard({ partner }) {
             )}
 
             {data.feedbackCount === 0 && data.totalViews === 0 && (
-              <div style={{ background: C.card, borderRadius: 12, padding: 20, textAlign: "center", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div style={{ fontSize: 32, marginBottom: 8 }}>📊</div>
-                <div style={{ fontSize: 14, color: C.mut }}>Nema podataka još. QR kod tek je skeniran!</div>
+              <div style={{ background: C.card, borderRadius: 12, padding: 24, textAlign: "center", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ fontSize: 40, marginBottom: 10 }}>🚀</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: C.text, marginBottom: 6 }}>Dashboard spreman!</div>
+                <div style={{ fontSize: 13, color: C.mut, lineHeight: 1.6 }}>
+                  Podaci se pojavljuju čim korisnici skeniraju QR kod.<br/>
+                  Dijelite <strong style={{ color: C.accent }}>jadran.ai/bj-qr.html</strong> ili printajte QR karticu.
+                </div>
+                <div style={{ marginTop: 14, padding: "10px 16px", background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)", borderRadius: 10, fontSize: 11, color: C.mut }}>
+                  Testirajte sami: posjetite <span style={{ color: C.accent }}>jadran.ai/?kiosk=rab&affiliate=blackjack&tk=sial2026</span>
+                </div>
               </div>
             )}
           </>
@@ -589,7 +596,7 @@ export default function JadranUnified() {
   const G = guestProfile || GUEST_FALLBACK;
 
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMsgs]);
-  useEffect(() => { const t = setTimeout(() => setSplash(false), 3800); return () => clearTimeout(t); }, []);
+  useEffect(() => { const t = setTimeout(() => setSplash(false), 2500); return () => clearTimeout(t); }, []);
 
   // ─── URL transit handoff (?go=transit&from=Wien&to=Split&seg=kamper) ───
   const urlFromSet = useRef(false); // blocks geocode race condition
@@ -1162,7 +1169,7 @@ export default function JadranUnified() {
   const doChat = async () => {
     if (!chatInput.trim()) return;
     // ── 3 FREE MESSAGES GATE (persisted in localStorage) ──
-    if (!premium && freeMsgUsed >= 3) {
+    if (!premium && freeMsgUsed >= 5) {
       setShowPaywall(true);
       return;
     }
@@ -1585,10 +1592,10 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "12px 0 4px", borderTop: `1px solid ${C.bord}`, marginTop: "auto" }}>
             {!premium && (() => {
               const used = freeMsgUsed;
-              const left = Math.max(0, 3 - used);
+              const left = Math.max(0, 5 - used);
               return left > 0 ? (
                 <div style={{ ...dm, fontSize: 11, color: left === 1 ? C.gold : C.mut, textAlign: "center" }}>
-                  {({hr:`${left} od 3 besplatnih poruka`,de:`${left} von 3 kostenlosen Nachrichten`,en:`${left} of 3 free messages`,it:`${left} di 3 messaggi gratuiti`})[lang] || `${left}/3`}
+                  {({hr:`${left} od 5 besplatnih poruka`,de:`${left} von 5 kostenlosen Nachrichten`,en:`${left} of 5 free messages`,it:`${left} di 5 messaggi gratuiti`})[lang] || `${left}/5`}
                 </div>
               ) : (
                 <div onClick={() => setShowPaywall(true)} style={{ ...dm, fontSize: 12, color: C.gold, textAlign: "center", padding: "6px 12px", cursor: "pointer", background: C.goDim, borderRadius: 10, border: `1px solid ${C.goBorder}` }}>
@@ -1599,7 +1606,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             <div style={{ display: "flex", gap: 10 }}>
               <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && doChat()}
                 placeholder={t("askPlaceholder",lang)} style={{ ...dm, flex: 1, padding: "14px 18px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, borderRadius: 22, color: C.text, fontSize: 16, outline: "none", minHeight: 48 }} />
-              <button onClick={doChat} disabled={!premium && freeMsgUsed >= 3} style={{ padding: "14px 22px", background: (!premium && freeMsgUsed >= 3) ? C.mut : `linear-gradient(135deg,${C.accent},#0284c7)`, border: "none", borderRadius: 22, color: "#fff", fontSize: 18, cursor: "pointer", fontWeight: 600, minWidth: 52, minHeight: 48, display: "grid", placeItems: "center", opacity: (!premium && freeMsgUsed >= 3) ? 0.4 : 1 }}>→</button>
+              <button onClick={doChat} disabled={!premium && freeMsgUsed >= 5} style={{ padding: "14px 22px", background: (!premium && freeMsgUsed >= 5) ? C.mut : `linear-gradient(135deg,${C.accent},#0284c7)`, border: "none", borderRadius: 22, color: "#fff", fontSize: 18, cursor: "pointer", fontWeight: 600, minWidth: 52, minHeight: 48, display: "grid", placeItems: "center", opacity: (!premium && freeMsgUsed >= 5) ? 0.4 : 1 }}>→</button>
             </div>
           </div>
         </div>
@@ -1660,7 +1667,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
               {(() => {
                 const isBooking = verifiedAffiliate.current || (roomCode.current && roomCode.current !== "DEMO" && !roomCode.current.startsWith("dev_"));
                 const used = freeMsgUsed;
-                const left = Math.max(0, 3 - used);
+                const left = Math.max(0, 5 - used);
                 return (
                   <div style={{ ...dm, display:"flex", alignItems:"center", gap:10, padding:"10px 16px",
                     borderRadius:12, background: isBooking ? "rgba(167,139,250,0.08)" : "rgba(14,165,233,0.06)",
@@ -2417,10 +2424,10 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           {/* Free message counter */}
           {!premium && (() => {
             const used = freeMsgUsed;
-            const left = Math.max(0, 3 - used);
+            const left = Math.max(0, 5 - used);
             return left > 0 ? (
               <div style={{ ...dm, fontSize: 11, color: left === 1 ? C.gold : C.mut, textAlign: "center", padding: "2px 0" }}>
-                {({hr:`${left} od 3 besplatnih poruka`,de:`${left} von 3 kostenlosen Nachrichten`,en:`${left} of 3 free messages`,it:`${left} di 3 messaggi gratuiti`})[lang] || `${left}/3`}
+                {({hr:`${left} od 5 besplatnih poruka`,de:`${left} von 5 kostenlosen Nachrichten`,en:`${left} of 5 free messages`,it:`${left} di 5 messaggi gratuiti`})[lang] || `${left}/5`}
               </div>
             ) : (
               <div onClick={() => setShowPaywall(true)} style={{ ...dm, fontSize: 12, color: C.gold, textAlign: "center", padding: "6px 12px", cursor: "pointer", background: C.goDim, borderRadius: 10, border: `1px solid ${C.goBorder}` }}>
@@ -2431,7 +2438,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           <div style={{ display: "flex", gap: 10 }}>
             <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && doChat()}
               placeholder={t("askPlaceholder",lang)} style={{ ...dm, flex: 1, padding: "14px 18px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, borderRadius: 22, color: C.text, fontSize: 16, outline: "none", minHeight: 48 }} />
-            <button onClick={doChat} disabled={!premium && freeMsgUsed >= 3} style={{ padding: "14px 22px", background: (!premium && freeMsgUsed >= 3) ? C.mut : `linear-gradient(135deg,${C.accent},#0284c7)`, border: "none", borderRadius: 22, color: "#fff", fontSize: 18, cursor: (!premium && freeMsgUsed >= 3) ? "default" : "pointer", fontWeight: 600, minWidth: 52, minHeight: 48, display: "grid", placeItems: "center", boxShadow: "0 4px 16px rgba(14,165,233,0.25)", opacity: (!premium && freeMsgUsed >= 3) ? 0.4 : 1 }}>→</button>
+            <button onClick={doChat} disabled={!premium && freeMsgUsed >= 5} style={{ padding: "14px 22px", background: (!premium && freeMsgUsed >= 5) ? C.mut : `linear-gradient(135deg,${C.accent},#0284c7)`, border: "none", borderRadius: 22, color: "#fff", fontSize: 18, cursor: (!premium && freeMsgUsed >= 5) ? "default" : "pointer", fontWeight: 600, minWidth: 52, minHeight: 48, display: "grid", placeItems: "center", boxShadow: "0 4px 16px rgba(14,165,233,0.25)", opacity: (!premium && freeMsgUsed >= 5) ? 0.4 : 1 }}>→</button>
           </div>
         </div>
       </div>
@@ -2736,12 +2743,19 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           {aff.gallery?.length > 0 && (
             <div style={{ marginBottom:20 }}>
               <div style={{ ...dm, fontSize:10, color:aff.color, letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:10 }}>{tl("gallery")}</div>
-              <div style={{ display:"flex", gap:8, overflowX:"auto", scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", paddingBottom:4 }}>
+              <div style={{ display:"flex", gap:8, overflowX:"auto", scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", paddingBottom:8, scrollbarWidth:"none" }}>
                 {aff.gallery.map((src, gi) => (
-                  <div key={gi} style={{ minWidth:160, height:112, borderRadius:14, overflow:"hidden", flexShrink:0, scrollSnapAlign:"start" }}>
+                  <div key={gi} style={{ minWidth:160, height:112, borderRadius:14, overflow:"hidden", flexShrink:0, scrollSnapAlign:"start", position:"relative" }}>
                     <img src={src} alt="" style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} loading="lazy" />
                   </div>
                 ))}
+              </div>
+              {/* Swipe hint — only shown once */}
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:4, marginTop:4, opacity:0.5 }}>
+                {aff.gallery.map((_, gi) => (
+                  <div key={gi} style={{ width: gi===0 ? 16 : 5, height:5, borderRadius:3, background: gi===0 ? aff.color : "rgba(255,255,255,0.3)", transition:"width 0.3s" }} />
+                ))}
+                <span style={{ ...dm, fontSize:9, color:C.mut, marginLeft:6 }}>swipe</span>
               </div>
             </div>
           )}
@@ -3344,11 +3358,13 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
       {/* Skip button */}
       <button onClick={() => setSplash(false)} style={{
         position:"absolute", bottom: 40, fontFamily:"'Outfit',sans-serif",
-        background:"none", border:"1px solid rgba(186,230,253,0.1)", borderRadius: 20,
-        color:"rgba(186,230,253,0.3)", fontSize: 11, padding:"8px 20px", cursor:"pointer",
-        letterSpacing: 2, textTransform:"uppercase", transition:"all 0.3s",
-        animation: "splash-tagline 0.5s ease 2.5s both",
+        background:"rgba(186,230,253,0.07)", border:"1px solid rgba(186,230,253,0.25)", borderRadius: 20,
+        color:"rgba(186,230,253,0.75)", fontSize: 12, padding:"10px 28px", cursor:"pointer",
+        letterSpacing: 1.5, textTransform:"uppercase", transition:"all 0.2s",
+        animation: "splash-tagline 0.5s ease 1.5s both",
       }}
+      onMouseEnter={e => { e.currentTarget.style.background="rgba(186,230,253,0.15)"; e.currentTarget.style.color="rgba(186,230,253,1)"; }}
+      onMouseLeave={e => { e.currentTarget.style.background="rgba(186,230,253,0.07)"; e.currentTarget.style.color="rgba(186,230,253,0.75)"; }}
       >{t("skipBtn",lang)}</button>
     </div>
   );
