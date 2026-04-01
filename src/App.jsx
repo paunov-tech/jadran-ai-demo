@@ -1328,7 +1328,10 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
   /* ─── PAYWALL ─── */
   const Paywall = () => (
     <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.88)", zIndex: 300, display: "grid", placeItems: "center", padding: "24px 16px", paddingTop: "calc(24px + env(safe-area-inset-top, 0px))", paddingBottom: "calc(24px + env(safe-area-inset-bottom, 0px))" }} onClick={() => { setShowPaywall(false); setShowRecovery(false); setRecoveryStatus(null); setRecoveryEmail(""); }}>
-      <div onClick={e => e.stopPropagation()} className="overlay-enter glass" style={{ background: "rgba(12,28,50,0.92)", borderRadius: 28, maxWidth: 440, width: "100%", padding: "40px 28px", border: `1px solid rgba(251,191,36,0.15)`, textAlign: "center", maxHeight: "calc(100dvh - 80px)", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+      <div onClick={e => e.stopPropagation()} className="overlay-enter glass" style={{ background: "rgba(12,28,50,0.92)", borderRadius: 28, maxWidth: 440, width: "100%", padding: "40px 28px", border: `1px solid rgba(251,191,36,0.15)`, textAlign: "center", maxHeight: "calc(100dvh - 80px)", overflowY: "auto", WebkitOverflowScrolling: "touch", position: "relative" }}>
+        <button onClick={() => { setShowPaywall(false); setShowRecovery(false); setRecoveryStatus(null); setRecoveryEmail(""); }}
+          style={{ position:"absolute", top:16, right:16, background:"rgba(255,255,255,0.06)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:"50%", width:32, height:32, display:"grid", placeItems:"center", cursor:"pointer", color:C.mut, fontSize:16, lineHeight:1, zIndex:1 }}
+          aria-label="Zatvori">✕</button>
         <div style={{ fontSize: 48, marginBottom: 12 }}>💎</div>
         <div style={{ fontSize: 26, fontWeight: 400, marginBottom: 6 }}>{t("premiumTitle",lang)}</div>
         <div style={{ ...dm, color: C.mut, fontSize: 14, lineHeight: 1.6, marginBottom: 24 }}>
@@ -1538,7 +1541,10 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
     if (subScreen === "pretrip") return (
       <>
-        <div style={{ padding: "24px 0 8px" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingTop:16 }}>
+          <BackBtn onClick={() => setSubScreen("onboard")} label={({hr:"Uredi profil",de:"Profil bearbeiten",en:"Edit profile",it:"Modifica profilo",si:"Uredi profil",cz:"Upravit profil",pl:"Edytuj profil"})[lang] || "Uredi profil"} />
+        </div>
+        <div style={{ padding: "8px 0 8px" }}>
           <div style={{ fontSize: 30, fontWeight: 400 }}>{Math.max(0, Math.ceil((new Date(G.arrival) - new Date()) / 86400000))} {t("daysToGo",lang)} ☀️</div>
           <div style={{ ...dm, fontSize: 14, color: C.mut, marginTop: 4 }}>{new Date(G.arrival).toLocaleDateString(dateLocale || "hr-HR", {day:"numeric",month:"long"})} – {new Date(G.departure).toLocaleDateString(dateLocale || "hr-HR", {day:"numeric",month:"long",year:"numeric"})} · {G.accommodation}</div>
         </div>
@@ -1677,6 +1683,9 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
     if (subScreen === "transit") return (
       <>
+        <div style={{ display:"flex", alignItems:"center", paddingTop:16, paddingBottom:8 }}>
+          <BackBtn onClick={() => setSubScreen("pretrip")} label={({hr:"Pregled putovanja",de:"Reiseübersicht",en:"Trip overview",it:"Panoramica viaggio",si:"Pregled potovanja",cz:"Přehled cesty",pl:"Przegląd podróży"})[lang] || "Pregled putovanja"} />
+        </div>
         {/* ── HERE Map ── */}
         <div style={{ borderRadius: 16, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 0 }}>
           {transitFromCoords && transitToCoords ? (
