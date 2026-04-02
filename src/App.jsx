@@ -1689,51 +1689,60 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
     // Chat accessible from transit — same component, back goes to transit
     if (subScreen === "chat") {
       const prompts = [t("chatPrompt1",lang), t("chatPrompt2",lang), t("chatPrompt3",lang), t("chatPrompt4",lang)];
+      const canSend = premium || freeMsgUsed < 5;
       return (
-        <div style={{ display: "flex", flexDirection: "column", height: "calc(100dvh - 130px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-          <BackBtn onClick={() => setSubScreen("transit")} label={({hr:"← Natrag na rutu",de:"← Zurück zur Route",en:"← Back to route",it:"← Torna al percorso"})[lang] || "← Natrag na rutu"} />
-          <div className="scroll-smooth" style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", flexDirection: "column", background: C.bg }}>
+          <div style={{ flexShrink: 0, padding: "12px 16px 8px", borderBottom: `1px solid ${C.bord}` }}>
+            <BackBtn onClick={() => setSubScreen("transit")} label={({hr:"← Ruta",de:"← Route",en:"← Route",it:"← Percorso"})[lang] || "← Ruta"} />
+          </div>
+          <div className="scroll-smooth" style={{ flex: 1, overflowY: "auto", padding: "12px 16px", WebkitOverflowScrolling: "touch" }}>
             {chatMsgs.length === 0 && (
-              <div style={{ textAlign: "center", padding: "40px 20px" }}>
-                <div style={{ fontSize: 48, marginBottom: 12 }}>🌊</div>
-                <div style={{ fontSize: 24, fontWeight: 300, marginBottom: 8 }}>{t("askAnything",lang)}</div>
-                <div style={{ ...dm, color: C.mut, fontSize: 14, marginBottom: 20 }}>{t("askDalmatia",lang)}</div>
+              <div style={{ textAlign: "center", padding: "32px 8px" }}>
+                <div style={{ fontSize: 44, marginBottom: 10 }}>🌊</div>
+                <div style={{ fontSize: 22, fontWeight: 300, marginBottom: 6 }}>{t("askAnything",lang)}</div>
+                <div style={{ ...dm, color: C.mut, fontSize: 14, marginBottom: 18 }}>{t("askDalmatia",lang)}</div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
                   {prompts.map((p, i) => (
-                    <button key={i} onClick={() => setChatInput(p)} style={{ ...dm, padding: "11px 16px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, borderRadius: 14, color: C.text, fontSize: 14, cursor: "pointer", minHeight: 44 }}>{p}</button>
+                    <button key={i} onClick={() => setChatInput(p)} style={{ ...dm, padding: "10px 14px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, borderRadius: 12, color: C.text, fontSize: 13, cursor: "pointer", minHeight: 44, textAlign: "left" }}>{p}</button>
                   ))}
                 </div>
               </div>
             )}
             {chatMsgs.map((m, i) => (
-              <div key={i} style={{ maxWidth: "78%", padding: "14px 18px", borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px", background: m.role === "user" ? "rgba(14,165,233,0.08)" : "rgba(186,230,253,0.03)", marginBottom: 10, marginLeft: m.role === "user" ? "auto" : 0, ...dm, fontSize: 15, lineHeight: 1.6, fontWeight: 300, border: `1px solid ${m.role === "user" ? "rgba(14,165,233,0.12)" : C.bord}`, whiteSpace: "pre-wrap" }}>
-                {m.role !== "user" && <div style={{ fontSize: 10, color: C.accent, marginBottom: 4, letterSpacing: 1, fontWeight: 700 }}>JADRAN AI</div>}
+              <div key={i} style={{ maxWidth: "80%", padding: "12px 16px", borderRadius: m.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: m.role === "user" ? "rgba(14,165,233,0.08)" : "rgba(186,230,253,0.03)", marginBottom: 10, marginLeft: m.role === "user" ? "auto" : 0, ...dm, fontSize: 15, lineHeight: 1.65, fontWeight: 300, border: `1px solid ${m.role === "user" ? "rgba(14,165,233,0.12)" : C.bord}`, whiteSpace: "pre-wrap" }}>
+                {m.role !== "user" && <div style={{ fontSize: 9, color: C.accent, marginBottom: 5, letterSpacing: 1.5, fontWeight: 700 }}>JADRAN AI</div>}
                 {m.text}
               </div>
             ))}
-            {chatLoading && <div style={{ ...dm, maxWidth: "78%", padding: "14px 18px", borderRadius: "18px 18px 18px 4px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}` }}>
-              <div style={{ display: "flex", gap: 4 }}>{[0,1,2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: `pulse 1.2s ease ${i * 0.2}s infinite` }} />)}</div>
-            </div>}
+            {chatLoading && (
+              <div style={{ ...dm, display: "inline-flex", padding: "12px 16px", borderRadius: "16px 16px 16px 4px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, marginBottom: 10 }}>
+                <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+                  {[0,1,2].map(i => <div key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: C.accent, animation: `pulse 1.2s ease ${i * 0.2}s infinite` }} />)}
+                </div>
+              </div>
+            )}
             <div ref={chatEnd} />
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "12px 0 4px", borderTop: `1px solid ${C.bord}`, flexShrink: 0, background: `${C.bg}ee`, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}>
+          <div style={{ flexShrink: 0, padding: "10px 16px", paddingBottom: "calc(10px + env(safe-area-inset-bottom, 0px))", borderTop: `1px solid ${C.bord}`, background: C.bg, display: "flex", flexDirection: "column", gap: 8 }}>
             {!premium && (() => {
-              const used = freeMsgUsed;
-              const left = Math.max(0, 5 - used);
+              const left = Math.max(0, 5 - freeMsgUsed);
               return left > 0 ? (
                 <div style={{ ...dm, fontSize: 11, color: left === 1 ? C.gold : C.mut, textAlign: "center" }}>
                   {({hr:`${left} od 5 besplatnih poruka`,de:`${left} von 5 kostenlosen Nachrichten`,en:`${left} of 5 free messages`,it:`${left} di 5 messaggi gratuiti`})[lang] || `${left}/5`}
                 </div>
               ) : (
-                <div onClick={() => setShowPaywall(true)} style={{ ...dm, fontSize: 12, color: C.gold, textAlign: "center", padding: "6px 12px", cursor: "pointer", background: C.goDim, borderRadius: 10, border: `1px solid ${C.goBorder}` }}>
+                <div onClick={() => setShowPaywall(true)} style={{ ...dm, fontSize: 12, color: C.gold, textAlign: "center", padding: "8px 12px", cursor: "pointer", background: C.goDim, borderRadius: 10, border: `1px solid ${C.goBorder}` }}>
                   ⭐ {({hr:"Nadogradi za neograničen chat",de:"Upgrade für unbegrenzten Chat",en:"Upgrade for unlimited chat",it:"Aggiorna per chat illimitata"})[lang] || "Upgrade →"}
                 </div>
               );
             })()}
-            <div style={{ display: "flex", gap: 10 }}>
-              <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && doChat()}
-                placeholder={t("askPlaceholder",lang)} style={{ ...dm, flex: 1, padding: "14px 18px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, borderRadius: 22, color: C.text, fontSize: 16, outline: "none", minHeight: 48 }} />
-              <button onClick={doChat} disabled={!premium && freeMsgUsed >= 5} style={{ padding: "14px 22px", background: (!premium && freeMsgUsed >= 5) ? C.mut : `linear-gradient(135deg,${C.accent},#0284c7)`, border: "none", borderRadius: 22, color: "#fff", fontSize: 18, cursor: "pointer", fontWeight: 600, minWidth: 52, minHeight: 48, display: "grid", placeItems: "center", opacity: (!premium && freeMsgUsed >= 5) ? 0.4 : 1 }}>→</button>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && canSend && doChat()}
+                placeholder={t("askPlaceholder",lang)} style={{ ...dm, flex: 1, padding: "13px 16px", background: "rgba(186,230,253,0.05)", border: `1px solid ${C.bord}`, borderRadius: 20, color: C.text, fontSize: 16, outline: "none", minHeight: 48 }} />
+              <button onClick={() => canSend ? doChat() : setShowPaywall(true)}
+                style={{ padding: "0 20px", background: canSend ? `linear-gradient(135deg,${C.accent},#0284c7)` : C.goDim, border: canSend ? "none" : `1px solid ${C.goBorder}`, borderRadius: 20, color: "#fff", fontSize: 20, cursor: "pointer", fontWeight: 600, minWidth: 52, minHeight: 48, display: "grid", placeItems: "center", flexShrink: 0 }}>
+                {canSend ? "→" : "⭐"}
+              </button>
             </div>
           </div>
         </div>
@@ -2498,54 +2507,71 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
   const KioskChat = () => {
     const prompts = [t("chatPrompt1",lang), t("chatPrompt2",lang), t("chatPrompt3",lang), t("chatPrompt4",lang)];
+    const canSend = premium || freeMsgUsed < 5;
     return (
-      <div style={{ display: "flex", flexDirection: "column", height: "calc(100dvh - 130px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-        <BackBtn onClick={() => setSubScreen("home")} />
-        <div className="scroll-smooth" style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
+      <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", flexDirection: "column", background: C.bg }}>
+        {/* Header */}
+        <div style={{ flexShrink: 0, padding: "12px 16px 8px", borderBottom: `1px solid ${C.bord}` }}>
+          <BackBtn onClick={() => setSubScreen("home")} />
+        </div>
+
+        {/* Messages */}
+        <div className="scroll-smooth" style={{ flex: 1, overflowY: "auto", padding: "12px 16px", WebkitOverflowScrolling: "touch" }}>
           {chatMsgs.length === 0 && (
-            <div style={{ textAlign: "center", padding: "40px 20px" }}>
-              <div style={{ fontSize: 48, marginBottom: 12 }}>🌊</div>
-              <div style={{ fontSize: 24, fontWeight: 300, marginBottom: 8 }}>{t("askAnything",lang)}</div>
-              <div style={{ ...dm, color: C.mut, fontSize: 14, marginBottom: 20 }}>{t("askDalmatia",lang)}</div>
+            <div style={{ textAlign: "center", padding: "32px 8px" }}>
+              <div style={{ fontSize: 44, marginBottom: 10 }}>🌊</div>
+              <div style={{ fontSize: 22, fontWeight: 300, marginBottom: 6 }}>{t("askAnything",lang)}</div>
+              <div style={{ ...dm, color: C.mut, fontSize: 14, marginBottom: 18 }}>{t("askDalmatia",lang)}</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
                 {prompts.map((p, i) => (
-                  <button key={i} onClick={() => setChatInput(p)} style={{ ...dm, padding: "11px 16px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, borderRadius: 14, color: C.text, fontSize: 14, cursor: "pointer", minHeight: 44, WebkitTapHighlightColor: "transparent" }}>{p}</button>
+                  <button key={i} onClick={() => { setChatInput(p); }} style={{ ...dm, padding: "10px 14px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, borderRadius: 12, color: C.text, fontSize: 13, cursor: "pointer", minHeight: 44, WebkitTapHighlightColor: "transparent", textAlign: "left" }}>{p}</button>
                 ))}
               </div>
             </div>
           )}
           {chatMsgs.map((m, i) => (
-            <div key={i} style={{ maxWidth: "78%", padding: "14px 18px", borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px", background: m.role === "user" ? "rgba(14,165,233,0.08)" : "rgba(186,230,253,0.03)", marginBottom: 10, marginLeft: m.role === "user" ? "auto" : 0, ...dm, fontSize: 15, lineHeight: 1.6, fontWeight: 300, border: `1px solid ${m.role === "user" ? "rgba(14,165,233,0.12)" : C.bord}`, whiteSpace: "pre-wrap" }}>
-              {m.role !== "user" && <div style={{ fontSize: 10, color: C.accent, marginBottom: 4, letterSpacing: 1, fontWeight: 700 }}>JADRAN AI</div>}
+            <div key={i} style={{ maxWidth: "80%", padding: "12px 16px", borderRadius: m.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: m.role === "user" ? "rgba(14,165,233,0.08)" : "rgba(186,230,253,0.03)", marginBottom: 10, marginLeft: m.role === "user" ? "auto" : 0, ...dm, fontSize: 15, lineHeight: 1.65, fontWeight: 300, border: `1px solid ${m.role === "user" ? "rgba(14,165,233,0.12)" : C.bord}`, whiteSpace: "pre-wrap" }}>
+              {m.role !== "user" && <div style={{ fontSize: 9, color: C.accent, marginBottom: 5, letterSpacing: 1.5, fontWeight: 700 }}>JADRAN AI</div>}
               {m.text}
             </div>
           ))}
-          {chatLoading && <div style={{ ...dm, maxWidth: "78%", padding: "14px 18px", borderRadius: "18px 18px 18px 4px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}` }}>
-            <div style={{ display: "flex", gap: 4 }}>
-              {[0,1,2].map(i => <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: `pulse 1.2s ease ${i * 0.2}s infinite` }} />)}
+          {chatLoading && (
+            <div style={{ ...dm, display: "inline-flex", padding: "12px 16px", borderRadius: "16px 16px 16px 4px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, marginBottom: 10 }}>
+              <div style={{ display: "flex", gap: 5, alignItems: "center" }}>
+                {[0,1,2].map(i => <div key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: C.accent, animation: `pulse 1.2s ease ${i * 0.2}s infinite` }} />)}
+              </div>
             </div>
-          </div>}
+          )}
           <div ref={chatEnd} />
         </div>
-        <div style={{ display: "flex", gap: 10, padding: "12px 0 4px", borderTop: `1px solid ${C.bord}`, background: `${C.bg}ee`, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", flexShrink: 0, flexDirection: "column" }}>
-          {/* Free message counter */}
+
+        {/* Input bar — pinned to bottom */}
+        <div style={{ flexShrink: 0, padding: "10px 16px", paddingBottom: "calc(10px + env(safe-area-inset-bottom, 0px))", borderTop: `1px solid ${C.bord}`, background: C.bg, display: "flex", flexDirection: "column", gap: 8 }}>
           {!premium && (() => {
-            const used = freeMsgUsed;
-            const left = Math.max(0, 5 - used);
+            const left = Math.max(0, 5 - freeMsgUsed);
             return left > 0 ? (
-              <div style={{ ...dm, fontSize: 11, color: left === 1 ? C.gold : C.mut, textAlign: "center", padding: "2px 0" }}>
+              <div style={{ ...dm, fontSize: 11, color: left === 1 ? C.gold : C.mut, textAlign: "center" }}>
                 {({hr:`${left} od 5 besplatnih poruka`,de:`${left} von 5 kostenlosen Nachrichten`,en:`${left} of 5 free messages`,it:`${left} di 5 messaggi gratuiti`})[lang] || `${left}/5`}
               </div>
             ) : (
-              <div onClick={() => setShowPaywall(true)} style={{ ...dm, fontSize: 12, color: C.gold, textAlign: "center", padding: "6px 12px", cursor: "pointer", background: C.goDim, borderRadius: 10, border: `1px solid ${C.goBorder}` }}>
+              <div onClick={() => setShowPaywall(true)} style={{ ...dm, fontSize: 12, color: C.gold, textAlign: "center", padding: "8px 12px", cursor: "pointer", background: C.goDim, borderRadius: 10, border: `1px solid ${C.goBorder}` }}>
                 ⭐ {({hr:"Nadogradi za neograničen chat",de:"Upgrade für unbegrenzten Chat",en:"Upgrade for unlimited chat",it:"Aggiorna per chat illimitata"})[lang] || "Upgrade →"}
               </div>
             );
           })()}
-          <div style={{ display: "flex", gap: 10 }}>
-            <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && doChat()}
-              placeholder={t("askPlaceholder",lang)} style={{ ...dm, flex: 1, padding: "14px 18px", background: "rgba(186,230,253,0.04)", border: `1px solid ${C.bord}`, borderRadius: 22, color: C.text, fontSize: 16, outline: "none", minHeight: 48 }} />
-            <button onClick={doChat} disabled={!premium && freeMsgUsed >= 5} style={{ padding: "14px 22px", background: (!premium && freeMsgUsed >= 5) ? C.mut : `linear-gradient(135deg,${C.accent},#0284c7)`, border: "none", borderRadius: 22, color: "#fff", fontSize: 18, cursor: (!premium && freeMsgUsed >= 5) ? "default" : "pointer", fontWeight: 600, minWidth: 52, minHeight: 48, display: "grid", placeItems: "center", boxShadow: "0 4px 16px rgba(14,165,233,0.25)", opacity: (!premium && freeMsgUsed >= 5) ? 0.4 : 1 }}>→</button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              value={chatInput}
+              onChange={e => setChatInput(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && !e.shiftKey && canSend && doChat()}
+              placeholder={t("askPlaceholder",lang)}
+              style={{ ...dm, flex: 1, padding: "13px 16px", background: "rgba(186,230,253,0.05)", border: `1px solid ${C.bord}`, borderRadius: 20, color: C.text, fontSize: 16, outline: "none", minHeight: 48 }}
+            />
+            <button
+              onClick={() => canSend ? doChat() : setShowPaywall(true)}
+              style={{ padding: "0 20px", background: canSend ? `linear-gradient(135deg,${C.accent},#0284c7)` : C.goDim, border: canSend ? "none" : `1px solid ${C.goBorder}`, borderRadius: 20, color: "#fff", fontSize: 20, cursor: "pointer", fontWeight: 600, minWidth: 52, minHeight: 48, display: "grid", placeItems: "center", flexShrink: 0 }}>
+              {canSend ? "→" : "⭐"}
+            </button>
           </div>
         </div>
       </div>
