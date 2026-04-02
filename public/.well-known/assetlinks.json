@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "ai.jadran.app",
+    "sha256_cert_fingerprints": [
+      "78:72:BE:7D:EA:86:AB:05:D6:79:EB:35:FF:53:9A:02:5C:7F:2A:02:BE:91:C6:7D:3F:A4:D6:5D:C0:0C:77:FC"
+    ]
+  }
+}]
