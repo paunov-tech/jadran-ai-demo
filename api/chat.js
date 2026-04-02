@@ -1506,6 +1506,25 @@ export default async function handler(req, res) {
 6. LENGTH: Direct answer first. Max 6 paragraphs. Each paragraph max 3 sentences.`;
     systemPrompt = FORMAT_RULES + '\n\n' + systemPrompt;
 
+    // ── UV/HEAT PREFILL — force first sentence when conditions are critical ──
+    // Assistant prefill is the only reliable way to guarantee first-sentence position.
+    // Claude will continue from this partial assistant message.
+    let finalMessages = sanitizedMessages;
+    const wxForPrefill = req.body.weather || {};
+    const uvVal = parseFloat(wxForPrefill.uv) || 0;
+    const tempVal = parseFloat(wxForPrefill.temp) || 0;
+    const hasKids = JSON.stringify(req.body.delta_context || {}).includes("kids");
+    if (!walkieMode && uvVal >= 8 && tempVal >= 30) {
+      const kidNote = hasKids ? (lang === "de" || lang === "at" ? " Kinder besonders schützen!" : lang === "en" ? " Especially protect children!" : lang === "it" ? " Proteggete i bambini!" : " Djeca su posebno osjetljiva!") : "";
+      const uvPrefill = lang === "de" || lang === "at"
+        ? `⚠️ UV ${uvVal} und ${Math.round(tempVal)}°C — SPF50+ auftragen, 11–16 Uhr Schatten suchen.${kidNote}\n\n`
+        : lang === "en" ? `⚠️ UV ${uvVal} and ${Math.round(tempVal)}°C — apply SPF50+, avoid sun 11–16h.${kidNote}\n\n`
+        : lang === "it" ? `⚠️ UV ${uvVal} e ${Math.round(tempVal)}°C — crema solare SPF50+, ombra 11–16h.${kidNote}\n\n`
+        : lang === "si" ? `⚠️ UV ${uvVal} in ${Math.round(tempVal)}°C — SPF50+ obvezno, izogibajte se soncu 11–16h.${kidNote}\n\n`
+        : `⚠️ UV ${uvVal} i ${Math.round(tempVal)}°C — nanesite SPF50+, izbjegavajte sunce 11–16h.${kidNote}\n\n`;
+      finalMessages = [...sanitizedMessages, { role: "assistant", content: uvPrefill }];
+    }
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -1518,7 +1537,7 @@ export default async function handler(req, res) {
         max_tokens: walkieMode ? 400 : (TIER_LIMITS[tierPlan] || TIER_LIMITS.free).maxTokens,
         temperature: 0.55,
         system: systemPrompt,
-        messages: sanitizedMessages, // Tier-truncated + injection-sanitized
+        messages: finalMessages,
       }),
     });
 
@@ -1530,6 +1549,14 @@ export default async function handler(req, res) {
       return res.status(200).json({ content: [{ type: "text", text: `⚠️ AI greška: ${data.error.message || 'Pokušajte ponovno.'}` }] });
     }
     
+    // If prefill was used, prepend it to the response text so client sees the full message
+    if (finalMessages !== sanitizedMessages && data.content) {
+      const prefillText = finalMessages[finalMessages.length - 1]?.content || "";
+      data.content = data.content.map((c, i) =>
+        i === 0 && c.type === "text" ? { ...c, text: prefillText + c.text } : c
+      );
+    }
+
     // Send remaining count so client can sync (prevents incognito bypass)
     res.setHeader("X-Remaining", String(tierCheck.remaining));
     return res.status(200).json(data);
