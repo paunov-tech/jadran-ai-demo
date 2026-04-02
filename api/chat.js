@@ -637,6 +637,20 @@ function generateCamperYoloPrompt(yoloData) {
     asfinag: { label: "\u{1F1E6}\u{1F1F9} ASFINAG (Austrija)", prefixes: ["asf_","at_"], interpret: (c,t) => c>30 ? "ASFINAG: STAU u Austriji!" : c>10 ? "ASFINAG umjeren" : "ASFINAG frei" },
     border: { label: "\u{1F6C2} GRANICE", prefixes: ["border","granica","macelj","bregana","rupa","sentilj","karavanke","obrezje","spielfeld"], interpret: (c,t) => c>25 ? "\u26A0\uFE0F GU\u017DVA NA GRANICAMA \u2014 30-60 min!" : c>10 ? "umjeren promet na granicama" : "slobodan prolaz" },
     ferry: { label: "\u26F4\uFE0F TRAJEKTI", prefixes: ["tkon","drvenik","orebic","milna","sutivan","postira","ferry","trajekt","pristaniste","sumartin","valbiska","lopar","jablanac","prizna"], interpret: (c,t) => c>20 ? "\u26A0\uFE0F RED NA TRAJEKTU \u2014 do\u0111ite 1-2h ranije!" : c>8 ? "umjereni red" : "slobodan ukrcaj" },
+    rab_ferry: {
+      label: "\u26F4\uFE0F RAB trajekti (337+338)",
+      // Stinica side: jablanac (=terminalna zona) + prizna (cesta prema terminalu)
+      // Rab side: misnjak (terminal) + lopar (338 terminal)
+      // Krk side: valbiska (338 terminal)
+      prefixes: ["jablanac","prizna","stinica","misnjak","lopar","valbiska","rab_"],
+      interpret: (c, t) => {
+        // jablanac/prizna coverage = cars queuing on kopno side road
+        if (c > 30) return "\u26A0\uFE0F DUGA KOLONA na Stinici \u2014 do\u0111ite 2-3h ranije!";
+        if (c > 15) return "umjeren red na Stinici \u2014 1h ranije";
+        if (c > 5)  return "slab red, normalan ukrcaj";
+        return "nema kolone \u2014 slobodan ukrcaj";
+      },
+    },
     parking: { label: "\u{1F17F}\uFE0F PARKINZI", prefixes: ["parking","park_","garaza"], interpret: (c,t) => t>40 ? "PARKINZI PUNI" : t>15 ? "umjerena popunjenost" : "ima mjesta" },
     bura: { label: "\u{1F4A8} BURA", prefixes: ["senj","maslenica","jablanac","prizna","krk_most","sveti_rok"], interpret: (c,t) => { if (t===0) return "\u26A0\uFE0F NEMA PROMETA \u2014 mogu\u0107a zabrana! HAK.hr"; if (c>10) return "promet te\u010De \u2014 bura ne pu\u0161e"; return "slab promet \u2014 oprez"; } },
     city: { label: "\u{1F3D9}\uFE0F GRADOVI", prefixes: ["split","dubrovnik","pula","rijeka","sibenik","trogir","makarska","omis","zadar","hvar","korcula","rovinj"], interpret: (c,t) => t>40 ? "GRAD PUN \u2014 P+R" : t>15 ? "umjerena gu\u017Eva" : "grad miran" },
@@ -674,6 +688,8 @@ function generateCamperYoloPrompt(yoloData) {
 - "Kako je na autoputu kroz Sloveniju?" — DARS sekcija
 - "Stau na Tauern?" — ASFINAG sekcija
 - "Ima li reda na trajektu?" — TRAJEKT sekcija
+- "Kolona na Mišnjaku / Stinici / Rabu?" — RAB trajekti sekcija (jablanac+prizna = cesta ka Stinici = direktan pokazatelj reda)
+- "Kolona na Valbiska / Lopar?" — RAB trajekti sekcija (338 terminal)
 - UVIJEK navedi KOJI autoput i KOJI smjer kad govoriš o prometu
 - NIKAD "vidim na kameri" — reci "prema podacima sa X kamera na Y autoputu"
 - Za granice: kombiniraj kamere + border-intelligence`);
