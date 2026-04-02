@@ -30,8 +30,8 @@ export const PARKING_ZONES = {
     name: "Plitvice P2 (Ulaz 2)",
     location: "np_plitvice",
     npId: "plitvice",
-    // P2 near entrance 2, slightly north
-    polygon: [[15.6162,44.8825],[15.6185,44.8825],[15.6185,44.8808],[15.6162,44.8808],[15.6162,44.8825]],
+    // P2 near entrance 2: 44°52'58.5"N 15°37'25.2"E (verified)
+    polygon: [[15.6215,44.8838],[15.6242,44.8838],[15.6242,44.8818],[15.6215,44.8818],[15.6215,44.8838]],
     baselineB04: 0.08,
     baselineB03: 0.09,
     areaM2: 22000,
@@ -42,8 +42,8 @@ export const PARKING_ZONES = {
     name: "Krka NP — Lozovac (kamperi)",
     location: "np_krka",
     npId: "krka",
-    // Lozovac upper parking, main campervan access point
-    polygon: [[15.9672,43.8127],[15.9695,43.8127],[15.9695,43.8110],[15.9672,43.8110],[15.9672,43.8127]],
+    // Lozovac: 43.8329°N, 15.9602°E (verified from NP Krka directions)
+    polygon: [[15.9585,43.8338],[15.9618,43.8338],[15.9618,43.8318],[15.9585,43.8318],[15.9585,43.8338]],
     baselineB04: 0.09,
     baselineB03: 0.10,
     areaM2: 25000,
@@ -54,8 +54,8 @@ export const PARKING_ZONES = {
     name: "Zlatni Rat — parking Bol (Brač)",
     location: "split_makarska",
     npId: null,
-    // Parking before Zlatni Rat beach, Bol
-    polygon: [[16.6384,43.2581],[16.6402,43.2581],[16.6402,43.2570],[16.6384,43.2570],[16.6384,43.2581]],
+    // 43.257347, 16.634528 (verified)
+    polygon: [[16.6328,43.2582],[16.6358,43.2582],[16.6358,43.2563],[16.6328,43.2563],[16.6328,43.2582]],
     baselineB04: 0.10,
     baselineB03: 0.11,
     areaM2: 8000,
@@ -90,8 +90,8 @@ export const PARKING_ZONES = {
     name: "Dubrovnik — Garaža Ilijina Glavica (Pile)",
     location: "dubrovnik",
     npId: null,
-    // Main parking structure near Pile gate
-    polygon: [[18.0963,42.6428],[18.0982,42.6428],[18.0982,42.6417],[18.0963,42.6417],[18.0963,42.6428]],
+    // Zagrebačka ul. 42: 42°38'31.862"N 18°6'10.8"E = 42.6422°N, 18.1030°E (verified, 711 mjesta)
+    polygon: [[18.1018,42.6431],[18.1042,42.6431],[18.1042,42.6413],[18.1018,42.6413],[18.1018,42.6431]],
     baselineB04: 0.11,
     baselineB03: 0.12,
     areaM2: 9000,
@@ -212,7 +212,7 @@ async function queryZoneStats(zone, token, daysBack = 5) {
     },
     aggregation: {
       timeRange: { from, to },
-      aggregationInterval: { of: "P1D" },
+      aggregationInterval: { interval: "P1D" },
       width: 64, height: 64,  // downsampled — we only need statistics
       evalscript: EVALSCRIPT,
     },
