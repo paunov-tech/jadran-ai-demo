@@ -128,6 +128,7 @@ export default function LandingPage() {
   const [carouselIdx, setCarouselIdx] = useState(0);
   const [showPlanPicker, setShowPlanPicker] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [routeInputFocused, setRouteInputFocused] = useState(false);
   // Detect GDPR banner presence — offset sticky bar so they don't overlap
   const [gdprVisible, setGdprVisible] = useState(() => { try { return !localStorage.getItem("jadran_consent"); } catch { return false; } });
   useEffect(() => {
@@ -466,8 +467,8 @@ export default function LandingPage() {
                     <div style={{ position: "relative", marginBottom: 12 }}>
                       <input ref={fromInputRef} value={depCity}
                         onChange={e => { setDepCity(e.target.value); hereSuggest(e.target.value, setFromLPSugs, fromTimerRef); if (fromInputRef.current) setFromRect(fromInputRef.current.getBoundingClientRect()); }}
-                        onFocus={() => { if (fromInputRef.current) setFromRect(fromInputRef.current.getBoundingClientRect()); }}
-                        onBlur={() => setTimeout(() => setFromLPSugs([]), 150)}
+                        onFocus={() => { setRouteInputFocused(true); if (fromInputRef.current) setFromRect(fromInputRef.current.getBoundingClientRect()); }}
+                        onBlur={() => { setTimeout(() => setFromLPSugs([]), 150); setTimeout(() => setRouteInputFocused(false), 300); }}
                         placeholder={tx("fromPlaceholder")}
                         style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${depCity ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 15, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
                       {fromLPSugs.length > 0 && fromRect && (
@@ -481,8 +482,8 @@ export default function LandingPage() {
                     <div style={{ position: "relative", marginBottom: 16 }}>
                       <input ref={toInputRef} value={toLPCity}
                         onChange={e => { setToLPCity(e.target.value); hereSuggest(e.target.value, setToLPSugs, toTimerRef); if (toInputRef.current) setToRect(toInputRef.current.getBoundingClientRect()); }}
-                        onFocus={() => { if (toInputRef.current) setToRect(toInputRef.current.getBoundingClientRect()); }}
-                        onBlur={() => setTimeout(() => setToLPSugs([]), 150)}
+                        onFocus={() => { setRouteInputFocused(true); if (toInputRef.current) setToRect(toInputRef.current.getBoundingClientRect()); }}
+                        onBlur={() => { setTimeout(() => setToLPSugs([]), 150); setTimeout(() => setRouteInputFocused(false), 300); }}
                         placeholder={tx("toPlaceholder")}
                         style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${toLPCity ? "rgba(249,115,22,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 15, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
                       {toLPSugs.length > 0 && toRect && (
@@ -696,14 +697,14 @@ export default function LandingPage() {
       </footer>
 
       {/* ═══ STICKY BUY BAR — PREMIUM DESIGN ═══ */}
-      {isPremium ? (
+      {!routeInputFocused && isPremium ? (
         <div style={{ position: "fixed", bottom: gdprVisible ? 52 : 0, left: 0, right: 0, zIndex: 99, paddingBottom: "env(safe-area-inset-bottom, 0px)", transition: "bottom 0.3s" }}>
           <div style={{ padding: "10px 20px", background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)", borderTop: "1px solid rgba(245,158,11,0.15)", display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}>
             <span style={{ padding: "4px 14px", borderRadius: 12, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.12)", color: "#f59e0b", fontSize: 11, fontWeight: 600 }}>⭐ {premLabel} {premDays !== null ? premDays + "d" : ""}</span>
             <span style={{ color: "#475569", fontSize: 10 }}>JADRAN.AI PREMIUM</span>
           </div>
         </div>
-      ) : (
+      ) : !routeInputFocused ? (
         <div onClick={() => setShowPlanPicker(true)} style={{ position: "fixed", bottom: gdprVisible ? 52 : 0, left: 0, right: 0, zIndex: 99, cursor: "pointer", paddingBottom: "env(safe-area-inset-bottom, 0px)", transition: "bottom 0.3s" }}>
           <div style={{ position: "relative", overflow: "hidden", padding: "12px 20px", background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)", borderTop: "1px solid rgba(245,158,11,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 -8px 32px rgba(0,0,0,0.5)" }}>
             {/* Shimmer accent line */}
@@ -720,7 +721,7 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* ═══ PLAN PICKER MODAL — Decoy Psychology ═══ */}
       {showPlanPicker && (

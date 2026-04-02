@@ -1642,9 +1642,9 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
     if (subScreen === "chat") {
       const prompts = [t("chatPrompt1",lang), t("chatPrompt2",lang), t("chatPrompt3",lang), t("chatPrompt4",lang)];
       return (
-        <div style={{ display: "flex", flexDirection: "column", height: "calc(100dvh - 200px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+        <div style={{ display: "flex", flexDirection: "column", height: "calc(100dvh - 130px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
           <BackBtn onClick={() => setSubScreen("transit")} label={({hr:"← Natrag na rutu",de:"← Zurück zur Route",en:"← Back to route",it:"← Torna al percorso"})[lang] || "← Natrag na rutu"} />
-          <div className="scroll-smooth" style={{ flex: 1, padding: "8px 0" }}>
+          <div className="scroll-smooth" style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
             {chatMsgs.length === 0 && (
               <div style={{ textAlign: "center", padding: "40px 20px" }}>
                 <div style={{ fontSize: 48, marginBottom: 12 }}>🌊</div>
@@ -1668,7 +1668,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             </div>}
             <div ref={chatEnd} />
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "12px 0 4px", borderTop: `1px solid ${C.bord}`, marginTop: "auto" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "12px 0 4px", borderTop: `1px solid ${C.bord}`, flexShrink: 0, background: `${C.bg}ee`, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }}>
             {!premium && (() => {
               const used = freeMsgUsed;
               const left = Math.max(0, 5 - used);
@@ -1915,6 +1915,23 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
     setEmergencyNearby(null);
     fetch(`/api/nearby?lat=${lat}&lng=${lng}&cats=hospital,clinic,pharmacy,vet&limit=6&lang=${lang}`)
       .then(r => r.json()).then(setEmergencyNearby).catch(() => {});
+    // Also immediately refresh Firestore emergency alerts when entering screen
+    const FB_KEY = import.meta.env.VITE_FB_API_KEY;
+    if (FB_KEY) {
+      fetch(`https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_alerts?key=${FB_KEY}&pageSize=10`)
+        .then(r => r.json())
+        .then(data => {
+          const docs = (data.documents || []).sort((a, b) => new Date(b.createTime || 0) - new Date(a.createTime || 0));
+          const now = new Date();
+          const active = docs.find(d => {
+            const f = d.fields || {};
+            const isActive = f.active?.booleanValue === true || f.active?.stringValue === "true";
+            const expires = f.expires?.stringValue || f.expires?.timestampValue || "0";
+            return isActive && new Date(expires) > now;
+          });
+          setEmergencyAlert(active ? (active.fields.message?.stringValue || null) : null);
+        }).catch(() => {});
+    }
   }, [subScreen]); // eslint-disable-line
 
   useEffect(() => {
@@ -1922,23 +1939,24 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
     const FB_KEY = import.meta.env.VITE_FB_API_KEY;
     if (!FB_KEY) return;
     const checkAlerts = () => {
-      fetch(`https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_alerts?key=${FB_KEY}&pageSize=5&orderBy=created desc`)
+      fetch(`https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_alerts?key=${FB_KEY}&pageSize=10`)
         .then(r => r.json())
         .then(data => {
           const docs = data.documents || [];
+          // Sort by createTime desc so newest comes first
+          docs.sort((a, b) => new Date(b.createTime || 0) - new Date(a.createTime || 0));
+          const now = new Date();
           const active = docs.find(d => {
             const f = d.fields || {};
-            return f.active?.stringValue === "true" && new Date(f.expires?.stringValue || 0) > new Date();
+            const isActive = f.active?.booleanValue === true || f.active?.stringValue === "true";
+            const expires = f.expires?.stringValue || f.expires?.timestampValue || "0";
+            return isActive && new Date(expires) > now;
           });
-          if (active) {
-            setEmergencyAlert(active.fields.message?.stringValue || null);
-          } else {
-            setEmergencyAlert(null);
-          }
+          setEmergencyAlert(active ? (active.fields.message?.stringValue || null) : null);
         }).catch(() => {});
     };
     checkAlerts();
-    const iv = setInterval(checkAlerts, 60000); // check every 1 min
+    const iv = setInterval(checkAlerts, 30000); // check every 30s
     return () => clearInterval(iv);
   }, [phase]);
 
