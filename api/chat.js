@@ -1524,13 +1524,14 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
       hakMod,
       npMod,
       cascadeResult,
+      satResult,
     ] = await Promise.allSettled([
-      // Layer 1: Camp catalog (camper mode + any mode asking about camps)
+      // Layer 1: Camp catalog
       region
         ? import("./camps.js").then(m => m.fetchCampData(_reg, camperLen || 7, camperHeight || null))
         : Promise.resolve(null),
 
-      // Layer 4: Fuel intelligence (always — critical for all modes)
+      // Layer 4: Fuel intelligence
       import("./fuel.js"),
 
       // Layer 2: Events calendar
@@ -1539,11 +1540,17 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
       // Layer 2: HAK road incidents
       import("./hak.js"),
 
-      // Layer 5: NP Capacity — now returns adjacent NPs too
+      // Layer 5: NP Capacity
       import("./np-capacity.js"),
 
-      // Layer 1+3: Cascade prediction (needs yoloCrowdData)
+      // Layer 1+3: Cascade prediction
       import("./cascade.js").then(m => m.buildCascadePrompt(_reg, yoloCrowdData)),
+
+      // Layer 2 (new): Sentinel-2 satellite parking detection
+      import("./satellite.js").then(async m => {
+        const cached = await m.readSatelliteCache(); // read Firestore cache (daily update)
+        return { mod: m, cached };
+      }),
     ]);
 
     const campCatalog   = campsResult.status === "fulfilled" ? campsResult.value : null;
@@ -1554,6 +1561,7 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
     const fuelModule = fuelMod.status === "fulfilled" ? fuelMod.value : null;
     const hakModule  = hakMod.status  === "fulfilled" ? hakMod.value  : null;
     const npModule   = npMod.status   === "fulfilled" ? npMod.value   : null;
+    const satData    = satResult.status === "fulfilled" ? satResult.value : null;
 
     // Fetch data + build prompts using resolved modules
     // Region-aware dead zone: check destination OR region for island detection
@@ -1568,6 +1576,13 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
       ? fuelModule.buildFuelPrompt(fuelData, mode, destOrRegion) : null;
     const hakPrompt  = hakData  && hakModule  ? hakModule.buildHAKPrompt(hakData)   : null;
     const npPrompt   = npList?.length && npModule ? npModule.buildNPPrompt(npList)  : null;
+    const satPrompt  = satData?.cached && satData?.mod
+      ? satData.mod.buildSatellitePrompt(
+          // convert flat Firestore cache to results format expected by builder
+          Object.fromEntries(Object.entries(satData.cached).map(([id, occ]) => [id, { zone: { name: occ.zoneName, location: occ.location, npId: occ.npId, maxCars: 200 }, occ }])),
+          _reg
+        )
+      : null;
 
     // Camp catalog: inject for camper mode; for other modes only if explicitly asked about camps
     const campIsRelevant = mode === "camper" ||
@@ -1575,11 +1590,11 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
 
     // Assemble intelligence blocks — PRIORITY ORDER (critical first)
     // HAK/cascade (safety) → events (surges) → fuel (critical) → NP → camps
-    const intelligenceBlocks = [hakPrompt, cascadePrompt, eventsPrompt, fuelPrompt, npPrompt]
+    const intelligenceBlocks = [hakPrompt, cascadePrompt, eventsPrompt, fuelPrompt, npPrompt, satPrompt]
       .filter(Boolean)
       .join("\n\n");
 
-    console.warn(`[intel] events=${!!eventsPrompt} hak=${!!(hakData?.incidents?.length || hakData?.borders?.length)} cascade=${!!cascadePrompt} fuel=${!!fuelData?.prices} np=${npList?.length || 0} camp=${!!campCatalog}`);
+    console.warn(`[intel] events=${!!eventsPrompt} hak=${!!(hakData?.incidents?.length || hakData?.borders?.length)} cascade=${!!cascadePrompt} fuel=${!!fuelData?.prices} np=${npList?.length || 0} sat=${!!satPrompt} camp=${!!campCatalog}`);
 
     let systemPrompt = '';
     try {
