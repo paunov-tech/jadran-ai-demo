@@ -180,11 +180,24 @@ function estimateNPCapacity(npId) {
   return { level: "medium", msg: "Umjerena posjećenost" };
 }
 
+// ── REGION → ADJACENT NPs ─────────────────────────────────────────────────
+// Tourists always ask about nearby NPs regardless of current coastal region
+const NP_FOR_REGION = {
+  istra:          ["brijuni", "paklenica"],
+  kvarner:        ["plitvice", "paklenica", "kornati"],
+  zadar_sibenik:  ["krka", "kornati", "plitvice", "paklenica"],
+  split_makarska: ["krka", "plitvice"],
+  dubrovnik:      ["mljet", "krka"],
+  inland:         ["plitvice", "krka", "paklenica"],
+  all:            Object.keys(NP_DATA),
+};
+
 // ── MAIN FETCH ────────────────────────────────────────────────────────────
 export async function fetchNPCapacity(region) {
   const liveStatus = await fetchNPStatus();
+  const allowed = new Set(NP_FOR_REGION[region] || NP_FOR_REGION.all);
   const relevant = Object.entries(NP_DATA)
-    .filter(([, np]) => np.region === region || region === "all")
+    .filter(([id]) => allowed.has(id))
     .map(([id, np]) => ({ id, ...np, live: liveStatus[id] || null, estimate: estimateNPCapacity(id) }));
   return relevant;
 }

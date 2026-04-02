@@ -1248,12 +1248,7 @@ PRAVILA:
 - Za parking/trajekt: uvijek dodaj "dođite ranije za sigurno"`);
   }
 
-  // 10. CAMP CATALOG (camper mode only)
-  if (mode === "camper" && campCatalog) {
-    parts.push(campCatalog);
-  }
-
-  // 11. DMO NUDGE — Destination Management directives from TZ partners
+  // 10. DMO NUDGE — Destination Management directives from TZ partners
   // Injects gap-filling recommendations when regions are under capacity
   try {
     const nudge = generateNudgeDirectives("croatia", region);
@@ -1519,53 +1514,72 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
     }
 
     // ── PARALLEL INTELLIGENCE GATHER — all 6 layers ──────────────────────
+    const _dest = delta_context?.destination?.city || "";
+    const _reg  = region || "kvarner";
+
     const [
       campsResult,
-      fuelResult,
+      fuelMod,
       eventsResult,
-      hakResult,
-      npResult,
+      hakMod,
+      npMod,
       cascadeResult,
     ] = await Promise.allSettled([
-      // Layer 1: Camp catalog (camper mode)
-      (mode === "camper" && region)
-        ? import("./camps.js").then(m => m.fetchCampData(region, camperLen || 7, camperHeight || null))
+      // Layer 1: Camp catalog (camper mode + any mode asking about camps)
+      region
+        ? import("./camps.js").then(m => m.fetchCampData(_reg, camperLen || 7, camperHeight || null))
         : Promise.resolve(null),
 
       // Layer 4: Fuel intelligence (always — critical for all modes)
-      import("./fuel.js").then(m => m.fetchFuelIntel(region || "kvarner", delta_context?.destination?.city || "")),
+      import("./fuel.js"),
 
       // Layer 2: Events calendar
-      import("./events.js").then(m => ({ prompt: m.buildEventPrompt(region || "all") })),
+      import("./events.js").then(m => ({ prompt: m.buildEventPrompt(_reg) })),
 
       // Layer 2: HAK road incidents
-      import("./hak.js").then(m => m.fetchHAKIntel(region || "all")),
+      import("./hak.js"),
 
-      // Layer 5: NP Capacity
-      import("./np-capacity.js").then(m => m.fetchNPCapacity(region || "all")),
+      // Layer 5: NP Capacity — now returns adjacent NPs too
+      import("./np-capacity.js"),
 
-      // Layer 1+3: Cascade prediction (needs yoloCrowdData — may be null)
-      import("./cascade.js").then(m => m.buildCascadePrompt(region || "all", yoloCrowdData)),
+      // Layer 1+3: Cascade prediction (needs yoloCrowdData)
+      import("./cascade.js").then(m => m.buildCascadePrompt(_reg, yoloCrowdData)),
     ]);
 
-    const campCatalog      = campsResult.status    === "fulfilled" ? campsResult.value    : null;
-    const fuelData         = fuelResult.status     === "fulfilled" ? fuelResult.value     : null;
-    const eventsPrompt     = eventsResult.status   === "fulfilled" ? eventsResult.value?.prompt : null;
-    const hakData          = hakResult.status      === "fulfilled" ? hakResult.value      : null;
-    const npList           = npResult.status       === "fulfilled" ? npResult.value       : null;
-    const cascadePrompt    = cascadeResult.status  === "fulfilled" ? cascadeResult.value  : null;
+    const campCatalog   = campsResult.status === "fulfilled" ? campsResult.value : null;
+    const eventsPrompt  = eventsResult.status === "fulfilled" ? eventsResult.value?.prompt : null;
+    const cascadePrompt = cascadeResult.status === "fulfilled" ? cascadeResult.value : null;
 
-    // Build intelligence sub-prompts
-    const fuelPrompt    = fuelData  ? (await import("./fuel.js")).buildFuelPrompt(fuelData, mode, delta_context?.destination?.city || "")    : null;
-    const hakPrompt     = hakData   ? (await import("./hak.js")).buildHAKPrompt(hakData)   : null;
-    const npPrompt      = npList?.length ? (await import("./np-capacity.js")).buildNPPrompt(npList) : null;
+    // Resolve module refs (single import, reuse)
+    const fuelModule = fuelMod.status === "fulfilled" ? fuelMod.value : null;
+    const hakModule  = hakMod.status  === "fulfilled" ? hakMod.value  : null;
+    const npModule   = npMod.status   === "fulfilled" ? npMod.value   : null;
 
-    // Assemble intelligence block (injected after main system prompt)
-    const intelligenceBlocks = [eventsPrompt, hakPrompt, cascadePrompt, fuelPrompt, npPrompt]
+    // Fetch data + build prompts using resolved modules
+    // Region-aware dead zone: check destination OR region for island detection
+    const destOrRegion = _dest || (_reg === "kvarner" ? "rab" : _reg === "split_makarska" ? "hvar" : "");
+    const [fuelData, hakData, npList] = await Promise.all([
+      fuelModule ? fuelModule.fetchFuelIntel(_reg, destOrRegion) : Promise.resolve(null),
+      hakModule  ? hakModule.fetchHAKIntel(_reg)                 : Promise.resolve(null),
+      npModule   ? npModule.fetchNPCapacity(_reg)                : Promise.resolve([]),
+    ]);
+
+    const fuelPrompt = fuelData && fuelModule
+      ? fuelModule.buildFuelPrompt(fuelData, mode, destOrRegion) : null;
+    const hakPrompt  = hakData  && hakModule  ? hakModule.buildHAKPrompt(hakData)   : null;
+    const npPrompt   = npList?.length && npModule ? npModule.buildNPPrompt(npList)  : null;
+
+    // Camp catalog: inject for camper mode; for other modes only if explicitly asked about camps
+    const campIsRelevant = mode === "camper" ||
+      /kamp|camp|parking za kamper|noćenje/i.test(lastUserMessage || "");
+
+    // Assemble intelligence blocks — PRIORITY ORDER (critical first)
+    // HAK/cascade (safety) → events (surges) → fuel (critical) → NP → camps
+    const intelligenceBlocks = [hakPrompt, cascadePrompt, eventsPrompt, fuelPrompt, npPrompt]
       .filter(Boolean)
       .join("\n\n");
 
-    console.warn(`[intel] events=${!!eventsPrompt} hak=${!!hakData?.incidents?.length} cascade=${!!cascadePrompt} fuel=${!!fuelData?.prices} np=${!!npList?.length} camp=${!!campCatalog}`);
+    console.warn(`[intel] events=${!!eventsPrompt} hak=${!!(hakData?.incidents?.length || hakData?.borders?.length)} cascade=${!!cascadePrompt} fuel=${!!fuelData?.prices} np=${npList?.length || 0} camp=${!!campCatalog}`);
 
     let systemPrompt = '';
     try {
@@ -1580,8 +1594,10 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
     if (adriaticCtx && systemPrompt) systemPrompt = adriaticCtx + '\n' + systemPrompt;
     // Prepend DELTA_CONTEXT (structured trip info from onboarding)
     if (deltaCtxStr && systemPrompt) systemPrompt = deltaCtxStr + '\n' + systemPrompt;
-    // Append intelligence blocks (events, HAK, cascade, fuel, NP)
-    if (intelligenceBlocks && systemPrompt) systemPrompt += '\n\n' + intelligenceBlocks;
+    // Intelligence blocks go BEFORE main prompt — safety/situational info has priority
+    if (intelligenceBlocks) systemPrompt = intelligenceBlocks + '\n\n' + systemPrompt;
+    // Camp catalog appended at end (contextual reference, not safety-critical)
+    if (campIsRelevant && campCatalog && systemPrompt) systemPrompt += '\n\n' + campCatalog;
 
     // Inject FERRY RAB live schedule when user asks about Rab ferry
     const lastMsg = (lastUserMessage || "").toLowerCase();
