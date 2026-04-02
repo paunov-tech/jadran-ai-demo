@@ -98,7 +98,14 @@ async function fetchYoloSensors() {
       total += cnt;
       if (cnt > 0) active++;
     }
-    return { regions, total, active, ts: new Date().toISOString() };
+    // Collect top hotspot cameras for the feed
+    const hotspots = [];
+    for (const [sub, rd] of Object.entries(regions)) {
+      if (rd.objects > 30) hotspots.push({ sub, objects: rd.objects, cars: rd.cars, persons: rd.persons, cams: rd.cams });
+    }
+    hotspots.sort((a, b) => b.objects - a.objects);
+
+    return { regions, total, active, hotspots, ts: new Date().toISOString() };
   } catch (e) { console.warn("guide: Sense error:", e.message); return null; }
 }
 
@@ -374,24 +381,34 @@ function generateCards(traffic, sense, weather, hak, dars, asfinag, seg, lang) {
     }
   }
 
-  // ── Sense SENSE INTELLIGENCE ──
+  // ── Sense BIG EYE — Camera Hotspots ──
   if (sense && sense.total > 0) {
     const sortedRegions = Object.entries(sense.regions).sort((a, b) => b[1].objects - a[1].objects);
-    const busiest = sortedRegions[0];
     const quietest = sortedRegions.filter(([_, d]) => d.objects > 0).pop();
-    if (busiest && busiest[1].objects > 50) {
+
+    // One card per significant hotspot region (top 4)
+    const hotspots = sense.hotspots || sortedRegions.filter(([_, d]) => d.objects > 30).map(([sub, d]) => ({ sub, ...d }));
+    hotspots.slice(0, 4).forEach((hs, i) => {
+      const sub = hs.sub || hs[0];
+      const data = hs.objects != null ? hs : hs[1];
+      const objs = data.objects || data.totalObjects || 0;
+      const cars = data.cars || 0;
+      const persons = data.persons || 0;
+      const cams = data.cams || data.activeSensors || 0;
+      const busy = objs > 100 ? (hr ? "GUŽVA" : de ? "VOLL" : "BUSY") : objs > 50 ? (hr ? "aktivno" : de ? "aktiv" : "active") : (hr ? "mirno" : de ? "ruhig" : "quiet");
       cards.push({
-        id: "sense_busy",
-        severity: "info",
+        id: `sense_cam_${i}`,
+        severity: objs > 100 ? "info" : "tip",
         icon: "📸",
-        title: de ? "Kameras: hohes Aufkommen" : hr ? "Kamere: pojačan promet" : "Sensors: heavy activity",
-        body: de ? `${busiest[0]}: ${busiest[1].objects} Objekte (${busiest[1].cars} Autos, ${busiest[1].persons} Personen) auf ${busiest[1].cams} Kameras.${quietest ? ` Ruhiger: ${quietest[0]}` : ""}`
-             : hr ? `${busiest[0]}: ${busiest[1].objects} objekata (${busiest[1].cars} auta, ${busiest[1].persons} osoba) na ${busiest[1].cams} kamera.${quietest ? ` Mirnije: ${quietest[0]}` : ""}`
-             : `${busiest[0]}: ${busiest[1].objects} objects (${busiest[1].cars} cars, ${busiest[1].persons} people) on ${busiest[1].cams} sensors.${quietest ? ` Quieter: ${quietest[0]}` : ""}`,
+        title: de ? `Kamera: ${sub} — ${busy}` : hr ? `Kamera: ${sub} — ${busy}` : `Camera: ${sub} — ${busy}`,
+        body: de ? `${objs} Obj. (${cars} Fahrzeuge, ${persons} Pers.) auf ${cams} Kamera(s).${quietest && quietest[0] !== sub ? ` Ruhiger: ${quietest[0]}` : ""}`
+             : hr ? `${objs} obj. (${cars} auta, ${persons} osoba) na ${cams} kamera.${quietest && quietest[0] !== sub ? ` Mirnije: ${quietest[0]}` : ""}`
+             : `${objs} obj. (${cars} cars, ${persons} persons) on ${cams} sensor(s).${quietest && quietest[0] !== sub ? ` Quieter: ${quietest[0]}` : ""}`,
         source: "Sense BIG EYE",
         ts: sense.ts,
       });
-    }
+    });
+
     // Camper-specific: highway sensor activity
     if (isKamper) {
       const hwRegions = ["inland", "zagreb", "gorski_kotar"];
@@ -402,9 +419,9 @@ function generateCards(traffic, sense, weather, hak, dars, asfinag, seg, lang) {
           severity: "info",
           icon: "🛣️",
           title: de ? "Dichter Autobahnverkehr" : hr ? "Gust promet na autocesti" : "Dense highway traffic",
-          body: de ? `${hwCars} Fahrzeuge auf Autobahn-Kameras erkannt. Naplatne können voll sein.`
-               : hr ? `${hwCars} vozila na kamerama autoceste. Naplatne rampe mogu biti pune.`
-               : `${hwCars} vehicles detected on highway sensors. Toll stations may be crowded.`,
+          body: de ? `${hwCars} Fahrzeuge auf Autobahn-Kameras. Naplatne können voll sein.`
+               : hr ? `${hwCars} vozila detektovano na kamerama autoceste. Naplatne rampe mogu biti pune.`
+               : `${hwCars} vehicles on highway sensors. Toll stations may be crowded.`,
           source: "Sense BIG EYE",
           ts: sense.ts,
         });

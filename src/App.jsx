@@ -537,12 +537,23 @@ export default function JadranUnified() {
   const [transitFromCoords, setTransitFromCoords] = useState(null);
   const [transitToCoords, setTransitToCoords] = useState(null);
   const [transitRouteData, setTransitRouteData] = useState(null);
+  const [preTripGuideCards, setPreTripGuideCards] = useState([]);
   // Save real HERE road distance to delta → gpsEngine → pulse.js gets accurate km
   useEffect(() => {
     if (transitRouteData?.km) {
       saveDelta({ route_km: transitRouteData.km, route_hrs: transitRouteData.hrs, route_mins: transitRouteData.mins });
     }
   }, [transitRouteData?.km]); // eslint-disable-line
+
+  // Pre-fetch guide cards when route coords are known — ready when user opens chat
+  useEffect(() => {
+    if (!transitFromCoords || !transitToCoords) return;
+    const seg = loadDelta().segment || "auto";
+    fetch(`/api/guide?oLat=${transitFromCoords[0]}&oLng=${transitFromCoords[1]}&dLat=${transitToCoords[0]}&dLng=${transitToCoords[1]}&seg=${seg}&lang=${lang || "hr"}`)
+      .then(r => r.json())
+      .then(d => setPreTripGuideCards(d.cards || []))
+      .catch(() => {});
+  }, [transitFromCoords?.[0], transitToCoords?.[0]]); // eslint-disable-line
 
   // ─── GPS LIVE ENGINE (starts on user action, not automatically) ───
   const [gpsCards, setGpsCards] = useState([]);
@@ -1214,20 +1225,36 @@ VRIJEME: ${weather.temp}°C ${weather.icon}, UV ${weather.uv}, more ${weather.se
 LOKACIJA: ${kioskCity}.
 ${senseCtx ? "LIVE STATUS: " + senseCtx + "." : ""}
 Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i udaljenostima. Bez emoji.`;
+      // Map guest segment to chat mode
+      const delta = loadDelta();
+      const SEG_TO_MODE = { kamper:"camper", jedrilicar:"sailing", kruzer:"cruiser", standard:"apartment" };
+      const chatMode = SEG_TO_MODE[delta.segment] || SEG_TO_MODE[G.segment] || "default";
+      // Detect region from kiosk coords OR transit destination
+      const regionCoords = kioskCoords || transitToCoords;
+      const chatRegion = regionCoords
+        ? Object.entries({ istra:[45.1,13.9], kvarner:[45.0,14.5], zadar:[44.1,15.3], split:[43.5,16.5], makarska:[43.3,17.0], dubrovnik:[42.65,18.1] })
+            .sort(([,a],[,b]) => Math.hypot(regionCoords[0]-a[0],regionCoords[1]-a[1]) - Math.hypot(regionCoords[0]-b[0],regionCoords[1]-b[1]))[0]?.[0]
+        : "kvarner";
+
       const res = await fetch("/api/chat", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ system: sys,
+        body: JSON.stringify({
           messages: [...chatMsgs.map(m => ({ role: m.role === "user" ? "user" : "assistant", content: m.text })), { role: "user", content: msg }],
-          delta_context: loadDelta(),
+          mode: chatMode,
+          region: chatRegion,
           lang: lang || "hr",
+          weather: weather || undefined,
+          guide_cards: preTripGuideCards.length ? preTripGuideCards : undefined,
+          plan: premium ? "season" : "free",
+          delta_context: delta,
           freeMsgUsed: premium ? -1 : freeMsgUsed,
           deviceId: (() => { try { return localStorage.getItem("jadran_push_deviceId") || ""; } catch { return ""; } })(),
           emergencyAlerts: alerts.filter(a => a.severity === "critical" || a.severity === "high" || a.severity === "medium")
             .slice(0, 10).map(a => ({ type: a.type, severity: a.severity, region: a.region, title: a.title, description: a.description, count: a.count, source: a.source })),
           navtexData: navtexData || undefined,
           lastUserMessage: msg,
-          region: kioskCoords ? Object.entries({ istra:[45.1,13.9], kvarner:[45.0,14.5], zadar:[44.1,15.3], split:[43.5,16.5], makarska:[43.3,17.0], dubrovnik:[42.65,18.1] })
-            .sort(([,a],[,b]) => Math.hypot(kioskCoords[0]-a[0],kioskCoords[1]-a[1]) - Math.hypot(kioskCoords[0]-b[0],kioskCoords[1]-b[1]))[0]?.[0] : undefined,
+          camperLen: delta.camperLen || undefined,
+          camperHeight: delta.camperHeight || undefined,
         }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);

@@ -7,11 +7,11 @@ const _global = { c: 0, r: 0 }; // Global daily counter
 
 // Tier limits — server-side enforcement (frontend can be bypassed)
 const TIER_LIMITS = {
-  free:     { daily: 4,  maxHistory: 6,  maxTokens: 550 },
-  week:     { daily: 110, maxHistory: 16, maxTokens: 900 },
-  season:   { daily: 110, maxHistory: 20, maxTokens: 900 },
-  vip:      { daily: 320, maxHistory: 30, maxTokens: 1200 },
-  referral: { daily: 110, maxHistory: 20, maxTokens: 900 },
+  free:     { daily: 4,  maxHistory: 6,  maxTokens: 1100 }, // WOW izlog — free users must be impressed
+  week:     { daily: 110, maxHistory: 16, maxTokens: 1200 },
+  season:   { daily: 110, maxHistory: 20, maxTokens: 1400 },
+  vip:      { daily: 320, maxHistory: 30, maxTokens: 2000 },
+  referral: { daily: 110, maxHistory: 20, maxTokens: 1400 },
 };
 const GLOBAL_DAILY_CAP = 10000; // Emergency kill switch — max 10K requests/day across all users
 const RL_WIN = 86400000; // 24h window
@@ -1483,7 +1483,7 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: tierPlan === 'vip' ? 'claude-opus-4-6' : 'claude-sonnet-4-20250514',
+        model: tierPlan === 'vip' ? 'claude-opus-4-6' : 'claude-sonnet-4-6',
         max_tokens: walkieMode ? 400 : (TIER_LIMITS[tierPlan] || TIER_LIMITS.free).maxTokens,
         temperature: 0.55,
         system: systemPrompt,
