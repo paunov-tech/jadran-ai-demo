@@ -44,11 +44,12 @@ function detectRoutes(text) {
 
 // ── HAK RSS FETCH ─────────────────────────────────────────────────────────
 async function fetchHAKRSS() {
-  // HAK publishes road conditions via RSS and their website
-  // Public RSS: https://www.hak.hr/rss/promet.xml (road conditions)
-  // Also: https://www.hak.hr/rss/granice.xml (border queues)
+  // HAK sources (verified 2026):
+  // 1. status.hak.hr — structured incident page (scrapable)
+  // 2. hak.hr/info/stanje-na-cestama/ — main road conditions page
+  // No public RSS confirmed; web scrape with attribution
   const urls = [
-    "https://www.hak.hr/rss/promet.xml",
+    "https://status.hak.hr/incidents/",
     "https://www.hak.hr/info/stanje-na-cestama/",
   ];
 

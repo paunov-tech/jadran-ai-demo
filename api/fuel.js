@@ -163,46 +163,77 @@ const PRICE_TTL = 4 * 3600 * 1000; // 4h
 async function fetchLivePrices() {
   if (_priceCache && Date.now() - _priceCacheTs < PRICE_TTL) return _priceCache;
 
+  // Source 1: cijenagoriva.com — main Croatian fuel price aggregator
   try {
-    // e-gorivo.hr publishes national average prices
-    // Their JSON endpoint: https://e-gorivo.hr/api/v1/prices/current (unofficial)
-    // Fallback: scrape their homepage average table
-    const r = await fetch("https://e-gorivo.hr/", {
+    const r = await fetch("https://cijenagoriva.com/en", {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; jadran-ai-bot/1.0; +https://jadran.ai)" },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (r.ok) {
+      const html = await r.text();
+      const prices = {};
+      // cijenagoriva.com shows national average in header/table
+      const d = html.match(/Diesel[^>]*>[\s\S]*?([\d][,.][\d]{2,3})\s*€/i);
+      if (d) prices.diesel = parseFloat(d[1].replace(",", "."));
+      const b = html.match(/Euro\s*(?:Super\s*)?95[^>]*>[\s\S]*?([\d][,.][\d]{2,3})\s*€/i);
+      if (b) prices.benzin95 = parseFloat(b[1].replace(",", "."));
+      const l = html.match(/(?:LPG|Autogas)[^>]*>[\s\S]*?([\d][,.][\d]{2,3})\s*€/i);
+      if (l) prices.lpg = parseFloat(l[1].replace(",", "."));
+
+      if (prices.diesel || prices.benzin95) {
+        _priceCache = { ...prices, source: "cijenagoriva.com", ts: new Date().toISOString() };
+        _priceCacheTs = Date.now();
+        return _priceCache;
+      }
+    }
+  } catch (e) {
+    console.warn("[fuel] cijenagoriva.com failed:", e.message);
+  }
+
+  // Source 2: mzoe-gor.hr (Ministry) — regulated weekly prices, JSON format
+  // Croatian fuel prices are EU-regulated: max prices published weekly by MINGOR
+  try {
+    const r = await fetch("https://mzoe-gor.hr/UserDocsImages/energetika/cijene_goriva/cijene_goriva_aktualne.json", {
+      signal: AbortSignal.timeout(5000),
+    });
+    if (r.ok) {
+      const data = await r.json();
+      const prices = {
+        diesel: data?.dizel || data?.diesel || null,
+        benzin95: data?.eurosuper95 || data?.benzin || null,
+        lpg: data?.autogas || data?.lpg || null,
+        source: "mzoe-gor.hr",
+        ts: new Date().toISOString(),
+      };
+      if (prices.diesel || prices.benzin95) {
+        _priceCache = prices;
+        _priceCacheTs = Date.now();
+        return _priceCache;
+      }
+    }
+  } catch (e) {
+    console.warn("[fuel] mzoe-gor.hr failed:", e.message);
+  }
+
+  // Source 3: GlobalPetrolPrices — commercial API (free tier available)
+  try {
+    const r = await fetch("https://www.globalpetrolprices.com/Croatia/gasoline_prices/", {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; jadran-ai-bot/1.0)" },
       signal: AbortSignal.timeout(5000),
     });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const html = await r.text();
-
-    // Parse average price table from HTML (e-gorivo publishes a table with national averages)
-    // Pattern: data-fuel="diesel" data-avg="1.94"
-    const prices = {};
-    const matches = html.matchAll(/data-fuel="(\w+)"[^>]*data-avg="([\d.]+)"/g);
-    for (const m of matches) {
-      prices[m[1]] = parseFloat(m[2]);
-    }
-
-    // Fallback extraction if data-attrs not found
-    if (!prices.diesel) {
-      const dieselMatch = html.match(/Diesel.*?([\d,]+)\s*€/i);
-      if (dieselMatch) prices.diesel = parseFloat(dieselMatch[1].replace(",", "."));
-      const benzinMatch = html.match(/Eurosuper.*?([\d,]+)\s*€/i);
-      if (benzinMatch) prices.benzin95 = parseFloat(benzinMatch[1].replace(",", "."));
-      const lpgMatch = html.match(/Autogas.*?([\d,]+)\s*€/i);
-      if (lpgMatch) prices.lpg = parseFloat(lpgMatch[1].replace(",", "."));
-    }
-
-    if (prices.diesel || prices.benzin95) {
-      _priceCache = { ...prices, source: "e-gorivo.hr", ts: new Date().toISOString() };
-      _priceCacheTs = Date.now();
-      return _priceCache;
+    if (r.ok) {
+      const html = await r.text();
+      const priceMatch = html.match(/"price":\s*"([\d.]+)"/);
+      if (priceMatch) {
+        _priceCache = { benzin95: parseFloat(priceMatch[1]), source: "globalpetrolprices.com", ts: new Date().toISOString() };
+        _priceCacheTs = Date.now();
+        return _priceCache;
+      }
     }
   } catch (e) {
-    console.warn("[fuel] e-gorivo.hr fetch failed:", e.message);
+    console.warn("[fuel] globalpetrolprices failed:", e.message);
   }
 
-  // Fallback: HANDA (Croatian strategic petroleum reserve) publishes regulated prices
-  // Prices are regulated in HR (EU directive) — max prices published weekly by MINGOR
   return null;
 }
 

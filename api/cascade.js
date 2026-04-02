@@ -150,44 +150,78 @@ const BURA_TTL = 3600 * 1000; // 1h
 export async function fetchBuraPrediction() {
   if (_buraCache && Date.now() - _buraCacheTs < BURA_TTL) return _buraCache;
 
-  try {
-    // DHMZ publishes wind forecasts — try their public XML/JSON
-    // meteo.hr API: https://api.meteo.hr/v1/forecasts/wind?location=senj
-    const r = await fetch("https://api.meteo.hr/v1/forecasts?location=senj&days=2", {
-      signal: AbortSignal.timeout(4000),
-    });
-    if (!r.ok) throw new Error(`DHMZ ${r.status}`);
-    const data = await r.json();
+  // DHMZ open data — XML products (open licence RH, no auth required)
+  // Source: meteo.hr/proizvodi.php?section=podaci&param=xml_korisnici
+  // Marine + bura forecasts for Adriatic published as XML files
+  const DHMZ_URLS = [
+    "https://meteo.hr/data/products/textual_forecasts/marine_forecast_adriatic.xml",
+    "https://meteo.hr/data/products/warnings/bura_warning.xml",
+    "https://meteo.hr/data/products/wind_forecast_adriatic.xml",
+  ];
 
-    // Look for bura indicators: NE wind >60 km/h → bridge closure risk
-    const forecasts = data?.forecasts || data?.data || [];
-    const buraAlerts = [];
+  for (const url of DHMZ_URLS) {
+    try {
+      const r = await fetch(url, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (compatible; jadran-ai-bot/1.0; +https://jadran.ai)",
+          "Accept": "application/xml, text/xml, */*",
+        },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!r.ok) continue;
+      const xml = await r.text();
+      if (!xml || xml.length < 100) continue;
 
-    for (const f of forecasts) {
-      const wind = f.wind_speed_kmh || f.windSpeed || 0;
-      const dir = (f.wind_dir || f.windDirection || "").toUpperCase();
-      const time = f.time || f.datetime;
+      const buraAlerts = [];
 
-      if (wind > 60 && (dir.includes("NE") || dir.includes("E") || dir.includes("BURA"))) {
-        const hoursFromNow = (new Date(time) - Date.now()) / 3600000;
-        if (hoursFromNow >= 0 && hoursFromNow <= 24) {
+      // Parse wind speeds from XML (DHMZ uses multiple schemas)
+      const windMatches = [...xml.matchAll(/<(?:wind_speed|brzina_vjetra|speed)[^>]*>([\d.]+)<\/[^>]+>/gi)];
+      const timeMatches = [...xml.matchAll(/<(?:valid_time|vrijedi_od|time)[^>]*>([^<]+)<\/[^>]+>/gi)];
+      const dirMatches  = [...xml.matchAll(/<(?:wind_dir|smjer_vjetra|direction)[^>]*>([^<]+)<\/[^>]+>/gi)];
+
+      for (let i = 0; i < windMatches.length; i++) {
+        const wind = parseFloat(windMatches[i][1]);
+        const dir  = (dirMatches[i]?.[1] || "").toUpperCase();
+        const time = timeMatches[i]?.[1];
+        const isBuraDir = !dir || dir.includes("NE") || dir.includes("E") || dir.includes("BURA");
+
+        if (wind > 60 && isBuraDir) {
+          const hoursFromNow = time ? (new Date(time) - Date.now()) / 3600000 : 6;
+          if (hoursFromNow >= -1 && hoursFromNow <= 24) {
+            buraAlerts.push({
+              time: time || "uskoro",
+              wind: Math.round(wind),
+              hoursFromNow: Math.round(Math.max(0, hoursFromNow)),
+              severity: wind > 90 ? "critical" : wind > 70 ? "high" : "medium",
+            });
+          }
+        }
+      }
+
+      // Fallback: detect bura keyword + speed mention in text forecast
+      if (!buraAlerts.length && /bura|jak\s+vjetar|olujn/i.test(xml)) {
+        const speedMatch = xml.match(/(\d{2,3})\s*km\/h/);
+        if (speedMatch) {
+          const wind = parseInt(speedMatch[1]);
           buraAlerts.push({
-            time,
-            wind,
-            hoursFromNow: Math.round(hoursFromNow),
-            severity: wind > 90 ? "critical" : wind > 70 ? "high" : "medium",
+            time: "uskoro", wind,
+            hoursFromNow: 0,
+            severity: wind > 80 ? "critical" : "high",
           });
         }
       }
-    }
 
-    _buraCache = { alerts: buraAlerts, source: "DHMZ", ts: new Date().toISOString() };
-    _buraCacheTs = Date.now();
-    return _buraCache;
-  } catch (e) {
-    console.warn("[cascade] DHMZ fetch failed:", e.message);
-    return null;
+      _buraCache = { alerts: buraAlerts, source: "DHMZ", url, ts: new Date().toISOString() };
+      _buraCacheTs = Date.now();
+      return _buraCache;
+    } catch (e) {
+      console.warn(`[cascade] DHMZ ${url.split("/").pop()} failed:`, e.message);
+    }
   }
+
+  _buraCache = { alerts: [], source: "DHMZ-unavailable", ts: new Date().toISOString() };
+  _buraCacheTs = Date.now();
+  return _buraCache;
 }
 
 // ── MAIN INTELLIGENCE BUILDER ─────────────────────────────────────────────
