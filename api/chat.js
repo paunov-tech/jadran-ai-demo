@@ -337,10 +337,32 @@ const LOCATIONS = {
   rab: `LOKALNI VODIČ — OTOK RAB (PILOT DESTINACIJA):
 RAB JE SPECIFIČNA DESTINACIJA — koristi isključivo ove podatke:
 
-DOLAZAK NA RAB:
-- Glavna trajektna linija: Stinica → Mišnjak (Rapska Plovidba), svakih sat, 15 min, ~€25 auto+putnici. BEZ rezervacije! Ljeti doći 1-2h ranije.
-- Krk ruta: Lopar → Valbiska (Krk, spojen mostom s kopnom). Dobra ruta za Rijeku/sjever.
-- Katamaranm: Rijeka → Rab grad (~2h), samo ljeti.
+DOLAZAK NA RAB — TRAJEKTI 2026 (AKTUALNI PODACI):
+
+LINIJA 337 — Stinica ↔ Mišnjak (operator: Rapska Plovidba, NE Jadrolinija):
+- Trajanje: 20 min. BEZ rezervacije — karte samo na terminalu.
+- Cijena auto (do 5m) + 2 putnika: van sezone €17.70, visoka sezona (1.5.–29.9.) €26.60.
+- Broj polazaka po sezoni:
+  - Jan/Feb/Mar/Oct/Nov/Dec: 13 polazaka/dan (prvi iz Mišnjaka 05:45, zadnji 23:30)
+  - Travanj/Rujan: 14 polazaka/dan
+  - Svibanj/Lipanj: 17 polazaka/dan (prvi 05:00)
+  - Srpanj/Kolovoz: 23 polazaka/dan (prvi 04:00, praktički svakih sat!)
+- Polasci iz Mišnjaka (Rab→kopno) srpanj/kolovoz: 04:00, 05:00, 05:45, 06:30, 07:30, 08:30, 09:30, 10:00, 10:30, 11:00, 12:00, 13:00, 14:00, 15:00, 16:00, 17:00, 18:00, 18:30, 19:30, 20:30, 21:30, 22:30, 23:30
+- Polasci iz Stinice (kopno→Rab) srpanj/kolovoz: 04:30, 05:30, 06:15, 07:00, 08:00, 09:00, 10:00, 10:30, 11:00, 11:30, 12:30, 13:30, 14:30, 15:30, 16:30, 17:30, 18:30, 19:00, 20:00, 21:00, 22:00, 23:00, 24:00
+- VAŽNO: Ljeti doći 1-2h ranije. Nema rezervacije — tko dođe prvi, ulazi prvi.
+- Jablanac luka: ZATVORENA za trajekte od 2012. Stara linija ne postoji.
+
+LINIJA 338 — Lopar (Rab) ↔ Valbiska (Krk) (operator: Jadrolinija):
+- Trajanje: 80 min. OBAVEZNA rezervacija — karta = rezervirano mjesto (shop.jadrolinija.hr). Doći 45 min ranije!
+- Cijena auto (do 5m) + 2 putnika: van sezone €30.00, visoka sezona €45.70.
+- Van sezone (do 28.5. i od 28.9.): samo 2 polaska/dan (iz Lopara 05:45 i 16:00).
+- Sezona (29.5.–27.9.): 4 polaska/dan iz Lopara: 05:45, 09:45, 14:00, 18:30.
+- Sezona iz Valbiske: 07:45, 11:45, 16:00, 20:30 (pon: 21:00).
+- Ova ruta je idealna za putnike iz smjera Rijeke/Krka (Krk most = bez trajekta).
+
+USPOREDBA RUTA:
+- Stinica↔Mišnjak: kraće čekanje bez rezervacije, jeftinije, ali gužva u srpnju/kolovozu.
+- Lopar↔Valbiska: rezervacija obavezna, skuplje, ali garantirano mjesto, dobro za kampere koji dolaze s Krka.
 
 PLAŽE (Rab ima 30+ pješčanih plaža — raritet u Hrvatskoj!):
 - Rajska Plaža (Lopar): 2km pijeska, plitka, idealna za obitelji. DOLAZAK PRIJE 10h!
@@ -1488,6 +1510,31 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
     if (adriaticCtx && systemPrompt) systemPrompt = adriaticCtx + '\n' + systemPrompt;
     // Prepend DELTA_CONTEXT (structured trip info from onboarding)
     if (deltaCtxStr && systemPrompt) systemPrompt = deltaCtxStr + '\n' + systemPrompt;
+
+    // Inject FERRY RAB live schedule when user asks about Rab ferry
+    const lastMsg = (lastUserMessage || "").toLowerCase();
+    const rabFerryKeywords = ["trajekt","ferry","mišnjak","misnjak","stinica","lopar","valbiska","rapska plovidba","jadrolinija","luka rab","polazak","raspored","red plovidbe","vozila","red čekanja"];
+    const isRabFerryQ = (region === "kvarner" || lastMsg.includes("rab")) && rabFerryKeywords.some(k => lastMsg.includes(k));
+    if (isRabFerryQ && systemPrompt) {
+      try {
+        const { buildLiveSummary } = await import('./ferry-rab.js');
+        const f = buildLiveSummary();
+        const ferryCtx = [
+          `[LIVE TRAJEKTI RAB — ${new Date().toLocaleTimeString("hr-HR", { hour:"2-digit", minute:"2-digit" })}]`,
+          `Linija 337 Stinica↔Mišnjak (Rapska Plovidba, 20 min, BEZ rezervacije):`,
+          `  Sljedeći polasci RAB→kopno: ${f.line337.nextFromRab.join(", ") || "nema više danas"}`,
+          `  Sljedeći polasci kopno→RAB: ${f.line337.nextFromKopno.join(", ") || "nema više danas"}`,
+          `  Polazaka danas ukupno: ${f.line337.sailingsToday}`,
+          `Linija 338 Lopar↔Valbiska/Krk (Jadrolinija, 80 min, OBAVEZNA rezervacija shop.jadrolinija.hr):`,
+          `  Sljedeći polasci Lopar→Valbiska: ${f.line338.nextFromLopar.join(", ") || "nema više danas"}`,
+          `  Sljedeći polasci Valbiska→Lopar: ${f.line338.nextFromValbiska.join(", ") || "nema više danas"}`,
+          `${f.priceNote}`,
+          f.warning ? `⚠️ ${f.warning}` : "",
+          `NAPOMENA: Broj vozila u redu čekanja nije dostupan u realnom vremenu — nema kamere na terminalu. Savjetuj doći 1-2h ranije ljeti.`,
+        ].filter(Boolean).join("\n");
+        systemPrompt = ferryCtx + "\n\n" + systemPrompt;
+      } catch(e) { /* ferry data unavailable — static schedule still in prompt */ }
+    }
 
     // Inject GUIDE CARDS — live route intelligence (HERE Traffic + YOLO + Meteo)
     if (guide_cards?.length && systemPrompt) {
