@@ -1518,16 +1518,54 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
       console.error("YOLO fetch failed:", e.message, "— fallback crowd estimate will be used");
     }
 
-    // Fetch camp data for camper mode
-    let campCatalog = null;
-    if (mode === "camper" && region) {
-      try {
-        const { fetchCampData } = await import("./camps.js");
-        campCatalog = await fetchCampData(region, camperLen || 7, camperHeight || null);
-      } catch (e) {
-        console.error("[camps] fetch failed:", e.message);
-      }
-    }
+    // ── PARALLEL INTELLIGENCE GATHER — all 6 layers ──────────────────────
+    const [
+      campsResult,
+      fuelResult,
+      eventsResult,
+      hakResult,
+      npResult,
+      cascadeResult,
+    ] = await Promise.allSettled([
+      // Layer 1: Camp catalog (camper mode)
+      (mode === "camper" && region)
+        ? import("./camps.js").then(m => m.fetchCampData(region, camperLen || 7, camperHeight || null))
+        : Promise.resolve(null),
+
+      // Layer 4: Fuel intelligence (always — critical for all modes)
+      import("./fuel.js").then(m => m.fetchFuelIntel(region || "kvarner", delta_context?.destination?.city || "")),
+
+      // Layer 2: Events calendar
+      import("./events.js").then(m => ({ prompt: m.buildEventPrompt(region || "all") })),
+
+      // Layer 2: HAK road incidents
+      import("./hak.js").then(m => m.fetchHAKIntel(region || "all")),
+
+      // Layer 5: NP Capacity
+      import("./np-capacity.js").then(m => m.fetchNPCapacity(region || "all")),
+
+      // Layer 1+3: Cascade prediction (needs yoloCrowdData — may be null)
+      import("./cascade.js").then(m => m.buildCascadePrompt(region || "all", yoloCrowdData)),
+    ]);
+
+    const campCatalog      = campsResult.status    === "fulfilled" ? campsResult.value    : null;
+    const fuelData         = fuelResult.status     === "fulfilled" ? fuelResult.value     : null;
+    const eventsPrompt     = eventsResult.status   === "fulfilled" ? eventsResult.value?.prompt : null;
+    const hakData          = hakResult.status      === "fulfilled" ? hakResult.value      : null;
+    const npList           = npResult.status       === "fulfilled" ? npResult.value       : null;
+    const cascadePrompt    = cascadeResult.status  === "fulfilled" ? cascadeResult.value  : null;
+
+    // Build intelligence sub-prompts
+    const fuelPrompt    = fuelData  ? (await import("./fuel.js")).buildFuelPrompt(fuelData, mode, delta_context?.destination?.city || "")    : null;
+    const hakPrompt     = hakData   ? (await import("./hak.js")).buildHAKPrompt(hakData)   : null;
+    const npPrompt      = npList?.length ? (await import("./np-capacity.js")).buildNPPrompt(npList) : null;
+
+    // Assemble intelligence block (injected after main system prompt)
+    const intelligenceBlocks = [eventsPrompt, hakPrompt, cascadePrompt, fuelPrompt, npPrompt]
+      .filter(Boolean)
+      .join("\n\n");
+
+    console.warn(`[intel] events=${!!eventsPrompt} hak=${!!hakData?.incidents?.length} cascade=${!!cascadePrompt} fuel=${!!fuelData?.prices} np=${!!npList?.length} camp=${!!campCatalog}`);
 
     let systemPrompt = '';
     try {
@@ -1542,6 +1580,8 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
     if (adriaticCtx && systemPrompt) systemPrompt = adriaticCtx + '\n' + systemPrompt;
     // Prepend DELTA_CONTEXT (structured trip info from onboarding)
     if (deltaCtxStr && systemPrompt) systemPrompt = deltaCtxStr + '\n' + systemPrompt;
+    // Append intelligence blocks (events, HAK, cascade, fuel, NP)
+    if (intelligenceBlocks && systemPrompt) systemPrompt += '\n\n' + intelligenceBlocks;
 
     // Inject FERRY RAB live schedule when user asks about Rab ferry
     const lastMsg = (lastUserMessage || "").toLowerCase();
