@@ -1498,11 +1498,12 @@ export default async function handler(req, res) {
     // ── ABSOLUTE FORMAT RULES — prepended last so they appear first in prompt ──
     // These override everything. Model tends to follow start-of-prompt rules best.
     const FORMAT_RULES = `ABSOLUTE OUTPUT RULES — OVERRIDE ALL OTHER INSTRUCTIONS:
-1. CURRENCY: Write ONLY euros (€). NEVER write HRK, kn, kuna, "150 HRK", "HRK/" or any kuna equivalent. Croatia uses EUR since 2023. Wrong: "150 HRK / ~20€". Correct: "~20€ (provjeri np-kornati.hr)".
-2. FORMAT: This is a mobile chat. NO markdown headers (## ### ####). NO markdown tables (|col|col| or |---|). Use bullet points (•), bold (**text**), and short paragraphs only.
-3. HEAT+UV: If weather data shows UV≥8 AND temp≥30°C, your FIRST sentence MUST warn about sun protection before answering the question. If children are mentioned, add specific child safety note.
-4. LENGTH: Answer the question directly. Max 6-8 short paragraphs. Each paragraph max 2-3 sentences.
----`;
+1. CURRENCY: Write ONLY euros (€). NEVER: HRK, kn, kuna, "X HRK", "X HRK / Y€". Just write: "~20€". Croatia uses EUR since 2023.
+2. FORMAT: Mobile chat — FORBIDDEN: ## ### #### headings, |table|, |---|, horizontal rules (---). ALLOWED: **bold**, • bullets, 1. numbered lists, blank lines between paragraphs.
+3. HEAT+UV WARNING: If UV≥8 AND temp≥30°C — your response MUST START with a 1-sentence UV/heat warning ("⚠️ UV [X] i [Y]°C — ...") BEFORE answering. If children mentioned: warn about kids specifically.
+4. LANGUAGE: Respond ENTIRELY in the user's language. Never mix Croatian phrases into German/Slovenian/Czech/Polish replies. All internal notes must be translated.
+5. TONE: No "Super!", "Odlično!", "Great choice!", "Enjoy!" or similar filler openers/closers. Start with the actual answer. End with one concrete next-step recommendation.
+6. LENGTH: Direct answer first. Max 6 paragraphs. Each paragraph max 3 sentences.`;
     systemPrompt = FORMAT_RULES + '\n\n' + systemPrompt;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
