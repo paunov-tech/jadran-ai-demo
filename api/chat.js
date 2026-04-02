@@ -873,7 +873,7 @@ PRAVILA:
 }
 
 // ── MAIN ASSEMBLER ──
-function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan, yoloCrowdData }) {
+function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan, yoloCrowdData, campCatalog }) {
   const parts = [];
 
   // 0. DATE/TIME CONTEXT — AI mora znati kad je da može dati relevantne savjete
@@ -1248,7 +1248,12 @@ PRAVILA:
 - Za parking/trajekt: uvijek dodaj "dođite ranije za sigurno"`);
   }
 
-  // 10. DMO NUDGE — Destination Management directives from TZ partners
+  // 10. CAMP CATALOG (camper mode only)
+  if (mode === "camper" && campCatalog) {
+    parts.push(campCatalog);
+  }
+
+  // 11. DMO NUDGE — Destination Management directives from TZ partners
   // Injects gap-filling recommendations when regions are under capacity
   try {
     const nudge = generateNudgeDirectives("croatia", region);
@@ -1513,11 +1518,22 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
       console.error("YOLO fetch failed:", e.message, "— fallback crowd estimate will be used");
     }
 
+    // Fetch camp data for camper mode
+    let campCatalog = null;
+    if (mode === "camper" && region) {
+      try {
+        const { fetchCampData } = await import("./camps.js");
+        campCatalog = await fetchCampData(region, camperLen || 7, camperHeight || null);
+      } catch (e) {
+        console.error("[camps] fetch failed:", e.message);
+      }
+    }
+
     let systemPrompt = '';
     try {
       // SECURITY: Never use `system` field from req.body — always build server-side
       systemPrompt = (mode && region)
-        ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan, yoloCrowdData })
+        ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan, yoloCrowdData, campCatalog })
         : 'Ti si Jadran.ai, lokalni turistički vodič za hrvatsku obalu Jadrana. Kratki, korisni odgovori na jeziku korisnika.';
     } catch (promptErr) {
       systemPrompt = 'Ti si Jadran.ai, lokalni turistički vodič za hrvatsku obalu Jadrana. Kratki, korisni odgovori.';
