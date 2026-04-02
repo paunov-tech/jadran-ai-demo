@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>JADRAN.AI — Nema veze</title>
+  <meta name="theme-color" content="#0a1628" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+      background: #030c18;
+      color: #e0f2fe;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100dvh;
+      padding: 24px;
+      text-align: center;
+    }
+    .wave { font-size: 72px; margin-bottom: 24px; animation: sway 3s ease-in-out infinite; }
+    @keyframes sway {
+      0%, 100% { transform: rotate(-5deg); }
+      50%       { transform: rotate(5deg); }
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 600;
+      color: #e0f2fe;
+      margin-bottom: 10px;
+      letter-spacing: -0.3px;
+    }
+    p {
+      font-size: 15px;
+      color: #64748b;
+      line-height: 1.6;
+      max-width: 300px;
+      margin-bottom: 32px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
+      color: #fff;
+      border: none;
+      border-radius: 16px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      font-family: inherit;
+      margin-bottom: 16px;
+    }
+    .hint {
+      font-size: 12px;
+      color: #334155;
+      margin-top: 40px;
+    }
+    .cached {
+      margin-top: 24px;
+      padding: 16px 20px;
+      background: rgba(14,165,233,0.05);
+      border: 1px solid rgba(14,165,233,0.1);
+      border-radius: 14px;
+      max-width: 320px;
+      width: 100%;
+    }
+    .cached h3 { font-size: 13px; color: #0ea5e9; margin-bottom: 8px; letter-spacing: 1px; text-transform: uppercase; }
+    .cached ul { list-style: none; }
+    .cached li { font-size: 13px; color: #94a3b8; padding: 4px 0; }
+    .cached li::before { content: "• "; color: #0ea5e9; }
+  </style>
+</head>
+<body>
+  <div class="wave">🌊</div>
+  <h1>Trenutno ste offline</h1>
+  <p>Bez internetske veze ne mogu dohvatiti live podatke. Provjerite Wi-Fi ili mobilne podatke i pokušajte ponovo.</p>
+
+  <button class="btn" onclick="location.reload()">Pokušaj ponovo</button>
+
+  <div class="cached">
+    <h3>Dostupno offline</h3>
+    <ul>
+      <li>Vaš profil i podaci o putovanju</li>
+      <li>Prethodni chat razgovori</li>
+      <li>Kiosk informacije (zadnja verzija)</li>
+      <li>Ruta i mapa (zadnje učitana)</li>
+    </ul>
+  </div>
+
+  <p class="hint">JADRAN.AI — Adriatic Travel Guide</p>
+
+  <script>
+    // Auto-reload when connection is restored
+    window.addEventListener('online', () => location.reload());
+  </script>
+</body>
+</html>

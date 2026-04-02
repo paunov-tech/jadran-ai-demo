@@ -1,7 +1,7 @@
-// JADRAN Service Worker v5 — App Shell Cache + Push Notifications
+// JADRAN Service Worker v6 — App Shell Cache + Push Notifications + Offline Page
 // Strategy: Network-first for HTML, Cache-first for hashed assets, Never cache API
-const CACHE = "jadran-v5";
-const SHELL = ["/", "/ai"];
+const CACHE = "jadran-v6";
+const SHELL = ["/", "/ai", "/offline.html"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
@@ -44,7 +44,7 @@ self.addEventListener("fetch", (e) => {
           if (res.ok) { const clone = res.clone(); caches.open(CACHE).then((c) => c.put(e.request, clone)); }
           return res;
         })
-        .catch(() => caches.match(e.request).then((cached) => cached || caches.match("/")))
+        .catch(() => caches.match(e.request).then((cached) => cached || caches.match("/offline.html")))
     );
     return;
   }

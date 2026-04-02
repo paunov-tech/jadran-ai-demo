@@ -458,6 +458,8 @@ export default function JadranUnified() {
     } catch { return false; }
   });
   const [showPaywall, setShowPaywall] = useState(false);
+  const [pwaPrompt, setPwaPrompt] = useState(null);       // deferred beforeinstallprompt event
+  const [pwaInstalled, setPwaInstalled] = useState(false); // hide button after install
   const [selectedPlan, setSelectedPlan] = useState("season"); // default to mid-tier (decoy effect)
   const [showRecovery, setShowRecovery] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState("");
@@ -836,6 +838,22 @@ export default function JadranUnified() {
       }
     }).catch(() => {});
   }, []); // eslint-disable-line
+
+  // ─── PWA INSTALL PROMPT ───
+  useEffect(() => {
+    const handler = (e) => { e.preventDefault(); setPwaPrompt(e); };
+    const installed = () => { setPwaInstalled(true); setPwaPrompt(null); };
+    window.addEventListener("beforeinstallprompt", handler);
+    window.addEventListener("appinstalled", installed);
+    // Check if already running as PWA (standalone mode)
+    if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone) {
+      setPwaInstalled(true);
+    }
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("appinstalled", installed);
+    };
+  }, []);
 
   // ─── ALERTS BAR ───
   const [alerts, setAlerts] = useState([]);
@@ -3547,6 +3565,35 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
       <div className="grain" />
       <div className="wave-deco" />
       <div className="jadran-ambient" />
+
+      {/* ── PWA Install Banner — shown when browser supports install and not yet installed ── */}
+      {pwaPrompt && !pwaInstalled && (
+        <div style={{ position: "fixed", bottom: "calc(env(safe-area-inset-bottom, 0px) + 72px)", left: 16, right: 16, zIndex: 9998,
+          background: "rgba(5,14,30,0.96)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+          border: "1px solid rgba(14,165,233,0.25)", borderRadius: 18,
+          padding: "14px 18px", display: "flex", alignItems: "center", gap: 14,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
+          <div style={{ fontSize: 28, flexShrink: 0 }}>📲</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "#e0f2fe", marginBottom: 2 }}>
+              {({ hr:"Instaliraj aplikaciju", de:"App installieren", at:"App installieren", en:"Install app", it:"Installa l'app", si:"Namesti aplikacijo", cz:"Instalovat aplikaci", pl:"Zainstaluj aplikację" })[lang] || "Install app"}
+            </div>
+            <div style={{ fontSize: 12, color: "#64748b" }}>
+              {({ hr:"Dodaj JADRAN na početni ekran — radi i offline", de:"JADRAN zum Startbildschirm hinzufügen", at:"JADRAN zum Startbildschirm hinzufügen", en:"Add JADRAN to home screen — works offline", it:"Aggiungi JADRAN alla schermata iniziale", si:"Dodaj JADRAN na začetni zaslon", cz:"Přidat JADRAN na domovskou obrazovku", pl:"Dodaj JADRAN do ekranu głównego" })[lang] || "Add to home screen — works offline"}
+            </div>
+          </div>
+          <button onClick={async () => {
+            if (!pwaPrompt) return;
+            pwaPrompt.prompt();
+            const { outcome } = await pwaPrompt.userChoice;
+            if (outcome === "accepted") setPwaInstalled(true);
+            setPwaPrompt(null);
+          }} style={{ padding: "10px 18px", background: "linear-gradient(135deg,#0ea5e9,#0284c7)", border: "none", borderRadius: 12, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", flexShrink: 0, fontFamily: "inherit" }}>
+            {({ hr:"Instaliraj", de:"Installieren", at:"Installieren", en:"Install", it:"Installa", si:"Namesti", cz:"Instalovat", pl:"Zainstaluj" })[lang] || "Install"}
+          </button>
+          <button onClick={() => setPwaPrompt(null)} style={{ background: "none", border: "none", color: "#64748b", fontSize: 20, cursor: "pointer", padding: "8px", flexShrink: 0, minWidth: 36, minHeight: 36, display: "grid", placeItems: "center" }}>×</button>
+        </div>
+      )}
 
       <div style={{ position: "relative", zIndex: 2, maxWidth: 1100, margin: "0 auto", padding: "0 clamp(12px, 3vw, 24px)" }} className="page-enter">
         {/* ── HEADER ── */}
