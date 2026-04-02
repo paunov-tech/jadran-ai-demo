@@ -113,34 +113,37 @@ const LiveTicker = React.memo(({ fromCoords, toCoords, seg, lang, routeData, dm,
         .catch(() => {});
     };
     load();
-    const iv = setInterval(load, 180000);
+    const iv = setInterval(load, 60000); // 1 min — fresh data
     return () => { cancelled = true; clearInterval(iv); };
   }, [fromCoords?.[0], toCoords?.[0], seg]); // eslint-disable-line
 
   // Build ticker items from route + guide
   const items = React.useMemo(() => {
     const t = [];
-    // Route info shown in bar below map, not in ticker
     for (const c of guideCards) {
-      if (c.severity === "critical") t.push({ icon: c.icon, text: c.title, color: "#ef4444" });
+      if (c.severity === "critical") t.push({ icon: c.icon, text: `${c.title} — ${c.body?.slice(0,80)||""}`, color: "#ef4444" });
     }
     for (const c of guideCards) {
-      if (c.severity === "warning") t.push({ icon: c.icon, text: c.title, color: "#f59e0b" });
+      if (c.severity === "warning") t.push({ icon: c.icon, text: `${c.title} — ${c.body?.slice(0,80)||""}`, color: "#f59e0b" });
     }
     for (const c of guideCards) {
-      if (c.severity === "info" || c.severity === "tip") t.push({ icon: c.icon, text: c.body?.slice(0, 60) || c.title, color: C.mut });
+      if (c.severity === "info") t.push({ icon: c.icon, text: c.body?.slice(0, 100) || c.title, color: C.mut });
+    }
+    for (const c of guideCards) {
+      if (c.severity === "tip") t.push({ icon: c.icon, text: c.body?.slice(0, 100) || c.title, color: "rgba(100,116,139,0.6)" });
     }
     if (guideSources) {
       const s = guideSources;
-      t.push({ icon: "📡", text: `HERE·${s.here||0} Sense·${s.yolo||0} Meteo·${s.meteo?1:0}`, color: "rgba(100,116,139,0.4)" });
+      const srcs = [`HERE:${s.here||0}`, s.hak > 0 ? `HAK:${s.hak}` : null, s.dars > 0 ? `DARS:${s.dars}` : null, `Wx:${s.meteo?1:0}`].filter(Boolean).join(" · ");
+      t.push({ icon: "📡", text: srcs, color: "rgba(100,116,139,0.35)" });
     }
     return t.length ? t : [{ icon: "⏳", text: routeData ? "Prikupljam live podatke…" : "Izračunavam rutu…", color: C.mut }];
   }, [routeData, guideCards, guideSources]); // eslint-disable-line
 
-  // Rotate
+  // Rotate — 2.5s per card for a live feel
   React.useEffect(() => {
     if (items.length < 2) return;
-    const t = setInterval(() => setIdx(i => (i + 1) % items.length), 4000);
+    const t = setInterval(() => setIdx(i => (i + 1) % items.length), 2500);
     return () => clearInterval(t);
   }, [items.length]);
 
@@ -194,7 +197,7 @@ const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C, extraCa
 
   React.useEffect(() => {
     fetchGuide();
-    const iv = setInterval(fetchGuide, 180000); // 3 min
+    const iv = setInterval(fetchGuide, 60000); // 1 min — fresh
     return () => clearInterval(iv);
   }, [fetchGuide]);
 
@@ -255,7 +258,7 @@ const RouteGuide = React.memo(({ fromCoords, toCoords, seg, lang, dm, C, extraCa
       {/* Source indicator */}
       {(sources || extraCards?.length > 0) && (
         <div style={{ ...dm, fontSize: 10, color: "rgba(100,116,139,0.4)", marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {sources && <><span>HERE:{sources.here || 0}</span><span>Sense:{sources.yolo || 0}</span><span>Meteo:{sources.meteo ? "✓" : "–"}</span></>}
+          {sources && <><span>HERE:{sources.here || 0}</span>{sources.hak > 0 && <span>HAK:{sources.hak}</span>}{sources.dars > 0 && <span>DARS:{sources.dars}</span>}<span>Wx:{sources.meteo ? "✓" : "–"}</span></>}
           {extraCards?.length > 0 && <span>GPS:{extraCards.length}</span>}
           {updated && <span style={{ marginLeft: "auto" }}>{new Date(updated).toLocaleTimeString("hr", { hour: "2-digit", minute: "2-digit" })}</span>}
         </div>

@@ -1,6 +1,6 @@
 // api/guide.js — AI Route Guide: Live Situational Awareness Engine
-// Aggregates: HERE Traffic, Sense sensors, Open-Meteo weather, Border crossings,
-// HAC (HR), DARS (SI), ASFINAG (AT) road conditions
+// Aggregates: HERE Traffic, Sense sensors, Open-Meteo weather,
+// HAK (HR), DARS (SI), ASFINAG (AT) road conditions
 // Returns: prioritized intelligence cards for the tourist
 //
 // GET /api/guide?oLat=48.2&oLng=16.4&dLat=43.5&dLng=16.4&seg=kamper&lang=hr
@@ -9,7 +9,7 @@ const HERE_KEY = process.env.HERE_API_KEY;
 const FB_KEY = process.env.FIREBASE_API_KEY;
 const CORS = ["https://jadran.ai","https://monte-negro.ai"];
 const CACHE = { data: null, ts: 0, key: "" };
-const CACHE_TTL = 180000; // 3 min
+const CACHE_TTL = 60000; // 1 min — fresh data
 
 // Rate limiting — max 60 guide calls per IP per hour
 const _guideRL = new Map();
@@ -102,6 +102,64 @@ async function fetchYoloSensors() {
   } catch (e) { console.warn("guide: Sense error:", e.message); return null; }
 }
 
+// ─── HAK (Croatian Auto Club) — real RSS feed ───
+async function fetchHAK() {
+  try {
+    const r = await fetch("https://www.hak.hr/info/stanje-na-cestama/feed/", {
+      signal: AbortSignal.timeout(5000),
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; JadranBot/1.0)" },
+    });
+    if (!r.ok) { console.warn("guide: HAK HTTP", r.status); return []; }
+    const xml = await r.text();
+    const items = [];
+    const itemRx = /<item>([\s\S]*?)<\/item>/g;
+    let m;
+    while ((m = itemRx.exec(xml)) !== null && items.length < 12) {
+      const chunk = m[1];
+      const title = (/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/.exec(chunk) || /<title>([^<]*)<\/title>/.exec(chunk))?.[1]?.trim() || "";
+      const desc  = (/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/.exec(chunk) || /<description>([^<]*)<\/description>/.exec(chunk))?.[1]?.replace(/<[^>]+>/g,"").trim() || "";
+      const pubDate = /<pubDate>([^<]*)<\/pubDate>/.exec(chunk)?.[1]?.trim() || "";
+      if (title) items.push({ title, desc: desc.slice(0, 300), pubDate });
+    }
+    console.log("guide: HAK items", items.length);
+    return items;
+  } catch (e) { console.warn("guide: HAK error:", e.message); return []; }
+}
+
+// ─── DARS (Slovenia highways) — promet.si JSON ───
+async function fetchDARS() {
+  try {
+    const r = await fetch("https://www.promet.si/dc/b2b.dogodki.json", { signal: AbortSignal.timeout(4000) });
+    if (!r.ok) return [];
+    const data = await r.json();
+    const events = Array.isArray(data) ? data : (data.dogodki || data.events || []);
+    return events.slice(0, 8).map(e => ({
+      title: e.opis || e.description || e.title || "",
+      road:  e.cesta || e.road || "",
+      sev:   (e.prioriteta || e.priority || "").toLowerCase(),
+      type:  (e.tip || e.type || "").toUpperCase(),
+    })).filter(e => e.title);
+  } catch (e) { console.warn("guide: DARS error:", e.message); return []; }
+}
+
+// ─── ASFINAG (Austria) — REST API ───
+async function fetchASFINAG() {
+  try {
+    // ASFINAG open traffic data
+    const r = await fetch("https://api.asfinag.at/traffic/hazards?bbox=12.0,46.5,17.5,48.8&limit=20", {
+      signal: AbortSignal.timeout(4000),
+      headers: { "Accept": "application/json" },
+    });
+    if (!r.ok) return [];
+    const data = await r.json();
+    return (data.hazards || data.features || data || []).slice(0, 6).map(h => ({
+      title: h.description?.de || h.properties?.description || h.name || "",
+      road:  h.road?.name || h.properties?.road || "",
+      type:  (h.type || h.properties?.type || "").toUpperCase(),
+    })).filter(h => h.title);
+  } catch (e) { console.warn("guide: ASFINAG error:", e.message); return []; }
+}
+
 async function fetchWeatherRoute(oLat, oLng, dLat, dLng) {
   try {
     // Weather at origin + midpoint + destination
@@ -141,9 +199,18 @@ async function fetchWeatherRoute(oLat, oLng, dLat, dLng) {
 }
 
 
+// HAK severity detection from Croatian text
+function hakSeverity(title, desc) {
+  const t = (title + " " + desc).toLowerCase();
+  if (/zatvor|zaprijek|blokira|zaustav/.test(t)) return "critical";
+  if (/nesreć|sudar|prevrnulo|bura.*zatvoren|oluja/.test(t)) return "warning";
+  if (/radov|gradilišt|gužv|zastoj|kolona|čekanje/.test(t)) return "info";
+  return "tip";
+}
+
 // ─── RULES ENGINE — generates intelligence cards from raw data ───
 
-function generateCards(traffic, sense, weather, seg, lang) {
+function generateCards(traffic, sense, weather, hak, dars, asfinag, seg, lang) {
   const cards = [];
   const isKamper = seg === "kamper" || seg === "truck";
   const hr = lang === "hr" || lang === "si" || lang === "cz" || lang === "pl";
@@ -346,6 +413,54 @@ function generateCards(traffic, sense, weather, seg, lang) {
   }
 
 
+  // ── HAK — Croatian roads live feed ──
+  if (hak && hak.length > 0) {
+    hak.slice(0, 5).forEach((item, i) => {
+      const sev = hakSeverity(item.title, item.desc);
+      const icon = sev === "critical" ? "⛔" : sev === "warning" ? "🚨" : sev === "info" ? "🟡" : "ℹ️";
+      cards.push({
+        id: `hak_${i}`,
+        severity: sev,
+        icon,
+        title: `HAK: ${item.title.slice(0, 80)}`,
+        body: item.desc || item.title,
+        source: "HAK.hr",
+        ts: item.pubDate || new Date().toISOString(),
+      });
+    });
+  }
+
+  // ── DARS — Slovenia highways ──
+  if (dars && dars.length > 0) {
+    dars.slice(0, 3).forEach((item, i) => {
+      const isCritical = /CLOS|BLOCK|ACCID/.test(item.type) || /1|visok/.test(item.sev);
+      cards.push({
+        id: `dars_${i}`,
+        severity: isCritical ? "warning" : "info",
+        icon: isCritical ? "🚨" : "🟡",
+        title: `DARS/SI: ${(item.road ? item.road + " — " : "") + item.title.slice(0, 70)}`,
+        body: item.title,
+        source: "DARS / promet.si",
+        ts: new Date().toISOString(),
+      });
+    });
+  }
+
+  // ── ASFINAG — Austria highways ──
+  if (asfinag && asfinag.length > 0) {
+    asfinag.slice(0, 2).forEach((item, i) => {
+      cards.push({
+        id: `asfinag_${i}`,
+        severity: "info",
+        icon: "🛣️",
+        title: `ASFINAG/AT: ${(item.road ? item.road + " — " : "") + item.title.slice(0, 70)}`,
+        body: item.title,
+        source: "ASFINAG",
+        ts: new Date().toISOString(),
+      });
+    });
+  }
+
   // ── SEGMENT-SPECIFIC INTELLIGENCE ──
   if (isKamper) {
     cards.push({
@@ -408,7 +523,7 @@ export default async function handler(req, res) {
   const origin = req.headers.origin;
   res.setHeader("Access-Control-Allow-Origin", CORS.includes(origin) ? origin : CORS[0]);
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Cache-Control", "s-maxage=180, stale-while-revalidate=60");
+  res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=30");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "GET") return res.status(405).json({ error: "GET only" });
 
@@ -438,11 +553,14 @@ export default async function handler(req, res) {
   }, 8000);
 
   try {
-    // Parallel fetch — 3 active sources, each with 4s timeout, all fail gracefully
-    const [traffic, sense, weather] = await Promise.allSettled([
+    // Parallel fetch — 6 sources, each with independent timeouts, all fail gracefully
+    const [traffic, sense, weather, hak, dars, asfinag] = await Promise.allSettled([
       fetchHereTraffic(oLat, oLng, dLat, dLng),
       fetchYoloSensors(),
       fetchWeatherRoute(oLat, oLng, dLat, dLng),
+      fetchHAK(),
+      fetchDARS(),
+      fetchASFINAG(),
     ]);
 
     if (responded) return; // hard timeout already fired
@@ -450,18 +568,21 @@ export default async function handler(req, res) {
     responded = true;
 
     const trafficData = traffic.status === "fulfilled" ? (traffic.value || []) : [];
-    const senseData = sense.status === "fulfilled" ? sense.value : null;
+    const senseData   = sense.status === "fulfilled" ? sense.value : null;
     const weatherData = weather.status === "fulfilled" ? weather.value : null;
+    const hakData     = hak.status === "fulfilled" ? (hak.value || []) : [];
+    const darsData    = dars.status === "fulfilled" ? (dars.value || []) : [];
+    const asfinagData = asfinag.status === "fulfilled" ? (asfinag.value || []) : [];
 
-    console.warn(`guide.js: HERE=${trafficData.length} Sense=${senseData?.active||0} Wx=${!!weatherData}`);
+    console.warn(`guide.js: HERE=${trafficData.length} HAK=${hakData.length} DARS=${darsData.length} ASFINAG=${asfinagData.length} Sense=${senseData?.active||0} Wx=${!!weatherData}`);
 
-    const cards = generateCards(trafficData, senseData, weatherData, seg, lang);
+    const cards = generateCards(trafficData, senseData, weatherData, hakData, darsData, asfinagData, seg, lang);
 
     cards.sort((a, b) => (SEV[a.severity] ?? 9) - (SEV[b.severity] ?? 9));
 
     const result = {
       cards,
-      sources: { here: trafficData.length, sense: senseData?.active || 0, meteo: !!weatherData },
+      sources: { here: trafficData.length, hak: hakData.length, dars: darsData.length, sense: senseData?.active || 0, meteo: !!weatherData },
       updated: new Date().toISOString(),
     };
     CACHE.data = result; CACHE.ts = Date.now(); CACHE.key = key;
