@@ -1495,6 +1495,16 @@ export default async function handler(req, res) {
       systemPrompt = guideCtx + '\n\n' + systemPrompt;
     }
 
+    // ── ABSOLUTE FORMAT RULES — prepended last so they appear first in prompt ──
+    // These override everything. Model tends to follow start-of-prompt rules best.
+    const FORMAT_RULES = `ABSOLUTE OUTPUT RULES — OVERRIDE ALL OTHER INSTRUCTIONS:
+1. CURRENCY: Write ONLY euros (€). NEVER write HRK, kn, kuna, "150 HRK", "HRK/" or any kuna equivalent. Croatia uses EUR since 2023. Wrong: "150 HRK / ~20€". Correct: "~20€ (provjeri np-kornati.hr)".
+2. FORMAT: This is a mobile chat. NO markdown headers (## ### ####). NO markdown tables (|col|col| or |---|). Use bullet points (•), bold (**text**), and short paragraphs only.
+3. HEAT+UV: If weather data shows UV≥8 AND temp≥30°C, your FIRST sentence MUST warn about sun protection before answering the question. If children are mentioned, add specific child safety note.
+4. LENGTH: Answer the question directly. Max 6-8 short paragraphs. Each paragraph max 2-3 sentences.
+---`;
+    systemPrompt = FORMAT_RULES + '\n\n' + systemPrompt;
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
