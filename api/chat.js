@@ -1507,17 +1507,17 @@ export default async function handler(req, res) {
 5. LENGTH: Direct answer first. Max 6 paragraphs. Each paragraph max 3 sentences.`;
     systemPrompt = FORMAT_RULES + '\n\n' + systemPrompt;
 
-    // ── UV/HEAT PREFILL — force first sentence when conditions are critical ──
-    // Assistant prefill is the only reliable way to guarantee first-sentence position.
-    // Claude will continue from this partial assistant message.
+    // ── UV/HEAT INJECTION — inject UV warning directive into last user message ──
+    // Claude-sonnet-4-6 does not support assistant prefill.
+    // We inject a [SYSTEM_NOTE] at the start of the user's last message instead.
     let finalMessages = sanitizedMessages;
     const wxForPrefill = req.body.weather || {};
     const uvVal = parseFloat(wxForPrefill.uv) || 0;
     const tempVal = parseFloat(wxForPrefill.temp) || 0;
     const hasKids = JSON.stringify(req.body.delta_context || {}).includes("kids");
     if (!walkieMode && uvVal >= 8 && tempVal >= 30) {
-      const kidNote = hasKids ? (lang === "de" || lang === "at" ? " Kinder besonders schützen!" : lang === "en" ? " Especially protect children!" : lang === "it" ? " Proteggete i bambini!" : " Djeca su posebno osjetljiva!") : "";
-      const uvPrefill = lang === "de" || lang === "at"
+      const kidNote = hasKids ? (lang === "de" || lang === "at" ? " Kinder sind besonders gefährdet!" : lang === "en" ? " Children especially at risk!" : lang === "it" ? " Bambini particolarmente a rischio!" : lang === "si" ? " Otroci so posebej ogroženi!" : " Djeca su posebno osjetljiva!") : "";
+      const uvText = lang === "de" || lang === "at"
         ? `⚠️ UV ${uvVal} und ${Math.round(tempVal)}°C — SPF50+ auftragen, 11–16 Uhr Schatten suchen.${kidNote}`
         : lang === "en" ? `⚠️ UV ${uvVal} and ${Math.round(tempVal)}°C — apply SPF50+, avoid sun 11–16h.${kidNote}`
         : lang === "it" ? `⚠️ UV ${uvVal} e ${Math.round(tempVal)}°C — crema solare SPF50+, ombra 11–16h.${kidNote}`
@@ -1525,7 +1525,13 @@ export default async function handler(req, res) {
         : lang === "cz" ? `⚠️ UV ${uvVal} a ${Math.round(tempVal)}°C — SPF50+, vyhněte se slunci 11–16h.${kidNote}`
         : lang === "pl" ? `⚠️ UV ${uvVal} i ${Math.round(tempVal)}°C — filtr SPF50+, unikaj słońca 11–16h.${kidNote}`
         : `⚠️ UV ${uvVal} i ${Math.round(tempVal)}°C — nanesite SPF50+, izbjegavajte sunce 11–16h.${kidNote}`;
-      finalMessages = [...sanitizedMessages, { role: "assistant", content: uvPrefill }];
+      // Inject directive into last user message so model sees it as a requirement
+      const uvDirective = `[IMPORTANT: Start your response with exactly this safety warning on its own line: "${uvText}"]\n\n`;
+      finalMessages = sanitizedMessages.map((m, i) =>
+        i === sanitizedMessages.length - 1 && m.role === "user"
+          ? { ...m, content: uvDirective + (typeof m.content === "string" ? m.content : JSON.stringify(m.content)) }
+          : m
+      );
     }
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1552,14 +1558,6 @@ export default async function handler(req, res) {
       return res.status(200).json({ content: [{ type: "text", text: `⚠️ AI greška: ${data.error.message || 'Pokušajte ponovno.'}` }] });
     }
     
-    // If prefill was used, prepend it to the response text so client sees the full message
-    if (finalMessages !== sanitizedMessages && data.content) {
-      const prefillText = finalMessages[finalMessages.length - 1]?.content || "";
-      data.content = data.content.map((c, i) =>
-        i === 0 && c.type === "text" ? { ...c, text: prefillText + c.text } : c
-      );
-    }
-
     // Send remaining count so client can sync (prevents incognito bypass)
     res.setHeader("X-Remaining", String(tierCheck.remaining));
     return res.status(200).json(data);
