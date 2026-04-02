@@ -1497,13 +1497,14 @@ export default async function handler(req, res) {
 
     // ── ABSOLUTE FORMAT RULES — prepended last so they appear first in prompt ──
     // These override everything. Model tends to follow start-of-prompt rules best.
+    const langForRules = LANG_MAP[lang] || "Croatian";
     const FORMAT_RULES = `ABSOLUTE OUTPUT RULES — OVERRIDE ALL OTHER INSTRUCTIONS:
+0. LANGUAGE: Your response MUST be written ENTIRELY in ${langForRules}. This is non-negotiable. Do NOT write in Croatian unless lang=hr. Slovenian≠Croatian. Czech≠Croatian. German≠Croatian.
 1. CURRENCY: Write ONLY euros (€). NEVER: HRK, kn, kuna, "X HRK", "X HRK / Y€". Just write: "~20€". Croatia uses EUR since 2023.
 2. FORMAT: Mobile chat — FORBIDDEN: ## ### #### headings, |table|, |---|, horizontal rules (---). ALLOWED: **bold**, • bullets, 1. numbered lists, blank lines between paragraphs.
 3. HEAT+UV WARNING: If UV≥8 AND temp≥30°C — your response MUST START with a 1-sentence UV/heat warning ("⚠️ UV [X] i [Y]°C — ...") BEFORE answering. If children mentioned: warn about kids specifically.
-4. LANGUAGE: Respond ENTIRELY in the user's language. Never mix Croatian phrases into German/Slovenian/Czech/Polish replies. All internal notes must be translated.
-5. TONE: No "Super!", "Odlično!", "Great choice!", "Enjoy!" or similar filler openers/closers. Start with the actual answer. End with one concrete next-step recommendation.
-6. LENGTH: Direct answer first. Max 6 paragraphs. Each paragraph max 3 sentences.`;
+4. TONE: No "Super!", "Odlično!", "Great choice!", "Enjoy!" or similar filler openers/closers. Start with the actual answer. End with one concrete next-step recommendation.
+5. LENGTH: Direct answer first. Max 6 paragraphs. Each paragraph max 3 sentences.`;
     systemPrompt = FORMAT_RULES + '\n\n' + systemPrompt;
 
     // ── UV/HEAT PREFILL — force first sentence when conditions are critical ──
@@ -1517,11 +1518,13 @@ export default async function handler(req, res) {
     if (!walkieMode && uvVal >= 8 && tempVal >= 30) {
       const kidNote = hasKids ? (lang === "de" || lang === "at" ? " Kinder besonders schützen!" : lang === "en" ? " Especially protect children!" : lang === "it" ? " Proteggete i bambini!" : " Djeca su posebno osjetljiva!") : "";
       const uvPrefill = lang === "de" || lang === "at"
-        ? `⚠️ UV ${uvVal} und ${Math.round(tempVal)}°C — SPF50+ auftragen, 11–16 Uhr Schatten suchen.${kidNote}\n\n`
-        : lang === "en" ? `⚠️ UV ${uvVal} and ${Math.round(tempVal)}°C — apply SPF50+, avoid sun 11–16h.${kidNote}\n\n`
-        : lang === "it" ? `⚠️ UV ${uvVal} e ${Math.round(tempVal)}°C — crema solare SPF50+, ombra 11–16h.${kidNote}\n\n`
-        : lang === "si" ? `⚠️ UV ${uvVal} in ${Math.round(tempVal)}°C — SPF50+ obvezno, izogibajte se soncu 11–16h.${kidNote}\n\n`
-        : `⚠️ UV ${uvVal} i ${Math.round(tempVal)}°C — nanesite SPF50+, izbjegavajte sunce 11–16h.${kidNote}\n\n`;
+        ? `⚠️ UV ${uvVal} und ${Math.round(tempVal)}°C — SPF50+ auftragen, 11–16 Uhr Schatten suchen.${kidNote}`
+        : lang === "en" ? `⚠️ UV ${uvVal} and ${Math.round(tempVal)}°C — apply SPF50+, avoid sun 11–16h.${kidNote}`
+        : lang === "it" ? `⚠️ UV ${uvVal} e ${Math.round(tempVal)}°C — crema solare SPF50+, ombra 11–16h.${kidNote}`
+        : lang === "si" ? `⚠️ UV ${uvVal} in ${Math.round(tempVal)}°C — SPF50+ obvezno, izogibajte se soncu 11–16h.${kidNote}`
+        : lang === "cz" ? `⚠️ UV ${uvVal} a ${Math.round(tempVal)}°C — SPF50+, vyhněte se slunci 11–16h.${kidNote}`
+        : lang === "pl" ? `⚠️ UV ${uvVal} i ${Math.round(tempVal)}°C — filtr SPF50+, unikaj słońca 11–16h.${kidNote}`
+        : `⚠️ UV ${uvVal} i ${Math.round(tempVal)}°C — nanesite SPF50+, izbjegavajte sunce 11–16h.${kidNote}`;
       finalMessages = [...sanitizedMessages, { role: "assistant", content: uvPrefill }];
     }
 
