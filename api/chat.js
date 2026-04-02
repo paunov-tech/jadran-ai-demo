@@ -1338,7 +1338,21 @@ export default async function handler(req, res) {
       if (d.arrival_date) parts.push(`Dolazak: ${d.arrival_date}`);
       if (d.departure_date) parts.push(`Odlazak: ${d.departure_date}`);
       // Operator instructions based on phase
-      if (d.phase === "pretrip") parts.push("INSTRUKCIJA: Gost je u fazi planiranja. Pomozi s rutom, vremenom, šta ponijeti, i informacijama o destinaciji.");
+      if (d.phase === "pretrip") {
+        const routeInfo = d.route_km ? `Ruta: ${d.from || "?"} → ${d.destination?.city || "?"}, ${d.route_km}km, ~${d.route_hrs || "?"}h${d.route_mins ? d.route_mins+"min" : ""}.` : "";
+        const segInfo = d.segment ? `Segment: ${d.segment}.` : "";
+        const arrInfo = d.arrival_date ? `Planirani dolazak: ${d.arrival_date}.` : "";
+        const camperInfo = (d.camperLen || d.camperHeight) ? `Kamper: ${d.camperLen ? d.camperLen+"m" : ""}${d.camperHeight ? ", visina "+d.camperHeight+"m" : ""}.` : "";
+        parts.push(`INSTRUKCIJA PRE-TRIP: Gost planira putovanje na Jadran. ${routeInfo} ${segInfo} ${arrInfo} ${camperInfo}
+Tvoj zadatak je biti KONKRETNI putni operater — ne turistički letak. Daj:
+1. RUTA: Ključne dionice, gužve, preporučeno vrijeme polaska, alternativne rute ako postoje.
+2. GRANIČNI PRIJELAZI: Koji je optimalan za ovaj segment (kamper/auto/brod). Čekanja ako su poznata.
+3. TRAJEKTI (ako relevantno za destinaciju): Red, rezervacija, preporuke.
+4. KAMPER-SPECIFIČNO (ako segment=kamper): Visinska ograničenja tunela na ruti, zabranjene ceste, camping prijedlozi uz rutu.
+5. VREMENSKI UVJETI na dan polaska i na destinaciji: konkretno što to znači za putovanje.
+6. ŠTA PONIJETI/PRIPREMITI: Samo ono specifično za ovu rutu i segment — ne generičku listu.
+Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to direktno i daj što možeš.`.trim());
+      }
       if (d.phase === "transit") parts.push("INSTRUKCIJA: Gost je na putu. Fokus na navigaciju, trajekte, gužve, parking. Proaktivna upozorenja.");
       if (d.phase === "arrival") parts.push("INSTRUKCIJA: Gost je stigao. Check-in info, parking, prve preporuke za dan, live kamere.");
       if (d.phase === "odmor") parts.push("INSTRUKCIJA: Gost boravi na destinaciji. Preporuči aktivnosti, restorane, plaže. Direktni partneri uvijek prvi.");

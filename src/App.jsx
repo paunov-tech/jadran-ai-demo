@@ -1792,48 +1792,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
               🚀 {lang === "de" || lang === "at" ? "Reise starten" : lang === "en" ? "Start trip" : lang === "it" ? "Inizia viaggio" : "Krećem na put"}
             </button>
           ) : (
-            <>
-              {/* AI chat banner — adapted per user type */}
-              {(() => {
-                const isBooking = verifiedAffiliate.current || (roomCode.current && roomCode.current !== "DEMO" && !roomCode.current.startsWith("dev_"));
-                const used = freeMsgUsed;
-                const left = Math.max(0, 5 - used);
-                return (
-                  <div style={{ ...dm, display:"flex", alignItems:"center", gap:10, padding:"10px 16px",
-                    borderRadius:12, background: isBooking ? "rgba(167,139,250,0.08)" : "rgba(14,165,233,0.06)",
-                    border: `1px solid ${isBooking ? "rgba(167,139,250,0.18)" : C.acBorder}`,
-                    marginBottom:10, textAlign:"left" }}>
-                    <span style={{ fontSize:18 }}>🤖</span>
-                    <div style={{ flex:1 }}>
-                      <div style={{ fontSize:12, color: isBooking ? "#a78bfa" : C.accent, fontWeight:600, marginBottom:1 }}>
-                        {isBooking
-                          ? ({hr:"AI vodič aktivan · 72h",de:"AI-Guide aktiv · 72h",en:"AI guide active · 72h",it:"Guida AI attiva · 72h"})[lang] || "AI guide active · 72h"
-                          : left > 0
-                            ? ({hr:`AI vodič · ${left} besplatna pitanja`,de:`AI-Guide · ${left} kostenlose Fragen`,en:`AI guide · ${left} free questions`,it:`Guida AI · ${left} domande gratuite`})[lang] || `AI guide · ${left} free`
-                            : ({hr:"AI vodič · Nadogradi",de:"AI-Guide · Upgrade",en:"AI guide · Upgrade",it:"Guida AI · Aggiorna"})[lang] || "Upgrade"
-                        }
-                      </div>
-                      <div style={{ fontSize:11, color:C.mut }}>
-                        {({hr:"Pitaj za granicu, gorivo, restorane…",de:"Fragen zu Grenze, Tanken, Restaurants…",en:"Ask about border, fuel, restaurants…",it:"Chiedi di confine, carburante, ristoranti…"})[lang] || "Ask about border, fuel, restaurants…"}
-                      </div>
-                    </div>
-                    <button onClick={() => {
-                      if (!premium && left <= 0) { setShowPaywall(true); return; }
-                      setSubScreen("chat");
-                    }}
-                      style={{ ...dm, padding:"6px 12px", borderRadius:8,
-                        border: `1px solid ${isBooking ? "rgba(167,139,250,0.25)" : C.acBorder}`,
-                        background: isBooking ? "rgba(167,139,250,0.10)" : C.acDim,
-                        color: isBooking ? "#a78bfa" : C.accent, fontSize:11, cursor:"pointer", fontWeight:600, whiteSpace:"nowrap" }}>
-                      {left <= 0 && !premium
-                        ? "⭐ Upgrade"
-                        : ({hr:"Pitaj →",de:"Fragen →",en:"Ask →",it:"Chiedi →"})[lang] || "Pitaj →"}
-                    </button>
-                  </div>
-                );
-              })()}
-              <Btn primary onClick={() => { ensureTrialStart(); setKioskWelcome(true); setNearbyData(null); setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home", lang, destination: transitDestCity || kioskCity, segment: transitSegUrl || "auto", lastAccess: new Date().toISOString() }); }}>{t("arrived",lang)}</Btn>
-            </>
+            <Btn primary onClick={() => { ensureTrialStart(); setKioskWelcome(true); setNearbyData(null); setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home", lang, destination: transitDestCity || kioskCity, segment: transitSegUrl || "auto", lastAccess: new Date().toISOString() }); }}>{t("arrived",lang)}</Btn>
           )}
         </div>
 

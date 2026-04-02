@@ -148,6 +148,10 @@
       "destination": "/blog/kroatien-wohnmobil-reisefuehrer.html"
     },
     {
+      "source": "/privacy",
+      "destination": "/privacy.html"
+    },
+    {
       "source": "/blog",
       "destination": "/blog/index.html"
     },
