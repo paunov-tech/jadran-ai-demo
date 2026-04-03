@@ -595,14 +595,6 @@ Specifico. Nomi reali di strade (A1, E65), città, valichi.`,
               { hr: "GUARDIAN POSTAVLJANJE — KORAK 2", de: "GUARDIAN SETUP — SCHRITT 2", en: "GUARDIAN SETUP — STEP 2", it: "CONFIGURAZIONE GUARDIAN — PASSO 2" },
               { hr: "GUARDIAN SPREMAN — AKTIVIRAJ", de: "GUARDIAN BEREIT — AKTIVIEREN", en: "GUARDIAN READY — ACTIVATE", it: "GUARDIAN PRONTO — ATTIVA" },
             ];
-            const PHASES = [
-              { hr: "Postavljanje", de: "Einrichten", en: "Setup", it: "Configurazione" },
-              { hr: "Ruta", de: "Route", en: "Route", it: "Percorso" },
-              { hr: "Monitoring", de: "Überwachung", en: "Monitoring", it: "Monitoraggio" },
-              { hr: "Putovanje", de: "Unterwegs", en: "En route", it: "In viaggio" },
-              { hr: "Odmor", de: "Aufenthalt", en: "Stay", it: "Soggiorno" },
-              { hr: "Povratak", de: "Rückkehr", en: "Return", it: "Ritorno" },
-            ];
             // Guardian Brief intercept — show pre-trip card instead of setup wizard
             if (guardianBrief) {
               const gb = guardianBrief;
@@ -613,13 +605,27 @@ Specifico. Nomi reali di strade (A1, E65), città, valichi.`,
                   <div style={{ fontSize: 11, color: "#4ade80", marginBottom: 12, letterSpacing: 1.5, textTransform: "uppercase", fontFamily: B }}>
                     🛡️ {lang === "de" || lang === "at" ? "GUARDIAN BRIEF — REISEPRÜFUNG" : lang === "en" ? "GUARDIAN BRIEF — PRE-TRIP CHECK" : lang === "it" ? "GUARDIAN BRIEF — CONTROLLO VIAGGIO" : "GUARDIAN BRIEF — PROVJERA PUTOVANJA"}
                   </div>
-                  {/* All phases complete */}
-                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center", marginBottom: 16 }}>
-                    {PHASES.map((phase, i) => (
-                      <div key={i} style={{ padding: "3px 10px", borderRadius: 20, background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.35)", color: "#4ade80", fontSize: 10, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
-                        <span style={{ fontSize: 9 }}>✓</span>{tlang(phase)}
-                      </div>
-                    ))}
+                  {/* Guardian active status strip */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, padding: "5px 12px", borderRadius: 8, background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.18)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", boxShadow: "0 0 6px #22c55e", display: "inline-block", animation: "pulse 2s infinite", flexShrink: 0 }} />
+                      <span style={{ fontSize: 10, fontWeight: 700, color: "#4ade80", letterSpacing: 1, fontFamily: B }}>
+                        {lang === "de" || lang === "at" ? "GUARDIAN AKTIV" : lang === "en" ? "GUARDIAN ACTIVE" : lang === "it" ? "GUARDIAN ATTIVO" : "GUARDIAN AKTIVAN"}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", gap: 10 }}>
+                      {[
+                        { src: "HAK", active: true },
+                        { src: lang === "de" || lang === "at" ? "Wetter" : lang === "en" ? "Meteo" : lang === "it" ? "Meteo" : "Meteo", active: !!gb.weather },
+                        { src: lang === "de" || lang === "at" ? "Sat" : "Sat", active: !!gb.satData },
+                        { src: "Live", active: !!(gb.senseCards?.length) },
+                      ].map((s, i) => (
+                        <span key={i} style={{ fontSize: 9, color: s.active ? "#4ade80" : "#374151", fontFamily: B, fontWeight: 600, display: "flex", alignItems: "center", gap: 3 }}>
+                          <span style={{ width: 5, height: 5, borderRadius: "50%", background: s.active ? "#22c55e" : "#374151", display: "inline-block", flexShrink: 0 }} />
+                          {s.src}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                   {/* Brief card */}
                   <div style={{ borderRadius: 18, overflow: "hidden", border: "1px solid rgba(34,197,94,0.2)", background: "rgba(10,22,40,0.8)" }}>
