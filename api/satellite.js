@@ -187,7 +187,7 @@ function evaluatePixel(s) {
 }`;
 
 // ── QUERY STATISTICAL API ─────────────────────────────────────────────────
-async function queryZoneStats(zone, token, daysBack = 5) {
+async function queryZoneStats(zone, token, daysBack = 14) {
   const now   = new Date();
   const from  = new Date(now - daysBack * 86400000).toISOString().slice(0, 10) + "T00:00:00Z";
   const to    = now.toISOString().slice(0, 10) + "T23:59:59Z";
@@ -218,7 +218,6 @@ async function queryZoneStats(zone, token, daysBack = 5) {
     },
     calculations: {
       default: {
-        histograms: { default: { nBins: 10, lowEdge: 0.0, highEdge: 0.5 } },
         statistics: { default: { percentiles: { k: [25, 50, 75] } } },
       },
     },
