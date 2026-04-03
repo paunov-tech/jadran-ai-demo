@@ -138,6 +138,8 @@ export default function LandingPage() {
   const [showPlanPicker, setShowPlanPicker] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [routeInputFocused, setRouteInputFocused] = useState(false);
+  const [recoverEmail, setRecoverEmail] = useState("");
+  const [recoverStatus, setRecoverStatus] = useState(null); // null|"loading"|"ok"|"fail"
   // Detect GDPR banner presence — offset sticky bar so they don't overlap
   const [gdprVisible, setGdprVisible] = useState(() => { try { return !localStorage.getItem("jadran_consent"); } catch { return false; } });
   useEffect(() => {
@@ -920,7 +922,7 @@ Specifico. Nomi reali di strade (A1, E65), città, valichi.`,
                 {tx("demoDesc")} <em>"{tx("demoQ")}"</em><br/><br/>
                 {tx("demoStory")}
               </p>
-              <a href={`/ai?niche=camper&lang=${lang}`} aria-label="Kamper vodič" style={{ display: "inline-block", padding: "13px 28px", borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", color: "#fff", fontSize: 15, fontWeight: 700, textDecoration: "none", fontFamily: F }}>
+              <a href="/explore" aria-label="Probaj besplatno" style={{ display: "inline-block", padding: "13px 28px", borderRadius: 12, background: "linear-gradient(135deg, #0ea5e9, #0284c7)", color: "#fff", fontSize: 15, fontWeight: 700, textDecoration: "none", fontFamily: F }}>
                 {tx("demoTry")} {"\u2192"}
               </a>
             </div>
@@ -1044,14 +1046,14 @@ Specifico. Nomi reali di strade (A1, E65), città, valichi.`,
       </footer>
 
       {/* ═══ STICKY BUY BAR — PREMIUM DESIGN ═══ */}
-      {!routeInputFocused && isPremium ? (
+      {(!routeInputFocused && !routeStep) && isPremium ? (
         <div style={{ position: "fixed", bottom: gdprVisible ? 52 : 0, left: 0, right: 0, zIndex: 99, paddingBottom: "env(safe-area-inset-bottom, 0px)", transition: "bottom 0.3s" }}>
           <div style={{ padding: "10px 20px", background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)", borderTop: "1px solid rgba(245,158,11,0.15)", display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}>
             <span style={{ padding: "4px 14px", borderRadius: 12, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.12)", color: "#f59e0b", fontSize: 11, fontWeight: 600 }}>⭐ {premLabel} {premDays !== null ? premDays + "d" : ""}</span>
             <span style={{ color: "#475569", fontSize: 10 }}>JADRAN.AI PREMIUM</span>
           </div>
         </div>
-      ) : !routeInputFocused ? (
+      ) : (!routeInputFocused && !routeStep) ? (
         <div onClick={() => setShowPlanPicker(true)} style={{ position: "fixed", bottom: gdprVisible ? 52 : 0, left: 0, right: 0, zIndex: 99, cursor: "pointer", paddingBottom: "env(safe-area-inset-bottom, 0px)", transition: "bottom 0.3s" }}>
           <div style={{ position: "relative", overflow: "hidden", padding: "12px 20px", background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)", borderTop: "1px solid rgba(245,158,11,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 -8px 32px rgba(0,0,0,0.5)" }}>
             {/* Shimmer accent line */}
@@ -1138,7 +1140,53 @@ Specifico. Nomi reali di strade (A1, E65), città, valichi.`,
             <div style={{ textAlign: "center", fontSize: 10, color: "#64748b" }}>
               🔒 {lang === "en" ? "Secure payment via Stripe · No hidden fees" : lang === "de" || lang === "at" ? "Sichere Zahlung über Stripe · Keine versteckten Kosten" : lang === "it" ? "Pagamento sicuro via Stripe · Nessun costo nascosto" : "Sigurno plaćanje putem Stripe · Bez skrivenih troškova"}
             </div>
-            <div onClick={() => setShowPlanPicker(false)} style={{ textAlign: "center", marginTop: 16, fontSize: 12, color: "#475569", cursor: "pointer" }}>
+
+            {/* ── ALREADY PAID RECOVERY ── */}
+            <div style={{ marginTop: 16, padding: "14px 16px", borderRadius: 14, border: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
+              <div style={{ fontSize: 11, color: "#64748b", marginBottom: 8, textAlign: "center" }}>
+                {lang === "de" || lang === "at" ? "Bereits bezahlt?" : lang === "en" ? "Already paid?" : lang === "it" ? "Già pagato?" : "Već plaćeno?"}
+              </div>
+              {recoverStatus === "ok" ? (
+                <div style={{ textAlign: "center", color: "#4ade80", fontSize: 13, fontWeight: 700 }}>
+                  ✓ {lang === "de" || lang === "at" ? "Zugang wiederhergestellt!" : lang === "en" ? "Access restored!" : lang === "it" ? "Accesso ripristinato!" : "Pristup obnovljen!"}
+                </div>
+              ) : (
+                <div style={{ display: "flex", gap: 6 }}>
+                  <input
+                    type="email"
+                    value={recoverEmail}
+                    onChange={e => setRecoverEmail(e.target.value)}
+                    placeholder={lang === "de" || lang === "at" ? "E-Mail der Zahlung" : lang === "en" ? "Payment email" : lang === "it" ? "Email pagamento" : "Email s kojim ste platili"}
+                    style={{ flex: 1, padding: "9px 12px", borderRadius: 8, border: `1px solid ${recoverStatus === "fail" ? "rgba(248,113,113,0.5)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#e2e8f0", fontSize: 13, outline: "none", fontFamily: "inherit" }}
+                  />
+                  <button
+                    disabled={recoverStatus === "loading" || !recoverEmail.includes("@")}
+                    onClick={async () => {
+                      setRecoverStatus("loading");
+                      try {
+                        let deviceId;
+                        try { deviceId = localStorage.getItem("jadran_device_id"); if (!deviceId) { const b = new Uint8Array(9); crypto.getRandomValues(b); deviceId = "jd_" + Array.from(b, x => x.toString(16).padStart(2,"0")).join(""); localStorage.setItem("jadran_device_id", deviceId); } } catch { deviceId = "unknown"; }
+                        const r = await fetch("/api/recover", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: recoverEmail.trim().toLowerCase(), deviceId }) });
+                        if (r.ok) {
+                          const d = await r.json();
+                          if (d.recovered) { localStorage.setItem("jadran_ai_premium", "1"); setRecoverStatus("ok"); setTimeout(() => setShowPlanPicker(false), 1500); }
+                          else setRecoverStatus("fail");
+                        } else setRecoverStatus("fail");
+                      } catch { setRecoverStatus("fail"); }
+                    }}
+                    style={{ padding: "9px 14px", borderRadius: 8, background: recoverStatus === "loading" ? "rgba(255,255,255,0.06)" : "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.3)", color: "#38bdf8", fontSize: 12, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", fontFamily: "inherit" }}>
+                    {recoverStatus === "loading" ? "…" : lang === "de" || lang === "at" ? "Wiederherstellen" : lang === "en" ? "Restore" : lang === "it" ? "Ripristina" : "Obnovi"}
+                  </button>
+                </div>
+              )}
+              {recoverStatus === "fail" && (
+                <div style={{ fontSize: 11, color: "#f87171", marginTop: 6, textAlign: "center" }}>
+                  {lang === "de" || lang === "at" ? "Kein Kauf gefunden. E-Mail prüfen oder Support kontaktieren." : lang === "en" ? "No purchase found. Check email or contact support." : lang === "it" ? "Nessun acquisto trovato. Controlla email o contatta supporto." : "Plaćanje nije pronađeno. Provjeri email ili kontaktiraj podršku."}
+                </div>
+              )}
+            </div>
+
+            <div onClick={() => { setShowPlanPicker(false); setRecoverStatus(null); setRecoverEmail(""); }} style={{ textAlign: "center", marginTop: 14, fontSize: 12, color: "#475569", cursor: "pointer" }}>
               {lang === "en" ? "Maybe later" : lang === "de" || lang === "at" ? "Vielleicht später" : lang === "it" ? "Forse dopo" : "Možda kasnije"}
             </div>
           </div>
