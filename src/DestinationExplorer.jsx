@@ -81,7 +81,6 @@ const FJERA = {
 
 // ─── STATS ───
 const STATS = [
-  { n:"165+",  l:{hr:"Jadran Sense™ točaka",de:"Jadran Sense™ Punkte",en:"Jadran Sense™ points",it:"Punti Jadran Sense™",pl:"Punktów Jadran Sense™",si:"Jadran Sense™ točk"} },
   { n:"8",     l:{hr:"Jezika",de:"Sprachen",en:"Languages",it:"Lingue",pl:"Języków",si:"Jezikov"} },
   { n:"7",     l:{hr:"Regija",de:"Regionen",en:"Regions",it:"Regioni",pl:"Regionów",si:"Regij"} },
   { n:"24/7",  l:{hr:"AI vodič",de:"KI-Guide",en:"AI guide",it:"Guida AI",pl:"Przewodnik AI",si:"AI vodič"} },
@@ -478,9 +477,6 @@ export default function DestinationExplorer() {
 
           {/* CTAs — centered */}
           <div style={{ display:"flex", gap:8, flexWrap:"wrap", justifyContent:"center", marginBottom:12 }}>
-            <a href="#destinations" style={{ padding:"11px 24px", background:"linear-gradient(135deg,#0ea5e9,#0284c7)", borderRadius:12, color:"#fff", fontSize:14, fontWeight:600, textDecoration:"none", fontFamily:F, letterSpacing:0.3, boxShadow:"0 4px 24px rgba(14,165,233,0.4), inset 0 1px 0 rgba(255,255,255,0.15)", display:"inline-flex", alignItems:"center" }}>
-              {({hr:"Istraži destinacije",de:"Destinationen entdecken",en:"Explore destinations",it:"Esplora destinazioni",pl:"Odkryj destynacje",si:"Razišči destinacije"})[dl] || "Explore"} ↓
-            </a>
             <a href="/landing" style={{ padding:"11px 20px", borderRadius:12, color:"#fbbf24", fontSize:14, fontWeight:500, textDecoration:"none", fontFamily:F, border:"1px solid rgba(251,191,36,0.3)", background:"rgba(251,191,36,0.06)", display:"inline-flex", alignItems:"center", gap:6, letterSpacing:0.3, backdropFilter:"blur(8px)" }}>
               ⭐ AI Travel Guardian →
             </a>
