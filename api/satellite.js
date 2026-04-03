@@ -168,23 +168,17 @@ async function getSentinelToken() {
 // Returns mean of B04 (Red) and B03 (Green) over polygon
 // Cars increase visible-band reflectance vs dark empty asphalt
 // NDVI complement: low NDVI + high visible = pavement/vehicles
-// Minimal evalscript: only B04 (Red reflectance) + cloud flag
-// B04 rises when vehicles/bright objects present vs dark asphalt baseline
+// Minimal evalscript: B04 (Red reflectance) for vehicle detection
+// Cloud filtering handled server-side via maxCloudCoverage in dataFilter
 const EVALSCRIPT = `//VERSION=3
 function setup() {
   return {
-    input: [{ bands: ["B04","CLM"], units: "REFLECTANCE" }],
-    output: [
-      { id: "b04", bands: 1, sampleType: "FLOAT32" },
-      { id: "cloud", bands: 1, sampleType: "UINT8" }
-    ]
+    input: [{ bands: ["B04"], units: "REFLECTANCE" }],
+    output: [{ id: "b04", bands: 1, sampleType: "FLOAT32" }]
   };
 }
 function evaluatePixel(s) {
-  return {
-    b04: [s.B04],
-    cloud: [s.CLM > 0 ? 1 : 0]
-  };
+  return { b04: [s.B04] };
 }`;
 
 // ── QUERY STATISTICAL API ─────────────────────────────────────────────────
@@ -248,17 +242,16 @@ async function queryZoneStats(zone, token, daysBack = 14) {
 // Higher mean B04 (Red) vs baseline → more vehicles
 // Scale: 0-100% estimated occupancy
 function estimateOccupancy(stats, zone) {
-  // Find most recent non-cloudy result
+  // Find most recent valid result (cloud filtering is server-side via maxCloudCoverage)
   const intervals = stats?.data?.filter(d =>
-    d.outputs?.b04?.bands?.B0?.stats?.mean != null &&
-    (d.outputs?.cloud?.bands?.B0?.stats?.mean ?? 1) < 0.3  // <30% cloud cover
+    d.outputs?.b04?.bands?.B0?.stats?.mean != null
   );
   if (!intervals?.length) return null;
 
   const latest = intervals[intervals.length - 1];
-  const meanB04  = latest.outputs.b04.bands.B0.stats.mean;
+  const meanB04   = latest.outputs.b04.bands.B0.stats.mean;
   const imageDate = latest.interval?.from?.slice(0, 10);
-  const cloudPct  = Math.round((latest.outputs.cloud?.bands?.B0?.stats?.mean || 0) * 100);
+  const cloudPct  = 0; // handled server-side
 
   if (meanB04 == null) return null;
 
