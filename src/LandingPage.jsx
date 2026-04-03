@@ -225,15 +225,15 @@ export default function LandingPage() {
     if (code <= 82) return "🌦️";
     return "⛈️";
   };
-  const CAMP_HINTS = {
-    split: "Camping Stobreč · 2km od centra", dubrovnik: "Camping Solitudo · Lapad",
-    pula: "Camping Kažela · Medulin", zadar: "Falkensteiner Premium · Zadar",
-    rovinj: "Camping Amarin · Rovinj", makarska: "Camping Makarska · Rivijera",
-    hvar: "Camping Vira · Stari Grad", šibenik: "Camping Solaris · Šibenik",
-  };
-  const campHint = (city) => {
-    const k = city.toLowerCase();
-    return Object.entries(CAMP_HINTS).find(([key]) => k.includes(key))?.[1] || null;
+
+  const destTag = (city) => {
+    const c = city.toLowerCase();
+    if (c.includes("split") || c.includes("makarska") || c.includes("hvar") || c.includes("omiš") || c.includes("brač")) return "SPLIT";
+    if (c.includes("dubrovnik") || c.includes("pelješac") || c.includes("ston")) return "DUBROVNIK";
+    if (c.includes("zadar") || c.includes("krka") || c.includes("šibenik") || c.includes("sibenik")) return "ZADAR";
+    if (c.includes("pula") || c.includes("rovinj") || c.includes("poreč") || c.includes("porec") || c.includes("motovun") || c.includes("istra")) return "ISTRA";
+    if (c.includes("plitvic")) return "PLITVICE";
+    return null;
   };
 
   const launchGuardian = async () => {
@@ -241,14 +241,14 @@ export default function LandingPage() {
     setBriefLoading(true);
     const seg = selectedMode === "kamper" ? "kamper" : selectedMode === "avion" ? "jedrilicar" : "par";
     const fromCoordArr = depCoords ? [depCoords.lat, depCoords.lng] : null;
-    const dest = { city: toLPCity.trim() };
-    if (toCoords) { dest.lat = toCoords.lat; dest.lng = toCoords.lng; }
-    saveDelta({ segment: seg, transport: selectedMode, from: depCity.trim(), from_coords: fromCoordArr, destination: dest, lang, phase: "transit" });
+    const destObj = { city: toLPCity.trim() };
+    if (toCoords) { destObj.lat = toCoords.lat; destObj.lng = toCoords.lng; }
+    saveDelta({ segment: seg, transport: selectedMode, from: depCity.trim(), from_coords: fromCoordArr, destination: destObj, lang, phase: "transit" });
     let transitUrl = `/?room=DEMO&go=transit&from=${encodeURIComponent(depCity.trim())}&to=${encodeURIComponent(toLPCity.trim())}&seg=${seg}&lang=${lang}`;
     if (depCoords) transitUrl += `&fLat=${depCoords.lat}&fLng=${depCoords.lng}`;
     if (toCoords) transitUrl += `&tLat=${toCoords.lat}&tLng=${toCoords.lng}`;
 
-    // Linear distance estimate (crow-fly × 1.35 road factor)
+    // Linear distance + ETA estimate
     let distKm = null, etaH = null, etaMin = null;
     if (depCoords && toCoords) {
       const R = 6371;
@@ -262,17 +262,55 @@ export default function LandingPage() {
       etaH = Math.floor(totalMin / 60); etaMin = totalMin % 60;
     }
 
-    // Weather at destination (Open-Meteo, free, no key)
-    let weather = null;
-    if (toCoords) {
-      try {
-        const wr = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${toCoords.lat.toFixed(4)}&longitude=${toCoords.lng.toFixed(4)}&current=temperature_2m,weathercode&timezone=auto`, { signal: AbortSignal.timeout(5000) });
-        const wd = await wr.json();
-        if (wd.current) weather = { temp: Math.round(wd.current.temperature_2m), icon: WMO_ICON(wd.current.weathercode) };
-      } catch {}
-    }
+    // Parallel: weather + AI brief
+    let weather = null, aiText = null;
 
-    setGuardianBrief({ weather, distKm, etaH, etaMin, seg, transitUrl, camp: campHint(toLPCity) });
+    const weatherPromise = toCoords
+      ? fetch(`https://api.open-meteo.com/v1/forecast?latitude=${toCoords.lat.toFixed(4)}&longitude=${toCoords.lng.toFixed(4)}&current=temperature_2m,weathercode&timezone=auto`, { signal: AbortSignal.timeout(5000) })
+          .then(r => r.json())
+          .then(wd => { if (wd.current) weather = { temp: Math.round(wd.current.temperature_2m), icon: WMO_ICON(wd.current.weathercode) }; })
+          .catch(() => {})
+      : Promise.resolve();
+
+    const modeText = { kamper: { hr:"kamperom", de:"mit Wohnmobil", en:"by camper", it:"in camper" }, jedrilicar: { hr:"jahtom/avionom", de:"per Yacht/Flug", en:"by yacht/flight", it:"in yacht/volo" }, par: { hr:"automobilom", de:"mit Auto", en:"by car", it:"in auto" } }[seg] || {};
+    const ml = (o) => o[lang === "at" ? "de" : lang] || o.hr || o.en || "";
+    const routeCtx = distKm ? ` Ruta ≈${distKm}km, ~${etaH}h vožnje.` : "";
+    const prompts = {
+      hr: `Ti si Travel Guardian. Kratki pre-trip brief za: ${depCity} → ${toLPCity}, ${ml(modeText)}.${routeCtx} Daj 4 konkretna savjeta u bullet točkama: 1) upozorenja na ruti${seg==="kamper"?" (visine tunela, kamperska ograničenja, servisi)":""}, 2) što ne propustiti u ${toLPCity}, 3) preporuku lokalnog restorana ili plaže, 4) sigurnosna napomena. Budi konkretan, kratak, lokalan. Max 90 riječi.`,
+      de: `Du bist Travel Guardian. Kurzes Pre-Trip-Briefing: ${depCity} → ${toLPCity}, ${ml(modeText)}.${routeCtx.replace("Ruta","Strecke").replace("vožnje","Fahrt")} Gib 4 konkrete Tipps als Bullet Points: 1) Strecken-Warnungen${seg==="kamper"?" (Tunnelhöhen, Wohnmobil-Beschränkungen)":""}, 2) Was in ${toLPCity} nicht verpassen, 3) Restaurant- oder Strandempfehlung, 4) Sicherheitshinweis. Maximal 90 Wörter.`,
+      en: `You are Travel Guardian. Short pre-trip brief: ${depCity} → ${toLPCity}, ${ml(modeText)}.${routeCtx.replace("Ruta","Route").replace("vožnje","drive")} Give 4 concrete bullet points: 1) Route warnings${seg==="kamper"?" (tunnel heights, camper restrictions, services)":""}, 2) Must-see in ${toLPCity}, 3) Local restaurant or beach tip, 4) Safety note. Max 90 words.`,
+      it: `Sei il Travel Guardian. Briefing pre-viaggio: ${depCity} → ${toLPCity}, ${ml(modeText)}.${routeCtx.replace("Ruta","Percorso").replace("vožnje","guida")} Fornisci 4 consigli concreti: 1) Avvertenze percorso${seg==="kamper"?" (altezze tunnel, restrizioni camper)":""}, 2) Da non perdere a ${toLPCity}, 3) Ristorante o spiaggia locale, 4) Nota di sicurezza. Max 90 parole.`,
+    };
+    const prompt = prompts[lang === "at" ? "de" : lang] || prompts.hr;
+    const destRegion = (() => {
+      const c = toLPCity.toLowerCase();
+      if (c.includes("split") || c.includes("makarska") || c.includes("hvar")) return "split";
+      if (c.includes("dubrovnik")) return "dubrovnik";
+      if (c.includes("zadar") || c.includes("šibenik")) return "zadar";
+      return "split";
+    })();
+
+    const aiPromise = fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: [{ role: "user", content: prompt }],
+        mode: seg === "kamper" ? "camper" : seg === "jedrilicar" ? "sailing" : "local",
+        region: destRegion,
+        lang: lang === "at" ? "de" : lang || "hr",
+        plan: "season",
+        delta_context: { segment: seg, from: depCity.trim(), destination: destObj },
+      }),
+      signal: AbortSignal.timeout(25000),
+    }).then(r => r.json()).then(d => { aiText = d.content?.map(c => c.text||"").join("") || null; }).catch(() => {});
+
+    await Promise.all([weatherPromise, aiPromise]);
+
+    // Partner offers filtered by destination
+    const tag = destTag(toLPCity);
+    const offers = tag ? TRENDING.filter(t => t.tag === tag).slice(0, 3) : TRENDING.slice(0, 3);
+
+    setGuardianBrief({ weather, distKm, etaH, etaMin, seg, transitUrl, aiText, offers });
     setBriefLoading(false);
   };
 
@@ -515,34 +553,42 @@ export default function LandingPage() {
                   {/* Brief card */}
                   <div style={{ borderRadius: 18, overflow: "hidden", border: "1px solid rgba(34,197,94,0.2)", background: "rgba(10,22,40,0.8)" }}>
                     {/* Route header */}
-                    <div style={{ padding: "16px 18px", background: "rgba(34,197,94,0.08)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                      <div style={{ fontFamily: F, fontSize: 18, fontWeight: 700, color: "#f0f4f8", marginBottom: 4 }}>{depCity} → {toLPCity}</div>
-                      <div style={{ fontSize: 13, color: "#64748b" }}>{tlang(modeLabel)}</div>
+                    <div style={{ padding: "16px 18px", background: "rgba(34,197,94,0.08)", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div>
+                        <div style={{ fontFamily: F, fontSize: 18, fontWeight: 700, color: "#f0f4f8", marginBottom: 4 }}>{depCity} → {toLPCity}</div>
+                        <div style={{ fontSize: 13, color: "#64748b" }}>{tlang(modeLabel)}</div>
+                      </div>
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        {gb.weather && <div style={{ fontSize: 20 }}>{gb.weather.icon} <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>{gb.weather.temp}°C</span></div>}
+                        {gb.distKm && <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>≈{gb.distKm}km · ~{gb.etaH}h{gb.etaMin > 0 ? `${gb.etaMin}m` : ""}</div>}
+                      </div>
                     </div>
-                    {/* Stats row */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                      {gb.weather && (
-                        <div style={{ padding: "14px 18px", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
-                          <div style={{ fontSize: 10, color: "#475569", marginBottom: 4, letterSpacing: 1 }}>{lang === "de" || lang === "at" ? "WETTER" : lang === "en" ? "WEATHER" : lang === "it" ? "METEO" : "VRIJEME"}</div>
-                          <div style={{ fontSize: 22 }}>{gb.weather.icon}</div>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: "#e2e8f0" }}>{gb.weather.temp}°C</div>
+                    {/* AI Brief */}
+                    {gb.aiText && (
+                      <div style={{ padding: "16px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div style={{ fontSize: 10, color: "#0ea5e9", letterSpacing: 1.5, fontWeight: 700, marginBottom: 10, fontFamily: B }}>
+                          🛡️ {lang === "de" || lang === "at" ? "GUARDIAN ANALYSE" : lang === "en" ? "GUARDIAN ANALYSIS" : lang === "it" ? "ANALISI GUARDIAN" : "GUARDIAN ANALIZA"}
                         </div>
-                      )}
-                      {gb.distKm && (
-                        <div style={{ padding: "14px 18px" }}>
-                          <div style={{ fontSize: 10, color: "#475569", marginBottom: 4, letterSpacing: 1 }}>{lang === "de" || lang === "at" ? "STRECKE" : lang === "en" ? "DISTANCE" : lang === "it" ? "DISTANZA" : "RUTA"}</div>
-                          <div style={{ fontSize: 14, fontWeight: 600, color: "#e2e8f0" }}>≈ {gb.distKm} km</div>
-                          {gb.etaH !== null && <div style={{ fontSize: 12, color: "#64748b" }}>⏱ ~{gb.etaH}h {gb.etaMin > 0 ? `${gb.etaMin}min` : ""}</div>}
+                        <div style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{gb.aiText}</div>
+                      </div>
+                    )}
+                    {/* Partner offers as AI recommendations */}
+                    {gb.offers && gb.offers.length > 0 && (
+                      <div style={{ padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div style={{ fontSize: 10, color: "#f59e0b", letterSpacing: 1.5, fontWeight: 700, marginBottom: 10, fontFamily: B }}>
+                          ⭐ {lang === "de" || lang === "at" ? "GUARDIAN EMPFIEHLT" : lang === "en" ? "GUARDIAN RECOMMENDS" : lang === "it" ? "GUARDIAN CONSIGLIA" : "GUARDIAN PREPORUČUJE"}
                         </div>
-                      )}
-                    </div>
-                    {/* Camp recommendation */}
-                    {gb.camp && (
-                      <div style={{ padding: "12px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 10 }}>
-                        <span style={{ fontSize: 18 }}>🏕</span>
-                        <div>
-                          <div style={{ fontSize: 10, color: "#475569", letterSpacing: 1 }}>{lang === "de" || lang === "at" ? "EMPFOHLENER CAMPINGPLATZ" : lang === "en" ? "RECOMMENDED CAMPSITE" : lang === "it" ? "CAMPEGGIO CONSIGLIATO" : "PREPORUČENI KAMP"}</div>
-                          <div style={{ fontSize: 13, color: "#e2e8f0", marginTop: 2 }}>{gb.camp}</div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          {gb.offers.map((offer, i) => (
+                            <a key={i} href={offer.link} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", textDecoration: "none", transition: "background 0.2s" }}>
+                              <span style={{ fontSize: 22, flexShrink: 0 }}>{offer.emoji}</span>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tlang(offer.title)}</div>
+                                <div style={{ fontSize: 11, color: "#64748b", marginTop: 1 }}>{tlang(offer.sub)}</div>
+                              </div>
+                              <div style={{ flexShrink: 0, fontSize: 13, fontWeight: 700, color: "#22c55e", background: "rgba(34,197,94,0.1)", padding: "4px 10px", borderRadius: 8 }}>{offer.price}</div>
+                            </a>
+                          ))}
                         </div>
                       </div>
                     )}
