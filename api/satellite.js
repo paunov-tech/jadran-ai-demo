@@ -459,6 +459,37 @@ export default async function handler(req, res) {
   res.setHeader("Cache-Control", "public, max-age=3600, s-maxage=86400"); // 1h browser, 24h CDN
 
   const region = req.query.region || null;
+  const debug  = req.query.debug === "1";
+
+  // Debug: test auth only
+  if (debug) {
+    const clientId = process.env.SENTINEL_HUB_CLIENT_ID;
+    const clientSecret = process.env.SENTINEL_HUB_CLIENT_SECRET;
+    const hasCreds = !!(clientId && clientSecret);
+    let authResult = null;
+    if (hasCreds) {
+      try {
+        const tok = await getSentinelToken();
+        authResult = { ok: true, tokenLen: tok?.length };
+      } catch (e) {
+        authResult = { ok: false, error: e.message };
+      }
+    }
+    // Test one zone
+    let zoneTest = null;
+    if (authResult?.ok) {
+      try {
+        const tok = await getSentinelToken();
+        const firstZone = Object.entries(PARKING_ZONES)[0];
+        const raw = await queryZoneStats(firstZone[1], tok, 14);
+        const intervals = raw?.data?.length || 0;
+        zoneTest = { zone: firstZone[0], intervals, sample: raw?.data?.[0] };
+      } catch (e) {
+        zoneTest = { error: e.message };
+      }
+    }
+    return res.json({ hasCreds, clientIdPrefix: clientId?.slice(0,8), authResult, zoneTest });
+  }
 
   try {
     const results = await fetchSatelliteOccupancy(region);
