@@ -413,33 +413,50 @@ export default function LandingPage() {
               { id: "kamper", img: "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?w=400&q=75", accent: "rgba(245,158,11,0.65)", border: "rgba(245,158,11,0.2)" },
               { id: "odmor",  img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&q=75", accent: "rgba(34,197,94,0.55)", border: "rgba(34,197,94,0.2)" },
             ];
+            // Dynamic Guardian phase: 0=setup tile, 1=entering route, 2=ready to activate
+            const gPhase = selectedMode === null ? 0
+              : routeStep === "room" ? 1
+              : routeStep === "city" && depCity.trim() && toLPCity.trim() ? 2
+              : routeStep === "city" ? 1
+              : 0;
+            const stepLabels = [
+              { hr: "GUARDIAN POSTAVLJANJE — KORAK 1", de: "GUARDIAN SETUP — SCHRITT 1", en: "GUARDIAN SETUP — STEP 1", it: "CONFIGURAZIONE GUARDIAN — PASSO 1" },
+              { hr: "GUARDIAN POSTAVLJANJE — KORAK 2", de: "GUARDIAN SETUP — SCHRITT 2", en: "GUARDIAN SETUP — STEP 2", it: "CONFIGURAZIONE GUARDIAN — PASSO 2" },
+              { hr: "GUARDIAN SPREMAN — AKTIVIRAJ", de: "GUARDIAN BEREIT — AKTIVIEREN", en: "GUARDIAN READY — ACTIVATE", it: "GUARDIAN PRONTO — ATTIVA" },
+            ];
+            const PHASES = [
+              { hr: "Postavljanje", de: "Einrichten", en: "Setup", it: "Configurazione" },
+              { hr: "Ruta", de: "Route", en: "Route", it: "Percorso" },
+              { hr: "Monitoring", de: "Überwachung", en: "Monitoring", it: "Monitoraggio" },
+              { hr: "Putovanje", de: "Unterwegs", en: "En route", it: "In viaggio" },
+              { hr: "Odmor", de: "Aufenthalt", en: "Stay", it: "Soggiorno" },
+              { hr: "Povratak", de: "Rückkehr", en: "Return", it: "Ritorno" },
+            ];
             return (
               <div style={{ maxWidth: 540, margin: "0 auto" }}>
-                <div style={{ fontSize: 11, color: "#64748b", marginBottom: 10, letterSpacing: 1.5, textTransform: "uppercase", fontFamily: B }}>
-                  {lang === "de" || lang === "at" ? "GUARDIAN SETUP — SCHRITT 1" : lang === "en" ? "GUARDIAN SETUP — STEP 1" : lang === "it" ? "CONFIGURAZIONE GUARDIAN — PASSO 1" : "GUARDIAN POSTAVLJANJE — KORAK 1"}
+                <div style={{ fontSize: 11, color: gPhase >= 2 ? "#4ade80" : "#64748b", marginBottom: 10, letterSpacing: 1.5, textTransform: "uppercase", fontFamily: B, transition: "color 0.3s" }}>
+                  {tlang(stepLabels[Math.min(gPhase, 2)])}
                 </div>
-                {/* Guardian phase progress */}
+                {/* Guardian phase progress — dynamic */}
                 <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center", marginBottom: 14 }}>
-                  {[
-                    { hr: "Postavljanje", de: "Einrichten", en: "Setup", it: "Configurazione" },
-                    { hr: "Ruta", de: "Route", en: "Route", it: "Percorso" },
-                    { hr: "Monitoring", de: "Überwachung", en: "Monitoring", it: "Monitoraggio" },
-                    { hr: "Putovanje", de: "Unterwegs", en: "En route", it: "In viaggio" },
-                    { hr: "Odmor", de: "Aufenthalt", en: "Stay", it: "Soggiorno" },
-                    { hr: "Povratak", de: "Rückkehr", en: "Return", it: "Ritorno" },
-                  ].map((phase, i) => (
-                    <div key={i} style={{
-                      padding: "3px 10px", borderRadius: 20,
-                      background: i === 0 ? "rgba(14,165,233,0.18)" : "rgba(255,255,255,0.03)",
-                      border: `1px solid ${i === 0 ? "rgba(14,165,233,0.45)" : "rgba(255,255,255,0.06)"}`,
-                      color: i === 0 ? "#38bdf8" : "#334155",
-                      fontSize: 10, fontWeight: i === 0 ? 700 : 400,
-                      display: "flex", alignItems: "center", gap: 4,
-                    }}>
-                      {i === 0 && <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#38bdf8", display: "inline-block", flexShrink: 0 }} />}
-                      {tlang(phase)}
-                    </div>
-                  ))}
+                  {PHASES.map((phase, i) => {
+                    const isComplete = i < gPhase;
+                    const isActive = i === gPhase;
+                    return (
+                      <div key={i} style={{
+                        padding: "3px 10px", borderRadius: 20,
+                        background: isActive ? "rgba(14,165,233,0.18)" : isComplete ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${isActive ? "rgba(14,165,233,0.45)" : isComplete ? "rgba(34,197,94,0.35)" : "rgba(255,255,255,0.06)"}`,
+                        color: isActive ? "#38bdf8" : isComplete ? "#4ade80" : "#334155",
+                        fontSize: 10, fontWeight: isActive || isComplete ? 700 : 400,
+                        display: "flex", alignItems: "center", gap: 4, transition: "all 0.3s",
+                      }}>
+                        {isComplete && <span style={{ fontSize: 9 }}>✓</span>}
+                        {isActive && <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#38bdf8", display: "inline-block", flexShrink: 0 }} />}
+                        {tlang(phase)}
+                      </div>
+                    );
+                  })}
                 </div>
                 <div style={{ fontSize: 13, color: "#475569", marginBottom: 14, lineHeight: 1.5 }}>
                   {lang === "de" || lang === "at" ? "Guardian übernimmt die Kontrolle. Wählen Sie Ihre Reiseart — wir passen alles an." : lang === "en" ? "Guardian takes over. Choose how you travel — we adapt everything." : lang === "it" ? "Il Guardian interviene. Scegli come viaggi — ci adattiamo." : "Guardian preuzima kontrolu. Odaberite način putovanja — prilagođavamo se."}
@@ -536,8 +553,10 @@ export default function LandingPage() {
                         if (toCoords) url += `&tLat=${toCoords.lat}&tLng=${toCoords.lng}`;
                         window.location.href = url;
                       }}
-                      style={{ width: "100%", padding: "14px 20px", borderRadius: 12, background: depCity.trim() && toLPCity.trim() ? "linear-gradient(135deg, #f97316, #ea580c)" : "rgba(255,255,255,0.06)", border: "none", color: depCity.trim() && toLPCity.trim() ? "#fff" : "#475569", fontSize: 15, fontWeight: 700, cursor: depCity.trim() && toLPCity.trim() ? "pointer" : "default", fontFamily: F, letterSpacing: 0.5, transition: "all 0.2s" }}>
-                      {tx("ctaGo")}
+                      style={{ width: "100%", padding: "14px 20px", borderRadius: 12, background: depCity.trim() && toLPCity.trim() ? "linear-gradient(135deg, #22c55e, #16a34a)" : "rgba(255,255,255,0.06)", border: "none", color: depCity.trim() && toLPCity.trim() ? "#fff" : "#475569", fontSize: 15, fontWeight: 700, cursor: depCity.trim() && toLPCity.trim() ? "pointer" : "default", fontFamily: F, letterSpacing: 0.5, transition: "all 0.2s" }}>
+                      {depCity.trim() && toLPCity.trim()
+                        ? (lang === "de" || lang === "at" ? "🛡️ Guardian aktivieren →" : lang === "en" ? "🛡️ Activate Guardian →" : lang === "it" ? "🛡️ Attiva Guardian →" : "🛡️ Aktiviraj Guardian →")
+                        : tx("ctaGo")}
                     </button>
                   </div>
                 )}

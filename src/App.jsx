@@ -624,6 +624,7 @@ export default function JadranUnified() {
   // ─── URL transit handoff (?go=transit&from=Wien&to=Split&seg=kamper) ───
   const urlFromSet = useRef(false); // blocks geocode race condition
   const urlToSet = useRef(false);
+  const guardianWelcomeInjected = useRef(false);
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     if (p.get("go") !== "transit") return;
@@ -654,6 +655,26 @@ export default function JadranUnified() {
     localStorage.setItem("jadran_go_transit", "1");
     window.history.replaceState({}, "", "/");
   }, []); // eslint-disable-line
+
+  // ─── Guardian welcome — inject first message when transit handoff detected ───
+  useEffect(() => {
+    if (guardianWelcomeInjected.current || !transitFromUrl || !transitToUrl) return;
+    guardianWelcomeInjected.current = true;
+    const modeMap = {
+      kamper:     { hr: "kamperom 🚐", de: "mit dem Wohnmobil 🚐", en: "by camper 🚐", it: "in camper 🚐" },
+      jedrilicar: { hr: "jahtom / avionom ⛵", de: "mit Yacht/Flug ⛵", en: "by yacht/flight ⛵", it: "in yacht/volo ⛵" },
+      par:        { hr: "automobilom 🚗", de: "mit dem Auto 🚗", en: "by car 🚗", it: "in auto 🚗" },
+    };
+    const mode = modeMap[transitSegUrl] || modeMap.par;
+    const ml = (o) => o[lang === "at" ? "de" : lang] || o.hr;
+    const msg = {
+      hr: `🛡️ Guardian aktiviran\n\nPratim te: ${transitFromUrl} → ${transitToUrl}, ${ml(mode)}.\n\nPitaj me o ruti, kampovima, vremenskim uvjetima, prometnim upozorenjima ili bilo čemu što trebaš za putovanje.`,
+      de: `🛡️ Guardian aktiviert\n\nIch begleite dich: ${transitFromUrl} → ${transitToUrl}, ${ml(mode)}.\n\nFrag mich nach der Route, Campingplätzen, Wetter, Verkehrswarnungen oder allem, was du für die Reise brauchst.`,
+      en: `🛡️ Guardian activated\n\nTracking your journey: ${transitFromUrl} → ${transitToUrl}, ${ml(mode)}.\n\nAsk me about the route, campsites, weather conditions, traffic warnings or anything you need for this trip.`,
+      it: `🛡️ Guardian attivato\n\nTi seguo: ${transitFromUrl} → ${transitToUrl}, ${ml(mode)}.\n\nChiedimi del percorso, campeggi, meteo, avvisi di traffico o qualsiasi cosa ti serva per il viaggio.`,
+    };
+    setChatMsgs([{ role: "assistant", text: ml(msg) }]);
+  }, [transitFromUrl, transitToUrl, transitSegUrl]); // eslint-disable-line
 
   // ─── ?kiosk=rab&lang=de&affiliate=blackjack → direct kiosk demo mode ───
   useEffect(() => {
