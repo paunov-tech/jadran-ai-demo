@@ -227,6 +227,54 @@ export const CAMPS = [
     notes: "Naturistički park — djelomično tekstilno od 2024. Skrivene uvale, stjenovite terase.",
   },
 
+  {
+    id: "HR-IST-010",
+    name: "Camping Kažela",
+    region: "istra", sub: "medulin",
+    coords: [44.8061, 13.9546],
+    website: "arenacampsites.com/en/campsites-istria/camping-kazela",
+    season: { open: "04-15", close: "10-15" },
+    capacity: { total: 3000, motorhomePitches: 600, maxLen: 12, maxH: null },
+    access: {
+      road: "asfalt", maxLen: null, maxH: null, maxW: null,
+      notes: "D66 prema Medulinu, 8km južno od Pule. Dobar pristup za sve tipove vozila. Kamper recepcija odvojena.",
+      yoloSensors: ["pula","medulin","istra_south"],
+      ferry: null,
+    },
+    infra: {
+      electricity: "10-16A", dumpStation: true, freshWater: true, greyWater: true,
+      lpg: false, wifi: true, laundry: true, shop: true, restaurant: true,
+      pool: true, beach: "šljunak/kamen", dogFriendly: true,
+    },
+    price: { low: 30, mid: 58, high: 85 },
+    partner: false, bookUrl: null,
+    notes: "Jedan od najvećih kampova u Istri (71ha). Arena Campsites premium resort. 5 bazenskih bazena, aquapark. LPG: Pula 8km.",
+  },
+
+  {
+    id: "HR-IST-011",
+    name: "Camping Arena Stoja",
+    region: "istra", sub: "pula",
+    coords: [44.8570, 13.8133],
+    website: "arenacamps.com/en/camps-istria/camping-arena-stoja",
+    season: { open: "04-15", close: "10-15" },
+    capacity: { total: 1800, motorhomePitches: 400, maxLen: 12, maxH: null },
+    access: {
+      road: "asfalt", maxLen: null, maxH: null, maxW: null,
+      notes: "3km zapadno od centra Pule, odlično označen. Direktan pristup s D75/D2. Recepcija za kampere 24h u sezoni.",
+      yoloSensors: ["pula","istra_south"],
+      ferry: null,
+    },
+    infra: {
+      electricity: "10-16A", dumpStation: true, freshWater: true, greyWater: true,
+      lpg: false, wifi: true, laundry: true, shop: true, restaurant: true,
+      pool: false, beach: "šljunak/kamen", dogFriendly: true,
+    },
+    price: { low: 28, mid: 55, high: 80 },
+    partner: false, bookUrl: null,
+    notes: "33ha, poluotok Stoja. Vizura na Pulsku arenu. Premium parcele uz more. LPG: Pula 3km.",
+  },
+
   // ── KVARNER ───────────────────────────────────────────────────────────────
 
   {
@@ -640,6 +688,54 @@ export const CAMPS = [
     price: { low: 26, mid: 50, high: 72 },
     partner: false, bookUrl: null,
     notes: "⭐ LPG dostupan! 16A na nekim parcelama. Jedan od najvećih kampova HR. Odličan dump station.",
+  },
+
+  {
+    id: "HR-ZAD-007",
+    name: "Bluesun Camping Paklenica",
+    region: "zadar_sibenik", sub: "starigrad_paklenica",
+    coords: [44.2870, 15.4473],
+    website: "bluesuncamping.com/hr/paklenica",
+    season: { open: "04-01", close: "10-31" },
+    capacity: { total: 600, motorhomePitches: 200, maxLen: 12, maxH: null },
+    access: {
+      road: "asfalt", maxLen: null, maxH: null, maxW: null,
+      notes: "D8 Starigrad Paklenica, 35km sjeverno od Zadra. Direktno uz NP Paklenica — ulaz u kanjon pješice 5 min.",
+      yoloSensors: ["zadar","paklenica","a1_zg_split"],
+      ferry: null,
+    },
+    infra: {
+      electricity: "10-16A", dumpStation: true, freshWater: true, greyWater: true,
+      lpg: false, wifi: true, laundry: true, shop: true, restaurant: true,
+      pool: false, beach: "šljunak/kamen direktno", dogFriendly: true,
+    },
+    price: { low: 24, mid: 44, high: 62 },
+    partner: false, bookUrl: null,
+    notes: "Neposredno uz NP Paklenica — penjački raj. Kamperi do 12m bez problema. LPG: Starigrad/Zadar.",
+  },
+
+  {
+    id: "HR-ZAD-008",
+    name: "Kamp Nin",
+    region: "zadar_sibenik", sub: "nin",
+    coords: [44.2455, 15.1742],
+    website: "campingnin.hr",
+    season: { open: "05-01", close: "09-30" },
+    capacity: { total: 350, motorhomePitches: 120, maxLen: 10, maxH: null },
+    access: {
+      road: "asfalt", maxLen: null, maxH: null, maxW: null,
+      notes: "Nin 13km sjeverno od Zadra, D306. Legendarni sabunara (ljekovito blato). Pristup lak, manji kamp uz pijesak.",
+      yoloSensors: ["zadar","nin","biograd"],
+      ferry: null,
+    },
+    infra: {
+      electricity: "10A", dumpStation: false, freshWater: true, greyWater: false,
+      lpg: false, wifi: true, laundry: true, shop: true, restaurant: false,
+      pool: false, beach: "pijesak direktno", dogFriendly: true,
+    },
+    price: { low: 18, mid: 34, high: 52 },
+    partner: false, bookUrl: null,
+    notes: "Jedina pješčana plaža u okolici. Ljekovito blato sabunara uz plaži. Miran obiteljski kamp.",
   },
 
   // ── SPLIT / MAKARSKA ──────────────────────────────────────────────────────
