@@ -562,6 +562,32 @@ export default function JadranUnified() {
   const [gpsPosition, setGpsPosition] = useState(null);
   const [tripActive, setTripActive] = useState(false);
   const gpsStarted = useRef(false);
+  const pushDeviceId = useRef(null);
+
+  // Register SW Web Push subscription and store on server
+  const setupPushSub = React.useCallback(async () => {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return null;
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        const raw = "BHNHtalPk8wfqL9yxMbAgiVQ5Df-V0BWElnPOfPH2MenN1UbOrQDu76Hj_pTSoNmFFjATVgZck3a8JO4jQrm8j0";
+        const pad = "=".repeat((4 - raw.length % 4) % 4);
+        const b64 = (raw + pad).replace(/-/g, "+").replace(/_/g, "/");
+        const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: bytes });
+      }
+      let devId = localStorage.getItem("jadran_device_id");
+      if (!devId) { devId = "d_" + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem("jadran_device_id", devId); }
+      await fetch("/api/push-subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscription: sub.toJSON(), deviceId: devId, roomCode: roomCode.current || "" }),
+      });
+      pushDeviceId.current = devId;
+      return devId;
+    } catch (e) { console.warn("Push setup:", e.message); return null; }
+  }, []); // eslint-disable-line
 
   const startTrip = () => {
     if (gpsStarted.current) return;
@@ -569,10 +595,8 @@ export default function JadranUnified() {
     setTripActive(true);
     saveDelta({ trip_started: true });
 
-    // Request browser push notification permission for critical alerts
-    if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission().catch(() => {});
-    }
+    // Register SW push subscription (works in background/locked screen)
+    setupPushSub();
 
     // Inject "tracking mode activated" card immediately — NOT a route brief
     const trackingCard = {
@@ -600,16 +624,19 @@ export default function JadranUnified() {
     }
     startGPS({
       onCard: (card) => {
-        // Fire browser push notification for critical alerts
-        if (card.severity === "critical" && "Notification" in window && Notification.permission === "granted") {
-          try {
-            new Notification(`🛡️ Guardian — ${card.title}`, {
+        // Critical alerts → server-side Web Push (works on locked screen / background tab)
+        if (card.severity === "critical" && pushDeviceId.current) {
+          fetch("/api/push-send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              deviceId: pushDeviceId.current,
+              title: `🛡️ Guardian — ${card.title}`,
               body: card.body,
-              icon: "/pwa-192.png",
               tag: card.id,
-              renotify: false,
-            });
-          } catch {}
+              url: "/",
+            }),
+          }).catch(() => {});
         }
         setGpsCards(prev => {
           const exists = prev.some(c => c.id === card.id);
