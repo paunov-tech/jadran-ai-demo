@@ -1755,7 +1755,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
       const canSend = premium || freeMsgUsed < 5;
       return (
         <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", flexDirection: "column", background: C.bg }}>
-          <div style={{ flexShrink: 0, padding: "12px 16px 8px", borderBottom: `1px solid ${C.bord}` }}>
+          <div style={{ flexShrink: 0, padding: "12px 16px 8px", paddingTop: "calc(12px + env(safe-area-inset-top, 0px))", borderBottom: `1px solid ${C.bord}` }}>
             <BackBtn onClick={() => setSubScreen("transit")} label={({hr:"← Ruta",de:"← Route",en:"← Route",it:"← Percorso"})[lang] || "← Ruta"} />
           </div>
           <div className="scroll-smooth" style={{ flex: 1, overflowY: "auto", padding: "12px 16px", WebkitOverflowScrolling: "touch" }}>
@@ -2584,8 +2584,8 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
     const canSend = premium || freeMsgUsed < 5;
     return (
       <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", flexDirection: "column", background: C.bg }}>
-        {/* Header */}
-        <div style={{ flexShrink: 0, padding: "12px 16px 8px", borderBottom: `1px solid ${C.bord}` }}>
+        {/* Header — paddingTop includes notch/Dynamic Island clearance */}
+        <div style={{ flexShrink: 0, padding: "12px 16px 8px", paddingTop: "calc(12px + env(safe-area-inset-top, 0px))", borderBottom: `1px solid ${C.bord}` }}>
           <BackBtn onClick={() => setSubScreen("home")} />
         </div>
 
@@ -3452,6 +3452,22 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           <span style={{ color: C.gold }}>📊 ~20-30€/gost</span>
         </div>
       </Card>}
+
+      {/* ── EXIT NAVIGATION ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 8 }}>
+        <a href="/explore" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "16px 12px", borderRadius: 16, background: "rgba(14,165,233,0.06)", border: `1px solid rgba(14,165,233,0.12)`, textDecoration: "none", color: "inherit" }}>
+          <div style={{ fontSize: 26, marginBottom: 6 }}>🗺️</div>
+          <div style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.accent, textAlign: "center" }}>
+            {({hr:"Istraži destinacije",de:"Destinationen",en:"Explore",it:"Esplora",si:"Destinacije",cz:"Destinace",pl:"Destynacje"})[lang]||"Explore"}
+          </div>
+        </a>
+        <button onClick={() => { setPhase("pre"); setSubScreen("pretrip"); }} style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "16px 12px", borderRadius: 16, background: "rgba(251,191,36,0.05)", border: `1px solid rgba(251,191,36,0.1)`, cursor: "pointer" }}>
+          <div style={{ fontSize: 26, marginBottom: 6 }}>🛡️</div>
+          <div style={{ ...dm, fontSize: 13, fontWeight: 600, color: C.gold, textAlign: "center" }}>
+            {({hr:"Planiraj novi odmor",de:"Neue Reise",en:"Plan new trip",it:"Nuovo viaggio",si:"Nova pot",cz:"Nová cesta",pl:"Nowa podróż"})[lang]||"New trip"}
+          </div>
+        </button>
+      </div>
     </>
     );
   };
@@ -3752,36 +3768,59 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         <div style={{ position:"fixed", inset:0, zIndex:300, background:"rgba(5,14,30,0.75)", backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)" }}
           onClick={() => setShowKioskLive(false)}>
           <div onClick={e => e.stopPropagation()}
-            style={{ position:"absolute", bottom:0, left:0, right:0, background:"#0a1628", borderRadius:"24px 24px 0 0", padding:"24px 20px", paddingBottom:"calc(24px + env(safe-area-inset-bottom, 0px))", animation:"fadeUp 0.28s ease" }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
-              <div style={{ fontSize:18, fontWeight:400 }}>🌊 Jadran Sense™ <span style={{ fontSize:10, color: senseData?.source==="yolo" ? "#22c55e" : "#64748b", letterSpacing:0.5 }}>● {senseData?.source==="yolo" ? "LIVE" : "~procjena"}</span></div>
-              <button onClick={() => setShowKioskLive(false)} style={{ background:"rgba(255,255,255,0.06)", border:`1px solid rgba(14,165,233,0.12)`, borderRadius:10, color:"#94a3b8", fontSize:13, padding:"8px 14px", cursor:"pointer" }}>✕</button>
+            style={{ position:"absolute", bottom:0, left:0, right:0, background:"#0a1628", borderRadius:"24px 24px 0 0", padding:"20px 20px", paddingBottom:"calc(20px + env(safe-area-inset-bottom, 0px))", animation:"fadeUp 0.28s ease" }}>
+            {/* Header */}
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+              <div>
+                <div style={{ fontSize:17, fontWeight:500 }}>🌊 Jadran Sense™</div>
+                <div style={{ fontSize:11, color: senseData?.source==="yolo" ? "#22c55e" : "#64748b", marginTop:2 }}>
+                  {senseData?.source==="yolo" ? `● LIVE · ${kioskCity}` : `● ${({hr:"procjena",de:"Schätzung",en:"estimate",it:"stima"})[lang]||"estimate"} · ${kioskCity}`}
+                </div>
+              </div>
+              <button onClick={() => setShowKioskLive(false)} style={{ background:"rgba(255,255,255,0.06)", border:`1px solid rgba(14,165,233,0.12)`, borderRadius:10, color:"#94a3b8", fontSize:13, padding:"8px 14px", cursor:"pointer", minHeight:40 }}>✕</button>
             </div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:16 }}>
-              {senseData?.parking && (
-                <div style={{ padding:"16px 14px", borderRadius:16, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.12)", textAlign:"center" }}>
-                  <div style={{ fontSize:28, marginBottom:6 }}>🅿️</div>
-                  <div style={{ fontSize:22, fontWeight:300, color: senseData.parking.status==="slobodno"?"#22c55e":senseData.parking.status==="umjereno"?"#f59e0b":"#ef4444" }}>{senseData.parking.free_spots}/{senseData.parking.total_spots}</div>
-                  <div style={{ fontSize:11, color:"#64748b", marginTop:2 }}>({["hr","si"].includes(lang)?"slobodnih":lang==="de"?"frei":lang==="it"?"liberi":"free"})</div>
+
+            {/* Weather row — always shown */}
+            <div style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 14px", borderRadius:14, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.1)", marginBottom:12 }}>
+              <span style={{ fontSize:28 }}>{weather.icon || "🌤"}</span>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:20, fontWeight:300, color:"#e2e8f0" }}>{weather.temp ?? "—"}°C</div>
+                <div style={{ fontSize:11, color:"#64748b", marginTop:1 }}>
+                  {weather.condition || ""}
+                  {weather.wind > 0 ? ` · ${({hr:"vjetar",de:"Wind",en:"wind",it:"vento"})[lang]||"wind"} ${weather.wind} km/h` : ""}
+                  {weather.uv > 0 ? ` · UV ${weather.uv}` : ""}
+                </div>
+              </div>
+              <div style={{ fontSize:11, color:"#475569", textAlign:"right" }}>📍 {kioskCity}</div>
+            </div>
+
+            {/* Sense tiles */}
+            <div style={{ display:"grid", gridTemplateColumns: [senseData?.parking, senseData?.beach, senseData?.marina].filter(Boolean).length === 3 ? "1fr 1fr 1fr" : [senseData?.parking, senseData?.beach, senseData?.marina].filter(Boolean).length === 2 ? "1fr 1fr" : "1fr", gap:10 }}>
+              {senseData?.beach && (
+                <div style={{ padding:"14px 10px", borderRadius:14, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.12)", textAlign:"center" }}>
+                  <div style={{ fontSize:24, marginBottom:4 }}>🏖️</div>
+                  <div style={{ fontSize:20, fontWeight:300, color: senseData.beach.crowd==="mirno"?"#22c55e":senseData.beach.crowd==="malo gužve"?"#38bdf8":senseData.beach.crowd==="srednje gužve"?"#f59e0b":"#ef4444" }}>{senseData.beach.occupancy_pct}%</div>
+                  <div style={{ fontSize:10, color:"#64748b", marginTop:2, lineHeight:1.3 }}>{senseData.beach.crowd}</div>
                 </div>
               )}
-              {senseData?.beach && (
-                <div style={{ padding:"16px 14px", borderRadius:16, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.12)", textAlign:"center" }}>
-                  <div style={{ fontSize:28, marginBottom:6 }}>🏖️</div>
-                  <div style={{ fontSize:22, fontWeight:300, color: senseData.beach.crowd==="mirno"?"#22c55e":senseData.beach.crowd==="malo gužve"?"#38bdf8":senseData.beach.crowd==="srednje gužve"?"#f59e0b":"#ef4444" }}>{senseData.beach.occupancy_pct}%</div>
-                  <div style={{ fontSize:11, color:"#64748b", marginTop:2 }}>({["hr","si"].includes(lang)?"popunjenost":lang==="de"?"Auslastung":lang==="it"?"occupazione":"occupancy"})</div>
+              {senseData?.parking && (
+                <div style={{ padding:"14px 10px", borderRadius:14, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.12)", textAlign:"center" }}>
+                  <div style={{ fontSize:24, marginBottom:4 }}>🅿️</div>
+                  <div style={{ fontSize:20, fontWeight:300, color: senseData.parking.status==="slobodno"?"#22c55e":senseData.parking.status==="umjereno"?"#f59e0b":"#ef4444" }}>{senseData.parking.free_spots}<span style={{ fontSize:13, color:"#64748b" }}>/{senseData.parking.total_spots}</span></div>
+                  <div style={{ fontSize:10, color:"#64748b", marginTop:2 }}>{({hr:"slobodnih",de:"frei",en:"free",it:"liberi"})[lang]||"free"}</div>
                 </div>
               )}
               {senseData?.marina && (
-                <div style={{ padding:"16px 14px", borderRadius:16, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.12)", textAlign:"center" }}>
-                  <div style={{ fontSize:28, marginBottom:6 }}>⛵</div>
-                  <div style={{ fontSize:22, fontWeight:300, color: senseData.marina.status==="slobodno"?"#22c55e":senseData.marina.status==="umjereno"?"#f59e0b":"#ef4444" }}>{senseData.marina.free_moorings}</div>
-                  <div style={{ fontSize:11, color:"#64748b", marginTop:2 }}>({["hr","si"].includes(lang)?"vezova":lang==="de"?"Plätze":lang==="it"?"posti":"berths"})</div>
+                <div style={{ padding:"14px 10px", borderRadius:14, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.12)", textAlign:"center" }}>
+                  <div style={{ fontSize:24, marginBottom:4 }}>⛵</div>
+                  <div style={{ fontSize:20, fontWeight:300, color: senseData.marina.status==="slobodno"?"#22c55e":senseData.marina.status==="umjereno"?"#f59e0b":"#ef4444" }}>{senseData.marina.free_moorings}</div>
+                  <div style={{ fontSize:10, color:"#64748b", marginTop:2 }}>{({hr:"vezova",de:"Plätze",en:"berths",it:"posti"})[lang]||"berths"}</div>
                 </div>
               )}
               {!senseData && (
-                <div style={{ gridColumn:"1/-1", padding:"24px", textAlign:"center", color:"#64748b", fontSize:14 }}>
-                  {({hr:"Učitavanje...",de:"Laden...",en:"Loading...",it:"Caricamento..."})[lang]||"Loading..."}
+                <div style={{ gridColumn:"1/-1", padding:"20px", textAlign:"center", color:"#64748b", fontSize:13, display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
+                  <span style={{ width:8, height:8, borderRadius:"50%", background:"#0ea5e9", display:"inline-block", animation:"pulse 1s infinite" }} />
+                  {({hr:"Učitavam senzore...",de:"Sensoren laden...",en:"Loading sensors...",it:"Caricamento sensori..."})[lang]||"Loading..."}
                 </div>
               )}
             </div>

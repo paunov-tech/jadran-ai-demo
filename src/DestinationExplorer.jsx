@@ -401,9 +401,9 @@ export default function DestinationExplorer() {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
               {({hr:"Istraži",de:"Erkunden",en:"Explore",it:"Esplora",pl:"Odkryj",si:"Razišči"})[lang]||"Explore"}
             </button>
-            <a href="/landing" onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 18px", color:"#94a3b8", fontSize:14, textDecoration:"none", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-              {({hr:"Kreni",de:"Los",en:"Go",it:"Vai",pl:"Jedź",si:"Pojdi"})[lang]||"Go"}
+            <a href="/landing" onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 18px", color:"#fbbf24", fontSize:14, fontWeight:600, textDecoration:"none", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
+              {({hr:"🛡️ Guardian Brief",de:"🛡️ Guardian Brief",en:"🛡️ Guardian Brief",it:"🛡️ Guardian Brief",pl:"🛡️ Guardian Brief",si:"🛡️ Guardian Brief"})[lang]||"🛡️ Guardian Brief"}
             </a>
             <button onClick={() => { setMenuOpen(false); setActiveTab("live"); setShowLive(true); }} style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 18px", color:"#22c55e", fontSize:14, fontWeight:600, background:"none", border:"none", borderBottom:"1px solid rgba(255,255,255,0.05)", cursor:"pointer", width:"100%", fontFamily:B, textAlign:"left" }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h2"/><path d="M20 12h2"/><path d="M12 2v2"/><path d="M12 20v2"/><circle cx="12" cy="12" r="4"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M4.93 19.07l1.41-1.41"/><path d="M17.66 6.34l1.41-1.41"/></svg>
