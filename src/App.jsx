@@ -989,7 +989,7 @@ export default function JadranUnified() {
     if (!wLat || !wLng) return; // wait for real coords — don't pollute with Split fallback
     fetch(`/api/weather?lat=${wLat}&lon=${wLng}`).then(r => r.json()).then(data => {
       if (data.current?.temp) setWeather(data.current);
-      if (data.forecast?.length >= 5) setForecast(data.forecast);
+      if (data.forecast?.length >= 1) setForecast(data.forecast);
     }).catch(() => {});
   }, [transitToCoords?.[0], kioskCoords?.[0], phase]); // eslint-disable-line
   // ─── ADMIN: Secret unlock DISABLED in production ───
@@ -2330,7 +2330,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         </Card>
 
         <div style={{ textAlign: "center", padding: "8px 0 16px" }}>
-          <Btn onClick={() => { setPhase("post"); setSubScreen("summary"); updateGuest(roomCode.current, { phase: "post", subScreen: "summary" }); }}>{t("checkOut",lang)}</Btn>
+          <Btn onClick={() => setSubScreen("departure")}>{t("checkOut",lang)}</Btn>
         </div>
       </>
     );
@@ -3356,7 +3356,98 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
       );
     };
 
+    /* ── DEPARTURE SCREEN ── */
+    const KioskDeparture = () => {
+      const depDate = G.departure ? new Date(G.departure) : null;
+      const depDay = depDate ? depDate.toLocaleDateString(dateLocale || "hr-HR", { weekday:"long", day:"numeric", month:"long" }) : null;
+      const stayNights = (G.arrival && G.departure)
+        ? Math.max(1, Math.round((new Date(G.departure) - new Date(G.arrival)) / 86400000))
+        : null;
+      const depForecast = (forecast || FORECAST_DEFAULT)[0];
+      const CHECKLIST = {
+        hr:["Klima / TV isključeni","Prozori zatvoreni","Ključ vraćen","Parking propusnica","Prtljaga u autu"],
+        de:["Klima / TV ausschalten","Fenster schließen","Schlüssel zurückgeben","Parkausweis mitnehmen","Gepäck im Auto"],
+        en:["A/C & TV off","Windows closed","Key returned","Parking pass","Luggage in car"],
+        it:["A/C e TV spenti","Finestre chiuse","Chiave restituita","Tagliando parcheggio","Bagagli in auto"],
+        si:["Klima / TV izklopljeni","Okna zaprta","Ključ vrnjen","Parkirni listek","Prtljaga v avtu"],
+        cz:["Klima / TV vypnuto","Okna zavřená","Klíč vrácen","Parkovací lístek","Zavazadla v autě"],
+        pl:["Klima / TV wyłączone","Okna zamknięte","Klucz oddany","Bilet parkingowy","Bagaż w samochodzie"],
+      };
+      const TRANSPORT = [
+        { icon:"✈️", label:{hr:"Aerodrom",de:"Flughafen",en:"Airport",it:"Aeroporto",si:"Letališče",cz:"Letiště",pl:"Lotnisko"}, q:`airport ${kioskCity} Croatia` },
+        { icon:"⛴️", label:{hr:"Trajekt",de:"Fähre",en:"Ferry",it:"Traghetto",si:"Trajekt",cz:"Trajekt",pl:"Prom"}, q:`trajekt ferry ${kioskCity}` },
+        { icon:"🚌", label:{hr:"Autobusni kol.",de:"Busbahnhof",en:"Bus station",it:"Staz. autobus",si:"Avtobusna post.",cz:"Autobusové nádraží",pl:"Dworzec aut."}, q:`bus station ${kioskCity}` },
+        { icon:"🚕", label:{hr:"Taksi",de:"Taxi",en:"Taxi",it:"Taxi",si:"Taksi",cz:"Taxi",pl:"Taxi"}, q:`taxi ${kioskCity}` },
+      ];
+      return (
+        <>
+          <BackBtn onClick={() => setSubScreen("home")} />
+          <div style={{ textAlign:"center", padding:"16px 0 20px" }}>
+            <div style={{ fontSize:54, marginBottom:10 }} className="emoji-float">👋</div>
+            <div style={{ ...hf, fontSize:28, fontWeight:400 }}>
+              {({hr:`Doviđenja, ${G.first||""}!`,de:`Auf Wiedersehen, ${G.first||""}!`,en:`Goodbye, ${G.first||""}!`,it:`Arrivederci, ${G.first||""}!`,si:`Na svidenje, ${G.first||""}!`,cz:`Na shledanou, ${G.first||""}!`,pl:`Do widzenia, ${G.first||""}!`})[lang]||"Goodbye!"}
+            </div>
+            <div style={{ ...dm, color:C.mut, fontSize:14, marginTop:6 }}>
+              {kioskCity}{stayNights ? ` · ${stayNights} ${stayNights===1?({hr:"noć",de:"Nacht",en:"night",it:"notte",si:"noč",cz:"noc",pl:"noc"})[lang]||"noć":({hr:"noći",de:"Nächte",en:"nights",it:"notti",si:"noči",cz:"nocí",pl:"nocy"})[lang]||"noći"}` : ""}
+            </div>
+            {depDay && <div style={{ ...dm, fontSize:12, color:C.accent, marginTop:4 }}>📅 {depDay}</div>}
+          </div>
+
+          {/* Departure day weather */}
+          {depForecast && (
+            <Card style={{ display:"flex", alignItems:"center", gap:14, padding:"14px 18px", marginBottom:12 }}>
+              <div style={{ fontSize:34 }}>{depForecast.icon}</div>
+              <div>
+                <div style={{ ...dm, fontSize:10, color:C.mut, letterSpacing:1, marginBottom:2 }}>
+                  {({hr:"Danas",de:"Heute",en:"Today",it:"Oggi",si:"Danes",cz:"Dnes",pl:"Dziś"})[lang]||"Today"}
+                </div>
+                <div style={{ fontSize:22, fontWeight:300 }}>{depForecast.h}° <span style={{ fontSize:14, color:C.mut }}>{depForecast.l}°</span></div>
+              </div>
+              <div style={{ flex:1, textAlign:"right", ...dm, fontSize:11, color:C.mut }}>
+                {weather.wind > 0 ? `💨 ${weather.wind} km/h` : ""}
+                {weather.uv > 0 ? ` · UV ${weather.uv}` : ""}
+              </div>
+            </Card>
+          )}
+
+          {/* Checklist */}
+          <Card style={{ marginBottom:12 }}>
+            <SectionLabel>{({hr:"Provjeri prije odlaska",de:"Checkliste vor der Abreise",en:"Before you leave",it:"Prima di partire",si:"Pred odhodom",cz:"Před odjezdem",pl:"Przed wyjazdem"})[lang]||"Before you leave"}</SectionLabel>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6 }}>
+              {(CHECKLIST[lang]||CHECKLIST.en).map((item, i) => (
+                <div key={i} style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 10px", borderRadius:10, background:"rgba(34,197,94,0.04)", border:"1px solid rgba(34,197,94,0.1)", ...dm, fontSize:12 }}>
+                  <span style={{ color:"#22c55e", flexShrink:0 }}>✓</span>{item}
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Transport */}
+          <Card style={{ marginBottom:16 }}>
+            <SectionLabel>{({hr:"Prijevoz",de:"Transport",en:"Transport",it:"Trasporto",si:"Prevoz",cz:"Doprava",pl:"Transport"})[lang]||"Transport"}</SectionLabel>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+              {TRANSPORT.map((tr, i) => (
+                <a key={i} href={`https://www.google.com/maps/search/${encodeURIComponent(tr.q)}`} target="_blank" rel="noopener noreferrer"
+                  style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 12px", borderRadius:12, background:"rgba(14,165,233,0.05)", border:`1px solid rgba(14,165,233,0.1)`, textDecoration:"none", color:C.text }}>
+                  <span style={{ fontSize:20 }}>{tr.icon}</span>
+                  <span style={{ ...dm, fontSize:12 }}>{(tr.label[lang]||tr.label.en)}</span>
+                </a>
+              ))}
+            </div>
+          </Card>
+
+          {/* Checkout CTA */}
+          <div style={{ textAlign:"center", padding:"8px 0 20px" }}>
+            <Btn warm onClick={() => { setPhase("post"); setSubScreen("summary"); updateGuest(roomCode.current, { phase:"post", subScreen:"summary" }); }}>
+              {({hr:"Završi boravak →",de:"Aufenthalt beenden →",en:"Complete stay →",it:"Concludi soggiorno →",si:"Zaključi bivanje →",cz:"Dokončit pobyt →",pl:"Zakończ pobyt →"})[lang]||"Complete stay →"}
+            </Btn>
+          </div>
+        </>
+      );
+    };
+
     if (subScreen === "home") return KioskHome();
+    if (subScreen === "departure") return KioskDeparture();
     if (subScreen === "activities") return KioskActivities();
     if (subScreen === "excursions") return KioskExcursions();
     if (subScreen === "gems") return KioskGems();

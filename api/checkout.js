@@ -39,12 +39,18 @@ export default async function handler(req, res) {
     };
     const p = plans[plan] || plans.week;
 
-    // CRITICAL: Build success/cancel URLs properly — returnPath may contain "?" already
-    // Strip any query params from returnPath (they are recovered from localStorage on reload)
-    const basePath = (returnPath || "/ai").split("?")[0];
-    const successParams = `payment=success&plan=${plan}&days=${p.days}&region=${region || "all"}&session_id={CHECKOUT_SESSION_ID}`;
-    const successUrl = `${origin}${basePath}?${successParams}`;
-    const cancelUrl = `${origin}${basePath}?payment=cancelled`;
+    // CRITICAL: Build success/cancel URLs — preserve room/kiosk params so session context survives Stripe redirect
+    let basePath = "/ai", persistParams = "";
+    try {
+      const rUrl = new URL((returnPath || "/ai"), origin);
+      basePath = rUrl.pathname;
+      const room = rUrl.searchParams.get("room");
+      const kiosk = rUrl.searchParams.get("kiosk");
+      const parts = [room ? `room=${encodeURIComponent(room)}` : "", kiosk ? `kiosk=${encodeURIComponent(kiosk)}` : ""].filter(Boolean);
+      persistParams = parts.length ? "&" + parts.join("&") : "";
+    } catch {}
+    const successUrl = `${origin}${basePath}?payment=success&plan=${plan}&days=${p.days}&region=${region || "all"}&session_id={CHECKOUT_SESSION_ID}${persistParams}`;
+    const cancelUrl = `${origin}${basePath}?payment=cancelled${persistParams}`;
 
     // Build session config
     const sessionConfig = {
@@ -116,7 +122,8 @@ export default async function handler(req, res) {
         const sanitizedPartnerRef = (typeof partnerRef === "string" && /^JAD-[A-Z]{2,5}-\d{3}$/.test(partnerRef)) ? partnerRef : "";
         const plans = { week: { name: "JADRAN Vodič — Explorer (7 dana)", amount: 999, days: 7 }, season: { name: "JADRAN Vodič — Sezona (30 dana)", amount: 1999, days: 30 }, vip: { name: "JADRAN Vodič — VIP Sezona (30 dana)", amount: 4999, days: 30 } };
         const p = plans[plan] || plans.week;
-        const basePath = (returnPath || "/ai").split("?")[0];
+        let fbPath = "/ai", fbPersist = "";
+        try { const u = new URL((returnPath||"/ai"), origin); fbPath = u.pathname; const r2 = u.searchParams.get("room"); const k2 = u.searchParams.get("kiosk"); const pts = [r2?`room=${encodeURIComponent(r2)}`:"", k2?`kiosk=${encodeURIComponent(k2)}`:""].filter(Boolean); fbPersist = pts.length ? "&"+pts.join("&") : ""; } catch {}
         const session = await stripe.checkout.sessions.create({
           payment_method_types: ["card"],
           customer_creation: "always",
@@ -124,8 +131,8 @@ export default async function handler(req, res) {
           line_items: [{ price_data: { currency: "eur", product_data: { name: p.name, description: "AI turistički vodič za hrvatsku obalu" }, unit_amount: p.amount }, quantity: 1 }],
           mode: "payment",
           invoice_creation: { enabled: true },
-          success_url: `${origin}${basePath}?payment=success&plan=${plan}&days=${p.days}&region=${region || "all"}&session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${origin}${basePath}?payment=cancelled`,
+          success_url: `${origin}${fbPath}?payment=success&plan=${plan}&days=${p.days}&region=${region || "all"}&session_id={CHECKOUT_SESSION_ID}${fbPersist}`,
+          cancel_url: `${origin}${fbPath}?payment=cancelled${fbPersist}`,
           metadata: { roomCode: roomCode || "AI-STANDALONE", guestName: guestName || "Guest", plan: plan || "week", region: region || "all", days: String(p.days), deviceId: deviceId || "unknown", lang: lang || "hr", utm_source: utm_source || "", utm_medium: utm_medium || "", utm_campaign: utm_campaign || "", partnerRef: sanitizedPartnerRef },
           locale: lang === "de" || lang === "at" ? "de" : lang === "en" ? "en" : lang === "it" ? "it" : lang === "hr" ? "hr" : "auto",
         });
