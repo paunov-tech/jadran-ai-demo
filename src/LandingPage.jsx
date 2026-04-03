@@ -95,6 +95,8 @@ export default function LandingPage() {
   const [vLen, setVLen] = useState("");
   const [anim, setAnim] = useState(false);
   const [roomInput, setRoomInput] = useState("");
+  const [guardianBrief, setGuardianBrief] = useState(null); // pre-trip brief data
+  const [briefLoading, setBriefLoading] = useState(false);
   // Unified entry flow
   const [selectedMode, setSelectedMode] = useState(null); // "auto"|"avion"|"kamper"|"odmor"
   const [depCity, setDepCity] = useState("");
@@ -213,6 +215,66 @@ export default function LandingPage() {
 
   const goChat = () => { window.location.href = `/ai?niche=camper${dest ? "&dest=" + dest : ""}`; };
   const goRoom = () => { const c = roomInput.trim().toUpperCase(); if (c) window.location.href = `/?room=${encodeURIComponent(c)}`; };
+
+  const WMO_ICON = (code) => {
+    if (code === 0) return "☀️";
+    if (code <= 3) return "⛅";
+    if (code <= 48) return "🌫️";
+    if (code <= 67) return "🌧️";
+    if (code <= 77) return "🌨️";
+    if (code <= 82) return "🌦️";
+    return "⛈️";
+  };
+  const CAMP_HINTS = {
+    split: "Camping Stobreč · 2km od centra", dubrovnik: "Camping Solitudo · Lapad",
+    pula: "Camping Kažela · Medulin", zadar: "Falkensteiner Premium · Zadar",
+    rovinj: "Camping Amarin · Rovinj", makarska: "Camping Makarska · Rivijera",
+    hvar: "Camping Vira · Stari Grad", šibenik: "Camping Solaris · Šibenik",
+  };
+  const campHint = (city) => {
+    const k = city.toLowerCase();
+    return Object.entries(CAMP_HINTS).find(([key]) => k.includes(key))?.[1] || null;
+  };
+
+  const launchGuardian = async () => {
+    if (!depCity.trim() || !toLPCity.trim()) return;
+    setBriefLoading(true);
+    const seg = selectedMode === "kamper" ? "kamper" : selectedMode === "avion" ? "jedrilicar" : "par";
+    const fromCoordArr = depCoords ? [depCoords.lat, depCoords.lng] : null;
+    const dest = { city: toLPCity.trim() };
+    if (toCoords) { dest.lat = toCoords.lat; dest.lng = toCoords.lng; }
+    saveDelta({ segment: seg, transport: selectedMode, from: depCity.trim(), from_coords: fromCoordArr, destination: dest, lang, phase: "transit" });
+    let transitUrl = `/?room=DEMO&go=transit&from=${encodeURIComponent(depCity.trim())}&to=${encodeURIComponent(toLPCity.trim())}&seg=${seg}&lang=${lang}`;
+    if (depCoords) transitUrl += `&fLat=${depCoords.lat}&fLng=${depCoords.lng}`;
+    if (toCoords) transitUrl += `&tLat=${toCoords.lat}&tLng=${toCoords.lng}`;
+
+    // Linear distance estimate (crow-fly × 1.35 road factor)
+    let distKm = null, etaH = null, etaMin = null;
+    if (depCoords && toCoords) {
+      const R = 6371;
+      const dLat = (toCoords.lat - depCoords.lat) * Math.PI / 180;
+      const dLng = (toCoords.lng - depCoords.lng) * Math.PI / 180;
+      const a = Math.sin(dLat/2)**2 + Math.cos(depCoords.lat*Math.PI/180)*Math.cos(toCoords.lat*Math.PI/180)*Math.sin(dLng/2)**2;
+      const crow = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      distKm = Math.round(crow * 1.35);
+      const speedKph = seg === "kamper" ? 85 : seg === "jedrilicar" ? 70 : 110;
+      const totalMin = Math.round(distKm / speedKph * 60);
+      etaH = Math.floor(totalMin / 60); etaMin = totalMin % 60;
+    }
+
+    // Weather at destination (Open-Meteo, free, no key)
+    let weather = null;
+    if (toCoords) {
+      try {
+        const wr = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${toCoords.lat.toFixed(4)}&longitude=${toCoords.lng.toFixed(4)}&current=temperature_2m,weathercode&timezone=auto`, { signal: AbortSignal.timeout(5000) });
+        const wd = await wr.json();
+        if (wd.current) weather = { temp: Math.round(wd.current.temperature_2m), icon: WMO_ICON(wd.current.weathercode) };
+      } catch {}
+    }
+
+    setGuardianBrief({ weather, distKm, etaH, etaMin, seg, transitUrl, camp: campHint(toLPCity) });
+    setBriefLoading(false);
+  };
 
   // HERE Maps API key (safe for client-side JS Maps API)
   const HERE_KEY = import.meta.env.VITE_HERE_API_KEY || "";
@@ -432,6 +494,76 @@ export default function LandingPage() {
               { hr: "Odmor", de: "Aufenthalt", en: "Stay", it: "Soggiorno" },
               { hr: "Povratak", de: "Rückkehr", en: "Return", it: "Ritorno" },
             ];
+            // Guardian Brief intercept — show pre-trip card instead of setup wizard
+            if (guardianBrief) {
+              const gb = guardianBrief;
+              const modeLabel = { kamper: { hr:"kamper 🚐", de:"Wohnmobil 🚐", en:"camper 🚐", it:"camper 🚐" }, jedrilicar: { hr:"jahta/avion ⛵", de:"Yacht/Flug ⛵", en:"yacht/flight ⛵", it:"yacht/volo ⛵" }, par: { hr:"auto 🚗", de:"Auto 🚗", en:"car 🚗", it:"auto 🚗" } }[gb.seg] || { hr:"auto 🚗", de:"Auto 🚗", en:"auto 🚗", it:"auto 🚗" };
+              return (
+                <div style={{ maxWidth: 540, margin: "0 auto", animation: "fadeIn 0.4s both" }}>
+                  {/* Guardian Brief header */}
+                  <div style={{ fontSize: 11, color: "#4ade80", marginBottom: 12, letterSpacing: 1.5, textTransform: "uppercase", fontFamily: B }}>
+                    🛡️ {lang === "de" || lang === "at" ? "GUARDIAN BRIEF — REISEPRÜFUNG" : lang === "en" ? "GUARDIAN BRIEF — PRE-TRIP CHECK" : lang === "it" ? "GUARDIAN BRIEF — CONTROLLO VIAGGIO" : "GUARDIAN BRIEF — PROVJERA PUTOVANJA"}
+                  </div>
+                  {/* All phases complete */}
+                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center", marginBottom: 16 }}>
+                    {PHASES.map((phase, i) => (
+                      <div key={i} style={{ padding: "3px 10px", borderRadius: 20, background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.35)", color: "#4ade80", fontSize: 10, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                        <span style={{ fontSize: 9 }}>✓</span>{tlang(phase)}
+                      </div>
+                    ))}
+                  </div>
+                  {/* Brief card */}
+                  <div style={{ borderRadius: 18, overflow: "hidden", border: "1px solid rgba(34,197,94,0.2)", background: "rgba(10,22,40,0.8)" }}>
+                    {/* Route header */}
+                    <div style={{ padding: "16px 18px", background: "rgba(34,197,94,0.08)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div style={{ fontFamily: F, fontSize: 18, fontWeight: 700, color: "#f0f4f8", marginBottom: 4 }}>{depCity} → {toLPCity}</div>
+                      <div style={{ fontSize: 13, color: "#64748b" }}>{tlang(modeLabel)}</div>
+                    </div>
+                    {/* Stats row */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0, borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                      {gb.weather && (
+                        <div style={{ padding: "14px 18px", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
+                          <div style={{ fontSize: 10, color: "#475569", marginBottom: 4, letterSpacing: 1 }}>{lang === "de" || lang === "at" ? "WETTER" : lang === "en" ? "WEATHER" : lang === "it" ? "METEO" : "VRIJEME"}</div>
+                          <div style={{ fontSize: 22 }}>{gb.weather.icon}</div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: "#e2e8f0" }}>{gb.weather.temp}°C</div>
+                        </div>
+                      )}
+                      {gb.distKm && (
+                        <div style={{ padding: "14px 18px" }}>
+                          <div style={{ fontSize: 10, color: "#475569", marginBottom: 4, letterSpacing: 1 }}>{lang === "de" || lang === "at" ? "STRECKE" : lang === "en" ? "DISTANCE" : lang === "it" ? "DISTANZA" : "RUTA"}</div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: "#e2e8f0" }}>≈ {gb.distKm} km</div>
+                          {gb.etaH !== null && <div style={{ fontSize: 12, color: "#64748b" }}>⏱ ~{gb.etaH}h {gb.etaMin > 0 ? `${gb.etaMin}min` : ""}</div>}
+                        </div>
+                      )}
+                    </div>
+                    {/* Camp recommendation */}
+                    {gb.camp && (
+                      <div style={{ padding: "12px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 10 }}>
+                        <span style={{ fontSize: 18 }}>🏕</span>
+                        <div>
+                          <div style={{ fontSize: 10, color: "#475569", letterSpacing: 1 }}>{lang === "de" || lang === "at" ? "EMPFOHLENER CAMPINGPLATZ" : lang === "en" ? "RECOMMENDED CAMPSITE" : lang === "it" ? "CAMPEGGIO CONSIGLIATO" : "PREPORUČENI KAMP"}</div>
+                          <div style={{ fontSize: 13, color: "#e2e8f0", marginTop: 2 }}>{gb.camp}</div>
+                        </div>
+                      </div>
+                    )}
+                    {/* Status row */}
+                    <div style={{ padding: "10px 18px", display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block", flexShrink: 0 }} />
+                      <span style={{ fontSize: 12, color: "#4ade80" }}>{lang === "de" || lang === "at" ? "Guardian bereit — überwacht jede Phase deiner Reise" : lang === "en" ? "Guardian ready — monitoring every phase of your journey" : lang === "it" ? "Guardian pronto — monitora ogni fase del viaggio" : "Guardian spreman — prati svaku fazu tvog putovanja"}</span>
+                    </div>
+                  </div>
+                  {/* Launch CTA */}
+                  <button onClick={() => { window.location.href = gb.transitUrl; }} style={{ width: "100%", marginTop: 14, padding: "16px 20px", borderRadius: 14, background: "linear-gradient(135deg, #22c55e, #16a34a)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: F, letterSpacing: 0.5, boxShadow: "0 4px 24px rgba(34,197,94,0.3)" }}>
+                    {lang === "de" || lang === "at" ? "🛡️ Auf geht's — Guardian begleitet mich →" : lang === "en" ? "🛡️ Let's go — Guardian is with me →" : lang === "it" ? "🛡️ Partiamo — il Guardian mi accompagna →" : "🛡️ Krenimo — Guardian me prati →"}
+                  </button>
+                  <button onClick={() => setGuardianBrief(null)} style={{ width: "100%", marginTop: 8, padding: "10px", background: "none", border: "none", color: "#475569", fontSize: 13, cursor: "pointer", fontFamily: B }}>
+                    {lang === "de" || lang === "at" ? "← Route ändern" : lang === "en" ? "← Change route" : lang === "it" ? "← Cambia percorso" : "← Promijeni rutu"}
+                  </button>
+                  <div style={{ marginTop: 10, fontSize: 11, color: "#334155" }}>{tx("freeInfo")}</div>
+                </div>
+              );
+            }
+
             return (
               <div style={{ maxWidth: 540, margin: "0 auto" }}>
                 <div style={{ fontSize: 11, color: gPhase >= 2 ? "#4ade80" : "#64748b", marginBottom: 10, letterSpacing: 1.5, textTransform: "uppercase", fontFamily: B, transition: "color 0.3s" }}>
@@ -541,22 +673,14 @@ export default function LandingPage() {
                     </div>
                     {/* CTA */}
                     <button
-                      disabled={!depCity.trim() || !toLPCity.trim()}
-                      onClick={() => {
-                        const seg = selectedMode === "kamper" ? "kamper" : selectedMode === "avion" ? "jedrilicar" : "par";
-                        const fromCoordArr = depCoords ? [depCoords.lat, depCoords.lng] : null;
-                        const dest = { city: toLPCity.trim() };
-                        if (toCoords) { dest.lat = toCoords.lat; dest.lng = toCoords.lng; }
-                        saveDelta({ segment: seg, transport: selectedMode, from: depCity.trim(), from_coords: fromCoordArr, destination: dest, lang, phase: "transit" });
-                        let url = `/?room=DEMO&go=transit&from=${encodeURIComponent(depCity.trim())}&to=${encodeURIComponent(toLPCity.trim())}&seg=${seg}&lang=${lang}`;
-                        if (depCoords) url += `&fLat=${depCoords.lat}&fLng=${depCoords.lng}`;
-                        if (toCoords) url += `&tLat=${toCoords.lat}&tLng=${toCoords.lng}`;
-                        window.location.href = url;
-                      }}
+                      disabled={!depCity.trim() || !toLPCity.trim() || briefLoading}
+                      onClick={launchGuardian}
                       style={{ width: "100%", padding: "14px 20px", borderRadius: 12, background: depCity.trim() && toLPCity.trim() ? "linear-gradient(135deg, #22c55e, #16a34a)" : "rgba(255,255,255,0.06)", border: "none", color: depCity.trim() && toLPCity.trim() ? "#fff" : "#475569", fontSize: 15, fontWeight: 700, cursor: depCity.trim() && toLPCity.trim() ? "pointer" : "default", fontFamily: F, letterSpacing: 0.5, transition: "all 0.2s" }}>
-                      {depCity.trim() && toLPCity.trim()
-                        ? (lang === "de" || lang === "at" ? "🛡️ Guardian aktivieren →" : lang === "en" ? "🛡️ Activate Guardian →" : lang === "it" ? "🛡️ Attiva Guardian →" : "🛡️ Aktiviraj Guardian →")
-                        : tx("ctaGo")}
+                      {briefLoading
+                        ? (lang === "de" || lang === "at" ? "Guardian prüft…" : lang === "en" ? "Guardian checking…" : lang === "it" ? "Guardian controlla…" : "Guardian provjerava…")
+                        : depCity.trim() && toLPCity.trim()
+                          ? (lang === "de" || lang === "at" ? "🛡️ Guardian aktivieren →" : lang === "en" ? "🛡️ Activate Guardian →" : lang === "it" ? "🛡️ Attiva Guardian →" : "🛡️ Aktiviraj Guardian →")
+                          : tx("ctaGo")}
                     </button>
                   </div>
                 )}
