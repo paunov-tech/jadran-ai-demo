@@ -274,50 +274,58 @@ export default function LandingPage() {
 
     const modeText = { kamper: { hr:"kamperom", de:"mit Wohnmobil", en:"by camper", it:"in camper" }, jedrilicar: { hr:"jahtom/avionom", de:"per Yacht/Flug", en:"by yacht/flight", it:"in yacht/volo" }, par: { hr:"automobilom", de:"mit Auto", en:"by car", it:"in auto" } }[seg] || {};
     const ml = (o) => o[lang === "at" ? "de" : lang] || o.hr || o.en || "";
-    const routeCtx = distKm ? `Ruta ≈${distKm}km, procjena ~${etaH}h${etaMin > 0 ? ` ${etaMin}min` : ""} vožnje.` : "";
-    const weatherCtx = weather ? `Trenutno u ${toLPCity}: ${weather.icon} ${weather.temp}°C.` : "";
-    const kamperCtx = seg === "kamper" ? " KAMPER SPECIFIČNO: visine tunela i podvožnjaka, LPG dostupnost, kamper parking u centrima, servisi na ruti." : "";
+    const routeCtx = distKm ? `${distKm}km, ~${etaH}h${etaMin > 0 ? `${etaMin}min` : ""}` : "";
+    const weatherCtx = weather ? `, ${weather.icon} ${weather.temp}°C u ${toLPCity}` : "";
+    const isKamper = seg === "kamper";
     const prompts = {
-      hr: `Ti si Travel Guardian — lokalni ekspert za Jadransku obalu s dubokim znanjem terena. Napiši detaljan pre-trip brief za putovanje: ${depCity} → ${toLPCity}, ${ml(modeText)}. ${routeCtx} ${weatherCtx}
+      hr: `Ti si Travel Guardian. Putnik ide ${isKamper?"kamperom":"automobilom"}: ${depCity} → ${toLPCity}${routeCtx ? ` (${routeCtx}${weatherCtx})` : ""}.
 
-Pokrij SVE od sljedećeg što je relevantno:
-• **Ruta i obvezni zastanci**: konkretne lokacije za gorivo, LPG, odmorišta${kamperCtx}
-• **Skrivene zamke**: prometni problemi, cestovne zamke, kaznene zone, trajekti (rezervacija, raspored)
-• **Što lokalni znaju a turisti ne**: plaže, restorani, tržnice, viewpointovi izvan turističkih mapa
-• **Konkretne preporuke**: navedi prava imena mjesta, restorana, plaža — ne generičke savjete
-• **Sigurnost i sezona**: specifična upozorenja za godišnje doba, bura, gužve, uske ceste
+Napiši konkretan rutni brief. Fokus je ISKLJUČIVO na putu — ne na destinaciji. Koristi znanje o konkretnoj ruti (autoceste, prolazi, trajekti, gradovi na putu).
 
-Piši kao iskusni lokalni vodič koji ovog turista poznaje osobno. Budi specifičan, konkretan, koristan.`,
-      de: `Du bist Travel Guardian — lokaler Experte für die Adria mit tiefem Geländewissen. Schreibe ein detailliertes Pre-Trip-Briefing: ${depCity} → ${toLPCity}, ${ml(modeText)}. ${routeCtx.replace("Ruta","Strecke").replace("vožnje","Fahrt")} ${weatherCtx}
+**Ruta korak po korak** — ključni gradovi i čvorišta na putu, s km oznakama
+**Gorivo i LPG** — gdje točno tankovati${isKamper?" (LPG dostupnost na ruti)":""}, posebno pred Jadranom gdje ponuda opada
+**Kamperska upozorenja** — visine tunela, zabrane za teška vozila, uske dionice, savjeti za parking${isKamper?"":" (preskoči ako nije kamper)"}
+**Trajekti** — postoji li trajekt na ruti, raspored, rezervacija, alternativa (preskoči ako nema)
+**Prometni savjeti** — kada krenuti, koje dionice izbjegavati, sezonske gužve, radovi
+**Granični prijelaz** — koji GP preporučuješ i zašto
 
-Decke ALLES Relevante ab:
-• **Strecke & Pflichtstopps**: konkrete Tankstellen, LPG, Raststätten${seg==="kamper"?" Tunnelhöhen, Wohnmobil-Parkplätze":""}
-• **Versteckte Fallen**: Verkehrsprobleme, Straßenfallen, Bußgeldzonen, Fähren (Reservierung, Zeiten)
-• **Was Einheimische wissen**: Strände, Restaurants, Märkte abseits der Touristenkarten
-• **Konkrete Empfehlungen**: echte Namen von Orten, Restaurants, Stränden — keine generischen Tipps
-• **Sicherheit & Saison**: saisonale Warnungen, Bora, Staus, enge Straßen
+Budi specifičan. Navedi prava imena mjesta, autocesta (npr. A1, E65), prijelaza, marina. Bez generičkih fraza.`,
+      de: `Du bist Travel Guardian. Reisender fährt ${isKamper?"mit Wohnmobil":"mit Auto"}: ${depCity} → ${toLPCity}${routeCtx ? ` (${routeCtx}${weatherCtx})` : ""}.
 
-Schreibe wie ein erfahrener lokaler Guide, der diesen Touristen persönlich kennt.`,
-      en: `You are Travel Guardian — a local expert on the Adriatic coast with deep ground knowledge. Write a detailed pre-trip brief for: ${depCity} → ${toLPCity}, ${ml(modeText)}. ${routeCtx.replace("Ruta","Route").replace("vožnje","drive")} ${weatherCtx}
+Schreibe ein konkretes Routen-Briefing. Fokus NUR auf die Strecke — nicht auf das Reiseziel.
 
-Cover ALL relevant points:
-• **Route & mandatory stops**: specific fuel stations, LPG, rest areas${seg==="kamper"?" tunnel heights, camper parking":""}
-• **Hidden traps**: traffic issues, road traps, fine zones, ferries (booking, schedules)
-• **What locals know**: beaches, restaurants, markets off the tourist map
-• **Concrete recommendations**: real names of places, restaurants, beaches — no generic tips
-• **Safety & season**: seasonal warnings, bura wind, crowds, narrow roads
+**Route Schritt für Schritt** — wichtige Städte und Knotenpunkte mit km-Angaben
+**Tanken & LPG** — wo genau tanken${isKamper?" (LPG-Verfügbarkeit)":" "}, besonders vor der Adria-Küste
+**Wohnmobil-Warnungen** — Tunnelhöhen, LKW-Verbote, enge Abschnitte${isKamper?"":" (überspringen wenn kein Wohnmobil)"}
+**Fähren** — gibt es eine Fähre auf der Route, Fahrplan, Reservierung, Alternative
+**Verkehrstipps** — wann losfahren, welche Abschnitte meiden, Saisonstaus, Baustellen
+**Grenzübergang** — welchen GP empfehlen und warum
 
-Write as an experienced local guide who knows this tourist personally.`,
-      it: `Sei il Travel Guardian — esperto locale della costa adriatica con profonda conoscenza del territorio. Scrivi un briefing pre-viaggio dettagliato: ${depCity} → ${toLPCity}, ${ml(modeText)}. ${routeCtx.replace("Ruta","Percorso").replace("vožnje","guida")} ${weatherCtx}
+Konkret. Echte Ortsnamen, Autobahnen (A1, E65), Übergänge nennen.`,
+      en: `You are Travel Guardian. Traveler going ${isKamper?"by camper":"by car"}: ${depCity} → ${toLPCity}${routeCtx ? ` (${routeCtx}${weatherCtx})` : ""}.
 
-Copri TUTTO il rilevante:
-• **Percorso e tappe obbligatorie**: stazioni di servizio, LPG, aree di sosta${seg==="kamper"?" altezze tunnel, parcheggi camper":""}
-• **Trappole nascoste**: problemi traffico, zone a rischio multa, traghetti (prenotazione, orari)
-• **Cosa sanno i locali**: spiagge, ristoranti, mercati fuori dalle mappe turistiche
-• **Raccomandazioni concrete**: nomi reali di posti, ristoranti, spiagge — niente consigli generici
-• **Sicurezza e stagione**: avvertenze stagionali, bora, code, strade strette
+Write a concrete route brief. Focus ONLY on the journey — not the destination.
 
-Scrivi come una guida locale esperta che conosce personalmente questo turista.`,
+**Route step by step** — key cities and junctions with km markers
+**Fuel & LPG** — where exactly to refuel${isKamper?" (LPG availability on route)":""}, especially before the Adriatic where options thin out
+**Camper warnings** — tunnel heights, truck restrictions, narrow sections${isKamper?"":" (skip if not camper)"}
+**Ferries** — is there a ferry on route, schedule, booking, alternative
+**Traffic tips** — when to depart, sections to avoid, seasonal jams, roadworks
+**Border crossing** — which crossing to use and why
+
+Be specific. Name real roads (A1, E65), towns, crossings.`,
+      it: `Sei il Travel Guardian. Viaggiatore in ${isKamper?"camper":"auto"}: ${depCity} → ${toLPCity}${routeCtx ? ` (${routeCtx}${weatherCtx})` : ""}.
+
+Scrivi un briefing di percorso concreto. Focus SOLO sul viaggio — non sulla destinazione.
+
+**Percorso passo per passo** — città e snodi principali con indicazioni km
+**Carburante & LPG** — dove fare rifornimento${isKamper?" (disponibilità LPG)":""}, specialmente prima della costa
+**Avvisi camper** — altezze tunnel, divieti mezzi pesanti, tratti stretti${isKamper?"":" (salta se non camper)"}
+**Traghetti** — c'è un traghetto sul percorso, orari, prenotazione, alternativa
+**Consigli traffico** — quando partire, tratti da evitare, ingorghi stagionali
+**Valico di frontiera** — quale scegliere e perché
+
+Specifico. Nomi reali di strade (A1, E65), città, valichi.`,
     };
     const prompt = prompts[lang === "at" ? "de" : lang] || prompts.hr;
     const destRegion = (() => {
@@ -339,7 +347,7 @@ Scrivi come una guida locale esperta che conosce personalmente questo turista.`,
         plan: "season",
         delta_context: { segment: seg, from: depCity.trim(), destination: destObj },
       }),
-      signal: AbortSignal.timeout(25000),
+      signal: AbortSignal.timeout(45000),
     }).then(r => r.json()).then(d => { aiText = d.content?.map(c => c.text||"").join("") || null; }).catch(() => {});
 
     await Promise.all([weatherPromise, aiPromise]);
@@ -633,32 +641,33 @@ Scrivi come una guida locale esperta che conosce personalmente questo turista.`,
                         </div>
                       </div>
                     )}
-                    {/* Partner offers as AI recommendations */}
-                    {gb.offers && gb.offers.length > 0 && (
-                      <div style={{ padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                        <div style={{ fontSize: 10, color: "#f59e0b", letterSpacing: 1.5, fontWeight: 700, marginBottom: 10, fontFamily: B }}>
-                          ⭐ {lang === "de" || lang === "at" ? "GUARDIAN EMPFIEHLT" : lang === "en" ? "GUARDIAN RECOMMENDS" : lang === "it" ? "GUARDIAN CONSIGLIA" : "GUARDIAN PREPORUČUJE"}
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                          {gb.offers.map((offer, i) => (
-                            <a key={i} href={offer.link} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", textDecoration: "none", transition: "background 0.2s" }}>
-                              <span style={{ fontSize: 22, flexShrink: 0 }}>{offer.emoji}</span>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: 13, fontWeight: 600, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tlang(offer.title)}</div>
-                                <div style={{ fontSize: 11, color: "#64748b", marginTop: 1 }}>{tlang(offer.sub)}</div>
-                              </div>
-                              <div style={{ flexShrink: 0, fontSize: 13, fontWeight: 700, color: "#22c55e", background: "rgba(34,197,94,0.1)", padding: "4px 10px", borderRadius: 8 }}>{offer.price}</div>
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                     {/* Status row */}
                     <div style={{ padding: "10px 18px", display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block", flexShrink: 0 }} />
                       <span style={{ fontSize: 12, color: "#4ade80" }}>{lang === "de" || lang === "at" ? "Guardian bereit — überwacht jede Phase deiner Reise" : lang === "en" ? "Guardian ready — monitoring every phase of your journey" : lang === "it" ? "Guardian pronto — monitora ogni fase del viaggio" : "Guardian spreman — prati svaku fazu tvog putovanja"}</span>
                     </div>
                   </div>
+                  {/* Partner offers — outside card, always visible */}
+                  {gb.offers && gb.offers.length > 0 && (
+                    <div style={{ marginTop: 14 }}>
+                      <div style={{ fontSize: 10, color: "#f59e0b", letterSpacing: 1.5, fontWeight: 700, marginBottom: 10, fontFamily: B }}>
+                        ⭐ {lang === "de" || lang === "at" ? "AKTIVITÄTEN IN DER DESTINATION" : lang === "en" ? "ACTIVITIES AT YOUR DESTINATION" : lang === "it" ? "ATTIVITÀ ALLA DESTINAZIONE" : "AKTIVNOSTI NA DESTINACIJI"}
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                        {gb.offers.map((offer, i) => (
+                          <a key={i} href={offer.link} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", textDecoration: "none" }}>
+                            <span style={{ fontSize: 24, flexShrink: 0 }}>{offer.emoji}</span>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 14, fontWeight: 600, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tlang(offer.title)}</div>
+                              <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>{tlang(offer.sub)}</div>
+                            </div>
+                            <div style={{ flexShrink: 0, fontSize: 14, fontWeight: 700, color: "#22c55e", background: "rgba(34,197,94,0.1)", padding: "5px 12px", borderRadius: 8, whiteSpace: "nowrap" }}>{offer.price} →</div>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Launch CTA */}
                   <button onClick={() => { window.location.href = gb.transitUrl; }} style={{ width: "100%", marginTop: 14, padding: "16px 20px", borderRadius: 14, background: "linear-gradient(135deg, #22c55e, #16a34a)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: F, letterSpacing: 0.5, boxShadow: "0 4px 24px rgba(34,197,94,0.3)" }}>
                     {lang === "de" || lang === "at" ? "🛡️ Auf geht's — Guardian begleitet mich →" : lang === "en" ? "🛡️ Let's go — Guardian is with me →" : lang === "it" ? "🛡️ Partiamo — il Guardian mi accompagna →" : "🛡️ Krenimo — Guardian me prati →"}
@@ -796,23 +805,6 @@ Scrivi come una guida locale esperta che conosce personalmente questo turista.`,
               </div>
             );
           })()}
-        </div>
-      </section>
-
-      {/* ═══ PAIN RELIEF ═══ */}
-      <section style={{ background: "#f8fafc", color: "#0f172a", padding: "48px 24px" }}>
-        <div style={{ maxWidth: 960, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 24 }}>
-          {[
-            { icon: "\u26D4", t: tx("pain1t"), d: tx("pain1d"), c: "#ef4444" },
-            { icon: "🌬️", t: tx("pain2t"), d: tx("pain2d"), c: "#f59e0b" },
-            { icon: "💎", t: tx("pain3t"), d: tx("pain3d"), c: "#0ea5e9" },
-          ].map((p, i) => (
-            <div key={i} style={{ padding: 28, borderRadius: 18, background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.04)", border: "1px solid #e2e8f0" }}>
-              <div style={{ width: 48, height: 48, borderRadius: 14, background: p.c + "10", display: "grid", placeItems: "center", fontSize: 24, marginBottom: 14 }}>{p.icon}</div>
-              <h3 style={{ fontFamily: F, fontSize: 20, fontWeight: 700, marginBottom: 8, color: "#0f172a" }}>{p.t}</h3>
-              <p style={{ fontSize: 14, color: "#475569", lineHeight: 1.7 }}>{p.d}</p>
-            </div>
-          ))}
         </div>
       </section>
 
