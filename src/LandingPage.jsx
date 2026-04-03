@@ -262,35 +262,60 @@ export default function LandingPage() {
       etaH = Math.floor(totalMin / 60); etaMin = totalMin % 60;
     }
 
-    // Parallel: weather + AI brief
-    let weather = null, aiText = null;
+    // ── STAGE 1: fast fetches in parallel (weather + Jadran Sense + satellite) ──
+    let weather = null, senseCards = [], satData = null;
 
     const weatherPromise = toCoords
-      ? fetch(`https://api.open-meteo.com/v1/forecast?latitude=${toCoords.lat.toFixed(4)}&longitude=${toCoords.lng.toFixed(4)}&current=temperature_2m,weathercode&timezone=auto`, { signal: AbortSignal.timeout(5000) })
+      ? fetch(`https://api.open-meteo.com/v1/forecast?latitude=${toCoords.lat.toFixed(4)}&longitude=${toCoords.lng.toFixed(4)}&current=temperature_2m,weathercode&timezone=auto`, { signal: AbortSignal.timeout(6000) })
           .then(r => r.json())
           .then(wd => { if (wd.current) weather = { temp: Math.round(wd.current.temperature_2m), icon: WMO_ICON(wd.current.weathercode) }; })
           .catch(() => {})
       : Promise.resolve();
 
+    const guidePromise = (depCoords && toCoords)
+      ? fetch(`/api/guide?oLat=${depCoords.lat}&oLng=${depCoords.lng}&dLat=${toCoords.lat}&dLng=${toCoords.lng}&seg=${seg}&lang=${lang === "at" ? "de" : lang || "hr"}`, { signal: AbortSignal.timeout(8000) })
+          .then(r => r.json())
+          .then(data => { senseCards = Array.isArray(data) ? data : (data.cards || []); })
+          .catch(() => {})
+      : Promise.resolve();
+
+    const satPromise = toCoords
+      ? fetch(`/api/satellite?lat=${toCoords.lat.toFixed(4)}&lng=${toCoords.lng.toFixed(4)}`, { signal: AbortSignal.timeout(8000) })
+          .then(r => r.json())
+          .then(d => { if (d.zoneCount > 0) satData = d; })
+          .catch(() => {})
+      : Promise.resolve();
+
+    await Promise.all([weatherPromise, guidePromise, satPromise]);
+
+    // Show brief immediately after Stage 1
+    const tag = destTag(toLPCity);
+    const offers = tag ? TRENDING.filter(t => t.tag === tag).slice(0, 3) : TRENDING.slice(0, 3);
+    setGuardianBrief({ weather, distKm, etaH, etaMin, seg, transitUrl, offers, senseCards, satData, aiText: null, aiLoading: true });
+    setBriefLoading(false);
+
+    // ── STAGE 2: AI brief in background (slow) ──
+    let aiText = null;
     const modeText = { kamper: { hr:"kamperom", de:"mit Wohnmobil", en:"by camper", it:"in camper" }, jedrilicar: { hr:"jahtom/avionom", de:"per Yacht/Flug", en:"by yacht/flight", it:"in yacht/volo" }, par: { hr:"automobilom", de:"mit Auto", en:"by car", it:"in auto" } }[seg] || {};
     const ml = (o) => o[lang === "at" ? "de" : lang] || o.hr || o.en || "";
     const routeCtx = distKm ? `${distKm}km, ~${etaH}h${etaMin > 0 ? `${etaMin}min` : ""}` : "";
     const weatherCtx = weather ? `, ${weather.icon} ${weather.temp}°C u ${toLPCity}` : "";
+    const senseCtx = senseCards.slice(0, 3).map(c => c.title + (c.body ? ": " + c.body : "")).join("; ");
     const isKamper = seg === "kamper";
     const prompts = {
-      hr: `Ti si Travel Guardian. Putnik ide ${isKamper?"kamperom":"automobilom"}: ${depCity} → ${toLPCity}${routeCtx ? ` (${routeCtx}${weatherCtx})` : ""}.
+      hr: `Ti si Travel Guardian. Putnik ide ${isKamper?"kamperom":"automobilom"}: ${depCity} → ${toLPCity}${routeCtx ? ` (${routeCtx}${weatherCtx})` : ""}.${senseCtx ? `\n\nJADRAN SENSE LIVE: ${senseCtx}` : ""}
 
-Napiši konkretan rutni brief. Fokus je ISKLJUČIVO na putu — ne na destinaciji. Koristi znanje o konkretnoj ruti (autoceste, prolazi, trajekti, gradovi na putu).
+Napiši konkretan rutni brief. Fokus je ISKLJUČIVO na putu.
 
-**Ruta korak po korak** — ključni gradovi i čvorišta na putu, s km oznakama
-**Gorivo i LPG** — gdje točno tankovati${isKamper?" (LPG dostupnost na ruti)":""}, posebno pred Jadranom gdje ponuda opada
-**Kamperska upozorenja** — visine tunela, zabrane za teška vozila, uske dionice, savjeti za parking${isKamper?"":" (preskoči ako nije kamper)"}
-**Trajekti** — postoji li trajekt na ruti, raspored, rezervacija, alternativa (preskoči ako nema)
-**Prometni savjeti** — kada krenuti, koje dionice izbjegavati, sezonske gužve, radovi
-**Granični prijelaz** — koji GP preporučuješ i zašto
+**Ruta korak po korak** — gradovi i čvorišta s km oznakama (Salzburg → Ljubljana → Rijeka → Senj → Rab npr.)
+**Gorivo i LPG** — gdje točno napuniti${isKamper?" LPG":""}, posebno pred Jadranom (Senj, Karlobag — zadnja šansa)
+**Kamperska upozorenja** — visine tunela (Učka 5.1m), uske ceste (Velebit!), kamper zabrane u centrima${isKamper?"":" (preskoči ako nije kamper)"}
+**Trajekti** — koji trajekt, kada kreće, rezervacija na jadrolinija.hr ili rtp.hr (Stinice-Mišnjak za Rab, Porozina za Cres itd.)
+**Prometni savjeti** — kada krenuti, sezonske gužve A6/A1 petkom, kolone na GP Macelj/Rupa
+**Granični prijelaz** — koji GP i zašto (Macelj brži, Rupa za jug)
 
-Budi specifičan. Navedi prava imena mjesta, autocesta (npr. A1, E65), prijelaza, marina. Bez generičkih fraza.`,
-      de: `Du bist Travel Guardian. Reisender fährt ${isKamper?"mit Wohnmobil":"mit Auto"}: ${depCity} → ${toLPCity}${routeCtx ? ` (${routeCtx}${weatherCtx})` : ""}.
+Konkretno. Prava imena. Bez generičkih savjeta.`,
+      de: `Du bist Travel Guardian. Reisender fährt ${isKamper?"mit Wohnmobil":"mit Auto"}: ${depCity} → ${toLPCity}${routeCtx ? ` (${routeCtx}${weatherCtx})` : ""}.${senseCtx ? `\n\nJADRAN SENSE LIVE: ${senseCtx}` : ""}
 
 Schreibe ein konkretes Routen-Briefing. Fokus NUR auf die Strecke — nicht auf das Reiseziel.
 
@@ -302,7 +327,7 @@ Schreibe ein konkretes Routen-Briefing. Fokus NUR auf die Strecke — nicht auf 
 **Grenzübergang** — welchen GP empfehlen und warum
 
 Konkret. Echte Ortsnamen, Autobahnen (A1, E65), Übergänge nennen.`,
-      en: `You are Travel Guardian. Traveler going ${isKamper?"by camper":"by car"}: ${depCity} → ${toLPCity}${routeCtx ? ` (${routeCtx}${weatherCtx})` : ""}.
+      en: `You are Travel Guardian. Traveler going ${isKamper?"by camper":"by car"}: ${depCity} → ${toLPCity}${routeCtx ? ` (${routeCtx}${weatherCtx})` : ""}.${senseCtx ? `\n\nJADRAN SENSE LIVE: ${senseCtx}` : ""}
 
 Write a concrete route brief. Focus ONLY on the journey — not the destination.
 
@@ -314,7 +339,7 @@ Write a concrete route brief. Focus ONLY on the journey — not the destination.
 **Border crossing** — which crossing to use and why
 
 Be specific. Name real roads (A1, E65), towns, crossings.`,
-      it: `Sei il Travel Guardian. Viaggiatore in ${isKamper?"camper":"auto"}: ${depCity} → ${toLPCity}${routeCtx ? ` (${routeCtx}${weatherCtx})` : ""}.
+      it: `Sei il Travel Guardian. Viaggiatore in ${isKamper?"camper":"auto"}: ${depCity} → ${toLPCity}${routeCtx ? ` (${routeCtx}${weatherCtx})` : ""}.${senseCtx ? `\n\nJADRAN SENSE LIVE: ${senseCtx}` : ""}
 
 Scrivi un briefing di percorso concreto. Focus SOLO sul viaggio — non sulla destinazione.
 
@@ -348,16 +373,12 @@ Specifico. Nomi reali di strade (A1, E65), città, valichi.`,
         delta_context: { segment: seg, from: depCity.trim(), destination: destObj },
       }),
       signal: AbortSignal.timeout(45000),
-    }).then(r => r.json()).then(d => { aiText = d.content?.map(c => c.text||"").join("") || null; }).catch(() => {});
-
-    await Promise.all([weatherPromise, aiPromise]);
-
-    // Partner offers filtered by destination
-    const tag = destTag(toLPCity);
-    const offers = tag ? TRENDING.filter(t => t.tag === tag).slice(0, 3) : TRENDING.slice(0, 3);
-
-    setGuardianBrief({ weather, distKm, etaH, etaMin, seg, transitUrl, aiText, offers });
-    setBriefLoading(false);
+    }).then(r => r.json()).then(d => {
+      aiText = d.content?.map(c => c.text||"").join("") || null;
+      setGuardianBrief(prev => prev ? { ...prev, aiText, aiLoading: false } : prev);
+    }).catch(() => {
+      setGuardianBrief(prev => prev ? { ...prev, aiLoading: false } : prev);
+    });
   };
 
   // HERE Maps API key (safe for client-side JS Maps API)
@@ -485,7 +506,7 @@ Specifico. Nomi reali di strade (A1, E65), città, valichi.`,
 
   return (
     <div style={{ background: "#0a1628", color: "#f0f4f8", fontFamily: B, overflowX: "hidden" }}>
-      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}`}</style>
+      <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
       {/* NAV */}
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, paddingTop: "max(10px, env(safe-area-inset-top, 10px))", paddingBottom: 10, paddingLeft: 16, paddingRight: 16, display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(10,22,40,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
@@ -609,6 +630,44 @@ Specifico. Nomi reali di strade (A1, E65), città, valichi.`,
                         {gb.distKm && <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>≈{gb.distKm}km · ~{gb.etaH}h{gb.etaMin > 0 ? `${gb.etaMin}m` : ""}</div>}
                       </div>
                     </div>
+                    {/* Jadran Sense section */}
+                    {((gb.senseCards && gb.senseCards.length > 0) || gb.satData) && (
+                      <div style={{ padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div style={{ fontSize: 10, color: "#a78bfa", letterSpacing: 1.5, fontWeight: 700, marginBottom: 10, fontFamily: B }}>
+                          📡 JADRAN SENSE — LIVE INTELLIGENCE
+                        </div>
+                        {gb.satData && (
+                          <div style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: 8, padding: "8px 10px", borderRadius: 10, background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.15)" }}>
+                            <span style={{ fontSize: 16, flexShrink: 0 }}>🛰️</span>
+                            <div style={{ fontSize: 12, color: "#c4b5fd", lineHeight: 1.5 }}>
+                              <strong style={{ color: "#ddd6fe" }}>
+                                {lang === "de" || lang === "at" ? "Satellit" : lang === "en" ? "Satellite" : lang === "it" ? "Satellite" : "Satellit"}
+                              </strong>
+                              {" — "}
+                              {gb.satData.zones && gb.satData.zones.length > 0
+                                ? gb.satData.zones.slice(0, 2).map((z, zi) => (
+                                    <span key={zi}>{z.name}: <strong style={{ color: z.occupancy > 80 ? "#f87171" : z.occupancy > 50 ? "#fb923c" : "#4ade80" }}>{z.occupancy}% {lang === "de" || lang === "at" ? "belegt" : lang === "en" ? "occupied" : lang === "it" ? "occupato" : "popunjeno"}</strong>{zi < Math.min(gb.satData.zones.length, 2) - 1 ? " · " : ""}</span>
+                                  ))
+                                : (lang === "de" || lang === "at" ? `${gb.satData.zoneCount} Campingzonen erkannt` : lang === "en" ? `${gb.satData.zoneCount} camp zones detected` : lang === "it" ? `${gb.satData.zoneCount} zone rilevate` : `${gb.satData.zoneCount} zona detektirano`)}
+                            </div>
+                          </div>
+                        )}
+                        {gb.senseCards && gb.senseCards.slice(0, 4).map((card, ci) => {
+                          const sevColor = { critical: "#f87171", warning: "#fb923c", info: "#38bdf8", tip: "#4ade80" }[card.severity] || "#94a3b8";
+                          const sevBg = { critical: "rgba(248,113,113,0.07)", warning: "rgba(251,146,60,0.07)", info: "rgba(56,189,248,0.07)", tip: "rgba(74,222,128,0.07)" }[card.severity] || "rgba(255,255,255,0.03)";
+                          const sevBorder = { critical: "rgba(248,113,113,0.2)", warning: "rgba(251,146,60,0.2)", info: "rgba(56,189,248,0.2)", tip: "rgba(74,222,128,0.2)" }[card.severity] || "rgba(255,255,255,0.06)";
+                          return (
+                            <div key={ci} style={{ display: "flex", alignItems: "flex-start", gap: 8, marginBottom: ci < gb.senseCards.slice(0,4).length - 1 ? 6 : 0, padding: "8px 10px", borderRadius: 10, background: sevBg, border: `1px solid ${sevBorder}` }}>
+                              <span style={{ fontSize: 15, flexShrink: 0 }}>{card.icon || "📍"}</span>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: sevColor }}>{card.title}</div>
+                                {card.body && <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2, lineHeight: 1.4 }}>{card.body}</div>}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                     {/* AI Brief — with markdown rendering */}
                     {gb.aiText && (
                       <div style={{ padding: "16px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
@@ -639,6 +698,15 @@ Specifico. Nomi reali di strade (A1, E65), città, valichi.`,
                             return <div key={i} style={{ marginBottom: 6 }}>{renderBold(line)}</div>;
                           })}
                         </div>
+                      </div>
+                    )}
+                    {/* AI loading spinner */}
+                    {gb.aiLoading && !gb.aiText && (
+                      <div style={{ padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ width: 16, height: 16, borderRadius: "50%", border: "2px solid rgba(14,165,233,0.2)", borderTopColor: "#0ea5e9", animation: "spin 0.8s linear infinite", flexShrink: 0 }} />
+                        <span style={{ fontSize: 12, color: "#475569" }}>
+                          {lang === "de" || lang === "at" ? "Neural Engine analysiert Route…" : lang === "en" ? "Neural Engine analysing route…" : lang === "it" ? "Neural Engine analizza percorso…" : "Neural Engine analizira rutu…"}
+                        </span>
                       </div>
                     )}
                     {/* Status row */}
