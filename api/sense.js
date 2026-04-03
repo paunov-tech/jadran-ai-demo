@@ -89,18 +89,35 @@ async function fetchSenseData() {
   }
 }
 
-// ─── Translate YOLO split_makarska region → BeachStatus shape ───
-function yoloToBeachStatus(yoloData) {
-  // split_makarska covers Split, Podstrana, Omiš, Makarska corridor cameras
-  const reg = yoloData.regions?.["split_makarska"];
+// ─── Map destination city name → YOLO region key ───
+function cityToRegion(city) {
+  if (!city) return "split_makarska";
+  const c = city.toLowerCase().trim();
+  // Kvarner
+  if (/rab|krk|cres|rijeka|opatija|lošinj|losinj|crikvenica|senj|novi vinodolski/.test(c)) return "kvarner";
+  // Istra
+  if (/pula|rovinj|poreč|porec|umag|novigrad|pazin|labin|medulin|poreč|fažana|fazana/.test(c)) return "istra";
+  // Zadar / Šibenik
+  if (/zadar|šibenik|sibenik|vodice|biograd|nin|primošten|primosten|murter|tribunj/.test(c)) return "zadar_sibenik";
+  // Dubrovnik corridor
+  if (/dubrovnik|makarska|ploče|ploce|metkovic|metković|opuzen/.test(c)) return "dubrovnik";
+  // Split corridor (default Dalmatia)
+  return "split_makarska";
+}
+
+// ─── Translate YOLO region → BeachStatus shape ───
+function yoloToBeachStatus(yoloData, city) {
+  const regionKey = cityToRegion(city);
+  // Try requested region; fall back to split_makarska as last resort
+  const reg = yoloData.regions?.[regionKey] || yoloData.regions?.["split_makarska"];
   if (!reg || reg.totalObjects === 0) return null;
 
+  const cityName = city || "Jadran";
   const persons = reg.persons;
   const boats = reg.boats;
   const cars = reg.cars;
   const activeCams = reg.activeCameras || 0;
 
-  // Use topCamera busyness if available, otherwise derive from persons
   const busyness = reg.topCamera?.busyness ?? Math.min(100, Math.round(persons / 2));
   const occupancy_pct = busyness;
 
@@ -114,15 +131,13 @@ function yoloToBeachStatus(yoloData) {
     occupancy_pct < 45 ? "Ugodno — ima mjesta" :
     occupancy_pct < 70 ? "Gužva — dođite rano ujutro" : "Jako gužva — preporučamo alternativu";
 
-  // Boats: real YOLO boat count for the region; clamp to realistic marina range
   const boatCount = Math.min(boats || 0, 40);
-  // Free parking: infer from car density (more cars on camera = less parking)
   const carLoad = Math.min(cars, 80);
   const freeSpots = Math.max(0, 80 - carLoad);
 
   return {
     beach: {
-      name: "Plaža Podstrana",
+      name: `Plaža ${cityName}`,
       crowd,
       occupancy_pct,
       tourists: persons,
@@ -131,19 +146,20 @@ function yoloToBeachStatus(yoloData) {
       yolo_cams: activeCams,
     },
     marina: {
-      name: "Luka Podstrana",
+      name: `Marina ${cityName}`,
       boats: boatCount,
       free_moorings: Math.max(0, 30 - boatCount),
       status: boatCount < 10 ? "slobodno" : boatCount < 20 ? "umjereno" : "popunjeno",
     },
     parking: {
-      name: "Parking Podstrana Centar",
+      name: `Parking ${cityName}`,
       free_spots: freeSpots,
       total_spots: 80,
       status: freeSpots > 50 ? "slobodno" : freeSpots > 20 ? "umjereno" : "gotovo puno",
     },
     updated: yoloData.timestamp,
     source: "yolo",
+    region: regionKey,
     note: `LIVE YOLO data — ${yoloData.activeCams} aktivnih kamera, zadnji update ${new Date(yoloData.timestamp).toLocaleTimeString("hr")}`,
   };
 }
@@ -184,7 +200,7 @@ export default async function handler(req, res) {
   let data = null;
   try {
     const yolo = await fetchSenseData();
-    if (yolo) data = yoloToBeachStatus(yolo);
+    if (yolo) data = yoloToBeachStatus(yolo, city);
   } catch (e) {
     console.warn("sense.js: Sense unavailable, falling back to simulation:", e.message);
   }
