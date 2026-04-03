@@ -201,7 +201,7 @@ async function queryZoneStats(zone, token, daysBack = 14) {
         dataFilter: {
           timeRange: { from, to },
           maxCloudCoverage: 50,
-          mosaickingOrder: "leastCC",  // prefer least cloud coverage
+          mosaickingOrder: "mostRecent",
         },
       }],
     },
@@ -473,7 +473,7 @@ export default async function handler(req, res) {
       try {
         const tok = await getSentinelToken();
         const firstZone = Object.entries(PARKING_ZONES)[0];
-        const raw = await queryZoneStats(firstZone[1], tok, 10);
+        const raw = await queryZoneStats(firstZone[1], tok, 5);
         const intervals = raw?.data?.length || 0;
         zoneTest = { zone: firstZone[0], intervals, sample: raw?.data?.[0], totalData: raw?.data?.length, status: raw?.status };
       } catch (e) {
