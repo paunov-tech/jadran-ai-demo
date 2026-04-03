@@ -91,9 +91,20 @@ export const GLOBAL_CSS = `
 
   /* ── Touch targets ── */
   button, a, [role="button"], input, select, textarea, label { touch-action: manipulation; }
-  input, select, textarea { font-size: 16px !important; }
+  input, select, textarea {
+    font-size: 16px !important;   /* prevents iOS Safari zoom-on-focus */
+    -webkit-appearance: none; appearance: none; /* removes native iOS/Samsung styling glitches */
+    max-width: 100%;              /* prevents horizontal overflow on Samsung narrow screens */
+  }
   @media (max-width: 480px) { button { min-height: 44px; } }
   @media (min-width: 768px) and (max-width: 1366px) and (hover: none) { button { min-height: 48px; } }
+
+  /* ── Backdrop-filter fallback for Samsung Internet < 16 ── */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass      { background: rgba(8,18,36,0.97) !important; }
+    .fixed-bottom { background: rgba(5,14,30,0.99) !important; }
+    .sticky-blur { background: rgba(8,18,36,0.97) !important; }
+  }
 
   /* ── Scrollbar ── */
   ::-webkit-scrollbar { width: 4px; }
@@ -158,10 +169,6 @@ export const GLOBAL_CSS = `
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
-  /* ── Viewport helpers ── */
-  .dvh      { min-height: 100vh; min-height: 100dvh; }
-  .dvh-exact{ height: 100vh; height: 100dvh; }
-
   /* ── Glass card ── */
   .glass {
     backdrop-filter: blur(14px) saturate(1.5);
@@ -209,11 +216,12 @@ export const GLOBAL_CSS = `
   }
 
   /* ── Samsung/iOS viewport — address bar & gesture navigation ── */
-  /* svh = small viewport (safest, excludes browser chrome), dvh = dynamic */
+  /* svh = small viewport height (excludes browser chrome, safest for fixed content) */
+  /* dvh = dynamic viewport height (grows/shrinks with address bar — best for full-screen) */
   .dvh       { min-height: 100svh; min-height: 100dvh; }
   .dvh-exact { height: 100svh; height: 100dvh; }
-  /* Samsung One UI: allow vertical pan gestures through interactive elements */
-  .scroll-smooth, [style*="overflow-y"] { touch-action: pan-y; }
+  /* Samsung One UI: allow vertical pan + pinch-zoom through scroll containers */
+  .scroll-smooth { touch-action: pan-y pinch-zoom; overscroll-behavior-y: contain; }
 
   /* ── Prevent iOS rubber-band on fixed containers ── */
   .no-bounce { overscroll-behavior: none; -webkit-overflow-scrolling: auto; }

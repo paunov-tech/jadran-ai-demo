@@ -677,8 +677,12 @@ export default function JadranUnified() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const G = guestProfile || GUEST_FALLBACK;
 
-  useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMsgs]);
-  useEffect(() => { const t = setTimeout(() => setSplash(false), 2500); return () => clearTimeout(t); }, []);
+  useEffect(() => {
+    // 350ms delay — iOS keyboard animation must settle before scrollIntoView or it jumps
+    const t = setTimeout(() => chatEnd.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 350);
+    return () => clearTimeout(t);
+  }, [chatMsgs]);
+  useEffect(() => { const t = setTimeout(() => setSplash(false), 1500); return () => clearTimeout(t); }, []);
 
   // ─── URL transit handoff (?go=transit&from=Wien&to=Split&seg=kamper) ───
   const urlFromSet = useRef(false); // blocks geocode race condition
@@ -1797,7 +1801,9 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             })()}
             <div style={{ display: "flex", gap: 8 }}>
               <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && canSend && doChat()}
-                placeholder={t("askPlaceholder",lang)} style={{ ...dm, flex: 1, padding: "13px 16px", background: "rgba(186,230,253,0.05)", border: `1px solid ${C.bord}`, borderRadius: 20, color: C.text, fontSize: 16, outline: "none", minHeight: 48 }} />
+                placeholder={t("askPlaceholder",lang)}
+                inputMode="text" autoCorrect="off" autoCapitalize="sentences" spellCheck={false} autoComplete="off"
+                style={{ ...dm, flex: 1, padding: "13px 16px", background: "rgba(186,230,253,0.05)", border: `1px solid ${C.bord}`, borderRadius: 20, color: C.text, fontSize: 16, outline: "none", minHeight: 48 }} />
               <button onClick={() => canSend ? doChat() : setShowPaywall(true)}
                 style={{ padding: "0 20px", background: canSend ? `linear-gradient(135deg,${C.accent},#0284c7)` : C.goDim, border: canSend ? "none" : `1px solid ${C.goBorder}`, borderRadius: 20, color: "#fff", fontSize: 20, cursor: "pointer", fontWeight: 600, minWidth: 52, minHeight: 48, display: "grid", placeItems: "center", flexShrink: 0 }}>
                 {canSend ? "→" : "⭐"}
@@ -2633,6 +2639,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
               onChange={e => setChatInput(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && canSend && doChat()}
               placeholder={t("askPlaceholder",lang)}
+              inputMode="text" autoCorrect="off" autoCapitalize="sentences" spellCheck={false} autoComplete="off"
               style={{ ...dm, flex: 1, padding: "13px 16px", background: "rgba(186,230,253,0.05)", border: `1px solid ${C.bord}`, borderRadius: 20, color: C.text, fontSize: 16, outline: "none", minHeight: 48 }}
             />
             <button

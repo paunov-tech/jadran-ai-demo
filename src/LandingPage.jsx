@@ -833,7 +833,8 @@ Specifico. Nomi reali di strade (A1, E65), città, valichi.`,
                         onFocus={() => { setRouteInputFocused(true); if (fromInputRef.current) setFromRect(fromInputRef.current.getBoundingClientRect()); }}
                         onBlur={() => { setTimeout(() => setFromLPSugs([]), 150); setTimeout(() => setRouteInputFocused(false), 300); }}
                         placeholder={tx("fromPlaceholder")}
-                        style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${depCity ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 15, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
+                        inputMode="text" autoCorrect="off" autoCapitalize="words" spellCheck={false} autoComplete="off"
+                        style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${depCity ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 16, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
                       {fromLPSugs.length > 0 && fromRect && (
                         <div style={{ position: "fixed", top: fromRect.bottom + 4, left: fromRect.left, width: fromRect.width, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, zIndex: 9999, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
                           {fromLPSugs.map(c => <div key={c.title} onMouseDown={e => { e.preventDefault(); setDepCity(c.title); setDepCoords({lat: c.lat, lng: c.lng}); setFromLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c.title}</div>)}
@@ -848,7 +849,8 @@ Specifico. Nomi reali di strade (A1, E65), città, valichi.`,
                         onFocus={() => { setRouteInputFocused(true); if (toInputRef.current) setToRect(toInputRef.current.getBoundingClientRect()); }}
                         onBlur={() => { setTimeout(() => setToLPSugs([]), 150); setTimeout(() => setRouteInputFocused(false), 300); }}
                         placeholder={tx("toPlaceholder")}
-                        style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${toLPCity ? "rgba(249,115,22,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 15, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
+                        inputMode="text" autoCorrect="off" autoCapitalize="words" spellCheck={false} autoComplete="off"
+                        style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${toLPCity ? "rgba(249,115,22,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 16, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
                       {toLPSugs.length > 0 && toRect && (
                         <div style={{ position: "fixed", top: toRect.bottom + 4, left: toRect.left, width: toRect.width, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, zIndex: 9999, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
                           {toLPSugs.map(c => <div key={c.title} onMouseDown={e => { e.preventDefault(); setToLPCity(c.title); setToCoords({lat: c.lat, lng: c.lng}); setToLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c.title}</div>)}
