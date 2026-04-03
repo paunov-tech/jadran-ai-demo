@@ -168,21 +168,22 @@ async function getSentinelToken() {
 // Returns mean of B04 (Red) and B03 (Green) over polygon
 // Cars increase visible-band reflectance vs dark empty asphalt
 // NDVI complement: low NDVI + high visible = pavement/vehicles
+// Minimal evalscript: only B04 (Red reflectance) + cloud flag
+// B04 rises when vehicles/bright objects present vs dark asphalt baseline
 const EVALSCRIPT = `//VERSION=3
 function setup() {
   return {
-    input: [{ bands: ["B02","B03","B04","B08","B11","CLM"], units: "REFLECTANCE" }],
+    input: [{ bands: ["B04","CLM"], units: "REFLECTANCE" }],
     output: [
-      { id: "data", bands: 5, sampleType: "FLOAT32" },
+      { id: "b04", bands: 1, sampleType: "FLOAT32" },
       { id: "cloud", bands: 1, sampleType: "UINT8" }
     ]
   };
 }
 function evaluatePixel(s) {
-  const cloud = s.CLM > 0 ? 1 : 0;
   return {
-    data: [s.B02, s.B03, s.B04, s.B08, s.B11],
-    cloud: [cloud]
+    b04: [s.B04],
+    cloud: [s.CLM > 0 ? 1 : 0]
   };
 }`;
 
@@ -232,7 +233,7 @@ async function queryZoneStats(zone, token, daysBack = 14) {
         "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(28000),
     }
   );
 
@@ -249,14 +250,13 @@ async function queryZoneStats(zone, token, daysBack = 14) {
 function estimateOccupancy(stats, zone) {
   // Find most recent non-cloudy result
   const intervals = stats?.data?.filter(d =>
-    d.outputs?.data?.bands?.B0?.stats?.mean != null &&
-    d.outputs?.cloud?.bands?.B0?.stats?.mean < 0.3  // <30% cloud cover
+    d.outputs?.b04?.bands?.B0?.stats?.mean != null &&
+    (d.outputs?.cloud?.bands?.B0?.stats?.mean ?? 1) < 0.3  // <30% cloud cover
   );
   if (!intervals?.length) return null;
 
   const latest = intervals[intervals.length - 1];
-  const meanB04 = latest.outputs.data.bands.B2?.stats?.mean  // B04 is index 2 (B02,B03,B04)
-               ?? latest.outputs.data.bands.B0?.stats?.mean;
+  const meanB04  = latest.outputs.b04.bands.B0.stats.mean;
   const imageDate = latest.interval?.from?.slice(0, 10);
   const cloudPct  = Math.round((latest.outputs.cloud?.bands?.B0?.stats?.mean || 0) * 100);
 
