@@ -212,7 +212,7 @@ async function queryZoneStats(zone, token, daysBack = 14) {
     },
     aggregation: {
       timeRange: { from, to },
-      aggregationInterval: { interval: "P1D" },
+      aggregationInterval: { of: "P1D" },
       width: 64, height: 64,  // downsampled — we only need statistics
       evalscript: EVALSCRIPT,
     },
