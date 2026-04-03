@@ -764,25 +764,20 @@ Specifico. Nomi reali di strade (A1, E65), città, valichi.`,
                   {tlang(stepLabels[Math.min(gPhase, 2)])}
                 </div>
                 {/* Guardian phase progress — dynamic */}
-                <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "center", marginBottom: 14 }}>
-                  {PHASES.map((phase, i) => {
-                    const isComplete = i < gPhase;
-                    const isActive = i === gPhase;
-                    return (
-                      <div key={i} style={{
-                        padding: "3px 10px", borderRadius: 20,
-                        background: isActive ? "rgba(14,165,233,0.18)" : isComplete ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.03)",
-                        border: `1px solid ${isActive ? "rgba(14,165,233,0.45)" : isComplete ? "rgba(34,197,94,0.35)" : "rgba(255,255,255,0.06)"}`,
-                        color: isActive ? "#38bdf8" : isComplete ? "#4ade80" : "#334155",
-                        fontSize: 10, fontWeight: isActive || isComplete ? 700 : 400,
-                        display: "flex", alignItems: "center", gap: 4, transition: "all 0.3s",
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 14, justifyContent: "center" }}>
+                  {[0, 1, 2].map(i => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ width: 24, height: 24, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, flexShrink: 0,
+                        background: i < gPhase ? "rgba(34,197,94,0.18)" : i === gPhase ? "rgba(14,165,233,0.18)" : "rgba(255,255,255,0.04)",
+                        border: `1px solid ${i < gPhase ? "rgba(34,197,94,0.4)" : i === gPhase ? "rgba(14,165,233,0.4)" : "rgba(255,255,255,0.08)"}`,
+                        color: i < gPhase ? "#4ade80" : i === gPhase ? "#38bdf8" : "#334155",
+                        transition: "all 0.3s",
                       }}>
-                        {isComplete && <span style={{ fontSize: 9 }}>✓</span>}
-                        {isActive && <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#38bdf8", display: "inline-block", flexShrink: 0 }} />}
-                        {tlang(phase)}
+                        {i < gPhase ? "✓" : i + 1}
                       </div>
-                    );
-                  })}
+                      {i < 2 && <div style={{ width: 28, height: 1, background: i < gPhase ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.06)", transition: "all 0.3s" }} />}
+                    </div>
+                  ))}
                 </div>
                 <div style={{ fontSize: 13, color: "#475569", marginBottom: 14, lineHeight: 1.5 }}>
                   {lang === "de" || lang === "at" ? "Guardian übernimmt die Kontrolle. Wählen Sie Ihre Reiseart — wir passen alles an." : lang === "en" ? "Guardian takes over. Choose how you travel — we adapt everything." : lang === "it" ? "Il Guardian interviene. Scegli come viaggi — ci adattiamo." : "Guardian preuzima kontrolu. Odaberite način putovanja — prilagođavamo se."}

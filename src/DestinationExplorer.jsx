@@ -477,7 +477,7 @@ export default function DestinationExplorer() {
 
           {/* CTAs — centered */}
           <div style={{ display:"flex", gap:8, flexWrap:"wrap", justifyContent:"center", marginBottom:12 }}>
-            <a href="/landing" style={{ padding:"11px 20px", borderRadius:12, color:"#fbbf24", fontSize:14, fontWeight:500, textDecoration:"none", fontFamily:F, border:"1px solid rgba(251,191,36,0.3)", background:"rgba(251,191,36,0.06)", display:"inline-flex", alignItems:"center", gap:6, letterSpacing:0.3, backdropFilter:"blur(8px)" }}>
+            <a href="/landing" style={{ padding:"16px 32px", borderRadius:14, color:"#fbbf24", fontSize:18, fontWeight:700, textDecoration:"none", fontFamily:F, border:"2px solid rgba(251,191,36,0.55)", background:"rgba(251,191,36,0.12)", display:"inline-flex", alignItems:"center", gap:8, letterSpacing:0.4, backdropFilter:"blur(8px)", boxShadow:"0 0 20px rgba(251,191,36,0.18)" }}>
               ⭐ AI Travel Guardian →
             </a>
           </div>
@@ -514,7 +514,7 @@ export default function DestinationExplorer() {
                 <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.9) 0%, rgba(5,13,26,0.3) 100%)" }} />
                 <div style={{ position:"absolute", bottom:0, left:0, right:0, padding:"14px 14px" }}>
                   <h3 style={{ fontFamily:F, fontSize:20, fontWeight:400, marginBottom:2, lineHeight:1.1, color:"#fff" }}>{r.id}</h3>
-                  <p style={{ fontSize:10, color:"rgba(255,255,255,0.55)", fontWeight:300, lineHeight:1.3 }}>{t(r.tagline)}</p>
+                  <p style={{ fontSize:10, color:"rgba(255,255,255,0.55)", fontWeight:300, lineHeight:1.3 }}>{r.destinations.slice(0,3).map(d => d.name).join(" · ")}</p>
                 </div>
               </button>
             ))}
