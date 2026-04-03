@@ -274,12 +274,50 @@ export default function LandingPage() {
 
     const modeText = { kamper: { hr:"kamperom", de:"mit Wohnmobil", en:"by camper", it:"in camper" }, jedrilicar: { hr:"jahtom/avionom", de:"per Yacht/Flug", en:"by yacht/flight", it:"in yacht/volo" }, par: { hr:"automobilom", de:"mit Auto", en:"by car", it:"in auto" } }[seg] || {};
     const ml = (o) => o[lang === "at" ? "de" : lang] || o.hr || o.en || "";
-    const routeCtx = distKm ? ` Ruta ≈${distKm}km, ~${etaH}h vožnje.` : "";
+    const routeCtx = distKm ? `Ruta ≈${distKm}km, procjena ~${etaH}h${etaMin > 0 ? ` ${etaMin}min` : ""} vožnje.` : "";
+    const weatherCtx = weather ? `Trenutno u ${toLPCity}: ${weather.icon} ${weather.temp}°C.` : "";
+    const kamperCtx = seg === "kamper" ? " KAMPER SPECIFIČNO: visine tunela i podvožnjaka, LPG dostupnost, kamper parking u centrima, servisi na ruti." : "";
     const prompts = {
-      hr: `Ti si Travel Guardian. Kratki pre-trip brief za: ${depCity} → ${toLPCity}, ${ml(modeText)}.${routeCtx} Daj 4 konkretna savjeta u bullet točkama: 1) upozorenja na ruti${seg==="kamper"?" (visine tunela, kamperska ograničenja, servisi)":""}, 2) što ne propustiti u ${toLPCity}, 3) preporuku lokalnog restorana ili plaže, 4) sigurnosna napomena. Budi konkretan, kratak, lokalan. Max 90 riječi.`,
-      de: `Du bist Travel Guardian. Kurzes Pre-Trip-Briefing: ${depCity} → ${toLPCity}, ${ml(modeText)}.${routeCtx.replace("Ruta","Strecke").replace("vožnje","Fahrt")} Gib 4 konkrete Tipps als Bullet Points: 1) Strecken-Warnungen${seg==="kamper"?" (Tunnelhöhen, Wohnmobil-Beschränkungen)":""}, 2) Was in ${toLPCity} nicht verpassen, 3) Restaurant- oder Strandempfehlung, 4) Sicherheitshinweis. Maximal 90 Wörter.`,
-      en: `You are Travel Guardian. Short pre-trip brief: ${depCity} → ${toLPCity}, ${ml(modeText)}.${routeCtx.replace("Ruta","Route").replace("vožnje","drive")} Give 4 concrete bullet points: 1) Route warnings${seg==="kamper"?" (tunnel heights, camper restrictions, services)":""}, 2) Must-see in ${toLPCity}, 3) Local restaurant or beach tip, 4) Safety note. Max 90 words.`,
-      it: `Sei il Travel Guardian. Briefing pre-viaggio: ${depCity} → ${toLPCity}, ${ml(modeText)}.${routeCtx.replace("Ruta","Percorso").replace("vožnje","guida")} Fornisci 4 consigli concreti: 1) Avvertenze percorso${seg==="kamper"?" (altezze tunnel, restrizioni camper)":""}, 2) Da non perdere a ${toLPCity}, 3) Ristorante o spiaggia locale, 4) Nota di sicurezza. Max 90 parole.`,
+      hr: `Ti si Travel Guardian — lokalni ekspert za Jadransku obalu s dubokim znanjem terena. Napiši detaljan pre-trip brief za putovanje: ${depCity} → ${toLPCity}, ${ml(modeText)}. ${routeCtx} ${weatherCtx}
+
+Pokrij SVE od sljedećeg što je relevantno:
+• **Ruta i obvezni zastanci**: konkretne lokacije za gorivo, LPG, odmorišta${kamperCtx}
+• **Skrivene zamke**: prometni problemi, cestovne zamke, kaznene zone, trajekti (rezervacija, raspored)
+• **Što lokalni znaju a turisti ne**: plaže, restorani, tržnice, viewpointovi izvan turističkih mapa
+• **Konkretne preporuke**: navedi prava imena mjesta, restorana, plaža — ne generičke savjete
+• **Sigurnost i sezona**: specifična upozorenja za godišnje doba, bura, gužve, uske ceste
+
+Piši kao iskusni lokalni vodič koji ovog turista poznaje osobno. Budi specifičan, konkretan, koristan.`,
+      de: `Du bist Travel Guardian — lokaler Experte für die Adria mit tiefem Geländewissen. Schreibe ein detailliertes Pre-Trip-Briefing: ${depCity} → ${toLPCity}, ${ml(modeText)}. ${routeCtx.replace("Ruta","Strecke").replace("vožnje","Fahrt")} ${weatherCtx}
+
+Decke ALLES Relevante ab:
+• **Strecke & Pflichtstopps**: konkrete Tankstellen, LPG, Raststätten${seg==="kamper"?" Tunnelhöhen, Wohnmobil-Parkplätze":""}
+• **Versteckte Fallen**: Verkehrsprobleme, Straßenfallen, Bußgeldzonen, Fähren (Reservierung, Zeiten)
+• **Was Einheimische wissen**: Strände, Restaurants, Märkte abseits der Touristenkarten
+• **Konkrete Empfehlungen**: echte Namen von Orten, Restaurants, Stränden — keine generischen Tipps
+• **Sicherheit & Saison**: saisonale Warnungen, Bora, Staus, enge Straßen
+
+Schreibe wie ein erfahrener lokaler Guide, der diesen Touristen persönlich kennt.`,
+      en: `You are Travel Guardian — a local expert on the Adriatic coast with deep ground knowledge. Write a detailed pre-trip brief for: ${depCity} → ${toLPCity}, ${ml(modeText)}. ${routeCtx.replace("Ruta","Route").replace("vožnje","drive")} ${weatherCtx}
+
+Cover ALL relevant points:
+• **Route & mandatory stops**: specific fuel stations, LPG, rest areas${seg==="kamper"?" tunnel heights, camper parking":""}
+• **Hidden traps**: traffic issues, road traps, fine zones, ferries (booking, schedules)
+• **What locals know**: beaches, restaurants, markets off the tourist map
+• **Concrete recommendations**: real names of places, restaurants, beaches — no generic tips
+• **Safety & season**: seasonal warnings, bura wind, crowds, narrow roads
+
+Write as an experienced local guide who knows this tourist personally.`,
+      it: `Sei il Travel Guardian — esperto locale della costa adriatica con profonda conoscenza del territorio. Scrivi un briefing pre-viaggio dettagliato: ${depCity} → ${toLPCity}, ${ml(modeText)}. ${routeCtx.replace("Ruta","Percorso").replace("vožnje","guida")} ${weatherCtx}
+
+Copri TUTTO il rilevante:
+• **Percorso e tappe obbligatorie**: stazioni di servizio, LPG, aree di sosta${seg==="kamper"?" altezze tunnel, parcheggi camper":""}
+• **Trappole nascoste**: problemi traffico, zone a rischio multa, traghetti (prenotazione, orari)
+• **Cosa sanno i locali**: spiagge, ristoranti, mercati fuori dalle mappe turistiche
+• **Raccomandazioni concrete**: nomi reali di posti, ristoranti, spiagge — niente consigli generici
+• **Sicurezza e stagione**: avvertenze stagionali, bora, code, strade strette
+
+Scrivi come una guida locale esperta che conosce personalmente questo turista.`,
     };
     const prompt = prompts[lang === "at" ? "de" : lang] || prompts.hr;
     const destRegion = (() => {
@@ -563,13 +601,36 @@ export default function LandingPage() {
                         {gb.distKm && <div style={{ fontSize: 11, color: "#475569", marginTop: 2 }}>≈{gb.distKm}km · ~{gb.etaH}h{gb.etaMin > 0 ? `${gb.etaMin}m` : ""}</div>}
                       </div>
                     </div>
-                    {/* AI Brief */}
+                    {/* AI Brief — with markdown rendering */}
                     {gb.aiText && (
                       <div style={{ padding: "16px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                        <div style={{ fontSize: 10, color: "#0ea5e9", letterSpacing: 1.5, fontWeight: 700, marginBottom: 10, fontFamily: B }}>
+                        <div style={{ fontSize: 10, color: "#0ea5e9", letterSpacing: 1.5, fontWeight: 700, marginBottom: 12, fontFamily: B }}>
                           🛡️ {lang === "de" || lang === "at" ? "GUARDIAN ANALYSE" : lang === "en" ? "GUARDIAN ANALYSIS" : lang === "it" ? "ANALISI GUARDIAN" : "GUARDIAN ANALIZA"}
                         </div>
-                        <div style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{gb.aiText}</div>
+                        <div style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.75 }}>
+                          {gb.aiText.split("\n").map((line, i) => {
+                            if (!line.trim()) return <div key={i} style={{ height: 6 }} />;
+                            // Parse **bold** inline
+                            const renderBold = (text) => text.split(/\*\*(.*?)\*\*/).map((p, j) =>
+                              j % 2 === 1 ? <strong key={j} style={{ color: "#f0f4f8", fontWeight: 700 }}>{p}</strong> : p
+                            );
+                            const isBullet = /^[\u2022\-\*]\s/.test(line.trim());
+                            const isHeader = /^\*\*.*\*\*:?$/.test(line.trim()) || /^#{1,3}\s/.test(line);
+                            const clean = line.replace(/^[\u2022\-\*#]+\s*/, "").trim();
+                            if (isHeader) return (
+                              <div key={i} style={{ marginTop: 12, marginBottom: 4, fontSize: 11, color: "#64748b", fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase" }}>
+                                {renderBold(clean)}
+                              </div>
+                            );
+                            if (isBullet) return (
+                              <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                                <span style={{ color: "#0ea5e9", flexShrink: 0, marginTop: 1 }}>•</span>
+                                <span>{renderBold(clean)}</span>
+                              </div>
+                            );
+                            return <div key={i} style={{ marginBottom: 6 }}>{renderBold(line)}</div>;
+                          })}
+                        </div>
                       </div>
                     )}
                     {/* Partner offers as AI recommendations */}
