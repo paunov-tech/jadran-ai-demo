@@ -568,6 +568,25 @@ export default function JadranUnified() {
     gpsStarted.current = true;
     setTripActive(true);
     saveDelta({ trip_started: true });
+
+    // Request browser push notification permission for critical alerts
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
+
+    // Inject "tracking mode activated" card immediately — NOT a route brief
+    const trackingCard = {
+      id: "tracking_start",
+      type: "tracking",
+      severity: "info",
+      icon: "🛡️",
+      title: ({ hr: "Monitoring aktivan — Guardian te prati", de: "Monitoring aktiv — Guardian begleitet dich", en: "Monitoring active — Guardian is with you", it: "Monitoraggio attivo — Guardian ti accompagna" })[lang] || "Monitoring aktivan",
+      body: ({ hr: `${transitFromUrl || "Start"} → ${transitToUrl || "Cilj"} · GPS praćenje, HAK upozorenja, prometni senzori aktivni`, de: `${transitFromUrl || "Start"} → ${transitToUrl || "Ziel"} · GPS-Tracking, HAK-Warnungen, Verkehrssensoren aktiv`, en: `${transitFromUrl || "Start"} → ${transitToUrl || "Destination"} · GPS tracking, HAK alerts, traffic sensors active`, it: `${transitFromUrl || "Partenza"} → ${transitToUrl || "Destinazione"} · GPS tracking, avvisi HAK, sensori traffico attivi` })[lang] || "",
+      source: "Guardian",
+      ts: new Date().toISOString(),
+    };
+    setGpsCards([trackingCard]);
+
     // 72h trial ONLY for booking partners (affiliate) or real host QR guests
     // Landing page users (DEMO/dev_) stay on 3 free messages
     const isBookingGuest = verifiedAffiliate.current || (roomCode.current && roomCode.current !== "DEMO" && !roomCode.current.startsWith("dev_"));
@@ -580,13 +599,26 @@ export default function JadranUnified() {
       setPremium(true);
     }
     startGPS({
-      onCard: (card) => setGpsCards(prev => {
-        const exists = prev.some(c => c.id === card.id);
-        if (exists) return prev;
-        // Keep only the newest AI card — remove older AI pulse cards
-        const filtered = card.isAI ? prev.filter(c => !c.isAI) : prev;
-        return [card, ...filtered].slice(0, 20);
-      }),
+      onCard: (card) => {
+        // Fire browser push notification for critical alerts
+        if (card.severity === "critical" && "Notification" in window && Notification.permission === "granted") {
+          try {
+            new Notification(`🛡️ Guardian — ${card.title}`, {
+              body: card.body,
+              icon: "/pwa-192.png",
+              tag: card.id,
+              renotify: false,
+            });
+          } catch {}
+        }
+        setGpsCards(prev => {
+          const exists = prev.some(c => c.id === card.id);
+          if (exists) return prev;
+          // Keep only the newest AI card — remove older AI pulse cards
+          const filtered = card.isAI ? prev.filter(c => !c.isAI) : prev;
+          return [card, ...filtered].slice(0, 20);
+        });
+      },
       onPosition: (pos) => setGpsPosition(pos),
       onPhase: (newPhase) => {
         if (newPhase === "odmor") {
@@ -1752,7 +1784,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
     if (subScreen === "transit") return (
       <>
         <div style={{ display:"flex", alignItems:"center", paddingTop:16, paddingBottom:8 }}>
-          <BackBtn onClick={() => setSubScreen("pretrip")} label={({hr:"Pregled putovanja",de:"Reiseübersicht",en:"Trip overview",it:"Panoramica viaggio",si:"Pregled potovanja",cz:"Přehled cesty",pl:"Przegląd podróży"})[lang] || "Pregled putovanja"} />
+          <BackBtn onClick={() => transitFromUrl ? (window.location.href = "/") : setSubScreen("pretrip")} label={({hr:"← Promijeni rutu",de:"← Route ändern",en:"← Change route",it:"← Cambia percorso",si:"← Spremeni pot",cz:"← Změnit trasu",pl:"← Zmień trasę"})[lang] || "← Promijeni rutu"} />
         </div>
         {/* ── HERE Map ── */}
         <div style={{ borderRadius: 16, overflow: "hidden", border: `1px solid ${C.bord}`, marginBottom: 0 }}>
@@ -1789,10 +1821,10 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         )}
 
         {/* ── Trip action button — always visible ── */}
-        <div style={{ textAlign: "center", padding: "12px 0" }}>
+        <div style={{ padding: "12px 0" }}>
           {!tripActive ? (
             <button onClick={startTrip} className="trip-btn" style={{
-              padding: "16px 40px", borderRadius: 16, border: "none", cursor: "pointer",
+              width: "100%", padding: "16px 40px", borderRadius: 16, border: "none", cursor: "pointer",
               background: `linear-gradient(135deg, #22c55e, #16a34a)`,
               color: "#fff", fontSize: 16, fontWeight: 700, ...dm,
               boxShadow: "0 4px 24px rgba(34,197,94,0.3)",
@@ -1801,7 +1833,16 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
               🚀 {lang === "de" || lang === "at" ? "Reise starten" : lang === "en" ? "Start trip" : lang === "it" ? "Inizia viaggio" : "Krećem na put"}
             </button>
           ) : (
-            <Btn primary onClick={() => { ensureTrialStart(); setKioskWelcome(true); setNearbyData(null); setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home", lang, destination: transitDestCity || kioskCity, segment: transitSegUrl || "auto", lastAccess: new Date().toISOString() }); }}>{t("arrived",lang)}</Btn>
+            <div>
+              {/* Tracking phase status bar */}
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 14, background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.2)", marginBottom: 10 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block", flexShrink: 0, animation: "pulse 2s infinite" }} />
+                <span style={{ ...dm, fontSize: 12, color: "#4ade80", flex: 1 }}>
+                  {lang === "de" || lang === "at" ? "Guardian überwacht — kritische Warnungen werden als Benachrichtigungen gesendet" : lang === "en" ? "Guardian monitoring — critical alerts sent as notifications" : lang === "it" ? "Guardian monitora — avvisi critici come notifiche" : "Guardian prati — kritična upozorenja stižu kao notifikacije"}
+                </span>
+              </div>
+              <Btn primary onClick={() => { ensureTrialStart(); setKioskWelcome(true); setNearbyData(null); setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home", lang, destination: transitDestCity || kioskCity, segment: transitSegUrl || "auto", lastAccess: new Date().toISOString() }); }}>{t("arrived",lang)}</Btn>
+            </div>
           )}
         </div>
 

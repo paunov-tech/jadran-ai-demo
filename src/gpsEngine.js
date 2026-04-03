@@ -49,11 +49,12 @@ export function startGPS(opts = {}) {
     const pos = lastPos || getFallbackPos();
     if (pos) fetchAIPulse(pos.lat, pos.lng);
   }, PULSE_INTERVAL);
-  // First pulse after 5 seconds (even without GPS — use departure coords)
+  // First pulse after 8 min — user is already en route, GPS has real position
+  // (no immediate pulse to avoid duplicating the Guardian Brief route description)
   setTimeout(() => {
     const pos = lastPos || getFallbackPos();
     if (pos) fetchAIPulse(pos.lat, pos.lng);
-  }, 5000);
+  }, 480000);
 
   if (!navigator.geolocation) {
     console.warn("GPS: geolocation not available — pulse uses departure coords");
