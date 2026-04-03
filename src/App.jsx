@@ -2664,6 +2664,18 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
       const nearbyCount = nearbyData ? Object.values(nearbyData.categories || {}).reduce((sum, arr) => sum + (arr?.length || 0), 0) : 0;
       return (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", textAlign: "center", animation: "fadeIn 0.6s both" }}>
+          {/* Guardian journey summary — shown when arriving from Guardian mode */}
+          {transitFromUrl && transitToUrl && (
+            <div style={{ marginBottom: 20, padding: "10px 18px", borderRadius: 14, background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", display: "flex", alignItems: "center", gap: 10, animation: "fadeUp 0.5s both" }}>
+              <span style={{ fontSize: 16 }}>✅</span>
+              <div style={{ ...dm, fontSize: 13, color: "#4ade80", textAlign: "left" }}>
+                <strong style={{ color: "#86efac" }}>{transitFromUrl}</strong>
+                <span style={{ color: "#475569", margin: "0 6px" }}>→</span>
+                <strong style={{ color: "#86efac" }}>{transitToUrl}</strong>
+                {transitRouteData?.km && <span style={{ color: "#475569", marginLeft: 8, fontSize: 11 }}>· {transitRouteData.km} km</span>}
+              </div>
+            </div>
+          )}
           <div style={{ fontSize: 72, marginBottom: 16, animation: "pulse-glow 2s ease infinite" }}>⚓</div>
           <div style={{ ...dm, fontSize: 14, color: C.accent, letterSpacing: 3, textTransform: "uppercase", marginBottom: 8 }}>{wt[0]}</div>
           <div style={{ ...hf, fontSize: 36, fontWeight: 400, color: C.text, marginBottom: 8 }}>{wt[1]}</div>
@@ -3701,7 +3713,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
         {/* Content */}
         {phase === "pre" && <div className="page-enter">{PreTrip()}</div>}
-        {phase === "kiosk" && <div key={subScreen} style={{ paddingBottom: subScreen !== "chat" ? 80 : 0 }}>{Kiosk()}</div>}
+        {phase === "kiosk" && <div key={subScreen} style={{ paddingBottom: subScreen !== "chat" ? "calc(80px + env(safe-area-inset-bottom, 0px))" : 0 }}>{Kiosk()}</div>}
         {phase === "post" && <div className="page-enter">{PostStay()}</div>}
 
         <div style={{ ...dm, textAlign: "center", padding: "20px 0 28px", paddingBottom: phase === "kiosk" && subScreen !== "chat" ? 100 : 28, fontSize: 10, color: "rgba(100,116,139,0.3)", letterSpacing: 2, textTransform: "uppercase" }}>

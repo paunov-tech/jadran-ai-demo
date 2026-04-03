@@ -208,11 +208,12 @@ export const GLOBAL_CSS = `
     transition: border-color 0.2s, box-shadow 0.2s !important;
   }
 
-  /* ── Samsung viewport fix — address bar resize ── */
-  @supports (height: 100dvh) {
-    .dvh      { min-height: 100dvh; }
-    .dvh-exact{ height: 100dvh; }
-  }
+  /* ── Samsung/iOS viewport — address bar & gesture navigation ── */
+  /* svh = small viewport (safest, excludes browser chrome), dvh = dynamic */
+  .dvh       { min-height: 100svh; min-height: 100dvh; }
+  .dvh-exact { height: 100svh; height: 100dvh; }
+  /* Samsung One UI: allow vertical pan gestures through interactive elements */
+  .scroll-smooth, [style*="overflow-y"] { touch-action: pan-y; }
 
   /* ── Prevent iOS rubber-band on fixed containers ── */
   .no-bounce { overscroll-behavior: none; -webkit-overflow-scrolling: auto; }
@@ -233,10 +234,13 @@ export const GLOBAL_CSS = `
   /* ── Bottom fixed bar (chat input, tab bar) ── */
   .fixed-bottom {
     position: fixed; bottom: 0; left: 0; right: 0;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    /* min 8px bottom gap on standard Android; adds home-indicator clearance on iOS/Samsung */
+    padding-bottom: max(env(safe-area-inset-bottom, 8px), 8px);
     backdrop-filter: blur(24px) saturate(1.8);
     -webkit-backdrop-filter: blur(24px) saturate(1.8);
     z-index: 50;
+    transform: translateZ(0); -webkit-transform: translateZ(0);
+    will-change: transform;
   }
 
   /* ── Skeleton pulse (better than shimmer for cards) ── */
@@ -509,7 +513,8 @@ export const TabBar = ({ items, active, onChange }) => {
     <div className="fixed-bottom" style={{
       display: "flex", justifyContent: "space-around", alignItems: "center",
       background: `linear-gradient(180deg, ${C.bg}dd 0%, ${C.bg}f5 100%)`,
-      borderTop: `1px solid ${C.bord}`, padding: "6px 8px 2px",
+      borderTop: `1px solid ${C.bord}`,
+      paddingTop: 6, paddingLeft: 8, paddingRight: 8,
     }}>
       {items.map(item => {
         const isActive = item.key === active;
