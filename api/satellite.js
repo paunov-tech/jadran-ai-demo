@@ -480,9 +480,9 @@ export default async function handler(req, res) {
       try {
         const tok = await getSentinelToken();
         const firstZone = Object.entries(PARKING_ZONES)[0];
-        const raw = await queryZoneStats(firstZone[1], tok, 3);
+        const raw = await queryZoneStats(firstZone[1], tok, 30);
         const intervals = raw?.data?.length || 0;
-        zoneTest = { zone: firstZone[0], intervals, sample: raw?.data?.[0] };
+        zoneTest = { zone: firstZone[0], intervals, sample: raw?.data?.[0], totalData: raw?.data?.length, status: raw?.status };
       } catch (e) {
         zoneTest = { error: e.message };
       }
