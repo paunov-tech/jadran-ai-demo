@@ -3,9 +3,13 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "functions": {
-    "api/satellite.js": { "maxDuration": 60 },
-    "api/chat.js":      { "maxDuration": 60 },
-    "api/room-book.js": { "maxDuration": 15 }
+    "api/satellite.js":        { "maxDuration": 60 },
+    "api/chat.js":             { "maxDuration": 60 },
+    "api/room-book.js":        { "maxDuration": 15 },
+    "api/partner-auth.js":     { "maxDuration": 15 },
+    "api/partner-data.js":     { "maxDuration": 15 },
+    "api/partner-calendar.js": { "maxDuration": 15 },
+    "api/partner-bookings.js": { "maxDuration": 15 }
   },
   "headers": [
     {
@@ -175,6 +179,14 @@
     {
       "source": "/blog/",
       "destination": "/blog/index.html"
+    },
+    {
+      "source": "/partner",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/partner/(.*)",
+      "destination": "/index.html"
     },
     {
       "source": "/(.*)",

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import PartnerPortal from "./PartnerPortal";
 import { DealCards } from "./DealCards";
 import { loadGuest, updateGuest, getRoomCode } from "./guestStore";
 import GuestOnboarding from "./GuestOnboarding";
@@ -445,6 +446,11 @@ function PartnerStatsDashboard({ partner, pin }) {
 
 /* ─── COMPONENT ─── */
 export default function JadranUnified() {
+  // Partner portal route
+  if (typeof window !== "undefined" && window.location.pathname.startsWith("/partner")) {
+    return <PartnerPortal />;
+  }
+
   // mounted
   const [lang, setLang] = useState("hr");
   const [langOpen, setLangOpen] = useState(false);
