@@ -4,6 +4,8 @@
 import { useState, useEffect } from "react";
 import { SEGMENTS, BRAND } from "./marketingConfig.js";
 
+const enc = t => { try { return btoa(t); } catch { return t; } };
+
 const STYLES = `
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:'Outfit',system-ui,sans-serif; background:#080f1e; color:#f0f9ff; }
@@ -95,7 +97,7 @@ export default function CampaignManager() {
     setAbLoading(true);
     try {
       const r = await fetch(`/api/ab-control?segmentId=${segId}`, {
-        headers: { "x-admin-token": token },
+        headers: { "x-admin-token": enc(token) },
       });
       const data = await r.json();
       setAbData(data.variants || []);
@@ -117,7 +119,7 @@ export default function CampaignManager() {
     try {
       const r = await fetch("/api/campaign-generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-admin-token": token },
+        headers: { "Content-Type": "application/json", "x-admin-token": enc(token) },
         body: JSON.stringify({ segmentId: selectedSeg, count }),
       });
       const data = await r.json();
@@ -133,7 +135,7 @@ export default function CampaignManager() {
   async function killVariant(variantId) {
     await fetch("/api/ab-control", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-admin-token": token },
+      headers: { "Content-Type": "application/json", "x-admin-token": enc(token) },
       body: JSON.stringify({ action: "kill", variantId, segmentId: selectedSeg }),
     });
     loadAbData(selectedSeg);
@@ -142,7 +144,7 @@ export default function CampaignManager() {
   async function reviveVariant(variantId) {
     await fetch("/api/ab-control", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-admin-token": token },
+      headers: { "Content-Type": "application/json", "x-admin-token": enc(token) },
       body: JSON.stringify({ action: "revive", variantId, segmentId: selectedSeg }),
     });
     loadAbData(selectedSeg);
