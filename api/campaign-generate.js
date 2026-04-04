@@ -20,7 +20,18 @@ export default async function handler(req, res) {
   // Admin auth
   const raw = req.headers["x-admin-token"] || "";
   const decoded = (() => { try { return Buffer.from(raw, "base64").toString("utf8"); } catch { return raw; } })();
-  if (decoded !== process.env.ADMIN_TOKEN) return res.status(401).json({ error: "unauthorized" });
+  const adminToken = process.env.ADMIN_TOKEN || "";
+  if (decoded.trim() !== adminToken.trim()) {
+    return res.status(401).json({
+      error: "unauthorized",
+      debug: {
+        rawLen: raw.length,
+        decodedLen: decoded.trim().length,
+        envLen: adminToken.trim().length,
+        envSet: !!adminToken,
+      }
+    });
+  }
 
   const { segmentId, count = DEFAULT_COUNT, tone = "authentic" } = req.body || {};
   if (!segmentId) return res.status(400).json({ error: "segmentId required" });
