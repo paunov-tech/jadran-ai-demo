@@ -499,6 +499,17 @@ export default function JadranUnified() {
   const [viatorBookDate, setViatorBookDate] = useState(() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); });
   const [viatorPersons, setViatorPersons] = useState(2);
   const [viatorWishlist, setViatorWishlist] = useState(() => { try { return JSON.parse(localStorage.getItem("jadran_viator_wishlist") || "[]"); } catch { return []; } });
+  // In-app browser
+  const [inAppUrl, setInAppUrl] = useState(null);
+  // BJ direct room booking
+  const [bjBookRoom, setBjBookRoom] = useState(null);
+  const [bjCheckIn, setBjCheckIn] = useState(() => { const d = new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); });
+  const [bjCheckOut, setBjCheckOut] = useState(() => { const d = new Date(); d.setDate(d.getDate()+5); return d.toISOString().slice(0,10); });
+  const [bjGuests, setBjGuests] = useState(2);
+  const [bjGuestName, setBjGuestName] = useState("");
+  const [bjGuestEmail, setBjGuestEmail] = useState("");
+  const [bjStatus, setBjStatus] = useState(null); // null|"loading"|"done"|"error"
+  const [bjConfirmId, setBjConfirmId] = useState("");
   // Border intelligence
   const [borderData, setBorderData] = useState(null);
   const [borderLoading, setBorderLoading] = useState(false);
@@ -1165,6 +1176,26 @@ export default function JadranUnified() {
     setPayLoading(false);
   };
 
+  // ─── BJ: Direct room booking ───
+  const doBjBook = async () => {
+    if (!bjBookRoom || !bjGuestName || !bjCheckIn || !bjCheckOut) return;
+    setBjStatus("loading");
+    try {
+      const r = await fetch("/api/room-book", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          roomId: bjBookRoom.id, roomName: bjBookRoom._nameLocalized || bjBookRoom.id,
+          affiliate: affiliateId || "blackjack",
+          checkIn: bjCheckIn, checkOut: bjCheckOut,
+          guests: bjGuests, guestName: bjGuestName, guestEmail: bjGuestEmail, lang,
+        }),
+      });
+      const data = await r.json();
+      if (r.ok && data.id) { setBjConfirmId(data.id); setBjStatus("done"); }
+      else { setBjStatus("error"); }
+    } catch { setBjStatus("error"); }
+  };
+
   // ─── Viator: Wishlist toggle ───
   const toggleViatorWishlist = (act) => {
     const next = viatorWishlist.some(a => a.productCode === act.productCode)
@@ -1662,7 +1693,9 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         <SectionLabel extra="Booking.com">{t("findStay",lang)}</SectionLabel>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(200px,1fr))", gap: 12, marginBottom: 24 }}>
           {ACCOMMODATION.map((a, i) => (
-            <a key={i} href={a.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit" }}>
+            <a key={i} href={a.link} target="_blank" rel="noopener noreferrer"
+              onClick={e => { e.preventDefault(); setInAppUrl(a.link); }}
+              style={{ textDecoration: "none", color: "inherit" }}>
               <Card style={{ cursor: "pointer", padding: 16, transition: "all 0.3s" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                   <CityIcon name={a.name.hr || a.name.en} size={24} />
@@ -2736,22 +2769,22 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
                 {/* Buttons */}
                 <div style={{ padding: "12px 14px", display: "flex", gap: 8 }}>
                   {ex.gyg && (
-                    <a href={ex.gyg} target="_blank" rel="noopener noreferrer"
-                      style={{ flex: 1, padding: "9px 10px", background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 10, color: C.accent, fontSize: 12, fontWeight: 700, textAlign: "center", textDecoration: "none", ...dm }}>
+                    <button onClick={() => setInAppUrl(ex.gyg)}
+                      style={{ flex: 1, padding: "9px 10px", background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.2)", borderRadius: 10, color: C.accent, fontSize: 12, fontWeight: 700, textAlign: "center", cursor: "pointer", ...dm }}>
                       GetYourGuide
-                    </a>
+                    </button>
                   )}
                   {ex.viator && (
-                    <a href={ex.viator} target="_blank" rel="noopener noreferrer"
-                      style={{ flex: 1, padding: "9px 10px", background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)", borderRadius: 10, color: "#22c55e", fontSize: 12, fontWeight: 700, textAlign: "center", textDecoration: "none", ...dm }}>
+                    <button onClick={() => setInAppUrl(ex.viator)}
+                      style={{ flex: 1, padding: "9px 10px", background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)", borderRadius: 10, color: "#22c55e", fontSize: 12, fontWeight: 700, textAlign: "center", cursor: "pointer", ...dm }}>
                       Viator
-                    </a>
+                    </button>
                   )}
                   {ex.booking && (
-                    <a href={ex.booking} target="_blank" rel="noopener noreferrer"
-                      style={{ flex: 1, padding: "9px 10px", background: "rgba(0,85,166,0.1)", border: "1px solid rgba(0,85,166,0.25)", borderRadius: 10, color: "#60a5fa", fontSize: 12, fontWeight: 700, textAlign: "center", textDecoration: "none", ...dm }}>
+                    <button onClick={() => setInAppUrl(ex.booking)}
+                      style={{ flex: 1, padding: "9px 10px", background: "rgba(0,85,166,0.1)", border: "1px solid rgba(0,85,166,0.25)", borderRadius: 10, color: "#60a5fa", fontSize: 12, fontWeight: 700, textAlign: "center", cursor: "pointer", ...dm }}>
                       Booking.com
-                    </a>
+                    </button>
                   )}
                 </div>
               </Card>
@@ -2775,12 +2808,13 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           </Card>
 
           {/* Viator Shop */}
-          <a href="https://vi.me/qku0x" target="_blank" rel="noopener noreferrer" style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", borderRadius:12, background:"rgba(34,197,94,0.07)", border:"1px solid rgba(34,197,94,0.18)", textDecoration:"none", marginTop:12 }}>
+          <button onClick={() => setInAppUrl("https://www.viator.com/searchResults/all?text=Rab+Croatia&pid=P00292197")}
+            style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", borderRadius:12, background:"rgba(34,197,94,0.07)", border:"1px solid rgba(34,197,94,0.18)", marginTop:12, width:"100%", cursor:"pointer" }}>
             <span style={{ ...dm, fontSize:13, color:"#22c55e", fontWeight:600 }}>
               {lang === "de" || lang === "at" ? "Viator Shop — alle Aktivitäten →" : lang === "en" ? "Viator Shop — all activities →" : "Viator Shop — sve aktivnosti →"}
             </span>
             <span style={{ fontSize:16 }}>🎟️</span>
-          </a>
+          </button>
 
           {/* Booking.com — accommodations */}
           <Card style={{ marginTop: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -2790,11 +2824,10 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
               </div>
               <div style={{ ...dm, fontSize: 12, color: C.mut, marginTop: 2 }}>Booking.com · 4-5% provizija</div>
             </div>
-            <a href="https://www.booking.com/searchresults.html?ss=Rab%2C+Croatia&aid=101704203"
-              target="_blank" rel="noopener noreferrer"
-              style={{ padding: "10px 18px", background: "linear-gradient(135deg,#003580,#0055A6)", borderRadius: 12, color: "#fff", fontSize: 13, fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap", ...dm }}>
+            <button onClick={() => setInAppUrl("https://www.booking.com/searchresults.html?ss=Rab%2C+Croatia&aid=101704203")}
+              style={{ padding: "10px 18px", background: "linear-gradient(135deg,#003580,#0055A6)", borderRadius: 12, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", border: "none", ...dm }}>
               {lang === "de" || lang === "at" ? "Suchen" : lang === "en" ? "Search" : "Traži"}
-            </a>
+            </button>
           </Card>
         </>
       );
@@ -3015,10 +3048,17 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
                         </div>
                       </div>
                       {/* Amenities */}
-                      <div style={{ padding:"10px 14px 12px", display:"flex", gap:6, flexWrap:"wrap" }}>
+                      <div style={{ padding:"10px 14px 8px", display:"flex", gap:6, flexWrap:"wrap" }}>
                         {amen.map((a, ai) => (
                           <span key={ai} style={{ padding:"3px 8px", borderRadius:8, background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.15)", ...dm, fontSize:11, color:"#86efac" }}>{a}</span>
                         ))}
+                      </div>
+                      {/* Direct booking button */}
+                      <div style={{ padding:"0 14px 14px" }}>
+                        <button onClick={() => { setBjGuestName(""); setBjGuestEmail(""); setBjStatus(null); setBjBookRoom({ ...room, _nameLocalized: L(room.name) }); }}
+                          style={{ width:"100%", padding:"11px", borderRadius:10, background:"linear-gradient(135deg,rgba(34,197,94,0.18),rgba(34,197,94,0.08))", border:"1px solid rgba(34,197,94,0.35)", color:"#22c55e", fontSize:13, fontWeight:700, cursor:"pointer", ...dm }}>
+                          📅 {isDE ? "Direkt buchen" : lang==="en" ? "Book directly" : lang==="it" ? "Prenota direttamente" : "Rezerviraj direktno"}
+                        </button>
                       </div>
                     </Card>
                   );
@@ -3148,26 +3188,27 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
                 <div style={{ fontSize:28, marginBottom:6 }}>{ex.emoji}</div>
                 <div style={{ ...dm, fontSize:12, fontWeight:600, color:C.text, marginBottom:10 }}>{L(ex)}</div>
                 <div style={{ display:"flex", gap:6 }}>
-                  {ex.gyg && <a href={ex.gyg} target="_blank" rel="noopener noreferrer" style={{ flex:1, padding:"7px 4px", background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", borderRadius:8, color:C.accent, fontSize:10, fontWeight:700, textAlign:"center", textDecoration:"none", ...dm }}>GYG</a>}
-                  {ex.viator && <a href={ex.viator} target="_blank" rel="noopener noreferrer" style={{ flex:1, padding:"7px 4px", background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.15)", borderRadius:8, color:"#22c55e", fontSize:10, fontWeight:700, textAlign:"center", textDecoration:"none", ...dm }}>Viator</a>}
+                  {ex.gyg && <button onClick={() => setInAppUrl(ex.gyg)} style={{ flex:1, padding:"7px 4px", background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", borderRadius:8, color:C.accent, fontSize:10, fontWeight:700, textAlign:"center", cursor:"pointer", ...dm }}>GYG</button>}
+                  {ex.viator && <button onClick={() => setInAppUrl(ex.viator)} style={{ flex:1, padding:"7px 4px", background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.15)", borderRadius:8, color:"#22c55e", fontSize:10, fontWeight:700, textAlign:"center", cursor:"pointer", ...dm }}>Viator</button>}
                 </div>
               </Card>
             ))}
           </div>
 
-          {/* ── Booking CTA ── */}
-          <Card style={{ background:"linear-gradient(135deg,rgba(0,85,166,0.12),rgba(14,165,233,0.06))", border:"1px solid rgba(0,85,166,0.25)", padding:"22px 20px", marginBottom:24 }}>
-            <div style={{ ...dm, fontSize:11, color:"#60a5fa", letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:8 }}>BOOKING.COM</div>
+          {/* ── Direct Booking CTA ── */}
+          <Card style={{ background:"linear-gradient(135deg,rgba(34,197,94,0.1),rgba(34,197,94,0.04))", border:"1px solid rgba(34,197,94,0.28)", padding:"22px 20px", marginBottom:24 }}>
+            <div style={{ ...dm, fontSize:11, color:"#22c55e", letterSpacing:3, textTransform:"uppercase", fontWeight:700, marginBottom:8 }}>DIREKTNA REZERVACIJA · BEZ PROVIZIJA</div>
             <div style={{ fontSize:20, fontWeight:400, marginBottom:6 }}>
-              🏨 {isDE ? "Jetzt buchen — beste Preisgarantie" : lang==="en" ? "Book now — best price guarantee" : lang==="it" ? "Prenota ora — miglior prezzo garantito" : "Rezervirajte odmah — garancija najniže cijene"}
+              🏡 {isDE ? "Direkt buchen — beste Preise" : lang==="en" ? "Book direct — best rates" : lang==="it" ? "Prenota direttamente — prezzi migliori" : "Rezervirajte direktno — najniže cijene"}
             </div>
             <div style={{ ...dm, fontSize:13, color:C.mut, marginBottom:16 }}>
-              {isDE ? "Kostenlose Stornierung · Keine Vorauszahlung" : lang==="en" ? "Free cancellation · No prepayment needed" : lang==="it" ? "Cancellazione gratuita · Nessun pagamento anticipato" : "Besplatni otkaz · Nema predujma"}
+              {isDE ? "Ohne Buchungsgebühren · Antwort in 2 Stunden" : lang==="en" ? "No booking fees · Response within 2 hours" : lang==="it" ? "Senza commissioni · Risposta entro 2 ore" : "Bez naknada · Odgovor unutar 2 sata"}
             </div>
-            <a href={aff.booking} target="_blank" rel="noopener noreferrer"
-              style={{ display:"block", padding:"16px", background:"linear-gradient(135deg,#003580,#0055A6)", borderRadius:14, color:"#fff", fontSize:16, fontWeight:700, textAlign:"center", textDecoration:"none", ...dm }}>
-              {isDE ? "Verfügbarkeit prüfen →" : lang==="en" ? "Check availability →" : lang==="it" ? "Verifica disponibilità →" : "Provjeri dostupnost →"}
-            </a>
+            <button
+              onClick={() => { setBjGuestName(""); setBjGuestEmail(""); setBjStatus(null); setBjBookRoom({ id:"general", priceFrom: aff.rooms?.[0]?.priceFrom || 50, guests:4, emoji:"🏡", name:{hr:"Smještaj",en:"Accommodation",de:"Unterkunft",it:"Alloggio"}, _nameLocalized: isDE?"Unterkunft":lang==="en"?"Accommodation":lang==="it"?"Alloggio":"Smještaj", amenities:{hr:[],en:[],de:[],it:[]} }); }}
+              style={{ display:"block", width:"100%", padding:"16px", background:"linear-gradient(135deg,#16a34a,#22c55e)", borderRadius:14, color:"#fff", fontSize:16, fontWeight:700, textAlign:"center", cursor:"pointer", border:"none", ...dm }}>
+              {isDE ? "Verfügbarkeit anfragen →" : lang==="en" ? "Request availability →" : lang==="it" ? "Richiedi disponibilità →" : "Provjeri dostupnost →"}
+            </button>
           </Card>
 
           {/* ── USER TESTING FEEDBACK ── */}
@@ -4054,6 +4095,149 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         );
       })()}
 
+      {/* ── In-app browser ── */}
+      {inAppUrl && (
+        <div style={{ position:"fixed", inset:0, zIndex:350, display:"flex", flexDirection:"column", background:"#0a1628" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 12px", paddingTop:"calc(10px + env(safe-area-inset-top,0px))", background:"#0f1e35", borderBottom:"1px solid rgba(255,255,255,0.08)", flexShrink:0 }}>
+            <button onClick={() => setInAppUrl(null)} aria-label="Zatvori"
+              style={{ background:"none", border:"1px solid rgba(255,255,255,0.12)", color:"#94a3b8", fontSize:15, cursor:"pointer", padding:"8px 12px", borderRadius:8, minHeight:40, flexShrink:0 }}>✕</button>
+            <div style={{ flex:1, padding:"8px 10px", background:"rgba(255,255,255,0.05)", borderRadius:8, fontSize:11, color:"#64748b", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", ...dm }}>
+              {inAppUrl.replace(/^https?:\/\/(www\.)?/,"")}
+            </div>
+            <a href={inAppUrl} target="_blank" rel="noopener noreferrer"
+              style={{ background:"rgba(14,165,233,0.12)", border:"1px solid rgba(14,165,233,0.2)", borderRadius:8, padding:"8px 10px", color:"#00b4d8", fontSize:11, fontWeight:700, textDecoration:"none", whiteSpace:"nowrap", flexShrink:0, ...dm }}>
+              ↗ {lang==="de"||lang==="at"?"Browser":"Open"}
+            </a>
+          </div>
+          <iframe
+            key={inAppUrl}
+            src={inAppUrl}
+            style={{ flex:1, border:"none", background:"#fff", display:"block" }}
+            title="JADRAN in-app browser"
+            allow="payment; fullscreen"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+          />
+        </div>
+      )}
+
+      {/* ── BJ Direct Room Booking ── */}
+      {bjBookRoom && (
+        <div style={{ position:"fixed", inset:0, zIndex:350, background:"rgba(5,14,30,0.92)", display:"flex", alignItems:"flex-end", justifyContent:"center" }}
+          onClick={() => { if (bjStatus !== "loading") setBjBookRoom(null); }}>
+          <div onClick={e => e.stopPropagation()}
+            style={{ background:"#0f1e35", borderRadius:"24px 24px 0 0", maxWidth:480, width:"100%", border:"1px solid rgba(34,197,94,0.2)", borderBottom:"none", overflow:"hidden", maxHeight:"92dvh", overflowY:"auto", paddingBottom:"env(safe-area-inset-bottom,0px)" }}>
+            {bjStatus === "done" ? (
+              <div style={{ padding:"36px 28px", textAlign:"center" }}>
+                <div style={{ fontSize:56, marginBottom:14 }}>🎉</div>
+                <div style={{ fontSize:22, fontWeight:400, marginBottom:8, color:"#f0f9ff" }}>
+                  {lang==="de"||lang==="at" ? "Anfrage gesendet!" : lang==="en" ? "Request sent!" : lang==="it" ? "Richiesta inviata!" : "Upit poslan!"}
+                </div>
+                <div style={{ ...dm, fontSize:14, color:"#64748b", lineHeight:1.7, marginBottom:20 }}>
+                  {lang==="de"||lang==="at" ? "Der Gastgeber meldet sich innerhalb von 2 Stunden." : lang==="en" ? "The host will contact you within 2 hours." : lang==="it" ? "L'host vi contatterà entro 2 ore." : "Domaćin će vas kontaktirati u roku 2 sata."}
+                </div>
+                <div style={{ padding:"14px 18px", background:"rgba(34,197,94,0.08)", border:"1px solid rgba(34,197,94,0.2)", borderRadius:12, marginBottom:24 }}>
+                  <div style={{ ...dm, fontSize:10, color:"#86efac", letterSpacing:1.5, fontWeight:700, marginBottom:4 }}>BROJ UPITA</div>
+                  <div style={{ fontFamily:"monospace", fontSize:20, fontWeight:800, color:"#22c55e" }}>{bjConfirmId}</div>
+                </div>
+                <button onClick={() => { setBjBookRoom(null); setBjStatus(null); }}
+                  style={{ width:"100%", padding:"14px", borderRadius:14, border:"none", background:"rgba(34,197,94,0.12)", color:"#22c55e", fontSize:15, fontWeight:700, cursor:"pointer", ...dm }}>
+                  {lang==="de"||lang==="at" ? "Schließen" : lang==="en" ? "Close" : lang==="it" ? "Chiudi" : "Zatvori"}
+                </button>
+              </div>
+            ) : (
+              <>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"18px 20px 14px", borderBottom:"1px solid rgba(255,255,255,0.08)" }}>
+                  <div>
+                    <div style={{ ...dm, fontSize:10, color:"#22c55e", letterSpacing:2, fontWeight:700 }}>DIREKTNA REZERVACIJA</div>
+                    <div style={{ fontSize:17, fontWeight:600, marginTop:3 }}>{bjBookRoom.emoji} {bjBookRoom._nameLocalized || (bjBookRoom.name?.[lang] || bjBookRoom.name?.hr || bjBookRoom.id)}</div>
+                    <div style={{ ...dm, fontSize:12, color:"#64748b", marginTop:2 }}>
+                      🏡 Black Jack · Palit, Rab{bjBookRoom.priceFrom ? <span style={{ color:"#22c55e", fontWeight:700 }}> · od €{bjBookRoom.priceFrom}/noć</span> : ""}
+                    </div>
+                  </div>
+                  <button onClick={() => setBjBookRoom(null)}
+                    style={{ background:"none", border:"1px solid rgba(255,255,255,0.1)", color:"#94a3b8", fontSize:15, cursor:"pointer", padding:"6px 10px", borderRadius:8, flexShrink:0 }}>✕</button>
+                </div>
+                <div style={{ padding:"18px 20px" }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:12 }}>
+                    <div>
+                      <label style={{ ...dm, fontSize:10, color:"#94a3b8", display:"block", marginBottom:5, letterSpacing:1 }}>
+                        {lang==="de"||lang==="at"?"ANKUNFT":lang==="en"?"CHECK-IN":lang==="it"?"ARRIVO":"DOLAZAK"}
+                      </label>
+                      <input type="date" value={bjCheckIn} min={new Date().toISOString().slice(0,10)}
+                        onChange={e => setBjCheckIn(e.target.value)}
+                        style={{ width:"100%", padding:"11px 10px", borderRadius:10, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.05)", color:"#f0f4f8", fontSize:16, outline:"none", boxSizing:"border-box" }} />
+                    </div>
+                    <div>
+                      <label style={{ ...dm, fontSize:10, color:"#94a3b8", display:"block", marginBottom:5, letterSpacing:1 }}>
+                        {lang==="de"||lang==="at"?"ABREISE":lang==="en"?"CHECK-OUT":lang==="it"?"PARTENZA":"ODLAZAK"}
+                      </label>
+                      <input type="date" value={bjCheckOut} min={bjCheckIn || new Date().toISOString().slice(0,10)}
+                        onChange={e => setBjCheckOut(e.target.value)}
+                        style={{ width:"100%", padding:"11px 10px", borderRadius:10, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.05)", color:"#f0f4f8", fontSize:16, outline:"none", boxSizing:"border-box" }} />
+                    </div>
+                  </div>
+                  {bjCheckIn && bjCheckOut && (() => {
+                    const n = Math.max(0, Math.round((new Date(bjCheckOut)-new Date(bjCheckIn))/86400000));
+                    if (n <= 0) return null;
+                    return (
+                      <div style={{ textAlign:"center", padding:"8px", marginBottom:12, ...dm, fontSize:12, color:"#22c55e" }}>
+                        🌙 {n} {n===1?({hr:"noć",de:"Nacht",en:"night",it:"notte"})[lang]||"noć":({hr:"noći",de:"Nächte",en:"nights",it:"notti"})[lang]||"noći"}
+                        {bjBookRoom.priceFrom ? <span style={{ color:"#64748b" }}>{" · "}~€{n * bjBookRoom.priceFrom} {lang==="de"||lang==="at"?"gesamt":lang==="en"?"total":lang==="it"?"totale":"ukupno"}</span> : ""}
+                      </div>
+                    );
+                  })()}
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 14px", borderRadius:12, background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.08)", marginBottom:14 }}>
+                    <div style={{ ...dm, fontSize:13 }}>
+                      {lang==="de"||lang==="at"?"Gäste":lang==="en"?"Guests":lang==="it"?"Ospiti":"Gosti"}
+                    </div>
+                    <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+                      <button onClick={() => setBjGuests(g => Math.max(1,g-1))} style={{ width:36, height:36, borderRadius:"50%", border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.05)", color:"#fff", fontSize:18, cursor:"pointer", display:"grid", placeItems:"center" }}>−</button>
+                      <span style={{ fontSize:18, fontWeight:600, minWidth:24, textAlign:"center" }}>{bjGuests}</span>
+                      <button onClick={() => setBjGuests(g => Math.min(bjBookRoom.guests||8,g+1))} style={{ width:36, height:36, borderRadius:"50%", border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.05)", color:"#fff", fontSize:18, cursor:"pointer", display:"grid", placeItems:"center" }}>+</button>
+                    </div>
+                  </div>
+                  <div style={{ marginBottom:10 }}>
+                    <label style={{ ...dm, fontSize:10, color:"#94a3b8", display:"block", marginBottom:5, letterSpacing:1 }}>
+                      {lang==="de"||lang==="at"?"NAME":lang==="en"?"YOUR NAME":lang==="it"?"NOME":"IME I PREZIME"}
+                    </label>
+                    <input value={bjGuestName} onChange={e => setBjGuestName(e.target.value)}
+                      placeholder={lang==="de"||lang==="at"?"Vollständiger Name":lang==="en"?"Full name":lang==="it"?"Nome completo":"Ime i prezime"}
+                      autoCapitalize="words"
+                      style={{ width:"100%", padding:"12px 14px", borderRadius:10, border:`1px solid ${bjGuestName?"rgba(34,197,94,0.35)":"rgba(255,255,255,0.1)"}`, background:"rgba(255,255,255,0.05)", color:"#f0f4f8", fontSize:16, outline:"none", boxSizing:"border-box", transition:"border-color 0.2s" }} />
+                  </div>
+                  <div style={{ marginBottom:18 }}>
+                    <label style={{ ...dm, fontSize:10, color:"#94a3b8", display:"block", marginBottom:5, letterSpacing:1 }}>
+                      EMAIL {lang==="en"?"(optional)":lang==="de"||lang==="at"?"(optional)":lang==="it"?"(opzionale)":"(opcionalno)"}
+                    </label>
+                    <input type="email" value={bjGuestEmail} onChange={e => setBjGuestEmail(e.target.value)}
+                      placeholder="email@example.com" inputMode="email"
+                      style={{ width:"100%", padding:"12px 14px", borderRadius:10, border:"1px solid rgba(255,255,255,0.1)", background:"rgba(255,255,255,0.05)", color:"#f0f4f8", fontSize:16, outline:"none", boxSizing:"border-box" }} />
+                  </div>
+                  {bjStatus === "error" && (
+                    <div style={{ ...dm, fontSize:12, color:"#f87171", marginBottom:12, textAlign:"center" }}>
+                      {lang==="de"||lang==="at"?"Fehler. Bitte erneut versuchen.":lang==="en"?"Error. Please try again.":lang==="it"?"Errore. Riprova.":"Greška. Pokušajte ponovo."}
+                    </div>
+                  )}
+                  <button
+                    onClick={doBjBook}
+                    disabled={bjStatus==="loading" || !bjGuestName || !bjCheckIn || !bjCheckOut}
+                    style={{ width:"100%", padding:"15px", borderRadius:14, border:"none", background: (bjStatus==="loading"||!bjGuestName||!bjCheckIn||!bjCheckOut) ? "rgba(34,197,94,0.15)" : "linear-gradient(135deg,#16a34a,#22c55e)", color: (bjStatus==="loading"||!bjGuestName||!bjCheckIn||!bjCheckOut) ? "#86efac" : "#fff", fontSize:16, fontWeight:700, cursor: (bjStatus==="loading"||!bjGuestName||!bjCheckIn||!bjCheckOut) ? "not-allowed":"pointer", opacity:(bjGuestName&&bjCheckIn&&bjCheckOut)?1:0.6, transition:"all 0.2s", minHeight:52, ...dm }}>
+                    {bjStatus==="loading" ? "⏳ "+(lang==="de"||lang==="at"?"Wird gesendet…":lang==="en"?"Sending…":lang==="it"?"Invio…":"Šaljem…")
+                      : lang==="de"||lang==="at" ? "📩 Anfrage senden →"
+                      : lang==="en" ? "📩 Send request →"
+                      : lang==="it" ? "📩 Invia richiesta →"
+                      : "📩 Pošalji upit →"}
+                  </button>
+                  <div style={{ ...dm, fontSize:11, color:"#64748b", textAlign:"center", marginTop:10, lineHeight:1.6, paddingBottom:8 }}>
+                    {lang==="de"||lang==="at" ? "Keine Vorauszahlung · Kostenlose Stornierung · Direktbestätigung" : lang==="en" ? "No prepayment · Free cancellation · Direct confirmation" : lang==="it" ? "Nessun anticipo · Cancellazione gratuita · Conferma diretta" : "Nema predujma · Besplatni otkaz · Direktna potvrda"}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Experience booking */}
       {selectedExp && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.88)", zIndex: 200, display: "grid", placeItems: "center", padding: 24 }} onClick={() => setSelectedExp(null)}>
@@ -4069,8 +4253,8 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
               {G.kids > 0 && <div style={{ ...dm, fontSize: 13, color: C.gold, marginTop: 4 }}>{t("familyPrice",lang)}: ~{selectedExp.price * 2 + Math.round(selectedExp.price * 0.5 * 2)}€</div>}
             </Card>
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 12 }}>
-              {selectedExp.gyg && <a href={selectedExp.gyg} target="_blank" rel="noopener noreferrer" style={{ display: "block", padding: "14px 20px", background: "linear-gradient(135deg,#FF5533,#FF7744)", borderRadius: 14, color: "#fff", fontSize: 16, fontFamily: "'Cormorant Garamond',Georgia,serif", fontWeight: 600, textAlign: "center", textDecoration: "none", letterSpacing: 0.5, boxShadow: "0 4px 16px rgba(255,85,51,0.3)" }}>{t("bookVia",lang)} GetYourGuide →</a>}
-              {selectedExp.viator && <a href={selectedExp.viator} target="_blank" rel="noopener noreferrer" style={{ display: "block", padding: "14px 20px", background: "linear-gradient(135deg,#2B8B4B,#3DA65E)", borderRadius: 14, color: "#fff", fontSize: 16, fontFamily: "'Cormorant Garamond',Georgia,serif", fontWeight: 600, textAlign: "center", textDecoration: "none", letterSpacing: 0.5, boxShadow: "0 4px 16px rgba(43,139,75,0.3)" }}>{t("bookVia",lang)} Viator →</a>}
+              {selectedExp.gyg && <button onClick={() => setInAppUrl(selectedExp.gyg)} style={{ display: "block", padding: "14px 20px", background: "linear-gradient(135deg,#FF5533,#FF7744)", borderRadius: 14, color: "#fff", fontSize: 16, fontFamily: "'Cormorant Garamond',Georgia,serif", fontWeight: 600, textAlign: "center", border: "none", cursor: "pointer", letterSpacing: 0.5, boxShadow: "0 4px 16px rgba(255,85,51,0.3)", width: "100%" }}>{t("bookVia",lang)} GetYourGuide →</button>}
+              {selectedExp.viator && <button onClick={() => setInAppUrl(selectedExp.viator)} style={{ display: "block", padding: "14px 20px", background: "linear-gradient(135deg,#2B8B4B,#3DA65E)", borderRadius: 14, color: "#fff", fontSize: 16, fontFamily: "'Cormorant Garamond',Georgia,serif", fontWeight: 600, textAlign: "center", border: "none", cursor: "pointer", letterSpacing: 0.5, boxShadow: "0 4px 16px rgba(43,139,75,0.3)", width: "100%" }}>{t("bookVia",lang)} Viator →</button>}
             </div>
             <div style={{ display: "flex", gap: 10 }}>
               <Btn style={{ flex: 1 }} onClick={() => setSelectedExp(null)}>{t("back",lang)}</Btn>
