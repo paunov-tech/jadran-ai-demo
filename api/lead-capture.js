@@ -48,6 +48,7 @@ async function sendWelcomeEmail(email, name, segmentId) {
     de_camper:  "Dein Kroatien-Wohnmobil-Guide ist bereit 🚐",
     de_family:  "Dein Familien-Kroatien-Guide ist bereit 🏖️",
     it_sailor:  "La tua guida vela Croazia è pronta ⛵",
+    en_camper:  "Your Croatia camper van guide is ready 🚐",
     en_cruiser: "Your Croatia sailing guide is ready ⚓",
     en_couple:  "Your secret Croatia guide is ready 🌊",
   };
