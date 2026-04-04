@@ -1147,7 +1147,7 @@ const [lang, setLang] = useState(() => {
     const dubLinks = region === "dubrovnik" ? DUBROVNIK_INTEL.filter(d => d.link).map(d => `• ${d.spot} → [${d.spot}](${d.link})`) : [];
     const warnLinks = filterByRegion(CAMPER_WARNINGS, region).filter(w => w.link).map(w => `• ${w.name} → [${w.name}](${w.link})`);
     const linkCatalog = [
-      ...regionExps.map(e => `• ${e.name} (~${e.price}€, ${e.dur}) → [${e.name} — od ${e.price}€](${e.link})`),
+      ...regionExps.map(e => `• ${e.name} (~${e.price}€, ${e.dur}) → [${e.name} — od ${e.price}€](${e.gyg || e.viator || ""})`),
       ...dubLinks, ...warnLinks,
     ].join("\n");
 
@@ -2384,7 +2384,7 @@ const [lang, setLang] = useState(() => {
                   </div>
                   <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 8, scrollSnapType: "x mandatory" }}>
                     {acts.map(a => (
-                      <a key={a.id} href={a.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit", scrollSnapAlign: "start" }}>
+                      <a key={a.id} href={a.gyg || a.viator || "#"} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", color: "inherit", scrollSnapAlign: "start" }}>
                         <div style={{
                           minWidth: 180, minHeight: 140, padding: 0, borderRadius: 18,
                           background: C.card, border: `1px solid ${C.bord}`,

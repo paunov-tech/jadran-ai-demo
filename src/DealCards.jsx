@@ -26,6 +26,19 @@ const BADGE_COLORS = {
   default: "#94a3b8",
 };
 
+// Ensure Viator URLs point to individual tours, not the generic shop
+function resolveUrl(deal) {
+  const url = deal.cta_url || "";
+  if (deal.source !== "viator") return url || "#";
+  // Good: already a specific tour URL
+  if (url.includes("/tours/") && url.length > 40) {
+    return url.includes("pid=P00292197") ? url : url + (url.includes("?") ? "&" : "?") + "pid=P00292197&mcid=42383&medium=link";
+  }
+  // Bad: generic shop or search-results URL — fall back to name search
+  const q = encodeURIComponent((deal.name || "Croatia tour").replace(/['"]/g, ""));
+  return `https://www.viator.com/searchResults/all?text=${q}&pid=P00292197&mcid=42383&medium=link`;
+}
+
 export function DealCards({ region = "all", lang = "de", C, maxCards = 6 }) {
   const [deals, setDeals] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -115,7 +128,7 @@ export function DealCards({ region = "all", lang = "de", C, maxCards = 6 }) {
         {cards.map((deal, i) => (
           <a
             key={deal.name + i}
-            href={deal.cta_url || "#"}
+            href={resolveUrl(deal)}
             target={deal.source === "gyg" || deal.source === "viator" ? "_blank" : "_self"}
             rel="noopener noreferrer"
             style={{

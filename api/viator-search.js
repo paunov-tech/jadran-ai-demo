@@ -26,7 +26,7 @@ const FALLBACK_ACTIVITIES = [
     price: 29, rating: 4.8, reviewCount: 1240,
     duration: "2h", category: "Kultura",
     images: ["https://images.unsplash.com/photo-1555990538-1e09e0e62c7e?w=400"],
-    bookingUrl: "https://www.viator.com/tours/Split/?pid=P00292197&mcid=42383&medium=link",
+    bookingUrl: "https://www.viator.com/tours/Split/Diocletians-Palace-Walking-Tour/d968-5085P3?pid=P00292197&mcid=42383&medium=link",
   },
   {
     productCode: "LOCAL-002",
@@ -35,7 +35,7 @@ const FALLBACK_ACTIVITIES = [
     price: 79, rating: 4.9, reviewCount: 3580,
     duration: "8h", category: "Nautika",
     images: ["https://images.unsplash.com/photo-1552560552-4c7d7f7d0e8d?w=400"],
-    bookingUrl: "https://www.viator.com/tours/Split/?pid=P00292197&mcid=42383&medium=link",
+    bookingUrl: "https://www.viator.com/tours/Split/Blue-Cave-and-Hvar-Tour-from-Split/d4185-17622P2?pid=P00292197&mcid=42383&medium=link",
   },
   {
     productCode: "LOCAL-003",
@@ -44,7 +44,7 @@ const FALLBACK_ACTIVITIES = [
     price: 65, rating: 4.7, reviewCount: 890,
     duration: "9h", category: "Priroda",
     images: ["https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400"],
-    bookingUrl: "https://www.viator.com/tours/Split/?pid=P00292197&mcid=42383&medium=link",
+    bookingUrl: "https://www.viator.com/tours/Split/From-Split-Krka-Waterfalls-Food-Wine-Tasting-Tour/d4185-251842P1?pid=P00292197&mcid=42383&medium=link",
   },
   {
     productCode: "LOCAL-004",
@@ -53,7 +53,7 @@ const FALLBACK_ACTIVITIES = [
     price: 45, rating: 4.8, reviewCount: 650,
     duration: "3h", category: "Avantura",
     images: ["https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=400"],
-    bookingUrl: "https://www.viator.com/tours/Omis/?pid=P00292197&mcid=42383&medium=link",
+    bookingUrl: "https://www.viator.com/tours/Omis/Rafting-on-the-Cetina-River/d50835-73537P1?pid=P00292197&mcid=42383&medium=link",
   },
 ];
 
@@ -75,7 +75,7 @@ function cleanProduct(p) {
       : (p.duration?.description || ""),
     category: p.tags?.[0]?.allNamesByLocale?.["en"] || p.productType || "",
     images: img ? [img] : [],
-    bookingUrl: `https://www.viator.com/tours/${encodeURIComponent(p.productCode || "")}`,
+    bookingUrl: p.productUrl || p.webURL || `https://www.viator.com/tours/${p.productCode || ""}?pid=P00292197&mcid=42383&medium=link`,
   };
 }
 
