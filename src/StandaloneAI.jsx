@@ -1026,7 +1026,7 @@ const [lang, setLang] = useState(() => {
       if (!data?.url) throw new Error("No checkout URL returned");
       window.location.href = data.url;
     } catch (e) {
-      console.error("Checkout error:", e);
+      captureErr(e);
       setPayLoading(false);
     }
   };
