@@ -65,20 +65,26 @@ const QUESTIONS = [
 function pickSegment(answers) {
   const { travel_type, language, travel_with } = answers;
 
+  // German speakers
   if (language === "de") {
     if (travel_with === "family") return "de_family";
     if (travel_type === "camper" || travel_type === "hotel") return "de_camper";
-    if (travel_type === "sailing" || travel_type === "cruiser") return "it_sailor"; // close enough, DE sailors → it_sailor is wrong; use en_cruiser
+    if (travel_type === "sailing" || travel_type === "cruiser") return "en_cruiser";
   }
 
+  // Italian speakers — sailors
   if (language === "it" && (travel_type === "sailing" || travel_type === "cruiser")) return "it_sailor";
 
-  if (travel_type === "sailing") return "en_cruiser";
-  if (travel_type === "cruiser") return "en_cruiser";
-  if (travel_type === "camper") return "de_camper";
+  // Everyone else by travel type
+  if (travel_type === "sailing" || travel_type === "cruiser") return "en_cruiser";
+  if (travel_type === "camper") {
+    // No dedicated English camper segment — use couple (has English form, closest match)
+    return travel_with === "family" ? "de_family" : "en_couple";
+  }
 
+  // Hotel/apartment travellers by companion
   if (travel_with === "couple") return "en_couple";
-  if (travel_with === "family" && language === "de") return "de_family";
+  if (travel_with === "family") return language === "de" ? "de_family" : "en_couple";
 
   return "en_couple"; // default
 }
