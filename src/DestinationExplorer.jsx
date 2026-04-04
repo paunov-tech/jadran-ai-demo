@@ -487,7 +487,7 @@ export default function DestinationExplorer() {
       </section>
 
       {/* ═══ DESTINATIONS ═══ */}
-      <section id="destinations" style={{ padding:"32px 16px 28px", background:"linear-gradient(180deg, #071828 0%, #0a1e36 50%, #071828 100%)" }}>
+      <section id="destinations" style={{ padding:"32px 20px 28px", background:"linear-gradient(180deg, #071828 0%, #0a1e36 50%, #071828 100%)" }}>
         <div style={{ maxWidth:960, margin:"0 auto" }}>
 
           <div style={{ textAlign:"center", marginBottom:18 }}>
@@ -523,7 +523,7 @@ export default function DestinationExplorer() {
       </section>
 
       {/* ═══ PARTNERI & BEST DEALS ═══ */}
-      <section style={{ padding:"24px 16px 20px", background:"#050d1a" }}>
+      <section style={{ padding:"24px 20px 20px", background:"#050d1a" }}>
         <div style={{ maxWidth:960, margin:"0 auto" }}>
 
           {/* — Naši partneri — */}
@@ -577,7 +577,7 @@ export default function DestinationExplorer() {
       </section>
 
       {/* ═══ APP REVIEWS ═══ */}
-      <section style={{ padding:"28px 16px 24px", background:"#030810", borderTop:"1px solid rgba(255,255,255,0.03)" }}>
+      <section style={{ padding:"28px 20px 24px", background:"#030810", borderTop:"1px solid rgba(255,255,255,0.03)" }}>
         <div style={{ maxWidth:960, margin:"0 auto" }}>
 
           {/* Header */}
@@ -760,7 +760,7 @@ export default function DestinationExplorer() {
         const cardHover = { cursor:"pointer", transition:"transform 0.18s, box-shadow 0.18s" };
 
         return (
-          <section style={{ padding:"40px 16px 48px", background:"linear-gradient(160deg, #050d1a 0%, #0a1628 50%, #061018 100%)", borderTop:"1px solid rgba(14,165,233,0.08)" }}>
+          <section style={{ padding:"40px 20px 48px", background:"linear-gradient(160deg, #050d1a 0%, #0a1628 50%, #061018 100%)", borderTop:"1px solid rgba(14,165,233,0.08)" }}>
             <div style={{ maxWidth:960, margin:"0 auto" }}>
 
               {/* ── LOCK GATE ── */}

@@ -2217,7 +2217,7 @@ const [lang, setLang] = useState(() => {
             </div>
 
             {/* Quick questions — CTA */}
-            <div style={{ padding: "16px 16px 20px", textAlign: "center" }}>
+            <div style={{ padding: "16px 20px 20px", textAlign: "center" }}>
               <div style={{ fontSize: 10, color: C.gold, letterSpacing: 3, fontWeight: 600, marginBottom: 12 }}>VAŠA PITANJA</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
                 {quickQs.map(q => (
@@ -2250,7 +2250,7 @@ const [lang, setLang] = useState(() => {
         {/* Messages pushed to bottom via margin-top:auto */}
         <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 10 }}>
         {msgs.map((m, i) => (
-          <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", padding: "0 16px" }}>
+          <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", padding: "0 20px" }}>
             {m.image && <img src={m.image} alt="foto" style={{ width: 60, height: 60, borderRadius: 12, objectFit: "cover", marginRight: 8, alignSelf: "flex-end" }} />}
             <div style={{
               maxWidth: "82%", boxSizing: "border-box", padding: "12px 16px", borderRadius: m.role === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
@@ -2311,7 +2311,7 @@ const [lang, setLang] = useState(() => {
 
         {/* Quick reply chips after last AI message */}
         {msgs.length > 0 && !loading && msgs[msgs.length - 1]?.role === "assistant" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "4px 12px 8px", overflow: "hidden" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "4px 16px 8px", overflow: "hidden" }}>
             {(travelMode === "camper" || niche === "camper" ? [
               `🅿️ ${t.qParking}`,
               `🍽️ ${t.qDinner}`,
@@ -2338,7 +2338,7 @@ const [lang, setLang] = useState(() => {
         )}
 
         {loading && (
-          <div style={{ display: "flex", justifyContent: "flex-start", padding: "0 16px" }}>
+          <div style={{ display: "flex", justifyContent: "flex-start", padding: "0 20px" }}>
             <div style={{ padding: "12px 20px", borderRadius: "18px 18px 18px 4px", background: C.card, border: `1px solid ${C.bord}` }}>
               <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                 {[0, 1, 2].map(d => <div key={d} style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: `pulse 1.2s ${d * 0.2}s infinite` }} />)}
@@ -2354,7 +2354,7 @@ const [lang, setLang] = useState(() => {
             {/* When chatting: show toggle button instead of full cards */}
             {msgs.length > 0 && !showCards && (
               <button onClick={() => setShowCards(true)} style={{
-                width: "calc(100% - 32px)", margin: "8px 16px", padding: "12px 16px", borderRadius: 14,
+                width: "calc(100% - 40px)", margin: "8px 20px", padding: "12px 16px", borderRadius: 14,
                 border: `1px solid ${C.bord}`, background: C.card, color: C.text,
                 fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
                 display: "flex", justifyContent: "space-between", alignItems: "center",
@@ -2365,7 +2365,7 @@ const [lang, setLang] = useState(() => {
             )}
             {msgs.length > 0 && showCards && (
               <button onClick={() => setShowCards(false)} style={{
-                width: "calc(100% - 32px)", margin: "8px 16px 12px", padding: "10px 16px", borderRadius: 12,
+                width: "calc(100% - 40px)", margin: "8px 20px 12px", padding: "10px 16px", borderRadius: 12,
                 border: `1px solid ${C.bord}`, background: "transparent", color: C.mut,
                 fontSize: 12, cursor: "pointer", fontFamily: "inherit", textAlign: "center",
               }}>{t.hideBtn}</button>
@@ -2673,7 +2673,7 @@ const [lang, setLang] = useState(() => {
       )}
 
       {/* Input */}
-      <div style={{ padding: "12px 16px", paddingBottom: "max(12px, env(safe-area-inset-bottom, 12px))", borderTop: `1px solid ${C.bord}`, display: "flex", gap: 8, flexShrink: 0, background: isNight ? "transparent" : "rgba(255,255,255,0.3)" }}>
+      <div style={{ padding: "12px 20px", paddingBottom: "max(12px, env(safe-area-inset-bottom, 12px))", borderTop: `1px solid ${C.bord}`, display: "flex", gap: 8, flexShrink: 0, background: isNight ? "transparent" : "rgba(255,255,255,0.3)" }}>
         <input value={input} onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); } }}
           placeholder={t.placeholder}
