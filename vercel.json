@@ -165,6 +165,10 @@
       "destination": "/privacy.html"
     },
     {
+      "source": "/prirucnik",
+      "destination": "/jadran-prirucnik.html"
+    },
+    {
       "source": "/blog",
       "destination": "/blog/index.html"
     },

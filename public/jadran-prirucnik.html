@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>JADRAN.ai — Kompletni priručnik · Prodanović</title>
+<style>
+  /* ── PRINT + SCREEN ── */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --navy:   #0a1628;
+    --navy2:  #0f1e35;
+    --accent: #00b4d8;
+    --green:  #22c55e;
+    --gold:   #FFB800;
+    --red:    #ef4444;
+    --text:   #1e293b;
+    --mut:    #64748b;
+    --bord:   #e2e8f0;
+    --bg:     #f8fafc;
+    --white:  #ffffff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    background: linear-gradient(160deg, #0a1628 0%, #0f2a4a 60%, #072040 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -40%;
+    left: -20%;
+    width: 80%;
+    height: 80%;
+    background: radial-gradient(circle, rgba(0,180,216,0.12) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    right: -10%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(circle, rgba(34,197,94,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .cover-inner { position: relative; z-index: 1; max-width: 600px; }
+  .cover-logo {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 64px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+  .cover-logo span { color: #FFB800; }
+  .cover-sub {
+    font-size: 16px;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 48px;
+    font-weight: 300;
+  }
+  .cover-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 36px;
+    font-weight: 400;
+    color: #fff;
+    margin-bottom: 16px;
+    line-height: 1.3;
+  }
+  .cover-desc {
+    font-size: 16px;
+    color: rgba(255,255,255,0.65);
+    margin-bottom: 52px;
+    line-height: 1.7;
+  }
+  .cover-badge {
+    display: inline-block;
+    padding: 8px 20px;
+    border: 1px solid rgba(0,180,216,0.4);
+    border-radius: 24px;
+    color: #00b4d8;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .cover-meta {
+    margin-top: 60px;
+    padding-top: 32px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+    max-width: 540px;
+  }
+  .cover-meta-item { text-align: left; }
+  .cover-meta-label { font-size: 10px; color: rgba(255,255,255,0.35); letter-spacing: 2px; text-transform: uppercase; }
+  .cover-meta-value { font-size: 14px; color: rgba(255,255,255,0.8); font-weight: 500; margin-top: 3px; }
+
+  /* ── PAGE LAYOUT ── */
+  .page {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 48px 48px;
+  }
+
+  @media print {
+    .cover { page-break-after: always; }
+    .page-break { page-break-before: always; }
+    .no-break { page-break-inside: avoid; }
+    body { background: white; }
+    .page { padding: 32px 40px; max-width: 100%; }
+  }
+
+  /* ── TOC ── */
+  .toc-page {
+    background: white;
+    padding: 60px 64px;
+    min-height: 100vh;
+    page-break-after: always;
+  }
+  .toc-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--navy);
+    margin-bottom: 36px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--bord);
+  }
+  .toc-section { margin-bottom: 4px; }
+  .toc-item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px dotted #dde2e8;
+  }
+  .toc-item.main {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--navy);
+    padding: 10px 0 6px;
+    border-bottom: 1px solid var(--bord);
+  }
+  .toc-item.sub {
+    font-size: 13px;
+    color: var(--mut);
+    padding-left: 20px;
+  }
+  .toc-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* ── TYPOGRAPHY ── */
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 8px;
+    line-height: 1.25;
+  }
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 36px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--bord);
+  }
+  h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 24px 0 10px;
+  }
+  h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--mut);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin: 20px 0 8px;
+  }
+  p { margin-bottom: 14px; color: var(--text); }
+  ul, ol { margin: 10px 0 16px 22px; }
+  li { margin-bottom: 6px; line-height: 1.65; }
+  strong { font-weight: 700; color: var(--navy); }
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: #0284c7;
+    border: 1px solid #e2e8f0;
+  }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    background: linear-gradient(135deg, var(--navy) 0%, #0f2a4a 100%);
+    color: white;
+    padding: 24px 32px;
+    border-radius: 16px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .section-header .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+    opacity: 0.8;
+    flex-shrink: 0;
+  }
+  .section-header h2 {
+    font-size: 20px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    color: white;
+  }
+  .section-header p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+    margin: 4px 0 0;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: white;
+    border: 1px solid var(--bord);
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+  .card.accent {
+    border-left: 4px solid var(--accent);
+    background: linear-gradient(135deg, #f0f9ff, white);
+  }
+  .card.green {
+    border-left: 4px solid var(--green);
+    background: linear-gradient(135deg, #f0fdf4, white);
+  }
+  .card.gold {
+    border-left: 4px solid var(--gold);
+    background: linear-gradient(135deg, #fffbeb, white);
+  }
+  .card.red {
+    border-left: 4px solid var(--red);
+    background: linear-gradient(135deg, #fff5f5, white);
+  }
+  .card.navy {
+    background: linear-gradient(135deg, var(--navy), #0f2a4a);
+    color: white;
+    border: none;
+  }
+  .card.navy p, .card.navy li { color: rgba(255,255,255,0.75); }
+  .card.navy h3, .card.navy h4 { color: white; }
+  .card.navy strong { color: #00b4d8; }
+
+  /* ── STEPS ── */
+  .steps { counter-reset: step; margin: 16px 0; }
+  .step {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    align-items: flex-start;
+  }
+  .step-num {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-content h4 { margin: 0 0 4px; color: var(--navy); text-transform: none; font-size: 14px; letter-spacing: 0; }
+  .step-content p { margin: 0; font-size: 13px; color: var(--mut); }
+
+  /* ── URL BOX ── */
+  .url-box {
+    background: var(--navy);
+    border-radius: 10px;
+    padding: 12px 18px;
+    margin: 12px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: #00b4d8;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    word-break: break-all;
+  }
+  .url-box .label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-family: 'Inter', sans-serif;
+    flex-shrink: 0;
+  }
+
+  /* ── INFO BOX ── */
+  .info-box {
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 13px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .info-box.tip {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1d4ed8;
+  }
+  .info-box.warn {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #92400e;
+  }
+  .info-box.danger {
+    background: #fff5f5;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+  }
+  .info-box.success {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+  }
+  .info-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── TABLE ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 13px;
+  }
+  th {
+    background: var(--navy);
+    color: white;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+  }
+  th:first-child { border-radius: 8px 0 0 0; }
+  th:last-child { border-radius: 0 8px 0 0; }
+  td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--bord);
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #f8fafc; }
+
+  /* ── BADGE ── */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .badge.green { background: rgba(34,197,94,0.12); color: #166534; border: 1px solid rgba(34,197,94,0.3); }
+  .badge.blue { background: rgba(0,180,216,0.1); color: #0284c7; border: 1px solid rgba(0,180,216,0.25); }
+  .badge.gold { background: rgba(255,184,0,0.12); color: #92400e; border: 1px solid rgba(255,184,0,0.3); }
+  .badge.red { background: rgba(239,68,68,0.1); color: #991b1b; border: 1px solid rgba(239,68,68,0.2); }
+
+  /* ── GRID ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin: 16px 0; }
+
+  /* ── FAQ ── */
+  .faq-item { margin-bottom: 20px; }
+  .faq-q {
+    font-weight: 700;
+    color: var(--navy);
+    font-size: 14px;
+    margin-bottom: 6px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .faq-q::before {
+    content: 'P';
+    background: var(--accent);
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .faq-a {
+    font-size: 13px;
+    color: var(--mut);
+    padding-left: 32px;
+    line-height: 1.7;
+  }
+
+  /* ── TROUBLESHOOT ── */
+  .trouble-item {
+    border: 1px solid var(--bord);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .trouble-problem {
+    background: #fff5f5;
+    padding: 12px 16px;
+    font-weight: 700;
+    font-size: 13px;
+    color: #991b1b;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    border-bottom: 1px solid #fecaca;
+  }
+  .trouble-solution {
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--text);
+    background: white;
+  }
+  .trouble-solution ol { margin: 8px 0 0 18px; }
+  .trouble-solution li { margin-bottom: 4px; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--bord);
+    margin: 32px 0;
+  }
+
+  /* ── FOOTER ── */
+  .doc-footer {
+    margin-top: 60px;
+    padding: 32px 0 20px;
+    border-top: 2px solid var(--bord);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--mut);
+  }
+  .doc-footer-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+  .doc-footer-logo span { color: #FFB800; }
+
+  /* ── SCREEN MOCKUP ── */
+  .phone-frame {
+    background: var(--navy);
+    border-radius: 16px;
+    padding: 16px;
+    color: white;
+    font-size: 12px;
+    max-width: 280px;
+    border: 2px solid rgba(255,255,255,0.1);
+  }
+  .phone-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-size: 10px;
+    color: rgba(255,255,255,0.5);
+  }
+  .phone-row {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .phone-row .icon { font-size: 18px; }
+  .phone-row .label { font-size: 12px; font-weight: 600; }
+  .phone-row .sub { font-size: 10px; color: rgba(255,255,255,0.5); }
+  .phone-btn {
+    background: linear-gradient(135deg, #00b4d8, #0085a8);
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 12px;
+    margin-top: 12px;
+  }
+  .phone-btn.green { background: linear-gradient(135deg, #22c55e, #16a34a); }
+
+  /* ── ROLE CARDS ── */
+  .role-cards { display: flex; gap: 16px; margin: 20px 0; flex-wrap: wrap; }
+  .role-card {
+    flex: 1;
+    min-width: 180px;
+    background: white;
+    border: 1px solid var(--bord);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+  }
+  .role-card .role-icon { font-size: 36px; margin-bottom: 10px; }
+  .role-card .role-name { font-weight: 700; font-size: 14px; color: var(--navy); margin-bottom: 4px; }
+  .role-card .role-desc { font-size: 12px; color: var(--mut); line-height: 1.5; }
+
+  /* ── FLOW CHART ── */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 16px 0;
+  }
+  .flow-box {
+    background: white;
+    border: 1px solid var(--bord);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--navy);
+    text-align: center;
+    min-width: 110px;
+  }
+  .flow-box.start { background: var(--navy); color: white; }
+  .flow-box.end { background: var(--green); color: white; border-color: var(--green); }
+  .flow-box.action { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+  .flow-arrow { color: var(--mut); font-size: 18px; font-weight: 300; flex-shrink: 0; }
+
+  /* ── PRINT PAGE NUMBERS ── */
+  @media print {
+    @page { margin: 20mm 22mm; size: A4; }
+    body { font-size: 12px; }
+    h1 { font-size: 26px; }
+    h2 { font-size: 18px; }
+    .cover { min-height: auto; padding: 80px 40px; }
+    .cover-logo { font-size: 52px; }
+    .cover-title { font-size: 28px; }
+    .toc-page { min-height: auto; }
+    .grid-2 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .role-cards { flex-wrap: nowrap; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     NASLOVNA STRANA
+════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-inner">
+    <div class="cover-logo">JADRAN<span>.ai</span></div>
+    <div class="cover-sub">AI turistički operater · Jadransko more</div>
+    <div style="height:2px;background:linear-gradient(90deg,transparent,rgba(0,180,216,0.5),transparent);margin-bottom:48px;"></div>
+    <div class="cover-badge">POVJERLJIVO · INTERNI DOKUMENT</div>
+    <div class="cover-title">Kompletni priručnik za rad<br>s platformom JADRAN.ai</div>
+    <div class="cover-desc">
+      Detaljan opis svih procesa, tokova rada, administrativnih funkcija,<br>
+      partnerskog portala i upravljanja rezervacijama.
+    </div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <div class="cover-badge" style="border-color:rgba(34,197,94,0.4);color:#22c55e;">Black Jack · Rab</div>
+      <div class="cover-badge" style="border-color:rgba(255,184,0,0.4);color:#FFB800;">Gurman House</div>
+      <div class="cover-badge" style="border-color:rgba(167,139,250,0.4);color:#a78bfa;">Admin · Operator</div>
+    </div>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <div class="cover-meta-label">Pripremljeno za</div>
+        <div class="cover-meta-value">Radojka i Srđan Prodanović</div>
+      </div>
+      <div class="cover-meta-item" style="text-align:center;">
+        <div class="cover-meta-label">Verzija</div>
+        <div class="cover-meta-value">v2.1 · April 2026</div>
+      </div>
+      <div class="cover-meta-item" style="text-align:right;">
+        <div class="cover-meta-label">Platforma</div>
+        <div class="cover-meta-value">jadran.ai</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SADRŽAJ
+════════════════════════════════════════════════ -->
+<div class="toc-page">
+  <div style="max-width:620px;margin:0 auto;">
+    <div class="toc-title">Sadržaj</div>
+
+    <div class="toc-section">
+      <div class="toc-item main"><span>1. Pregled sistema — Šta je JADRAN.ai?</span><span class="toc-num">4</span></div>
+      <div class="toc-item sub"><span>1.1 Misija i svrha platforme</span><span class="toc-num">4</span></div>
+      <div class="toc-item sub"><span>1.2 Ko koristi platformu (uloge)</span><span class="toc-num">4</span></div>
+      <div class="toc-item sub"><span>1.3 Tehnički pregled</span><span class="toc-num">5</span></div>
+    </div>
+
+    <div class="toc-section">
+      <div class="toc-item main"><span>2. Partnerski portal — Black Jack Rab</span><span class="toc-num">6</span></div>
+      <div class="toc-item sub"><span>2.1 Vaš kiosk link i QR kod</span><span class="toc-num">6</span></div>
+      <div class="toc-item sub"><span>2.2 Šta gost vidi na kiosk ekranu</span><span class="toc-num">7</span></div>
+      <div class="toc-item sub"><span>2.3 Partnerska statistika (Stats dashboard)</span><span class="toc-num">8</span></div>
+    </div>
+
+    <div class="toc-section">
+      <div class="toc-item main"><span>3. Direktna rezervacija sobe (bez Booking.com)</span><span class="toc-num">9</span></div>
+      <div class="toc-item sub"><span>3.1 Kako gost rezerviše sobu</span><span class="toc-num">9</span></div>
+      <div class="toc-item sub"><span>3.2 Šta vi dobijate (email obavještenje)</span><span class="toc-num">10</span></div>
+      <div class="toc-item sub"><span>3.3 Potvrda rezervacije</span><span class="toc-num">10</span></div>
+      <div class="toc-item sub"><span>3.4 Cijene i sobe</span><span class="toc-num">11</span></div>
+    </div>
+
+    <div class="toc-section">
+      <div class="toc-item main"><span>4. Admin panel — Upravljanje rezervacijama</span><span class="toc-num">12</span></div>
+      <div class="toc-item sub"><span>4.1 Prijava na admin panel</span><span class="toc-num">12</span></div>
+      <div class="toc-item sub"><span>4.2 Pregled svih rezervacija</span><span class="toc-num">13</span></div>
+      <div class="toc-item sub"><span>4.3 Potvrda rezervacije (dual-confirm)</span><span class="toc-num">13</span></div>
+      <div class="toc-item sub"><span>4.4 Email notifikacije</span><span class="toc-num">14</span></div>
+    </div>
+
+    <div class="toc-section">
+      <div class="toc-item main"><span>5. Gostujuće iskustvo — Kompletni tok</span><span class="toc-num">15</span></div>
+      <div class="toc-item sub"><span>5.1 Pre dolaska — Planiranje rute</span><span class="toc-num">15</span></div>
+      <div class="toc-item sub"><span>5.2 Dolazak — GPS navigacija i onboarding</span><span class="toc-num">16</span></div>
+      <div class="toc-item sub"><span>5.3 Tokom boravka — Vodič i AI chat</span><span class="toc-num">17</span></div>
+      <div class="toc-item sub"><span>5.4 Izleti i aktivnosti (in-app browser)</span><span class="toc-num">18</span></div>
+      <div class="toc-item sub"><span>5.5 Live panel — Vrijeme, more, GPS</span><span class="toc-num">19</span></div>
+      <div class="toc-item sub"><span>5.6 Odlazak — Checkout vodič</span><span class="toc-num">20</span></div>
+    </div>
+
+    <div class="toc-section">
+      <div class="toc-item main"><span>6. In-app browser — Naši prozori</span><span class="toc-num">21</span></div>
+    </div>
+
+    <div class="toc-section">
+      <div class="toc-item main"><span>7. Višejezičnost i jezici</span><span class="toc-num">22</span></div>
+    </div>
+
+    <div class="toc-section">
+      <div class="toc-item main"><span>8. Mobilna app (Google Play / iOS)</span><span class="toc-num">23</span></div>
+    </div>
+
+    <div class="toc-section">
+      <div class="toc-item main"><span>9. Česta pitanja (FAQ)</span><span class="toc-num">24</span></div>
+    </div>
+
+    <div class="toc-section">
+      <div class="toc-item main"><span>10. Rješavanje problema (Troubleshooter)</span><span class="toc-num">27</span></div>
+    </div>
+
+    <div class="toc-section">
+      <div class="toc-item main"><span>11. Kontakti i podrška</span><span class="toc-num">29</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SEKCIJA 1 — PREGLED SISTEMA
+════════════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section-header">
+    <div class="num">01</div>
+    <div>
+      <h2>Pregled sistema — Šta je JADRAN.ai?</h2>
+      <p>Platforma, misija i ko je koristi</p>
+    </div>
+  </div>
+
+  <h3>1.1 Misija i svrha platforme</h3>
+  <p>
+    <strong>JADRAN.ai</strong> je inteligentna turistička platforma za Jadransko more koja zamjenjuje klasične
+    turističke agencije i Booking.com posrednike. Platforma radi kao personalizovani AI turistički vodič koji prati
+    gosta od momenta rezervacije do povratka kući — u realnom vremenu, na njegovom jeziku, na njegovom uređaju.
+  </p>
+  <p>
+    Za vas kao partnere (Black Jack Gurman House), platforma znači direktan kontakt s gostom bez posrednika,
+    bez provizija Booking.com-a i uz potpunu kontrolu nad prezentacijom vašeg objekta.
+  </p>
+
+  <div class="grid-2">
+    <div class="card green">
+      <h4>ZA PARTNERE (VAS)</h4>
+      <ul>
+        <li>Direktne rezervacije bez Booking.com provizija</li>
+        <li>Vaš objekat prikazan u AI vodiču gosta</li>
+        <li>Statistike posjeta i interakcija</li>
+        <li>Gost koji je već informisan i spreman</li>
+        <li>Email notifikacije za svaki upit</li>
+      </ul>
+    </div>
+    <div class="card accent">
+      <h4>ZA GOSTE</h4>
+      <ul>
+        <li>AI vodič dostupan 24/7 na 7 jezika</li>
+        <li>GPS navigacija do objekta</li>
+        <li>Prognoza vremena i stanje mora</li>
+        <li>Preporuke izleta i aktivnosti</li>
+        <li>Sve informacije u jednoj aplikaciji</li>
+        <li>Radi i offline (bez interneta)</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>1.2 Ko koristi platformu (uloge)</h3>
+  <div class="role-cards">
+    <div class="role-card">
+      <div class="role-icon">🏡</div>
+      <div class="role-name">Partner / Affiliate</div>
+      <div class="role-desc">Vi (Prodanović). Upravljate prezentacijom objekta, primate direktne rezervacije, vidite statistike.</div>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">🧑‍💼</div>
+      <div class="role-name">Admin / Operator</div>
+      <div class="role-desc">JADRAN.ai tim. Potvrđuje rezervacije, upravlja platformom, odgovara na eskalacije.</div>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">🧳</div>
+      <div class="role-name">Gost / Turist</div>
+      <div class="role-desc">Korisnik aplikacije. Planira putovanje, dolazi na Rab, koristi AI vodič tokom boravka.</div>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">🏠</div>
+      <div class="role-name">Host (domaćin)</div>
+      <div class="role-desc">Vlasnik sobe koji prima QR kod za goste i prati naplatu putem Host panela.</div>
+    </div>
+  </div>
+
+  <h3>1.3 Tehnički pregled</h3>
+  <table>
+    <tr><th>Komponenta</th><th>Detalji</th></tr>
+    <tr><td><strong>Web adresa</strong></td><td>jadran.ai (radi na svim uređajima i preglednicima)</td></tr>
+    <tr><td><strong>Android app</strong></td><td>Google Play Store — ista platforma, instalirana kao nativna app</td></tr>
+    <tr><td><strong>Admin panel</strong></td><td>jadran.ai/admin (samo za administratore)</td></tr>
+    <tr><td><strong>Jezici</strong></td><td>Hrvatski, Engleski, Njemački, Italijanski, Slovenački, Češki, Poljski</td></tr>
+    <tr><td><strong>Hosting</strong></td><td>Vercel (globalna mreža, 99.99% uptime)</td></tr>
+    <tr><td><strong>Baza podataka</strong></td><td>Google Firestore (cloud, u realnom vremenu)</td></tr>
+    <tr><td><strong>Email servis</strong></td><td>Resend.com (transakcijski emailovi)</td></tr>
+    <tr><td><strong>AI motor</strong></td><td>Claude 3.5 (Anthropic) — isti model koji pokreće ChatGPT nivo asistenta</td></tr>
+    <tr><td><strong>Mape</strong></td><td>HERE Maps + Google Maps aerial view</td></tr>
+    <tr><td><strong>Offline rad</strong></td><td>Da — app radi bez interneta nakon prvog učitavanja</td></tr>
+  </table>
+
+  <div class="info-box tip">
+    <span class="info-icon">💡</span>
+    <div>Platforma je <strong>PWA (Progressive Web App)</strong> — to znači da radi i kao web stranica u pregledniku i kao instalirana mobilna aplikacija, bez razlike u funkcijama. Gost može "Instalirati" app direktno iz Chromea, bez posrednika App Store-a.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SEKCIJA 2 — PARTNERSKI PORTAL
+════════════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section-header">
+    <div class="num">02</div>
+    <div>
+      <h2>Partnerski portal — Black Jack Rab</h2>
+      <p>Vaš kiosk link, QR kod i statistike</p>
+    </div>
+  </div>
+
+  <h3>2.1 Vaš kiosk link i QR kod</h3>
+  <p>
+    Svaki partner ima jedinstvenu URL adresu koja otvara personalizovanu prezentaciju objekta direktno u
+    JADRAN.ai aplikaciji. Ovo je vaš link:
+  </p>
+
+  <div class="url-box">
+    <span class="label">VAŠA URL</span>
+    jadran.ai/?kiosk=rab&amp;affiliate=blackjack&amp;tk=sial2026
+  </div>
+
+  <div class="card gold">
+    <h4>VAŽNO — TOKEN PRISTUPA</h4>
+    <p>
+      Dio <code>tk=sial2026</code> je vaš pristupni token. Bez njega, link prikazuje generički kiosk, ne vaš objekat.
+      Nikada ne mijenjajte ovaj dio URL-a. Ako trebate novi token iz bezbjednosnih razloga, kontaktirajte JADRAN.ai tim.
+    </p>
+  </div>
+
+  <h4>KAO KORISTITE LINK</h4>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>QR kod na ulazu / recepciji</h4>
+        <p>Napravite QR kod koji sadrži vašu URL adresu (besplatno: qr-code-generator.com). Postavite ga na vidljivo mjesto — recepcija, stol, terasa, iza vrata sobe.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>Na marketing materijalima</h4>
+        <p>Dodajte link ili QR kod na vizit karte, brošure, table u sobama. Gost koji skenira odmah vidi vašu prezentaciju na svom jeziku.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>WhatsApp / Viber za goste</h4>
+        <p>Kad gost kontaktira za rezervaciju, pošaljite mu link. On se otvara direktno na vašoj stranici u JADRAN.ai-u.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>Link za statistike (samo za vas)</h4>
+        <p>Da biste vidjeli statistike, koristite: <code>jadran.ai/?stats=blackjack&amp;pin=VAŠE_PIN</code> — PIN dobijate od JADRAN.ai tima.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>2.2 Šta gost vidi na kiosk ekranu</h3>
+  <p>Kada gost otvori vaš link, vidi sljedeće (redom, pri skrolovanju prema dolje):</p>
+
+  <table>
+    <tr><th>#</th><th>Sekcija</th><th>Sadržaj</th></tr>
+    <tr><td>1</td><td>🏠 Hero fotografija</td><td>Velika foto objekta, naziv Black Jack, ocjena (⭐ 4.7 · 127 recenzija)</td></tr>
+    <tr><td>2</td><td>📞 Kontakt strip</td><td>Dugmad: Pozovi (+385 51 724 522) i Navigacija (Google Maps)</td></tr>
+    <tr><td>3</td><td>✓ Trust bedževi</td><td>Google Maps link, TripAdvisor, "Verificirani partner" status</td></tr>
+    <tr><td>4</td><td>🕐 Radno vrijeme</td><td>Pon–Ned 12:00–23:00 · Odgovor ~2h</td></tr>
+    <tr><td>5</td><td>🍽️ Jelo dana</td><td>Automatski se mijenja svaki dan (ponedjeljak = riba, petak = roštilj...)</td></tr>
+    <tr><td>6</td><td>📝 Opis objekta</td><td>Puna prezentacija na jeziku gosta</td></tr>
+    <tr><td>7</td><td>📸 Galerija</td><td>6 fotografija horizontalnog scroll-a</td></tr>
+    <tr><td>8</td><td>✅ Oprema/amenities</td><td>Klima, WiFi, kuhinja, parking, pogled na more...</td></tr>
+    <tr><td>9</td><td>🛏️ Sobe</td><td>Studio (od 65€), Apt A – 4 osobe (od 95€), Apt B – 6 osoba (od 130€)</td></tr>
+    <tr><td>10</td><td>🛰️ Aerial view</td><td>Google Maps satelitski pogled lokacije (Palit 315)</td></tr>
+    <tr><td>11</td><td>🍕 Jelovnik</td><td>Kompletan meni s cijenama na jeziku gosta</td></tr>
+    <tr><td>12</td><td>🌟 Recenzije gostiju</td><td>Klaus M. 🇩🇪, Sarah B. 🇬🇧, Marta K. 🇵🇱</td></tr>
+    <tr><td>13</td><td>📍 U blizini</td><td>Stari grad (2km), plaža Sv. Ivan (1.3km), Marina (2.2km)...</td></tr>
+    <tr><td>14</td><td>🚢 Izleti</td><td>Ture brodom, ronjenje, kajak, Rabska Fjera — GYG + Viator linkovi</td></tr>
+    <tr><td>15</td><td>📩 <strong>Rezerviraj direktno</strong></td><td>ZELENA CTA — otvara direktni rezervacioni formular (bez Booking.com!)</td></tr>
+    <tr><td>16</td><td>⭐ Feedback forma</td><td>Ocjena prezentacije (1–5 zvjezdica + komentar)</td></tr>
+  </table>
+
+  <div class="info-box success">
+    <span class="info-icon">✅</span>
+    <div><strong>Jelo dana se automatski mijenja!</strong> Nema potrebe za ručnom promjenom. Sistem ima programiranih 7 specijaliteta (po jedan za svaki dan u sedmici) koji se prikazuju automatski. Nedjelja = goveđa plata, Petak = Jadranski tanjur, Subota = Roštilj...</div>
+  </div>
+
+  <h3>2.3 Partnerska statistika (Stats dashboard)</h3>
+  <p>Da biste vidjeli koliko gostiju je posjetilo vašu stranicu, koliko je klikova i interakcija:</p>
+  <div class="url-box">
+    <span class="label">STATS URL</span>
+    jadran.ai/?stats=blackjack&amp;pin=[VAŠ_PIN]
+  </div>
+  <p>Dashboard prikazuje: broj posjeta, preglede po sobama, izlazne klikove (GYG, Viator), ocjene feedbacka i trend po danima. PIN za statistike dobijate od JADRAN.ai tima zasebno od tokena pristupa.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SEKCIJA 3 — DIREKTNA REZERVACIJA
+════════════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section-header">
+    <div class="num">03</div>
+    <div>
+      <h2>Direktna rezervacija sobe (bez Booking.com)</h2>
+      <p>Kako gost rezerviše, šta vi dobijate, kako potvrditi</p>
+    </div>
+  </div>
+
+  <div class="info-box success">
+    <span class="info-icon">🎉</span>
+    <div><strong>Nema provizije!</strong> Svaka direktna rezervacija putem JADRAN.ai plateforme ne podliježe Booking.com proviziji od 15–20%. Gost plaća direktno vama. JADRAN.ai naplaćuje partnersku naknadu zasebno po dogovoru.</div>
+  </div>
+
+  <h3>3.1 Kako gost rezerviše sobu</h3>
+
+  <div class="flow" style="margin-bottom:24px;">
+    <div class="flow-box start">Gost otvara vaš link</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Bira sobu</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box action">Klikne "Rezerviraj direktno"</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Popunjava formular</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box end">Vi dobijate email</div>
+  </div>
+
+  <p>Gost vidi tri sobe na vašoj kiosk stranici. Pored svake sobe nalazi se zeleno dugme <strong>"Rezerviraj direktno"</strong>. Klikom se otvara formular:</p>
+
+  <div class="card" style="max-width:400px;">
+    <div class="phone-frame">
+      <div class="phone-header">
+        <span>DIREKTNA REZERVACIJA</span>
+        <span>✕</span>
+      </div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px;">🛏️ Studio apartman · od €65/noć</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div style="background:rgba(255,255,255,0.08);border-radius:8px;padding:8px 10px;">
+          <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:3px;">DOLAZAK</div>
+          <div style="font-size:12px;color:#00b4d8;">15. 07. 2026</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:8px;padding:8px 10px;">
+          <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-bottom:3px;">ODLAZAK</div>
+          <div style="font-size:12px;color:#00b4d8;">20. 07. 2026</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:#22c55e;text-align:center;margin:6px 0;">🌙 5 noći · ~€325 ukupno</div>
+      <div style="background:rgba(255,255,255,0.06);border-radius:8px;padding:8px 10px;margin-bottom:8px;">
+        <div style="font-size:9px;color:rgba(255,255,255,0.4);">IME I PREZIME</div>
+        <div style="font-size:12px;margin-top:3px;">Hans Mueller</div>
+      </div>
+      <div class="phone-btn green">📩 Pošalji upit →</div>
+      <div style="font-size:9px;text-align:center;color:rgba(255,255,255,0.35);margin-top:8px;">Nema predujma · Besplatni otkaz · Direktna potvrda</div>
+    </div>
+  </div>
+
+  <h4>POLJA FORMULARA</h4>
+  <table>
+    <tr><th>Polje</th><th>Obavezno</th><th>Opis</th></tr>
+    <tr><td>Datum dolaska</td><td><span class="badge red">DA</span></td><td>Birač datuma, minimum = sutra</td></tr>
+    <tr><td>Datum odlaska</td><td><span class="badge red">DA</span></td><td>Birač datuma, minimum = dan nakon dolaska</td></tr>
+    <tr><td>Broj gostiju</td><td><span class="badge red">DA</span></td><td>Stepper + / −, max = kapacitet sobe</td></tr>
+    <tr><td>Ime i prezime</td><td><span class="badge red">DA</span></td><td>Slobodan tekst, bez kojeg se ne može poslati</td></tr>
+    <tr><td>Email adresa</td><td><span class="badge blue">NE</span></td><td>Opcionalno — ako želi email potvrdu</td></tr>
+  </table>
+
+  <p>Sistem automatski izračunava broj noći i procijenjenu ukupnu cijenu (dani × osnovna cijena sobe).</p>
+
+  <h3>3.2 Šta vi dobijate (email obavještenje)</h3>
+  <p>Čim gost pošalje upit, vi dobijate email na adresu koja je registrovana u sistemu (<code>BJ_EMAIL</code> env varijabla, postavljeno od strane JADRAN.ai tima). Email sadrži:</p>
+
+  <div class="card navy">
+    <h4 style="color:#22c55e;border:none;">📧 PRIMJER NOTIFIKACIJSKOG EMAILA</h4>
+    <p><strong>Predmet:</strong> 🔔 Novi upit BJ-3K7F2A — Hans Mueller · 15.07.2026 → 20.07.2026</p>
+    <p style="margin-top:12px;">Novi direktni upit putem <strong>JADRAN.ai</strong></p>
+    <ul>
+      <li><strong>ID:</strong> BJ-3K7F2A</li>
+      <li><strong>Soba:</strong> Studio apartman</li>
+      <li><strong>Gost:</strong> Hans Mueller</li>
+      <li><strong>Email gosta:</strong> hans.mueller@email.de</li>
+      <li><strong>Dolazak:</strong> 2026-07-15</li>
+      <li><strong>Odlazak:</strong> 2026-07-20</li>
+      <li><strong>Gosti:</strong> 2 osobe</li>
+      <li><strong>Noći:</strong> 5</li>
+    </ul>
+  </div>
+
+  <div class="info-box warn">
+    <span class="info-icon">⚠️</span>
+    <div><strong>Akcija potrebna!</strong> Email je obavještenje o upitu, ne automatska potvrda. Vi trebate kontaktirati gosta direktno (email ili telefon) i potvrditi dostupnost. Tek tada se rezervacija smatra potvrđenom.</div>
+  </div>
+
+  <h3>3.3 Potvrda rezervacije</h3>
+  <p>Nakon što kontaktirate gosta i potvrdite rezervaciju, trebate je i formalno potvrditi u sistemu. Postoje dva načina:</p>
+
+  <div class="grid-2">
+    <div class="card accent">
+      <h4>NAČIN A — Email link</h4>
+      <p>U email notifikaciji nalazi se direktan link za potvrdu. Kliknite na njega i automatski se evidentira vaša potvrda u sistemu.</p>
+    </div>
+    <div class="card">
+      <h4>NAČIN B — Admin panel</h4>
+      <p>Prijavite se na <code>jadran.ai/admin</code>, nađite rezervaciju po ID-u (npr. BJ-3K7F2A) i kliknite "Potvrdi kao partner".</p>
+    </div>
+  </div>
+
+  <h3>3.4 Cijene i sobe — pregled</h3>
+  <table>
+    <tr><th>Soba</th><th>Kapacitet</th><th>Površina</th><th>Pogled</th><th>Od (€/noć)</th><th>Min. boravak</th></tr>
+    <tr><td>🛏️ Studio apartman</td><td>2 osobe</td><td>22 m²</td><td>Bašta</td><td><strong>65€</strong></td><td>3 noći</td></tr>
+    <tr><td>🏠 Apartman A</td><td>4 osobe</td><td>42 m²</td><td>🌊 More</td><td><strong>95€</strong></td><td>3 noći</td></tr>
+    <tr><td>🏡 Apartman B</td><td>6 osoba</td><td>65 m²</td><td>🌊 Panorama</td><td><strong>130€</strong></td><td>5 noći (ljeto)</td></tr>
+  </table>
+  <p>Sve sobe uključuju: ❄️ klimatizacija · 📶 WiFi · 🍳 opremljena kuhinja · 🚿 kupaonica · 🅿️ parking</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SEKCIJA 4 — ADMIN PANEL
+════════════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section-header">
+    <div class="num">04</div>
+    <div>
+      <h2>Admin panel — Upravljanje rezervacijama</h2>
+      <p>jadran.ai/admin — prijava, pregled, potvrda</p>
+    </div>
+  </div>
+
+  <h3>4.1 Prijava na admin panel</h3>
+  <div class="url-box">
+    <span class="label">ADMIN URL</span>
+    jadran.ai/admin
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Otvorite admin URL</h4>
+        <p>Idite na <strong>jadran.ai/admin</strong> u bilo kom pregledniku (Chrome, Safari, Firefox).</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>Unesite admin PIN</h4>
+        <p>Na ekranu će biti polje za PIN/lozinku. Ovo je admin token koji je pohranjen u Vercel okruženju. <strong>Nikada ga ne čuvajte u emailu niti djeli s trećim licima.</strong></p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>Kliknite "Prijava"</h4>
+        <p>Sistem šalje PIN na server koji ga provjerava. Ako je tačan, učitava se lista svih rezervacija. Ako ne radi — vidjeti Troubleshooter, sekcija 10.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>Sesija je aktivna dok ne izađete</h4>
+        <p>Token se čuva lokalno u browseru. "Odjava" gumb briše sesiju. Ne ostavljajte admin otvoren na javnim računarima.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-box danger">
+    <span class="info-icon">🔒</span>
+    <div><strong>Bezbjednost!</strong> Admin token je kombinacija slova, brojeva i specijalnih znakova. Pohranjen je u Vercel env varijablama, nije u kodu. Ako postoji sumnja na kompromitovanje, odmah kontaktirajte JADRAN.ai tim za promjenu tokena.</div>
+  </div>
+
+  <h3>4.2 Pregled svih rezervacija</h3>
+  <p>Nakon prijave, admin panel prikazuje sve rezervacije sortirane po datumu (najnovije prvo). Za svaku rezervaciju vidite:</p>
+
+  <table>
+    <tr><th>Kolona</th><th>Primjer</th><th>Opis</th></tr>
+    <tr><td>ID rezervacije</td><td><code>JAD-XK9F3A</code></td><td>Jedinstveni kod, referenca za sve komunikacije</td></tr>
+    <tr><td>Status</td><td><span class="badge blue">PENDING</span> <span class="badge green">CONFIRMED</span></td><td>Čeka potvrdu obje strane / Potvrđeno</td></tr>
+    <tr><td>Gost</td><td>Hans Mueller</td><td>Ime i prezime gosta</td></tr>
+    <tr><td>Destinacija</td><td>Rab, Hrvatska</td><td>Destinacija putovanja</td></tr>
+    <tr><td>Smještaj</td><td>Studio apartman</td><td>Naziv sobe/apartmana</td></tr>
+    <tr><td>Dolazak / Odlazak</td><td>15.07 → 20.07</td><td>Datumi boravka</td></tr>
+    <tr><td>Partner ✓</td><td>✅ / ⏳</td><td>Da li je partner (vi) potvrdio</td></tr>
+    <tr><td>Operator ✓</td><td>✅ / ⏳</td><td>Da li je JADRAN.ai tim potvrdio</td></tr>
+    <tr><td>Akcija</td><td>[Potvrdi] [Detalji]</td><td>Dugmad za akciju</td></tr>
+  </table>
+
+  <h3>4.3 Potvrda rezervacije (dual-confirm sistem)</h3>
+  <p>
+    JADRAN.ai koristi <strong>sistem dvostruke potvrde</strong>: rezervacija se smatra potvrđenom tek kada je
+    potvrde <em>i</em> partner (vi) <em>i</em> operator (JADRAN.ai tim). Ovo sprečava duplikate i pogrešne rezervacije.
+  </p>
+
+  <div class="flow" style="flex-wrap:wrap;">
+    <div class="flow-box start">Gost šalje upit</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box action">Status: PENDING</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Partner potvrđuje ✓</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Operator potvrđuje ✓</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box end">CONFIRMED → Email gostu</div>
+  </div>
+
+  <p>Kada obje strane potvrde, sistem automatski šalje <strong>email gostu</strong> s informacijom da je rezervacija potvrđena i linkom na AI vodič.</p>
+
+  <h4>KAKO POTVRDITI KAO PARTNER (VY)</h4>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Opcija A: Email link (preporučeno)</h4>
+        <p>U email notifikaciji koji dobijate nalazi se link "Potvrdi kao partner". Jednim klikom — gotovo.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>Opcija B: Admin panel</h4>
+        <p>Prijavite se na jadran.ai/admin → nađite rezervaciju → kliknite dugme "Potvrdi partner".</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>4.4 Email notifikacije — šta gost dobija</h3>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4>EMAIL 1 — PO SLANJU UPITA</h4>
+      <p><strong>Ko ga prima:</strong> Gost (ako je ostavio email)</p>
+      <p><strong>Sadržaj:</strong> Potvrda da je upit primljen, broj upita (BJ-XXXXXX), detalji rezervacije. Informacija da će domaćin kontaktirati u roku 2 sata.</p>
+    </div>
+    <div class="card green">
+      <h4>EMAIL 2 — KADA JE REZERVACIJA POTVRĐENA</h4>
+      <p><strong>Ko ga prima:</strong> Gost</p>
+      <p><strong>Sadržaj:</strong> Booking potvrda s ID-om, link na AI vodič (<code>jadran.ai/?trip=JAD-XXX</code>), detalji smještaja i datuma.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SEKCIJA 5 — GOSTUJUĆE ISKUSTVO
+════════════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section-header">
+    <div class="num">05</div>
+    <div>
+      <h2>Gostujuće iskustvo — Kompletni tok</h2>
+      <p>Od rezervacije do povratka kući — šta gost doživljava</p>
+    </div>
+  </div>
+
+  <h3>5.1 Pre dolaska — Planiranje rute</h3>
+  <p>
+    Nakon potvrde rezervacije, gost dobija link na AI vodič. Prvim otvaranjem prolazi kroz <strong>onboarding</strong>
+    (uvodni upitnik) koji personalizuje iskustvo:
+  </p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Odabir jezika</h4>
+        <p>Automatski detektuje jezik uređaja. Gost može promijeniti: 🇭🇷 🇩🇪 🇬🇧 🇮🇹 🇸🇮 🇨🇿 🇵🇱</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>Profil putovanja</h4>
+        <p>Gost unosi: ime, polazišni grad, datum dolaska/odlaska, broj odraslih i djece, interesovanja (gastronomija, avantura, kultura, plaže...)</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>Način prevoza</h4>
+        <p>Bira: 🚗 Auto · ✈️ Avion · ⛵ Jahta · 🚐 Kamper — svaki mod daje drugačije preporuke i rute</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h4>AI planira rutu</h4>
+        <p>Sistem generira personalizovanu rutu s HERE Maps navigacijom (km, sati vožnje), preporukama za zaustavljanje, procjenom troškova.</p>
+      </div>
+    </div>
+  </div>
+
+  <h4>EKRAN RUTE (Pre-trip)</h4>
+  <div class="card navy">
+    <p>Gost vidi:<br>
+    🗺️ Interaktivna mapa s rutom (HERE Maps)<br>
+    ⏱ Procjena vremena: npr. "Beograd → Rab: 490 km · 5h 20min"<br>
+    ⛽ Procjena goriva · 🛣️ Autoceste i naplate<br>
+    🌤️ Prognoza vremena za destinaciju<br>
+    📋 AI generisane preporuke za put (gdje stati, šta vidjeti)
+    </p>
+  </div>
+
+  <h3>5.2 Dolazak — GPS navigacija i onboarding</h3>
+  <p>Aplikacija prati GPS lokaciju gosta. Kada se približi na <strong>10 km od odredišta</strong>, automatski prelazi u <strong>dolazni mod</strong>:</p>
+
+  <div class="grid-2">
+    <div class="card accent">
+      <h4>GPS GEOFENCING ALERT</h4>
+      <ul>
+        <li>Notifikacija: "Skoro ste tamo! Vaš smještaj je za X km"</li>
+        <li>Direktna navigacija do adrese objekta</li>
+        <li>Informacije o parkiranju u blizini</li>
+        <li>Broj telefona za check-in</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>ARRIVAL BRIEF</h4>
+      <ul>
+        <li>Lokalna vremenska prognoza (tačno za Rab)</li>
+        <li>Stanje mora (temperatura, talasi)</li>
+        <li>Hitne informacije (gradsko radno vrijeme...)</li>
+        <li>Preporuke za prvi dan</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>5.3 Tokom boravka — Vodič i AI chat</h3>
+  <p>Ovo je centralni ekran koji gost koristi svakodnevno tokom boravka. Dostupan kroz <strong>dno navigaciju</strong> aplikacije:</p>
+
+  <table>
+    <tr><th>Tab</th><th>Ikona</th><th>Sadržaj</th></tr>
+    <tr><td><strong>Početna</strong></td><td>🏠</td><td>Pozdravna poruka s imenom gosta, datum dolaska/odlaska, brzi pristup svemu</td></tr>
+    <tr><td><strong>AI Chat</strong></td><td>💬</td><td>Razgovor s AI asistentom na svim pitanjima o Rabu, Kvarneru, hrani, plovidbi</td></tr>
+    <tr><td><strong>Aktivnosti</strong></td><td>🎯</td><td>Preporuke aktivnosti prema interesovanjima, booking izleta</td></tr>
+    <tr><td><strong>Live</strong></td><td>🌡️</td><td>Živo: temperatura zraka/mora, UV indeks, snaga vjetra, vidljivost mora</td></tr>
+    <tr><td><strong>Istražuj</strong></td><td>🗺️</td><td>Destination Explorer — sve destinacije Jadrana s fotografijama i opisima</td></tr>
+  </table>
+
+  <h4>AI CHAT — MOGUĆNOSTI</h4>
+  <p>Gost može pitati AI asistenta bilo šta:</p>
+  <div class="grid-2">
+    <div class="card">
+      <ul style="font-size:13px;">
+        <li>"Koji restoran preporučuješ za večeras?"</li>
+        <li>"Kada kreće trajekt za Pag?"</li>
+        <li>"Je li laguna Šimuni dobra za djecu?"</li>
+        <li>"Koji su beste plaže za snorkeling?"</li>
+      </ul>
+    </div>
+    <div class="card">
+      <ul style="font-size:13px;">
+        <li>"Koliko košta parking u Rabu?"</li>
+        <li>"Radno vrijeme ljekarnice u Rabu?"</li>
+        <li>"Preporuči 3-dnevni itinerary"</li>
+        <li>"Hitna pomoć — koji je broj?"</li>
+      </ul>
+    </div>
+  </div>
+  <div class="info-box tip">
+    <span class="info-icon">💡</span>
+    <div>Chat je uključen za goste s Premium pristupom (5 besplatnih poruka, a zatim plaćeni tier). Za affiliate goste (vaše goste) koji dolaze kroz vaš kiosk link, pristup je standardan.</div>
+  </div>
+
+  <h3>5.4 Izleti i aktivnosti (in-app browser)</h3>
+  <p>
+    Aplikacija prikazuje izlete i aktivnosti na Rabu kroz partnere <strong>GetYourGuide</strong> i <strong>Viator</strong>.
+    Sve je integrisano unutar aplikacije — gost ne napušta JADRAN.ai da bi istražio ili rezervisao izlet.
+  </p>
+
+  <div class="card gold">
+    <h4>IN-APP BROWSER — "NAŠI PROZORI"</h4>
+    <p>Kada gost klikne na GYG ili Viator link, otvara se unutrašnji browser unutar JADRAN.ai aplikacije.
+    Gost vidi URL traku s adresom (za povjerenje), dugme "Otvori u browseru" za escape, i webiste partnera.
+    Klijent ne odlazi od vas — vraća se nazad klikom ✕.</p>
+  </div>
+
+  <p>Dostupni izleti iz vašeg objekta:</p>
+  <table>
+    <tr><th>Aktivnost</th><th>GYG</th><th>Viator</th></tr>
+    <tr><td>🚢 Ture brodom</td><td>✅</td><td>✅</td></tr>
+    <tr><td>🤿 Ronjenje i snorkeling</td><td>✅</td><td>✅</td></tr>
+    <tr><td>🛶 Kajak i SUP</td><td>✅</td><td>✅</td></tr>
+    <tr><td>🏝️ Island hopping (Goli Otok)</td><td>✅</td><td>✅</td></tr>
+    <tr><td>⚔️ Rabska Fjera šetnja gradom</td><td>✅</td><td>✅</td></tr>
+  </table>
+
+  <h3>5.5 Live panel — Vrijeme, more, GPS</h3>
+  <p>Live panel prikazuje podatke u realnom vremenu za lokaciju gosta:</p>
+
+  <div class="grid-3">
+    <div class="card">
+      <h4>🌤️ ATMOSFERA</h4>
+      <ul style="font-size:12px;">
+        <li>Temperatura zraka</li>
+        <li>UV indeks</li>
+        <li>Jačina i smjer vjetra</li>
+        <li>Prognoza 7 dana</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>🌊 MORE</h4>
+      <ul style="font-size:12px;">
+        <li>Temperatura mora</li>
+        <li>Visina valova</li>
+        <li>Morska struja</li>
+        <li>Čistoća mora (Blue Flag)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>📡 GPS LIVE</h4>
+      <ul style="font-size:12px;">
+        <li>Lokacija u realnom vremenu</li>
+        <li>Mapa okoline</li>
+        <li>Udaljenost do ključnih tačaka</li>
+        <li>Satelitski snimak</li>
+      </ul>
+    </div>
+  </div>
+
+  <p>Podaci dolaze iz: <strong>Open-Meteo</strong> (atmosfera), <strong>Marine Open-Meteo</strong> (more), <strong>GPS uređaja</strong> gosta.</p>
+
+  <h3>5.6 Odlazak — Checkout vodič</h3>
+  <p>Dan pre odlaska, aplikacija automatski prelazi u <strong>departure mod</strong> koji prikazuje:</p>
+  <ul>
+    <li>Vremensku prognozu za dan odlaska</li>
+    <li>Checklist: klima/TV isključeni, prozori zatvoreni, ključ vraćen, parking propusnica</li>
+    <li>Prevoz: navigacija do aerodroma, trajekta, autobus kolodvora, taxi</li>
+    <li>Zahvala i poziv za recenziju (TripAdvisor, Google Maps)</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SEKCIJA 6 — IN-APP BROWSER
+════════════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section-header">
+    <div class="num">06</div>
+    <div>
+      <h2>In-app browser — "Naši prozori"</h2>
+      <p>Kako zadržavamo goste unutar platforme</p>
+    </div>
+  </div>
+
+  <p>
+    Jedna od ključnih strategija JADRAN.ai-a je da gost nikada ne napusti aplikaciju — čak i kada koristi
+    usluge trećih strana (GYG, Viator, Booking.com). Ovo se postiže <strong>in-app browser</strong> komponenotom.
+  </p>
+
+  <div class="card navy">
+    <h3>Kako radi in-app browser</h3>
+    <p>Kada gost klikne na bilo koji eksterni link (GetYourGuide tura, Viator aktivnost, Booking.com smještaj), umjesto otvaranja novog taba ili napuštanja aplikacije, otvara se <strong>overlay ekran unutar same aplikacije</strong> koji sadrži:</p>
+    <ul>
+      <li>🔒 <strong>URL traka</strong> — prikazuje adresu (za povjerenje i transparentnost)</li>
+      <li>✕ <strong>Dugme za zatvaranje</strong> — jednim klikom vraća se u JADRAN.ai</li>
+      <li>↗ <strong>"Open"/"Browser" dugme</strong> — otvara u standardnom pregledniku ako gost želi</li>
+      <li>🌐 <strong>Web stranica partnera</strong> — učitava se unutar prozora</li>
+    </ul>
+    <p>Kada gost završi rezervaciju ili pregleda ponudu, klikne ✕ i <strong>vraća se direktno nazad u JADRAN.ai</strong> — bez izgubljenog konteksta.</p>
+  </div>
+
+  <h4>GDJE SE IN-APP BROWSER KORISTI</h4>
+  <table>
+    <tr><th>Link</th><th>Trigger</th></tr>
+    <tr><td>GetYourGuide izleti (Kiosk ekran)</td><td>Klik na "GetYourGuide" dugme na kartici izleta</td></tr>
+    <tr><td>Viator aktivnosti (Kiosk ekran)</td><td>Klik na "Viator" dugme na kartici izleta</td></tr>
+    <tr><td>Booking.com smještaj (Kiosk ekran)</td><td>Klik na "Booking.com" dugme (za opšti smještaj)</td></tr>
+    <tr><td>Accommodation sekcija (Travel faza)</td><td>Klik na karticu hotela/apartmana</td></tr>
+    <tr><td>Viator Shop (sve aktivnosti)</td><td>Klik na "Viator Shop" link</td></tr>
+    <tr><td>GYG / Viator u selectedExp modalu</td><td>Klik na "Rezerviraj via GetYourGuide"</td></tr>
+  </table>
+
+  <div class="info-box warn">
+    <span class="info-icon">⚠️</span>
+    <div>
+      <strong>Tehnička napomena:</strong> Booking.com i GetYourGuide koriste zaštitu koja sprečava učitavanje njihovih stranica unutar iframea (X-Frame-Options). U takvim slučajevima gost vidi grešku unutar in-app browsera, ali uvijek ima dostupno <strong>"Open" / "Browser" dugme</strong> kao izlaz. Ovo je standardno ponašanje — ne radi se o grešci naše aplikacije.
+    </div>
+  </div>
+
+  <h4>ZA BJ AFFILIATE — DIREKTNA REZERVACIJA ZAMJENJUJE BOOKING.COM</h4>
+  <p>
+    Za vas (Black Jack Rab), in-app browser <em>nije</em> rješenje za rezervacije soba — to je <strong>direktna rezervacija</strong>.
+    Svaka "Rezerviraj direktno" akcija na vašim sobama otvara naš vlastiti formular (bez Booking.com),
+    dok in-app browser pokriva izlete i vanjske usluge.
+  </p>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SEKCIJA 7 — JEZICI
+════════════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section-header">
+    <div class="num">07</div>
+    <div>
+      <h2>Višejezičnost i jezici</h2>
+      <p>Automatski prijevodi i jezici koje aplikacija podržava</p>
+    </div>
+  </div>
+
+  <p>
+    JADRAN.ai je potpuno višejezična platforma. Sve — od opisa soba, jelovnika, itinerarya, do AI razgovora —
+    dostupno je na 7 jezika bez ručnog prevođenja.
+  </p>
+
+  <table>
+    <tr><th>Jezik</th><th>Kod</th><th>Automatska detekcija</th><th>Napomena</th></tr>
+    <tr><td>🇭🇷 Hrvatski</td><td><code>hr</code></td><td>✅</td><td>Primarni jezik, default za Balkan regiju</td></tr>
+    <tr><td>🇩🇪 Njemački</td><td><code>de</code></td><td>✅</td><td>Najzastupljeniji strani gosti na Rabu</td></tr>
+    <tr><td>🇬🇧 Engleski</td><td><code>en</code></td><td>✅</td><td>Default za sve ostale jezike</td></tr>
+    <tr><td>🇮🇹 Italijanski</td><td><code>it</code></td><td>✅</td><td>Blizina Italije, drugi po zastupljenosti</td></tr>
+    <tr><td>🇸🇮 Slovenački</td><td><code>si</code></td><td>✅</td><td>Značajna turist zajednica</td></tr>
+    <tr><td>🇨🇿 Češki</td><td><code>cz</code></td><td>✅</td><td>Česti posjetioci Kvarnera</td></tr>
+    <tr><td>🇵🇱 Poljski</td><td><code>pl</code></td><td>✅</td><td>Rastući segment gostiju</td></tr>
+  </table>
+
+  <h4>KAKO RADI DETEKCIJA JEZIKA</h4>
+  <ol>
+    <li>Aplikacija čita jezik uređaja (navigator.language)</li>
+    <li>Mapira ga na jedan od 7 podržanih jezika</li>
+    <li>Automatski prikazuje sve na tom jeziku</li>
+    <li>Gost može ručno promijeniti klikom na zastavu u gornjem desnom uglu</li>
+  </ol>
+
+  <div class="card gold">
+    <h4>PRIMJER — ISTI JELOVNIK NA SVA 3 JEZIKA</h4>
+    <p>
+      <strong>HR:</strong> "Ćevapi s dimljenim sirom (8 kom) — Domaći goveđi ćevapi, dimljeni sir iz Dalmatinske zagore, ajvar, svježi luk, somun · 16€"<br><br>
+      <strong>DE:</strong> "Ćevapi mit Räucherkäse (8 Stk) — Rindfleisch-Ćevapi, Räucherkäse aus dem Hinterland, Ajvar, Zwiebeln, Somun · 16€"<br><br>
+      <strong>EN:</strong> "Ćevapi with smoked cheese (8 pcs) — Beef ćevapi, smoked cheese from Dalmatian hinterland, ajvar, onion, somun bread · 16€"
+    </p>
+  </div>
+
+  <p>Svi prijevodi su unaprijed uneseni u sistem od strane JADRAN.ai tima — ne zahtijevaju vašu pažnju.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SEKCIJA 8 — MOBILNA APP
+════════════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section-header">
+    <div class="num">08</div>
+    <div>
+      <h2>Mobilna aplikacija (Google Play / iOS)</h2>
+      <p>Android app, instalacija, ažuriranja</p>
+    </div>
+  </div>
+
+  <h3>Android aplikacija (Google Play Store)</h3>
+  <p>
+    JADRAN.ai je dostupna kao nativna Android aplikacija u Google Play Store-u. Radi se o tzv.
+    <strong>TWA (Trusted Web Activity)</strong> aplikaciji — kombinuje prednosti nativne Android app i web platforme.
+  </p>
+
+  <div class="grid-2">
+    <div class="card green">
+      <h4>PREDNOSTI ANDROID APP</h4>
+      <ul>
+        <li>Radi kao nativna app — nema URL trake</li>
+        <li>Brže pokretanje</li>
+        <li>Može se instalirati sa Play Store-a</li>
+        <li>Push notifikacije (planirano)</li>
+        <li>Radi offline</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>AŽURIRANJA</h4>
+      <ul>
+        <li>Web verzija se ažurira automatski</li>
+        <li>Gost uvijek vidi najnoviju verziju</li>
+        <li>APK ne treba reinstalirati za web promjene</li>
+        <li>Samo major promjene traže novi APK</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>iOS (iPhone) — PWA instalacija</h3>
+  <p>Na iPhoneu, JADRAN.ai se instalira kao <strong>PWA (Progressive Web App)</strong>:</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h4>Otvorite jadran.ai u Safari pregledniku</h4>
+        <p>Obavezno Safari — Chrome na iOS-u ne podržava PWA instalaciju.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h4>Kliknite dugme "Dijeli" (Share) u dnu</h4>
+        <p>Ikona kvadrata sa strelicom nagore u dnu Safari prozora.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h4>Odaberite "Dodaj na početni ekran" (Add to Home Screen)</h4>
+        <p>Aplikacija se pojavljuje na Home Screen-u kao ikona, radi kao nativna.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-box tip">
+    <span class="info-icon">💡</span>
+    <div>Savjetujte gostima da instaliraju aplikaciju odmah po dolasku. Radi offline (bez interneta), što je posebno korisno na pješčanoj plaži ili u uvali bez signala.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SEKCIJA 9 — FAQ
+════════════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section-header">
+    <div class="num">09</div>
+    <div>
+      <h2>Česta pitanja (FAQ)</h2>
+      <p>Odgovori na najčešće situacije</p>
+    </div>
+  </div>
+
+  <h3>Pitanja o rezervacijama</h3>
+
+  <div class="faq-item">
+    <div class="faq-q">Gost je poslao upit ali ja nisam dobio email — šta da radim?</div>
+    <div class="faq-a">
+      Provjerite spam/junk folder. Ako i dalje nema emaila, prijavite se na <code>jadran.ai/admin</code> i pregledajte listu rezervacija — upit je sigurno u sistemu. Email notifikacije se šalju na adresu registrovanu kao <code>BJ_EMAIL</code> u Vercel env varijablama. Ako adresa nije tačna, kontaktirajte JADRAN.ai tim.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Gost je rezervisao ali želi promijeniti datum — kako da to uradim?</div>
+    <div class="faq-a">
+      Direktno kontaktirajte gosta (email/telefon koji je ostavio u rezervaciji). JADRAN.ai admin panel trenutno ne podržava uredivanje datuma — upit treba otkazati i gost treba poslati novi. Alternativno, dogovorite se van sistema i samo interno evidentirajte promjenu. Ovo je planirana funkcija za sljedeću verziju.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Koliko traje da gost dobije potvrdu reservacije?</div>
+    <div class="faq-a">
+      Sistem ne šalje automatsku potvrdu — čeka da <em>obje</em> strane potvrde. Partner (vi) i operator (JADRAN.ai tim) moraju kliknuti "Potvrdi". Čim to oboje urade, gost <em>odmah</em> dobija email. Ako JADRAN.ai tim ne potvrdi u roku 4-8 sati, kontaktirajte ih direktno.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Gost pita za otkaz — kako postupiti?</div>
+    <div class="faq-a">
+      JADRAN.ai nema automatski otkazni sistem za direktne rezervacije. Dogovorite se s gostom direktno. Za evidenciju u sistemu, kontaktirajte JADRAN.ai tim koji će ažurirati status rezervacije u bazi. Naša politika direktnih rezervacija je "besplatni otkaz" — preporučujemo da je zadržite jer povećava konverziju.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Zašto gost ne može direktno platiti u aplikaciji?</div>
+    <div class="faq-a">
+      Direktna rezervacija je <strong>upit, ne plaćanje</strong>. Platni tok (online plaćanje) dostupan je za Viator aktivnosti i premium AI pretplatu, ali ne i za direktne hotelske rezervacije. Naplate smještaja dogovarate direktno s gostom — virman, gotovina, kartica na licu mjesta. Ovo je namjerna odluka da se izbjegnu kompleksni payment processing zahtjevi za svakog partnera.
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <h3>Pitanja o aplikaciji i tehnologiji</h3>
+
+  <div class="faq-item">
+    <div class="faq-q">Gost kaže da mu aplikacija "ne radi" — šta da mu kažem?</div>
+    <div class="faq-a">
+      Pitajte: (1) Koji preglednik koristi? <strong>Koristite Chrome ili Safari</strong>. Firefox i Edge imaju manje kompatibilnosti. (2) Je li Internet aktivan? (3) Neka izbriše cache: Chrome → 3 tačkice → Historija → Obriši podatke pretražavanja. Ako dalje ne radi — neka pošalje screenshot i kontaktirajte JADRAN.ai podršku.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Gost pita zašto GYG/Viator ne radi u aplikaciji (bijeli ekran)?</div>
+    <div class="faq-a">
+      GetYourGuide i Viator imaju zaštitu koja sprečava prikazivanje u iframeu. Ovo je normalno. Kliknite <strong>"Open" / "↗ Browser"</strong> dugme u zaglavlju in-app browsera — otvara se u standardnom pregledniku gdje sve funkcioniše normalno. Alternativno, ✕ zatvara in-app browser i gost može direktno posjetiti sajt.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Mogu li da dodam novi izlet ili promotivnu poruku?</div>
+    <div class="faq-a">
+      Da, ali samo uz JADRAN.ai tim. Sav sadržaj je "hard-coded" u kodu aplikacije. Pošaljite zahtjev s detaljima (naziv izleta, link, opis, cijena na svim jezicima) i tim će dodati u narednom ažuriranju. Planirano je da se uvede admin CMS za partnere gdje možete sami uredivati sadržaj.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Kako mogu promijeniti foto svog objekta?</div>
+    <div class="faq-a">
+      Kontaktirajte JADRAN.ai tim sa novim fotografijama (min. 1200×800px, JPEG/WebP). Fotografije se hostuju na Unsplash ili direktnom CDN-u. Tim vrši promjenu u kodu i deploya u roku 24h.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">Cijene soba su pogrešne u aplikaciji — kako se mijenjaju?</div>
+    <div class="faq-a">
+      Kontaktirajte JADRAN.ai tim s novim cjenovnikom. Cijene su pohranjenoj u <code>affiliates.js</code> datoteci. Polje <code>priceFrom</code> je "od" cijena koja se prikazuje. Sezonske varijacije (visoka/niska sezona) trenutno nisu podržane automatski — prikazuje se fiksna "od" cijena.
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <h3>Pitanja o gostima i jeziku</h3>
+
+  <div class="faq-item">
+    <div class="faq-q">Gost govori samo češki — aplikacija li podržava češki?</div>
+    <div class="faq-a">
+      Da! Aplikacija automatski detektuje češki (<code>cz</code>) i prikazuje sve na češkom. Ovo uključuje vaš opis objekta, jelovnik, amenities, POI lokacije i AI chat. Ako auto-detekcija ne radi, gost može ručno odabrati 🇨🇿 zastavu u dnu ekrana.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-q">AI asistent daje pogrešne informacije o Rabu — šta da uradim?</div>
+    <div class="faq-a">
+      AI asistent je baziran na Claude modelu koji ima znanje do avgusta 2025. Ako daje zastarjele ili pogrešne lokalne informacije, prijavite konkretni slučaj JADRAN.ai timu s primjerom pitanja i pogrešnog odgovora. Tim može dodati "kontekstualne instrukcije" (system prompt) koje koriguju specifična pitanja o Rabu.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SEKCIJA 10 — TROUBLESHOOTER
+════════════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section-header">
+    <div class="num">10</div>
+    <div>
+      <h2>Rješavanje problema (Troubleshooter)</h2>
+      <p>Dijagnoza i rješenje za najčešće probleme</p>
+    </div>
+  </div>
+
+  <div class="trouble-item">
+    <div class="trouble-problem">
+      ❌ Problem: Admin panel ne prihvata PIN — "Incorrect PIN" ili HTTP 401
+    </div>
+    <div class="trouble-solution">
+      <strong>Mogući uzroci i rješenja:</strong>
+      <ol>
+        <li>Provjerite da nemate <strong>space/razmak</strong> na početku ili kraju PIN-a pri kucanju</li>
+        <li>Provjerite da ne kucate u <strong>Caps Lock</strong> modu</li>
+        <li>Kopiraj-Zalijepi PIN direktno iz sigurnog dokumenta (izbjegnite kucanje)</li>
+        <li>Pokušajte <strong>incognito/privatni prozor</strong> — možda stari token je cachiran</li>
+        <li>Ako je PIN nedavno mijenjan u Vercel-u, potrebno je do 1 minute da se propagira</li>
+        <li>Ako ništa ne pomaže, kontaktirajte JADRAN.ai tim da reset/provjere env varijablu <code>ADMIN_TOKEN</code></li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="trouble-item">
+    <div class="trouble-problem">
+      ❌ Problem: Nisam dobio email kada je gost poslao upit za sobu
+    </div>
+    <div class="trouble-solution">
+      <strong>Provjera korak po korak:</strong>
+      <ol>
+        <li>Provjerite <strong>spam/junk</strong> folder — email dolazi od: <code>booking@jadran.ai</code></li>
+        <li>Prijavite se na <code>jadran.ai/admin</code> i provjerite da li je upit evidentiran</li>
+        <li>Ako je upit u adminu ali email ne dolazi, problem je u konfiguraciji <code>BJ_EMAIL</code> env varijable</li>
+        <li>Kontaktirajte JADRAN.ai tim s ispravnom email adresom — tim ažurira u Vercel env</li>
+        <li>Ako upit nije ni u adminu: provjerite da li gost zaista klikao "Pošalji upit" (ne samo otvorio formular)</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="trouble-item">
+    <div class="trouble-problem">
+      ❌ Problem: Gost kaže da aplikacija prikazuje pogrešan jezik (npr. Engleski umjesto Njemačkog)
+    </div>
+    <div class="trouble-solution">
+      <ol>
+        <li>Gost treba kliknuti na zastavu / jezik selector u dnu ekrana</li>
+        <li>Provjerite da li je jezik uređaja (telefona) podešen na Njemački — Settings → Language</li>
+        <li>Ako gost koristi stari browser koji ne šalje ispravne language headere: ručna promjena u app riješava problem</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="trouble-item">
+    <div class="trouble-problem">
+      ❌ Problem: Aerial view (pogled s neba) ne prikazuje sliku — bijeli rectangle
+    </div>
+    <div class="trouble-solution">
+      <ol>
+        <li>Osvježite stranicu (pull-to-refresh na mobilnom)</li>
+        <li>Provjerite Internet vezu — Google Maps zahtijeva stabilan internet</li>
+        <li>Ako koristite VPN — isključite ga (Google Maps može biti blokiran u nekim regijama)</li>
+        <li>Problem može biti privremeno nedostupan Google Maps servis — pokušajte ponovo za 5 minuta</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="trouble-item">
+    <div class="trouble-problem">
+      ❌ Problem: In-app browser prikazuje bijeli ekran (GYG / Viator ne učitava)
+    </div>
+    <div class="trouble-solution">
+      <ol>
+        <li>Ovo je <strong>normalno i očekivano ponašanje</strong> — GYG i Viator blokiraju iframe embedding</li>
+        <li>Kliknite <strong>"↗ Open" ili "↗ Browser"</strong> dugme u zaglavlju in-app browsera</li>
+        <li>Stranica se otvara u standardnom pregledniku gdje radi normalno</li>
+        <li>Ovo nije bug u JADRAN.ai-u — to je namjerna zaštita GYG/Viator strana</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="trouble-item">
+    <div class="trouble-problem">
+      ❌ Problem: Kiosk link (vaša URL) ne otvara vaš objekat nego generički ekran
+    </div>
+    <div class="trouble-solution">
+      <ol>
+        <li>Provjerite da URL sadrži <strong>tačno</strong>: <code>?kiosk=rab&amp;affiliate=blackjack&amp;tk=sial2026</code></li>
+        <li>Kopiranjem URL-a iz nekih aplikacija (WhatsApp, PDF) mogu se izgubiti ili promijeniti znakovi</li>
+        <li>Testirajte link direktno u Chrome-u kucanjem</li>
+        <li>Ako i dalje ne radi, provjerite da li JADRAN.ai tim nije promijenio token (<code>tk=</code> vrijednost)</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="trouble-item">
+    <div class="trouble-problem">
+      ❌ Problem: Gost ne može da instalira app na iPhone (ne vidi opciju)
+    </div>
+    <div class="trouble-solution">
+      <ol>
+        <li>PWA instalacija na iPhone radi <strong>samo u Safari</strong> pregledniku — ne Chrome, ne Firefox</li>
+        <li>Otvorite jadran.ai u <strong>Safari</strong> (preglednik jabuke, ne Google)</li>
+        <li>Kliknite ikonu <strong>Share</strong> (kvadrat sa strelicom) pri dnu ekrana</li>
+        <li>Scroll down u meniju i odaberite <strong>"Add to Home Screen"</strong></li>
+        <li>Ako opcija ne postoji: ažurirajte iOS na verziju 16.4 ili noviju</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="trouble-item">
+    <div class="trouble-problem">
+      ❌ Problem: Live panel ne prikazuje vremensku prognozu — vrti se loader
+    </div>
+    <div class="trouble-solution">
+      <ol>
+        <li>Provjerite Internet vezu gosta — Open-Meteo API zahtijeva internet</li>
+        <li>Ako gost nije odobrio pristup lokaciji: Settings → Privacy → Location → Safari/Chrome → Allow</li>
+        <li>Ako lokacija nije dostupna, sistem koristi koordinate destinacije (Rab) kao fallback — prognoza treba biti vidljiva</li>
+        <li>Osvježite stranicu i sačekajte 5-10 sekundi za inicijalno učitavanje</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="trouble-item">
+    <div class="trouble-problem">
+      ❌ Problem: Aplikacija je "zaglavljvena" na splash screenu (ne učitava dalje)
+    </div>
+    <div class="trouble-solution">
+      <ol>
+        <li><strong>Hard refresh:</strong> Ctrl+Shift+R (Desktop) ili Pull-to-Refresh (Mobilni)</li>
+        <li>Obrišite cache browsera: Chrome → 3 tačkice → Historija → Obriši podatke pretražavanja → Slike i fajlovi + Kolačići</li>
+        <li>Pokušajte u <strong>incognito modu</strong></li>
+        <li>Ako je prošlo ažuriranje (deploy), stari service worker može biti cachiran — hard refresh rješava</li>
+        <li>Ako ništa ne pomaže: deinstalirajte PWA i reinstalirajte, ili pošaljite bug report JADRAN.ai timu</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="info-box success">
+    <span class="info-icon">✅</span>
+    <div><strong>Preventivni savjet:</strong> Preporučite gostima da otvore jadran.ai jednom dok su na WiFi-ju (hotel, lobi, restoran) i da pričekaju da se potpuno učita. Nakon toga, aplikacija radi i offline — ne treba stalna veza.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════
+     SEKCIJA 11 — KONTAKTI
+════════════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="section-header">
+    <div class="num">11</div>
+    <div>
+      <h2>Kontakti i podrška</h2>
+      <p>Kome se obratiti i kada</p>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card navy">
+      <h3>JADRAN.ai Tehnička podrška</h3>
+      <p><strong>Za:</strong> Tehničke probleme, izmjenu podataka, dodavanje sadržaja, bug reportove, promjenu email adrese, problem s tokenom/PIN-om</p>
+      <p style="margin-top:12px;">🌐 <strong>jadran.ai</strong><br>📧 Kontakt putem platforme<br>⏱ Odgovor unutar 24h (radnim danima)</p>
+    </div>
+    <div class="card">
+      <h3>Hitne situacije — Rab</h3>
+      <p style="color:var(--red);font-weight:700;">📞 Hitna pomoć: 112</p>
+      <p>Policija: 192 · Vatrogasci: 193<br>Medicinska hitna: 194<br>HAK (ceste): 1987</p>
+      <p style="margin-top:8px;color:var(--mut);font-size:12px;">Ovi brojevi su i prikazani u aplikaciji pod "Hitne službe" za goste.</p>
+    </div>
+  </div>
+
+  <h3>Kada kontaktirati koji kontakt</h3>
+  <table>
+    <tr><th>Situacija</th><th>Ko</th><th>Prioritet</th></tr>
+    <tr><td>Gost ne može da se poveže na aplikaciju</td><td>JADRAN.ai tim</td><td><span class="badge blue">NORMALAN</span></td></tr>
+    <tr><td>Admin PIN ne radi</td><td>JADRAN.ai tim</td><td><span class="badge gold">VISOK</span></td></tr>
+    <tr><td>Email notifikacije ne stižu</td><td>JADRAN.ai tim</td><td><span class="badge gold">VISOK</span></td></tr>
+    <tr><td>Rezervacija ima pogrešne podatke</td><td>JADRAN.ai tim</td><td><span class="badge blue">NORMALAN</span></td></tr>
+    <tr><td>Gost u medicinskoj krizi</td><td>112 / 194</td><td><span class="badge red">HITNO</span></td></tr>
+    <tr><td>Željeti dodati novu sobu ili sadržaj</td><td>JADRAN.ai tim</td><td><span class="badge blue">NORMALAN</span></td></tr>
+    <tr><td>Promjena cijene sobe</td><td>JADRAN.ai tim</td><td><span class="badge blue">NORMALAN</span></td></tr>
+    <tr><td>Partnerski token kompromitovan</td><td>JADRAN.ai tim</td><td><span class="badge red">HITNO</span></td></tr>
+  </table>
+
+  <hr class="divider">
+
+  <h3>Brza referenca — Ključni podaci</h3>
+  <div class="grid-2">
+    <div class="card">
+      <h4>VAŠI PODACI U SISTEMU</h4>
+      <table style="margin:0;">
+        <tr><td style="font-size:12px;padding:6px 0;border:none;color:var(--mut);">Partner ID</td><td style="font-size:12px;padding:6px 0;border:none;"><code>blackjack</code></td></tr>
+        <tr><td style="font-size:12px;padding:6px 0;border:none;color:var(--mut);">Kiosk grad</td><td style="font-size:12px;padding:6px 0;border:none;"><code>rab</code></td></tr>
+        <tr><td style="font-size:12px;padding:6px 0;border:none;color:var(--mut);">Pristupni token</td><td style="font-size:12px;padding:6px 0;border:none;"><code>sial2026</code></td></tr>
+        <tr><td style="font-size:12px;padding:6px 0;border:none;color:var(--mut);">Region</td><td style="font-size:12px;padding:6px 0;border:none;">Kvarner</td></tr>
+        <tr><td style="font-size:12px;padding:6px 0;border:none;color:var(--mut);">GPS koordinate</td><td style="font-size:12px;padding:6px 0;border:none;">44.7534, 14.7835</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h4>KLJUČNE URL ADRESE</h4>
+      <table style="margin:0;">
+        <tr><td style="font-size:11px;padding:5px 0;border:none;color:var(--mut);">Kiosk link</td><td style="font-size:11px;padding:5px 0;border:none;word-break:break-all;"><code style="font-size:10px;">jadran.ai/?kiosk=rab&affiliate=blackjack&tk=sial2026</code></td></tr>
+        <tr><td style="font-size:11px;padding:5px 0;border:none;color:var(--mut);">Admin</td><td style="font-size:11px;padding:5px 0;border:none;"><code>jadran.ai/admin</code></td></tr>
+        <tr><td style="font-size:11px;padding:5px 0;border:none;color:var(--mut);">Stats</td><td style="font-size:11px;padding:5px 0;border:none;"><code style="font-size:10px;">jadran.ai/?stats=blackjack&pin=[PIN]</code></td></tr>
+        <tr><td style="font-size:11px;padding:5px 0;border:none;color:var(--mut);">Platforma</td><td style="font-size:11px;padding:5px 0;border:none;"><code>jadran.ai</code></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <h3>Glosarij — Pojmovnik</h3>
+  <table>
+    <tr><th>Termin</th><th>Značenje</th></tr>
+    <tr><td><strong>PWA</strong></td><td>Progressive Web App — web aplikacija koja se ponaša kao nativna mobilna app</td></tr>
+    <tr><td><strong>TWA</strong></td><td>Trusted Web Activity — Android wrapper koji web app pakuje kao nativnu APK datoteku za Play Store</td></tr>
+    <tr><td><strong>Affiliate</strong></td><td>Partnerski objekat koji je integrisan u JADRAN.ai platformu (vi = blackjack affiliate)</td></tr>
+    <tr><td><strong>Kiosk mod</strong></td><td>Javni ekran vaše prezentacije dostupan svima s linkom — bez prijave</td></tr>
+    <tr><td><strong>In-app browser</strong></td><td>Unutrašnji browser koji otvara externe linkove bez napuštanja JADRAN.ai aplikacije</td></tr>
+    <tr><td><strong>Dual-confirm</strong></td><td>Sistem dvostruke potvrde — i partner i operator moraju potvrditi rezervaciju</td></tr>
+    <tr><td><strong>GYG</strong></td><td>GetYourGuide — platforma za rezervaciju izleta i tura, naš affiliate partner</td></tr>
+    <tr><td><strong>Env varijabla</strong></td><td>Environment variable — sigurna pohrana povjerljivih podataka (API ključevi, tokeni) van koda</td></tr>
+    <tr><td><strong>Token</strong></td><td>Tajni niz znakova koji se koristi za identifikaciju i pristup (kao lozinka)</td></tr>
+    <tr><td><strong>Firestore</strong></td><td>Google-ova cloud baza podataka u kojoj se čuvaju sve rezervacije i podaci gostiju</td></tr>
+    <tr><td><strong>Deploy</strong></td><td>Objavljivanje nove verzije aplikacije na server — automatski, bez downtime-a</td></tr>
+    <tr><td><strong>Cache</strong></td><td>Lokalno pohranjena kopija web stranice u pregledniku — ponekad treba brisati za svježu verziju</td></tr>
+  </table>
+
+  <!-- FOOTER -->
+  <div class="doc-footer">
+    <div>
+      <div class="doc-footer-logo">JADRAN<span>.ai</span></div>
+      <div style="font-size:11px;color:var(--mut);margin-top:3px;">AI turistički operater · Jadransko more</div>
+    </div>
+    <div style="text-align:center;">
+      <div>Priručnik v2.1 · April 2026</div>
+      <div style="margin-top:2px;">Povjerljivo · Za internu upotrebu</div>
+    </div>
+    <div style="text-align:right;">
+      <div>Pripremljeno za:</div>
+      <div style="font-weight:600;color:var(--navy);">Radojka i Srđan Prodanović</div>
+      <div>Black Jack Gurman House, Rab</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
