@@ -3,7 +3,7 @@
 // Body: { segmentId, count?, tone? }
 // Auth: X-Admin-Token header
 
-const CLAUDE_MODEL = "claude-haiku-4-5-20251001"; // faster model for bulk generation
+const CLAUDE_MODEL = "claude-sonnet-4-6";
 const DEFAULT_COUNT = 15;
 
 export default async function handler(req, res) {
@@ -20,17 +20,8 @@ export default async function handler(req, res) {
   // Admin auth
   const raw = req.headers["x-admin-token"] || "";
   const decoded = (() => { try { return Buffer.from(raw, "base64").toString("utf8"); } catch { return raw; } })();
-  const adminToken = process.env.ADMIN_TOKEN || "";
-  if (decoded.trim() !== adminToken.trim()) {
-    return res.status(401).json({
-      error: "unauthorized",
-      debug: {
-        rawLen: raw.length,
-        decodedLen: decoded.trim().length,
-        envLen: adminToken.trim().length,
-        envSet: !!adminToken,
-      }
-    });
+  if (decoded.trim() !== (process.env.ADMIN_TOKEN || "").trim()) {
+    return res.status(401).json({ error: "unauthorized" });
   }
 
   const { segmentId, count = DEFAULT_COUNT, tone = "authentic" } = req.body || {};
