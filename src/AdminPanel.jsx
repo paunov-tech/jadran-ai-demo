@@ -37,17 +37,42 @@ function StatusBadge({ booking }) {
   );
 }
 
+const PARTNER_STATUS_CFG = {
+  trial:     { label: "Trial",     color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
+  active:    { label: "Aktivan",   color: "#22c55e", bg: "rgba(34,197,94,0.12)"  },
+  suspended: { label: "Suspendiran", color: "#ef4444", bg: "rgba(239,68,68,0.12)" },
+};
+
+const PBOOKING_STATUS_CFG = {
+  pending:           { label: "Na čekanju",   color: "#f59e0b" },
+  partner_confirmed: { label: "Partner ✓",    color: "#818cf8" },
+  confirmed:         { label: "Potvrđeno ✓",  color: "#22c55e" },
+  rejected:          { label: "Odbijeno",     color: "#ef4444" },
+  cancelled:         { label: "Otkazano",     color: "#7a8fa8" },
+};
+
 export default function AdminPanel() {
   const [auth, setAuth] = useState(false);
   const [token, setToken] = useState("");
   const [pin, setPin] = useState("");
   const [pinErr, setPinErr] = useState("");
 
+  const [mainTab, setMainTab] = useState("bookings"); // bookings | partners
+
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState("all"); // all | pending | confirmed
   const [selected, setSelected] = useState(null); // booking detail modal
   const [confirming, setConfirming] = useState(null); // bookingId being confirmed
+
+  // Partners state
+  const [partners, setPartners] = useState([]);
+  const [partnerLoading, setPartnerLoading] = useState(false);
+  const [partnerBookings, setPartnerBookings] = useState([]);
+  const [pbLoading, setPbLoading] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState(null);
+  const [pbFilter, setPbFilter] = useState("all");
+  const [statusChanging, setStatusChanging] = useState(null);
 
   useEffect(() => {
     try {
@@ -121,6 +146,73 @@ export default function AdminPanel() {
     setConfirming(null);
   };
 
+  // ── Partner data ──
+  const fetchPartners = useCallback(async () => {
+    setPartnerLoading(true);
+    try {
+      const r = await fetch("/api/partner-auth?action=admin-list", {
+        headers: { "x-admin-token": encTok(token) },
+      });
+      if (r.ok) {
+        const data = await r.json();
+        setPartners(data.partners || []);
+      }
+    } catch {}
+    setPartnerLoading(false);
+  }, [token]);
+
+  const fetchPartnerBookings = useCallback(async () => {
+    setPbLoading(true);
+    try {
+      const r = await fetch("/api/partner-bookings?action=admin-all", {
+        headers: { "x-admin-token": encTok(token) },
+      });
+      if (r.ok) {
+        const data = await r.json();
+        setPartnerBookings(data.bookings || []);
+      }
+    } catch {}
+    setPbLoading(false);
+  }, [token]);
+
+  const setPartnerStatus = async (partnerId, status) => {
+    setStatusChanging(partnerId);
+    try {
+      const r = await fetch("/api/partner-auth?action=admin-set-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-token": encTok(token) },
+        body: JSON.stringify({ partnerId, status }),
+      });
+      if (r.ok) {
+        setPartners(prev => prev.map(p => p.id === partnerId ? { ...p, status } : p));
+        if (selectedPartner?.id === partnerId) setSelectedPartner(p => ({ ...p, status }));
+      }
+    } catch {}
+    setStatusChanging(null);
+  };
+
+  const platformConfirmPB = async (id) => {
+    setConfirming(id);
+    try {
+      const r = await fetch(`/api/partner-bookings?action=platform-confirm&id=${id}`, {
+        method: "POST",
+        headers: { "x-admin-token": encTok(token) },
+      });
+      if (r.ok) {
+        const data = await r.json();
+        setPartnerBookings(prev => prev.map(b => b.id === id ? { ...b, status: data.status, platformConfirmed: "true" } : b));
+      }
+    } catch {}
+    setConfirming(null);
+  };
+
+  useEffect(() => {
+    if (auth && mainTab === "partners") {
+      fetchPartners();
+      fetchPartnerBookings();
+    }
+  }, [auth, mainTab, fetchPartners, fetchPartnerBookings]);
+
   const filtered = bookings.filter(b => {
     if (filter === "pending")   return b.status !== "confirmed" && b.status !== "cancelled";
     if (filter === "confirmed") return b.status === "confirmed";
@@ -190,7 +282,26 @@ export default function AdminPanel() {
         </div>
       </header>
 
+      {/* MAIN TAB BAR */}
+      <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${C.border}`, background: C.surface, padding: "0 28px" }}>
+        {[
+          { id: "bookings", label: "🏨 Bookings" },
+          { id: "partners", label: "🤝 Partneri" },
+        ].map(t => (
+          <button key={t.id} onClick={() => setMainTab(t.id)}
+            style={{ padding: "14px 20px", border: "none", background: "none", cursor: "pointer", fontFamily: "inherit",
+              fontWeight: mainTab === t.id ? 700 : 400, fontSize: 13,
+              color: mainTab === t.id ? C.accent : C.muted,
+              borderBottom: mainTab === t.id ? `2px solid ${C.accent}` : "2px solid transparent" }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px" }}>
+
+        {/* ══ BOOKINGS TAB ══ */}
+        {mainTab === "bookings" && <>
 
         {/* STATS */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 28 }}>
@@ -282,6 +393,151 @@ export default function AdminPanel() {
             );
           })}
         </div>
+
+        </> /* end bookings tab */}
+
+        {/* ══ PARTNERS TAB ══ */}
+        {mainTab === "partners" && <>
+
+          {/* Stats row */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 28 }}>
+            {[
+              { label: "Ukupno partnera", val: partners.length, color: C.accent },
+              { label: "Trial",   val: partners.filter(p => p.status === "trial").length,     color: "#f59e0b" },
+              { label: "Aktivni", val: partners.filter(p => p.status === "active").length,    color: C.success },
+              { label: "Partner bookingsi", val: partnerBookings.length, color: C.info },
+            ].map(({ label, val, color }) => (
+              <div key={label} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "18px 20px" }}>
+                <div style={{ fontSize: 28, fontWeight: 800, color, marginBottom: 4 }}>{val}</div>
+                <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, letterSpacing: "0.5px" }}>{label.toUpperCase()}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+
+            {/* Partners list */}
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 700, color: C.muted, letterSpacing: "0.8px" }}>PARTNERI</h3>
+                <button onClick={fetchPartners} disabled={partnerLoading}
+                  style={{ padding: "5px 12px", borderRadius: 8, background: "transparent", border: `1px solid ${C.border}`, color: C.muted, fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
+                  {partnerLoading ? "…" : "↻"}
+                </button>
+              </div>
+              <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, overflow: "hidden" }}>
+                {partnerLoading && <div style={{ padding: 24, textAlign: "center", color: C.muted, fontSize: 13 }}>Učitavanje…</div>}
+                {!partnerLoading && partners.length === 0 && <div style={{ padding: 24, textAlign: "center", color: C.muted, fontSize: 13 }}>Nema registrovanih partnera.</div>}
+                {partners.map((p, i) => {
+                  const stCfg = PARTNER_STATUS_CFG[p.status] || PARTNER_STATUS_CFG.trial;
+                  const isSelected = selectedPartner?.id === p.id;
+                  return (
+                    <div key={p.id} onClick={() => setSelectedPartner(p)}
+                      style={{ padding: "12px 16px", borderBottom: i < partners.length - 1 ? `1px solid ${C.border}` : "none",
+                        cursor: "pointer", background: isSelected ? `rgba(0,180,216,0.06)` : "transparent",
+                        borderLeft: isSelected ? `3px solid ${C.accent}` : "3px solid transparent",
+                        transition: "background 0.15s" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: 13, color: C.white }}>{p.name}</div>
+                          <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{p.type} · {p.city}</div>
+                          <div style={{ fontSize: 10, color: C.muted, marginTop: 1 }}>{p.email}</div>
+                        </div>
+                        <span style={{ padding: "2px 8px", borderRadius: 12, fontSize: 10, fontWeight: 700, background: stCfg.bg, color: stCfg.color }}>
+                          {stCfg.label}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Partner detail */}
+            <div>
+              {!selectedPartner ? (
+                <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 24, textAlign: "center", color: C.muted, fontSize: 13 }}>
+                  ← Odaberi partnera za detalje
+                </div>
+              ) : (
+                <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: 20 }}>
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontWeight: 700, fontSize: 16, color: C.white, marginBottom: 2 }}>{selectedPartner.name}</div>
+                    <div style={{ fontSize: 12, color: C.muted }}>{selectedPartner.type} · {selectedPartner.city}</div>
+                    <div style={{ fontFamily: "monospace", fontSize: 11, color: C.accent, marginTop: 4 }}>{selectedPartner.id}</div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
+                    {[
+                      ["Email", selectedPartner.email],
+                      ["Tel", selectedPartner.phone || "—"],
+                      ["Adresa", selectedPartner.address || "—"],
+                      ["Trial do", selectedPartner.trialEnds || "—"],
+                      ["Registrovan", selectedPartner.createdAt ? new Date(selectedPartner.createdAt).toLocaleDateString("hr-HR") : "—"],
+                      ["Kapaciteti", Array.isArray(selectedPartner.capacities) ? selectedPartner.capacities.length : 0],
+                    ].map(([l, v]) => (
+                      <div key={l} style={{ background: C.card, borderRadius: 8, padding: "10px 12px" }}>
+                        <div style={{ fontSize: 10, color: C.muted, fontWeight: 700, letterSpacing: "0.6px" }}>{l.toUpperCase()}</div>
+                        <div style={{ fontSize: 12, fontWeight: 600, marginTop: 2, wordBreak: "break-all" }}>{String(v)}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Status actions */}
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, marginBottom: 8, letterSpacing: "0.6px" }}>STATUS AKCIJE</div>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      {["trial","active","suspended"].map(s => (
+                        <button key={s} onClick={() => setPartnerStatus(selectedPartner.id, s)}
+                          disabled={statusChanging === selectedPartner.id || selectedPartner.status === s}
+                          style={{ padding: "6px 14px", borderRadius: 8, border: `1px solid ${PARTNER_STATUS_CFG[s].color}50`,
+                            background: selectedPartner.status === s ? `${PARTNER_STATUS_CFG[s].color}20` : "transparent",
+                            color: PARTNER_STATUS_CFG[s].color, fontSize: 11, fontWeight: 700,
+                            cursor: selectedPartner.status === s ? "default" : "pointer", fontFamily: "inherit",
+                            opacity: statusChanging === selectedPartner.id ? 0.5 : 1 }}>
+                          {statusChanging === selectedPartner.id ? "…" : s.charAt(0).toUpperCase() + s.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Partner's bookings */}
+                  <div>
+                    <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, marginBottom: 8, letterSpacing: "0.6px" }}>BOOKINGSI OD OVOG PARTNERA</div>
+                    {(() => {
+                      const pb = partnerBookings.filter(b => b.partnerId === selectedPartner.id);
+                      if (pb.length === 0) return <div style={{ fontSize: 12, color: C.muted }}>Nema bookingsa.</div>;
+                      return pb.map(b => {
+                        const stCfg = PBOOKING_STATUS_CFG[b.status] || PBOOKING_STATUS_CFG.pending;
+                        const needsPlatform = b.platformConfirmed !== "true" && b.status !== "confirmed" && b.status !== "rejected";
+                        return (
+                          <div key={b.id} style={{ background: C.card, borderRadius: 10, padding: "10px 12px", marginBottom: 8 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                              <div>
+                                <div style={{ fontFamily: "monospace", fontSize: 11, color: C.accent }}>{b.id}</div>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: C.white }}>{b.guestName}</div>
+                                <div style={{ fontSize: 11, color: C.muted }}>{b.capacityName} · {b.checkIn} → {b.checkOut}</div>
+                              </div>
+                              <span style={{ fontSize: 10, fontWeight: 700, color: stCfg.color, whiteSpace: "nowrap" }}>{stCfg.label}</span>
+                            </div>
+                            {needsPlatform && (
+                              <button onClick={() => platformConfirmPB(b.id)} disabled={confirming === b.id}
+                                style={{ padding: "5px 12px", borderRadius: 7, background: `rgba(0,180,216,0.12)`, border: `1px solid ${C.border}`, color: C.accent, fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                                {confirming === b.id ? "…" : "Platform potvrdi ✓"}
+                              </button>
+                            )}
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+        </> /* end partners tab */}
+
       </div>
 
       {/* DETAIL MODAL */}

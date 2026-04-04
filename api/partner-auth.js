@@ -243,9 +243,45 @@ export default async function handler(req, res) {
   if (action === "logout" && req.method === "POST") {
     const token = req.headers["x-partner-token"];
     if (token) {
-      // Expire the session
       await fsSet("partner_sessions", token, { expiresAt: new Date(0).toISOString() });
     }
+    return res.json({ ok: true });
+  }
+
+  // ── ADMIN: list all partners ─────────────────────────────────────
+  if (action === "admin-list" && req.method === "GET") {
+    const raw     = req.headers["x-admin-token"] || "";
+    const decoded = (() => { try { return Buffer.from(raw, "base64").toString("utf8"); } catch { return raw; } })();
+    if (decoded !== process.env.ADMIN_TOKEN) return res.status(401).json({ error: "Zabranjen pristup" });
+
+    try {
+      const r = await fetch(
+        `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/partners?key=${FB_KEY}&pageSize=200`
+      );
+      if (!r.ok) return res.status(500).json({ error: "Firestore greška" });
+      const data = await r.json();
+      const docs = (data.documents || []).map(doc => {
+        const p = fromFields(doc.fields || {});
+        const { passwordHash: _, ...safe } = p;
+        return { id: doc.name.split("/").pop(), ...safe };
+      });
+      return res.json({ ok: true, partners: docs });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  // ── ADMIN: suspend / activate partner ────────────────────────────
+  if (action === "admin-set-status" && req.method === "POST") {
+    const raw     = req.headers["x-admin-token"] || "";
+    const decoded = (() => { try { return Buffer.from(raw, "base64").toString("utf8"); } catch { return raw; } })();
+    if (decoded !== process.env.ADMIN_TOKEN) return res.status(401).json({ error: "Zabranjen pristup" });
+
+    const { partnerId, status } = req.body || {};
+    if (!partnerId || !["trial","active","suspended"].includes(status)) {
+      return res.status(400).json({ error: "partnerId i status (trial|active|suspended) su obavezni" });
+    }
+    await fsSet("partners", partnerId, { status, updatedAt: new Date().toISOString() });
     return res.json({ ok: true });
   }
 

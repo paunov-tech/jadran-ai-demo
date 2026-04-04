@@ -396,5 +396,24 @@ export default async function handler(req, res) {
     return res.json({ ok: true, status: newStatus });
   }
 
+  // ── ADMIN: all partner bookings ───────────────────────────────
+  if (action === "admin-all" && req.method === "GET") {
+    if (!isAdmin(req)) return res.status(401).json({ error: "Admin pristup potreban" });
+    try {
+      const r = await fetch(
+        `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/partner_bookings?key=${FB_KEY}&pageSize=200`
+      );
+      if (!r.ok) return res.status(500).json({ error: "Firestore greška" });
+      const data = await r.json();
+      const bookings = (data.documents || []).map(doc => ({
+        id: doc.name.split("/").pop(),
+        ...fromFields(doc.fields || {}),
+      })).sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+      return res.json({ ok: true, bookings });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
   return res.status(400).json({ error: "Nepoznata akcija" });
 }
