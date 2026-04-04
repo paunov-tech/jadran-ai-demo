@@ -1126,6 +1126,9 @@ export default function DestinationExplorer() {
           <span style={{ fontSize:10, fontWeight:600, color:"#92400e", letterSpacing:0.3 }}>Claude by Anthropic</span>
         </div>
         <div style={{ fontSize:10, color:"#1e293b", letterSpacing:0.5 }}>© 2026 SIAL Consulting d.o.o. · jadran.ai</div>
+        <div style={{ marginTop:6 }}>
+          <a href="/blog" style={{ fontSize:9, color:"#334155", textDecoration:"underline", textUnderlineOffset:2 }}>Blog</a>
+        </div>
       </footer>
 
       {/* ═══ LIVE OVERLAY — context-aware ═══ */}
