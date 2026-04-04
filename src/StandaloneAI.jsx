@@ -2571,9 +2571,9 @@ const [lang, setLang] = useState(() => {
                         <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                           <span style={{ fontSize: 22 }}>{g.emoji}</span>
                           <div>
-                            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{g.name} <span style={{ fontSize: 10, color: C.mut, fontWeight: 400 }}>{g.type}</span></div>
-                            <div style={{ fontSize: 12, color: C.mut, lineHeight: 1.5 }}>{g.desc}</div>
-                            <div style={{ fontSize: 11, color: C.accent, marginTop: 4 }}>💡 {g.tip}</div>
+                            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>{g.name} <span style={{ fontSize: 10, color: C.mut, fontWeight: 400 }}>{g.type?.[lang] || g.type?.en || g.type}</span></div>
+                            <div style={{ fontSize: 12, color: C.mut, lineHeight: 1.5 }}>{g.desc?.[lang] || g.desc?.en || g.desc}</div>
+                            <div style={{ fontSize: 11, color: C.accent, marginTop: 4 }}>💡 {g.tip?.[lang] || g.tip?.en || g.tip}</div>
                           </div>
                         </div>
                       </div>
@@ -2590,8 +2590,8 @@ const [lang, setLang] = useState(() => {
                               <span style={{ fontSize: 20 }}>{g.emoji}</span>
                               <div>
                                 <div style={{ fontSize: 13, fontWeight: 600 }}>{g.name}</div>
-                                <div style={{ fontSize: 12, color: C.mut, lineHeight: 1.4 }}>{g.desc}</div>
-                                <div style={{ fontSize: 11, color: C.accent, marginTop: 3 }}>💡 {g.tip}</div>
+                                <div style={{ fontSize: 12, color: C.mut, lineHeight: 1.4 }}>{g.desc?.[lang] || g.desc?.en || g.desc}</div>
+                                <div style={{ fontSize: 11, color: C.accent, marginTop: 3 }}>💡 {g.tip?.[lang] || g.tip?.en || g.tip}</div>
                               </div>
                             </div>
                           </div>
