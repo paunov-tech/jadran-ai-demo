@@ -29,6 +29,7 @@ import {
 } from "./ui";
 
 const HERE_ROUTING_KEY = import.meta.env.VITE_HERE_API_KEY || "";
+const captureErr = e => { try { window.Sentry?.captureException(e instanceof Error ? e : new Error(String(e))); } catch {} };
 
 const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteReady, gpsPosition }) => {
   const iframeRef = useRef(null);
@@ -119,7 +120,7 @@ const LiveTicker = React.memo(({ fromCoords, toCoords, seg, lang, routeData, dm,
       fetch(`/api/guide?oLat=${fromCoords[0]}&oLng=${fromCoords[1]}&dLat=${toCoords[0]}&dLng=${toCoords[1]}&seg=${seg || "auto"}&lang=${lang || "hr"}`)
         .then(r => r.json())
         .then(data => { if (!cancelled) { setGuideCards(data.cards || []); setGuideSources(data.sources || null); } })
-        .catch(() => {});
+        .catch(captureErr);
     };
     load();
     const iv = setInterval(load, 60000); // 1 min — fresh data
@@ -563,7 +564,7 @@ export default function JadranUnified() {
     fetch(`/api/guide?oLat=${transitFromCoords[0]}&oLng=${transitFromCoords[1]}&dLat=${transitToCoords[0]}&dLng=${transitToCoords[1]}&seg=${seg}&lang=${lang || "hr"}`)
       .then(r => r.json())
       .then(d => setPreTripGuideCards(d.cards || []))
-      .catch(() => {});
+      .catch(captureErr);
   }, [transitFromCoords?.[0], transitToCoords?.[0]]); // eslint-disable-line
 
   // ─── GPS LIVE ENGINE (starts on user action, not automatically) ───
@@ -933,7 +934,7 @@ export default function JadranUnified() {
   const [dismissedAlerts, setDismissedAlerts] = useState(new Set());
   const [navtexData, setNavtexData] = useState(null);
   useEffect(() => {
-    const fetchAlerts = () => fetch("/api/alerts").then(r => r.json()).then(d => { if (d.alerts?.length) setAlerts(d.alerts); }).catch(() => {});
+    const fetchAlerts = () => fetch("/api/alerts").then(r => r.json()).then(d => { if (d.alerts?.length) setAlerts(d.alerts); }).catch(captureErr);
     fetchAlerts();
     const interval = setInterval(fetchAlerts, 300000); // 5 min
     return () => clearInterval(interval);
@@ -1000,7 +1001,7 @@ export default function JadranUnified() {
     fetch(`/api/weather?lat=${wLat}&lon=${wLng}`).then(r => r.json()).then(data => {
       if (data.current?.temp) setWeather(data.current);
       if (data.forecast?.length >= 1) setForecast(data.forecast);
-    }).catch(() => {});
+    }).catch(captureErr);
   }, [transitToCoords?.[0], kioskCoords?.[0], phase]); // eslint-disable-line
   // ─── ADMIN: Secret unlock DISABLED in production ───
   // To test premium: use Stripe test mode or set jadran_ai_premium in Firebase console

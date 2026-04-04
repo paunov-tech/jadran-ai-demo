@@ -5,6 +5,7 @@
 // Perfect for: campervan travelers, day-trippers, cruise visitors
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useRef } from "react";
+const captureErr = e => { try { window.Sentry?.captureException(e instanceof Error ? e : new Error(String(e))); } catch {} };
 import { EXPERIENCES, GEMS, BOOKING_CITIES, CAMPER_WARNINGS, ISTRA_CAMPER_INTEL, DEEP_LOCAL, DUBROVNIK_INTEL, MARINAS, ANCHORAGES, CRUISE_PORTS, filterByRegion } from "./data.js";
 import { loadDelta } from "./deltaContext.js";
 
@@ -639,7 +640,7 @@ const [lang, setLang] = useState(() => {
             }
           }
         })
-        .catch(() => {});
+        .catch(captureErr);
     };
     fetchWx();
     const interval = setInterval(fetchWx, 60000); // Every 60 seconds
@@ -659,7 +660,7 @@ const [lang, setLang] = useState(() => {
         } else {
           setEmergencyAlerts([]);
         }
-      }).catch(() => {});
+      }).catch(captureErr);
     };
     fetchAlerts();
     const interval = setInterval(fetchAlerts, 300000); // 5 min
@@ -693,7 +694,7 @@ const [lang, setLang] = useState(() => {
         fetch(`/api/guide?oLat=${oLat}&oLng=${oLng}&dLat=${dLat}&dLng=${dLng}&seg=${seg}&lang=${lang}`)
           .then(r => r.json())
           .then(d => { if (d.cards?.length) setGuideCards(d.cards); })
-          .catch(() => {});
+          .catch(captureErr);
       } catch {}
     };
     fetchGuide();
@@ -856,15 +857,15 @@ const [lang, setLang] = useState(() => {
                 const ice = generateIcebreaker(restoredRegion); setMsgs([{ role: "assistant", text: ice }]); setStep("chat");
               } catch { setStep("chat"); }
             } else {
-              console.error("Payment verification failed:", data);
+              captureErr(new Error("Payment verification failed: " + JSON.stringify(data)));
               setShowPaywall(true);
             }
             setVerifyingPayment(false);
           })
-          .catch(err => { console.error("Verify error:", err); setVerifyingPayment(false); setShowPaywall(true); });
+          .catch(err => { captureErr(err); setVerifyingPayment(false); setShowPaywall(true); });
       } else {
         // No session_id = forged URL, reject
-        console.error("Payment URL without session_id — rejected");
+        captureErr(new Error("Payment URL without session_id — rejected"));
       }
     }
     // Handle payment cancellation — reopen paywall

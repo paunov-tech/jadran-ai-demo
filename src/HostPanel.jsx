@@ -213,7 +213,7 @@ export default function HostPanel() {
               <body>
                 <h2>${_printName}</h2>
                 <p>Skenirajte za turistički vodič</p>
-                <img src="${qrSvg(`https://jadran.ai?room=${qrModal.roomCode}`, 300)}" width="300" />
+                <img src="${qrSvg(`https://jadran.ai?room=${qrModal.roomCode}`, 300)}" width="300" alt="QR kod za sobu ${qrModal.roomCode}" />
                 <p style="margin-top:16px;font-family:monospace;font-size:12px;">jadran.ai?room=${qrModal.roomCode}</p>
                 <p style="color:#aaa;font-size:10px;margin-top:24px;">JADRAN AI · SIAL Consulting d.o.o.</p>
               </body></html>

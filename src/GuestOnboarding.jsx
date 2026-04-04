@@ -315,7 +315,7 @@ const S = {
   bgGrad: { position:"absolute", inset:0, background:"linear-gradient(160deg,#0c1929,#0a2540 30%,#0e3a5c 60%,#134e6f)" },
   input: { width:"100%", padding:"14px 16px", borderRadius:14, border:"1px solid rgba(255,255,255,0.12)", background:"rgba(255,255,255,0.06)", color:"#fff", fontSize:16, outline:"none", fontFamily:"'Outfit',sans-serif", transition:"border 0.2s", boxSizing:"border-box" },
   label: { fontSize:11, color:"rgba(255,255,255,0.4)", display:"block", marginBottom:6, fontFamily:"'Outfit',sans-serif" },
-  dateInput: { width:"100%", padding:"12px 10px", borderRadius:14, border:"1px solid rgba(255,255,255,0.12)", background:"rgba(255,255,255,0.06)", color:"#fff", fontSize:13, outline:"none", fontFamily:"'Outfit',sans-serif", boxSizing:"border-box" },
+  dateInput: { width:"100%", padding:"12px 10px", borderRadius:14, border:"1px solid rgba(255,255,255,0.12)", background:"rgba(255,255,255,0.06)", color:"#fff", fontSize:16, outline:"none", fontFamily:"'Outfit',sans-serif", boxSizing:"border-box" },
   cBtn: { width:34, height:34, borderRadius:"50%", border:"1px solid rgba(255,255,255,0.12)", background:"rgba(255,255,255,0.06)", color:"#fff", fontSize:18, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"inherit", transition:"all 0.15s" },
   backBtn: { padding:"10px 20px", borderRadius:14, border:"1px solid rgba(255,255,255,0.12)", background:"transparent", color:"rgba(255,255,255,0.5)", fontSize:13, cursor:"pointer", fontFamily:"'Outfit',sans-serif" },
   nextBtn: { padding:"12px 28px", borderRadius:14, border:"none", color:"#fff", fontSize:14, fontWeight:600, fontFamily:"'Outfit',sans-serif", transition:"all 0.2s" },
