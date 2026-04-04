@@ -21,48 +21,16 @@ var flat = parseFloat(p.get("flat") || "48.2082");
 var flon = parseFloat(p.get("flon") || "16.3738");
 var tlat = parseFloat(p.get("tlat") || "43.5081");
 var tlon = parseFloat(p.get("tlon") || "16.4402");
-var KEY = p.get("key") || "";
 var TMODE = p.get("tmode") || "car"; // "car" | "truck" (for campers)
+// KEY is NOT in the URL — received securely via postMessage from parent
 
-var platform = new H.service.Platform({ apikey: KEY });
-var defaultLayers = platform.createDefaultLayers();
+var map = null;
+var markerGroup = null;
+var gpsMarker = null;
+var followGPS = true;
 
-var map = new H.Map(
-  document.getElementById("map"),
-  defaultLayers.vector.normal.map,
-  {
-    center: { lat: (flat + tlat) / 2, lng: (flon + tlon) / 2 },
-    zoom: 6,
-    pixelRatio: window.devicePixelRatio || 1
-  }
-);
+var gpsIcon = new H.map.Icon('<svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="12" fill="rgba(59,130,246,0.15)" stroke="none"><animate attributeName="r" values="8;14;8" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite"/></circle><circle cx="14" cy="14" r="6" fill="#3b82f6" stroke="#fff" stroke-width="2"/></svg>', {size:{w:28,h:28},anchor:{x:14,y:14}});
 
-var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
-var ui = H.ui.UI.createDefault(map, defaultLayers);
-window.addEventListener("resize", function() { map.getViewPort().resize(); });
-setTimeout(function() { map.getViewPort().resize(); }, 100);
-
-// Markers
-var fromIcon = new H.map.Icon('<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" fill="#f97316" stroke="#fff" stroke-width="2.5"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg>', {size:{w:24,h:24},anchor:{x:12,y:12}});
-var toIcon = new H.map.Icon('<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" fill="#0ea5e9" stroke="#fff" stroke-width="2.5"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg>', {size:{w:24,h:24},anchor:{x:12,y:12}});
-var startMarker = new H.map.Marker({lat:flat,lng:flon},{icon:fromIcon});
-var endMarker = new H.map.Marker({lat:tlat,lng:tlon},{icon:toIcon});
-
-// Show markers immediately with initial zoom
-var markerGroup = new H.map.Group();
-markerGroup.addObjects([startMarker, endMarker]);
-map.addObject(markerGroup);
-map.getViewModel().setLookAtData({bounds: markerGroup.getBoundingBox()},{animate:false});
-
-// Route via REST API — SDK decodes flexible polyline natively
-var routeUrl = "https://router.hereapi.com/v8/routes"
-  + "?transportMode=" + TMODE + "&routingMode=fast"
-  + "&origin=" + flat + "," + flon
-  + "&destination=" + tlat + "," + tlon
-  + "&return=polyline,summary"
-  + "&apikey=" + KEY;
-
-// Error label helper
 function showRouteError(msg) {
   var el = document.createElement("div");
   el.style.cssText = "position:absolute;top:8px;left:50%;transform:translateX(-50%);padding:6px 14px;background:rgba(10,22,40,0.85);color:#94a3b8;font-size:12px;font-family:sans-serif;border-radius:8px;border:1px solid rgba(14,165,233,0.15);pointer-events:none;z-index:9;white-space:nowrap;";
@@ -70,59 +38,98 @@ function showRouteError(msg) {
   document.getElementById("map").appendChild(el);
 }
 
-fetch(routeUrl)
-  .then(function(r) {
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    return r.json();
-  })
-  .then(function(data) {
-    if (!data.routes || !data.routes[0]) { showRouteError("Ruta nije dostupna"); return; }
-    var sections = data.routes[0].sections;
-    var lines = sections.map(function(s) {
-      return H.geo.LineString.fromFlexiblePolyline(s.polyline);
-    });
-    var routeLine = new H.map.Polyline(new H.geo.MultiLineString(lines), {
-      style: {strokeColor: "rgba(14,165,233,0.85)", lineWidth: 5, lineCap: "round", lineJoin: "round"}
-    });
-    map.addObject(routeLine);
-    // Zoom to fit route + markers
-    var bb = routeLine.getBoundingBox();
-    var mb = markerGroup.getBoundingBox();
-    if (bb && mb) bb = bb.mergeRect(mb);
-    map.getViewModel().setLookAtData({bounds: bb || mb}, {animate: true});
-  })
-  .catch(function(e) {
-    console.warn("Route fetch error:", e);
-    showRouteError("Ruta — provjeri internet vezu");
-  });
+function initMap(KEY) {
+  var platform = new H.service.Platform({ apikey: KEY });
+  var defaultLayers = platform.createDefaultLayers();
 
-// ── GPS LIVE DOT — receives position via postMessage ──
-var gpsIcon = new H.map.Icon('<svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="12" fill="rgba(59,130,246,0.15)" stroke="none"><animate attributeName="r" values="8;14;8" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite"/></circle><circle cx="14" cy="14" r="6" fill="#3b82f6" stroke="#fff" stroke-width="2"/></svg>', {size:{w:28,h:28},anchor:{x:14,y:14}});
-var gpsMarker = null;
-var followGPS = true;
+  map = new H.Map(
+    document.getElementById("map"),
+    defaultLayers.vector.normal.map,
+    {
+      center: { lat: (flat + tlat) / 2, lng: (flon + tlon) / 2 },
+      zoom: 6,
+      pixelRatio: window.devicePixelRatio || 1
+    }
+  );
 
+  new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
+  H.ui.UI.createDefault(map, defaultLayers);
+  window.addEventListener("resize", function() { map.getViewPort().resize(); });
+  setTimeout(function() { map.getViewPort().resize(); }, 100);
+
+  // Markers
+  var fromIcon = new H.map.Icon('<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" fill="#f97316" stroke="#fff" stroke-width="2.5"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg>', {size:{w:24,h:24},anchor:{x:12,y:12}});
+  var toIcon = new H.map.Icon('<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" fill="#0ea5e9" stroke="#fff" stroke-width="2.5"/><circle cx="12" cy="12" r="3" fill="#fff"/></svg>', {size:{w:24,h:24},anchor:{x:12,y:12}});
+  var startMarker = new H.map.Marker({lat:flat,lng:flon},{icon:fromIcon});
+  var endMarker = new H.map.Marker({lat:tlat,lng:tlon},{icon:toIcon});
+
+  markerGroup = new H.map.Group();
+  markerGroup.addObjects([startMarker, endMarker]);
+  map.addObject(markerGroup);
+  map.getViewModel().setLookAtData({bounds: markerGroup.getBoundingBox()},{animate:false});
+
+  // Route via REST API — SDK decodes flexible polyline natively
+  var routeUrl = "https://router.hereapi.com/v8/routes"
+    + "?transportMode=" + TMODE + "&routingMode=fast"
+    + "&origin=" + flat + "," + flon
+    + "&destination=" + tlat + "," + tlon
+    + "&return=polyline,summary"
+    + "&apikey=" + KEY;
+
+  fetch(routeUrl)
+    .then(function(r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .then(function(data) {
+      if (!data.routes || !data.routes[0]) { showRouteError("Ruta nije dostupna"); return; }
+      var sections = data.routes[0].sections;
+      var lines = sections.map(function(s) {
+        return H.geo.LineString.fromFlexiblePolyline(s.polyline);
+      });
+      var routeLine = new H.map.Polyline(new H.geo.MultiLineString(lines), {
+        style: {strokeColor: "rgba(14,165,233,0.85)", lineWidth: 5, lineCap: "round", lineJoin: "round"}
+      });
+      map.addObject(routeLine);
+      var bb = routeLine.getBoundingBox();
+      var mb = markerGroup.getBoundingBox();
+      if (bb && mb) bb = bb.mergeRect(mb);
+      map.getViewModel().setLookAtData({bounds: bb || mb}, {animate: true});
+    })
+    .catch(function() {
+      showRouteError("Ruta — provjeri internet vezu");
+    });
+
+  // Stop auto-follow when user drags map
+  map.addEventListener("dragstart", function() { followGPS = false; });
+  // Resume follow on double-tap
+  map.addEventListener("dbltap", function() { followGPS = true; });
+}
+
+// ── Message router: map_init (key) + gps_update ──
 window.addEventListener("message", function(e) {
-  if (!e.data || e.data.type !== "gps_update") return;
-  var lat = e.data.lat, lng = e.data.lng;
-  if (!lat || !lng) return;
-  
-  if (!gpsMarker) {
-    gpsMarker = new H.map.Marker({lat: lat, lng: lng}, {icon: gpsIcon, zIndex: 100});
-    map.addObject(gpsMarker);
-  } else {
-    gpsMarker.setGeometry({lat: lat, lng: lng});
+  if (!e.data) return;
+
+  if (e.data.type === "map_init") {
+    if (e.data.key) initMap(e.data.key);
+    return;
   }
-  
-  // Follow GPS dot (smooth pan, don't re-zoom)
-  if (followGPS) {
-    map.getViewModel().setLookAtData({position: {lat: lat, lng: lng}, zoom: Math.max(map.getZoom(), 9)}, {animate: true});
+
+  if (e.data.type === "gps_update") {
+    if (!map) return;
+    var lat = e.data.lat, lng = e.data.lng;
+    if (!lat || !lng) return;
+    if (!gpsMarker) {
+      gpsMarker = new H.map.Marker({lat: lat, lng: lng}, {icon: gpsIcon, zIndex: 100});
+      map.addObject(gpsMarker);
+    } else {
+      gpsMarker.setGeometry({lat: lat, lng: lng});
+    }
+    if (followGPS) {
+      map.getViewModel().setLookAtData({position: {lat: lat, lng: lng}, zoom: Math.max(map.getZoom(), 9)}, {animate: true});
+    }
   }
 });
-
-// Stop auto-follow when user drags map
-map.addEventListener("dragstart", function() { followGPS = false; });
-// Resume follow on double-tap
-map.addEventListener("dbltap", function() { followGPS = true; });
 </script>
 </body>
 </html>

@@ -1007,7 +1007,7 @@ export default function DestinationExplorer() {
                             <div style={{ fontFamily:B, fontSize:9, color:t.color, fontWeight:700, letterSpacing:1 }}>{t.tag}</div>
                           </div>
                         </div>
-                        <div style={{ fontFamily:B, fontSize:12, color:"#475569", lineHeight:1.6 }} dangerouslySetInnerHTML={{ __html: t.desc[lang] || t.desc.en }} />
+                        <div style={{ fontFamily:B, fontSize:12, color:"#475569", lineHeight:1.6 }}>{t.desc[lang] || t.desc.en}</div>
                       </div>
                     ))}
                   </div>

@@ -2,19 +2,24 @@
 
 ## AUTOMATIC FIX AFTER ANY App.jsx COPY
 
-After EVERY `cp .../App.jsx src/App.jsx`, immediately patch line 73:
+After EVERY `cp .../App.jsx src/App.jsx`, verify the `TransitMap` iframe in App.jsx:
 
+1. The `src` URL must NOT contain `&key=` — key is sent via postMessage, never in the URL.
+2. The `<iframe>` must have an `onLoad` handler:
+```jsx
+onLoad={() => {
+  if (iframeRef.current?.contentWindow) {
+    iframeRef.current.contentWindow.postMessage(
+      { type: "map_init", key: HERE_ROUTING_KEY },
+      window.location.origin
+    );
+  }
+}}
 ```
-FIND:
-    ? `/map.html?flat=${fromCoords[0]}&flon=${fromCoords[1]}&tlat=${toCoords[0]}&tlon=${toCoords[1]}`
 
-REPLACE WITH:
-    ? `/map.html?flat=${fromCoords[0]}&flon=${fromCoords[1]}&tlat=${toCoords[0]}&tlon=${toCoords[1]}&key=${import.meta.env.VITE_HERE_API_KEY}`
-```
-
-This fix removes the hardcoded HERE API key from `public/map.html`.
-It must be re-applied every time because upstream App.jsx files don't include it.
-Do NOT skip this. Do NOT ask — just apply it silently before building.
+`map.html` receives the key via `{ type: "map_init", key }` postMessage and calls `initMap(key)`.
+This keeps the HERE API key out of the URL bar and browser history.
+Apply silently before building whenever App.jsx is replaced.
 
 ## STANDARD DEPLOY SEQUENCE
 

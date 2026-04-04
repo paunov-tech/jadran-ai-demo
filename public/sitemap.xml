@@ -4,7 +4,7 @@
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://jadran.ai</loc>
-    <lastmod>2026-03-15</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="hr" href="https://jadran.ai"/>
@@ -21,91 +21,91 @@
   </url>
   <url>
     <loc>https://jadran.ai/ai</loc>
-    <lastmod>2026-03-15</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://jadran.ai/ai?niche=camper</loc>
-    <lastmod>2026-03-15</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://jadran.ai/ai?niche=sailing</loc>
-    <lastmod>2026-03-15</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://jadran.ai/ai?niche=cruiser</loc>
-    <lastmod>2026-03-15</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://jadran.ai/ai?region=split</loc>
-    <lastmod>2026-03-15</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://jadran.ai/ai?region=dubrovnik</loc>
-    <lastmod>2026-03-15</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://jadran.ai/ai?region=makarska</loc>
-    <lastmod>2026-03-15</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://jadran.ai/ai?region=zadar</loc>
-    <lastmod>2026-03-15</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://jadran.ai/ai?region=istra</loc>
-    <lastmod>2026-03-15</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://jadran.ai/ai?region=kvarner</loc>
-    <lastmod>2026-03-15</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://jadran.ai/blog/</loc>
-    <lastmod>2026-03-15</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://jadran.ai/blog/croatia-camper-van-guide</loc>
-    <lastmod>2026-03-15</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://jadran.ai/blog/hidden-beaches-croatia</loc>
-    <lastmod>2026-03-15</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://jadran.ai/blog/croatia-sailing-guide</loc>
-    <lastmod>2026-03-15</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://jadran.ai/blog/kroatien-wohnmobil-reisefuehrer</loc>
-    <lastmod>2026-03-15</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

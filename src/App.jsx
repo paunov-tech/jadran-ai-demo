@@ -80,7 +80,7 @@ const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteRea
 
   const tmode = transportMode === "kamper" ? "truck" : "car";
   const src = fromCoords && toCoords
-    ? `/map.html?flat=${fromCoords[0]}&flon=${fromCoords[1]}&tlat=${toCoords[0]}&tlon=${toCoords[1]}&tmode=${tmode}&key=${import.meta.env.VITE_HERE_API_KEY}`
+    ? `/map.html?flat=${fromCoords[0]}&flon=${fromCoords[1]}&tlat=${toCoords[0]}&tlon=${toCoords[1]}&tmode=${tmode}`
     : null;
 
   if (!src) return <div style={{ width: "100%", height: 300, background: "#0c1426", borderRadius: 14, display: "grid", placeItems: "center" }}><span style={{ fontSize: 13, color: "#64748b", fontFamily: "'DM Sans',sans-serif" }}>Učitavam mapu…</span></div>;
@@ -88,7 +88,16 @@ const TransitMap = React.memo(({ fromCoords, toCoords, transportMode, onRouteRea
   return (
     <iframe ref={iframeRef} src={src} className="map-frame"
       style={{ width: "100%", height: 300, border: "none", display: "block" }}
-      allow="webgl; fullscreen" title="here-route" />
+      allow="webgl; fullscreen" title="here-route"
+      onLoad={() => {
+        if (iframeRef.current?.contentWindow) {
+          iframeRef.current.contentWindow.postMessage(
+            { type: "map_init", key: HERE_ROUTING_KEY },
+            window.location.origin
+          );
+        }
+      }}
+    />
   );
 });
 

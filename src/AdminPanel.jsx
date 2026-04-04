@@ -5,7 +5,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useCallback } from "react";
 
-const ADMIN_TOKEN = "jadran-admin-2026"; // same as ADMIN_TOKEN env var fallback
+// ADMIN_TOKEN is entered by the admin at login — never hardcoded here
 
 const C = {
   bg: "#07111f", surface: "#0f1e35", card: "#121d30", card2: "#162240",
@@ -37,6 +37,7 @@ function StatusBadge({ booking }) {
 
 export default function AdminPanel() {
   const [auth, setAuth] = useState(false);
+  const [token, setToken] = useState("");
   const [pin, setPin] = useState("");
   const [pinErr, setPinErr] = useState(false);
 
@@ -46,18 +47,25 @@ export default function AdminPanel() {
   const [selected, setSelected] = useState(null); // booking detail modal
   const [confirming, setConfirming] = useState(null); // bookingId being confirmed
 
-  const ADMIN_PIN = "jadran2026";
-
   useEffect(() => {
-    try { if (localStorage.getItem("jadran_admin_auth") === "1") setAuth(true); } catch {}
+    try {
+      const t = localStorage.getItem("jadran_admin_token");
+      if (t) { setToken(t); setAuth(true); }
+    } catch {}
   }, []);
 
-  const doLogin = () => {
-    if (pin === ADMIN_PIN) {
-      setAuth(true);
-      setPinErr(false);
-      try { localStorage.setItem("jadran_admin_auth", "1"); } catch {}
-    } else {
+  const doLogin = async () => {
+    try {
+      const r = await fetch("/api/bookings", { headers: { "x-admin-token": pin } });
+      if (r.ok) {
+        setAuth(true);
+        setToken(pin);
+        setPinErr(false);
+        try { localStorage.setItem("jadran_admin_token", pin); } catch {}
+      } else {
+        setPinErr(true);
+      }
+    } catch {
       setPinErr(true);
     }
   };
@@ -66,7 +74,7 @@ export default function AdminPanel() {
     setLoading(true);
     try {
       const r = await fetch("/api/bookings", {
-        headers: { "x-admin-token": ADMIN_TOKEN },
+        headers: { "x-admin-token": token },
       });
       if (r.ok) {
         const data = await r.json();
@@ -74,7 +82,7 @@ export default function AdminPanel() {
       }
     } catch {}
     setLoading(false);
-  }, []);
+  }, [token]);
 
   useEffect(() => { if (auth) fetchBookings(); }, [auth, fetchBookings]);
 
@@ -83,7 +91,7 @@ export default function AdminPanel() {
     try {
       const r = await fetch("/api/confirm", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-admin-token": ADMIN_TOKEN },
+        headers: { "Content-Type": "application/json", "x-admin-token": token },
         body: JSON.stringify({ id, role }),
       });
       if (r.ok) {
@@ -166,7 +174,7 @@ export default function AdminPanel() {
             style={{ padding: "7px 14px", borderRadius: 10, background: "transparent", border: `1px solid ${C.border}`, color: C.muted, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>
             {loading ? "Loading…" : "↻ Refresh"}
           </button>
-          <button onClick={() => { try { localStorage.removeItem("jadran_admin_auth"); } catch {} window.location.reload(); }}
+          <button onClick={() => { try { localStorage.removeItem("jadran_admin_token"); } catch {} window.location.reload(); }}
             style={{ padding: "7px 14px", borderRadius: 10, background: "transparent", border: `1px solid ${C.border}`, color: C.muted, fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>
             Sign out
           </button>
