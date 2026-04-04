@@ -239,27 +239,29 @@ export default function LandingPage() {
   };
 
   const launchGuardian = async () => {
-    if (!depCity.trim() || !toLPCity.trim()) return;
+    const isArrival = selectedMode === "avion"; // plane / yacht / cruise — no driving route
+    if (!isArrival && !depCity.trim()) return;
+    if (!toLPCity.trim()) return;
     setBriefLoading(true);
     const seg = selectedMode === "kamper" ? "kamper" : selectedMode === "avion" ? "jedrilicar" : "par";
     const fromCoordArr = depCoords ? [depCoords.lat, depCoords.lng] : null;
     const destObj = { city: toLPCity.trim() };
     if (toCoords) { destObj.lat = toCoords.lat; destObj.lng = toCoords.lng; }
-    saveDelta({ segment: seg, transport: selectedMode, from: depCity.trim(), from_coords: fromCoordArr, destination: destObj, lang, phase: "transit" });
-    let transitUrl = `/?room=DEMO&go=transit&from=${encodeURIComponent(depCity.trim())}&to=${encodeURIComponent(toLPCity.trim())}&seg=${seg}&lang=${lang}`;
-    if (depCoords) transitUrl += `&fLat=${depCoords.lat}&fLng=${depCoords.lng}`;
-    if (toCoords) transitUrl += `&tLat=${toCoords.lat}&tLng=${toCoords.lng}`;
+    saveDelta({ segment: seg, transport: selectedMode, from: isArrival ? null : depCity.trim(), from_coords: fromCoordArr, destination: destObj, lang, phase: isArrival ? "arrival" : "transit" });
+    const transitUrl = isArrival
+      ? `/ai?niche=sailing&lang=${lang}&dest=${encodeURIComponent(toLPCity.trim())}`
+      : `/?room=DEMO&go=transit&from=${encodeURIComponent(depCity.trim())}&to=${encodeURIComponent(toLPCity.trim())}&seg=${seg}&lang=${lang}${depCoords ? `&fLat=${depCoords.lat}&fLng=${depCoords.lng}` : ""}${toCoords ? `&tLat=${toCoords.lat}&tLng=${toCoords.lng}` : ""}`;
 
-    // Linear distance + ETA estimate
+    // Linear distance + ETA — only for driving modes
     let distKm = null, etaH = null, etaMin = null;
-    if (depCoords && toCoords) {
+    if (!isArrival && depCoords && toCoords) {
       const R = 6371;
       const dLat = (toCoords.lat - depCoords.lat) * Math.PI / 180;
       const dLng = (toCoords.lng - depCoords.lng) * Math.PI / 180;
       const a = Math.sin(dLat/2)**2 + Math.cos(depCoords.lat*Math.PI/180)*Math.cos(toCoords.lat*Math.PI/180)*Math.sin(dLng/2)**2;
       const crow = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
       distKm = Math.round(crow * 1.35);
-      const speedKph = seg === "kamper" ? 85 : seg === "jedrilicar" ? 70 : 110;
+      const speedKph = seg === "kamper" ? 85 : 110;
       const totalMin = Math.round(distKm / speedKph * 60);
       etaH = Math.floor(totalMin / 60); etaMin = totalMin % 60;
     }
@@ -274,8 +276,10 @@ export default function LandingPage() {
           .catch(() => {})
       : Promise.resolve();
 
-    const guidePromise = (depCoords && toCoords)
-      ? fetch(`/api/guide?oLat=${depCoords.lat}&oLng=${depCoords.lng}&dLat=${toCoords.lat}&dLng=${toCoords.lng}&seg=${seg}&lang=${lang === "at" ? "de" : lang || "hr"}`, { signal: AbortSignal.timeout(8000) })
+    // For arrival mode: use destination coords as both origin and dest for Sense data
+    const senseOriginCoords = isArrival ? toCoords : depCoords;
+    const guidePromise = (senseOriginCoords && toCoords)
+      ? fetch(`/api/guide?oLat=${senseOriginCoords.lat}&oLng=${senseOriginCoords.lng}&dLat=${toCoords.lat}&dLng=${toCoords.lng}&seg=${seg}&lang=${lang === "at" ? "de" : lang || "hr"}`, { signal: AbortSignal.timeout(8000) })
           .then(r => r.json())
           .then(data => { senseCards = Array.isArray(data) ? data : (data.cards || []); })
           .catch(() => {})
@@ -290,71 +294,115 @@ export default function LandingPage() {
 
     await Promise.all([weatherPromise, guidePromise, satPromise]);
 
-    // Show brief immediately after Stage 1
     const tag = destTag(toLPCity);
     const offers = tag ? TRENDING.filter(t => t.tag === tag).slice(0, 3) : TRENDING.slice(0, 3);
-    setGuardianBrief({ weather, distKm, etaH, etaMin, seg, transitUrl, offers, senseCards, satData, aiText: null, aiLoading: true });
+    setGuardianBrief({ weather, distKm, etaH, etaMin, seg, transitUrl, offers, senseCards, satData, aiText: null, aiLoading: true, isArrival });
     setBriefLoading(false);
 
-    // ── STAGE 2: AI brief in background (slow) ──
+    // ── STAGE 2: AI brief — route brief (driving) or arrival brief (fly/sail) ──
     let aiText = null;
-    const modeText = { kamper: { hr:"kamperom", de:"mit Wohnmobil", en:"by camper", it:"in camper" }, jedrilicar: { hr:"jahtom/avionom", de:"per Yacht/Flug", en:"by yacht/flight", it:"in yacht/volo" }, par: { hr:"automobilom", de:"mit Auto", en:"by car", it:"in auto" } }[seg] || {};
-    const ml = (o) => o[lang === "at" ? "de" : lang] || o.hr || o.en || "";
-    const routeCtx = distKm ? `${distKm}km, ~${etaH}h${etaMin > 0 ? `${etaMin}min` : ""}` : "";
-    const weatherCtx = weather ? `, ${weather.icon} ${weather.temp}°C u ${toLPCity}` : "";
+    const weatherCtx = weather ? `, ${weather.icon} ${weather.temp}°C` : "";
     const senseCtx = senseCards.slice(0, 3).map(c => c.title + (c.body ? ": " + c.body : "")).join("; ");
     const isKamper = seg === "kamper";
-    const prompts = {
-      hr: `Ti si Travel Guardian. Putnik ide ${isKamper?"kamperom":"automobilom"}: ${depCity} → ${toLPCity}${routeCtx ? ` (${routeCtx}${weatherCtx})` : ""}.${senseCtx ? `\n\nJADRAN SENSE LIVE: ${senseCtx}` : ""}
+
+    const arrivalPrompts = {
+      hr: `Ti si Travel Guardian. Turist dolazi u ${toLPCity}${selectedMode === "avion" ? " avionom/jahtom" : " kruzerom"}${weatherCtx ? ` — trenutno ${weatherCtx}` : ""}.${senseCtx ? `\n\nJADRAN SENSE LIVE: ${senseCtx}` : ""}
+
+Napiši konkretan brief za dolazak.
+
+**Transfer / dolazak** — aerodrom ili marina u ${toLPCity}: taxi, shuttle, bus, vez (marina ime, VHF kanal, dubina)
+**Prva 3 sata** — konkretno što učiniti odmah po dolasku, best time check-in, gdje ostaviti prtljagu
+**Live stanje** — plaže, gužva, parking za danas${weather ? `, ${weather.icon} ${weather.temp}°C` : ""}
+**Top 3 preporuke za večeras** — restoran, pogled, aktivnost — konkretna mjesta s imenom
+**Insider savjet** — nešto što turist ne može naći na Googleu
+
+Konkretno. Prava imena lokacija u ${toLPCity}.`,
+      de: `Du bist Travel Guardian. Tourist kommt in ${toLPCity} an${selectedMode === "avion" ? " per Flugzeug/Yacht" : " per Kreuzfahrtschiff"}${weatherCtx ? ` — aktuell ${weatherCtx}` : ""}.${senseCtx ? `\n\nJADRAN SENSE LIVE: ${senseCtx}` : ""}
+
+Schreibe ein konkretes Ankunfts-Briefing.
+
+**Transfer / Ankunft** — Flughafen oder Marina in ${toLPCity}: Taxi, Shuttle, Bus, Liegeplatz (Marina-Name, VHF-Kanal, Tiefe)
+**Erste 3 Stunden** — konkret was sofort nach Ankunft tun, beste Check-in-Zeit, Gepäck
+**Live-Lage** — Strände, Gedränge, Parken heute${weather ? `, ${weather.icon} ${weather.temp}°C` : ""}
+**Top 3 Empfehlungen für heute Abend** — Restaurant, Aussicht, Aktivität — echte Namen
+**Insider-Tipp** — was man auf Google nicht findet
+
+Konkret. Echte Ortsnamen in ${toLPCity}.`,
+      en: `You are Travel Guardian. Tourist arriving in ${toLPCity}${selectedMode === "avion" ? " by plane/yacht" : " by cruise ship"}${weatherCtx ? ` — currently ${weatherCtx}` : ""}.${senseCtx ? `\n\nJADRAN SENSE LIVE: ${senseCtx}` : ""}
+
+Write a concrete arrival brief.
+
+**Transfer / arrival** — airport or marina in ${toLPCity}: taxi, shuttle, bus, mooring (marina name, VHF channel, depth)
+**First 3 hours** — exactly what to do right after arrival, best check-in timing, luggage
+**Live conditions** — beaches, crowds, parking today${weather ? `, ${weather.icon} ${weather.temp}°C` : ""}
+**Top 3 recommendations for tonight** — restaurant, viewpoint, activity — real place names
+**Insider tip** — something you won't find on Google
+
+Specific. Real location names in ${toLPCity}.`,
+      it: `Sei il Travel Guardian. Turista in arrivo a ${toLPCity}${selectedMode === "avion" ? " in aereo/yacht" : " in nave da crociera"}${weatherCtx ? ` — attualmente ${weatherCtx}` : ""}.${senseCtx ? `\n\nJADRAN SENSE LIVE: ${senseCtx}` : ""}
+
+Scrivi un briefing di arrivo concreto.
+
+**Transfer / arrivo** — aeroporto o marina a ${toLPCity}: taxi, shuttle, bus, ormeggio (nome marina, canale VHF, fondale)
+**Prime 3 ore** — cosa fare esattamente subito dopo l'arrivo, miglior orario check-in, bagagli
+**Situazione live** — spiagge, affollamento, parcheggi oggi${weather ? `, ${weather.icon} ${weather.temp}°C` : ""}
+**Top 3 per stasera** — ristorante, belvedere, attività — nomi reali
+**Consiglio insider** — qualcosa che non si trova su Google
+
+Specifico. Nomi reali di luoghi a ${toLPCity}.`,
+    };
+
+    const routePrompts = {
+      hr: `Ti si Travel Guardian. Putnik ide ${isKamper?"kamperom":"automobilom"}: ${depCity} → ${toLPCity}${distKm ? ` (~${distKm}km${weatherCtx})` : ""}.${senseCtx ? `\n\nJADRAN SENSE LIVE: ${senseCtx}` : ""}
 
 Napiši konkretan rutni brief. Fokus je ISKLJUČIVO na putu.
 
-**Ruta korak po korak** — gradovi i čvorišta s km oznakama (Salzburg → Ljubljana → Rijeka → Senj → Rab npr.)
-**Gorivo i LPG** — gdje točno napuniti${isKamper?" LPG":""}, posebno pred Jadranom (Senj, Karlobag — zadnja šansa)
-**Kamperska upozorenja** — visine tunela (Učka 5.1m), uske ceste (Velebit!), kamper zabrane u centrima${isKamper?"":" (preskoči ako nije kamper)"}
-**Trajekti** — koji trajekt, kada kreće, rezervacija na jadrolinija.hr ili rtp.hr (Stinice-Mišnjak za Rab, Porozina za Cres itd.)
-**Prometni savjeti** — kada krenuti, sezonske gužve A6/A1 petkom, kolone na GP Macelj/Rupa
-**Granični prijelaz** — koji GP i zašto (Macelj brži, Rupa za jug)
+**Ruta korak po korak** — gradovi i čvorišta s km oznakama
+**Gorivo${isKamper?" i LPG":""}** — gdje točno napuniti, posebno pred Jadranom (Senj, Karlobag — zadnja šansa)
+${isKamper?"**Kamperska upozorenja** — visine tunela (Učka 5.1m), uske ceste (Velebit!), kamper zabrane u centrima\n":""}**Trajekti** — koji trajekt, kada kreće, rezervacija na jadrolinija.hr ili rtp.hr
+**Prometni savjeti** — kada krenuti, sezonske gužve A6/A1 petkom
+**Granični prijelaz** — koji GP i zašto
 
 Konkretno. Prava imena. Bez generičkih savjeta.`,
-      de: `Du bist Travel Guardian. Reisender fährt ${isKamper?"mit Wohnmobil":"mit Auto"}: ${depCity} → ${toLPCity}${routeCtx ? ` (${routeCtx}${weatherCtx})` : ""}.${senseCtx ? `\n\nJADRAN SENSE LIVE: ${senseCtx}` : ""}
+      de: `Du bist Travel Guardian. Reisender fährt ${isKamper?"mit Wohnmobil":"mit Auto"}: ${depCity} → ${toLPCity}${distKm ? ` (~${distKm}km${weatherCtx})` : ""}.${senseCtx ? `\n\nJADRAN SENSE LIVE: ${senseCtx}` : ""}
 
-Schreibe ein konkretes Routen-Briefing. Fokus NUR auf die Strecke — nicht auf das Reiseziel.
+Schreibe ein konkretes Routen-Briefing. Fokus NUR auf die Strecke.
 
-**Route Schritt für Schritt** — wichtige Städte und Knotenpunkte mit km-Angaben
-**Tanken & LPG** — wo genau tanken${isKamper?" (LPG-Verfügbarkeit)":" "}, besonders vor der Adria-Küste
-**Wohnmobil-Warnungen** — Tunnelhöhen, LKW-Verbote, enge Abschnitte${isKamper?"":" (überspringen wenn kein Wohnmobil)"}
-**Fähren** — gibt es eine Fähre auf der Route, Fahrplan, Reservierung, Alternative
-**Verkehrstipps** — wann losfahren, welche Abschnitte meiden, Saisonstaus, Baustellen
+**Route Schritt für Schritt** — wichtige Städte mit km-Angaben
+**Tanken${isKamper?" & LPG":""}** — wo genau, besonders vor der Adria-Küste
+${isKamper?"**Wohnmobil-Warnungen** — Tunnelhöhen, enge Abschnitte\n":""}**Fähren** — Fahrplan, Reservierung, Alternative
+**Verkehrstipps** — wann losfahren, Saisonstaus
 **Grenzübergang** — welchen GP empfehlen und warum
 
-Konkret. Echte Ortsnamen, Autobahnen (A1, E65), Übergänge nennen.`,
-      en: `You are Travel Guardian. Traveler going ${isKamper?"by camper":"by car"}: ${depCity} → ${toLPCity}${routeCtx ? ` (${routeCtx}${weatherCtx})` : ""}.${senseCtx ? `\n\nJADRAN SENSE LIVE: ${senseCtx}` : ""}
+Konkret. Echte Ortsnamen.`,
+      en: `You are Travel Guardian. Traveler going ${isKamper?"by camper":"by car"}: ${depCity} → ${toLPCity}${distKm ? ` (~${distKm}km${weatherCtx})` : ""}.${senseCtx ? `\n\nJADRAN SENSE LIVE: ${senseCtx}` : ""}
 
-Write a concrete route brief. Focus ONLY on the journey — not the destination.
+Write a concrete route brief. Focus ONLY on the journey.
 
-**Route step by step** — key cities and junctions with km markers
-**Fuel & LPG** — where exactly to refuel${isKamper?" (LPG availability on route)":""}, especially before the Adriatic where options thin out
-**Camper warnings** — tunnel heights, truck restrictions, narrow sections${isKamper?"":" (skip if not camper)"}
-**Ferries** — is there a ferry on route, schedule, booking, alternative
-**Traffic tips** — when to depart, sections to avoid, seasonal jams, roadworks
+**Route step by step** — key cities with km markers
+**Fuel${isKamper?" & LPG":""}** — where exactly to refuel, especially before the Adriatic
+${isKamper?"**Camper warnings** — tunnel heights, narrow sections\n":""}**Ferries** — schedule, booking, alternative
+**Traffic tips** — when to depart, seasonal jams
 **Border crossing** — which crossing to use and why
 
-Be specific. Name real roads (A1, E65), towns, crossings.`,
-      it: `Sei il Travel Guardian. Viaggiatore in ${isKamper?"camper":"auto"}: ${depCity} → ${toLPCity}${routeCtx ? ` (${routeCtx}${weatherCtx})` : ""}.${senseCtx ? `\n\nJADRAN SENSE LIVE: ${senseCtx}` : ""}
+Specific. Real road names.`,
+      it: `Sei il Travel Guardian. Viaggiatore in ${isKamper?"camper":"auto"}: ${depCity} → ${toLPCity}${distKm ? ` (~${distKm}km${weatherCtx})` : ""}.${senseCtx ? `\n\nJADRAN SENSE LIVE: ${senseCtx}` : ""}
 
-Scrivi un briefing di percorso concreto. Focus SOLO sul viaggio — non sulla destinazione.
+Scrivi un briefing di percorso. Focus SOLO sul viaggio.
 
-**Percorso passo per passo** — città e snodi principali con indicazioni km
-**Carburante & LPG** — dove fare rifornimento${isKamper?" (disponibilità LPG)":""}, specialmente prima della costa
-**Avvisi camper** — altezze tunnel, divieti mezzi pesanti, tratti stretti${isKamper?"":" (salta se non camper)"}
-**Traghetti** — c'è un traghetto sul percorso, orari, prenotazione, alternativa
-**Consigli traffico** — quando partire, tratti da evitare, ingorghi stagionali
+**Percorso passo per passo** — città principali con km
+**Carburante${isKamper?" & LPG":""}** — dove fare rifornimento, specialmente prima della costa
+${isKamper?"**Avvisi camper** — altezze tunnel, tratti stretti\n":""}**Traghetti** — orari, prenotazione, alternativa
+**Consigli traffico** — quando partire, ingorghi stagionali
 **Valico di frontiera** — quale scegliere e perché
 
-Specifico. Nomi reali di strade (A1, E65), città, valichi.`,
+Specifico. Nomi reali.`,
     };
-    const prompt = prompts[lang === "at" ? "de" : lang] || prompts.hr;
+
+    const prompt = isArrival
+      ? (arrivalPrompts[lang === "at" ? "de" : lang] || arrivalPrompts.hr)
+      : (routePrompts[lang === "at" ? "de" : lang] || routePrompts.hr);
+
     const destRegion = (() => {
       const c = toLPCity.toLowerCase();
       if (c.includes("split") || c.includes("makarska") || c.includes("hvar")) return "split";
@@ -372,7 +420,7 @@ Specifico. Nomi reali di strade (A1, E65), città, valichi.`,
         region: destRegion,
         lang: lang === "at" ? "de" : lang || "hr",
         plan: "season",
-        delta_context: { segment: seg, from: depCity.trim(), destination: destObj },
+        delta_context: { segment: seg, from: isArrival ? null : depCity.trim(), destination: destObj, phase: isArrival ? "arrival" : "transit" },
       }),
       signal: AbortSignal.timeout(45000),
     }).then(r => r.json()).then(d => {
@@ -631,11 +679,23 @@ Specifico. Nomi reali di strade (A1, E65), città, valichi.`,
                   </div>
                   {/* Brief card */}
                   <div style={{ borderRadius: 18, overflow: "hidden", border: "1px solid rgba(34,197,94,0.2)", background: "rgba(10,22,40,0.8)" }}>
-                    {/* Route header */}
-                    <div style={{ padding: "16px 18px", background: "rgba(34,197,94,0.08)", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    {/* Route / Arrival header */}
+                    <div style={{ padding: "16px 18px", background: gb.isArrival ? "rgba(6,182,212,0.08)" : "rgba(34,197,94,0.08)", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                       <div>
-                        <div style={{ fontFamily: F, fontSize: 18, fontWeight: 700, color: "#f0f4f8", marginBottom: 4 }}>{depCity} → {toLPCity}</div>
-                        <div style={{ fontSize: 13, color: "#64748b" }}>{tlang(modeLabel)}</div>
+                        {gb.isArrival ? (
+                          <>
+                            <div style={{ fontSize: 10, color: "#06b6d4", letterSpacing: 1, fontWeight: 700, marginBottom: 4 }}>
+                              {lang === "de" || lang === "at" ? "ANKUNFT" : lang === "en" ? "ARRIVAL" : lang === "it" ? "ARRIVO" : "DOLAZAK"}
+                            </div>
+                            <div style={{ fontFamily: F, fontSize: 20, fontWeight: 700, color: "#f0f4f8" }}>{toLPCity}</div>
+                            <div style={{ fontSize: 13, color: "#64748b", marginTop: 2 }}>{tlang(modeLabel)}</div>
+                          </>
+                        ) : (
+                          <>
+                            <div style={{ fontFamily: F, fontSize: 18, fontWeight: 700, color: "#f0f4f8", marginBottom: 4 }}>{depCity} → {toLPCity}</div>
+                            <div style={{ fontSize: 13, color: "#64748b" }}>{tlang(modeLabel)}</div>
+                          </>
+                        )}
                       </div>
                       <div style={{ textAlign: "right", flexShrink: 0 }}>
                         {gb.weather && <div style={{ fontSize: 20 }}>{gb.weather.icon} <span style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0" }}>{gb.weather.temp}°C</span></div>}
@@ -749,8 +809,10 @@ Specifico. Nomi reali di strade (A1, E65), città, valichi.`,
                   )}
 
                   {/* Launch CTA */}
-                  <button onClick={() => { window.location.href = gb.transitUrl; }} style={{ width: "100%", marginTop: 14, padding: "16px 20px", borderRadius: 14, background: "linear-gradient(135deg, #22c55e, #16a34a)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: F, letterSpacing: 0.5, boxShadow: "0 4px 24px rgba(34,197,94,0.3)" }}>
-                    {lang === "de" || lang === "at" ? "🛡️ Auf geht's — Guardian begleitet mich →" : lang === "en" ? "🛡️ Let's go — Guardian is with me →" : lang === "it" ? "🛡️ Partiamo — il Guardian mi accompagna →" : "🛡️ Krenimo — Guardian me prati →"}
+                  <button onClick={() => { window.location.href = gb.transitUrl; }} style={{ width: "100%", marginTop: 14, padding: "16px 20px", borderRadius: 14, background: gb.isArrival ? "linear-gradient(135deg, #06b6d4, #0284c7)" : "linear-gradient(135deg, #22c55e, #16a34a)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: F, letterSpacing: 0.5, boxShadow: gb.isArrival ? "0 4px 24px rgba(6,182,212,0.3)" : "0 4px 24px rgba(34,197,94,0.3)" }}>
+                    {gb.isArrival
+                      ? (lang === "de" || lang === "at" ? "🛡️ Ankunft — Guardian führt mich →" : lang === "en" ? "🛡️ Arrival — Guardian guides me →" : lang === "it" ? "🛡️ Arrivo — il Guardian mi guida →" : "🛡️ Dolazak — Guardian me vodi →")
+                      : (lang === "de" || lang === "at" ? "🛡️ Auf geht's — Guardian begleitet mich →" : lang === "en" ? "🛡️ Let's go — Guardian is with me →" : lang === "it" ? "🛡️ Partiamo — il Guardian mi accompagna →" : "🛡️ Krenimo — Guardian me prati →")}
                   </button>
                   <button onClick={() => setGuardianBrief(null)} style={{ width: "100%", marginTop: 8, padding: "10px", background: "none", border: "none", color: "#475569", fontSize: 13, cursor: "pointer", fontFamily: B }}>
                     {lang === "de" || lang === "at" ? "← Route ändern" : lang === "en" ? "← Change route" : lang === "it" ? "← Cambia percorso" : "← Promijeni rutu"}
@@ -830,53 +892,70 @@ Specifico. Nomi reali di strade (A1, E65), città, valichi.`,
                 )}
 
                 {/* Route inputs — shown after transport tile click */}
-                {(routeStep === "city" || routeStep === "map") && (
-                  <div style={{ marginTop: 14, padding: "16px 14px", borderRadius: 16, background: "rgba(14,165,233,0.06)", border: "1px solid rgba(14,165,233,0.15)", animation: "fadeIn 0.3s both" }}>
-                    {/* FROM */}
-                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>{tx("fromLabel")}</div>
-                    <div style={{ position: "relative", marginBottom: 12 }}>
-                      <input ref={fromInputRef} value={depCity}
-                        onChange={e => { setDepCity(e.target.value); hereSuggest(e.target.value, setFromLPSugs, fromTimerRef); if (fromInputRef.current) setFromRect(fromInputRef.current.getBoundingClientRect()); }}
-                        onFocus={() => { setRouteInputFocused(true); if (fromInputRef.current) setFromRect(fromInputRef.current.getBoundingClientRect()); }}
-                        onBlur={() => { setTimeout(() => setFromLPSugs([]), 150); setTimeout(() => setRouteInputFocused(false), 300); }}
-                        placeholder={tx("fromPlaceholder")}
-                        inputMode="text" autoCorrect="off" autoCapitalize="words" spellCheck={false} autoComplete="off"
-                        style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${depCity ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 16, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
-                      {fromLPSugs.length > 0 && fromRect && (
-                        <div style={{ position: "fixed", top: fromRect.bottom + 4, left: fromRect.left, width: fromRect.width, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, zIndex: 9999, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
-                          {fromLPSugs.map(c => <div key={c.title} onMouseDown={e => { e.preventDefault(); setDepCity(c.title); setDepCoords({lat: c.lat, lng: c.lng}); setFromLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c.title}</div>)}
+                {(routeStep === "city" || routeStep === "map") && (() => {
+                  const isArrivalMode = selectedMode === "avion";
+                  const canActivate = isArrivalMode ? !!toLPCity.trim() : (!!depCity.trim() && !!toLPCity.trim());
+                  return (
+                    <div style={{ marginTop: 14, padding: "16px 14px", borderRadius: 16, background: isArrivalMode ? "rgba(6,182,212,0.06)" : "rgba(14,165,233,0.06)", border: `1px solid ${isArrivalMode ? "rgba(6,182,212,0.2)" : "rgba(14,165,233,0.15)"}`, animation: "fadeIn 0.3s both" }}>
+                      {isArrivalMode && (
+                        <div style={{ fontSize: 11, color: "#06b6d4", marginBottom: 10, letterSpacing: 0.5 }}>
+                          {lang === "de" || lang === "at" ? "✈️ Ankunftsbriefing — kein Fahrtweg nötig" : lang === "en" ? "✈️ Arrival briefing — no driving route needed" : lang === "it" ? "✈️ Briefing di arrivo — nessun percorso" : "✈️ Dolazni brief — ruta nije potrebna"}
                         </div>
                       )}
-                    </div>
-                    {/* TO */}
-                    <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>{tx("toLabel")}</div>
-                    <div style={{ position: "relative", marginBottom: 16 }}>
-                      <input ref={toInputRef} value={toLPCity}
-                        onChange={e => { setToLPCity(e.target.value); hereSuggest(e.target.value, setToLPSugs, toTimerRef); if (toInputRef.current) setToRect(toInputRef.current.getBoundingClientRect()); }}
-                        onFocus={() => { setRouteInputFocused(true); if (toInputRef.current) setToRect(toInputRef.current.getBoundingClientRect()); }}
-                        onBlur={() => { setTimeout(() => setToLPSugs([]), 150); setTimeout(() => setRouteInputFocused(false), 300); }}
-                        placeholder={tx("toPlaceholder")}
-                        inputMode="text" autoCorrect="off" autoCapitalize="words" spellCheck={false} autoComplete="off"
-                        style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${toLPCity ? "rgba(249,115,22,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 16, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
-                      {toLPSugs.length > 0 && toRect && (
-                        <div style={{ position: "fixed", top: toRect.bottom + 4, left: toRect.left, width: toRect.width, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, zIndex: 9999, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
-                          {toLPSugs.map(c => <div key={c.title} onMouseDown={e => { e.preventDefault(); setToLPCity(c.title); setToCoords({lat: c.lat, lng: c.lng}); setToLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c.title}</div>)}
+                      {/* FROM — only for driving modes */}
+                      {!isArrivalMode && (<>
+                        <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>{tx("fromLabel")}</div>
+                        <div style={{ position: "relative", marginBottom: 12 }}>
+                          <input ref={fromInputRef} value={depCity}
+                            onChange={e => { setDepCity(e.target.value); hereSuggest(e.target.value, setFromLPSugs, fromTimerRef); if (fromInputRef.current) setFromRect(fromInputRef.current.getBoundingClientRect()); }}
+                            onFocus={() => { setRouteInputFocused(true); if (fromInputRef.current) setFromRect(fromInputRef.current.getBoundingClientRect()); }}
+                            onBlur={() => { setTimeout(() => setFromLPSugs([]), 150); setTimeout(() => setRouteInputFocused(false), 300); }}
+                            placeholder={tx("fromPlaceholder")}
+                            inputMode="text" autoCorrect="off" autoCapitalize="words" spellCheck={false} autoComplete="off"
+                            style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${depCity ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 16, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
+                          {fromLPSugs.length > 0 && fromRect && (
+                            <div style={{ position: "fixed", top: fromRect.bottom + 4, left: fromRect.left, width: fromRect.width, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, zIndex: 9999, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
+                              {fromLPSugs.map(c => <div key={c.title} onMouseDown={e => { e.preventDefault(); setDepCity(c.title); setDepCoords({lat: c.lat, lng: c.lng}); setFromLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c.title}</div>)}
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </>)}
+                      {/* TO — always shown */}
+                      <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6 }}>
+                        {isArrivalMode
+                          ? (lang === "de" || lang === "at" ? "Destination" : lang === "en" ? "Destination" : lang === "it" ? "Destinazione" : "Destinacija")
+                          : tx("toLabel")}
+                      </div>
+                      <div style={{ position: "relative", marginBottom: 16 }}>
+                        <input ref={toInputRef} value={toLPCity}
+                          onChange={e => { setToLPCity(e.target.value); hereSuggest(e.target.value, setToLPSugs, toTimerRef); if (toInputRef.current) setToRect(toInputRef.current.getBoundingClientRect()); }}
+                          onFocus={() => { setRouteInputFocused(true); if (toInputRef.current) setToRect(toInputRef.current.getBoundingClientRect()); }}
+                          onBlur={() => { setTimeout(() => setToLPSugs([]), 150); setTimeout(() => setRouteInputFocused(false), 300); }}
+                          placeholder={isArrivalMode
+                            ? (lang === "de" || lang === "at" ? "z.B. Dubrovnik, Split, Hvar…" : lang === "en" ? "e.g. Dubrovnik, Split, Hvar…" : lang === "it" ? "es. Dubrovnik, Split, Hvar…" : "npr. Dubrovnik, Split, Hvar…")
+                            : tx("toPlaceholder")}
+                          inputMode="text" autoCorrect="off" autoCapitalize="words" spellCheck={false} autoComplete="off"
+                          style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${toLPCity ? "rgba(249,115,22,0.4)" : "rgba(255,255,255,0.08)"}`, background: "rgba(255,255,255,0.04)", color: "#f0f4f8", fontSize: 16, outline: "none", fontFamily: B, boxSizing: "border-box" }} />
+                        {toLPSugs.length > 0 && toRect && (
+                          <div style={{ position: "fixed", top: toRect.bottom + 4, left: toRect.left, width: toRect.width, background: "#0c1e35", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, zIndex: 9999, overflow: "hidden", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
+                            {toLPSugs.map(c => <div key={c.title} onMouseDown={e => { e.preventDefault(); setToLPCity(c.title); setToCoords({lat: c.lat, lng: c.lng}); setToLPSugs([]); }} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 14, color: "#e2e8f0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>{c.title}</div>)}
+                          </div>
+                        )}
+                      </div>
+                      {/* CTA */}
+                      <button
+                        disabled={!canActivate || briefLoading}
+                        onClick={launchGuardian}
+                        style={{ width: "100%", padding: "14px 20px", borderRadius: 12, background: canActivate ? "linear-gradient(135deg, #22c55e, #16a34a)" : "rgba(255,255,255,0.06)", border: "none", color: canActivate ? "#fff" : "#475569", fontSize: 15, fontWeight: 700, cursor: canActivate ? "pointer" : "default", fontFamily: F, letterSpacing: 0.5, transition: "all 0.2s" }}>
+                        {briefLoading
+                          ? (lang === "de" || lang === "at" ? "Guardian prüft…" : lang === "en" ? "Guardian checking…" : lang === "it" ? "Guardian controlla…" : "Guardian provjerava…")
+                          : canActivate
+                            ? (lang === "de" || lang === "at" ? "🛡️ Guardian aktivieren →" : lang === "en" ? "🛡️ Activate Guardian →" : lang === "it" ? "🛡️ Attiva Guardian →" : "🛡️ Aktiviraj Guardian →")
+                            : tx("ctaGo")}
+                      </button>
                     </div>
-                    {/* CTA */}
-                    <button
-                      disabled={!depCity.trim() || !toLPCity.trim() || briefLoading}
-                      onClick={launchGuardian}
-                      style={{ width: "100%", padding: "14px 20px", borderRadius: 12, background: depCity.trim() && toLPCity.trim() ? "linear-gradient(135deg, #22c55e, #16a34a)" : "rgba(255,255,255,0.06)", border: "none", color: depCity.trim() && toLPCity.trim() ? "#fff" : "#475569", fontSize: 15, fontWeight: 700, cursor: depCity.trim() && toLPCity.trim() ? "pointer" : "default", fontFamily: F, letterSpacing: 0.5, transition: "all 0.2s" }}>
-                      {briefLoading
-                        ? (lang === "de" || lang === "at" ? "Guardian prüft…" : lang === "en" ? "Guardian checking…" : lang === "it" ? "Guardian controlla…" : "Guardian provjerava…")
-                        : depCity.trim() && toLPCity.trim()
-                          ? (lang === "de" || lang === "at" ? "🛡️ Guardian aktivieren →" : lang === "en" ? "🛡️ Activate Guardian →" : lang === "it" ? "🛡️ Attiva Guardian →" : "🛡️ Aktiviraj Guardian →")
-                          : tx("ctaGo")}
-                    </button>
-                  </div>
-                )}
+                  );
+                })()}
 
                 <div style={{ marginTop: 14, fontSize: 11, color: "#334155" }}>{tx("freeInfo")}</div>
               </div>
