@@ -153,8 +153,8 @@
       "destination": "/.well-known/assetlinks.json"
     },
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
     },
     {
       "source": "/blog/croatia-camper-van-guide",
@@ -189,27 +189,15 @@
       "destination": "/blog/index.html"
     },
     {
-      "source": "/partner",
+      "source": "/partner/:path*",
       "destination": "/index.html"
     },
     {
-      "source": "/partner/(.*)",
+      "source": "/m/:slug",
       "destination": "/index.html"
     },
     {
-      "source": "/qualify",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/campaigns",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/m/(.*)",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/(.*)",
+      "source": "/:path*",
       "destination": "/index.html"
     }
   ]
