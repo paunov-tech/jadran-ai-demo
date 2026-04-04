@@ -2885,22 +2885,6 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
               <span style={{ fontSize:22 }}>📞</span>
               <span style={{ ...dm, fontSize:10, fontWeight:700, color:C.accent }}>{isDE ? "Anrufen" : lang==="en" ? "Call" : lang==="it" ? "Chiama" : "Zovi"}</span>
             </a>
-            {(() => {
-              const isDesktop = typeof window !== "undefined" && !("ontouchstart" in window) && window.innerWidth > 768;
-              return isDesktop ? (
-                <button onClick={() => { navigator.clipboard?.writeText(aff.phone || ""); }}
-                  style={{ flex:"1 1 0", minWidth:0, padding:"13px 8px", borderRadius:14, background:"rgba(37,211,102,0.08)", border:"1px solid rgba(37,211,102,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, cursor:"pointer" }}>
-                  <span style={{ fontSize:22 }}>📋</span>
-                  <span style={{ ...dm, fontSize:10, fontWeight:700, color:"#25d366" }}>{isDE ? "Kopieren" : lang==="en" ? "Copy no." : lang==="it" ? "Copia" : "Kopiraj"}</span>
-                </button>
-              ) : (
-                <a href={`https://wa.me/${aff.whatsapp}`} target="_blank" rel="noopener noreferrer"
-                  style={{ flex:"1 1 0", minWidth:0, padding:"13px 8px", borderRadius:14, background:"rgba(37,211,102,0.08)", border:"1px solid rgba(37,211,102,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, textDecoration:"none" }}>
-                  <span style={{ fontSize:22 }}>💬</span>
-                  <span style={{ ...dm, fontSize:10, fontWeight:700, color:"#25d366" }}>{isDE ? "Schreiben" : lang==="en" ? "Message" : lang==="it" ? "Scrivi" : "Poruka"}</span>
-                </a>
-              );
-            })()}
             <a href="https://www.google.com/maps/search/?api=1&query=Palit+315,+Rab,+Croatia" target="_blank" rel="noopener noreferrer"
               style={{ flex:"1 1 0", minWidth:0, padding:"13px 8px", borderRadius:14, background:"rgba(251,191,36,0.08)", border:"1px solid rgba(251,191,36,0.2)", display:"flex", flexDirection:"column", alignItems:"center", gap:5, textDecoration:"none" }}>
               <span style={{ fontSize:22 }}>🗺️</span>
