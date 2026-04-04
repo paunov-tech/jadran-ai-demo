@@ -78,7 +78,7 @@ export default function CampaignManager() {
   const [tokenInput, setTokenInput] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedSeg, setSelectedSeg] = useState("de_camper");
-  const [count, setCount] = useState(50);
+  const [count, setCount] = useState(15);
   const [generating, setGenerating] = useState(false);
   const [generatedVariants, setGeneratedVariants] = useState([]);
   const [abData, setAbData] = useState([]);
@@ -258,7 +258,7 @@ export default function CampaignManager() {
                       <option key={s.id} value={s.id}>{s.label}</option>
                     ))}
                   </select>
-                  <input type="number" value={count} min={10} max={100} step={10}
+                  <input type="number" value={count} min={5} max={20} step={5}
                     onChange={e => setCount(parseInt(e.target.value))}
                     style={{ width: 80 }} />
                   <span style={{ fontSize: 13, color: "#475569" }}>variants</span>
