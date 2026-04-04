@@ -597,7 +597,7 @@ Specifico. Nomi reali.`,
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
               {lang === "de" || lang === "at" ? "Destinationen" : lang === "en" ? "Explore" : lang === "it" ? "Destinazioni" : lang === "si" ? "Destinacije" : lang === "pl" ? "Destynacje" : "Destinacije"}
             </a>
-            <a href="/host" onClick={() => setMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", color: "#94a3b8", fontSize: 14, textDecoration: "none", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+            <a href="/partner" onClick={() => setMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", color: "#94a3b8", fontSize: 14, textDecoration: "none", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
               Host / Partner
             </a>
@@ -1091,7 +1091,7 @@ Specifico. Nomi reali.`,
         <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
           <h2 style={{ fontFamily: F, fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 700, color: "#facc15", marginBottom: 14 }}>{tx("b2bTitle")}</h2>
           <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 28 }}>{tx("b2bDesc")}</p>
-          <a href="/host" style={{ display: "inline-block", padding: "14px 32px", borderRadius: 12, background: "#fff", color: "#0a1628", fontSize: 15, fontWeight: 700, textDecoration: "none", fontFamily: F }}>
+          <a href="/partner" style={{ display: "inline-block", padding: "14px 32px", borderRadius: 12, background: "#fff", color: "#0a1628", fontSize: 15, fontWeight: 700, textDecoration: "none", fontFamily: F }}>
             {tx("b2bBtn")} {"\u2192"}
           </a>
           <div style={{ marginTop: 32, display: "inline-flex", gap: 6, alignItems: "center", padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)" }}>
