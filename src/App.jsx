@@ -844,7 +844,8 @@ export default function JadranUnified() {
         setShowOnboarding(true);
       }
       // Mark ready AFTER initial state is applied
-      setTimeout(() => { persistReady.current = true; }, 500);
+      const _pt = setTimeout(() => { persistReady.current = true; }, 500);
+      return () => clearTimeout(_pt);
     }).catch(() => { persistReady.current = true; });
   }, []);
 
@@ -1027,6 +1028,11 @@ export default function JadranUnified() {
         console.warn("[jadran] Payment verify failed — waiting for webhook confirmation");
       });
       // Clean URL (keep ?room= if present)
+      const roomParam = new URLSearchParams(window.location.search).get('room');
+      window.history.replaceState({}, '', window.location.pathname + (roomParam ? `?room=${roomParam}` : ''));
+    } else if (paymentStatus === 'success' && !sessionId) {
+      // session_id missing — Stripe redirect issue; clean URL and show soft warning
+      console.warn("[jadran] payment=success but session_id missing — possible redirect error");
       const roomParam = new URLSearchParams(window.location.search).get('room');
       window.history.replaceState({}, '', window.location.pathname + (roomParam ? `?room=${roomParam}` : ''));
     }

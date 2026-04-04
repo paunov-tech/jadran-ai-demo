@@ -505,7 +505,7 @@ export const BackBtn = ({ onClick, label }) => {
     <button onClick={onClick} style={{ ...dm, background: `rgba(56,189,248,0.07)`, border: `1px solid ${C.acBorder}`,
       borderRadius: 20, color: C.accent, fontSize: 13, fontWeight: 600, cursor: "pointer", padding: "8px 16px 8px 12px",
       display: "flex", alignItems: "center", gap: 5, opacity: 0.92,
-      transition: "all 0.2s", minHeight: 36, WebkitTapHighlightColor: "transparent" }}
+      transition: "all 0.2s", minHeight: 44, WebkitTapHighlightColor: "transparent" }}
       onMouseEnter={e => { e.currentTarget.style.opacity = "1"; e.currentTarget.style.background = `rgba(56,189,248,0.13)`; }}
       onMouseLeave={e => { e.currentTarget.style.opacity = "0.92"; e.currentTarget.style.background = `rgba(56,189,248,0.07)`; }}>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>

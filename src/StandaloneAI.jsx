@@ -719,11 +719,7 @@ const [lang, setLang] = useState(() => {
     if (n === "sailing") { setNiche(n); setTravelMode("sailing"); }
     if (n === "cruiser") { setNiche(n); setTravelMode("cruiser"); }
     if (n === "local") { setNiche(n); setTravelMode("apartment"); }
-    if (params.get("premium") === "true") {
-      setPremium(true);
-      try { localStorage.setItem("jadran_ai_premium", "1"); } catch {}
-      window.history.replaceState({}, "", "/ai" + (n ? "?niche=" + n : ""));
-    }
+    // ?premium=true removed — was an unverified shortcut exploitable by any user
     // Detect invite link: jadran.ai/ai?invite=DEVICE_ID
     const inviteParam = params.get("invite");
     if (inviteParam && inviteParam.startsWith("jd_")) {
@@ -1281,9 +1277,9 @@ const [lang, setLang] = useState(() => {
             onMouseLeave={e => { e.currentTarget.style.borderColor = C.bord; e.currentTarget.style.opacity = "0.9"; }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: C.accent, letterSpacing: 1, marginBottom: 4 }}>EXPLORER</div>
             <div style={{ fontSize: 22, fontWeight: 300, color: C.accent }}>9.99€</div>
-            <div style={{ fontSize: 9, fontWeight: 600, color: C.mut, marginBottom: 6 }}>{lang === "de" || lang === "at" ? "pro Woche" : lang === "en" ? "per week" : lang === "it" ? "a settimana" : "tjedno"}</div>
-            <div style={{ fontSize: 8, color: C.mut, marginBottom: 6, fontStyle: "italic" }}>{lang === "de" || lang === "at" ? "Nur Basisinformationen" : lang === "en" ? "Basic info only" : lang === "it" ? "Solo info di base" : "Samo osnovne info"}</div>
-            <div style={{ fontSize: 9, color: C.mut, lineHeight: 1.9, textAlign: "left", flex: 1 }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: C.mut, marginBottom: 6 }}>{lang === "de" || lang === "at" ? "pro Woche" : lang === "en" ? "per week" : lang === "it" ? "a settimana" : "tjedno"}</div>
+            <div style={{ fontSize: 10, color: C.mut, marginBottom: 6, fontStyle: "italic" }}>{lang === "de" || lang === "at" ? "Nur Basisinformationen" : lang === "en" ? "Basic info only" : lang === "it" ? "Solo info di base" : "Samo osnovne info"}</div>
+            <div style={{ fontSize: 10, color: C.mut, lineHeight: 1.9, textAlign: "left", flex: 1 }}>
               ✅ {lang === "de" || lang === "at" ? "Chat mit AI-Assistent" : lang === "en" ? "AI assistant chat" : lang === "it" ? "Chat con assistente AI" : "Chat s AI asistentom"}<br/>
               ✅ {lang === "de" || lang === "at" ? "Restaurants & Strände" : lang === "en" ? "Restaurants & beaches" : lang === "it" ? "Ristoranti e spiagge" : "Restorani i plaže"}<br/>
               <span style={{ color: isNight ? "rgba(239,68,68,0.5)" : "rgba(239,68,68,0.6)" }}>❌ {lang === "de" || lang === "at" ? "Kein Sturmwarner" : lang === "en" ? "No storm/fire alerts" : lang === "it" ? "No allerte meteo" : "Bez upozorenja"}</span><br/>
@@ -1296,13 +1292,13 @@ const [lang, setLang] = useState(() => {
             style={{ flex: 1.3, padding: "16px 10px 14px", borderRadius: 18, border: "2px solid rgba(245,158,11,0.6)", background: isNight ? "rgba(245,158,11,0.08)" : "linear-gradient(180deg, rgba(245,158,11,0.12) 0%, rgba(245,158,11,0.04) 100%)", cursor: "pointer", fontFamily: "inherit", textAlign: "center", position: "relative", overflow: "hidden", transition: "all 0.2s", display: "flex", flexDirection: "column", transform: "scale(1.04)", boxShadow: "0 6px 24px rgba(245,158,11,0.2)", zIndex: 1 }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(245,158,11,0.9)"; e.currentTarget.style.transform = "scale(1.06)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(245,158,11,0.3)"; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(245,158,11,0.6)"; e.currentTarget.style.transform = "scale(1.04)"; e.currentTarget.style.boxShadow = "0 6px 24px rgba(245,158,11,0.2)"; }}>
-            <div style={{ position: "absolute", top: 0, left: 0, right: 0, padding: "4px 0", background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#fff", fontSize: 9, fontWeight: 800, letterSpacing: 2, textAlign: "center" }}>
+            <div style={{ position: "absolute", top: 0, left: 0, right: 0, padding: "4px 0", background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#fff", fontSize: 10, fontWeight: 800, letterSpacing: 2, textAlign: "center" }}>
               ⭐ {lang === "de" || lang === "at" ? "AM BELIEBTESTEN" : lang === "en" ? "MOST POPULAR" : lang === "it" ? "PIÙ POPOLARE" : "NAJPOPULARNIJE"}
             </div>
             <div style={{ fontSize: 10, fontWeight: 700, color: C.gold, letterSpacing: 1, marginTop: 18, marginBottom: 4 }}>SEASON PASS</div>
             <div style={{ fontSize: 32, fontWeight: 800, color: C.gold }}>19.99€</div>
-            <div style={{ fontSize: 9, fontWeight: 600, color: C.gold, marginBottom: 6 }}>{lang === "de" || lang === "at" ? "bis Oktober · alle Regionen" : lang === "en" ? "until October · all regions" : lang === "it" ? "fino a ottobre · tutte" : "do oktobra · sve regije"}</div>
-            <div style={{ fontSize: 9, color: C.text, lineHeight: 1.9, textAlign: "left", flex: 1, fontWeight: 500 }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: C.gold, marginBottom: 6 }}>{lang === "de" || lang === "at" ? "bis Oktober · alle Regionen" : lang === "en" ? "until October · all regions" : lang === "it" ? "fino a ottobre · tutte" : "do oktobra · sve regije"}</div>
+            <div style={{ fontSize: 10, color: C.text, lineHeight: 1.9, textAlign: "left", flex: 1, fontWeight: 500 }}>
               ✅ {lang === "de" || lang === "at" ? "Alles aus Explorer" : lang === "en" ? "Everything in Explorer" : lang === "it" ? "Tutto da Explorer" : "Sve iz Explorera"}<br/>
               🛡️ <strong style={{ color: C.gold }}>Travel Guardian</strong>: {lang === "de" || lang === "at" ? "Sturm · Feuer · Grenze" : lang === "en" ? "storms · fires · borders" : lang === "it" ? "tempeste · incendi · confini" : "oluje · požari · granica"}<br/>
               📸 <strong>Jadran Lens</strong>: {lang === "de" || lang === "at" ? "Strafen vermeiden" : lang === "en" ? "avoid €60 fines" : lang === "it" ? "evita multe €60" : "izbjegni kaznu 60€"}<br/>
@@ -1316,8 +1312,8 @@ const [lang, setLang] = useState(() => {
             onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(168,85,247,0.12)"; e.currentTarget.style.opacity = "0.8"; }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: "#a855f7", letterSpacing: 1, marginBottom: 4 }}>VIP PRIORITY</div>
             <div style={{ fontSize: 22, fontWeight: 300, color: "#a855f7" }}>49.99€</div>
-            <div style={{ fontSize: 9, color: C.mut, marginBottom: 6 }}>{lang === "de" || lang === "at" ? "bis Oktober · Priorität" : lang === "en" ? "until October · priority" : lang === "it" ? "fino a ottobre · priorità" : "do oktobra · prioritet"}</div>
-            <div style={{ fontSize: 9, color: C.mut, lineHeight: 1.9, textAlign: "left", flex: 1 }}>
+            <div style={{ fontSize: 10, color: C.mut, marginBottom: 6 }}>{lang === "de" || lang === "at" ? "bis Oktober · Priorität" : lang === "en" ? "until October · priority" : lang === "it" ? "fino a ottobre · priorità" : "do oktobra · prioritet"}</div>
+            <div style={{ fontSize: 10, color: C.mut, lineHeight: 1.9, textAlign: "left", flex: 1 }}>
               ✅ {lang === "de" || lang === "at" ? "Alles aus Season Pass" : lang === "en" ? "Everything in Season" : lang === "it" ? "Tutto da Season" : "Sve iz Season Passa"}<br/>
               ⚡ {lang === "de" || lang === "at" ? "300 Nachrichten/Tag" : lang === "en" ? "300 messages/day" : lang === "it" ? "300 messaggi/giorno" : "300 poruka/dan"}<br/>
               🏆 {lang === "de" || lang === "at" ? "Ausführlichere Antworten" : lang === "en" ? "More detailed answers" : lang === "it" ? "Risposte dettagliate" : "Detaljniji odgovori"}
@@ -1332,8 +1328,8 @@ const [lang, setLang] = useState(() => {
               <span key={m} style={{ padding: "3px 8px", borderRadius: 6, background: isNight ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)", border: `1px solid ${isNight ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"}`, fontSize: 9, color: C.mut, fontWeight: 500 }}>{m}</span>
             ))}
           </div>
-          <div style={{ fontSize: 9, color: C.mut }}>🔒 {t.paySecure}</div>
-          <div style={{ fontSize: 8, color: C.mut, marginTop: 4 }}>{lang === "en" ? "Prices incl. VAT" : lang === "de" || lang === "at" ? "Preise inkl. MwSt." : lang === "it" ? "Prezzi IVA inclusa" : "Cijene uklj. PDV"} · SIAL Consulting d.o.o.</div>
+          <div style={{ fontSize: 10, color: C.mut }}>🔒 {t.paySecure}</div>
+          <div style={{ fontSize: 10, color: C.mut, marginTop: 4 }}>{lang === "en" ? "Prices incl. VAT" : lang === "de" || lang === "at" ? "Preise inkl. MwSt." : lang === "it" ? "Prezzi IVA inclusa" : "Cijene uklj. PDV"} · SIAL Consulting d.o.o.</div>
         </div>
 
         {/* ═══ RECOVERY FLOW — above referral, easy to reach ═══ */}

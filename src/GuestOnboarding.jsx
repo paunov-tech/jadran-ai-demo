@@ -73,7 +73,7 @@ export default function GuestOnboarding({ roomCode, onComplete }) {
   const [kids, setKids] = useState(0);
   const [interests, setInterests] = useState([]);
 
-  useEffect(() => { setTimeout(() => setAnim(true), 100); track("GuestOnboardingStarted", { roomCode }); }, [roomCode]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { const t = setTimeout(() => setAnim(true), 100); track("GuestOnboardingStarted", { roomCode }); return () => clearTimeout(t); }, [roomCode]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (country) setLang(langFromCountry(country)); }, [country]);
 
   const t = TX[lang] || TX.en;

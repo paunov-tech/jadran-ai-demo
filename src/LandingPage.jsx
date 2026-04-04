@@ -1248,7 +1248,7 @@ Specifico. Nomi reali.`,
                         const r = await fetch("/api/recover", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: recoverEmail.trim().toLowerCase(), deviceId }) });
                         if (r.ok) {
                           const d = await r.json();
-                          if (d.recovered) { localStorage.setItem("jadran_ai_premium", "1"); setRecoverStatus("ok"); setTimeout(() => setShowPlanPicker(false), 1500); }
+                          if (d.recovered) { localStorage.setItem("jadran_ai_premium", "1"); setRecoverStatus("ok"); setTimeout(() => { window.location.href = "/ai"; }, 1500); }
                           else setRecoverStatus("fail");
                         } else setRecoverStatus("fail");
                       } catch { setRecoverStatus("fail"); }
