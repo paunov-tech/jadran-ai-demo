@@ -20,11 +20,12 @@ const isTZ = path === "/tz" || path === "/tz/";
 const isExplore = path === "/explore" || path === "/explore/";
 const isLanding = path === "/landing" || path === "/landing/";
 const isAdmin = path === "/admin" || path === "/admin/";
+const isPartner = path === "/partner" || path.startsWith("/partner/");
 const hasTrip = params.has("trip");
 
 // /explore is the main entry. / and all unknown paths → explore.
-// Operational paths (room, kiosk, trip, host, ai, tz, admin) stay unchanged.
-const route = isHost ? "host" : isAI ? "ai" : isTZ ? "tz" : isAdmin ? "admin" : hasTrip ? "trip" : (hasRoom || hasKiosk) ? "app" : isLanding ? "landing" : "explore";
+// Operational paths (room, kiosk, trip, host, ai, tz, admin, partner) stay unchanged.
+const route = isHost ? "host" : isAI ? "ai" : isTZ ? "tz" : isAdmin ? "admin" : isPartner ? "partner" : hasTrip ? "trip" : (hasRoom || hasKiosk) ? "app" : isLanding ? "landing" : "explore";
 
 const _ebLang = (() => { try { const s = localStorage.getItem("jadran_lang"); if (s) return s; const n = (navigator.language || "").toLowerCase(); if (n.startsWith("de")) return "de"; if (n.startsWith("it")) return "it"; if (n.startsWith("en")) return "en"; if (n.startsWith("hr")) return "hr"; if (n.startsWith("pl")) return "pl"; if (n.startsWith("sl")) return "si"; } catch {} return "en"; })();
 const _eb = {
@@ -65,13 +66,14 @@ const App = React.lazy(() =>
   : route === "ai"   ? import('./StandaloneAI.jsx')
   : route === "tz"   ? import('./TZDashboard.jsx')
   : route === "admin" ? import('./AdminPanel.jsx')
+  : route === "partner" ? import('./PartnerPortal.jsx')
   : route === "trip" ? import('./TripGuide.jsx')
   : route === "app"  ? import('./App.jsx')
   : route === "landing" ? import('./LandingPage.jsx')
   : import('./DestinationExplorer.jsx')  // default: explore
 );
 
-const labels = { host: "Host Panel", ai: "Jadran AI", tz: "TZ Dashboard", explore: "Jadran", admin: "Admin", trip: "JADRAN Trip", app: "JADRAN", landing: "JADRAN" };
+const labels = { host: "Host Panel", ai: "Jadran AI", tz: "TZ Dashboard", explore: "Jadran", admin: "Admin", partner: "Partner Portal", trip: "JADRAN Trip", app: "JADRAN", landing: "JADRAN" };
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
