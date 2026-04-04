@@ -10,9 +10,9 @@ function strV(s) { return { stringValue: String(s) }; }
 function intV(n) { return { integerValue: String(n) }; }
 
 function adminOk(req) {
-  const token = req.headers["x-admin-token"] || "";
-  const expected = Buffer.from(process.env.ADMIN_TOKEN || "", "base64").toString();
-  return token === expected && token.length > 0;
+  const raw = req.headers["x-admin-token"] || "";
+  const decoded = (() => { try { return Buffer.from(raw, "base64").toString("utf8"); } catch { return raw; } })();
+  return decoded === process.env.ADMIN_TOKEN && decoded.length > 0;
 }
 
 async function fsGet(col, id) {
