@@ -3,12 +3,22 @@
 
 User-agent: *
 Allow: /
+Allow: /explore
 Allow: /ai
+Allow: /blog/
+Allow: /privacy
+Allow: /og-image.jpg
 Disallow: /api/
+Disallow: /admin
+Disallow: /admin/
 Disallow: /host
 Disallow: /host/
+Disallow: /tz
+Disallow: /tz/
+Disallow: /partner
+Disallow: /partner/
 
-# Block aggressive crawlers
+# Throttle aggressive crawlers
 User-agent: AhrefsBot
 Crawl-delay: 10
 
@@ -20,5 +30,10 @@ Disallow: /
 
 User-agent: MJ12bot
 Disallow: /
+
+User-agent: GPTBot
+Allow: /blog/
+Allow: /ai
+Disallow: /api/
 
 Sitemap: https://jadran.ai/sitemap.xml

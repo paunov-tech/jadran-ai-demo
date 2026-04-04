@@ -2,23 +2,41 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <!-- ═══ MAIN PAGES ═══ -->
   <url>
     <loc>https://jadran.ai</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="hr" href="https://jadran.ai"/>
-    <xhtml:link rel="alternate" hreflang="de" href="https://jadran.ai"/>
-    <xhtml:link rel="alternate" hreflang="en" href="https://jadran.ai"/>
-    <xhtml:link rel="alternate" hreflang="it" href="https://jadran.ai"/>
-    <xhtml:link rel="alternate" hreflang="sl" href="https://jadran.ai"/>
-    <xhtml:link rel="alternate" hreflang="cs" href="https://jadran.ai"/>
-    <xhtml:link rel="alternate" hreflang="pl" href="https://jadran.ai"/>
+    <xhtml:link rel="alternate" hreflang="hr"      href="https://jadran.ai"/>
+    <xhtml:link rel="alternate" hreflang="de"      href="https://jadran.ai"/>
+    <xhtml:link rel="alternate" hreflang="de-AT"   href="https://jadran.ai"/>
+    <xhtml:link rel="alternate" hreflang="en"      href="https://jadran.ai"/>
+    <xhtml:link rel="alternate" hreflang="it"      href="https://jadran.ai"/>
+    <xhtml:link rel="alternate" hreflang="sl"      href="https://jadran.ai"/>
+    <xhtml:link rel="alternate" hreflang="cs"      href="https://jadran.ai"/>
+    <xhtml:link rel="alternate" hreflang="pl"      href="https://jadran.ai"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://jadran.ai"/>
     <image:image>
       <image:loc>https://jadran.ai/og-image.jpg</image:loc>
       <image:title>JADRAN.AI — AI tourist guide for Croatian Adriatic coast</image:title>
     </image:image>
   </url>
+
+  <url>
+    <loc>https://jadran.ai/explore</loc>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="hr"      href="https://jadran.ai/explore"/>
+    <xhtml:link rel="alternate" hreflang="de"      href="https://jadran.ai/explore"/>
+    <xhtml:link rel="alternate" hreflang="en"      href="https://jadran.ai/explore"/>
+    <xhtml:link rel="alternate" hreflang="it"      href="https://jadran.ai/explore"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://jadran.ai/explore"/>
+  </url>
+
+  <!-- ═══ AI GUIDE ═══ -->
   <url>
     <loc>https://jadran.ai/ai</loc>
     <lastmod>2026-04-04</lastmod>
@@ -29,84 +47,114 @@
     <loc>https://jadran.ai/ai?niche=camper</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://jadran.ai/ai?niche=sailing</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://jadran.ai/ai?niche=cruiser</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.80</priority>
   </url>
+
+  <!-- ═══ REGIONS ═══ -->
   <url>
     <loc>https://jadran.ai/ai?region=split</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.75</priority>
   </url>
   <url>
     <loc>https://jadran.ai/ai?region=dubrovnik</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.75</priority>
   </url>
   <url>
     <loc>https://jadran.ai/ai?region=makarska</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.70</priority>
   </url>
   <url>
     <loc>https://jadran.ai/ai?region=zadar</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.70</priority>
   </url>
   <url>
     <loc>https://jadran.ai/ai?region=istra</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.70</priority>
   </url>
   <url>
     <loc>https://jadran.ai/ai?region=kvarner</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.70</priority>
   </url>
+
+  <!-- ═══ BLOG ═══ -->
   <url>
     <loc>https://jadran.ai/blog/</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.85</priority>
   </url>
   <url>
     <loc>https://jadran.ai/blog/croatia-camper-van-guide</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.80</priority>
+    <image:image>
+      <image:loc>https://jadran.ai/og-image.jpg</image:loc>
+      <image:title>Complete Camper Van Guide to Croatia 2026</image:title>
+    </image:image>
   </url>
   <url>
     <loc>https://jadran.ai/blog/hidden-beaches-croatia</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.80</priority>
+    <image:image>
+      <image:loc>https://jadran.ai/og-image.jpg</image:loc>
+      <image:title>15 Hidden Beaches in Croatia Only Locals Know</image:title>
+    </image:image>
   </url>
   <url>
     <loc>https://jadran.ai/blog/croatia-sailing-guide</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.80</priority>
+    <image:image>
+      <image:loc>https://jadran.ai/og-image.jpg</image:loc>
+      <image:title>Sailing the Croatian Adriatic: Complete Guide</image:title>
+    </image:image>
   </url>
   <url>
     <loc>https://jadran.ai/blog/kroatien-wohnmobil-reisefuehrer</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.80</priority>
+    <xhtml:link rel="alternate" hreflang="de" href="https://jadran.ai/blog/kroatien-wohnmobil-reisefuehrer"/>
+    <image:image>
+      <image:loc>https://jadran.ai/og-image.jpg</image:loc>
+      <image:title>Wohnmobil Kroatien Reiseführer 2026</image:title>
+    </image:image>
   </url>
+
+  <!-- ═══ STATIC PAGES ═══ -->
+  <url>
+    <loc>https://jadran.ai/privacy</loc>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.30</priority>
+  </url>
+
 </urlset>

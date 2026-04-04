@@ -217,8 +217,26 @@
     "@type": "BreadcrumbList",
     "itemListElement": [
       { "@type": "ListItem", "position": 1, "name": "JADRAN.AI", "item": "https://jadran.ai" },
-      { "@type": "ListItem", "position": 2, "name": "AI Guide", "item": "https://jadran.ai/ai" }
+      { "@type": "ListItem", "position": 2, "name": "AI Guide", "item": "https://jadran.ai/ai" },
+      { "@type": "ListItem", "position": 3, "name": "Blog", "item": "https://jadran.ai/blog/" }
     ]
+  }
+  </script>
+
+  <!-- Structured Data — WebSite with SearchAction -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "JADRAN.AI",
+    "url": "https://jadran.ai",
+    "description": "AI turistički vodič za hrvatsku obalu Jadrana",
+    "inLanguage": ["hr","de","en","it","sl","cs","pl"],
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": { "@type": "EntryPoint", "urlTemplate": "https://jadran.ai/ai?q={search_term_string}" },
+      "query-input": "required name=search_term_string"
+    }
   }
   </script>
 
@@ -281,7 +299,7 @@
       var txt = lang === 'de' ? 'Wir nutzen Cookies für Analysen.' : lang === 'it' ? 'Usiamo cookie per le analisi.' : lang === 'hr' ? 'Koristimo kolačiće za analitiku.' : 'We use cookies for analytics.';
       var accTxt = lang === 'de' ? 'Akzeptieren' : lang === 'it' ? 'Accetta' : lang === 'hr' ? 'Prihvati' : 'Accept';
       var decTxt = lang === 'de' ? 'Ablehnen' : lang === 'it' ? 'Rifiuta' : lang === 'hr' ? 'Odbij' : 'Decline';
-      bar.innerHTML = '<span style="flex:1;min-width:200px">' + txt + ' <a href="/" style="color:#f59e0b;text-decoration:underline">Privacy</a></span>'
+      bar.innerHTML = '<span style="flex:1;min-width:200px">' + txt + ' <a href="/privacy" style="color:#f59e0b;text-decoration:underline">Privacy</a></span>'
         + '<button id="gdpr-accept" style="padding:6px 16px;border-radius:8px;border:none;background:#f59e0b;color:#0f172a;font-weight:700;font-size:12px;cursor:pointer">' + accTxt + '</button>'
         + '<button id="gdpr-decline" style="padding:6px 16px;border-radius:8px;border:1px solid rgba(148,163,184,0.2);background:transparent;color:#94a3b8;font-size:12px;cursor:pointer">' + decTxt + '</button>';
       document.body.appendChild(bar);
