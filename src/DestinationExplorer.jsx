@@ -323,6 +323,7 @@ export default function DestinationExplorer() {
   const [rvText, setRvText] = useState("");
   const [rvDone, setRvDone] = useState(false);
   const [activeFeature, setActiveFeature] = useState(null);
+  const [showPartnerDetails, setShowPartnerDetails] = useState(false);
   const [liveWx, setLiveWx] = useState(null);
   const [liveMarine, setLiveMarine] = useState(null);
   const [liveCity, setLiveCity] = useState(null);
@@ -822,28 +823,21 @@ export default function DestinationExplorer() {
           <section style={{ padding:"40px 20px 48px", background:"linear-gradient(160deg, #050d1a 0%, #0a1628 50%, #061018 100%)", borderTop:"1px solid rgba(14,165,233,0.08)" }}>
             <div style={{ maxWidth:960, margin:"0 auto" }}>
 
-              {/* ── PARTNER PROGRAM (open, no gate) ── */}
+              {/* ── PARTNER CTA — samo dugmad, sadržaj je na /partner portalu ── */}
               {true && (
                 <>
-                  {/* Header */}
-                  <div style={{ textAlign:"center", marginBottom:36 }}>
-                    <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"5px 14px", borderRadius:20, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", fontSize:10, fontWeight:700, color:"#0ea5e9", letterSpacing:2.5, marginBottom:14 }}>
-                      {({hr:"ZA PARTNERE",de:"FÜR PARTNER",en:"FOR PARTNERS",it:"PER I PARTNER"})[lang]||"FOR PARTNERS"}
-                    </div>
-                    <div style={{ fontFamily:F, fontSize:"clamp(26px,5vw,40px)", fontWeight:400, color:"#f0f4f8", lineHeight:1.15, marginBottom:12 }}>
-                      {({hr:"Dovedi goste koji kupuju",de:"Bringen Sie kaufkräftige Gäste",en:"Bring guests who spend",it:"Porta ospiti che acquistano"})[lang]||"Bring guests who spend"}
-                    </div>
-                    <div style={{ fontFamily:B, fontSize:15, color:"#475569", maxWidth:540, margin:"0 auto", lineHeight:1.7 }}>
-                      {({
-                        hr:"Jadran AI svaki dan pomaže tisućama gostiju da pronađu savršena mjesta. Vaš objekt, jelovnik i smještaj — direktno u njihovim rukama u pravom trenutku.",
-                        de:"Jadran AI hilft täglich Tausenden von Gästen, perfekte Orte zu finden. Ihr Betrieb, Ihre Speisekarte und Unterkunft — direkt in ihren Händen im richtigen Moment.",
-                        en:"Jadran AI helps thousands of guests daily find perfect places. Your venue, menu and accommodation — directly in their hands at the right moment.",
-                        it:"Jadran AI aiuta migliaia di ospiti ogni giorno a trovare posti perfetti. La vostra struttura, menù e alloggio — direttamente nelle loro mani al momento giusto.",
-                      })[lang]||"Jadran AI helps thousands of guests daily find perfect places."}
-                    </div>
+                  <div style={{ display:"flex", gap:12, flexWrap:"wrap", justifyContent:"center" }}>
+                    <a href="/partner"
+                      style={{ display:"inline-flex", alignItems:"center", gap:10, padding:"16px 36px", background:"linear-gradient(135deg, #0ea5e9, #0284c7)", borderRadius:18, color:"#fff", fontFamily:B, fontSize:16, fontWeight:700, textDecoration:"none", boxShadow:"0 8px 32px rgba(14,165,233,0.3)" }}>
+                      🤝 {({hr:"Registriraj se — besplatno",de:"Jetzt registrieren — kostenlos",en:"Register — free",it:"Registrati — gratis"})[lang]||"Register — free"}
+                    </a>
+                    <a href="/partner"
+                      style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"16px 28px", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(14,165,233,0.3)", borderRadius:18, color:"#0ea5e9", fontFamily:B, fontSize:15, fontWeight:600, textDecoration:"none" }}>
+                      {({hr:"Prijava →",de:"Anmelden →",en:"Sign in →",it:"Accedi →"})[lang]||"Sign in →"}
+                    </a>
                   </div>
 
-                  {/* Stats strip */}
+                  {false && <>
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:32 }}>
                     {[
                       { n:"8", u:{hr:"jezika",de:"Sprachen",en:"languages",it:"lingue"}, i:"🌍" },
@@ -1049,22 +1043,7 @@ export default function DestinationExplorer() {
                     </div>
                   </div>
 
-                  {/* CTA */}
-                  <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:16 }}>
-                    <div style={{ display:"flex", gap:12, flexWrap:"wrap", justifyContent:"center" }}>
-                      <a href="/partner"
-                        style={{ display:"inline-flex", alignItems:"center", gap:10, padding:"16px 36px", background:"linear-gradient(135deg, #0ea5e9, #0284c7)", borderRadius:18, color:"#fff", fontFamily:B, fontSize:16, fontWeight:700, textDecoration:"none", boxShadow:"0 8px 32px rgba(14,165,233,0.3)" }}>
-                        🤝 {({hr:"Registriraj se — besplatno",de:"Jetzt registrieren — kostenlos",en:"Register — free",it:"Registrati — gratis"})[lang]||"Register — free"}
-                      </a>
-                      <a href="/partner"
-                        style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"16px 28px", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(14,165,233,0.3)", borderRadius:18, color:"#0ea5e9", fontFamily:B, fontSize:15, fontWeight:600, textDecoration:"none" }}>
-                        {({hr:"Prijava →",de:"Anmelden →",en:"Sign in →",it:"Accedi →"})[lang]||"Sign in →"}
-                      </a>
-                    </div>
-                    <div style={{ fontFamily:B, fontSize:11, color:"#334155" }}>
-                      {({hr:"Probni period do 30. travnja · sezonska naknada 1.000 EUR",de:"Probezeit bis 30. April · saisonale Gebühr 1.000 EUR",en:"Trial until April 30 · seasonal fee 1,000 EUR",it:"Periodo prova fino al 30 aprile · tariffa stagionale 1.000 EUR"})[lang]||"Trial until April 30 · seasonal fee 1,000 EUR"}
-                    </div>
-                  </div>
+                  </>}
                 </>
               )}
             </div>
