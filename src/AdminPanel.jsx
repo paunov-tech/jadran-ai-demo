@@ -41,7 +41,7 @@ export default function AdminPanel() {
   const [auth, setAuth] = useState(false);
   const [token, setToken] = useState("");
   const [pin, setPin] = useState("");
-  const [pinErr, setPinErr] = useState(false);
+  const [pinErr, setPinErr] = useState("");
 
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -66,13 +66,16 @@ export default function AdminPanel() {
       if (r.ok) {
         setAuth(true);
         setToken(pin);
-        setPinErr(false);
+        setPinErr("");
         try { localStorage.setItem("jadran_admin_token", pin); } catch {}
       } else {
-        setPinErr(true);
+        const status = r.status;
+        if (status === 503) setPinErr("Server: ADMIN_TOKEN env var nije postavljen u Vercel");
+        else if (status === 404) setPinErr("Server: /api/admin-login endpoint nije pronađen (404)");
+        else setPinErr(`Pogrešan PIN (HTTP ${status})`);
       }
-    } catch {
-      setPinErr(true);
+    } catch (e) {
+      setPinErr("Network greška: " + (e?.message || "provjeri vezu"));
     }
   };
 
@@ -147,7 +150,7 @@ export default function AdminPanel() {
             autoFocus
             style={{ width: "100%", padding: "14px 16px", borderRadius: 12, background: C.card, border: `1px solid ${pinErr ? C.danger : C.border}`, color: C.white, fontSize: 16, fontFamily: "inherit", outline: "none", marginBottom: 12, boxSizing: "border-box" }}
           />
-          {pinErr && <p style={{ fontSize: 13, color: C.danger, marginBottom: 12 }}>Incorrect PIN</p>}
+          {pinErr && <p style={{ fontSize: 12, color: C.danger, marginBottom: 12, wordBreak: "break-word" }}>{pinErr}</p>}
           <button onClick={doLogin}
             style={{ width: "100%", padding: "14px", borderRadius: 12, background: `linear-gradient(135deg, ${C.accent}, #0085a8)`, color: "#fff", fontSize: 15, fontWeight: 700, border: "none", cursor: "pointer", fontFamily: "inherit" }}>
             Sign In →
