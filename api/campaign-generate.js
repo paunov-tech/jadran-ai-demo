@@ -100,13 +100,27 @@ Generate ${count} variants now.`;
     const data = await r.json();
     const raw = data.content?.[0]?.text || "[]";
 
-    // Parse JSON — Claude sometimes wraps in code block
-    const jsonStr = raw.replace(/^```json?\n?/, "").replace(/\n?```$/, "").trim();
+    // Parse JSON — try multiple strategies
     let variants;
-    try {
-      variants = JSON.parse(jsonStr);
-    } catch {
-      return res.status(502).json({ error: "parse", raw: raw.slice(0, 500) });
+    const strategies = [
+      // 1. Direct parse
+      () => JSON.parse(raw),
+      // 2. Strip code block fences
+      () => JSON.parse(raw.replace(/^```json?\n?/m, "").replace(/\n?```$/m, "").trim()),
+      // 3. Extract first [...] array from anywhere in the text
+      () => {
+        const match = raw.match(/\[[\s\S]*\]/);
+        if (!match) throw new Error("no array");
+        return JSON.parse(match[0]);
+      },
+    ];
+
+    for (const attempt of strategies) {
+      try { variants = attempt(); break; } catch {}
+    }
+
+    if (!variants) {
+      return res.status(502).json({ error: "parse", raw: raw.slice(0, 800) });
     }
 
     return res.status(200).json({ ok: true, segmentId, count: variants.length, variants });
