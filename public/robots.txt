@@ -17,6 +17,8 @@ Disallow: /tz
 Disallow: /tz/
 Disallow: /partner
 Disallow: /partner/
+Disallow: /campaigns
+Disallow: /campaigns/
 
 # Throttle aggressive crawlers
 User-agent: AhrefsBot

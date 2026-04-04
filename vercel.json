@@ -5,14 +5,26 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "functions": {
-    "api/satellite.js":        { "maxDuration": 60 },
-    "api/chat.js":             { "maxDuration": 60 },
-    "api/room-book.js":        { "maxDuration": 15 },
-    "api/partner-auth.js":     { "maxDuration": 15 },
-    "api/partner-data.js":     { "maxDuration": 15 },
-    "api/partner-calendar.js": { "maxDuration": 15 },
-    "api/partner-bookings.js": { "maxDuration": 15 }
+    "api/satellite.js":          { "maxDuration": 60 },
+    "api/chat.js":               { "maxDuration": 60 },
+    "api/room-book.js":          { "maxDuration": 15 },
+    "api/partner-auth.js":       { "maxDuration": 15 },
+    "api/partner-data.js":       { "maxDuration": 15 },
+    "api/partner-calendar.js":   { "maxDuration": 15 },
+    "api/partner-bookings.js":   { "maxDuration": 15 },
+    "api/campaign-generate.js":  { "maxDuration": 60 },
+    "api/lead-capture.js":       { "maxDuration": 15 },
+    "api/ab-impression.js":      { "maxDuration": 10 },
+    "api/ab-convert.js":         { "maxDuration": 15 },
+    "api/ab-control.js":         { "maxDuration": 15 },
+    "api/email-send.js":         { "maxDuration": 30 }
   },
+  "crons": [
+    {
+      "path": "/api/email-send",
+      "schedule": "0 * * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -188,6 +200,18 @@
     },
     {
       "source": "/partner/(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/qualify",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/campaigns",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/m/(.*)",
       "destination": "/index.html"
     },
     {
