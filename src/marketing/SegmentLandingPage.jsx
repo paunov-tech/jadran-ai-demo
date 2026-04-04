@@ -64,6 +64,11 @@ const BENEFITS = {
     { icon: "🏝️", title: "Hidden anchorages", desc: "Quiet bays away from the charter flotillas." },
     { icon: "📡", title: "NAVTEX & weather", desc: "Bura and Jugo forecasts before you leave port." },
   ],
+  en_camper: [
+    { icon: "🅿️", title: "Legal parking spots", desc: "Approved camper stops along the Adriatic — no fine risk." },
+    { icon: "📏", title: "Height restrictions", desc: "Tunnels, bridges and roads with vehicle height limits." },
+    { icon: "🌬️", title: "Bura wind warnings", desc: "AI alerts you before dangerous gusts hit coastal roads." },
+  ],
   en_couple: [
     { icon: "🏖️", title: "Secret beaches", desc: "GPS coordinates to coves that aren't on Google Maps." },
     { icon: "🍷", title: "Local restaurants", desc: "Where the fishermen eat — not the tourist traps." },
