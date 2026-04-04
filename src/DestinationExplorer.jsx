@@ -1410,11 +1410,6 @@ export default function DestinationExplorer() {
                       <div style={{ padding:"8px 10px" }}>
                         <div style={{ fontSize:10, color:"#64748b", marginBottom:8, lineHeight:1.4 }}>👤 {room.guests} · 🛏️ {room.beds} · 📐 {room.sqm}m² · {t(room.view)}</div>
                         <div style={{ fontSize:10, color:"#4ade80", marginBottom:8 }}>{t(room.amen)}</div>
-                        <a href={`https://wa.me/${BJ.whatsapp}?text=${encodeURIComponent(dl==="de"?`Hallo! Ich interessiere mich für ${t(room.name)} – Black Jack Rab.`:dl==="en"?`Hello! I'm interested in ${t(room.name)} – Black Jack Rab.`:dl==="it"?`Salve! Sono interessato/a a ${t(room.name)} – Black Jack Rab.`:`Pozdrav! Zanima me ${t(room.name)} – Black Jack Rab.`)}`}
-                          target="_blank" rel="noopener noreferrer"
-                          style={{ display:"block", padding:"7px", borderRadius:8, background:"rgba(37,211,102,0.1)", border:"1px solid rgba(37,211,102,0.2)", fontSize:11, fontWeight:700, color:"#25d366", textAlign:"center", textDecoration:"none" }}>
-                          💬 {({hr:"WhatsApp upit",de:"WA Anfrage",en:"WA Enquiry",it:"WA Informarsi"})[dl]||"Enquire"}
-                        </a>
                       </div>
                     </div>
                   ))}
