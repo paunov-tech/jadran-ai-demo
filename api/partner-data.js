@@ -9,7 +9,7 @@
 // All require x-partner-token header
 
 const FB_PROJECT = "molty-portal";
-const FB_KEY     = process.env.FIREBASE_API_KEY;
+const FB_KEY     = process.env.VITE_FB_API_KEY;
 
 const CORS = {
   "Access-Control-Allow-Origin":  "*",

@@ -35,7 +35,7 @@ export default async function handler(req, res) {
   // If env var not set, reject all — never fall back to a hardcoded value
   if (!VALID_PINS[partner] || VALID_PINS[partner] !== pin) return res.status(403).json({ error: "invalid pin" });
 
-  const FB_KEY = process.env.FIREBASE_API_KEY;
+  const FB_KEY = process.env.VITE_FB_API_KEY;
   if (!FB_KEY) return res.status(200).json({ ok: false, views: 0, feedback: [] });
 
   try {

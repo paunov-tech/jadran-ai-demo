@@ -9,7 +9,7 @@ import { promisify } from "util";
 
 const scryptAsync = promisify(scrypt);
 const FB_PROJECT  = "molty-portal";
-const FB_KEY      = process.env.FIREBASE_API_KEY;
+const FB_KEY      = process.env.VITE_FB_API_KEY;
 const TRIAL_ENDS  = "2026-04-30";
 const ADMIN_EMAIL = process.env.ADMIN_NOTIFY_EMAIL || process.env.RESEND_FROM_EMAIL;
 

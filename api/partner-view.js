@@ -39,7 +39,7 @@ export default async function handler(req, res) {
   const clientIp = (req.headers["x-forwarded-for"] || "unknown").split(",")[0].trim();
   if (!ipRateOk(clientIp)) return res.status(429).json({ ok: false, error: "rate limited" });
 
-  const FB_KEY = process.env.FIREBASE_API_KEY;
+  const FB_KEY = process.env.VITE_FB_API_KEY;
   if (!FB_KEY) return res.status(200).json({ ok: false });
 
   const { partner, event = "view", lang = "", deviceId = "unknown" } = req.body || {};

@@ -7,7 +7,7 @@
 //   body: { partnerId, capacityId, capacityName, checkIn, checkOut, guests, guestName, guestEmail, guestPhone, lang, note }
 
 const FB_PROJECT   = "molty-portal";
-const FB_KEY       = process.env.FIREBASE_API_KEY;
+const FB_KEY       = process.env.VITE_FB_API_KEY;
 const RESEND_KEY   = process.env.RESEND_API_KEY;
 const RESEND_FROM  = "JADRAN.ai Booking <booking@jadran.ai>";
 const ADMIN_EMAIL  = process.env.ADMIN_NOTIFY_EMAIL || process.env.RESEND_FROM_EMAIL;
