@@ -19,12 +19,6 @@
     "api/ab-control.js":         { "maxDuration": 15 },
     "api/email-send.js":         { "maxDuration": 30 }
   },
-  "crons": [
-    {
-      "path": "/api/email-send",
-      "schedule": "0 * * * *"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
