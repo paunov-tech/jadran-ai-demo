@@ -520,6 +520,7 @@ export default function JadranUnified() {
   const [chatLoading, setChatLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(null);
   const [trialRemaining, setTrialRemaining] = useState(null); // ms left in 72h trial, null=not started
+  const [isOffline, setIsOffline] = useState(() => !navigator.onLine);
 
   // ── FREE MESSAGE COUNTER — persisted in localStorage, survives refresh ──
   const [freeMsgUsed, setFreeMsgUsed] = useState(() => {
@@ -541,6 +542,15 @@ export default function JadranUnified() {
     if (!did) { const b = new Uint8Array(9); crypto.getRandomValues(b); did = "dev_" + Array.from(b, x => x.toString(16).padStart(2,"0")).join(""); try { localStorage.setItem("jadran_push_deviceId", did); } catch {} }
     return did;
   })());
+
+  // ─── NETWORK STATUS ───
+  useEffect(() => {
+    const on = () => setIsOffline(false);
+    const off = () => setIsOffline(true);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
+  }, []);
 
   // ─── TRANSIT HERE MAP ───
   const [transitFromUrl, setTransitFromUrl] = useState("");
@@ -1386,7 +1396,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         <span style={{ fontSize: 12, color: "#cbd5e1", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.title}</span>
         {critical.length > 1 && <span style={{ fontSize: 9, color, flexShrink: 0, fontWeight: 700 }}>+{critical.length - 1}</span>}
         <span style={{ fontSize: 9, padding: "2px 6px", borderRadius: 4, background: `${color}18`, color, fontWeight: 700, flexShrink: 0 }}>{a.severity === "critical" ? "LIVE" : "⚠️"}</span>
-        <button onClick={() => setDismissedAlerts(s => new Set([...s, a.title]))} style={{ background: "none", border: "none", color: "#475569", fontSize: 18, cursor: "pointer", padding: "8px", flexShrink: 0, lineHeight: 1, minWidth: 44, minHeight: 44, display: "grid", placeItems: "center" }}>×</button>
+        <button onClick={() => setDismissedAlerts(s => new Set([...s, a.title]))} aria-label="Zatvori upozorenje" style={{ background: "none", border: "none", color: "#475569", fontSize: 18, cursor: "pointer", padding: "8px", flexShrink: 0, lineHeight: 1, minWidth: 44, minHeight: 44, display: "grid", placeItems: "center" }}>×</button>
       </div>
     );
   };
@@ -3714,7 +3724,15 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           }} style={{ padding: "10px 18px", background: "linear-gradient(135deg,#0ea5e9,#0284c7)", border: "none", borderRadius: 12, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", flexShrink: 0, fontFamily: "inherit" }}>
             {({ hr:"Instaliraj", de:"Installieren", at:"Installieren", en:"Install", it:"Installa", si:"Namesti", cz:"Instalovat", pl:"Zainstaluj" })[lang] || "Install"}
           </button>
-          <button onClick={() => setPwaPrompt(null)} style={{ background: "none", border: "none", color: "#64748b", fontSize: 20, cursor: "pointer", padding: "8px", flexShrink: 0, minWidth: 36, minHeight: 36, display: "grid", placeItems: "center" }}>×</button>
+          <button onClick={() => setPwaPrompt(null)} aria-label="Zatvori" style={{ background: "none", border: "none", color: "#64748b", fontSize: 20, cursor: "pointer", padding: "8px", flexShrink: 0, minWidth: 36, minHeight: 36, display: "grid", placeItems: "center" }}>×</button>
+        </div>
+      )}
+
+      {/* ── Offline banner ── */}
+      {isOffline && (
+        <div style={{ position: "fixed", top: "env(safe-area-inset-top, 0px)", left: 0, right: 0, zIndex: 9997, padding: "8px 16px", background: "rgba(239,68,68,0.92)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, fontSize: 12, fontWeight: 700, color: "#fff", fontFamily: "'Outfit',sans-serif", letterSpacing: 0.3 }}>
+          <span>📡</span>
+          <span>{lang === "en" ? "No internet connection" : lang === "de" || lang === "at" ? "Keine Internetverbindung" : lang === "it" ? "Nessuna connessione" : lang === "si" ? "Brez povezave" : lang === "cz" ? "Offline" : lang === "pl" ? "Brak połączenia" : "Nema internet veze"}</span>
         </div>
       )}
 
@@ -3812,7 +3830,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
                   {senseData?.source==="yolo" ? `● LIVE · ${kioskCity}` : `● ${({hr:"procjena",de:"Schätzung",en:"estimate",it:"stima"})[lang]||"estimate"} · ${kioskCity}`}
                 </div>
               </div>
-              <button onClick={() => setShowKioskLive(false)} style={{ background:"rgba(255,255,255,0.06)", border:`1px solid rgba(14,165,233,0.12)`, borderRadius:10, color:"#94a3b8", fontSize:13, padding:"8px 14px", cursor:"pointer", minHeight:40 }}>✕</button>
+              <button onClick={() => setShowKioskLive(false)} aria-label="Zatvori" style={{ background:"rgba(255,255,255,0.06)", border:`1px solid rgba(14,165,233,0.12)`, borderRadius:10, color:"#94a3b8", fontSize:13, padding:"8px 14px", cursor:"pointer", minHeight:40 }}>✕</button>
             </div>
 
             {/* Weather row — always shown */}
@@ -3998,13 +4016,13 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
                   ? <img src={IMGS[imgIdx % IMGS.length]} alt={act.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   : <div style={{ height: "100%", display: "grid", placeItems: "center", fontSize: 72 }}>🏖️</div>}
                 {IMGS.length > 1 && <>
-                  <button onClick={e => { e.stopPropagation(); setImgIdx(p => Math.max(0, p - 1)); }} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: "50%", width: 44, height: 44, fontSize: 20, cursor: "pointer", display: "grid", placeItems: "center", backdropFilter: "blur(8px)" }}>‹</button>
-                  <button onClick={e => { e.stopPropagation(); setImgIdx(p => (p + 1) % IMGS.length); }} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: "50%", width: 44, height: 44, fontSize: 20, cursor: "pointer", display: "grid", placeItems: "center", backdropFilter: "blur(8px)" }}>›</button>
+                  <button onClick={e => { e.stopPropagation(); setImgIdx(p => Math.max(0, p - 1)); }} aria-label="Prethodna slika" style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: "50%", width: 44, height: 44, fontSize: 20, cursor: "pointer", display: "grid", placeItems: "center", backdropFilter: "blur(8px)" }}>‹</button>
+                  <button onClick={e => { e.stopPropagation(); setImgIdx(p => (p + 1) % IMGS.length); }} aria-label="Sljedeća slika" style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: "50%", width: 44, height: 44, fontSize: 20, cursor: "pointer", display: "grid", placeItems: "center", backdropFilter: "blur(8px)" }}>›</button>
                   <div style={{ position: "absolute", bottom: 10, left: "50%", transform: "translateX(-50%)", display: "flex", gap: 4 }}>
                     {IMGS.map((_, i) => <div key={i} style={{ width: 6, height: 6, borderRadius: "50%", background: i === imgIdx % IMGS.length ? "#fff" : "rgba(255,255,255,0.4)" }} />)}
                   </div>
                 </>}
-                <button onClick={() => setSelectedViatorAct(null)} style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: "50%", width: 44, height: 44, cursor: "pointer", fontSize: 20, display: "grid", placeItems: "center", backdropFilter: "blur(8px)" }}>✕</button>
+                <button onClick={() => setSelectedViatorAct(null)} aria-label="Zatvori" style={{ position: "absolute", top: 10, right: 10, background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", borderRadius: "50%", width: 44, height: 44, cursor: "pointer", fontSize: 20, display: "grid", placeItems: "center", backdropFilter: "blur(8px)" }}>✕</button>
               </div>
 
               <div style={{ padding: "20px 24px 28px" }}>
