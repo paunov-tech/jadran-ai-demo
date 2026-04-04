@@ -322,9 +322,6 @@ export default function DestinationExplorer() {
   const [rvName, setRvName] = useState("");
   const [rvText, setRvText] = useState("");
   const [rvDone, setRvDone] = useState(false);
-  const [b2bUnlocked, setB2bUnlocked] = useState(false);
-  const [b2bPin, setB2bPin] = useState("");
-  const [b2bWrong, setB2bWrong] = useState(false);
   const [activeFeature, setActiveFeature] = useState(null);
   const [liveWx, setLiveWx] = useState(null);
   const [liveMarine, setLiveMarine] = useState(null);
@@ -775,8 +772,6 @@ export default function DestinationExplorer() {
 
       {/* ═══ B2B — POSTANI PARTNER (password-gated) ═══ */}
       {(() => {
-        const B2B_PIN = "SIAL2026";
-
         // ── Feature card detail data ──
         const FEATURES = [
           { icon:"📱", color:"#0ea5e9",
@@ -827,44 +822,13 @@ export default function DestinationExplorer() {
           <section style={{ padding:"40px 20px 48px", background:"linear-gradient(160deg, #050d1a 0%, #0a1628 50%, #061018 100%)", borderTop:"1px solid rgba(14,165,233,0.08)" }}>
             <div style={{ maxWidth:960, margin:"0 auto" }}>
 
-              {/* ── LOCK GATE ── */}
-              {!b2bUnlocked ? (
-                <div style={{ textAlign:"center", padding:"48px 20px" }}>
-                  <div style={{ display:"inline-block", padding:"5px 14px", borderRadius:20, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", fontSize:10, fontWeight:700, color:"#0ea5e9", letterSpacing:2.5, marginBottom:20 }}>
-                    {({hr:"ZA PARTNERE",de:"FÜR PARTNER",en:"FOR PARTNERS",it:"PER I PARTNER"})[lang]||"FOR PARTNERS"}
-                  </div>
-                  <div style={{ fontFamily:F, fontSize:"clamp(22px,4vw,34px)", fontWeight:400, color:"#f0f4f8", marginBottom:10 }}>
-                    {({hr:"Partner program",de:"Partner-Programm",en:"Partner Programme",it:"Programma partner"})[lang]||"Partner Programme"}
-                  </div>
-                  <div style={{ fontFamily:B, fontSize:14, color:"#475569", marginBottom:32 }}>
-                    {({hr:"Zaštićen pristup — unesite šifru",de:"Geschützter Zugang — Passwort eingeben",en:"Protected access — enter password",it:"Accesso protetto — inserire password"})[lang]||"Protected access — enter password"}
-                  </div>
-                  <div style={{ display:"inline-flex", gap:10, alignItems:"center", flexWrap:"wrap", justifyContent:"center" }}>
-                    <input
-                      type="password"
-                      value={b2bPin}
-                      onChange={e => { setB2bPin(e.target.value); setB2bWrong(false); }}
-                      onKeyDown={e => { if (e.key === "Enter") { if (b2bPin === B2B_PIN) { setB2bUnlocked(true); setB2bWrong(false); } else { setB2bWrong(true); setB2bPin(""); } } }}
-                      placeholder={({hr:"Unesite šifru…",de:"Passwort eingeben…",en:"Enter password…",it:"Inserisci password…"})[lang]||"Enter password…"}
-                      style={{ padding:"12px 18px", borderRadius:12, border:`1px solid ${b2bWrong ? "#f43f5e" : "rgba(14,165,233,0.25)"}`, background:"rgba(255,255,255,0.04)", color:"#e2e8f0", fontFamily:B, fontSize:15, outline:"none", width:220 }}
-                    />
-                    <button
-                      onClick={() => { if (b2bPin === B2B_PIN) { setB2bUnlocked(true); setB2bWrong(false); } else { setB2bWrong(true); setB2bPin(""); } }}
-                      style={{ padding:"12px 24px", borderRadius:12, background:"linear-gradient(135deg,#0ea5e9,#0284c7)", border:"none", color:"#fff", fontFamily:B, fontSize:15, fontWeight:700, cursor:"pointer" }}>
-                      {({hr:"Pristup",de:"Zugang",en:"Access",it:"Accedi"})[lang]||"Access"}
-                    </button>
-                  </div>
-                  {b2bWrong && <div style={{ fontFamily:B, fontSize:12, color:"#f43f5e", marginTop:12 }}>
-                    {({hr:"Pogrešna šifra",de:"Falsches Passwort",en:"Wrong password",it:"Password errata"})[lang]||"Wrong password"}
-                  </div>}
-                </div>
-              ) : (
+              {/* ── PARTNER PROGRAM (open, no gate) ── */}
+              {true && (
                 <>
                   {/* Header */}
                   <div style={{ textAlign:"center", marginBottom:36 }}>
                     <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"5px 14px", borderRadius:20, background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", fontSize:10, fontWeight:700, color:"#0ea5e9", letterSpacing:2.5, marginBottom:14 }}>
                       {({hr:"ZA PARTNERE",de:"FÜR PARTNER",en:"FOR PARTNERS",it:"PER I PARTNER"})[lang]||"FOR PARTNERS"}
-                      <span style={{ fontSize:10, color:"#22c55e" }}>✓</span>
                     </div>
                     <div style={{ fontFamily:F, fontSize:"clamp(26px,5vw,40px)", fontWeight:400, color:"#f0f4f8", lineHeight:1.15, marginBottom:12 }}>
                       {({hr:"Dovedi goste koji kupuju",de:"Bringen Sie kaufkräftige Gäste",en:"Bring guests who spend",it:"Porta ospiti che acquistano"})[lang]||"Bring guests who spend"}
@@ -1086,13 +1050,19 @@ export default function DestinationExplorer() {
                   </div>
 
                   {/* CTA */}
-                  <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}>
-                    <a href="mailto:partneri@jadran.ai?subject=Partner%20prijava&body=Naziv%20objekta%3A%0AAdresa%3A%0AKontakt%20osoba%3A%0ATelefon%3A"
-                      style={{ display:"inline-flex", alignItems:"center", gap:10, padding:"16px 32px", background:"linear-gradient(135deg, #0ea5e9, #0284c7)", borderRadius:18, color:"#fff", fontFamily:B, fontSize:16, fontWeight:700, textDecoration:"none", boxShadow:"0 8px 32px rgba(14,165,233,0.3)" }}>
-                      🤝 {({hr:"Postani partner — besplatno",de:"Partner werden — kostenlos",en:"Become a partner — free",it:"Diventa partner — gratis"})[lang]||"Become a partner — free"}
-                    </a>
+                  <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:16 }}>
+                    <div style={{ display:"flex", gap:12, flexWrap:"wrap", justifyContent:"center" }}>
+                      <a href="/partner"
+                        style={{ display:"inline-flex", alignItems:"center", gap:10, padding:"16px 36px", background:"linear-gradient(135deg, #0ea5e9, #0284c7)", borderRadius:18, color:"#fff", fontFamily:B, fontSize:16, fontWeight:700, textDecoration:"none", boxShadow:"0 8px 32px rgba(14,165,233,0.3)" }}>
+                        🤝 {({hr:"Registriraj se — besplatno",de:"Jetzt registrieren — kostenlos",en:"Register — free",it:"Registrati — gratis"})[lang]||"Register — free"}
+                      </a>
+                      <a href="/partner"
+                        style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"16px 28px", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(14,165,233,0.3)", borderRadius:18, color:"#0ea5e9", fontFamily:B, fontSize:15, fontWeight:600, textDecoration:"none" }}>
+                        {({hr:"Prijava →",de:"Anmelden →",en:"Sign in →",it:"Accedi →"})[lang]||"Sign in →"}
+                      </a>
+                    </div>
                     <div style={{ fontFamily:B, fontSize:11, color:"#334155" }}>
-                      {({hr:"Odgovaramo unutar 24h · partneri@jadran.ai",de:"Antwort innerhalb 24h · partneri@jadran.ai",en:"Reply within 24h · partneri@jadran.ai",it:"Risposta entro 24h · partneri@jadran.ai"})[lang]||"Reply within 24h · partneri@jadran.ai"}
+                      {({hr:"Probni period do 30. travnja · sezonska naknada 1.000 EUR",de:"Probezeit bis 30. April · saisonale Gebühr 1.000 EUR",en:"Trial until April 30 · seasonal fee 1,000 EUR",it:"Periodo prova fino al 30 aprile · tariffa stagionale 1.000 EUR"})[lang]||"Trial until April 30 · seasonal fee 1,000 EUR"}
                     </div>
                   </div>
                 </>
