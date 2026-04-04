@@ -5,7 +5,9 @@
 // ═══════════════════════════════════════════════════════════════
 import { useState, useEffect, useCallback } from "react";
 
-// ADMIN_TOKEN is entered by the admin at login — never hardcoded here
+// PIN is entered at login, sent via POST body — never hardcoded here
+// Token is base64-encoded when sent as HTTP header (handles special characters)
+const encTok = t => { try { return btoa(t); } catch { return t; } };
 
 const C = {
   bg: "#07111f", surface: "#0f1e35", card: "#121d30", card2: "#162240",
@@ -56,7 +58,11 @@ export default function AdminPanel() {
 
   const doLogin = async () => {
     try {
-      const r = await fetch("/api/bookings", { headers: { "x-admin-token": pin } });
+      const r = await fetch("/api/admin-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin }),
+      });
       if (r.ok) {
         setAuth(true);
         setToken(pin);
@@ -74,7 +80,7 @@ export default function AdminPanel() {
     setLoading(true);
     try {
       const r = await fetch("/api/bookings", {
-        headers: { "x-admin-token": token },
+        headers: { "x-admin-token": encTok(token) },
       });
       if (r.ok) {
         const data = await r.json();
@@ -91,7 +97,7 @@ export default function AdminPanel() {
     try {
       const r = await fetch("/api/confirm", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-admin-token": token },
+        headers: { "Content-Type": "application/json", "x-admin-token": encTok(token) },
         body: JSON.stringify({ id, role }),
       });
       if (r.ok) {

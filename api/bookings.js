@@ -17,8 +17,9 @@ export default async function handler(req, res) {
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
 
   if (!ADMIN_TOKEN) return res.status(503).json({ error: "Admin not configured" });
-  const adminTok = req.headers["x-admin-token"];
-  if (!adminTok || adminTok !== ADMIN_TOKEN) return res.status(401).json({ error: "Unauthorized" });
+  const raw = req.headers["x-admin-token"] || "";
+  const adminTok = (() => { try { return Buffer.from(raw, "base64").toString("utf8"); } catch { return raw; } })();
+  if (!adminTok || adminTok.trim() !== ADMIN_TOKEN.trim()) return res.status(401).json({ error: "Unauthorized" });
 
   if (!FB_KEY) return res.status(200).json({ bookings: [] });
 

@@ -181,8 +181,9 @@ export default async function handler(req, res) {
   // ── POST — admin confirms from panel ──
   if (req.method === "POST") {
     if (!ADMIN_TOKEN) return res.status(503).json({ error: "Admin not configured" });
-    const adminTok = req.headers["x-admin-token"];
-    if (!adminTok || adminTok !== ADMIN_TOKEN) return res.status(401).json({ error: "Unauthorized" });
+    const raw = req.headers["x-admin-token"] || "";
+    const adminTok = (() => { try { return Buffer.from(raw, "base64").toString("utf8"); } catch { return raw; } })();
+    if (!adminTok || adminTok.trim() !== ADMIN_TOKEN.trim()) return res.status(401).json({ error: "Unauthorized" });
 
     const { id, role } = req.body || {};
     if (!id || !["partner", "operator"].includes(role)) {
