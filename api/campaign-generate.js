@@ -3,7 +3,7 @@
 // Body: { segmentId, count?, tone? }
 // Auth: X-Admin-Token header
 
-const CLAUDE_MODEL = "claude-sonnet-4-6";
+const CLAUDE_MODEL = "claude-haiku-4-5-20251001";
 const DEFAULT_COUNT = 15;
 
 export default async function handler(req, res) {
@@ -78,7 +78,7 @@ Generate ${count} variants now.`;
       },
       body: JSON.stringify({
         model: CLAUDE_MODEL,
-        max_tokens: 3000,
+        max_tokens: 4000,
         messages: [{ role: "user", content: prompt }],
       }),
     });
