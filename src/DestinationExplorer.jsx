@@ -94,6 +94,43 @@ const SENSE = [
   { img:"https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=200&q=60", l:{hr:"Vrijeme i more",de:"Wetter & Meer",en:"Weather & sea",it:"Meteo e mare",pl:"Pogoda i morze",si:"Vreme in morje"}, v:{hr:"UV · Temperatura · Vjetar",de:"UV · Temperatur · Wind",en:"UV · Temperature · Wind",it:"UV · Temperatura · Vento",pl:"UV · Temperatura · Wiatr",si:"UV · Temperatura · Veter"} },
 ];
 
+// ─── LIVE — nearest Adriatic city by GPS ───
+const ADRIATIC_CITIES = [
+  {name:"Dubrovnik", lat:42.65,lon:18.09},{name:"Cavtat",  lat:42.58,lon:18.22},
+  {name:"Korčula",   lat:42.96,lon:17.13},{name:"Hvar",    lat:43.17,lon:16.44},
+  {name:"Split",     lat:43.51,lon:16.44},{name:"Trogir",  lat:43.52,lon:16.25},
+  {name:"Makarska",  lat:43.30,lon:17.02},{name:"Brela",   lat:43.37,lon:16.93},
+  {name:"Tučepi",    lat:43.27,lon:17.06},{name:"Primošten",lat:43.58,lon:15.92},
+  {name:"Šibenik",   lat:43.73,lon:15.89},{name:"Vodice",  lat:43.76,lon:15.78},
+  {name:"Zadar",     lat:44.12,lon:15.23},{name:"Nin",     lat:44.24,lon:15.18},
+  {name:"Biograd",   lat:43.94,lon:15.45},{name:"Pag",     lat:44.44,lon:15.06},
+  {name:"Rab",       lat:44.75,lon:14.76},{name:"Senj",    lat:44.99,lon:14.91},
+  {name:"Krk",       lat:45.03,lon:14.57},{name:"Cres",    lat:44.96,lon:14.41},
+  {name:"Lošinj",    lat:44.53,lon:14.47},{name:"Opatija", lat:45.34,lon:14.31},
+  {name:"Rijeka",    lat:45.33,lon:14.44},{name:"Poreč",   lat:45.23,lon:13.60},
+  {name:"Rovinj",    lat:45.08,lon:13.64},{name:"Pula",    lat:44.87,lon:13.85},
+  {name:"Novigrad",  lat:45.32,lon:13.56},{name:"Motovun", lat:45.34,lon:13.83},
+];
+function nearestCity(lat, lon) {
+  return ADRIATIC_CITIES.reduce((b, c) => {
+    const d = Math.hypot(c.lat - lat, c.lon - lon);
+    return d < b.d ? {d, name:c.name} : b;
+  }, {d:Infinity, name:"Jadran"}).name;
+}
+function windDirStr(deg) {
+  return ["N","NE","E","SE","S","SW","W","NW"][Math.round((deg||0)/45)%8];
+}
+function wxEmoji(code) {
+  if (code == null) return "🌤️";
+  if (code === 0) return "☀️";
+  if (code <= 3) return "⛅";
+  if (code <= 49) return "🌫️";
+  if (code <= 67) return "🌧️";
+  if (code <= 77) return "❄️";
+  if (code <= 82) return "🌦️";
+  return "⛈️";
+}
+
 // ─── GYG OFFERS — GetYourGuide affiliate ───
 const GYG_OFFERS = [
   { title:{hr:"Tura brodom — Rab",de:"Bootstour — Rab",en:"Boat tour — Rab",it:"Tour in barca — Rab"}, price:"45€", tag:"RAB", img:"https://images.unsplash.com/photo-1592486882552-9c2a022c529b?w=400&q=75", link:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=boat+tour" },
@@ -289,6 +326,10 @@ export default function DestinationExplorer() {
   const [b2bPin, setB2bPin] = useState("");
   const [b2bWrong, setB2bWrong] = useState(false);
   const [activeFeature, setActiveFeature] = useState(null);
+  const [liveWx, setLiveWx] = useState(null);
+  const [liveMarine, setLiveMarine] = useState(null);
+  const [liveCity, setLiveCity] = useState(null);
+  const [liveLoadState, setLiveLoadState] = useState("idle"); // idle|loading|done|error|noperm
   const heroRef = useRef(null);
 
   useEffect(() => { setTimeout(() => setVisible(true), 100); }, []);
@@ -316,6 +357,29 @@ export default function DestinationExplorer() {
     }
     return () => { document.removeEventListener("keydown", h); document.body.style.overflow = ""; };
   }, [showBJ, showLive]);
+
+  // ─ Live data: GPS → Open-Meteo weather + marine ─
+  useEffect(() => {
+    if (!showLive) return;
+    setLiveLoadState("loading");
+    setLiveWx(null); setLiveMarine(null); setLiveCity(null);
+    if (!navigator.geolocation) { setLiveLoadState("noperm"); return; }
+    navigator.geolocation.getCurrentPosition(
+      ({ coords: { latitude: lat, longitude: lon } }) => {
+        setLiveCity(nearestCity(lat, lon));
+        Promise.all([
+          fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,wind_speed_10m,wind_direction_10m,uv_index,cloud_cover,weather_code&wind_speed_unit=kmh&timezone=auto`).then(r => r.json()),
+          fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&current=sea_surface_temperature,wave_height,wave_period`).then(r => r.json()),
+        ]).then(([wx, mar]) => {
+          setLiveWx(wx.current || null);
+          setLiveMarine(mar.current || null);
+          setLiveLoadState("done");
+        }).catch(() => setLiveLoadState("error"));
+      },
+      () => setLiveLoadState("noperm"),
+      { timeout: 10000, maximumAge: 300000 }
+    );
+  }, [showLive]);
 
   // ─ Viator API fetch ─
   useEffect(() => {
@@ -403,7 +467,7 @@ export default function DestinationExplorer() {
             </button>
             <a href="/landing" onClick={() => setMenuOpen(false)} style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 18px", color:"#fbbf24", fontSize:14, fontWeight:600, textDecoration:"none", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
-              {({hr:"🛡️ Guardian Brief",de:"🛡️ Guardian Brief",en:"🛡️ Guardian Brief",it:"🛡️ Guardian Brief",pl:"🛡️ Guardian Brief",si:"🛡️ Guardian Brief"})[lang]||"🛡️ Guardian Brief"}
+              {({hr:"Guardian Brief",de:"Guardian Brief",en:"Guardian Brief",it:"Guardian Brief",pl:"Guardian Brief",si:"Guardian Brief"})[lang]||"Guardian Brief"}
             </a>
             <button onClick={() => { setMenuOpen(false); setActiveTab("live"); setShowLive(true); }} style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 18px", color:"#22c55e", fontSize:14, fontWeight:600, background:"none", border:"none", borderBottom:"1px solid rgba(255,255,255,0.05)", cursor:"pointer", width:"100%", fontFamily:B, textAlign:"left" }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12h2"/><path d="M20 12h2"/><path d="M12 2v2"/><path d="M12 20v2"/><circle cx="12" cy="12" r="4"/><path d="M4.93 4.93l1.41 1.41"/><path d="M17.66 17.66l1.41 1.41"/><path d="M4.93 19.07l1.41-1.41"/><path d="M17.66 6.34l1.41-1.41"/></svg>
@@ -1418,55 +1482,137 @@ export default function DestinationExplorer() {
       </footer>
 
       {/* ═══ LIVE OVERLAY — context-aware ═══ */}
-      {showLive && (() => {
-        const liveTarget = activeDest
-          ? activeDest.name
-          : activeRegionData
-            ? (activeRegionData.liveCity === "rab" ? "Rab" : activeRegionData.destinations.find(d => d.id === activeRegionData.liveCity)?.name || activeRegionData.id)
-            : "Jadran";
-        const liveImg = activeDest
-          ? activeDest.img
-          : (activeRegionData?.img || SENSE[0].img);
-        return (
-        <div onClick={() => setShowLive(false)} style={{ position:"fixed", inset:0, zIndex:500, background:"rgba(3,8,16,0.88)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
-          <div onClick={e => e.stopPropagation()} style={{ width:"100%", maxWidth:560, background:"#0a1628", borderRadius:"24px 24px 0 0", border:"1px solid rgba(34,197,94,0.18)", borderBottom:"none", overflow:"hidden", animation:"fadeUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
-            {/* Hero image strip */}
-            <div style={{ position:"relative", height:90, overflow:"hidden" }}>
-              <img src={liveImg.replace("w=800","w=600")} alt={liveTarget} style={{ width:"100%", height:"100%", objectFit:"cover", opacity:0.4 }} />
-              <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, #0a1628 0%, rgba(10,22,40,0.5) 100%)" }} />
-              <div style={{ position:"absolute", bottom:12, left:18, display:"flex", alignItems:"center", gap:8 }}>
-                <div style={{ width:8, height:8, borderRadius:"50%", background:"#22c55e", boxShadow:"0 0 10px #22c55e", animation:"pulse 2s infinite", flexShrink:0 }} />
-                <span style={{ fontSize:11, color:"#22c55e", fontWeight:700, letterSpacing:2 }}>JADRAN SENSE™</span>
-                <span style={{ fontSize:11, color:"rgba(255,255,255,0.5)", fontWeight:400 }}>· {liveTarget}</span>
+      {showLive && (
+        <div onClick={() => setShowLive(false)} style={{ position:"fixed", inset:0, zIndex:500, background:"rgba(3,8,16,0.92)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
+          <div onClick={e => e.stopPropagation()} style={{ width:"100%", maxWidth:560, background:"#080f1e", borderRadius:"24px 24px 0 0", border:"1px solid rgba(34,197,94,0.2)", borderBottom:"none", overflow:"hidden", animation:"fadeUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
+
+            {/* ── Header ── */}
+            <div style={{ padding:"18px 20px 12px", display:"flex", justifyContent:"space-between", alignItems:"center", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                <div style={{ width:8, height:8, borderRadius:"50%", background: liveLoadState === "done" ? "#22c55e" : "#f59e0b", boxShadow:`0 0 10px ${liveLoadState === "done" ? "#22c55e" : "#f59e0b"}`, animation:"pulse 2s infinite", flexShrink:0 }} />
+                <span style={{ fontSize:12, color:"#22c55e", fontWeight:700, letterSpacing:2 }}>JADRAN SENSE™ LIVE</span>
               </div>
-              <button onClick={() => setShowLive(false)} style={{ position:"absolute", top:12, right:14, width:28, height:28, borderRadius:"50%", background:"rgba(0,0,0,0.6)", border:"none", color:"#64748b", fontSize:14, cursor:"pointer", display:"grid", placeItems:"center" }}>✕</button>
+              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                {liveCity && <span style={{ fontSize:12, color:"rgba(255,255,255,0.5)" }}>📍 {liveCity}</span>}
+                <button onClick={() => setShowLive(false)} style={{ width:28, height:28, borderRadius:"50%", background:"rgba(255,255,255,0.05)", border:"none", color:"#64748b", fontSize:14, cursor:"pointer", display:"grid", placeItems:"center" }}>✕</button>
+              </div>
             </div>
-            <div style={{ padding:"16px 18px", paddingBottom:"calc(20px + env(safe-area-inset-bottom, 0px))" }}>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-                {SENSE.map((s,i) => (
-                  <div key={i} style={{ borderRadius:14, overflow:"hidden", position:"relative", height:108, border:"1px solid rgba(14,165,233,0.1)" }}>
-                    <img src={s.img} alt="" loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", opacity:0.18 }} />
-                    <div style={{ position:"absolute", inset:0, background:"linear-gradient(0deg, rgba(5,13,26,0.94) 0%, rgba(5,13,26,0.5) 100%)" }} />
-                    <div style={{ position:"relative", padding:"12px 10px", height:"100%", display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
-                      <div style={{ fontSize:12, fontWeight:600, color:"#e2e8f0", marginBottom:2 }}>{t(s.l)}</div>
-                      <div style={{ fontSize:9, color:"#64748b", lineHeight:1.4 }}>{t(s.v)}</div>
+
+            <div style={{ padding:"16px 20px", paddingBottom:"calc(20px + env(safe-area-inset-bottom, 0px))" }}>
+
+              {/* ── Loading ── */}
+              {liveLoadState === "loading" && (
+                <div style={{ textAlign:"center", padding:"32px 0" }}>
+                  <div style={{ fontSize:28, marginBottom:10 }}>📡</div>
+                  <div style={{ fontSize:13, color:"#64748b" }}>
+                    {({hr:"Dohvaćam podatke za vašu lokaciju…",de:"Standortdaten werden geladen…",en:"Fetching data for your location…",it:"Caricamento dati posizione…",pl:"Pobieranie danych lokalizacji…",si:"Nalagam podatke za vašo lokacijo…"})[dl]||"Loading…"}
+                  </div>
+                </div>
+              )}
+
+              {/* ── No permission ── */}
+              {(liveLoadState === "noperm" || liveLoadState === "error") && (
+                <div style={{ textAlign:"center", padding:"28px 0" }}>
+                  <div style={{ fontSize:28, marginBottom:10 }}>📍</div>
+                  <div style={{ fontSize:13, color:"#f59e0b", marginBottom:8 }}>
+                    {liveLoadState === "noperm"
+                      ? ({hr:"Dopusti pristup lokaciji za Live podatke",de:"Standortzugriff erlauben für Live-Daten",en:"Allow location access for Live data",it:"Consenti accesso posizione per dati live",pl:"Zezwól na lokalizację dla danych live",si:"Dovoli dostop do lokacije za žive podatke"})[dl]||"Allow location"
+                      : ({hr:"Ne mogu dohvatiti podatke",de:"Daten konnten nicht geladen werden",en:"Could not fetch data",it:"Impossibile caricare i dati",pl:"Nie można pobrać danych",si:"Podatkov ni mogoče naložiti"})[dl]||"Error"}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Live data grid ── */}
+              {liveLoadState === "done" && liveWx && (
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+
+                  {/* Tile 1: Weather */}
+                  <div style={{ borderRadius:16, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.12)", padding:"14px 12px" }}>
+                    <div style={{ fontSize:9, color:"#64748b", letterSpacing:2, fontWeight:700, marginBottom:8 }}>
+                      {({hr:"VRIJEME",de:"WETTER",en:"WEATHER",it:"METEO",pl:"POGODA",si:"VREME"})[dl]||"WEATHER"}
+                    </div>
+                    <div style={{ fontSize:32, marginBottom:4 }}>{wxEmoji(liveWx.weather_code)}</div>
+                    <div style={{ fontSize:26, fontWeight:300, color:"#f0f4f8", lineHeight:1 }}>{Math.round(liveWx.temperature_2m ?? 0)}°C</div>
+                    <div style={{ fontSize:11, color:"#64748b", marginTop:4 }}>
+                      {({hr:"osjeća se",de:"gefühlt",en:"feels like",it:"percepito",pl:"odczuwalna",si:"občutek"})[dl]||"feels"} {Math.round(liveWx.apparent_temperature ?? 0)}°
+                    </div>
+                    <div style={{ fontSize:11, color:"#94a3b8", marginTop:4 }}>☁️ {liveWx.cloud_cover ?? "—"}%</div>
+                  </div>
+
+                  {/* Tile 2: UV + Wind */}
+                  <div style={{ borderRadius:16, background:"rgba(251,191,36,0.05)", border:"1px solid rgba(251,191,36,0.12)", padding:"14px 12px" }}>
+                    <div style={{ fontSize:9, color:"#64748b", letterSpacing:2, fontWeight:700, marginBottom:8 }}>UV · VJETAR</div>
+                    <div style={{ fontSize:22, fontWeight:700, color: (liveWx.uv_index??0) >= 8 ? "#ef4444" : (liveWx.uv_index??0) >= 5 ? "#f59e0b" : "#22c55e", marginBottom:2 }}>
+                      UV {liveWx.uv_index ?? "—"}
+                    </div>
+                    <div style={{ fontSize:11, color:"#64748b", marginBottom:8 }}>
+                      {(liveWx.uv_index??0) >= 8 ? "⚠️ Ekstremno" : (liveWx.uv_index??0) >= 6 ? "🧴 Visok" : (liveWx.uv_index??0) >= 3 ? "😎 Umjeren" : "✅ Nizak"}
+                    </div>
+                    <div style={{ fontSize:13, color:"#7dd3fc" }}>
+                      💨 {Math.round(liveWx.wind_speed_10m ?? 0)} km/h {windDirStr(liveWx.wind_direction_10m)}
                     </div>
                   </div>
-                ))}
-              </div>
-              {liveTarget === "Rab" && (
-                <a href={`/?kiosk=rab&go=live&lang=${lang}`} style={{ display:"block", marginTop:12, padding:"12px", borderRadius:12, background:"rgba(34,197,94,0.08)", border:"1px solid rgba(34,197,94,0.18)", textAlign:"center", textDecoration:"none", color:"#22c55e", fontSize:12, fontWeight:600 }}>
-                  {({hr:"Otvori live Rab →",de:"Live Rab öffnen →",en:"Open live Rab →",it:"Apri live Rab →"})[dl]||"Open live →"}
+
+                  {/* Tile 3: Sea temperature + waves */}
+                  <div style={{ borderRadius:16, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.14)", padding:"14px 12px" }}>
+                    <div style={{ fontSize:9, color:"#64748b", letterSpacing:2, fontWeight:700, marginBottom:8 }}>
+                      {({hr:"MORE",de:"MEER",en:"SEA",it:"MARE",pl:"MORZE",si:"MORJE"})[dl]||"SEA"}
+                    </div>
+                    <div style={{ fontSize:28, fontWeight:300, color:"#7dd3fc", lineHeight:1.1 }}>
+                      🌊 {liveMarine ? Math.round(liveMarine.sea_surface_temperature ?? 0) : "—"}°C
+                    </div>
+                    <div style={{ fontSize:11, color:"#64748b", marginTop:6 }}>
+                      {({hr:"temp. mora",de:"Meerestemperatur",en:"sea temp",it:"temp. mare",pl:"temp. morza",si:"temp. morja"})[dl]||"sea temp"}
+                    </div>
+                    {liveMarine && (
+                      <div style={{ fontSize:11, color:"#94a3b8", marginTop:4 }}>
+                        〰️ {(liveMarine.wave_height ?? 0).toFixed(1)}m · {Math.round(liveMarine.wave_period ?? 0)}s
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Tile 4: Sea cleanliness */}
+                  <div style={{ borderRadius:16, background:"rgba(34,197,94,0.06)", border:"1px solid rgba(34,197,94,0.16)", padding:"14px 12px" }}>
+                    <div style={{ fontSize:9, color:"#64748b", letterSpacing:2, fontWeight:700, marginBottom:8 }}>
+                      {({hr:"ČISTOĆA MORA",de:"MEERESQUALITÄT",en:"SEA QUALITY",it:"QUALITÀ MARE",pl:"CZYSTOŚĆ MORZA",si:"ČISTOST MORJA"})[dl]||"SEA QUALITY"}
+                    </div>
+                    <div style={{ fontSize:22, fontWeight:700, color:"#22c55e", marginBottom:4 }}>★★★★★</div>
+                    <div style={{ fontSize:13, fontWeight:600, color:"#22c55e", marginBottom:4 }}>
+                      {({hr:"Odlična",de:"Ausgezeichnet",en:"Excellent",it:"Eccellente",pl:"Doskonała",si:"Odlična"})[dl]||"Excellent"}
+                    </div>
+                    <div style={{ fontSize:9, color:"#475569", lineHeight:1.4 }}>EU Bathing Water Directive · Jadransko more</div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* ── Parking CTA ── */}
+              {liveLoadState === "done" && (
+                <a href={`/ai?niche=camper&lang=${lang}${liveCity ? `&dest=${encodeURIComponent(liveCity)}` : ""}`}
+                  style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginTop:12, padding:"13px 16px", borderRadius:14, background:"rgba(251,191,36,0.06)", border:"1px solid rgba(251,191,36,0.16)", textDecoration:"none" }}>
+                  <div>
+                    <div style={{ fontSize:12, fontWeight:700, color:"#fbbf24" }}>
+                      🅿️ {({hr:"Parking blizu vas",de:"Parkplätze in der Nähe",en:"Parking near you",it:"Parcheggio vicino a te",pl:"Parking w pobliżu",si:"Parking v bližini"})[dl]||"Parking near you"}
+                    </div>
+                    <div style={{ fontSize:10, color:"#64748b", marginTop:2 }}>
+                      {({hr:"Pitaj JADRAN AI →",de:"JADRAN AI fragen →",en:"Ask JADRAN AI →",it:"Chiedi JADRAN AI →",pl:"Zapytaj JADRAN AI →",si:"Vprašaj JADRAN AI →"})[dl]||"Ask JADRAN AI →"}
+                    </div>
+                  </div>
+                  <span style={{ fontSize:18, color:"#fbbf24" }}>→</span>
                 </a>
               )}
-              <div style={{ marginTop:12, fontSize:9, color:"#1e3a5f", textAlign:"center" }}>
-                165+ {({hr:"senzorskih točaka · Jadran.ai",de:"Sensorpunkte · Jadran.ai",en:"sensor points · Jadran.ai",it:"punti sensoriali · Jadran.ai"})[dl]||"sensor points"}
-              </div>
+
+              {/* ── Source note ── */}
+              {liveLoadState === "done" && (
+                <div style={{ marginTop:10, fontSize:9, color:"#1e3a5f", textAlign:"center" }}>
+                  Open-Meteo · Marine API · EU Bathing Water Directive 2023
+                </div>
+              )}
+
             </div>
           </div>
         </div>
-        );
-      })()}
+      )}
 
       {/* ═══ LANG PICKER OVERLAY ═══ */}
       {langOpen && (
