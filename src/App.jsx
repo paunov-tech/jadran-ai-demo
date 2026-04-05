@@ -768,6 +768,20 @@ export default function JadranUnified() {
       "makarska":  [43.298,  17.018,  "Makarska"],
       "hvar":      [43.172,  16.441,  "Hvar"],
       "zadar":     [44.119,  15.232,  "Zadar"],
+      "krk":       [45.028,  14.575,  "Krk"],
+      "pula":      [44.867,  13.850,  "Pula"],
+      "rovinj":    [45.081,  13.639,  "Rovinj"],
+      "sibenik":   [43.735,  15.890,  "Šibenik"],
+      "trogir":    [43.517,  16.252,  "Trogir"],
+      "korcula":   [42.960,  17.136,  "Korčula"],
+      "brac":      [43.306,  16.655,  "Brač"],
+      "porec":     [45.227,  13.594,  "Poreč"],
+      "opatija":   [45.337,  14.305,  "Opatija"],
+      "crikvenica":[45.177,  14.693,  "Crikvenica"],
+      "novalja":   [44.554,  14.886,  "Novalja"],
+      "biograd":   [43.943,  15.443,  "Biograd"],
+      "vodice":    [43.761,  15.779,  "Vodice"],
+      "primosten": [43.586,  15.923,  "Primošten"],
     };
     const urlAffiliate = p.get("affiliate");
     const urlToken = p.get("tk");
