@@ -1908,8 +1908,28 @@ const [lang, setLang] = useState(() => {
   );
 
   // ═══ CHAT SCREEN ═══
+  // Detect Facebook / Instagram in-app browser — causes Java object crashes on Android
+  const isFBBrowser = /FBAN|FBAV|FB_IAB|Instagram/i.test(navigator.userAgent || "");
+  const openInChrome = () => {
+    const url = window.location.href;
+    // Android Chrome intent
+    window.location.href = `intent://${url.replace(/^https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;end`;
+    // Fallback after 1s
+    setTimeout(() => { window.open(url, "_blank"); }, 1000);
+  };
+
   return (
     <div style={{ height: "100dvh", display: "flex", flexDirection: "column", background: C.chatBg, fontFamily: "'Outfit',system-ui,sans-serif", color: C.text }}>
+
+      {/* FB in-app browser warning */}
+      {isFBBrowser && (
+        <div style={{ background: "#1877f2", color: "#fff", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexShrink: 0, fontSize: 13 }}>
+          <span>{lang === "de" || lang === "at" ? "Für beste Erfahrung in Chrome öffnen" : lang === "it" ? "Apri in Chrome per la migliore esperienza" : "Open in Chrome for best experience"}</span>
+          <button onClick={openInChrome} style={{ background: "#fff", color: "#1877f2", border: "none", borderRadius: 8, padding: "6px 14px", fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
+            {lang === "de" || lang === "at" ? "In Chrome öffnen →" : lang === "it" ? "Apri in Chrome →" : "Open in Chrome →"}
+          </button>
+        </div>
+      )}
 
       {/* Header */}
       <div style={{ padding: "14px 20px", paddingTop: "max(14px, env(safe-area-inset-top, 14px))", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.bord}`, flexShrink: 0, background: isNight ? "transparent" : "rgba(255,255,255,0.4)" }}>
