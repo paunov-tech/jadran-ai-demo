@@ -552,6 +552,7 @@ export default function JadranUnified() {
     gpsStarted.current = true;
     setTripActive(true);
     saveDelta({ trip_started: true });
+    try { window.fbq?.("track", "ViewContent", { content_name: "trip_started", content_category: transitSegUrl || "auto" }); } catch {}
     // 72h trial ONLY for booking partners (affiliate) or real host QR guests
     // Landing page users (DEMO/dev_) stay on 3 free messages
     const isBookingGuest = verifiedAffiliate.current || (roomCode.current && roomCode.current !== "DEMO" && !roomCode.current.startsWith("dev_"));
@@ -959,6 +960,7 @@ export default function JadranUnified() {
   // ─── STRIPE: Start Premium Checkout ───
   const startPremiumCheckout = async (plan = "week") => {
     setPayLoading(true);
+    try { window.fbq?.("track", "AddPaymentInfo", { content_name: plan, currency: "EUR", value: plan === "vip" ? 49.99 : plan === "season" ? 19.99 : 9.99 }); } catch {}
     try {
       const deviceId = localStorage.getItem("jadran_push_deviceId") || `dev_${Date.now()}`;
       const res = await fetch('/api/checkout', {
@@ -1173,7 +1175,7 @@ export default function JadranUnified() {
   // Show paywall when trial expires (and user is not premium)
   useEffect(() => {
     if (premium || trialRemaining === null) return;
-    if (trialRemaining === 0) setShowPaywall(true);
+    if (trialRemaining === 0) { try { window.fbq?.("track", "InitiateCheckout", { content_name: "trial_expired" }); } catch {} setShowPaywall(true); }
   }, [trialRemaining, premium]); // eslint-disable-line
 
   const tryPremium = (cb) => { if (premium) { cb(); } else { setShowPaywall(true); } };
@@ -1544,7 +1546,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginBottom: 20 }}>
               {[...interests].map(k => { const o = INTERESTS.find(x => x.k === k); return o ? <Badge key={k} c="accent">{o.e} {(INTEREST_LABELS[k]||{})[lang] || (INTEREST_LABELS[k]||{}).hr || k}</Badge> : null; })}
             </div>
-            <Btn primary onClick={() => setSubScreen("pretrip")}>{t("toPreTrip",lang)}</Btn>
+            <Btn primary onClick={() => { try { window.fbq?.("track", "CompleteRegistration", { content_name: "onboarding", status: true }); } catch {} setSubScreen("pretrip"); }}>{t("toPreTrip",lang)}</Btn>
           </Card>
         )}
       </div>
@@ -1784,7 +1786,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
                   </div>
                 );
               })()}
-              <Btn primary onClick={() => { ensureTrialStart(); setKioskWelcome(true); setNearbyData(null); setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home", lang, destination: transitDestCity || kioskCity, segment: transitSegUrl || "auto", lastAccess: new Date().toISOString() }); }}>{t("arrived",lang)}</Btn>
+              <Btn primary onClick={() => { try { window.fbq?.("track", "Lead", { content_name: "arrived", content_category: transitDestCity || kioskCity }); } catch {} ensureTrialStart(); setKioskWelcome(true); setNearbyData(null); setPhase("kiosk"); setSubScreen("home"); updateGuest(roomCode.current, { phase: "kiosk", subScreen: "home", lang, destination: transitDestCity || kioskCity, segment: transitSegUrl || "auto", lastAccess: new Date().toISOString() }); }}>{t("arrived",lang)}</Btn>
             </>
           )}
         </div>
