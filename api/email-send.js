@@ -74,10 +74,11 @@ async function queryLeadsForStep(step) {
   }));
 }
 
-function getEmailBody(templateId, email, segmentId, name) {
+function getEmailBody(templateId, email, segmentId, name, leadId, step) {
   const unsubUrl = `https://jadran.ai/api/unsubscribe?email=${encodeURIComponent(email)}&seg=${segmentId}`;
+  const pixel = `<img src="https://jadran.ai/api/track-open?lid=${encodeURIComponent(leadId)}&step=${step}" width="1" height="1" style="display:none" alt="">`;
   const hi = name ? `Hi ${name},` : "Hi,";
-  const footer = `<p style="color:#94a3b8;font-size:11px;margin-top:24px">
+  const footer = `${pixel}<p style="color:#94a3b8;font-size:11px;margin-top:24px">
     <a href="${unsubUrl}">Unsubscribe</a> · SIAL Consulting d.o.o. · Croatia
   </p>`;
   const btn = (url, label) => `<p style="margin-top:20px"><a href="${url}" style="background:#0ea5e9;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;font-weight:700">${label}</a></p>`;
@@ -247,7 +248,7 @@ export default async function handler(req, res) {
       if (now - lastEmailTime < requiredDelay) { skipped++; continue; }
 
       const subject = getSubject(seq.step, segmentId);
-      const html = getEmailBody(seq.templateId, email, segmentId, name);
+      const html = getEmailBody(seq.templateId, email, segmentId, name, lead.id, seq.step);
       const ok = await sendEmail(email, subject, html);
       if (ok) {
         await fsPatch("mkt_leads", lead.id, {
