@@ -80,7 +80,8 @@ export default async function handler(req, res) {
 
   if (req.method !== "POST") return res.status(405).json({ error: "method" });
 
-  const { email, name = "", segmentId, variantId = "default", source = "organic" } = req.body || {};
+  const { email, name = "", segmentId, variantId = "default", source = "organic", fingerprint = {} } = req.body || {};
+  const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "unknown";
 
   if (!email || !segmentId) return res.status(400).json({ error: "missing fields" });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "invalid email" });
@@ -96,6 +97,11 @@ export default async function handler(req, res) {
       segmentId: strV(segmentId),
       variantId: strV(variantId),
       source: strV(source),
+      ip: strV(ip),
+      fp_ua: strV(fingerprint.ua || ""),
+      fp_lang: strV(fingerprint.lang || ""),
+      fp_tz: strV(fingerprint.tz || ""),
+      fp_screen: strV(fingerprint.screen || ""),
       emailStep: intV(0),
       createdAt: strV(now),
       updatedAt: strV(now),
