@@ -468,7 +468,7 @@ const [lang, setLang] = useState(() => {
       return localStorage.getItem("jadran_promo") || "";
     } catch { return ""; }
   });
-  const FREE_MSGS = 3;
+  const FREE_MSGS = 5;
   const PREMIUM_DAILY_LIMIT = 100; // Cost control: ~2€/day max API spend per user
   const VIP_DAILY_LIMIT = 300; // VIP gets 3x more messages
 
@@ -1322,19 +1322,13 @@ const [lang, setLang] = useState(() => {
     <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.92)", zIndex: 300, display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "min(10dvh, 60px) 24px 24px" }}
       onClick={() => { setShowPaywall(false); setUpsellFeature(null); setShowRecovery(false); setRecoveryStatus(null); setRecoveryEmail(""); try { window.fbq?.("track", "AddToWishlist", { content_name: "paywall_abandon", currency: "EUR", value: 19.99 }); } catch {} }}>
       <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "28px 20px", maxWidth: 480, width: "100%", border: "1px solid rgba(245,158,11,0.1)", maxHeight: "90dvh", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-        {/* ═══ EARLY BIRD BANNER ═══ */}
-        <div style={{ marginBottom: 14, padding: "10px 14px", borderRadius: 12, background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(234,88,12,0.1))", border: "1px solid rgba(245,158,11,0.35)", textAlign: "center" }}>
-          <div style={{ fontSize: 11, fontWeight: 800, color: "#f59e0b", letterSpacing: 1, marginBottom: 2 }}>
-            🐦 {lang === "de" || lang === "at" ? "EARLY BIRD — bis 30. April" : lang === "en" ? "EARLY BIRD — until April 30" : lang === "it" ? "EARLY BIRD — fino al 30 aprile" : "EARLY BIRD — do 30. travnja"}
+        {/* ═══ SOCIAL PROOF + URGENCY BANNER ═══ */}
+        <div style={{ marginBottom: 14, padding: "10px 14px", borderRadius: 12, background: "linear-gradient(135deg, rgba(245,158,11,0.12), rgba(234,88,12,0.08))", border: "1px solid rgba(245,158,11,0.3)", textAlign: "center" }}>
+          <div style={{ fontSize: 13, fontWeight: 800, color: "#f59e0b", marginBottom: 3 }}>
+            {lang === "de" || lang === "at" ? "⭐ 380+ Reisende haben dieses Wochenende gebucht" : lang === "en" ? "⭐ 380+ travellers used this guide this weekend" : lang === "it" ? "⭐ 380+ viaggiatori questo weekend" : "⭐ 380+ putnika koristilo ovaj vikend"}
           </div>
-          <div style={{ fontSize: 10, color: C.text, lineHeight: 1.5 }}>
-            {lang === "de" || lang === "at"
-              ? "✅ 1. Monat GRATIS · ✅ Prioritäts-Listing · ✅ EU-Support (Wert €500)"
-              : lang === "en"
-              ? "✅ 1st month FREE · ✅ Priority listing · ✅ EU support (value €500)"
-              : lang === "it"
-              ? "✅ 1° mese GRATIS · ✅ Listing prioritario · ✅ Supporto EU (valore €500)"
-              : "✅ 1. mjesec GRATIS · ✅ Prioritetni listing · ✅ EU podrška (vrijednost €500)"}
+          <div style={{ fontSize: 10, color: C.mut }}>
+            {lang === "de" || lang === "at" ? "🔒 7 Tage Geld-zurück-Garantie — kein Risiko" : lang === "en" ? "🔒 7-day money-back guarantee — zero risk" : lang === "it" ? "🔒 Garanzia rimborso 7 giorni — zero rischio" : "🔒 7 dana garancija povrata novca — nula rizika"}
           </div>
         </div>
         <div style={{ textAlign: "center", marginBottom: 16 }}>
@@ -1445,6 +1439,14 @@ const [lang, setLang] = useState(() => {
           </button>
         </div>
         {payLoading && <div style={{ textAlign: "center", fontSize: 13, color: C.accent, marginBottom: 8 }}>⏳ {t.payLoading}</div>}
+        {/* Urgency + guarantee strip */}
+        <div style={{ display:"flex", justifyContent:"center", gap:16, margin:"10px 0 4px", flexWrap:"wrap" }}>
+          <span style={{ fontSize:10, color:"#22c55e", fontWeight:600 }}>✅ {lang === "de" || lang === "at" ? "7 Tage Geld-zurück" : lang === "en" ? "7-day refund" : lang === "it" ? "Rimborso 7gg" : "7 dana povrat"}</span>
+          <span style={{ fontSize:10, color:C.mut }}>·</span>
+          <span style={{ fontSize:10, color:C.gold, fontWeight:600 }}>⚡ {lang === "de" || lang === "at" ? "Sofort aktiv" : lang === "en" ? "Instant access" : lang === "it" ? "Accesso immediato" : "Odmah aktivan"}</span>
+          <span style={{ fontSize:10, color:C.mut }}>·</span>
+          <span style={{ fontSize:10, color:C.mut }}>🔒 {lang === "de" || lang === "at" ? "Sicher & verschlüsselt" : lang === "en" ? "Secure & encrypted" : lang === "it" ? "Sicuro & cifrato" : "Sigurno & šifrirano"}</span>
+        </div>
         {/* Payment methods + security */}
         <div style={{ textAlign: "center", marginTop: 12, marginBottom: 8 }}>
           <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
