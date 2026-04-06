@@ -526,6 +526,10 @@ const [lang, setLang] = useState(() => {
   const [showInviteWelcome, setShowInviteWelcome] = useState(false);
   const [leadEmail, setLeadEmail] = useState("");
   const [leadCaptured, setLeadCaptured] = useState(false);
+  const [showExitIntent, setShowExitIntent] = useState(false);
+  const [exitEmail, setExitEmail] = useState("");
+  const [exitCaptured, setExitCaptured] = useState(false);
+  const exitShownRef = useRef(false);
 
   // Chat
   const [msgs, setMsgs] = useState([]);
@@ -563,6 +567,28 @@ const [lang, setLang] = useState(() => {
     istra: { lat: 45.08, lon: 13.64, loc: "Rovinj-Istra" },
     kvarner: { lat: 45.34, lon: 14.31, loc: "Opatija-Kvarner" },
   };
+
+  // Exit intent — show email popup when cursor leaves toward top (desktop) or after 45s (mobile)
+  useEffect(() => {
+    if (exitShownRef.current) return;
+    const onMouseOut = (e) => {
+      if (exitShownRef.current || showPaywall || exitCaptured) return;
+      if (e.clientY < 10 && !e.relatedTarget) {
+        exitShownRef.current = true;
+        setShowExitIntent(true);
+        try { window.fbq?.("track", "AddToWishlist", { content_name: "exit_intent" }); } catch {}
+      }
+    };
+    const mobileTimer = setTimeout(() => {
+      if (!exitShownRef.current && !showPaywall && !exitCaptured) {
+        exitShownRef.current = true;
+        setShowExitIntent(true);
+        try { window.fbq?.("track", "AddToWishlist", { content_name: "exit_intent_timer" }); } catch {}
+      }
+    }, 45000);
+    document.addEventListener("mouseout", onMouseOut);
+    return () => { document.removeEventListener("mouseout", onMouseOut); clearTimeout(mobileTimer); };
+  }, [showPaywall, exitCaptured]);
 
   // Persist region + travelMode to localStorage on every change
   useEffect(() => { try { if (region) localStorage.setItem("jadran_region", region); } catch {} }, [region]);
@@ -1250,7 +1276,7 @@ const [lang, setLang] = useState(() => {
   // ═══ PAYWALL MODAL ═══
   const paywallJsx = showPaywall && (
     <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.92)", zIndex: 300, display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "min(10dvh, 60px) 24px 24px" }}
-      onClick={() => { setShowPaywall(false); setUpsellFeature(null); setShowRecovery(false); setRecoveryStatus(null); setRecoveryEmail(""); }}>
+      onClick={() => { setShowPaywall(false); setUpsellFeature(null); setShowRecovery(false); setRecoveryStatus(null); setRecoveryEmail(""); try { window.fbq?.("track", "AddToWishlist", { content_name: "paywall_abandon", currency: "EUR", value: 19.99 }); } catch {} }}>
       <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "28px 20px", maxWidth: 480, width: "100%", border: "1px solid rgba(245,158,11,0.1)", maxHeight: "90dvh", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         {/* ═══ EARLY BIRD BANNER ═══ */}
         <div style={{ marginBottom: 14, padding: "10px 14px", borderRadius: 12, background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(234,88,12,0.1))", border: "1px solid rgba(245,158,11,0.35)", textAlign: "center" }}>
@@ -2765,6 +2791,50 @@ const [lang, setLang] = useState(() => {
 
       {paywallJsx}
       {inviteWelcomeJsx}
+
+      {/* ═══ EXIT INTENT POPUP ═══ */}
+      {showExitIntent && !exitCaptured && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(5,14,30,0.88)", zIndex:400, display:"grid", placeItems:"center", padding:24 }}
+          onClick={() => setShowExitIntent(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.98)" : "#fff", borderRadius:24, padding:"28px 24px", maxWidth:420, width:"100%", border:"1px solid rgba(245,158,11,0.25)", textAlign:"center" }}>
+            <div style={{ fontSize:36, marginBottom:10 }}>🌊</div>
+            <div style={{ fontFamily:"'Playfair Display',Georgia,serif", fontSize:18, fontWeight:700, color:C.text, marginBottom:8 }}>
+              {lang === "de" || lang === "at" ? "Warte! 3 Insider-Tipps kostenlos." : lang === "en" ? "Wait! 3 free insider tips." : lang === "it" ? "Aspetta! 3 consigli insider gratis." : "Čekaj! 3 besplatna insider savjeta."}
+            </div>
+            <div style={{ fontSize:12, color:C.mut, marginBottom:18, lineHeight:1.6 }}>
+              {lang === "de" || lang === "at" ? "Versteckte Buchten, Camper-Geheimtipps und wo Einheimische wirklich essen — direkt auf deine E-Mail." : lang === "en" ? "Hidden coves, camper secrets and where locals really eat — straight to your email." : lang === "it" ? "Calette nascoste, segreti camper e dove mangiano i locali — nella tua email." : "Skrivene uvale, kamper tajne i gdje lokalni zaista jedu — direktno na email."}
+            </div>
+            <div style={{ display:"flex", gap:8, marginBottom:12 }}>
+              <input
+                type="email" inputMode="email" autoComplete="email" autoFocus
+                value={exitEmail}
+                onChange={e => setExitEmail(e.target.value)}
+                placeholder="email@example.com"
+                style={{ flex:1, padding:"11px 14px", borderRadius:10, border:`1px solid ${C.bord}`, background: isNight ? "rgba(255,255,255,0.08)" : "#fff", color:C.text, fontSize:15, fontFamily:"inherit", outline:"none" }}
+                onKeyDown={e => { if (e.key === "Enter") document.getElementById("exit-intent-btn")?.click(); }}
+              />
+              <button id="exit-intent-btn"
+                disabled={!exitEmail.includes("@")}
+                onClick={() => {
+                  if (!exitEmail.includes("@")) return;
+                  setExitCaptured(true);
+                  setShowExitIntent(false);
+                  fetch("/api/lead-capture", {
+                    method:"POST", headers:{"Content-Type":"application/json"},
+                    body: JSON.stringify({ email: exitEmail.trim(), segmentId:`exit_${lang}`, source:"exit_intent", fingerprint:{ lang, tz: Intl.DateTimeFormat().resolvedOptions().timeZone } }),
+                  }).catch(() => {});
+                  try { window.fbq?.("track", "Lead", { content_name:"exit_intent_email" }); } catch {}
+                }}
+                style={{ padding:"11px 16px", borderRadius:10, border:"none", background:C.accent, color:"#fff", fontSize:13, fontWeight:700, cursor: exitEmail.includes("@") ? "pointer" : "default", opacity: exitEmail.includes("@") ? 1 : 0.5, fontFamily:"inherit", whiteSpace:"nowrap" }}>
+                {lang === "de" || lang === "at" ? "Senden" : lang === "en" ? "Send" : lang === "it" ? "Invia" : "Pošalji"}
+              </button>
+            </div>
+            <button onClick={() => setShowExitIntent(false)} style={{ background:"none", border:"none", color:C.mut, fontSize:11, cursor:"pointer", fontFamily:"inherit" }}>
+              {lang === "de" || lang === "at" ? "Nein danke" : lang === "en" ? "No thanks" : lang === "it" ? "No grazie" : "Ne hvala"}
+            </button>
+          </div>
+        </div>
+      )}
       <VerifyingOverlay />
       <SuccessModal />
       {globalToast && <div style={{ position: "fixed", top: 24, left: "50%", transform: "translateX(-50%)", zIndex: 500, background: "linear-gradient(135deg, #22c55e, #16a34a)", color: "#fff", padding: "14px 28px", borderRadius: 16, fontSize: 15, fontWeight: 700, fontFamily: "'Playfair Display',Georgia,serif", boxShadow: "0 8px 32px rgba(34,197,94,0.4)", animation: "fadeInDown 0.3s ease", whiteSpace: "nowrap" }}>{globalToast}</div>}

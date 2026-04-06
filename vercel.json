@@ -164,6 +164,10 @@
       ]
     }
   ],
+  "crons": [
+    { "path": "/api/cron-email",    "schedule": "0 */6 * * *" },
+    { "path": "/api/cron-audience", "schedule": "0 3 * * *"  }
+  ],
   "redirects": [
     { "source": "/blog/", "destination": "/blog", "permanent": true }
   ],
