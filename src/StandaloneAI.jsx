@@ -524,6 +524,8 @@ const [lang, setLang] = useState(() => {
   const [referralToast, setReferralToast] = useState(null);
   const [globalToast, setGlobalToast] = useState(null);
   const [showInviteWelcome, setShowInviteWelcome] = useState(false);
+  const [leadEmail, setLeadEmail] = useState("");
+  const [leadCaptured, setLeadCaptured] = useState(false);
 
   // Chat
   const [msgs, setMsgs] = useState([]);
@@ -1250,6 +1252,21 @@ const [lang, setLang] = useState(() => {
     <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.92)", zIndex: 300, display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "min(10dvh, 60px) 24px 24px" }}
       onClick={() => { setShowPaywall(false); setUpsellFeature(null); setShowRecovery(false); setRecoveryStatus(null); setRecoveryEmail(""); }}>
       <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.97)" : "rgba(255,255,255,0.97)", borderRadius: 24, padding: "28px 20px", maxWidth: 480, width: "100%", border: "1px solid rgba(245,158,11,0.1)", maxHeight: "90dvh", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+        {/* ═══ EARLY BIRD BANNER ═══ */}
+        <div style={{ marginBottom: 14, padding: "10px 14px", borderRadius: 12, background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(234,88,12,0.1))", border: "1px solid rgba(245,158,11,0.35)", textAlign: "center" }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: "#f59e0b", letterSpacing: 1, marginBottom: 2 }}>
+            🐦 {lang === "de" || lang === "at" ? "EARLY BIRD — bis 30. April" : lang === "en" ? "EARLY BIRD — until April 30" : lang === "it" ? "EARLY BIRD — fino al 30 aprile" : "EARLY BIRD — do 30. travnja"}
+          </div>
+          <div style={{ fontSize: 10, color: C.text, lineHeight: 1.5 }}>
+            {lang === "de" || lang === "at"
+              ? "✅ 1. Monat GRATIS · ✅ Prioritäts-Listing · ✅ EU-Support (Wert €500)"
+              : lang === "en"
+              ? "✅ 1st month FREE · ✅ Priority listing · ✅ EU support (value €500)"
+              : lang === "it"
+              ? "✅ 1° mese GRATIS · ✅ Listing prioritario · ✅ Supporto EU (valore €500)"
+              : "✅ 1. mjesec GRATIS · ✅ Prioritetni listing · ✅ EU podrška (vrijednost €500)"}
+          </div>
+        </div>
         <div style={{ textAlign: "center", marginBottom: 16 }}>
           <div style={{ fontSize: 28, marginBottom: 6 }}>🔒</div>
           {/* Upsell context — which feature triggered paywall */}
@@ -1267,6 +1284,38 @@ const [lang, setLang] = useState(() => {
           </div>
           <div style={{ fontSize: 12, color: C.mut, lineHeight: 1.5 }}>
             {lang === "de" || lang === "at" ? "Sichere deinen Urlaub. Vermeide Strafen, Staus und Stürme bis Ende der Saison." : lang === "en" ? "Secure your holiday. Avoid fines, traffic jams and storms until end of season." : lang === "it" ? "Proteggi la tua vacanza. Evita multe, code e tempeste fino a fine stagione." : "Osiguraj svoj odmor. Izbjegni kazne, gužve i oluje do kraja sezone."}
+          </div>
+        </div>
+        {/* ═══ LEAD CAPTURE — email before paywall ═══ */}
+        <div style={{ marginBottom: 14, padding: "12px 14px", borderRadius: 12, background: isNight ? "rgba(14,165,233,0.05)" : "rgba(14,165,233,0.04)", border: `1px solid ${isNight ? "rgba(14,165,233,0.12)" : "rgba(14,165,233,0.1)"}` }}>
+          <div style={{ fontSize: 11, color: C.mut, marginBottom: 8 }}>
+            {lang === "de" || lang === "at" ? "📩 Kostenlose Reisetipps per E-Mail erhalten:" : lang === "en" ? "📩 Get free travel tips by email:" : lang === "it" ? "📩 Ricevi consigli gratis via email:" : "📩 Primi besplatne putničke savjete na email:"}
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              value={leadEmail}
+              onChange={e => setLeadEmail(e.target.value)}
+              placeholder="email@example.com"
+              style={{ flex: 1, padding: "10px 12px", borderRadius: 10, border: `1px solid ${C.bord}`, background: isNight ? "rgba(255,255,255,0.08)" : "#fff", color: C.text, fontSize: 15, fontFamily: "inherit", outline: "none" }}
+              onFocus={e => setTimeout(() => e.target.scrollIntoView({ behavior: "smooth", block: "center" }), 300)}
+            />
+            <button
+              disabled={leadCaptured || !leadEmail.includes("@")}
+              onClick={() => {
+                if (leadCaptured || !leadEmail.includes("@")) return;
+                setLeadCaptured(true);
+                fetch("/api/lead-capture", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email: leadEmail.trim(), segmentId: `paywall_${lang}`, source: "paywall", fingerprint: { lang, ua: navigator.userAgent, tz: Intl.DateTimeFormat().resolvedOptions().timeZone } }),
+                }).catch(() => {});
+                try { window.fbq?.("track", "Lead", { content_name: "paywall_email" }); } catch {}
+              }}
+              style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: leadCaptured ? "#22c55e" : C.accent, color: "#fff", fontSize: 13, fontWeight: 600, cursor: leadCaptured || !leadEmail.includes("@") ? "default" : "pointer", fontFamily: "inherit", whiteSpace: "nowrap", opacity: !leadEmail.includes("@") && !leadCaptured ? 0.5 : 1, transition: "background 0.2s" }}
+            >{leadCaptured ? "✓" : (lang === "de" || lang === "at" ? "Senden" : lang === "en" ? "Send" : lang === "it" ? "Invia" : "Pošalji")}</button>
           </div>
         </div>
         {/* ═══ 3-TIER DECOY PRICING CARDS ═══ */}
