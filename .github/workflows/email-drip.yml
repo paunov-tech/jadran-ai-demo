@@ -1,0 +1,17 @@
+name: Email Drip Sequence
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"   # every 6 hours
+  workflow_dispatch:         # manual trigger for testing
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger email-send
+        run: |
+          curl -s -X POST https://jadran.ai/api/email-send \
+            -H "Content-Type: application/json" \
+            -d "{\"secret\":\"${{ secrets.CRON_SECRET }}\"}" \
+            | tee /dev/stderr | grep -q '"ok":true'
