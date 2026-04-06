@@ -83,9 +83,9 @@ const BENEFITS = {
 };
 
 const FORM_LABELS = {
-  de: { name: "Vorname", email: "E-Mail-Adresse", cta: "Kostenlos testen →", trust: "Kein Spam. Jederzeit abmeldbar.", wa: "Per WhatsApp kontaktieren" },
-  it: { name: "Nome", email: "Indirizzo email", cta: "Prova gratis →", trust: "Niente spam. Disiscrizione in qualsiasi momento.", wa: "Contatta via WhatsApp" },
-  en: { name: "First name", email: "Email address", cta: "Get free access →", trust: "No spam. Unsubscribe anytime.", wa: "Contact via WhatsApp" },
+  de: { name: "Vorname", email: "E-Mail-Adresse", cta: "Kostenlos testen →", trust: "Kein Spam. Jederzeit abmeldbar.", wa: "Per WhatsApp kontaktieren", returning_pain: "Nur deine E-Mail — wir schicken dir alles sofort:" },
+  it: { name: "Nome", email: "Indirizzo email", cta: "Prova gratis →", trust: "Niente spam. Disiscrizione in qualsiasi momento.", wa: "Contatta via WhatsApp", returning_pain: "Solo la tua email — ti mandiamo tutto subito:" },
+  en: { name: "First name", email: "Email address", cta: "Get free access →", trust: "No spam. Unsubscribe anytime.", wa: "Contact via WhatsApp", returning_pain: "Just your email — we'll send everything right away:" },
 };
 
 const WA_MESSAGES = {
@@ -226,7 +226,8 @@ export default function SegmentLandingPage({ slug }) {
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
-              <p className="form-title">{seg.pain}</p>
+              <p className="form-title">{returning ? (labels.returning_pain || seg.pain) : seg.pain}</p>
+              {!returning && (
               <input
                 type="text"
                 placeholder={labels.name}
@@ -234,6 +235,7 @@ export default function SegmentLandingPage({ slug }) {
                 onChange={e => setName(e.target.value)}
                 autoComplete="given-name"
               />
+              )}
               <input
                 type="email"
                 placeholder={labels.email}
