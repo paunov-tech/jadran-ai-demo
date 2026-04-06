@@ -97,7 +97,7 @@ const WA_MESSAGES = {
   en_couple:  "Hi, I'm interested in the Croatia couples guide 🌊",
 };
 
-const WA_NUMBER = "381695561699";
+const WA_NUMBER = "38640564940";
 
 const RETURNING_HOOK = {
   de_camper:  "Willkommen zurück! Noch auf der Suche nach Stellplätzen in Kroatien?",
