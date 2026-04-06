@@ -18,7 +18,23 @@
     "api/email-send.js":         { "maxDuration": 30 },
     "api/unsubscribe.js":        { "maxDuration": 10 },
     "api/track-open.js":         { "maxDuration": 5 },
-    "api/audience-sync.js":      { "maxDuration": 30 }
+    "api/audience-sync.js":      { "maxDuration": 30 },
+    "api/border-intelligence.js":{ "maxDuration": 60 },
+    "api/pulse.js":              { "maxDuration": 60 },
+    "api/guide.js":              { "maxDuration": 60 },
+    "api/gemini.js":             { "maxDuration": 30 },
+    "api/vision.js":             { "maxDuration": 30 },
+    "api/alerts.js":             { "maxDuration": 30 },
+    "api/nearby.js":             { "maxDuration": 30 },
+    "api/navtex.js":             { "maxDuration": 20 },
+    "api/weather.js":            { "maxDuration": 20 },
+    "api/np-capacity.js":        { "maxDuration": 20 },
+    "api/checkout.js":           { "maxDuration": 20 },
+    "api/book.js":               { "maxDuration": 20 },
+    "api/reserve.js":            { "maxDuration": 20 },
+    "api/notify.js":             { "maxDuration": 15 },
+    "api/daily.js":              { "maxDuration": 15 },
+    "api/places.js":             { "maxDuration": 15 }
   },
   "headers": [
     {
