@@ -532,12 +532,43 @@ const [lang, setLang] = useState(() => {
     const cookies = Object.fromEntries(document.cookie.split("; ").map(c => c.split("=")));
     return { fbp: cookies._fbp || "", fbc: cookies._fbc || "" };
   };
+
+  const sha256hex = async (str) => {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+  };
+
+  const getDeviceFingerprint = async () => {
+    const s = window.screen;
+    const raw = [
+      navigator.userAgent,
+      `${s.width}x${s.height}x${s.colorDepth}`,
+      navigator.language,
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+      navigator.hardwareConcurrency || "",
+      navigator.platform || "",
+    ].join("|");
+    const hash = await sha256hex(raw);
+    return {
+      externalId: hash,
+      screen: `${s.width}x${s.height}`,
+      colorDepth: s.colorDepth,
+      os: navigator.platform || "",
+      ua: navigator.userAgent,
+      lang: navigator.language,
+      tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      cores: navigator.hardwareConcurrency || 0,
+    };
+  };
+
   const applyAdvancedMatching = async (email) => {
     try {
-      const enc = new TextEncoder();
-      const buf = await crypto.subtle.digest("SHA-256", enc.encode(email.trim().toLowerCase()));
-      const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
-      window.fbq?.("init", "1284802997089070", { em: hash });
+      const emHash = await sha256hex(email.trim().toLowerCase());
+      const fp = await getDeviceFingerprint();
+      window.fbq?.("init", "1284802997089070", {
+        em: emHash,
+        external_id: fp.externalId,
+      });
     } catch {}
   };
   const [exitEmail, setExitEmail] = useState("");
@@ -1348,13 +1379,14 @@ const [lang, setLang] = useState(() => {
                 setLeadCaptured(true);
                 const { fbp, fbc } = getMetaCookies();
                 const evId = `pw_${Date.now()}`;
+                const fp = await getDeviceFingerprint();
                 applyAdvancedMatching(leadEmail);
                 fetch("/api/lead-capture", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ email: leadEmail.trim(), segmentId: `paywall_${lang}`, source: "paywall", fingerprint: { lang, ua: navigator.userAgent, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }, fbp, fbc, eventId: evId }),
+                  body: JSON.stringify({ email: leadEmail.trim(), segmentId: `paywall_${lang}`, source: "paywall", fingerprint: fp, fbp, fbc, eventId: evId, externalId: fp.externalId }),
                 }).catch(() => {});
-                try { window.fbq?.("track", "Lead", { content_name: "paywall_email", eventID: evId }); } catch {}
+                try { window.fbq?.("track", "Lead", { content_name: "paywall_email", eventID: evId, external_id: fp.externalId }); } catch {}
               }}
               style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: leadCaptured ? "#22c55e" : C.accent, color: "#fff", fontSize: 13, fontWeight: 600, cursor: leadCaptured || !leadEmail.includes("@") ? "default" : "pointer", fontFamily: "inherit", whiteSpace: "nowrap", opacity: !leadEmail.includes("@") && !leadCaptured ? 0.5 : 1, transition: "background 0.2s" }}
             >{leadCaptured ? "✓" : (lang === "de" || lang === "at" ? "Senden" : lang === "en" ? "Send" : lang === "it" ? "Invia" : "Pošalji")}</button>
@@ -2837,12 +2869,13 @@ const [lang, setLang] = useState(() => {
                   setShowExitIntent(false);
                   const { fbp, fbc } = getMetaCookies();
                   const evId = `ei_${Date.now()}`;
+                  const fp = await getDeviceFingerprint();
                   applyAdvancedMatching(exitEmail);
                   fetch("/api/lead-capture", {
                     method:"POST", headers:{"Content-Type":"application/json"},
-                    body: JSON.stringify({ email: exitEmail.trim(), segmentId:`exit_${lang}`, source:"exit_intent", fingerprint:{ lang, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }, fbp, fbc, eventId: evId }),
+                    body: JSON.stringify({ email: exitEmail.trim(), segmentId:`exit_${lang}`, source:"exit_intent", fingerprint: fp, fbp, fbc, eventId: evId, externalId: fp.externalId }),
                   }).catch(() => {});
-                  try { window.fbq?.("track", "Lead", { content_name:"exit_intent_email", eventID: evId }); } catch {}
+                  try { window.fbq?.("track", "Lead", { content_name:"exit_intent_email", eventID: evId, external_id: fp.externalId }); } catch {}
                 }}
                 style={{ padding:"11px 16px", borderRadius:10, border:"none", background:C.accent, color:"#fff", fontSize:13, fontWeight:700, cursor: exitEmail.includes("@") ? "pointer" : "default", opacity: exitEmail.includes("@") ? 1 : 0.5, fontFamily:"inherit", whiteSpace:"nowrap" }}>
                 {lang === "de" || lang === "at" ? "Senden" : lang === "en" ? "Send" : lang === "it" ? "Invia" : "Pošalji"}

@@ -30,10 +30,11 @@ async function fireMetaCAPI(email, eventName, { ip, ua, fbp, fbc, eventId } = {}
 
   const userData = {
     em: [emHash],
-    ...(ip  ? { client_ip_address: ip } : {}),
-    ...(ua  ? { client_user_agent: ua } : {}),
-    ...(fbp ? { fbp } : {}),
-    ...(fbc ? { fbc } : {}),
+    ...(ip         ? { client_ip_address: ip } : {}),
+    ...(ua         ? { client_user_agent: ua } : {}),
+    ...(fbp        ? { fbp } : {}),
+    ...(fbc        ? { fbc } : {}),
+    ...(externalId ? { external_id: [await sha256(externalId)] } : {}),
   };
 
   await fetch(`https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${token}`, {
@@ -92,7 +93,7 @@ export default async function handler(req, res) {
 
   if (req.method !== "POST") return res.status(405).json({ error: "method" });
 
-  const { email, name = "", segmentId, variantId = "default", source = "organic", fingerprint = {}, vid = "", returning = false, fbp = "", fbc = "", eventId = "" } = req.body || {};
+  const { email, name = "", segmentId, variantId = "default", source = "organic", fingerprint = {}, vid = "", returning = false, fbp = "", fbc = "", eventId = "", externalId = "" } = req.body || {};
   const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "unknown";
   const ua = req.headers["user-agent"] || "";
 
