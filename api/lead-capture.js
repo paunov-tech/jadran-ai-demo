@@ -21,7 +21,7 @@ async function sha256(str) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function fireMetaCAPI(email, eventName, { ip, ua, fbp, fbc, eventId } = {}) {
+async function fireMetaCAPI(email, eventName, { ip, ua, fbp, fbc, eventId, externalId } = {}) {
   const pixelId = process.env.META_PIXEL_ID;
   const token = process.env.META_CAPI_TOKEN;
   if (!pixelId || !token) return;
@@ -127,7 +127,7 @@ export default async function handler(req, res) {
 
     // Fire async side-effects (don't block response)
     Promise.all([
-      fireMetaCAPI(email, "Lead", { ip, ua, fbp, fbc, eventId }),
+      fireMetaCAPI(email, "Lead", { ip, ua, fbp, fbc, eventId, externalId }),
       sendWelcomeEmail(email, name, segmentId),
     ]).catch(() => {});
 

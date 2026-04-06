@@ -93,32 +93,50 @@ function buildReEmail(templateId, email, segmentId, name, leadId) {
   if (templateId === "re_discount") {
     const BODIES = {
       de_camper: `<p>${hi}</p>
-<p>Du hast deinen <strong>${guideName}</strong> fast freigeschaltet — wir haben deinen Platz für dich reserviert.</p>
-<p>Heute haben wir etwas Besonderes für dich:</p>
-<div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:12px;padding:16px 24px;margin:16px 0;text-align:center">
-  <p style="margin:0;font-size:22px;font-weight:700;color:#0ea5e9">25% Rabatt</p>
-  <p style="margin:4px 0 0;color:#334155">Nur €14,99 statt €19,99 — 30 Tage Vollzugang</p>
-</div>
-<p style="color:#64748b;font-size:13px">⏳ Dieses Angebot läuft in 48 Stunden ab.</p>
-${btn(url + "&promo=RE25", "Jetzt €14,99 sichern →")}${footer}`,
+<p>Du hast deinen <strong>${guideName}</strong> fast freigeschaltet — 380+ Reisende aus dem DACH-Raum nutzen ihn bereits diese Saison.</p>
+<p>Was sie gefunden haben, was auf keiner Karte steht:</p>
+<ul style="color:#334155">
+  <li>🅿️ Legale Stellplätze direkt am Meer — kostenlos in der Nebensaison</li>
+  <li>🌊 Buchten ohne Tagestouristen — nur per Boot oder früh morgens erreichbar</li>
+  <li>🍽️ Konobas, in denen die Einheimischen essen — keine Touristenfallen</li>
+</ul>
+<p><strong>7-Tage-Geld-zurück-Garantie</strong> — kein Risiko.</p>
+${btn(url, "Guide freischalten →")}${footer}`,
 
       de_family: `<p>${hi}</p>
-<p>Dein <strong>${guideName}</strong> wartet auf dich — wir haben einen speziellen Rabatt vorbereitet.</p>
-<div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:12px;padding:16px 24px;margin:16px 0;text-align:center">
-  <p style="margin:0;font-size:22px;font-weight:700;color:#0ea5e9">25% Rabatt</p>
-  <p style="margin:4px 0 0;color:#334155">Nur €14,99 statt €19,99 — 30 Tage Vollzugang</p>
-</div>
-<p style="color:#64748b;font-size:13px">⏳ Nur 48 Stunden gültig.</p>
-${btn(url + "&promo=RE25", "Angebot sichern →")}${footer}`,
+<p>Dein <strong>${guideName}</strong> wartet — 380+ Familien aus Deutschland, Österreich und der Schweiz haben ihn bereits benutzt, um Kroatien zu entdecken.</p>
+<p>Kinderfreundliche Strände mit flachem Wasser, Restaurants ohne Touristenfallen, die beste Anreiseroute für deine Familie — alles auf Deutsch.</p>
+<p><strong>7-Tage-Geld-zurück-Garantie</strong> — kein Risiko.</p>
+${btn(url, "Jetzt freischalten →")}${footer}`,
+
+      it_sailor: `<p>${hi}</p>
+<p>La tua <strong>${guideName}</strong> ti aspetta — centinaia di velisti DACH la usano già questa stagione.</p>
+<p>Rade nascoste, previsioni Bora in tempo reale, ristoranti di pesce fresco dove mangiano i locali — tutto in italiano.</p>
+<p><strong>Garanzia 7 giorni soddisfatti o rimborsati</strong> — zero rischi.</p>
+${btn(url, "Sblocca la guida →")}${footer}`,
+
+      en_cruiser: `<p>${hi}</p>
+<p>Your <strong>${guideName}</strong> is still waiting — 380+ DACH sailors and travellers are already using it this season.</p>
+<p>Secret anchorages, live Bura forecasts, ACI marina tips, and fish restaurants the locals actually go to — all in English.</p>
+<p><strong>7-day money-back guarantee</strong> — zero risk.</p>
+${btn(url, "Unlock my sailing guide →")}${footer}`,
+
+      en_camper: `<p>${hi}</p>
+<p>Your <strong>${guideName}</strong> is still waiting — 380+ DACH travellers are using it to plan Croatia this summer.</p>
+<p>Legal camper spots Google Maps doesn't show, height restriction alerts, Bura wind warnings, cheap local restaurants — all in English.</p>
+<p><strong>7-day money-back guarantee</strong> — zero risk.</p>
+${btn(url, "Unlock my camper guide →")}${footer}`,
+
+      en_couple: `<p>${hi}</p>
+<p>Your <strong>${guideName}</strong> is still waiting — 380+ travellers found beaches and restaurants no travel blog has ever mentioned.</p>
+<p>We'll send you to places you'll have to yourself. Guaranteed or your money back within 7 days.</p>
+${btn(url, "Unlock my Croatia guide →")}${footer}`,
 
       default: `<p>${hi}</p>
-<p>You left your <strong>${guideName}</strong> behind — we saved your spot.</p>
-<div style="background:#f0f9ff;border:2px solid #0ea5e9;border-radius:12px;padding:16px 24px;margin:16px 0;text-align:center">
-  <p style="margin:0;font-size:22px;font-weight:700;color:#0ea5e9">25% OFF — just for you</p>
-  <p style="margin:4px 0 0;color:#334155">Only €14.99 instead of €19.99 · 30-day full access</p>
-</div>
-<p style="color:#64748b;font-size:13px">⏳ This offer expires in 48 hours.</p>
-${btn(url + "&promo=RE25", "Claim your 25% discount →")}${footer}`,
+<p>Your <strong>${guideName}</strong> is still waiting — 380+ travellers are already exploring Croatia with JADRAN.AI this season.</p>
+<p>Hidden beaches, local restaurants, real-time weather — all AI-powered, in your language.</p>
+<p><strong>7-day money-back guarantee</strong> — zero risk.</p>
+${btn(url, "Unlock my guide →")}${footer}`,
     };
     return BODIES[segmentId] || BODIES.default;
   }
@@ -126,16 +144,16 @@ ${btn(url + "&promo=RE25", "Claim your 25% discount →")}${footer}`,
   if (templateId === "re_last") {
     const BODIES = {
       de_camper: `<p>${hi}</p>
-<p>Letzte Erinnerung — dein <strong>25% Rabatt</strong> auf den ${guideName} läuft heute ab.</p>
+<p>Letzte Erinnerung — dein <strong>${guideName}</strong> wartet noch auf dich.</p>
 <p>JADRAN.AI kennt alle legalen Stellplätze, Höhenbeschränkungen, Bora-Warnungen und günstigen Konobas entlang der Dalmatinischen Küste.</p>
 <p><strong>7-Tage-Geld-zurück-Garantie</strong> — kein Risiko.</p>
-${btn(url + "&promo=RE25LAST", "Letztes Angebot sichern →")}${footer}`,
+${btn(url, "Jetzt freischalten — letzter Aufruf →")}${footer}`,
 
       default: `<p>${hi}</p>
-<p>Last call — your <strong>25% discount</strong> on the ${guideName} expires today.</p>
+<p>Last reminder — your <strong>${guideName}</strong> is still here.</p>
 <p>JADRAN.AI knows every hidden beach, legal camper spot, marina berth and local restaurant on the Croatian coast — AI-powered, in your language.</p>
 <p><strong>7-day money-back guarantee</strong> — zero risk.</p>
-${btn(url + "&promo=RE25LAST", "Grab the last offer →")}${footer}`,
+${btn(url, "Unlock my guide — last call →")}${footer}`,
     };
     return BODIES[segmentId] || BODIES.default;
   }
@@ -162,22 +180,22 @@ ${btn(url, "Take one last look →")}${footer}`,
 function getReSubject(templateId, segmentId, name) {
   const SUBJECTS = {
     re_discount: {
-      de_camper: "25% Rabatt auf deinen Kroatien-Guide — nur 48h ⏳",
-      de_family: "25% Rabatt auf deinen Familienguide — nur 48h ⏳",
-      it_sailor:  "25% di sconto sulla tua guida Croazia — 48h ⏳",
-      en_cruiser: "25% off your Croatia sailing guide — 48h only ⏳",
-      en_camper:  "25% off your Croatia camper guide — 48h only ⏳",
-      en_couple:  "25% off your Croatia guide — 48h only ⏳",
-      default:    "A special offer just for you — 48h only ⏳",
+      de_camper: "380+ DACH-Reisende nutzen deinen Guide — hast du ihn schon freigeschaltet? 🚐",
+      de_family: "Dein Familien-Kroatien-Guide wartet — hier sind 3 Tipps ⛱️",
+      it_sailor:  "380+ velisti stanno usando la tua guida — sei dentro? ⛵",
+      en_cruiser: "380+ sailors are using their guide — are you? ⛵",
+      en_camper:  "380+ DACH campers are using their guide this summer 🚐",
+      en_couple:  "Secret Croatia spots — 380+ travellers found them 🌊",
+      default:    "380+ travellers are exploring Croatia with JADRAN.AI — are you? 🌊",
     },
     re_last: {
-      de_camper: "Letzter Tag: 25% Rabatt läuft heute ab 🔔",
-      de_family: "Letzter Tag: Dein Rabatt läuft ab 🔔",
-      it_sailor:  "Ultimo giorno: lo sconto scade oggi 🔔",
-      en_cruiser: "Last day: your discount expires tonight 🔔",
-      en_camper:  "Last day: your discount expires tonight 🔔",
-      en_couple:  "Last day: your offer expires tonight 🔔",
-      default:    "Last day: your special offer expires tonight 🔔",
+      de_camper: "Kroatien-Saison startet bald — bist du vorbereitet? 🗺️",
+      de_family: "Letzter Aufruf: Dein Kroatien-Familienguide 🏖️",
+      it_sailor:  "Ultima chiamata: la tua guida vela Croazia ⛵",
+      en_cruiser: "Last call: your Croatia sailing guide ⛵",
+      en_camper:  "Croatia season is starting — are you ready? 🚐",
+      en_couple:  "Last call: your secret Croatia guide 🌊",
+      default:    "Last call: your Croatia guide is waiting 🌊",
     },
     re_final: {
       de_camper: "Auf Wiedersehen — viel Spaß in Kroatien 🌊",
