@@ -1374,7 +1374,7 @@ const [lang, setLang] = useState(() => {
             />
             <button
               disabled={leadCaptured || !leadEmail.includes("@")}
-              onClick={() => {
+              onClick={async () => {
                 if (leadCaptured || !leadEmail.includes("@")) return;
                 setLeadCaptured(true);
                 const { fbp, fbc } = getMetaCookies();
@@ -2863,7 +2863,7 @@ const [lang, setLang] = useState(() => {
               />
               <button id="exit-intent-btn"
                 disabled={!exitEmail.includes("@")}
-                onClick={() => {
+                onClick={async () => {
                   if (!exitEmail.includes("@")) return;
                   setExitCaptured(true);
                   setShowExitIntent(false);
