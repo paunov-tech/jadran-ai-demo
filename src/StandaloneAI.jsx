@@ -503,7 +503,6 @@ const [lang, setLang] = useState(() => {
         checkout_click: "InitiateCheckout",
         paywall_shown: "ViewContent",
         chat_start: "ViewContent",
-        msg_sent: "ViewContent",
         referral_share: "Lead",
       };
       if (pixelMap[event] && window.fbq) window.fbq("track", pixelMap[event], props || {});
