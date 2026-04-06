@@ -16,15 +16,25 @@ async function fsSet(col, id, fields) {
   return r.ok;
 }
 
-async function fireMetaCAPI(email, eventName) {
+async function sha256(str) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str.trim().toLowerCase()));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function fireMetaCAPI(email, eventName, { ip, ua, fbp, fbc, eventId } = {}) {
   const pixelId = process.env.META_PIXEL_ID;
   const token = process.env.META_CAPI_TOKEN;
   if (!pixelId || !token) return;
 
-  // Hash email for Meta
-  const enc = new TextEncoder();
-  const buf = await crypto.subtle.digest("SHA-256", enc.encode(email.trim().toLowerCase()));
-  const hashHex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+  const emHash = await sha256(email);
+
+  const userData = {
+    em: [emHash],
+    ...(ip  ? { client_ip_address: ip } : {}),
+    ...(ua  ? { client_user_agent: ua } : {}),
+    ...(fbp ? { fbp } : {}),
+    ...(fbc ? { fbc } : {}),
+  };
 
   await fetch(`https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${token}`, {
     method: "POST",
@@ -33,8 +43,10 @@ async function fireMetaCAPI(email, eventName) {
       data: [{
         event_name: eventName,
         event_time: Math.floor(Date.now() / 1000),
-        user_data: { em: [hashHex] },
+        event_id: eventId || `lead_${Date.now()}`,
+        user_data: userData,
         action_source: "website",
+        event_source_url: "https://jadran.ai/ai",
       }],
     }),
   }).catch(() => {});
@@ -80,8 +92,9 @@ export default async function handler(req, res) {
 
   if (req.method !== "POST") return res.status(405).json({ error: "method" });
 
-  const { email, name = "", segmentId, variantId = "default", source = "organic", fingerprint = {}, vid = "", returning = false } = req.body || {};
+  const { email, name = "", segmentId, variantId = "default", source = "organic", fingerprint = {}, vid = "", returning = false, fbp = "", fbc = "", eventId = "" } = req.body || {};
   const ip = (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "unknown";
+  const ua = req.headers["user-agent"] || "";
 
   if (!email || !segmentId) return res.status(400).json({ error: "missing fields" });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "invalid email" });
@@ -112,7 +125,7 @@ export default async function handler(req, res) {
 
     // Fire async side-effects (don't block response)
     Promise.all([
-      fireMetaCAPI(email, "Lead"),
+      fireMetaCAPI(email, "Lead", { ip, ua, fbp, fbc, eventId }),
       sendWelcomeEmail(email, name, segmentId),
     ]).catch(() => {});
 

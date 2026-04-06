@@ -526,6 +526,20 @@ const [lang, setLang] = useState(() => {
   const [leadEmail, setLeadEmail] = useState("");
   const [leadCaptured, setLeadCaptured] = useState(false);
   const [showExitIntent, setShowExitIntent] = useState(false);
+
+  // Advanced Matching helpers
+  const getMetaCookies = () => {
+    const cookies = Object.fromEntries(document.cookie.split("; ").map(c => c.split("=")));
+    return { fbp: cookies._fbp || "", fbc: cookies._fbc || "" };
+  };
+  const applyAdvancedMatching = async (email) => {
+    try {
+      const enc = new TextEncoder();
+      const buf = await crypto.subtle.digest("SHA-256", enc.encode(email.trim().toLowerCase()));
+      const hash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+      window.fbq?.("init", "1284802997089070", { em: hash });
+    } catch {}
+  };
   const [exitEmail, setExitEmail] = useState("");
   const [exitCaptured, setExitCaptured] = useState(false);
   const exitShownRef = useRef(false);
@@ -1332,12 +1346,15 @@ const [lang, setLang] = useState(() => {
               onClick={() => {
                 if (leadCaptured || !leadEmail.includes("@")) return;
                 setLeadCaptured(true);
+                const { fbp, fbc } = getMetaCookies();
+                const evId = `pw_${Date.now()}`;
+                applyAdvancedMatching(leadEmail);
                 fetch("/api/lead-capture", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ email: leadEmail.trim(), segmentId: `paywall_${lang}`, source: "paywall", fingerprint: { lang, ua: navigator.userAgent, tz: Intl.DateTimeFormat().resolvedOptions().timeZone } }),
+                  body: JSON.stringify({ email: leadEmail.trim(), segmentId: `paywall_${lang}`, source: "paywall", fingerprint: { lang, ua: navigator.userAgent, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }, fbp, fbc, eventId: evId }),
                 }).catch(() => {});
-                try { window.fbq?.("track", "Lead", { content_name: "paywall_email" }); } catch {}
+                try { window.fbq?.("track", "Lead", { content_name: "paywall_email", eventID: evId }); } catch {}
               }}
               style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: leadCaptured ? "#22c55e" : C.accent, color: "#fff", fontSize: 13, fontWeight: 600, cursor: leadCaptured || !leadEmail.includes("@") ? "default" : "pointer", fontFamily: "inherit", whiteSpace: "nowrap", opacity: !leadEmail.includes("@") && !leadCaptured ? 0.5 : 1, transition: "background 0.2s" }}
             >{leadCaptured ? "✓" : (lang === "de" || lang === "at" ? "Senden" : lang === "en" ? "Send" : lang === "it" ? "Invia" : "Pošalji")}</button>
@@ -2818,11 +2835,14 @@ const [lang, setLang] = useState(() => {
                   if (!exitEmail.includes("@")) return;
                   setExitCaptured(true);
                   setShowExitIntent(false);
+                  const { fbp, fbc } = getMetaCookies();
+                  const evId = `ei_${Date.now()}`;
+                  applyAdvancedMatching(exitEmail);
                   fetch("/api/lead-capture", {
                     method:"POST", headers:{"Content-Type":"application/json"},
-                    body: JSON.stringify({ email: exitEmail.trim(), segmentId:`exit_${lang}`, source:"exit_intent", fingerprint:{ lang, tz: Intl.DateTimeFormat().resolvedOptions().timeZone } }),
+                    body: JSON.stringify({ email: exitEmail.trim(), segmentId:`exit_${lang}`, source:"exit_intent", fingerprint:{ lang, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }, fbp, fbc, eventId: evId }),
                   }).catch(() => {});
-                  try { window.fbq?.("track", "Lead", { content_name:"exit_intent_email" }); } catch {}
+                  try { window.fbq?.("track", "Lead", { content_name:"exit_intent_email", eventID: evId }); } catch {}
                 }}
                 style={{ padding:"11px 16px", borderRadius:10, border:"none", background:C.accent, color:"#fff", fontSize:13, fontWeight:700, cursor: exitEmail.includes("@") ? "pointer" : "default", opacity: exitEmail.includes("@") ? 1 : 0.5, fontFamily:"inherit", whiteSpace:"nowrap" }}>
                 {lang === "de" || lang === "at" ? "Senden" : lang === "en" ? "Send" : lang === "it" ? "Invia" : "Pošalji"}
