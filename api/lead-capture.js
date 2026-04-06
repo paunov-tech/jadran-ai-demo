@@ -119,6 +119,7 @@ export default async function handler(req, res) {
       vid: strV(vid),
       returning: { booleanValue: !!returning },
       emailStep: intV(0),
+      reEngageStep: intV(0),
       createdAt: strV(now),
       updatedAt: strV(now),
       unsubscribed: { booleanValue: false },
