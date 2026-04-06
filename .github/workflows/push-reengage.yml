@@ -1,0 +1,27 @@
+name: Push Re-engagement
+
+on:
+  schedule:
+    - cron: "0 10 * * 3"   # every Wednesday at 10:00 UTC
+  workflow_dispatch:
+    inputs:
+      title:
+        description: "Notification title"
+        default: "Jadran te čeka 🌊"
+      body:
+        description: "Notification body"
+        default: "Otkrij skrivene plaže i savjete za ovu sezonu →"
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send push re-engagement
+        run: |
+          TITLE="${{ github.event.inputs.title || 'Jadran te čeka 🌊' }}"
+          BODY="${{ github.event.inputs.body || 'Otkrij skrivene plaže i savjete za ovu sezonu →' }}"
+          curl -s -X POST https://jadran.ai/api/push-broadcast \
+            -H "Content-Type: application/json" \
+            -H "X-Push-Secret: ${{ secrets.PUSH_SECRET }}" \
+            -d "{\"title\":\"${TITLE}\",\"body\":\"${BODY}\",\"url\":\"https://jadran.ai/ai\",\"tag\":\"reengage\"}" \
+            | tee /dev/stderr | grep -q '"ok":true'

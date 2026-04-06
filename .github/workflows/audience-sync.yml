@@ -1,0 +1,17 @@
+name: Audience Sync (Meta + Google)
+
+on:
+  schedule:
+    - cron: "0 3 * * *"   # every day at 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync leads to Meta + Google audiences
+        run: |
+          curl -s -X POST https://jadran.ai/api/audience-sync \
+            -H "Content-Type: application/json" \
+            -d "{\"secret\":\"${{ secrets.CRON_SECRET }}\"}" \
+            | tee /dev/stderr | grep -q '"ok":true'

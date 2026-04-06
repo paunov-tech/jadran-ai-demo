@@ -17,7 +17,8 @@
     "api/ab-control.js":         { "maxDuration": 15 },
     "api/email-send.js":         { "maxDuration": 30 },
     "api/unsubscribe.js":        { "maxDuration": 10 },
-    "api/track-open.js":         { "maxDuration": 5 }
+    "api/track-open.js":         { "maxDuration": 5 },
+    "api/audience-sync.js":      { "maxDuration": 30 }
   },
   "headers": [
     {
