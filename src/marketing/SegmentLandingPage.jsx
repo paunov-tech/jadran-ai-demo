@@ -99,6 +99,33 @@ const WA_MESSAGES = {
 
 const WA_NUMBER = "381695561699";
 
+const RETURNING_HOOK = {
+  de_camper:  "Willkommen zurück! Noch auf der Suche nach Stellplätzen in Kroatien?",
+  de_family:  "Willkommen zurück! Noch auf der Suche nach dem perfekten Familienurlaub?",
+  it_sailor:  "Bentornato! Stai ancora cercando ormeggi in Croazia?",
+  en_cruiser: "Welcome back! Still looking for the best anchorages in Croatia?",
+  en_camper:  "Welcome back! Still looking for camper spots on the Adriatic?",
+  en_couple:  "Welcome back! Still looking for those secret beaches?",
+};
+
+function getVid() {
+  const KEY = "jadran_vid";
+  // try localStorage first, then cookie
+  let vid = localStorage.getItem(KEY);
+  if (!vid) {
+    const match = document.cookie.match(/(?:^|;\s*)jadran_vid=([^;]+)/);
+    vid = match ? match[1] : null;
+  }
+  if (!vid) {
+    vid = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem(KEY, vid);
+    const exp = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+    document.cookie = `jadran_vid=${vid}; expires=${exp}; path=/; SameSite=Lax`;
+    return { vid, returning: false };
+  }
+  return { vid, returning: true };
+}
+
 function getFingerprint() {
   return {
     ua: navigator.userAgent,
@@ -117,6 +144,8 @@ export default function SegmentLandingPage({ slug }) {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
+  const [vid, setVid] = useState("");
+  const [returning, setReturning] = useState(false);
 
   const labels = FORM_LABELS[seg?.lang] || FORM_LABELS.en;
   const benefits = BENEFITS[slug] || [];
@@ -125,6 +154,9 @@ export default function SegmentLandingPage({ slug }) {
     if (!seg) return;
     const v = new URLSearchParams(window.location.search).get("v") || "default";
     setVariantId(v);
+    const { vid: visitorId, returning: isReturning } = getVid();
+    setVid(visitorId);
+    setReturning(isReturning);
     // Track impression
     fetch("/api/ab-impression", {
       method: "POST",
@@ -154,7 +186,7 @@ export default function SegmentLandingPage({ slug }) {
       const r = await fetch("/api/lead-capture", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name, segmentId: slug, variantId, source: "landing", fingerprint: getFingerprint() }),
+        body: JSON.stringify({ email, name, segmentId: slug, variantId, source: "landing", fingerprint: getFingerprint(), vid, returning }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || "error");
@@ -179,7 +211,7 @@ export default function SegmentLandingPage({ slug }) {
       <style>{STYLES}</style>
       <div className="hero">
         <div className="logo">JADRAN.AI</div>
-        <h1 className="hook">{seg.headline}</h1>
+        <h1 className="hook">{returning && RETURNING_HOOK[slug] ? RETURNING_HOOK[slug] : seg.headline}</h1>
         <p className="sub">{seg.subheadline}</p>
 
         <div className="form-wrap">
