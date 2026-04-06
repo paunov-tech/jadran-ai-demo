@@ -164,6 +164,9 @@
       ]
     }
   ],
+  "redirects": [
+    { "source": "/blog/", "destination": "/blog", "permanent": true }
+  ],
   "rewrites": [
     {
       "source": "/.well-known/assetlinks.json",

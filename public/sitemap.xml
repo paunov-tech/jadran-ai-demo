@@ -102,7 +102,7 @@
 
   <!-- ═══ BLOG ═══ -->
   <url>
-    <loc>https://jadran.ai/blog/</loc>
+    <loc>https://jadran.ai/blog</loc>
     <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
