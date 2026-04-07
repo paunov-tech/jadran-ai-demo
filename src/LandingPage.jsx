@@ -11,7 +11,7 @@ const goToStripe = async (plan = "season", lang = "en") => {
   try {
     // Analytics
     try { window.plausible?.("checkout_click", { props: { plan, source: "landing" } }); } catch {}
-    try { window.fbq?.("track", "AddPaymentInfo", { content_name: plan, currency: "EUR", value: plan === "vip" ? 49.99 : plan === "season" ? 19.99 : 9.99 }); } catch {}
+    try { if (localStorage.getItem("jadran_consent") === "1" && window.fbq) window.fbq("track", "AddPaymentInfo", { content_name: plan, currency: "EUR", value: plan === "vip" ? 49.99 : plan === "season" ? 19.99 : 9.99, event_id: `lp_${Date.now()}_${Math.random().toString(36).slice(2,9)}` }); } catch {}
     let deviceId;
     try { deviceId = localStorage.getItem("jadran_device_id"); if (!deviceId) { const b = new Uint8Array(9); crypto.getRandomValues(b); deviceId = "jd_" + Array.from(b, x => x.toString(16).padStart(2,"0")).join(""); localStorage.setItem("jadran_device_id", deviceId); } } catch { deviceId = "unknown"; }
     let utmData = {};
@@ -243,13 +243,13 @@ export default function LandingPage() {
     if (!isArrival && !depCity.trim()) return;
     if (!toLPCity.trim()) return;
     setBriefLoading(true);
-    const seg = selectedMode === "kamper" ? "kamper" : selectedMode === "avion" ? "jedrilicar" : "par";
+    const seg = selectedMode === "kamper" ? "kamper" : selectedMode === "avion" ? "luxury" : "par";
     const fromCoordArr = depCoords ? [depCoords.lat, depCoords.lng] : null;
     const destObj = { city: toLPCity.trim() };
     if (toCoords) { destObj.lat = toCoords.lat; destObj.lng = toCoords.lng; }
     saveDelta({ segment: seg, transport: selectedMode, from: isArrival ? null : depCity.trim(), from_coords: fromCoordArr, destination: destObj, lang, phase: isArrival ? "arrival" : "transit" });
     const transitUrl = isArrival
-      ? `/ai?niche=sailing&lang=${lang}&dest=${encodeURIComponent(toLPCity.trim())}`
+      ? `/ai?niche=luxury&lang=${lang}&dest=${encodeURIComponent(toLPCity.trim())}`
       : `/?room=DEMO&go=transit&from=${encodeURIComponent(depCity.trim())}&to=${encodeURIComponent(toLPCity.trim())}&seg=${seg}&lang=${lang}${depCoords ? `&fLat=${depCoords.lat}&fLng=${depCoords.lng}` : ""}${toCoords ? `&tLat=${toCoords.lat}&tLng=${toCoords.lng}` : ""}`;
 
     // Linear distance + ETA — only for driving modes
@@ -455,7 +455,7 @@ Specifico. Nomi reali.`,
   const startLabel = (l) => ({ hr: "Krenite na put →", de: "Reise starten →", en: "Start your journey →", it: "Inizia il viaggio →" }[l] || "Krenite na put →");
   const tlang = (obj) => obj[lang === "at" ? "de" : lang] || obj.hr || obj.en || "";
 
-  const modeToNiche = { auto: "local", avion: "sailing", kamper: "camper" };
+  const modeToNiche = { auto: "local", avion: "luxury", kamper: "camper" };
 
   // Load HERE Maps scripts dynamically
   const loadHereMaps = useCallback(() => new Promise((resolve, reject) => {

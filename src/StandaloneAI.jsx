@@ -75,6 +75,7 @@ const TRAVEL_MODES = [
   { id: "apartment", emoji: "🏠", name: "Apartman/Hotel", desc: "Fiksni smještaj" },
   { id: "camper", emoji: "🚐", name: "Kamper / Autodom", desc: "Sloboda na kotačima" },
   { id: "sailing", emoji: "⛵", name: "Jedrilica / Brod", desc: "Nautički turizam" },
+  { id: "luxury", emoji: "✈️", name: "Avion / Jahta", desc: "Premium dolazak" },
   { id: "cruiser", emoji: "🚢", name: "Kruzer", desc: "Lučki dan — maksimum u 8h" },
   { id: "daytrip", emoji: "🚗", name: "Dnevni izlet", desc: "Prolazim kroz" },
   { id: "cruise", emoji: "🚢", name: "Krstarenje", desc: "Kratko zaustavljanje" },
@@ -92,6 +93,7 @@ const T = {
     nicCamper: "Kamper vodič", nicCamperSub: "Parking, rute, dump station, upozorenja za kampere",
     nicLocal: "Lokalni vodič", nicLocalSub: "Apartman, hotel ili automobilom — plaže, konobe, skrivena mjesta",
     nicSailing: "Nautički vodič", nicSailingSub: "Marine, sidrišta, vjetar, konobe s mora",
+    nicLuxury: "VIP Concierge", nicLuxurySub: "Privatni transferi, luksuzni restorani, jahte, ekskluzivni doživljaji",
     nicCruiser: "Kruzer vodič", nicCruiserSub: "Maksimum u 8 sati — plan po minutu, skip-the-line",
     // Camper picker
     gabariti: "GABARITI VOZILA", camperLength: "Dužina (m)", camperHeight: "Visina (m)", camperPlaceholderLen: "npr. 7.5", camperPlaceholderH: "npr. 3.2", lenLabel: "Dužina (m)", heightLabel: "Visina (m)",
@@ -103,6 +105,7 @@ const T = {
     // Quick chips
     qParking: "Gdje parkirati kamper?", qDinner: "Večera s parkingom?", qFuel: "Benzinska / LPG?",
     qMarina: "Najbliža marina s vezom?", qSea: "Stanje mora i vjetar?", qKonoba: "Konoba dostupna s mora?",
+    qLuxTransfer: "Privatni transfer s aerodroma?", qLuxDine: "Najbolji restoran s pogledom?", qLuxYacht: "Jednodnevni najam jahte?",
     qPlan: "Plan dana za 8 sati?", qLunch: "Lokalni ručak bez turističke cijene?", qPhoto: "Fotogenična lokacija?",
     qBeach: "Najbolja plaža u blizini?", qFood: "Preporuka za ručak?", qVisit: "Što posjetiti danas?",
     // Buttons
@@ -123,6 +126,7 @@ const T = {
     nicCamper: "Camper Guide", nicCamperSub: "Parking, routes, dump stations, camper warnings",
     nicLocal: "Local Guide", nicLocalSub: "Apartment, hotel or by car — beaches, restaurants, hidden gems",
     nicSailing: "Nautical Guide", nicSailingSub: "Marinas, anchorages, wind, waterfront restaurants",
+    nicLuxury: "VIP Concierge", nicLuxurySub: "Private transfers, fine dining, yacht charters, exclusive experiences",
     nicCruiser: "Cruise Guide", nicCruiserSub: "Max in 8 hours — minute-by-minute plan, skip-the-line",
     gabariti: "VEHICLE SIZE", camperLength: "Length (m)", camperHeight: "Height (m)", camperPlaceholderLen: "e.g. 7.5", camperPlaceholderH: "e.g. 3.2", lenLabel: "Length (m)", heightLabel: "Height (m)",
     gabaritiFeedback: "Your camper: {len}m × {h}m — tailoring recommendations",
@@ -130,6 +134,7 @@ const T = {
     vibeTitle: "Right now on the Adriatic", vibeCamper: "Road & sea conditions", vibeSailing: "Maritime conditions",
     notifBtn: "Enable weather alerts", notifOn: "Alerts active", loading: "Loading data...",
     qParking: "Where to park the camper?", qDinner: "Dinner with parking?", qFuel: "Gas / LPG nearby?",
+    qLuxTransfer: "Private airport transfer?", qLuxDine: "Best fine dining with a view?", qLuxYacht: "Day yacht charter options?",
     qMarina: "Nearest marina with berth?", qSea: "Sea conditions & wind?", qKonoba: "Restaurant from the sea?",
     qPlan: "Day plan for 8 hours?", qLunch: "Local lunch, no tourist prices?", qPhoto: "Best photo spot?",
     qBeach: "Best beach nearby?", qFood: "Lunch recommendation?", qVisit: "What to see today?",
@@ -148,6 +153,7 @@ const T = {
     nicCamper: "Camper-Reiseführer", nicCamperSub: "Stellplätze, Routen, Ver-/Entsorgung, Warnungen",
     nicLocal: "Lokaler Reiseführer", nicLocalSub: "Ferienwohnung, Hotel oder mit dem Auto — Strände, Restaurants",
     nicSailing: "Nautischer Reiseführer", nicSailingSub: "Marinas, Ankerplätze, Wind, Küstenrestaurants",
+    nicLuxury: "VIP Concierge", nicLuxurySub: "Privattransfers, Gourmet-Restaurants, Yachtcharter, exklusive Erlebnisse",
     nicCruiser: "Kreuzfahrt-Reiseführer", nicCruiserSub: "Maximum in 8 Stunden — Minutenplan, ohne Anstehen",
     gabariti: "FAHRZEUGMAßE", camperLength: "Länge (m)", camperHeight: "Höhe (m)", camperPlaceholderLen: "z.B. 7,5", camperPlaceholderH: "z.B. 3,2", lenLabel: "Länge (m)", heightLabel: "Höhe (m)",
     gabaritiFeedback: "Ihr Camper: {len}m × {h}m — Empfehlungen werden angepasst",
@@ -155,6 +161,7 @@ const T = {
     vibeTitle: "Aktuell an der Adria", vibeCamper: "Straßen- & Seebedingungen", vibeSailing: "Seebedingungen",
     notifBtn: "Wetterwarnungen aktivieren", notifOn: "Warnungen aktiv", loading: "Daten werden geladen...",
     qParking: "Wo kann ich den Camper parken?", qDinner: "Abendessen mit Parkplatz?", qFuel: "Tankstelle / LPG?",
+    qLuxTransfer: "Privater Flughafentransfer?", qLuxDine: "Bestes Gourmet-Restaurant mit Aussicht?", qLuxYacht: "Yacht-Charter für einen Tag?",
     qMarina: "Nächste Marina mit Liegeplatz?", qSea: "Seezustand & Wind?", qKonoba: "Restaurant vom Meer aus?",
     qPlan: "Tagesplan für 8 Stunden?", qLunch: "Lokales Mittagessen, keine Touristenpreise?", qPhoto: "Bester Foto-Spot?",
     qBeach: "Bester Strand in der Nähe?", qFood: "Empfehlung zum Mittagessen?", qVisit: "Was gibt es heute zu sehen?",
@@ -173,6 +180,7 @@ const T = {
     nicCamper: "Guida camper", nicCamperSub: "Parcheggi, percorsi, scarico, avvertenze per camper",
     nicLocal: "Guida locale", nicLocalSub: "Appartamento, hotel o in auto — spiagge, ristoranti, gemme nascoste",
     nicSailing: "Guida nautica", nicSailingSub: "Porti turistici, ancoraggi, vento, ristoranti sul mare",
+    nicLuxury: "VIP Concierge", nicLuxurySub: "Transfer privati, ristoranti gourmet, yacht charter, esperienze esclusive",
     nicCruiser: "Guida crociera", nicCruiserSub: "Massimo in 8 ore — piano al minuto, salta la fila",
     gabariti: "DIMENSIONI VEICOLO", camperLength: "Lunghezza (m)", camperHeight: "Altezza (m)", camperPlaceholderLen: "es. 7,5", camperPlaceholderH: "es. 3,2", lenLabel: "Lunghezza (m)", heightLabel: "Altezza (m)",
     gabaritiFeedback: "Il vostro camper: {len}m × {h}m — adattiamo i consigli",
@@ -180,6 +188,7 @@ const T = {
     vibeTitle: "In questo momento sull'Adriatico", vibeCamper: "Condizioni stradali e marittime", vibeSailing: "Condizioni marittime",
     notifBtn: "Attiva avvisi meteo", notifOn: "Avvisi attivi", loading: "Caricamento dati...",
     qParking: "Dove parcheggiare il camper?", qDinner: "Cena con parcheggio?", qFuel: "Distributore / GPL?",
+    qLuxTransfer: "Transfer privato dall'aeroporto?", qLuxDine: "Miglior ristorante gourmet con vista?", qLuxYacht: "Noleggio yacht per un giorno?",
     qMarina: "Porto turistico più vicino?", qSea: "Condizioni del mare e vento?", qKonoba: "Ristorante dal mare?",
     qPlan: "Piano giornaliero per 8 ore?", qLunch: "Pranzo locale, no prezzi turistici?", qPhoto: "Miglior punto foto?",
     qBeach: "Spiaggia migliore nelle vicinanze?", qFood: "Consiglio per il pranzo?", qVisit: "Cosa vedere oggi?",
@@ -198,6 +207,7 @@ const T = {
     nicCamper: "Camper-Guide", nicCamperSub: "Stellplätze, Routen, Ver-/Entsorgung, Warnungen für Camper",
     nicLocal: "Dein Urlaubsguide", nicLocalSub: "Ferienwohnung, Hotel oder mit dem Auto — Strände, Beisln, Geheimtipps",
     nicSailing: "Nautik-Guide", nicSailingSub: "Marinas, Ankerplätze, Wind, Schmankerln am Wasser",
+    nicLuxury: "VIP Concierge", nicLuxurySub: "Privattransfers, Gourmet-Restaurants, Yachtcharter, exklusive Erlebnisse",
     nicCruiser: "Kreuzfahrt-Guide", nicCruiserSub: "Maximales Erlebnis in 8 Stunden — ohne Anstehen",
     gabariti: "FAHRZEUGGRÖßE", camperLength: "Länge (m)", camperHeight: "Höhe (m)", camperPlaceholderLen: "z.B. 7,5", camperPlaceholderH: "z.B. 3,2", lenLabel: "Länge (m)", heightLabel: "Höhe (m)",
     gabaritiFeedback: "Dein Camper: {len}m × {h}m — wir passen die Tipps an",
@@ -205,6 +215,7 @@ const T = {
     vibeTitle: "Gerade an der Adria", vibeCamper: "Straßen- & Meerlage", vibeSailing: "Seebedingungen",
     notifBtn: "Wetterwarnungen aktivieren", notifOn: "Warnungen aktiv", loading: "Daten laden...",
     qParking: "Wo kann ich den Camper hinstellen?", qDinner: "Abendessen mit Parkplatz?", qFuel: "Tankstelle / LPG?",
+    qLuxTransfer: "Privater Flughafentransfer?", qLuxDine: "Bestes Gourmet-Restaurant mit Aussicht?", qLuxYacht: "Yacht-Charter für einen Tag?",
     qMarina: "Nächste Marina mit Liegeplatz?", qSea: "Wie schaut's am Meer aus?", qKonoba: "Beisl direkt am Wasser?",
     qPlan: "Tagesplan für 8 Stunden?", qLunch: "Wo gibt's a gschmackige Jause?", qPhoto: "Bester Platz fürs Foto?",
     qBeach: "Bester Strand in der Nähe?", qFood: "Wo gibt's was Gutes zum Essen?", qVisit: "Was schaut man sich heut an?",
@@ -223,6 +234,7 @@ const T = {
     nicCamper: "Vodič za kamper", nicCamperSub: "Parkirišča, poti, opozorila za kamper",
     nicLocal: "Lokalni vodič", nicLocalSub: "Apartma, hotel ali z avtom — plaže, restavracije",
     nicSailing: "Navtični vodič", nicSailingSub: "Marine, sidrišča, veter, restavracije ob morju",
+    nicLuxury: "VIP Concierge", nicLuxurySub: "Zasebni transferji, vrhunske restavracije, jahte, ekskluzivne izkušnje",
     nicCruiser: "Vodič za križarke", nicCruiserSub: "Maksimum v 8 urah — načrt po minutah",
     gabariti: "VELIKOST VOZILA", camperLength: "Dolžina (m)", camperHeight: "Višina (m)", camperPlaceholderLen: "npr. 7,5", camperPlaceholderH: "npr. 3,2", lenLabel: "Dolžina (m)", heightLabel: "Višina (m)",
     gabaritiFeedback: "Vaš kamper: {len}m × {h}m — prilagajamo priporočila",
@@ -248,6 +260,7 @@ const T = {
     nicCamper: "Průvodce pro karavany", nicCamperSub: "Parkování, trasy, služby, varování pro karavany",
     nicLocal: "Místní průvodce", nicLocalSub: "Apartmán, hotel nebo autem — pláže, restaurace, skryté klenoty",
     nicSailing: "Námořní průvodce", nicSailingSub: "Přístavy, kotviště, vítr, restaurace u moře",
+    nicLuxury: "VIP Concierge", nicLuxurySub: "Soukromé transfery, luxusní restaurace, jachtové pronájmy, exkluzivní zážitky",
     nicCruiser: "Průvodce pro výletní lodě", nicCruiserSub: "Maximum za 8 hodin — plán po minutách",
     gabariti: "ROZMĚRY VOZIDLA", camperLength: "Délka (m)", camperHeight: "Výška (m)", camperPlaceholderLen: "např. 7,5", camperPlaceholderH: "např. 3,2", lenLabel: "Délka (m)", heightLabel: "Výška (m)",
     gabaritiFeedback: "Váš karavan: {len}m × {h}m — přizpůsobujeme doporučení",
@@ -271,6 +284,7 @@ const T = {
   },
   pl: { title: "Jadran przewodnik", sub: "Lokalne wskazówki na idealny urlop nad Adriatykiem", start: "Zacznij rozmowę", send: "Wyślij", placeholder: "Zapytaj o Adriatyk...", region: "Wybierz region", mode: "Jak podróżujesz?", unlock: "Odblokuj — od 9,99€", free3: "3 pytania za darmo", remaining: "pozostało", upgraded: "Premium odblokowany!", back: "Wstecz", typing: "myślę...",
     nicCamper: "Przewodnik kamperowy", nicCamperSub: "Parkingi, trasy, stacje serwisowe, ostrzeżenia",
+    nicLuxury: "VIP Concierge", nicLuxurySub: "Prywatne transfery, luksusowe restauracje, czartery jachtów, ekskluzywne doświadczenia",
     nicLocal: "Lokalny przewodnik", nicLocalSub: "Apartament, hotel lub samochodem — plaże, restauracje",
     nicSailing: "Przewodnik żeglarski", nicSailingSub: "Mariny, kotwicowiska, wiatr, restauracje nad wodą",
     nicCruiser: "Przewodnik wycieczkowy", nicCruiserSub: "Maksimum w 8 godzin — plan co do minuty",
@@ -494,23 +508,27 @@ const [lang, setLang] = useState(() => {
   const [showRestore, setShowRestore] = useState(false);   // session recovery banner
   const [feedbackSent, setFeedbackSent] = useState({});    // msgIndex → true (flag sent)
 
+  // GDPR-safe Meta Pixel helper — only fires if user consented
+  const fbqSafe = (action, eventName, params) => {
+    try { if (localStorage.getItem("jadran_consent") === "1" && window.fbq) window.fbq(action, eventName, params); } catch {}
+  };
+  const genEventId = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
   // Plausible analytics helper
   // Dual analytics: Plausible (privacy) + Meta Pixel (ads)
   const track = (event, props) => {
     try { window.plausible?.(event, { props }); } catch {}
-    try {
-      const pixelMap = {
-        checkout_click: "InitiateCheckout",
-        paywall_shown: "ViewContent",
-        chat_start: "ViewContent",
-        referral_share: "Lead",
-      };
-      if (pixelMap[event] && window.fbq) window.fbq("track", pixelMap[event], props || {});
-    } catch {}
+    const pixelMap = {
+      checkout_click: "InitiateCheckout",
+      paywall_shown: "ViewContent",
+      chat_start: "ViewContent",
+      referral_share: "Lead",
+    };
+    if (pixelMap[event]) fbqSafe("track", pixelMap[event], { ...props, event_id: genEventId(event) });
   };
   const trackPurchase = (plan, amount, currency = "EUR") => {
     try { window.plausible?.("purchase", { props: { plan, amount, currency } }); } catch {}
-    try { window.fbq?.("track", "Purchase", { value: amount, currency, content_name: plan }); } catch {}
+    fbqSafe("track", "Purchase", { value: amount, currency, content_name: plan, event_id: genEventId("purchase") });
   };
   const [langOpen, setLangOpen] = useState(false);
   const curFlag = (LANGS.find(l => l.code === lang) || LANGS[0]).flag;
@@ -620,14 +638,14 @@ const [lang, setLang] = useState(() => {
       if (e.clientY < 10 && !e.relatedTarget) {
         exitShownRef.current = true;
         setShowExitIntent(true);
-        try { window.fbq?.("track", "AddToWishlist", { content_name: "exit_intent" }); } catch {}
+        fbqSafe("track", "AddToWishlist", { content_name: "exit_intent", event_id: genEventId("exit") });
       }
     };
     const mobileTimer = setTimeout(() => {
       if (!exitShownRef.current && !showPaywall && !exitCaptured) {
         exitShownRef.current = true;
         setShowExitIntent(true);
-        try { window.fbq?.("track", "AddToWishlist", { content_name: "exit_intent_timer" }); } catch {}
+        fbqSafe("track", "AddToWishlist", { content_name: "exit_intent_timer", event_id: genEventId("exit_timer") });
       }
     }, 45000);
     document.addEventListener("mouseout", onMouseOut);
@@ -790,6 +808,7 @@ const [lang, setLang] = useState(() => {
     const n = params.get("niche");
     if (n === "camper" || n === "local") { setNiche(n); if (n === "camper") setTravelMode("camper"); }
     if (n === "sailing") { setNiche(n); setTravelMode("sailing"); }
+    if (n === "luxury") { setNiche(n); setTravelMode("luxury"); }
     if (n === "cruiser") { setNiche(n); setTravelMode("cruiser"); }
     if (n === "local") { setNiche(n); setTravelMode("apartment"); }
     // ?premium=true removed — was an unverified shortcut exploitable by any user
@@ -1066,7 +1085,7 @@ const [lang, setLang] = useState(() => {
 
   const startCheckout = async (plan = "week") => {
     track("checkout_click", { plan, lang, region, niche });
-    try { window.fbq?.("track", "AddPaymentInfo", { content_name: plan, currency: "EUR", value: plan === "vip" ? 49.99 : plan === "season" ? 19.99 : 9.99 }); } catch {}
+    fbqSafe("track", "AddPaymentInfo", { content_name: plan, currency: "EUR", value: plan === "vip" ? 49.99 : plan === "season" ? 19.99 : 9.99, event_id: genEventId("checkout") });
     // Persist session state so it survives Stripe redirect
     try { localStorage.setItem("jadran_session", JSON.stringify({ region, travelMode, lang, niche })); } catch {}
     setPayLoading(true);
@@ -1372,7 +1391,7 @@ const [lang, setLang] = useState(() => {
                 if (leadCaptured || !leadEmail.includes("@")) return;
                 setLeadCaptured(true);
                 const { fbp, fbc } = getMetaCookies();
-                const evId = `pw_${Date.now()}`;
+                const evId = genEventId("pw");
                 const fp = await getDeviceFingerprint();
                 applyAdvancedMatching(leadEmail);
                 fetch("/api/lead-capture", {
@@ -1380,7 +1399,7 @@ const [lang, setLang] = useState(() => {
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ email: leadEmail.trim(), segmentId: `paywall_${lang}`, source: "paywall", fingerprint: fp, fbp, fbc, eventId: evId, externalId: fp.externalId }),
                 }).catch(() => {});
-                try { window.fbq?.("track", "Lead", { content_name: "paywall_email", eventID: evId, external_id: fp.externalId }); } catch {}
+                fbqSafe("track", "Lead", { content_name: "paywall_email", event_id: evId, external_id: fp.externalId });
               }}
               style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: leadCaptured ? "#22c55e" : C.accent, color: "#fff", fontSize: 13, fontWeight: 600, cursor: leadCaptured || !leadEmail.includes("@") ? "default" : "pointer", fontFamily: "inherit", whiteSpace: "nowrap", opacity: !leadEmail.includes("@") && !leadCaptured ? 0.5 : 1, transition: "background 0.2s" }}
             >{leadCaptured ? "✓" : (lang === "de" || lang === "at" ? "Senden" : lang === "en" ? "Send" : lang === "it" ? "Invia" : "Pošalji")}</button>
@@ -1708,6 +1727,11 @@ const [lang, setLang] = useState(() => {
     if (isSailing) {
       return `${t.iceWelcome} ${regionName}. ${t.iceSailIntro}\n\n${wxLine}\n\n${t.iceMarinaQ}`;
     }
+    if (travelMode === "luxury" || niche === "luxury") {
+      const luxIntro = lang === "de" || lang === "at" ? "Willkommen. Ich bin Ihr privater Concierge für die Adria — Yachtcharter, Gourmet-Reservierungen, Helikoptertransfers, exklusive Erlebnisse." : lang === "en" ? "Welcome. I'm your private Adriatic concierge — yacht charters, Michelin reservations, helicopter transfers, exclusive experiences." : lang === "it" ? "Benvenuto. Sono il vostro concierge privato per l'Adriatico — charter yacht, ristoranti Michelin, trasferimenti in elicottero, esperienze esclusive." : "Dobrodošli. Ja sam vaš privatni concierge za Jadran — jahte, Michelin restorani, helikopter transferi, ekskluzivni doživljaji.";
+      const luxQ = lang === "de" || lang === "at" ? "Was darf ich für Sie arrangieren?" : lang === "en" ? "What may I arrange for you?" : lang === "it" ? "Cosa posso organizzare per voi?" : "Što mogu organizirati za vas?";
+      return `${t.iceWelcome} ${regionName}. ${luxIntro}\n\n${wxLine}\n\n${luxQ}`;
+    }
     if (isCruiser) {
       return `${t.iceWelcome} ${regionName}. ${t.iceCruiseIntro}\n\n${wxLine}\n\n${t.iceCruiseQ}`;
     }
@@ -1729,6 +1753,13 @@ const [lang, setLang] = useState(() => {
     "⛽ Gdje napuniti gorivo?",
     "🏝️ Zaštićeno sidrište?",
     "🌊 Stanje mora i prognoze?",
+  ] : travelMode === "luxury" ? [
+    "✈️ Privatni transfer s aerodroma?",
+    "🛥️ Jednodnevni najam jahte s kapetanom?",
+    "🍷 Michelin restoran ili degustacija vina?",
+    "🚁 Helikopterski transfer na otoke?",
+    "🏝️ Privatna plaža ili ekskluzivna uvala?",
+    "💎 VIP tura — Hvar, Vis, Pakleni otoci?",
   ] : travelMode === "cruiser" ? [
     "🗺️ Optimalan plan dana za 8h?",
     "🍽️ Gdje jesti lokalno i jeftino?",
@@ -1789,15 +1820,15 @@ const [lang, setLang] = useState(() => {
               boxShadow: premium ? "0 0 20px rgba(34,197,94,0.08)" : "0 0 20px rgba(245,158,11,0.08), 0 0 60px rgba(245,158,11,0.04)",
               transition: "all 0.3s", zIndex: 1,
             }}>
-            <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${niche === "camper" ? "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?w=600&q=75" : niche === "sailing" ? "https://images.unsplash.com/photo-1540946485063-a40da27545f8?w=600&q=75" : niche === "cruiser" ? "https://images.unsplash.com/photo-1548574505-5e239809ee19?w=600&q=75" : "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&q=75"})`, backgroundSize: "cover", backgroundPosition: "center", pointerEvents: "none" }} />
-            <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${niche === "camper" ? "rgba(245,158,11,0.7)" : niche === "sailing" ? "rgba(6,182,212,0.65)" : niche === "cruiser" ? "rgba(168,85,247,0.65)" : "rgba(14,165,233,0.65)"} 0%, rgba(15,23,42,0.88) 100%)`, pointerEvents: "none" }} />
+            <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${niche === "camper" ? "https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?w=600&q=75" : niche === "sailing" ? "https://images.unsplash.com/photo-1540946485063-a40da27545f8?w=600&q=75" : niche === "luxury" ? "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=600&q=75" : niche === "cruiser" ? "https://images.unsplash.com/photo-1548574505-5e239809ee19?w=600&q=75" : "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=600&q=75"})`, backgroundSize: "cover", backgroundPosition: "center", pointerEvents: "none" }} />
+            <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${niche === "camper" ? "rgba(245,158,11,0.7)" : niche === "sailing" ? "rgba(6,182,212,0.65)" : niche === "luxury" ? "rgba(212,175,55,0.7)" : niche === "cruiser" ? "rgba(168,85,247,0.65)" : "rgba(14,165,233,0.65)"} 0%, rgba(15,23,42,0.88) 100%)`, pointerEvents: "none" }} />
             <div style={{ position: "relative", padding: "20px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", pointerEvents: "none" }}>
               <div>
                 <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 20, fontWeight: 700, color: "#fff" }}>
-                  {niche === "camper" ? t.nicCamper : niche === "sailing" ? t.nicSailing : niche === "cruiser" ? t.nicCruiser : t.nicLocal}
+                  {niche === "camper" ? t.nicCamper : niche === "sailing" ? t.nicSailing : niche === "luxury" ? t.nicLuxury : niche === "cruiser" ? t.nicCruiser : t.nicLocal}
                 </div>
                 <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", marginTop: 3 }}>
-                  {niche === "camper" ? t.nicCamperSub : niche === "sailing" ? t.nicSailingSub : niche === "cruiser" ? t.nicCruiserSub : t.nicLocalSub}
+                  {niche === "camper" ? t.nicCamperSub : niche === "sailing" ? t.nicSailingSub : niche === "luxury" ? t.nicLuxurySub : niche === "cruiser" ? t.nicCruiserSub : t.nicLocalSub}
                 </div>
               </div>
               {premium
@@ -1994,6 +2025,7 @@ const [lang, setLang] = useState(() => {
               <div style={{ fontSize: 12, color: C.text, lineHeight: 1.5 }}>
                 {niche === "camper" ? (lang === "de" || lang === "at" ? "Tunnel-Höhen, Camper-Stellplätze, Dump-Stations, Bura-Warnungen — alles in Echtzeit." : lang === "en" ? "Tunnel heights, camper parking, dump stations, Bura warnings — all in real-time." : "Visine tunela, kamper parkinge, dump statione, upozorenja na buru — sve u realnom vremenu.")
                 : niche === "sailing" ? (lang === "de" || lang === "at" ? "DHMZ-Prognose, NAVTEX, Marinas, Ankerplätze, Windvorhersage — direkt im Chat." : lang === "en" ? "DHMZ forecast, NAVTEX, marinas, anchorages, wind forecast — right in the chat." : "DHMZ prognoza, NAVTEX, marine, sidrišta, prognoza vjetra — direktno u chatu.")
+                : niche === "luxury" ? (lang === "de" || lang === "at" ? "Privatcharter, Michelin-Restaurants, VIP-Transfers, Helikoptertouren — Ihr exklusiver Adriatik-Concierge." : lang === "en" ? "Private charters, Michelin dining, VIP transfers, helicopter tours — your exclusive Adriatic concierge." : lang === "it" ? "Charter privati, ristoranti Michelin, trasferimenti VIP, tour in elicottero — il vostro concierge esclusivo." : "Privatni čarteri, Michelin restorani, VIP transferi, helikopterske ture — vaš ekskluzivni jadranski concierge.")
                 : niche === "cruiser" ? (lang === "de" || lang === "at" ? "Minutengenauer Plan für Ihren Hafentag. Restaurants, Sehenswürdigkeiten, Rückweg zum Schiff." : lang === "en" ? "Minute-by-minute plan for your port day. Restaurants, sights, route back to ship." : "Plan po minutu za vaš dan u luci. Restorani, znamenitosti, povratak na brod.")
                 : (lang === "de" || lang === "at" ? "Versteckte Buchten, lokale Konobas, Parkplätze, Wetter — alles was Google nicht weiß." : lang === "en" ? "Hidden coves, local konobas, parking, weather — everything Google doesn't know." : "Skrivene uvale, lokalne konobe, parking, vrijeme — sve što Google ne zna.")}
               </div>
@@ -2466,6 +2498,10 @@ const [lang, setLang] = useState(() => {
               `⚓ ${t.qMarina}`,
               `🌊 ${t.qSea}`,
               `🍽️ ${t.qKonoba}`,
+            ] : travelMode === "luxury" || niche === "luxury" ? [
+              `✈️ ${t.qLuxTransfer || "Private airport transfer?"}`,
+              `🍷 ${t.qLuxDine || "Best fine dining with a view?"}`,
+              `🛥️ ${t.qLuxYacht || "Day yacht charter options?"}`,
             ] : travelMode === "cruiser" || niche === "cruiser" ? [
               `🗺️ ${t.qPlan}`,
               `🍽️ ${t.qLunch}`,
@@ -2870,14 +2906,14 @@ const [lang, setLang] = useState(() => {
                   setExitCaptured(true);
                   setShowExitIntent(false);
                   const { fbp, fbc } = getMetaCookies();
-                  const evId = `ei_${Date.now()}`;
+                  const evId = genEventId("ei");
                   const fp = await getDeviceFingerprint();
                   applyAdvancedMatching(exitEmail);
                   fetch("/api/lead-capture", {
                     method:"POST", headers:{"Content-Type":"application/json"},
                     body: JSON.stringify({ email: exitEmail.trim(), segmentId:`exit_${lang}`, source:"exit_intent", fingerprint: fp, fbp, fbc, eventId: evId, externalId: fp.externalId }),
                   }).catch(() => {});
-                  try { window.fbq?.("track", "Lead", { content_name:"exit_intent_email", eventID: evId, external_id: fp.externalId }); } catch {}
+                  fbqSafe("track", "Lead", { content_name:"exit_intent_email", event_id: evId, external_id: fp.externalId });
                 }}
                 style={{ padding:"11px 16px", borderRadius:10, border:"none", background:C.accent, color:"#fff", fontSize:13, fontWeight:700, cursor: exitEmail.includes("@") ? "pointer" : "default", opacity: exitEmail.includes("@") ? 1 : 0.5, fontFamily:"inherit", whiteSpace:"nowrap" }}>
                 {lang === "de" || lang === "at" ? "Senden" : lang === "en" ? "Send" : lang === "it" ? "Invia" : "Pošalji"}
