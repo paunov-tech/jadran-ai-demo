@@ -333,27 +333,35 @@ export default function DestinationExplorer() {
   const [qcInput, setQcInput] = useState("");
   const [qcLoading, setQcLoading] = useState(false);
   const [qcStarted, setQcStarted] = useState(false);
-  const qcEndRef = useRef(null);
-  const qcCardRef = useRef(null);
+  const qcBoxRef = useRef(null);   // scrollable messages container
+  const qcCardRef = useRef(null);  // outer card — for initial viewport scroll
   const qcSend = async (text) => {
     if (!text.trim() || qcLoading) return;
-    const uMsg = { role:"user", text:text.trim() };
+    const uMsg = { role:"user", content:text.trim() };
     setQcMsgs(p => [...p, uMsg]);
     setQcInput(""); setQcLoading(true); setQcStarted(true);
-    // Scroll chat card into view after send so messages are visible
-    setTimeout(() => qcCardRef.current?.scrollIntoView({ behavior:"smooth", block:"nearest" }), 80);
     const errText = lang==="de"||lang==="at" ? "Keine Antwort — bitte nochmal versuchen." : lang==="en" ? "No response — please try again." : lang==="it" ? "Nessuna risposta — riprova." : "Nema odgovora — pokušaj ponovo.";
     try {
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 20000);
-      const r = await fetch("/api/chat", { method:"POST", headers:{"Content-Type":"application/json"}, signal: ctrl.signal, body: JSON.stringify({ mode:"apartment", plan:"free", lang: lang==="at"?"de":lang||"en", region:"all", msgs:[...qcMsgs, uMsg].slice(-6) }) });
+      const timer = setTimeout(() => ctrl.abort(), 25000);
+      const r = await fetch("/api/chat", {
+        method:"POST", headers:{"Content-Type":"application/json"}, signal: ctrl.signal,
+        body: JSON.stringify({
+          mode:"landing", plan:"free", lang: lang==="at"?"de":lang||"hr", region:"all",
+          messages:[...qcMsgs, uMsg].slice(-6)
+        })
+      });
       clearTimeout(timer);
       const d = await r.json();
-      setQcMsgs(p => [...p, { role:"assistant", text: d.reply||d.text||errText }]);
-    } catch { setQcMsgs(p => [...p, { role:"assistant", text: errText }]); }
+      const reply = d.content?.[0]?.text || d.reply || d.text || errText;
+      setQcMsgs(p => [...p, { role:"assistant", content: reply }]);
+    } catch { setQcMsgs(p => [...p, { role:"assistant", content: errText }]); }
     setQcLoading(false);
   };
-  useEffect(() => { qcEndRef.current?.scrollIntoView({behavior:"smooth"}); }, [qcMsgs]);
+  // Scroll inside chat box only — never move page viewport
+  useEffect(() => {
+    if (qcBoxRef.current) qcBoxRef.current.scrollTop = qcBoxRef.current.scrollHeight;
+  }, [qcMsgs]);
 
   useEffect(() => { setTimeout(() => setVisible(true), 100); }, []);
   useEffect(() => { try { localStorage.setItem("jadran_lang",lang); } catch {} }, [lang]);
@@ -582,10 +590,10 @@ export default function DestinationExplorer() {
 
             {/* Messages — only shown after first send */}
             {qcMsgs.length > 0 && (
-              <div style={{ padding:"18px 18px 8px", maxHeight:280, overflowY:"auto" }}>
+              <div ref={qcBoxRef} style={{ padding:"18px 18px 8px", maxHeight:280, overflowY:"auto" }}>
                 {qcMsgs.map((m,i) => (
                   <div key={i} style={{ display:"flex", justifyContent:m.role==="user"?"flex-end":"flex-start", marginBottom:10, animation:"qc-in .3s both" }}>
-                    <div style={{ background:m.role==="user"?"linear-gradient(135deg,#0ea5e9,#0284c7)":"rgba(14,165,233,0.07)", border:m.role==="user"?"none":"1px solid rgba(14,165,233,0.1)", borderRadius:m.role==="user"?"16px 4px 16px 16px":"4px 16px 16px 16px", padding:"10px 15px", fontSize:14, color:m.role==="user"?"#fff":"#cbd5e1", lineHeight:1.65, maxWidth:"82%", whiteSpace:"pre-wrap" }}>{m.text}</div>
+                    <div style={{ background:m.role==="user"?"linear-gradient(135deg,#0ea5e9,#0284c7)":"rgba(14,165,233,0.07)", border:m.role==="user"?"none":"1px solid rgba(14,165,233,0.1)", borderRadius:m.role==="user"?"16px 4px 16px 16px":"4px 16px 16px 16px", padding:"10px 15px", fontSize:14, color:m.role==="user"?"#fff":"#cbd5e1", lineHeight:1.65, maxWidth:"82%", whiteSpace:"pre-wrap" }}>{m.content}</div>
                   </div>
                 ))}
                 {qcLoading && (
@@ -595,7 +603,6 @@ export default function DestinationExplorer() {
                     </div>
                   </div>
                 )}
-                <div ref={qcEndRef}/>
               </div>
             )}
 

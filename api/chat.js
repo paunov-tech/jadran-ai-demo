@@ -7,7 +7,7 @@ const _global = { c: 0, r: 0 }; // Global daily counter
 
 // Tier limits — server-side enforcement (frontend can be bypassed)
 const TIER_LIMITS = {
-  free:     { daily: 4,  maxHistory: 6,  maxTokens: 1100 }, // WOW izlog — free users must be impressed
+  free:     { daily: 7,  maxHistory: 6,  maxTokens: 1100 }, // 7 free messages — consistent with frontend
   week:     { daily: 110, maxHistory: 16, maxTokens: 1200 },
   season:   { daily: 110, maxHistory: 20, maxTokens: 1400 },
   vip:      { daily: 320, maxHistory: 30, maxTokens: 2000 },
@@ -281,6 +281,12 @@ SPECIFIČNO:
 - Restorani s parkingom — ne samo u centru grada
 - Plaže s pristupom autom + parking opcije
 Završi sa jednom bonus "insider" preporukom koju turisti obično ne znaju.`,
+
+  landing: `ULOGA: Ti si Jadran.ai — AI turistički operater za Jadransku obalu Hrvatske. Ovo je tvoj prvi kontakt s potencijalnim gostom na naslovnoj stranici.
+TON: Samouvjeren lokalni insider koji zna stvari koje Google ne zna. Konkretno, živahno, impresivno.
+STIL: Kratki odgovori — max 4 paragrafa. Uvijek završi s jednom konkretnom preporukom ili pozivom na akciju.
+LIVE INTELLIGENCE: Ako imaš live podatke o gužvi, vremenu ili prometnoj situaciji — OBAVEZNO ih pomeni. To je ono što nas razlikuje od svakog drugog chatbota.
+PRIMJER DOBROG ODGOVORA: "Trenutno je Split malo tiši nego inače — idealno za šetnju rivom bez gužve. Voda je 18°C, sunce je stalno, bura je mirna. Preporučujem večeru u Varoš četvrti — rezerviraj odmah jer se popunjava do 19h."`,
 
   default: `ULOGA: Ti si lokalni turistički vodič za hrvatsku obalu Jadrana.
 TON: Topao, konkretan, insider savjeti — ne generički turistički info.
@@ -1460,15 +1466,15 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
 
         // Block if EITHER is exhausted (catches incognito where fp changes but IP stays)
         const maxCount = Math.max(ipCount, fpCount);
-        if (maxCount >= 3) {
+        if (maxCount >= 7) {
           const exhaustMsg = lang === "de" || lang === "at"
-            ? "Ihre 3 kostenlosen Nachrichten sind aufgebraucht. Upgraden Sie auf Premium für unbegrenzte Nutzung."
-            : lang === "en" ? "Your 3 free messages are used up. Upgrade to Premium for unlimited access."
-            : lang === "it" ? "I tuoi 3 messaggi gratuiti sono esauriti. Passa a Premium per accesso illimitato."
-            : lang === "si" ? "Vaša 3 brezplačna sporočila so porabljena. Nadgradite na Premium za neomejen dostop."
-            : lang === "cz" ? "Vaše 3 bezplatné zprávy byly vyčerpány. Přejděte na Premium pro neomezený přístup."
-            : lang === "pl" ? "Twoje 3 darmowe wiadomości zostały wykorzystane. Przejdź na Premium, aby uzyskać nieograniczony dostęp."
-            : "Vaše 3 besplatne poruke su iskorištene. Nadogradite na Premium za neograničen pristup.";
+            ? "Ihre 7 kostenlosen Nachrichten sind aufgebraucht. Upgraden Sie auf Premium für unbegrenzte Nutzung."
+            : lang === "en" ? "Your 7 free messages are used up. Upgrade to Premium for unlimited access."
+            : lang === "it" ? "I tuoi 7 messaggi gratuiti sono esauriti. Passa a Premium per accesso illimitato."
+            : lang === "si" ? "Vaših 7 brezplačnih sporočil je porabljenih. Nadgradite na Premium za neomejen dostop."
+            : lang === "cz" ? "Vaše 7 bezplatných zpráv bylo vyčerpáno. Přejděte na Premium pro neomezený přístup."
+            : lang === "pl" ? "Twoje 7 darmowych wiadomości zostało wykorzystanych. Przejdź na Premium, aby uzyskać nieograniczony dostęp."
+            : "Vaših 7 besplatnih poruka je iskorišteno. Nadogradite na Premium za neograničen pristup.";
           return res.status(429).json({ content: [{ type: "text", text: "⭐ " + exhaustMsg }], _exhausted: true });
         }
 
