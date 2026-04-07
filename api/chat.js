@@ -718,16 +718,9 @@ function generateCamperYoloPrompt(yoloData) {
   }
 
   lines.push(`\nSITUACIONA PRAVILA:
-- "Kakav je promet na A1?" — navedi A1 sekciju sa brojem vozila
-- "Kolona na granici?" — GRANICE + DARS/ASFINAG kamere
-- "Kako je na autoputu kroz Sloveniju?" — DARS sekcija
-- "Stau na Tauern?" — ASFINAG sekcija
-- "Ima li reda na trajektu?" — TRAJEKT sekcija
-- "Kolona na Mišnjaku / Stinici / Rabu?" — RAB trajekti sekcija (jablanac+prizna = cesta ka Stinici = direktan pokazatelj reda)
-- "Kolona na Valbiska / Lopar?" — RAB trajekti sekcija (338 terminal)
-- UVIJEK navedi KOJI autoput i KOJI smjer kad govoriš o prometu
-- NIKAD "vidim na kameri" — reci "prema podacima sa X kamera na Y autoputu"
-- Za granice: kombiniraj kamere + border-intelligence`);
+- Pomeni promet samo ako je gust ili ako gost pita
+- Za granice: kombiniraj kamere + border-intelligence
+- NIKAD "vidim na kameri" — reci "prema aktualnim podacima sa X autoputu"`);
 
   return lines.join("\n");
 }

@@ -242,6 +242,7 @@ const T = {
     vibeTitle: "Trenutno na Jadranu", vibeCamper: "Stanje na cesti in morju", vibeSailing: "Pomorske razmere",
     notifBtn: "Vklopi vremenska opozorila", notifOn: "Opozorila aktivna", loading: "Nalagam podatke...",
     qParking: "Kje parkirati kamper?", qDinner: "Večerja s parkiriščem?", qFuel: "Bencinska / LPG?",
+    qLuxTransfer: "Zasebni prevoz z letališča?", qLuxDine: "Najboljša restavracija z razgledom?", qLuxYacht: "Enodnevni najem jahte?",
     qMarina: "Najbližja marina?", qSea: "Stanje morja in veter?", qKonoba: "Restavracija ob morju?",
     qPlan: "Dnevni načrt za 8 ur?", qLunch: "Lokalno kosilo?", qPhoto: "Najboljša točka za fotografijo?",
     qBeach: "Najboljša plaža v bližini?", qFood: "Priporočilo za kosilo?", qVisit: "Kaj si ogledati danes?",
@@ -268,6 +269,7 @@ const T = {
     vibeTitle: "Právě teď na Jadranu", vibeCamper: "Silniční a mořské podmínky", vibeSailing: "Mořské podmínky",
     notifBtn: "Zapnout upozornění na počasí", notifOn: "Upozornění aktivní", loading: "Načítám data...",
     qParking: "Kde zaparkovat karavan?", qDinner: "Večeře s parkováním?", qFuel: "Benzínka / LPG?",
+    qLuxTransfer: "Soukromý transfer z letiště?", qLuxDine: "Nejlepší restaurace s výhledem?", qLuxYacht: "Jednodenní pronájem jachty?",
     qMarina: "Nejbližší přístav?", qSea: "Stav moře a vítr?", qKonoba: "Restaurace u moře?",
     qPlan: "Denní plán na 8 hodin?", qLunch: "Místní oběd za dobré ceny?", qPhoto: "Nejlepší místo na fotku?",
     qBeach: "Nejlepší pláž v okolí?", qFood: "Doporučení na oběd?", qVisit: "Co vidět dnes?",
@@ -294,6 +296,7 @@ const T = {
     vibeTitle: "Teraz na Adriatyku", vibeCamper: "Warunki drogowe i morskie", vibeSailing: "Warunki morskie",
     notifBtn: "Włącz alerty pogodowe", notifOn: "Alerty aktywne", loading: "Ładowanie danych...",
     qParking: "Gdzie zaparkować kamper?", qDinner: "Kolacja z parkingiem?", qFuel: "Stacja / LPG?",
+    qLuxTransfer: "Prywatny transfer z lotniska?", qLuxDine: "Najlepsza restauracja z widokiem?", qLuxYacht: "Jednodniowy czarter jachtu?",
     qMarina: "Najbliższa marina?", qSea: "Stan morza i wiatr?", qKonoba: "Restauracja nad wodą?",
     qPlan: "Plan dnia na 8 godzin?", qLunch: "Lokalny obiad w dobrej cenie?", qPhoto: "Najlepsze miejsce na zdjęcie?",
     qBeach: "Najlepsza plaża w pobliżu?", qFood: "Polecenie na obiad?", qVisit: "Co zobaczyć dziś?",
@@ -2120,6 +2123,21 @@ const [lang, setLang] = useState(() => {
 
       {/* Messages */}
       <div ref={scrollBox} style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "0", display: "flex", flexDirection: "column" }}>
+
+        {/* ═══ HERE TRAFFIC ALERT BANNER ═══ */}
+        {guideCards.filter(c => c.severity === "critical" || c.severity === "warning").length > 0 && (
+          <div style={{ flexShrink: 0, margin: "8px 12px 0", display: "flex", flexDirection: "column", gap: 6 }}>
+            {guideCards.filter(c => c.severity === "critical" || c.severity === "warning").slice(0, 3).map((c, i) => (
+              <div key={c.id || i} style={{ padding: "10px 14px", borderRadius: 12, background: c.severity === "critical" ? "rgba(239,68,68,0.12)" : "rgba(245,158,11,0.1)", border: `1px solid ${c.severity === "critical" ? "rgba(239,68,68,0.25)" : "rgba(245,158,11,0.2)"}`, display: "flex", gap: 8, alignItems: "flex-start" }}>
+                <span style={{ fontSize: 16, flexShrink: 0 }}>{c.icon || (c.severity === "critical" ? "⛔" : "⚠️")}</span>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: c.severity === "critical" ? "#ef4444" : "#f59e0b" }}>{c.title}</div>
+                  <div style={{ fontSize: 11, color: C.mut, marginTop: 2 }}>{c.body}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* ═══ JADRAN VIBE — Maritime Dashboard ═══ */}
         {msgs.length > 0 && weather && (
