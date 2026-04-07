@@ -573,6 +573,88 @@ export default function SegmentLandingPage({ slug }) {
         </div>
       </Section>
 
+      {/* ── TECH STACK ── */}
+      <Section pt={48} pb={48} bg={DARK}>
+        <SectionLabel text={isDE ? "TECHNOLOGIE" : isIT ? "TECNOLOGIA" : "TECHNOLOGY"} />
+        <p style={{ textAlign:"center", fontSize:isDE?14:15, color:"#64748b", lineHeight:1.7, marginBottom:32, maxWidth:560, margin:"0 auto 32px" }}>
+          {isDE
+            ? "Keine App von gestern. Jadran.ai ist die einzige Reise-KI, die Echtzeit-Satellitendaten, Straßenverkehr von HERE (BMW-Gruppe), EU-Wettersatelliten und militärgrade KI in einem System kombiniert."
+            : isIT
+            ? "Non una solita app. Jadran.ai è l'unica guida AI che combina dati satellitari in tempo reale, traffico HERE (Gruppo BMW), satelliti meteo UE e AI di livello militare in un unico sistema."
+            : "Not an ordinary app. Jadran.ai is the only travel AI that combines real-time satellite data, HERE traffic (BMW Group), EU weather satellites and military-grade AI in one system."}
+        </p>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:12, marginBottom:24 }}>
+          {[
+            {
+              logo: "HERE",
+              logoColor: "#00AFAA",
+              name: isDE ? "HERE Maps Navigation" : isIT ? "HERE Maps Navigation" : "HERE Maps Navigation",
+              desc: isDE ? "Präzise Routing-Daten von BMW und Bosch — dem Standard der Automobilindustrie. Kein Google, keine Werbung." : isIT ? "Dati di routing precisi da BMW e Bosch — lo standard dell'industria automobilistica." : "Precision routing data from BMW and Bosch — the automotive industry standard. No Google, no ads.",
+              badge: isDE ? "BMW-Gruppe" : isIT ? "Gruppo BMW" : "BMW Group",
+            },
+            {
+              logo: "ESA",
+              logoColor: "#003087",
+              name: isDE ? "Sentinel-2 EU-Satelliten" : isIT ? "Satelliti Sentinel-2 UE" : "Sentinel-2 EU Satellites",
+              desc: isDE ? "Europäische Weltraumagentur-Satelliten überwachen Parkplätze, Strandbesucheraufkommen und Straßenzustände täglich." : isIT ? "Satelliti dell'Agenzia Spaziale Europea monitorano parcheggi, affollamento spiagge e condizioni stradali ogni giorno." : "European Space Agency satellites monitor parking, beach crowds and road conditions daily.",
+              badge: isDE ? "EU-Daten" : isIT ? "Dati UE" : "EU Data",
+            },
+            {
+              logo: "⚡",
+              logoColor: "#8B5CF6",
+              name: isDE ? "Anthropic Claude KI" : isIT ? "Anthropic Claude AI" : "Anthropic Claude AI",
+              desc: isDE ? "Das einzige KI-Modell mit US-Verteidigungsministerium-Vertrag. Constitutional AI — keine Halluzinationen, keine falschen Infos." : isIT ? "L'unico modello AI con contratto con il Dipartimento della Difesa USA. Niente allucinazioni, niente false informazioni." : "The only AI model with a US Department of Defense contract. Constitutional AI — no hallucinations, no false information.",
+              badge: isDE ? "US DoD Contract" : isIT ? "Contratto US DoD" : "US DoD Contract",
+            },
+            {
+              logo: "👁",
+              logoColor: "#F59E0B",
+              name: isDE ? "YOLO Echtzeit-Kamera" : isIT ? "Telecamere YOLO in tempo reale" : "YOLO Real-time Cameras",
+              desc: isDE ? "Computer-Vision-System erkennt Menschenmassen, Fahrzeuge und Boote auf 60+ Live-Kameras entlang der Küste. Aktualisierung alle 15 Minuten." : isIT ? "Sistema di visione artificiale rileva folla, veicoli e barche su 60+ telecamere live lungo la costa. Aggiornamento ogni 15 minuti." : "Computer vision system detects crowds, vehicles and boats on 60+ live cameras along the coast. Updated every 15 minutes.",
+              badge: isDE ? "Live-Daten" : isIT ? "Dati live" : "Live Data",
+            },
+            {
+              logo: "🛰",
+              logoColor: "#10B981",
+              name: isDE ? "Google Street View" : isIT ? "Google Street View" : "Google Street View",
+              desc: isDE ? "360°-Straßenansichten für präzise Standortverifizierung. Damit du weißt genau was dich erwartet — bevor du ankommst." : isIT ? "Viste stradali a 360° per la verifica precisa dei luoghi. Sai esattamente cosa ti aspetta prima di arrivare." : "360° street-level imagery for precise location verification. Know exactly what to expect before you arrive.",
+              badge: isDE ? "Google Partner" : isIT ? "Google Partner" : "Google Partner",
+            },
+            {
+              logo: "🇩🇪",
+              logoColor: "#E5E7EB",
+              name: isDE ? "Hetzner Cloud (Deutschland)" : isIT ? "Hetzner Cloud (Germania)" : "Hetzner Cloud (Germany)",
+              desc: isDE ? "Server in deutschen Rechenzentren. DSGVO-konform. Deine Daten verlassen nie die EU — Datenschutz nach deutschem Standard." : isIT ? "Server in data center tedeschi. Conforme al GDPR. I tuoi dati non lasciano mai l'UE." : "Servers in German data centres. GDPR compliant. Your data never leaves the EU.",
+              badge: isDE ? "DSGVO-konform" : isIT ? "Conforme GDPR" : "GDPR Compliant",
+            },
+          ].map((t, i) => (
+            <div key={i} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.05)", borderRadius:16, padding:"18px 16px" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+                <div style={{ width:36, height:36, borderRadius:10, background:`${t.logoColor}18`, border:`1px solid ${t.logoColor}30`,
+                  display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0,
+                  fontSize: t.logo.length > 2 ? 11 : 18, fontWeight:800, color:t.logoColor, letterSpacing:-0.5 }}>
+                  {t.logo}
+                </div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:"#f0f9ff", lineHeight:1.2 }}>{t.name}</div>
+                  <div style={{ fontSize:10, color:t.logoColor, fontWeight:700, letterSpacing:1, marginTop:2 }}>{t.badge}</div>
+                </div>
+              </div>
+              <p style={{ fontSize:12, color:"#475569", lineHeight:1.55 }}>{t.desc}</p>
+            </div>
+          ))}
+        </div>
+        <div style={{ background:"rgba(14,165,233,0.04)", border:"1px solid rgba(14,165,233,0.12)", borderRadius:14, padding:"16px 18px", textAlign:"center" }}>
+          <p style={{ fontSize:13, color:"#64748b", lineHeight:1.6 }}>
+            {isDE
+              ? "6 Enterprise-APIs · 60+ Live-Kameras · Echtzeit-Satellitendaten · Militärgrade KI · DSGVO-konforme deutsche Server"
+              : isIT
+              ? "6 API Enterprise · 60+ telecamere live · Dati satellitari in tempo reale · AI livello militare · Server tedeschi GDPR"
+              : "6 Enterprise APIs · 60+ live cameras · Real-time satellite data · Military-grade AI · GDPR-compliant German servers"}
+          </p>
+        </div>
+      </Section>
+
       {/* ── PRICING ── */}
       <Section pt={48} pb={48} bg={DARK}>
         <SectionLabel text={pricing.label} />
