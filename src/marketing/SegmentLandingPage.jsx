@@ -41,9 +41,10 @@ const CONTENT = {
     pricing: {
       label: "PREISE",
       free: { label:"Kostenlos", price:"0 €", features:["7 Fragen gratis","Kein Konto nötig","Alle Regionen"] },
-      week: { label:"Woche", price:"9,99 €", per:"/Woche", features:["Unbegrenzte Fragen","Live Wetter & Bura","Alle Routen & Karten","Deutsch"] },
-      season: { label:"Saisonpass", price:"29 €", per:"/Saison", badge:"BELIEBT", features:["Alles aus Woche","Gültig April–Oktober","Live Kamera-Links","Priority Support"] },
-      ctaWeek:"Woche kaufen", ctaSeason:"Saisonpass kaufen",
+      explorer: { label:"Explorer", price:"9,99 €", per:"/Woche", features:["KI-Assistent Chat","Restaurants & Strände","Routen & Karten"] },
+      season: { label:"Season Pass", price:"19,99 €", per:"/bis Oktober", badge:"AM BELIEBTESTEN", features:["Alles aus Explorer","🛡️ Travel Guardian: Sturm · Feuer · Grenze","📸 Jadran Lens: Strafen vermeiden","🎙️ Walkie-Talkie: sicher beim Fahren"] },
+      vip: { label:"VIP Priority", price:"49,99 €", per:"/bis Oktober", features:["Alles aus Season Pass","⚡ 300 Nachrichten/Tag","🏆 Ausführlichere Antworten"] },
+      ctaExplorer:"Explorer kaufen", ctaSeason:"Season Pass kaufen", ctaVip:"VIP kaufen",
     },
     proof: [
       { text:"Hat uns vor einem €200 Bußgeld gerettet — Stellplatz gefunden den Google Maps nicht kennt.", name:"Klaus & Renate", origin:"Bayern, Wohnmobil-Tour Istrien→Dubrovnik" },
@@ -54,7 +55,7 @@ const CONTENT = {
       { q:"Brauche ich ein Konto?", a:"Nein. Einfach öffnen und loslegen. 7 Fragen sind kostenlos, ohne Registrierung." },
       { q:"Funktioniert es auf dem Smartphone?", a:"Ja, vollständig optimiert für Mobilgeräte. Kein Download nötig." },
       { q:"Sind die Stellplätze aktuell?", a:"Die Datenbank wird laufend aktualisiert. Für Kroatien mit über 400 verifizierten Stellplätzen." },
-      { q:"Was passiert nach 7 Fragen?", a:"Du kannst ein Wochenabo (9,99 €) oder den Saisonpass (29 €) kaufen. Per Karte oder PayPal." },
+      { q:"Was passiert nach 7 Fragen?", a:"Du kannst Explorer (9,99 €/Woche), Season Pass (19,99 €) oder VIP Priority (49,99 €) kaufen. Per Karte oder PayPal." },
     ],
     finalCta: "Jetzt kostenlos testen →",
     finalHref: "/ai?niche=camper&lang=de",
@@ -92,9 +93,10 @@ const CONTENT = {
     pricing: {
       label: "PREISE",
       free: { label:"Kostenlos", price:"0 €", features:["7 Fragen gratis","Kein Konto","Alle Regionen"] },
-      week: { label:"Woche", price:"9,99 €", per:"/Woche", features:["Unbegrenzte Fragen","Live Wetter","Alle Strände & Restaurants","Deutsch"] },
-      season: { label:"Saisonpass", price:"29 €", per:"/Saison", badge:"BELIEBT", features:["Alles aus Woche","April–Oktober","Familienrouten","Priority Support"] },
-      ctaWeek:"Woche kaufen", ctaSeason:"Saisonpass kaufen",
+      explorer: { label:"Explorer", price:"9,99 €", per:"/Woche", features:["KI-Assistent Chat","Restaurants & Strände","Routen & Karten"] },
+      season: { label:"Season Pass", price:"19,99 €", per:"/bis Oktober", badge:"AM BELIEBTESTEN", features:["Alles aus Explorer","🛡️ Travel Guardian: Sturm · Feuer · Grenze","📸 Jadran Lens: Strafen vermeiden","🎙️ Walkie-Talkie: sicher beim Fahren"] },
+      vip: { label:"VIP Priority", price:"49,99 €", per:"/bis Oktober", features:["Alles aus Season Pass","⚡ 300 Nachrichten/Tag","🏆 Ausführlichere Antworten"] },
+      ctaExplorer:"Explorer kaufen", ctaSeason:"Season Pass kaufen", ctaVip:"VIP kaufen",
     },
     proof: [
       { text:"Meine Kinder haben mitgeplant statt zu quengeln. Der beste Urlaub seit Jahren.", name:"Familie Weber", origin:"Split–Hvar–Brač" },
@@ -105,7 +107,7 @@ const CONTENT = {
       { q:"Brauche ich ein Konto?", a:"Nein. Einfach öffnen und loslegen. 7 Fragen kostenlos." },
       { q:"Funktioniert es auf dem Smartphone?", a:"Ja, vollständig für Mobilgeräte optimiert." },
       { q:"Auf Deutsch?", a:"Ja, vollständig auf Deutsch — Fragen und Antworten." },
-      { q:"Was kostet der Saisonpass?", a:"29 € für die gesamte Saison April–Oktober. Einmalige Zahlung." },
+      { q:"Was kostet der Season Pass?", a:"19,99 € für die gesamte Saison April–Oktober. Einmalige Zahlung." },
     ],
     finalCta: "Jetzt kostenlos testen →",
     finalHref: "/ai?niche=camper&lang=de",
@@ -143,9 +145,10 @@ const CONTENT = {
     pricing: {
       label: "PREZZI",
       free: { label:"Gratis", price:"0 €", features:["7 domande gratis","Nessun account","Tutte le regioni"] },
-      week: { label:"Settimana", price:"9,99 €", per:"/settimana", features:["Domande illimitate","Meteo marino live","Tutte le rotte","Italiano"] },
-      season: { label:"Pass stagione", price:"29 €", per:"/stagione", badge:"POPOLARE", features:["Tutto dalla settimana","Valido aprile–ottobre","Link webcam live","Supporto prioritario"] },
-      ctaWeek:"Acquista settimana", ctaSeason:"Acquista pass stagione",
+      explorer: { label:"Explorer", price:"9,99 €", per:"/settimana", features:["Chat assistente AI","Ristoranti & spiagge","Rotte & mappe"] },
+      season: { label:"Season Pass", price:"19,99 €", per:"/fino a ottobre", badge:"PIÙ POPOLARE", features:["Tutto da Explorer","🛡️ Travel Guardian: tempeste · incendi · confini","📸 Jadran Lens: evita multe €60","🎙️ Walkie-Talkie: usa in sicurezza alla guida"] },
+      vip: { label:"VIP Priority", price:"49,99 €", per:"/fino a ottobre", features:["Tutto da Season Pass","⚡ 300 messaggi/giorno","🏆 Risposte dettagliate"] },
+      ctaExplorer:"Acquista Explorer", ctaSeason:"Acquista Season Pass", ctaVip:"Acquista VIP",
     },
     proof: [
       { text:"Tre baie che non esistono su nessuna app. Incredibile per chi naviga in Croazia.", name:"Marco", origin:"Ancona → Spalato" },
@@ -156,7 +159,7 @@ const CONTENT = {
       { q:"Serve un account?", a:"No. Apri e inizia subito. 7 domande gratis, nessuna registrazione." },
       { q:"Funziona su smartphone?", a:"Sì, completamente ottimizzato per mobile." },
       { q:"I dati NAVTEX sono aggiornati?", a:"Sì, dati DHMZ in tempo reale aggiornati ogni ora." },
-      { q:"Cosa succede dopo 7 domande?", a:"Puoi acquistare la settimana (9,99 €) o il pass stagione (29 €). Carta o PayPal." },
+      { q:"Cosa succede dopo 7 domande?", a:"Puoi acquistare Explorer (9,99 €/settimana), Season Pass (19,99 €) o VIP Priority (49,99 €). Carta o PayPal." },
     ],
     finalCta: "Prova adesso gratis →",
     finalHref: "/ai?niche=sailing&lang=it",
@@ -194,9 +197,10 @@ const CONTENT = {
     pricing: {
       label: "PRICING",
       free: { label:"Free", price:"€0", features:["7 questions free","No account needed","All regions"] },
-      week: { label:"Week", price:"€9.99", per:"/week", features:["Unlimited questions","Live marine weather","All routes & charts","English"] },
-      season: { label:"Season pass", price:"€29", per:"/season", badge:"POPULAR", features:["Everything in week","Valid April–October","Live webcam links","Priority support"] },
-      ctaWeek:"Buy week pass", ctaSeason:"Buy season pass",
+      explorer: { label:"Explorer", price:"€9.99", per:"/week", features:["AI assistant chat","Restaurants & beaches","Routes & charts"] },
+      season: { label:"Season Pass", price:"€19.99", per:"/until October", badge:"MOST POPULAR", features:["Everything in Explorer","🛡️ Travel Guardian: storms · fires · borders","📸 Jadran Lens: avoid €60 fines","🎙️ Walkie-Talkie: use safely while driving"] },
+      vip: { label:"VIP Priority", price:"€49.99", per:"/until October", features:["Everything in Season","⚡ 300 messages/day","🏆 More detailed answers"] },
+      ctaExplorer:"Buy Explorer", ctaSeason:"Buy Season Pass", ctaVip:"Buy VIP",
     },
     proof: [
       { text:"Found three anchorages that aren't on any chart app. Best tool I've used for Croatian waters.", name:"James", origin:"Sailing Ancona to Dubrovnik" },
@@ -207,7 +211,7 @@ const CONTENT = {
       { q:"Do I need an account?", a:"No. Open it and start immediately. 7 questions free, no signup." },
       { q:"Does it work on a phone?", a:"Yes, fully optimised for mobile. Works offline for cached responses." },
       { q:"Is the NAVTEX data live?", a:"Yes, DHMZ data updated hourly." },
-      { q:"What happens after 7 questions?", a:"Buy a week pass (€9.99) or season pass (€29). Card or PayPal." },
+      { q:"What happens after 7 questions?", a:"Buy Explorer (€9.99/week), Season Pass (€19.99) or VIP Priority (€49.99). Card or PayPal." },
     ],
     finalCta: "Try it free now →",
     finalHref: "/ai?niche=sailing&lang=en",
@@ -245,9 +249,10 @@ const CONTENT = {
     pricing: {
       label: "PRICING",
       free: { label:"Free", price:"€0", features:["7 questions free","No account needed","All regions"] },
-      week: { label:"Week", price:"€9.99", per:"/week", features:["Unlimited questions","Live Bura warnings","All routes & maps","English"] },
-      season: { label:"Season pass", price:"€29", per:"/season", badge:"POPULAR", features:["Everything in week","Valid April–October","Live webcam links","Priority support"] },
-      ctaWeek:"Buy week pass", ctaSeason:"Buy season pass",
+      explorer: { label:"Explorer", price:"€9.99", per:"/week", features:["AI assistant chat","Restaurants & beaches","Routes & maps"] },
+      season: { label:"Season Pass", price:"€19.99", per:"/until October", badge:"MOST POPULAR", features:["Everything in Explorer","🛡️ Travel Guardian: storms · fires · borders","📸 Jadran Lens: avoid €60 fines","🎙️ Walkie-Talkie: use safely while driving"] },
+      vip: { label:"VIP Priority", price:"€49.99", per:"/until October", features:["Everything in Season","⚡ 300 messages/day","🏆 More detailed answers"] },
+      ctaExplorer:"Buy Explorer", ctaSeason:"Buy Season Pass", ctaVip:"Buy VIP",
     },
     proof: [
       { text:"Saved us from a €200 fine — found a legal spot that Google Maps doesn't even show.", name:"Dave & Sarah", origin:"Motorhome Split to Istria" },
@@ -258,7 +263,7 @@ const CONTENT = {
       { q:"Do I need an account?", a:"No. Open it and start immediately. 7 questions free, no signup." },
       { q:"Does it work on a phone?", a:"Yes, fully optimised for mobile." },
       { q:"Are the parking spots up to date?", a:"Yes, verified database of 400+ spots across Croatia, updated continuously." },
-      { q:"What happens after 7 questions?", a:"Buy a week pass (€9.99) or season pass (€29). Card or PayPal." },
+      { q:"What happens after 7 questions?", a:"Buy Explorer (€9.99/week), Season Pass (€19.99) or VIP Priority (€49.99). Card or PayPal." },
     ],
     finalCta: "Try it free now →",
     finalHref: "/ai?niche=camper&lang=en",
@@ -296,9 +301,10 @@ const CONTENT = {
     pricing: {
       label: "PRICING",
       free: { label:"Free", price:"€0", features:["7 questions free","No account needed","All regions"] },
-      week: { label:"Week", price:"€9.99", per:"/week", features:["Unlimited questions","Live conditions","All regions","English"] },
-      season: { label:"Season pass", price:"€29", per:"/season", badge:"POPULAR", features:["Everything in week","Valid April–October","Live webcam links","Priority support"] },
-      ctaWeek:"Buy week pass", ctaSeason:"Buy season pass",
+      explorer: { label:"Explorer", price:"€9.99", per:"/week", features:["AI assistant chat","Restaurants & beaches","All regions"] },
+      season: { label:"Season Pass", price:"€19.99", per:"/until October", badge:"MOST POPULAR", features:["Everything in Explorer","🛡️ Travel Guardian: storms · fires · borders","📸 Jadran Lens: avoid €60 fines","🎙️ Walkie-Talkie: use safely while driving"] },
+      vip: { label:"VIP Priority", price:"€49.99", per:"/until October", features:["Everything in Season","⚡ 300 messages/day","🏆 More detailed answers"] },
+      ctaExplorer:"Buy Explorer", ctaSeason:"Buy Season Pass", ctaVip:"Buy VIP",
     },
     proof: [
       { text:"We had the beach completely to ourselves for two hours. No travel blog has mentioned it.", name:"Sophie & Tom", origin:"Island-hopping from Split" },
@@ -309,7 +315,7 @@ const CONTENT = {
       { q:"Do I need an account?", a:"No. Open it and start immediately. 7 questions free, no signup." },
       { q:"Does it work on a phone?", a:"Yes, fully optimised for mobile." },
       { q:"Is it just a chatbot?", a:"It's a local knowledge system with live weather, crowd data and real-time conditions — not just a chatbot." },
-      { q:"What happens after 7 questions?", a:"Buy a week pass (€9.99) or season pass (€29). Card or PayPal." },
+      { q:"What happens after 7 questions?", a:"Buy Explorer (€9.99/week), Season Pass (€19.99) or VIP Priority (€49.99). Card or PayPal." },
     ],
     finalCta: "Try it free now →",
     finalHref: "/ai?niche=apartment&lang=en",
@@ -658,24 +664,27 @@ export default function SegmentLandingPage({ slug }) {
       {/* ── PRICING ── */}
       <Section pt={48} pb={48} bg={DARK}>
         <SectionLabel text={pricing.label} />
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1.2fr 1fr", gap:12 }}>
           {[
             { ...pricing.free, isFree:true },
-            { ...pricing.week, ctaText: pricing.ctaWeek, ctaHref: hero.ctaHref },
+            { ...pricing.explorer, ctaText: pricing.ctaExplorer, ctaHref: hero.ctaHref },
             { ...pricing.season, ctaText: pricing.ctaSeason, ctaHref: hero.ctaHref },
+            { ...pricing.vip, ctaText: pricing.ctaVip, ctaHref: hero.ctaHref },
           ].map((tier, i) => (
-            <div key={i} style={{ background: i===2 ? "rgba(14,165,233,0.06)" : "rgba(255,255,255,0.02)",
-              border: i===2 ? `1px solid rgba(14,165,233,0.3)` : "1px solid rgba(255,255,255,0.05)",
-              borderRadius:16, padding:"20px 14px", textAlign:"center", position:"relative" }}>
+            <div key={i} style={{
+              background: i===2 ? "rgba(245,158,11,0.06)" : i===3 ? "rgba(168,85,247,0.04)" : "rgba(255,255,255,0.02)",
+              border: i===2 ? "1px solid rgba(245,158,11,0.4)" : i===3 ? "1px solid rgba(168,85,247,0.2)" : "1px solid rgba(255,255,255,0.05)",
+              borderRadius:16, padding:"20px 14px", textAlign:"center", position:"relative",
+              transform: i===2 ? "scale(1.02)" : "none", zIndex: i===2 ? 1 : 0 }}>
               {tier.badge && (
                 <div style={{ position:"absolute", top:-10, left:"50%", transform:"translateX(-50%)",
-                  background:`linear-gradient(135deg,${SKY},#0284c7)`, color:"#fff",
+                  background:"linear-gradient(135deg,#f59e0b,#d97706)", color:"#fff",
                   fontSize:10, fontWeight:700, padding:"3px 10px", borderRadius:20, letterSpacing:1, whiteSpace:"nowrap" }}>
                   {tier.badge}
                 </div>
               )}
-              <div style={{ fontSize:13, color:"#64748b", marginBottom:6 }}>{tier.label}</div>
-              <div style={{ fontSize:26, fontWeight:700, color:"#f0f9ff", marginBottom:2 }}>{tier.price}</div>
+              <div style={{ fontSize:13, color: i===2 ? "#f59e0b" : i===3 ? "#a855f7" : "#64748b", fontWeight: i===2||i===3 ? 700 : 400, letterSpacing:1, marginBottom:6 }}>{tier.label}</div>
+              <div style={{ fontSize:26, fontWeight:700, color: i===2 ? "#f59e0b" : i===3 ? "#a855f7" : "#f0f9ff", marginBottom:2 }}>{tier.price}</div>
               {tier.per && <div style={{ fontSize:12, color:"#475569", marginBottom:14 }}>{tier.per}</div>}
               <div style={{ marginBottom:16 }}>
                 {tier.features.map((f, j) => (
@@ -692,8 +701,8 @@ export default function SegmentLandingPage({ slug }) {
                 </a>
               ) : (
                 <a href={`/ai?niche=${seg.niche}&lang=${seg.lang_param}`} style={{ display:"block", padding:"10px",
-                  background:`linear-gradient(135deg,${SKY},#0284c7)`, color:"#fff",
-                  textDecoration:"none", borderRadius:10, fontSize:13, fontWeight:700 }}>
+                  background: i===3 ? "linear-gradient(135deg,#a855f7,#7c3aed)" : i===2 ? "linear-gradient(135deg,#f59e0b,#d97706)" : `linear-gradient(135deg,${SKY},#0284c7)`,
+                  color:"#fff", textDecoration:"none", borderRadius:10, fontSize:13, fontWeight:700 }}>
                   {tier.ctaText}
                 </a>
               )}
