@@ -605,7 +605,7 @@ export default function DestinationExplorer() {
 
             {/* Freemium note */}
             <div style={{ padding:"0 16px 14px", textAlign:"center", fontSize:12, color:"#475569" }}>
-              {dl==="de"?"5 Fragen gratis · danach":dl==="en"?"5 messages free · then":dl==="it"?"5 domande gratis · poi":"5 poruka besplatno · zatim"}{" "}
+              {dl==="de"?"7 Fragen gratis · danach":dl==="en"?"7 messages free · then":dl==="it"?"7 domande gratis · poi":"7 poruka besplatno · zatim"}{" "}
               <a href="/ai" style={{ color:"#0ea5e9", textDecoration:"none", fontWeight:600 }}>
                 {dl==="de"?"Vollzugang ab 9,99 €":dl==="en"?"full access from €9.99":dl==="it"?"accesso completo da 9,99 €":"puni pristup od 9,99 €"}
               </a>

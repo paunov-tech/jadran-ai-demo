@@ -468,7 +468,7 @@ const [lang, setLang] = useState(() => {
       return localStorage.getItem("jadran_promo") || "";
     } catch { return ""; }
   });
-  const FREE_MSGS = 5;
+  const FREE_MSGS = 7;
   const PREMIUM_DAILY_LIMIT = 100; // Cost control: ~2€/day max API spend per user
   const VIP_DAILY_LIMIT = 300; // VIP gets 3x more messages
 
