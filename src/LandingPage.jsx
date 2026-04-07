@@ -112,6 +112,35 @@ export default function LandingPage() {
   const toInputRef = useRef(null);
   const [fromRect, setFromRect] = useState(null);
   const [toRect, setToRect] = useState(null);
+
+  // ── Instant chat widget state ──
+  const [qcMsgs, setQcMsgs] = useState([]);
+  const [qcInput, setQcInput] = useState("");
+  const [qcLoading, setQcLoading] = useState(false);
+  const [qcStarted, setQcStarted] = useState(false);
+  const qcEndRef = useRef(null);
+  const qcSendMsg = async (text) => {
+    if (!text.trim() || qcLoading) return;
+    const userMsg = { role: "user", text: text.trim() };
+    setQcMsgs(prev => [...prev, userMsg]);
+    setQcInput("");
+    setQcLoading(true);
+    setQcStarted(true);
+    try {
+      const r = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "apartment", plan: "free", lang: lang === "at" ? "de" : lang || "en", region: "all", msgs: [...qcMsgs, userMsg].slice(-6) }),
+      });
+      const d = await r.json();
+      const reply = d.reply || d.text || (lang === "de" || lang === "at" ? "Einen Moment…" : lang === "en" ? "One moment…" : "Trenutak…");
+      setQcMsgs(prev => [...prev, { role: "assistant", text: reply }]);
+    } catch {
+      setQcMsgs(prev => [...prev, { role: "assistant", text: lang === "de" || lang === "at" ? "Verbindungsfehler. Bitte nochmal versuchen." : lang === "en" ? "Connection error. Please try again." : "Greška veze. Pokušaj ponovo." }]);
+    }
+    setQcLoading(false);
+  };
+  useEffect(() => { qcEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [qcMsgs]);
   const hereSuggest = (text, setter, timerRef) => {
     clearTimeout(timerRef.current);
     if (!text || text.length < 2) { setter([]); return; }
@@ -973,6 +1002,136 @@ Specifico. Nomi reali.`,
               </div>
             );
           })()}
+        </div>
+      </section>
+
+      {/* ═══ INSTANT CHAT ═══ */}
+      <section style={{ padding: "0 20px 56px", background: "linear-gradient(180deg, rgba(10,14,23,0.98) 0%, #0a0e17 100%)", position: "relative" }}>
+        <style>{`
+          @keyframes jc-pulse { 0%,100%{transform:scale(1);opacity:.5} 50%{transform:scale(1.18);opacity:.15} }
+          @keyframes jc-blink { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
+          @keyframes jc-fadein { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+          @keyframes jc-glow { 0%,100%{box-shadow:0 0 24px rgba(14,165,233,0.18)} 50%{box-shadow:0 0 40px rgba(14,165,233,0.38)} }
+        `}</style>
+        <div style={{ maxWidth: 640, margin: "0 auto" }}>
+
+          {/* Avatar + intro */}
+          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+            {/* Avatar orb */}
+            <div style={{ position: "relative", flexShrink: 0, width: 60, height: 60 }}>
+              <div style={{ position: "absolute", inset: -8, borderRadius: "50%", background: "rgba(14,165,233,0.08)", animation: "jc-pulse 3s ease-in-out infinite" }} />
+              <div style={{ position: "absolute", inset: -4, borderRadius: "50%", background: "rgba(14,165,233,0.06)", animation: "jc-pulse 3s ease-in-out 0.5s infinite" }} />
+              <div style={{ width: 60, height: 60, borderRadius: "50%", background: "linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #a855f7 100%)", display: "flex", alignItems: "center", justifyContent: "center", animation: "jc-glow 4s ease-in-out infinite", position: "relative" }}>
+                {/* Stylised female face SVG */}
+                <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+                  <ellipse cx="17" cy="13" rx="8" ry="9" fill="#fde8cc"/>
+                  <path d="M9 10 Q12 2 17 2 Q22 2 25 10 Q25 4 17 3 Q9 4 9 10Z" fill="#4f3d8c"/>
+                  <ellipse cx="14" cy="12" rx="1.4" ry="1.8" fill="#1e293b"/>
+                  <ellipse cx="20" cy="12" rx="1.4" ry="1.8" fill="#1e293b"/>
+                  <ellipse cx="14.4" cy="11.4" rx=".5" ry=".5" fill="#fff"/>
+                  <ellipse cx="20.4" cy="11.4" rx=".5" ry=".5" fill="#fff"/>
+                  <path d="M14 17 Q17 19.5 20 17" stroke="#c2785a" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+                  <ellipse cx="17" cy="22" rx="5" ry="3.5" fill="#fde8cc"/>
+                  <path d="M12 22 Q9 24 9 28 Q13 31 17 31 Q21 31 25 28 Q25 24 22 22" fill="#4f3d8c"/>
+                </svg>
+                {/* Online dot */}
+                <div style={{ position: "absolute", bottom: 2, right: 2, width: 11, height: 11, borderRadius: "50%", background: "#22c55e", border: "2px solid #0a0e17" }} />
+              </div>
+            </div>
+            <div>
+              <div style={{ fontFamily: F, fontSize: 17, fontWeight: 700, color: "#e2e8f0" }}>
+                {lang === "de" || lang === "at" ? "Frag mich alles über Kroatien" : lang === "en" ? "Ask me anything about Croatia" : lang === "it" ? "Chiedimi tutto sulla Croazia" : "Pitaj me bilo što o Hrvatskoj"}
+              </div>
+              <div style={{ fontSize: 12, color: "#22c55e", marginTop: 3, display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
+                {lang === "de" || lang === "at" ? "JADRAN.AI · Jetzt aktiv" : lang === "en" ? "JADRAN.AI · Online now" : lang === "it" ? "JADRAN.AI · Ora attivo" : "JADRAN.AI · Aktivna"}
+              </div>
+            </div>
+          </div>
+
+          {/* Chat card */}
+          <div style={{ background: "rgba(15,23,42,0.9)", border: "1px solid rgba(14,165,233,0.15)", borderRadius: 20, overflow: "hidden", boxShadow: "0 16px 48px rgba(0,0,0,0.5)" }}>
+
+            {/* Messages */}
+            <div style={{ padding: "20px 18px", minHeight: 120, maxHeight: 280, overflowY: "auto" }}>
+              {/* Opening AI message */}
+              {!qcStarted && (
+                <div style={{ display: "flex", gap: 10, marginBottom: 12, animation: "jc-fadein .4s both" }}>
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg,#0ea5e9,#a855f7)", flexShrink: 0, display:"flex",alignItems:"center",justifyContent:"center",fontSize:13 }}>
+                    <svg width="16" height="16" viewBox="0 0 34 34" fill="none">
+                      <ellipse cx="17" cy="13" rx="8" ry="9" fill="#fde8cc"/>
+                      <path d="M9 10 Q12 2 17 2 Q22 2 25 10" fill="#4f3d8c"/>
+                      <ellipse cx="14" cy="12" rx="1.4" ry="1.8" fill="#1e293b"/>
+                      <ellipse cx="20" cy="12" rx="1.4" ry="1.8" fill="#1e293b"/>
+                      <path d="M14 17 Q17 19 20 17" stroke="#c2785a" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <div style={{ background:"rgba(14,165,233,0.07)", border:"1px solid rgba(14,165,233,0.1)", borderRadius:"4px 14px 14px 14px", padding:"10px 14px", fontSize:14, color:"#cbd5e1", lineHeight:1.6, maxWidth:"90%" }}>
+                    {lang==="de"||lang==="at" ? "Hallo! Ich kenne die kroatische Adria in- und auswendig — Strände, Stellplätze, Marinas, lokale Restaurants. Was möchtest du wissen?" : lang==="en" ? "Hello! I know the Croatian Adriatic inside out — beaches, camper spots, marinas, local restaurants. What would you like to know?" : lang==="it" ? "Ciao! Conosco l'Adriatico croato a fondo — spiagge, posteggi camper, marine, ristoranti locali. Cosa vuoi sapere?" : "Bok! Znam Jadransku obalu od A do Ž — plaže, kamperi, marine, lokalni restorani. Što te zanima?"}
+                  </div>
+                </div>
+              )}
+              {/* Dynamic messages */}
+              {qcMsgs.map((m, i) => (
+                <div key={i} style={{ display:"flex", justifyContent: m.role==="user" ? "flex-end" : "flex-start", gap:10, marginBottom:10, animation:"jc-fadein .3s both" }}>
+                  {m.role==="assistant" && (
+                    <div style={{ width:28, height:28, borderRadius:"50%", background:"linear-gradient(135deg,#0ea5e9,#a855f7)", flexShrink:0, display:"flex",alignItems:"center",justifyContent:"center" }}>
+                      <svg width="16" height="16" viewBox="0 0 34 34" fill="none"><ellipse cx="17" cy="13" rx="8" ry="9" fill="#fde8cc"/><path d="M9 10 Q12 2 17 2 Q22 2 25 10" fill="#4f3d8c"/><ellipse cx="14" cy="12" rx="1.4" ry="1.8" fill="#1e293b"/><ellipse cx="20" cy="12" rx="1.4" ry="1.8" fill="#1e293b"/><path d="M14 17 Q17 19 20 17" stroke="#c2785a" strokeWidth="1.2" fill="none" strokeLinecap="round"/></svg>
+                    </div>
+                  )}
+                  <div style={{ background: m.role==="user" ? "linear-gradient(135deg,#0ea5e9,#0284c7)" : "rgba(14,165,233,0.07)", border: m.role==="user" ? "none" : "1px solid rgba(14,165,233,0.1)", borderRadius: m.role==="user" ? "14px 4px 14px 14px" : "4px 14px 14px 14px", padding:"10px 14px", fontSize:14, color: m.role==="user" ? "#fff" : "#cbd5e1", lineHeight:1.6, maxWidth:"82%", whiteSpace:"pre-wrap" }}>
+                    {m.text}
+                  </div>
+                </div>
+              ))}
+              {/* Typing indicator */}
+              {qcLoading && (
+                <div style={{ display:"flex", gap:10, marginBottom:10 }}>
+                  <div style={{ width:28, height:28, borderRadius:"50%", background:"linear-gradient(135deg,#0ea5e9,#a855f7)", flexShrink:0 }} />
+                  <div style={{ background:"rgba(14,165,233,0.07)", border:"1px solid rgba(14,165,233,0.1)", borderRadius:"4px 14px 14px 14px", padding:"12px 16px", display:"flex", gap:4, alignItems:"center" }}>
+                    {[0,1,2].map(i => <span key={i} style={{ width:6,height:6,borderRadius:"50%",background:"#38bdf8",display:"inline-block",animation:`jc-blink 1.4s ease-in-out ${i*0.2}s infinite` }} />)}
+                  </div>
+                </div>
+              )}
+              <div ref={qcEndRef} />
+            </div>
+
+            {/* Suggested questions */}
+            {!qcStarted && (
+              <div style={{ padding:"0 18px 14px", display:"flex", gap:8, flexWrap:"wrap" }}>
+                {(lang==="de"||lang==="at" ? ["🚐 Camper nach Dubrovnik?","🏖️ Geheimstrände Istrien","⛵ Marina Hvar Plätze","🌬️ Bora-Warnung heute"] : lang==="en" ? ["🚐 Camper to Dubrovnik?","🏖️ Hidden beaches Istria","⛵ Marina Hvar berths","🌬️ Bura warning today"] : lang==="it" ? ["🚐 Camper a Dubrovnik?","🏖️ Spiagge nascoste Istria","⛵ Marina Hvar ormeggi","🌬️ Allerta Bora oggi"] : ["🚐 Kamperom u Dubrovnik?","🏖️ Tajne plaže Istre","⛵ Marine Hvara","🌬️ Bura upozorenje danas"]).map(q => (
+                  <button key={q} onClick={() => qcSendMsg(q)} style={{ background:"rgba(14,165,233,0.07)", border:"1px solid rgba(14,165,233,0.18)", borderRadius:20, padding:"7px 14px", fontSize:12, color:"#7dd3fc", cursor:"pointer", whiteSpace:"nowrap", transition:"all .2s", fontFamily:B }}
+                    onMouseEnter={e=>e.currentTarget.style.background="rgba(14,165,233,0.15)"}
+                    onMouseLeave={e=>e.currentTarget.style.background="rgba(14,165,233,0.07)"}>
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Input row */}
+            <div style={{ padding:"12px 18px 16px", display:"flex", gap:10, borderTop:"1px solid rgba(255,255,255,0.04)" }}>
+              <input
+                value={qcInput}
+                onChange={e=>setQcInput(e.target.value)}
+                onKeyDown={e=>e.key==="Enter"&&!e.shiftKey&&(e.preventDefault(),qcSendMsg(qcInput))}
+                placeholder={lang==="de"||lang==="at" ? "Frag mich etwas über Kroatien…" : lang==="en" ? "Ask me anything about Croatia…" : lang==="it" ? "Chiedimi qualcosa sulla Croazia…" : "Pitaj me nešto o Hrvatskoj…"}
+                disabled={qcLoading}
+                style={{ flex:1, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(14,165,233,0.2)", borderRadius:12, padding:"11px 16px", fontSize:14, color:"#e2e8f0", outline:"none", fontFamily:B, caretColor:"#0ea5e9" }}
+              />
+              <button
+                onClick={()=>qcSendMsg(qcInput)}
+                disabled={qcLoading||!qcInput.trim()}
+                style={{ width:44, height:44, borderRadius:12, background: qcInput.trim()&&!qcLoading ? "linear-gradient(135deg,#0ea5e9,#0284c7)" : "rgba(14,165,233,0.1)", border:"none", cursor: qcInput.trim()&&!qcLoading ? "pointer" : "default", display:"flex",alignItems:"center",justifyContent:"center", flexShrink:0, transition:"all .2s" }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="#fff" strokeWidth="2" strokeLinecap="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+            </div>
+
+            {/* Footer note */}
+            <div style={{ padding:"0 18px 14px", fontSize:11, color:"#334155", textAlign:"center" }}>
+              {tx("freeInfo")} · <a href="/ai" style={{ color:"#0ea5e9", textDecoration:"none" }}>{lang==="de"||lang==="at"?"Vollversion öffnen →":lang==="en"?"Open full version →":lang==="it"?"Apri versione completa →":"Otvori punu verziju →"}</a>
+            </div>
+          </div>
         </div>
       </section>
 
