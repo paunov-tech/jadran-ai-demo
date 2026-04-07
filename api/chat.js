@@ -1563,8 +1563,7 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
       if (/istra|pula|rovinj|poreč|umag|novigrad|piran/.test(t)) return "istra";
       return null;
     }
-    const lastMsg = [...(messages || [])].reverse().find(m => m.role === "user")?.content || "";
-    const detectedRegion = (region === "all" || !region) ? detectRegionFromText(lastMsg) : null;
+    const detectedRegion = (region === "all" || !region) ? detectRegionFromText(lastUserMessage) : null;
     const _reg = detectedRegion || (region !== "all" ? region : null) || "dubrovnik";
 
     const [

@@ -675,13 +675,13 @@ const [lang, setLang] = useState(() => {
     return () => document.removeEventListener("visibilitychange", checkPremium);
   }, [premium, promoCode]);
 
-  // Auto-generate icebreaker when entering chat with no messages (e.g. premium auto-skip)
+  // Auto-generate icebreaker when entering chat with no messages (e.g. premium auto-skip, niche auto-skip)
   useEffect(() => {
     if (step === "chat" && msgs.length === 0 && region) {
       const ice = generateIcebreaker(region);
       setMsgs([{ role: "assistant", text: ice }]);
     }
-  }, []); // only on mount
+  }, [step, region]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Session recovery: offer to restore previous chat if < 24h old
   useEffect(() => {
@@ -792,6 +792,16 @@ const [lang, setLang] = useState(() => {
     if (n === "sailing") { setNiche(n); setTravelMode("sailing"); }
     if (n === "cruiser") { setNiche(n); setTravelMode("cruiser"); }
     if (n === "local") { setNiche(n); setTravelMode("apartment"); }
+    // Pre-fill question from /explore "puni pristup" link
+    const qParam = params.get("q");
+    if (qParam) { try { setInput(qParam); } catch {} }
+    // Auto-skip setup when niche is in URL — user already has intent, don't make them pick again
+    if (n) {
+      const savedR = (() => { try { return localStorage.getItem("jadran_region"); } catch { return null; } })();
+      const defRegion = savedR || (n === "sailing" ? "split" : n === "cruiser" ? "dubrovnik" : "kvarner");
+      setRegion(defRegion);
+      setStep("chat");
+    }
     // ?premium=true removed — was an unverified shortcut exploitable by any user
     // Detect invite link: jadran.ai/ai?invite=DEVICE_ID
     const inviteParam = params.get("invite");
@@ -2059,7 +2069,7 @@ const [lang, setLang] = useState(() => {
       {/* Header */}
       <div style={{ padding: "14px 20px", paddingTop: "max(14px, env(safe-area-inset-top, 14px))", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `1px solid ${C.bord}`, flexShrink: 0, background: isNight ? "transparent" : "rgba(255,255,255,0.4)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, flex: 1 }}>
-          <button onClick={() => { setStep("setup"); window.scrollTo(0, 0); }} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 10, border: `1px solid ${C.bord}`, background: "transparent", color: C.text, fontSize: 16, cursor: "pointer", transition: "all 0.2s", flexShrink: 0 }}
+          <button onClick={() => { window.location.href = "/"; }} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 36, height: 36, borderRadius: 10, border: `1px solid ${C.bord}`, background: "transparent", color: C.text, fontSize: 16, cursor: "pointer", transition: "all 0.2s", flexShrink: 0 }}
               onMouseEnter={e => e.currentTarget.style.borderColor = C.accent}
               onMouseLeave={e => e.currentTarget.style.borderColor = C.bord}>‹</button>
           <div style={{ width: 1, height: 20, background: C.bord, flexShrink: 0 }} />
