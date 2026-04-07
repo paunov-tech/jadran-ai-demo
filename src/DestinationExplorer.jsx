@@ -334,16 +334,23 @@ export default function DestinationExplorer() {
   const [qcLoading, setQcLoading] = useState(false);
   const [qcStarted, setQcStarted] = useState(false);
   const qcEndRef = useRef(null);
+  const qcCardRef = useRef(null);
   const qcSend = async (text) => {
     if (!text.trim() || qcLoading) return;
     const uMsg = { role:"user", text:text.trim() };
     setQcMsgs(p => [...p, uMsg]);
     setQcInput(""); setQcLoading(true); setQcStarted(true);
+    // Scroll chat card into view after send so messages are visible
+    setTimeout(() => qcCardRef.current?.scrollIntoView({ behavior:"smooth", block:"nearest" }), 80);
+    const errText = lang==="de"||lang==="at" ? "Keine Antwort — bitte nochmal versuchen." : lang==="en" ? "No response — please try again." : lang==="it" ? "Nessuna risposta — riprova." : "Nema odgovora — pokušaj ponovo.";
     try {
-      const r = await fetch("/api/chat", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ mode:"apartment", plan:"free", lang: lang==="at"?"de":lang||"en", region:"all", msgs:[...qcMsgs, uMsg].slice(-6) }) });
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 20000);
+      const r = await fetch("/api/chat", { method:"POST", headers:{"Content-Type":"application/json"}, signal: ctrl.signal, body: JSON.stringify({ mode:"apartment", plan:"free", lang: lang==="at"?"de":lang||"en", region:"all", msgs:[...qcMsgs, uMsg].slice(-6) }) });
+      clearTimeout(timer);
       const d = await r.json();
-      setQcMsgs(p => [...p, { role:"assistant", text: d.reply||d.text||(lang==="de"||lang==="at"?"Einen Moment…":lang==="en"?"One moment…":"Trenutak…") }]);
-    } catch { setQcMsgs(p => [...p, { role:"assistant", text:"…" }]); }
+      setQcMsgs(p => [...p, { role:"assistant", text: d.reply||d.text||errText }]);
+    } catch { setQcMsgs(p => [...p, { role:"assistant", text: errText }]); }
     setQcLoading(false);
   };
   useEffect(() => { qcEndRef.current?.scrollIntoView({behavior:"smooth"}); }, [qcMsgs]);
@@ -432,7 +439,8 @@ export default function DestinationExplorer() {
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@200;300;400;500;600;700&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         html { scroll-behavior: smooth; }
-        body { overscroll-behavior: none; }
+        body { overscroll-behavior: none; overflow-x: hidden; }
+        html { overflow-x: hidden; }
         @keyframes heroReveal { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
         @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
         @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
@@ -570,7 +578,7 @@ export default function DestinationExplorer() {
       <section style={{ padding:"0 20px 52px", background:"#0a0e17" }}>
         <style>{`@keyframes qc-blink{0%,80%,100%{opacity:.15}40%{opacity:1}} @keyframes qc-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`}</style>
         <div style={{ maxWidth:640, margin:"0 auto" }}>
-          <div style={{ background:"rgba(10,18,32,0.92)", border:"1px solid rgba(14,165,233,0.13)", borderRadius:20, overflow:"hidden", boxShadow:"0 16px 48px rgba(0,0,0,0.5)" }}>
+          <div ref={qcCardRef} style={{ background:"rgba(10,18,32,0.92)", border:"1px solid rgba(14,165,233,0.13)", borderRadius:20, overflow:"hidden", boxShadow:"0 16px 48px rgba(0,0,0,0.5)" }}>
 
             {/* Messages — only shown after first send */}
             {qcMsgs.length > 0 && (
