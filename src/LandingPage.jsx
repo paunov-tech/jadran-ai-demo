@@ -248,8 +248,20 @@ export default function LandingPage() {
     const destObj = { city: toLPCity.trim() };
     if (toCoords) { destObj.lat = toCoords.lat; destObj.lng = toCoords.lng; }
     saveDelta({ segment: seg, transport: selectedMode, from: isArrival ? null : depCity.trim(), from_coords: fromCoordArr, destination: destObj, lang, phase: isArrival ? "arrival" : "transit" });
+    // For arrival mode (plane/yacht), route to kiosk — NOT to StandaloneAI setup screen
+    const toKioskSlug = (city) => {
+      const n = city.toLowerCase()
+        .replace(/š/g,"s").replace(/č/g,"c").replace(/ć/g,"c")
+        .replace(/ž/g,"z").replace(/đ/g,"dj").replace(/[^a-z]/g,"");
+      return { split:"split",dubrovnik:"dubrovnik",hvar:"hvar",zadar:"zadar",rab:"rab",
+               krk:"krk",pula:"pula",rovinj:"rovinj",sibenik:"sibenik",shibenik:"sibenik",
+               trogir:"trogir",korcula:"korcula",korchula:"korcula",brac:"brac",
+               porec:"porec",opatija:"opatija",makarska:"makarska",novalja:"novalja",
+               biograd:"biograd",vodice:"vodice",primosten:"primosten",crikvenica:"crikvenica",
+               ragusa:"dubrovnik",spalato:"split",brač:"brac" }[n] || "split";
+    };
     const transitUrl = isArrival
-      ? `/ai?niche=sailing&lang=${lang}&dest=${encodeURIComponent(toLPCity.trim())}`
+      ? `/?kiosk=${toKioskSlug(toLPCity.trim())}&lang=${lang}${toCoords ? `&tLat=${toCoords.lat}&tLng=${toCoords.lng}` : ""}`
       : `/?room=DEMO&go=transit&from=${encodeURIComponent(depCity.trim())}&to=${encodeURIComponent(toLPCity.trim())}&seg=${seg}&lang=${lang}${depCoords ? `&fLat=${depCoords.lat}&fLng=${depCoords.lng}` : ""}${toCoords ? `&tLat=${toCoords.lat}&tLng=${toCoords.lng}` : ""}`;
 
     // Linear distance + ETA — only for driving modes

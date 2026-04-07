@@ -802,9 +802,13 @@ export default function JadranUnified() {
       }).catch(() => {});
     }
     if (isValidAffiliate) verifiedAffiliate.current = true;
-    kioskForcedCoords.current = [cd[0], cd[1]]; // prevent GPS from overriding
-    setTransitToCoords([cd[0], cd[1]]);
-    saveDelta({ destination: { city: cd[2], lat: cd[0], lng: cd[1] } });
+    // Allow Guardian arrival to override coords with precise destination coords (tLat/tLng)
+    const urlTLat = parseFloat(p.get("tLat")), urlTLng = parseFloat(p.get("tLng"));
+    const finalLat = (urlTLat && urlTLng) ? urlTLat : cd[0];
+    const finalLng = (urlTLat && urlTLng) ? urlTLng : cd[1];
+    kioskForcedCoords.current = [finalLat, finalLng]; // prevent GPS from overriding
+    setTransitToCoords([finalLat, finalLng]);
+    saveDelta({ destination: { city: cd[2], lat: finalLat, lng: finalLng } });
     setPhase("kiosk");
     setSubScreen(urlAffiliate ? "affiliate" : "home");
     setSplash(false);
