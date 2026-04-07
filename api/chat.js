@@ -412,16 +412,46 @@ KADA POSJETITI:
 - Srpanj/kolovoz: vrhunac sezone, gužve, više cijene
 - Svibanj/listopad: mirno, sunce`,
 
-  dubrovnik: `REGIONALNI FOKUS — DUBROVNIK & PELJEŠAC:
-- Gruž luka: taxi preskup! Bus 1A do Pile vrata (2€, 15 min)
-- Pile Gate: 10-13h = čep! Ulaz Ploče ili Buža (nitko ne zna)
-- Gradske zidine: 35€, ići RANO ujutro (manje gužve + hladnije)
-- Lokrum otok: 15 min brodom, 22€ return, mir od gužve
-- Cable car Srđ: 27€, pješice 30 min ako ste fit
-- Pelješac: Ston kamenice 1€/kom, Dingač vino
-- Mali Ston → Ston: zidine 5.5km, manje poznate od dubrovačkih
-- Stradun restorani: 40% skuplji! Uličica Prijeko za lokalne cijene
-- Buža bar: kava na stijenama s pogledom na Lokrum`,
+  dubrovnik: `REGIONALNI FOKUS — DUBROVNIK (Ragusa):
+Dubrovnik je jedinstven turistički entitet — turistički najskuplji i najgušći grad na Jadranu.
+
+STRADUN & STARI GRAD — GUŽVA LOGIKA:
+- Stradun je najgušći u Europi po m²: križ brodova i aviona udara u isto vrijeme
+- Peak gužva: 09:30-11:00 (jutarnji brodovi), 14:00-17:00 (poslijepodnevni kruzeri), vikendi
+- Mirno: pre 08:30, poslije 20:00 (večera vani je zapravo ugodna)
+- LIVE KAMERA Stradun: https://www.livecamcroatia.com/en/camera/dubrovnik-stradun — ako imaš podke UVIJEK ih pomeni
+- Ako YOLO kamera pokazuje mali broj posjetitelja (< 20 objekata) → ODMAH reci: "Stradun je sada mirno — idi sad"
+- Ako YOLO pokazuje > 80 objekata → "Stradun je zagušen — preporuči Prijeko ili Pustijerna"
+
+GUŽVA ALTERNATIVE (manje poznate):
+- Uličica Prijeko: paralelna s Stradunom, isti duh, 40% jeftiniji restorani, NULA gužve
+- Pustijerna četvrt (uz Sv. Vlaha): lokalni kafići, lokalni stanari, gotovo nema turista
+- Lazareti (van Ploče vrata): kulturni prostor, kava, pogled na more — turistima nepoznato
+- Sveti Jakov plaža: 20 min pješice, gradska plaža za lokalne — nema kruzer-turista
+
+PRISTUP I TRANSPORT:
+- Gruž luka: taxi do Pile = 15€ (preskupo!), Bus 1A = 2€ (15 min)
+- Pile Gate: ulaz 10-13h = čep! Alternativa: Ploče vrata (istok) ili Buža (zid)
+- Parking Ilijina Glavica (Pile): 1200 mjesta, ali ljeti 09-18h UVIJEK pun — idi P+R Dubac
+- Parking Lapad: slobodnije, bus 6 do Pile
+
+AKTIVNOSTI — KONKRETAN RASPORED:
+- Gradske zidine 35€: idi RANO (07:30-09:00) — jutarnji hlad, nula gužve, svjetlo savršeno za slike
+- Lokrum otok: 22€ return, brod svakih 30 min iz Stare luke — mir, nudistička plaža, paunovi
+- Cable car Srđ: 27€ gore-dolje, ili pješice (30 min fit turist) — zalazak sunca = magija
+- Pelješac (45 min): Ston kamenice 1€/kom direktno na baru, Dingač vino 10€/boca u vinariji
+
+RESTORANI — INSIDER LOGIKA:
+- Stradun restorani: 40-60% skuplji od prosjeka — IZBJEGAVAJ za ručak/večeru
+- Konoba Lokanda Peskarija: jedini restoran u starom gradu s normalnim cijenama (riba, more)
+- Konoba Kopun (Pustijerna): best slow food Dubrovnik — rezerviraj dan ranije
+- Café Buža: kava na stijenama nad morem, ne treba rezervacija, ulaz kroz rupu u zidu
+
+MORE I VJETAR:
+- Bura u Dubrovniku rijetka ali moguća studeni-ožujak — kruzeri otkazuju, trajekti kasne
+- Jugo: čest, topao, more valovito — plaže ugodne ali plivanje zahtjevnije
+- More temperatura: lipanj 22°C, srpanj-kolovoz 25-27°C, rujan 24°C
+- UPOZORENJE: morska struja prema Lokrumu može biti jača nego izgleda`,
 };
 
 // ── WEATHER CONTEXT BUILDER ──
@@ -1521,7 +1551,21 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
 
     // ── PARALLEL INTELLIGENCE GATHER — all 6 layers ──────────────────────
     const _dest = delta_context?.destination?.city || "";
-    const _reg  = region || "kvarner";
+
+    // Smart region detection: if region="all" or missing, infer from last user message
+    // so landing page chat gets correct live data injection per city
+    function detectRegionFromText(text) {
+      const t = (text || "").toLowerCase();
+      if (/dubrovnik|stradun|ragusa|pile|ploče|lokrum|srđ|gruž|cavtat|pelješac|konavle/.test(t)) return "dubrovnik";
+      if (/split|diocletian|dioklecijan|riva split|brač|hvar|makarska|trogir|omiš|vis|šolta/.test(t)) return "split_makarska";
+      if (/zadar|šibenik|kornati|krka|nin|biograd|murter/.test(t)) return "zadar_sibenik";
+      if (/rijeka|opatija|kvarner|krk|cres|lošinj|rab|mali lošinj/.test(t)) return "kvarner";
+      if (/istra|pula|rovinj|poreč|umag|novigrad|piran/.test(t)) return "istra";
+      return null;
+    }
+    const lastMsg = [...(messages || [])].reverse().find(m => m.role === "user")?.content || "";
+    const detectedRegion = (region === "all" || !region) ? detectRegionFromText(lastMsg) : null;
+    const _reg = detectedRegion || (region !== "all" ? region : null) || "dubrovnik";
 
     const [
       campsResult,
@@ -1605,8 +1649,8 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
     let systemPrompt = '';
     try {
       // SECURITY: Never use `system` field from req.body — always build server-side
-      systemPrompt = (mode && region)
-        ? buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan, yoloCrowdData, campCatalog })
+      systemPrompt = mode
+        ? buildPrompt({ mode, region: _reg, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan, yoloCrowdData, campCatalog })
         : 'Ti si Jadran.ai, lokalni turistički vodič za hrvatsku obalu Jadrana. Kratki, korisni odgovori na jeziku korisnika.';
     } catch (promptErr) {
       systemPrompt = 'Ti si Jadran.ai, lokalni turistički vodič za hrvatsku obalu Jadrana. Kratki, korisni odgovori.';
