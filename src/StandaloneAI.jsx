@@ -2485,16 +2485,34 @@ const [lang, setLang] = useState(() => {
                 })}</div>;
               }) : m.text}
               {m.role === "assistant" && i > 0 && (
-                <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end" }}>
-                  <button
-                    onClick={() => sendFeedback(i, m.text)}
-                    style={{ padding: "2px 8px", borderRadius: 6, border: `1px solid ${feedbackSent[i] ? C.bord : C.bord}`, background: "transparent", color: feedbackSent[i] ? "#22c55e" : C.mut, fontSize: 10, cursor: feedbackSent[i] ? "default" : "pointer", fontFamily: "inherit", transition: "all 0.2s", opacity: feedbackSent[i] ? 1 : 0.5 }}
-                    onMouseEnter={e => { if (!feedbackSent[i]) { e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = "#f87171"; } }}
-                    onMouseLeave={e => { if (!feedbackSent[i]) { e.currentTarget.style.opacity = "0.5"; e.currentTarget.style.color = C.mut; } }}
-                    disabled={!!feedbackSent[i]}
-                  >
-                    {feedbackSent[i] ? "✓ hvala" : "⚑ netačno"}
-                  </button>
+                <div style={{ marginTop: 8 }}>
+                  {/* Intelligence sources — only on latest AI message */}
+                  {i === msgs.length - 1 && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginBottom: 6, opacity: 0.6 }}>
+                      {[
+                        weather && { icon: "🌡️", label: "DHMZ" },
+                        guideCards.length > 0 && { icon: "🛣️", label: "HERE" },
+                        { icon: "🛰️", label: "Sentinel" },
+                        { icon: "📡", label: "HAK" },
+                        { icon: "👁️", label: "YOLO" },
+                        travelMode === "sailing" && { icon: "⚓", label: "NAVTEX" },
+                      ].filter(Boolean).map((s, si) => (
+                        <span key={si} style={{ fontSize: 8, color: C.mut, background: isNight ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)", padding: "1px 5px", borderRadius: 4, letterSpacing: 0.3 }}>{s.icon} {s.label}</span>
+                      ))}
+                      <span style={{ fontSize: 8, color: C.accent, letterSpacing: 0.5 }}>· Neural</span>
+                    </div>
+                  )}
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <button
+                      onClick={() => sendFeedback(i, m.text)}
+                      style={{ padding: "2px 8px", borderRadius: 6, border: `1px solid ${feedbackSent[i] ? C.bord : C.bord}`, background: "transparent", color: feedbackSent[i] ? "#22c55e" : C.mut, fontSize: 10, cursor: feedbackSent[i] ? "default" : "pointer", fontFamily: "inherit", transition: "all 0.2s", opacity: feedbackSent[i] ? 1 : 0.5 }}
+                      onMouseEnter={e => { if (!feedbackSent[i]) { e.currentTarget.style.opacity = "1"; e.currentTarget.style.color = "#f87171"; } }}
+                      onMouseLeave={e => { if (!feedbackSent[i]) { e.currentTarget.style.opacity = "0.5"; e.currentTarget.style.color = C.mut; } }}
+                      disabled={!!feedbackSent[i]}
+                    >
+                      {feedbackSent[i] ? "✓ hvala" : "⚑ netačno"}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -2539,10 +2557,37 @@ const [lang, setLang] = useState(() => {
 
         {loading && (
           <div style={{ display: "flex", justifyContent: "flex-start", padding: "0 20px" }}>
-            <div style={{ padding: "12px 20px", borderRadius: "18px 18px 18px 4px", background: C.card, border: `1px solid ${C.bord}` }}>
-              <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                {[0, 1, 2].map(d => <div key={d} style={{ width: 6, height: 6, borderRadius: "50%", background: C.accent, animation: `pulse 1.2s ${d * 0.2}s infinite` }} />)}
-                <span style={{ fontSize: 11, color: C.mut, marginLeft: 6 }}>{t.typing}</span>
+            <div style={{ padding: "14px 18px", borderRadius: "18px 18px 18px 4px", background: C.card, border: `1px solid ${C.bord}`, maxWidth: "85%" }}>
+              {/* Neural processing header */}
+              <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 10 }}>
+                <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.accent, animation: "pulse 1s infinite" }} />
+                <span style={{ fontSize: 11, fontWeight: 600, color: C.accent, letterSpacing: 1 }}>NEURAL</span>
+                <span style={{ fontSize: 10, color: C.mut }}>{t.typing}</span>
+              </div>
+              {/* Data source tickers */}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 6px" }}>
+                {[
+                  { icon: "🌡️", label: "DHMZ", delay: 0, active: !!weather },
+                  { icon: "🛰️", label: "Sentinel-2", delay: 0.3, active: true },
+                  { icon: "🛣️", label: "HERE Traffic", delay: 0.5, active: guideCards.length > 0 },
+                  { icon: "📡", label: "HAK Live", delay: 0.7, active: true },
+                  { icon: "👁️", label: "YOLO Sense", delay: 0.9, active: true },
+                  ...(travelMode === "sailing" ? [{ icon: "⚓", label: "NAVTEX", delay: 1.1, active: true }] : []),
+                  ...(travelMode === "luxury" ? [{ icon: "✈️", label: "Airports", delay: 1.1, active: true }] : []),
+                ].map((src, i) => (
+                  <div key={i} style={{
+                    display: "inline-flex", alignItems: "center", gap: 3,
+                    padding: "2px 7px", borderRadius: 6,
+                    background: src.active ? "rgba(14,165,233,0.08)" : "rgba(148,163,184,0.06)",
+                    border: `1px solid ${src.active ? "rgba(14,165,233,0.15)" : "transparent"}`,
+                    fontSize: 9, color: C.mut, letterSpacing: 0.5,
+                    animation: `fadeIn 0.3s ${src.delay}s both`,
+                  }}>
+                    <span style={{ fontSize: 10 }}>{src.icon}</span>
+                    <span>{src.label}</span>
+                    {src.active && <span style={{ color: "#22c55e", fontSize: 8 }}>✓</span>}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -2952,6 +2997,7 @@ const [lang, setLang] = useState(() => {
         @supports not (height: 100dvh) { .jadran-chat { height: 100vh !important; } }
         ::selection { background: rgba(14,165,233,0.3); }
         @keyframes pulse { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         @keyframes sunGlow { 0%,100% { box-shadow: 0 0 60px rgba(251,191,36,0.4), 0 0 120px rgba(251,191,36,0.15); } 50% { box-shadow: 0 0 80px rgba(251,191,36,0.5), 0 0 160px rgba(251,191,36,0.2); } }
         @keyframes fadeSlide { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fadeInDown { from { opacity: 0; transform: translateX(-50%) translateY(-16px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
