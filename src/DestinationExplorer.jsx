@@ -592,7 +592,7 @@ export default function DestinationExplorer() {
             )}
 
             {/* Input */}
-            <div style={{ padding:"14px 16px", display:"flex", gap:10 }}>
+            <div style={{ padding:"14px 16px 12px", display:"flex", gap:10 }}>
               <input value={qcInput} onChange={e=>setQcInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&!e.shiftKey&&(e.preventDefault(),qcSend(qcInput))}
                 placeholder={dl==="de"?"Frag mich etwas über die Adria…":dl==="en"?"Ask me anything about the Adriatic…":dl==="it"?"Chiedimi qualcosa sull'Adriatico…":"Pitaj me nešto o Jadranu…"}
                 disabled={qcLoading}
@@ -601,6 +601,14 @@ export default function DestinationExplorer() {
               <button onClick={()=>qcSend(qcInput)} disabled={qcLoading||!qcInput.trim()} style={{ width:48, height:48, borderRadius:13, background:qcInput.trim()&&!qcLoading?"linear-gradient(135deg,#0ea5e9,#0284c7)":"rgba(14,165,233,0.08)", border:"none", cursor:qcInput.trim()&&!qcLoading?"pointer":"default", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"all .2s" }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="#fff" strokeWidth="2.2" strokeLinecap="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
+            </div>
+
+            {/* Freemium note */}
+            <div style={{ padding:"0 16px 14px", textAlign:"center", fontSize:12, color:"#475569" }}>
+              {dl==="de"?"5 Fragen gratis · danach":dl==="en"?"5 messages free · then":dl==="it"?"5 domande gratis · poi":"5 poruka besplatno · zatim"}{" "}
+              <a href="/ai" style={{ color:"#0ea5e9", textDecoration:"none", fontWeight:600 }}>
+                {dl==="de"?"Vollzugang ab 9,99 €":dl==="en"?"full access from €9.99":dl==="it"?"accesso completo da 9,99 €":"puni pristup od 9,99 €"}
+              </a>
             </div>
           </div>
         </div>
