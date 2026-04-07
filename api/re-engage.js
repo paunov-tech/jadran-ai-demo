@@ -30,8 +30,9 @@ const SEG_NAMES = {
 // ─── Firestore helpers ───────────────────────────────────────────────────────
 
 async function fsPatch(col, id, fields) {
+  const mask = Object.keys(fields).map(f => `updateMask.fieldPaths=${encodeURIComponent(f)}`).join("&");
   const r = await fetch(
-    `${FS}/${col}/${id}?key=${process.env.VITE_FB_API_KEY}`,
+    `${FS}/${col}/${id}?${mask}&key=${process.env.VITE_FB_API_KEY}`,
     { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fields }) }
   );
   return r.ok;
@@ -300,7 +301,6 @@ export default async function handler(req, res) {
       // Advance reEngageStep in Firestore
       if (success) {
         await fsPatch("mkt_leads", leadId, {
-          ...lead,
           reEngageStep: intV(seq.reStep),
           updatedAt: strV(new Date().toISOString()),
         }).catch(() => {});
