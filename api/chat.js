@@ -420,7 +420,7 @@ STRADUN & STARI GRAD — GUŽVA LOGIKA:
 - Peak gužva: 09:30-11:00 (jutarnji brodovi), 14:00-17:00 (poslijepodnevni kruzeri), vikendi
 - Mirno: pre 08:30, poslije 20:00 (večera vani je zapravo ugodna)
 - LIVE KAMERA Stradun: https://www.livecamcroatia.com/en/camera/dubrovnik-stradun — ako imaš podke UVIJEK ih pomeni
-- Ako YOLO kamera pokazuje mali broj posjetitelja (< 20 objekata) → ODMAH reci: "Stradun je sada mirno — idi sad"
+- Ako prometni senzori pokazuju mali broj posjetitelja (< 20 objekata) → ODMAH reci: "Stradun je sada mirno — idi sad"
 - Ako YOLO pokazuje > 80 objekata → "Stradun je zagušen — preporuči Prijeko ili Pustijerna"
 
 GUŽVA ALTERNATIVE (manje poznate):
@@ -637,8 +637,8 @@ async function fetchYoloCrowd() {
 function generateYoloCrowdPrompt(yoloData, userRegion) {
   if (!yoloData || !yoloData.regions) return "";
   const lines = [];
-  lines.push("[LIVE CROWD DATA — YOLO kamera sistem, ažurirano svakih 15 min]");
-  lines.push(`Ukupno: ${yoloData.totalObjects} detekcija na ${yoloData.activeSensors} aktivnih kamera\n`);
+  lines.push("[LIVE CROWD DATA — mreža prometnih senzora, ažurirano svakih 15 min]");
+  lines.push(`Ukupno: ${yoloData.totalObjects} detekcija na ${yoloData.activeSensors} aktivnih senzora\n`);
 
   // Sort regions by activity
   const sorted = Object.entries(yoloData.regions).sort((a, b) => b[1].totalObjects - a[1].totalObjects);
@@ -646,12 +646,12 @@ function generateYoloCrowdPrompt(yoloData, userRegion) {
     const isUser = (region === userRegion) || (SENSE_TO_APP_REGION[userRegion] === region);
     const marker = isUser ? " ← KORISNIKOVA REGIJA" : "";
     const top3 = data.sensors.slice(0, 3).filter(c => c.rawCount > 0).map(c => `${c.camId}:${c.rawCount}`).join(", ");
-    lines.push(`${region}: ${data.totalObjects} obj (${data.persons} osoba, ${data.cars} auta, ${data.boats} brodova) — ${data.activeSensors} aktivnih kamera${marker}`);
+    lines.push(`${region}: ${data.totalObjects} obj (${data.persons} osoba, ${data.cars} auta, ${data.boats} brodova) — ${data.activeSensors} aktivnih senzora${marker}`);
     if (top3) lines.push(`  Top: ${top3}`);
   }
 
   lines.push(`\nPRAVILA ZA LIVE PODATKE:`);
-  lines.push(`- Ovo su PRAVI podaci s kamera, NE procjene. Koristi ih kad gost pita o gužvi.`);
+  lines.push(`- Ovo su PRAVI podaci s prometnih senzora, NE procjene. Koristi ih kad gost pita o gužvi.`);
   lines.push(`- NE navodi točan broj — zaokruži: "dvadesetak osoba", "pedesetak", "stotinjak"`);
   lines.push(`- Ako je 0 detekcija → "Trenutno je mirno, idealno vrijeme za posjet."`);
   lines.push(`- Usporedi regije: ako korisnikova regija ima puno, preporuči mirniju`);
@@ -694,7 +694,7 @@ function generateCamperYoloPrompt(yoloData) {
   };
 
   const lines = [];
-  lines.push("[DELTA BIG EYE — Situaciona svest iz 165+ kamera, 3 zemlje]");
+  lines.push("[DELTA BIG EYE — Situaciona svest iz 165+ prometnih senzora, 3 zemlje]");
 
   for (const [catId, cat] of Object.entries(DELTA_EYE)) {
     let totalObj = 0, totalCars = 0, totalPersons = 0, activeSensors = 0;
@@ -727,7 +727,7 @@ function generateCamperYoloPrompt(yoloData) {
 - "Kolona na Mišnjaku / Stinici / Rabu?" — RAB trajekti sekcija (jablanac+prizna = cesta ka Stinici = direktan pokazatelj reda)
 - "Kolona na Valbiska / Lopar?" — RAB trajekti sekcija (338 terminal)
 - UVIJEK navedi KOJI autoput i KOJI smjer kad govoriš o prometu
-- NIKAD "vidim na kameri" — reci "prema podacima sa X kamera na Y autoputu"
+- NIKAD "vidim na kameri" — reci "prema podacima sa X senzora na Y autoputu"
 - Za granice: kombiniraj kamere + border-intelligence`);
 
   return lines.join("\n");

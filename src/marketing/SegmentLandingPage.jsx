@@ -609,9 +609,9 @@ export default function SegmentLandingPage({ slug }) {
             {
               logo: "👁",
               logoColor: "#F59E0B",
-              name: isDE ? "YOLO Echtzeit-Kamera" : isIT ? "Telecamere YOLO in tempo reale" : "YOLO Real-time Cameras",
-              desc: isDE ? "Computer-Vision-System erkennt Menschenmassen, Fahrzeuge und Boote auf 60+ Live-Kameras entlang der Küste. Aktualisierung alle 15 Minuten." : isIT ? "Sistema di visione artificiale rileva folla, veicoli e barche su 60+ telecamere live lungo la costa. Aggiornamento ogni 15 minuti." : "Computer vision system detects crowds, vehicles and boats on 60+ live cameras along the coast. Updated every 15 minutes.",
-              badge: isDE ? "Live-Daten" : isIT ? "Dati live" : "Live Data",
+              name: isDE ? "YOLO Verkehrssensor-Netzwerk" : isIT ? "Rete sensori di traffico YOLO" : "YOLO Traffic Sensor Network",
+              desc: isDE ? "160+ Verkehrssensoren entlang der Küste erfassen Besucheraufkommen, Fahrzeugdichte und Hafenauslastung — anonym, aggregiert, alle 15 Minuten aktualisiert." : isIT ? "160+ sensori di traffico lungo la costa rilevano affollamento, densità veicolare e occupazione dei porti — anonimi, aggregati, aggiornati ogni 15 minuti." : "160+ traffic sensors along the coast measure visitor density, vehicle flow and harbour occupancy — anonymous, aggregated, updated every 15 minutes.",
+              badge: isDE ? "160+ Sensoren" : isIT ? "160+ sensori" : "160+ Sensors",
             },
             {
               logo: "🛰",
@@ -647,10 +647,10 @@ export default function SegmentLandingPage({ slug }) {
         <div style={{ background:"rgba(14,165,233,0.04)", border:"1px solid rgba(14,165,233,0.12)", borderRadius:14, padding:"16px 18px", textAlign:"center" }}>
           <p style={{ fontSize:13, color:"#64748b", lineHeight:1.6 }}>
             {isDE
-              ? "6 Enterprise-APIs · 60+ Live-Kameras · Echtzeit-Satellitendaten · Militärgrade KI · DSGVO-konforme deutsche Server"
+              ? "6 Enterprise-APIs · 160+ Verkehrssensoren · EU-Satellitendaten · Militärgrade KI · DSGVO-konforme deutsche Server"
               : isIT
-              ? "6 API Enterprise · 60+ telecamere live · Dati satellitari in tempo reale · AI livello militare · Server tedeschi GDPR"
-              : "6 Enterprise APIs · 60+ live cameras · Real-time satellite data · Military-grade AI · GDPR-compliant German servers"}
+              ? "6 API Enterprise · 160+ sensori di traffico · Dati satellitari UE · AI livello militare · Server tedeschi GDPR"
+              : "6 Enterprise APIs · 160+ traffic sensors · EU satellite data · Military-grade AI · GDPR-compliant German servers"}
           </p>
         </div>
       </Section>
