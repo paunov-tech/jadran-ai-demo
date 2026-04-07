@@ -1,232 +1,322 @@
 // Route: /m/:slug  (e.g. /m/de_camper?v=vDEC_001)
-// Segment-specific landing page — aggressive demo-first funnel.
-// Flow: teaser chat → live AI question (free) → email gate → full access
+// Product showcase landing page — show the app, let them try it, then convert.
+// Structure: hero → how it works → live demo (ungated) → pricing → testimonials → CTA
 
 import { useState, useEffect, useRef } from "react";
-import { BRAND, SEGMENTS } from "./marketingConfig.js";
+import { SEGMENTS } from "./marketingConfig.js";
 
-const STYLES = `
-  * { margin:0; padding:0; box-sizing:border-box; }
-  html,body { overflow-x:hidden; max-width:100vw; }
-  body { font-family: 'Outfit', system-ui, sans-serif; background:#050d1a; color:#f0f9ff; }
+const F = "'Outfit', system-ui, sans-serif";
 
-  /* ── HERO ── */
-  .hero { padding:40px 20px 0; text-align:center; background:linear-gradient(180deg,#050d1a 0%,#071828 100%); }
-  .logo { font-size:12px; letter-spacing:4px; color:#0ea5e9; margin-bottom:28px; font-weight:700; }
-  .hook { font-size:clamp(24px,5.5vw,52px); font-weight:700; line-height:1.15; max-width:680px;
-    margin:0 auto 16px; }
-  .sub { font-size:clamp(14px,2vw,17px); color:#7dd3fc; max-width:520px; margin:0 auto 12px; line-height:1.6; font-weight:300; }
-  .social-proof { font-size:13px; color:#475569; margin-bottom:32px; }
-  .social-proof span { color:#38bdf8; font-weight:600; }
-
-  /* ── DEMO CHAT ── */
-  .demo-wrap { max-width:560px; margin:0 auto 0; padding:0 0 32px; }
-  .demo-label { font-size:11px; letter-spacing:2px; color:#334155; font-weight:700; text-align:center; margin-bottom:12px; }
-  .chat-box { background:rgba(10,18,32,0.95); border:1px solid rgba(14,165,233,0.18);
-    border-radius:20px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.6); }
-
-  /* teaser conversation */
-  .teaser-msgs { padding:20px 18px 14px; }
-  .tmsg { display:flex; margin-bottom:12px; }
-  .tmsg.user { justify-content:flex-end; }
-  .tmsg .bubble { padding:11px 15px; font-size:14px; line-height:1.6; max-width:84%; border-radius:16px; }
-  .tmsg.user .bubble { background:linear-gradient(135deg,#0ea5e9,#0284c7); color:#fff; border-radius:16px 4px 16px 16px; }
-  .tmsg.ai .bubble { background:rgba(14,165,233,0.07); border:1px solid rgba(14,165,233,0.12);
-    color:#cbd5e1; border-radius:4px 16px 16px 16px; }
-  .ai-badge { font-size:10px; color:#0ea5e9; font-weight:700; letter-spacing:1px; margin-bottom:4px; }
-
-  /* live reply area */
-  .live-msgs { padding:0 18px 8px; min-height:0; }
-  .live-msgs.has-msgs { padding-top:8px; border-top:1px solid rgba(14,165,233,0.07); }
-  .lmsg { display:flex; margin-bottom:10px; animation:msgIn .3s both; }
-  .lmsg.user { justify-content:flex-end; }
-  .lmsg .bubble { padding:10px 14px; font-size:14px; line-height:1.65; max-width:84%; border-radius:16px; white-space:pre-wrap; }
-  .lmsg.user .bubble { background:linear-gradient(135deg,#0ea5e9,#0284c7); color:#fff; border-radius:16px 4px 16px 16px; }
-  .lmsg.ai .bubble { background:rgba(14,165,233,0.07); border:1px solid rgba(14,165,233,0.1);
-    color:#cbd5e1; border-radius:4px 16px 16px 16px; }
-  @keyframes msgIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
-  @keyframes blink { 0%,80%,100%{opacity:.15} 40%{opacity:1} }
-
-  /* chips */
-  .chips { display:flex; flex-wrap:wrap; gap:8px; padding:0 18px 16px; }
-  .chip { padding:9px 14px; background:rgba(14,165,233,0.06); border:1px solid rgba(14,165,233,0.2);
-    border-radius:20px; font-size:13px; color:#7dd3fc; cursor:pointer; font-family:inherit;
-    transition:all .2s; text-align:left; }
-  .chip:hover { background:rgba(14,165,233,0.14); border-color:#0ea5e9; color:#fff; }
-  .chip:disabled { opacity:.4; cursor:default; }
-
-  /* input row */
-  .input-row { display:flex; gap:8px; padding:12px 14px; border-top:1px solid rgba(14,165,233,0.08); }
-  .chat-input { flex:1; background:rgba(255,255,255,0.04); border:1px solid rgba(14,165,233,0.18);
-    border-radius:12px; padding:12px 16px; font-size:15px; color:#e2e8f0; outline:none;
-    font-family:inherit; caret-color:#0ea5e9; }
-  .chat-input::placeholder { color:#334155; }
-  .send-btn { width:44px; height:44px; border-radius:11px; border:none; cursor:pointer;
-    display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .2s; }
-  .send-btn.active { background:linear-gradient(135deg,#0ea5e9,#0284c7); }
-  .send-btn.inactive { background:rgba(14,165,233,0.07); cursor:default; }
-
-  /* email gate */
-  .gate { padding:20px 20px 20px; background:rgba(14,165,233,0.04);
-    border-top:1px solid rgba(14,165,233,0.12); }
-  .gate-title { font-size:15px; font-weight:600; color:#f0f9ff; margin-bottom:6px; }
-  .gate-sub { font-size:13px; color:#64748b; margin-bottom:16px; line-height:1.5; }
-  .gate input { width:100%; padding:13px 16px; background:rgba(255,255,255,0.06);
-    border:1px solid rgba(14,165,233,0.2); border-radius:12px; color:#f0f9ff; font-size:15px;
-    margin-bottom:10px; outline:none; font-family:inherit; }
-  .gate input:focus { border-color:#0ea5e9; }
-  .gate input::placeholder { color:#475569; }
-  .gate-btn { width:100%; padding:14px; background:linear-gradient(135deg,#0ea5e9,#0284c7);
-    color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700;
-    cursor:pointer; font-family:inherit; transition:all .2s; }
-  .gate-btn:disabled { opacity:.6; cursor:not-allowed; }
-  .gate-trust { font-size:11px; color:#334155; margin-top:8px; text-align:center; }
-
-  /* ── BELOW CHAT ── */
-  .section { padding:40px 20px; max-width:580px; margin:0 auto; }
-  .section-label { font-size:10px; letter-spacing:3px; color:#0ea5e9; font-weight:700; margin-bottom:20px; text-align:center; }
-
-  /* proof */
-  .proof-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  .proof-card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06);
-    border-radius:16px; padding:18px; }
-  .proof-card blockquote { font-size:14px; color:#94a3b8; line-height:1.6; font-style:italic; margin-bottom:10px; }
-  .proof-card cite { font-size:12px; color:#475569; font-style:normal; }
-
-  /* benefits */
-  .ben-list { display:flex; flex-direction:column; gap:14px; }
-  .ben { display:flex; gap:14px; align-items:flex-start; }
-  .ben-icon { font-size:22px; flex-shrink:0; margin-top:1px; }
-  .ben-text strong { display:block; font-size:15px; color:#f0f9ff; margin-bottom:3px; }
-  .ben-text span { font-size:13px; color:#64748b; line-height:1.5; }
-
-  /* final CTA */
-  .final-cta { padding:0 20px 60px; text-align:center; max-width:480px; margin:0 auto; }
-  .final-cta p { font-size:13px; color:#475569; margin-top:10px; }
-
-  /* success */
-  .success-wrap { text-align:center; padding:40px 20px; }
-  .success-wrap .wave { font-size:52px; margin-bottom:16px; }
-  .success-wrap h2 { font-size:22px; margin-bottom:10px; }
-  .success-wrap p { color:#7dd3fc; font-size:15px; margin-bottom:24px; max-width:400px; }
-  .open-btn { display:inline-block; padding:14px 32px; background:linear-gradient(135deg,#0ea5e9,#0284c7);
-    color:#fff; text-decoration:none; border-radius:14px; font-weight:700; font-size:16px; }
-
-  .footer { padding:24px; text-align:center; font-size:11px; color:#1e293b; }
-
-  /* WA */
-  .wa-sep { display:flex; align-items:center; gap:10px; margin:16px 0 12px; color:#1e293b; font-size:11px; }
-  .wa-sep::before,.wa-sep::after { content:""; flex:1; height:1px; background:rgba(255,255,255,0.04); }
-  .btn-wa { width:100%; padding:13px; background:#25D366; color:#fff; border:none; border-radius:12px;
-    font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; display:flex;
-    align-items:center; justify-content:center; gap:8px; }
-`;
-
-// ── Per-segment demo content ──────────────────────────────────────────────────
-const DEMO = {
+// ── Per-segment content ───────────────────────────────────────────────────────
+const CONTENT = {
   de_camper: {
-    teaserQ: "Wo kann ich heute Nacht in der Nähe von Zadar legal übernachten?",
-    teaserA: "Camp Zaton (15km nördlich, Vollservice, 28€/Nacht) oder kostenloser Stellplatz bei Nin — Wohnmobile bis 8m, direkt am Flachstrand. Für morgen früh: Bura-Warnung aktiv auf der Küstenstraße bei Maslenica — fahre vor 9 Uhr oder nach 16 Uhr.",
-    chips: [
-      "Legale Stellplätze in Split?",
-      "Bura — wann ist es gefährlich?",
-      "Tunnel mit Höhenbeschränkung?",
-      "Günstige Entsorgungsstation Istrien?",
+    lang: "de",
+    hero: {
+      tag: "KI-REISEBEGLEITER FÜR WOHNMOBILREISENDE",
+      h1: "Kroatien mit dem Wohnmobil —\nohne böse Überraschungen",
+      sub: "Legale Stellplätze, Höhenbeschränkungen, Bura-Warnungen — alles auf Deutsch, alles in Echtzeit.",
+      cta: "Kostenlos testen",
+      ctaHref: "/ai?niche=camper&lang=de",
+      ctaSub: "Keine Registrierung · 7 Fragen gratis",
+    },
+    steps: [
+      { n:"1", title:"App öffnen", desc:"Keine Installation. Direkt im Browser, auf jedem Gerät." },
+      { n:"2", title:"Deine Frage stellen", desc:"Auf Deutsch. Stellplatz, Route, Tunnel, Wetter — einfach fragen." },
+      { n:"3", title:"Konkrete Antwort", desc:"Echte Ortsangaben, Preise und Warnungen — kein generisches Touristeninfo." },
     ],
-    gateTitle: "Deine vollständige Antwort wartet",
-    gateSub: "E-Mail eingeben — wir schicken dir deinen kompletten Kroatien-Wohnmobilguide sofort:",
-    gateCta: "Meinen Guide sichern →",
-    mode: "camper", lang: "de",
+    features: [
+      { icon:"🅿️", title:"Legale Stellplätze", desc:"Alle genehmigten Stellplätze und Campingplätze entlang der Adria. Mit Strom, Wasser, Entsorgung. Kein Bußgeldrisiko." },
+      { icon:"📏", title:"Höhenbeschränkungen", desc:"Tunnel Učka (4,2m), Brücken und Straßen mit Limits für dein Fahrzeug — bevor du hineingerätst." },
+      { icon:"🌬️", title:"Bura-Warnungen", desc:"Echtzeit-Warnungen wenn gefährliche Böen auf Küstenstraßen aktiv sind. Automatisch für deine Route." },
+      { icon:"⛽", title:"Günstigste Tankstellen", desc:"Dieselpreise entlang der Route. Kroatien ist bis zu 20% günstiger als Deutschland — wenn du weißt wo." },
+      { icon:"🌊", title:"Live-Wetter & Meer", desc:"Temperatur, Wind, Wellengang — für den nächsten Badestrand oder Hafen auf deiner Route." },
+      { icon:"🗺️", title:"Routenplanung", desc:"Wohnmobil-freundliche Routen. Keine Straßen mit Verboten, keine Überraschungen auf der Küstenstraße." },
+    ],
+    demo: {
+      label: "PROBIERE ES SELBST — KEINE REGISTRIERUNG",
+      placeholder: "z.B. Wo kann ich heute Nacht bei Split legal übernachten?",
+      chips: ["Stellplatz bei Split?","Bura heute aktiv?","Tunnel Učka Höhe?","Günstige Entsorgung Istrien?"],
+      errText: "Keine Antwort — bitte nochmal versuchen.",
+    },
+    pricing: {
+      label: "PREISE",
+      free: { label:"Kostenlos", price:"0 €", features:["7 Fragen gratis","Kein Konto nötig","Alle Regionen"] },
+      week: { label:"Woche", price:"9,99 €", per:"/Woche", features:["Unbegrenzte Fragen","Live Wetter & Bura","Alle Routen & Karten","Deutsch"] },
+      season: { label:"Saisonpass", price:"29 €", per:"/Saison", badge:"BELIEBT", features:["Alles aus Woche","Gültig April–Oktober","Live Kamera-Links","Priority Support"] },
+      ctaWeek:"Woche kaufen", ctaSeason:"Saisonpass kaufen",
+    },
+    proof: [
+      { text:"Hat uns vor einem €200 Bußgeld gerettet — Stellplatz gefunden den Google Maps nicht kennt.", name:"Klaus & Renate", origin:"Bayern, Wohnmobil-Tour Istrien→Dubrovnik" },
+      { text:"Tunnel-Warnung 10 Minuten bevor wir reingefahren wären. Unser Fahrzeug hätte nicht durchgepasst.", name:"Thomas H.", origin:"München → Dalmatien" },
+      { text:"Endlich ein Guide der wirklich auf Deutsch antwortet und konkrete Orte nennt, keine leeren Phrasen.", name:"Brigitte S.", origin:"Wien, Stellplatz-Tour Kvarner" },
+    ],
+    faq: [
+      { q:"Brauche ich ein Konto?", a:"Nein. Einfach öffnen und loslegen. 7 Fragen sind kostenlos, ohne Registrierung." },
+      { q:"Funktioniert es auf dem Smartphone?", a:"Ja, vollständig optimiert für Mobilgeräte. Kein Download nötig." },
+      { q:"Sind die Stellplätze aktuell?", a:"Die Datenbank wird laufend aktualisiert. Für Kroatien mit über 400 verifizierten Stellplätzen." },
+      { q:"Was passiert nach 7 Fragen?", a:"Du kannst ein Wochenabo (9,99 €) oder den Saisonpass (29 €) kaufen. Per Karte oder PayPal." },
+    ],
+    finalCta: "Jetzt kostenlos testen →",
+    finalHref: "/ai?niche=camper&lang=de",
   },
-  de_family: {
-    teaserQ: "Welche Strände in Kroatien sind am besten für kleine Kinder?",
-    teaserA: "Saharun (Dugi Otok): weißer Sand, Wasser nur 30–50cm tief, kein Bootsverkehr — perfekt bis 6 Jahre. Brela (Makarska): flaches Kiesstrand, direkt vom Parkplatz. Lopar (Rab): 22 Sandstrände auf einer Insel, kinderfreundlichste Destination der Adria.",
-    chips: ["Kinderfreundliche Restaurants Split?", "Sicherer Strand ohne Strömung?", "Wasserpark Kroatien?", "Anreise mit Kindern — Tipps?"],
-    gateTitle: "Dein Familienguide wartet",
-    gateSub: "E-Mail eingeben für deinen kompletten Kroatien-Familienplan:",
-    gateCta: "Meinen Familienguide sichern →",
-    mode: "apartment", lang: "de",
-  },
-  it_sailor: {
-    teaserQ: "Dove posso ancorare stanotte vicino a Hvar senza pagare la marina?",
-    teaserA: "Baia Vinogradišće (Hvar nord): fondo sabbioso, 5–8m, protetta da Bora e Maestrale. Baia Jagodna (Vis): più isolata, ideale per una notte tranquilla. Domani: NAVTEX segnala Bora 18–22kn da Zadar — niente di critico ma evita le rotte aperte.",
-    chips: ["Marina ACI disponibile a Šibenik?", "Previsione Bora domani?", "Ristorante pesce fresco Vis?", "Rotta Split → Dubrovnik sicura?"],
-    gateTitle: "La tua guida velistica ti aspetta",
-    gateSub: "Inserisci la tua email per la guida completa all'Adriatico:",
-    gateCta: "Ottieni la mia guida →",
-    mode: "sailing", lang: "it",
-  },
-  en_cruiser: {
-    teaserQ: "Where can I anchor tonight near Hvar without paying a marina?",
-    teaserA: "Vinogradišće bay (north Hvar): sandy bottom, 5–8m depth, sheltered from Bora and Maestrale. Jagodna bay (Vis): more isolated, perfect for a quiet night. Tomorrow: NAVTEX shows Bora 18–22kn from Zadar — nothing critical but avoid exposed northerly routes.",
-    chips: ["ACI marina availability Šibenik?", "Bura forecast tomorrow?", "Best anchorage Kornati?", "Split → Dubrovnik route safe?"],
-    gateTitle: "Your sailing guide is waiting",
-    gateSub: "Enter your email for your full Adriatic sailing guide:",
-    gateCta: "Get my guide →",
-    mode: "sailing", lang: "en",
-  },
-  en_camper: {
-    teaserQ: "Where can I legally park my motorhome near Split tonight?",
-    teaserA: "Camp Stobreč (4km east of Split, €22/night, full hookups, bus to centre every 20min). Free option: parking near Kaštel Štafilić — allowed for motorhomes up to 7.5m, no time limit. Warning: Split city centre tunnels max 2.8m — most GPS apps don't show this.",
-    chips: ["Legal spots near Dubrovnik?", "Height limit Učka tunnel?", "Bura warning active now?", "Cheap dump station Istria?"],
-    gateTitle: "Your full camper guide is waiting",
-    gateSub: "Enter your email — we'll send your complete Croatia motorhome guide:",
-    gateCta: "Get my guide →",
-    mode: "camper", lang: "en",
-  },
-  en_couple: {
-    teaserQ: "Which beach near Split is most secluded — away from the crowds?",
-    teaserA: "Pakleni Islands (boat from Hvar, 10 min): Palmižana bay has a nude beach that clears out after 5pm. Stiniva cove (Vis): most beautiful beach in Croatia, arrive before 8am. Žukovac (Brač, south side): no road access, zero tourists, 45min walk from Bol.",
-    chips: ["Best sunset dinner Split?", "Hidden beach Dubrovnik?", "Romantic spot Hvar?", "Local wine region Pelješac?"],
-    gateTitle: "Your secret Croatia guide is waiting",
-    gateSub: "Enter your email for your complete hidden-spots guide:",
-    gateCta: "Get my guide →",
-    mode: "apartment", lang: "en",
-  },
-};
 
-const PROOF = {
-  de_camper: [
-    { q: "\"Hat uns vor €200 Bußgeld gerettet — Stellplatz den Google Maps nicht kennt.\"", name: "Klaus & Renate, Wohnmobil Istrien→Dubrovnik" },
-    { q: "\"Tunnel-Warnung 10 Minuten bevor wir reingefahren wären. Fahrzeug passte nicht durch.\"", name: "Thomas H., Bayern → Dalmatien" },
-  ],
-  de_family: [
-    { q: "\"Meine Kinder haben mitgeplant statt zu quengeln. Der beste Urlaub seit Jahren.\"", name: "Familie Weber, Split–Hvar–Brač" },
-    { q: "\"Hat uns den einzigen kinderfreundlichen Strand ohne Strömung in der Gegend gezeigt.\"", name: "Sandra M., Wien" },
-  ],
-  it_sailor: [
-    { q: "\"Tre baie che non esistono su nessuna app. Incredibile per chi naviga in Croazia.\"", name: "Marco, Ancona → Spalato" },
-    { q: "\"Bora warning 2 ore prima. Abbiamo aspettato a Šibenik. La barca prima era okay.\"", name: "Giulia & Luca, Costa Dalmata" },
-  ],
-  en_cruiser: [
-    { q: "\"Found three anchorages that aren't on any chart app. Best tool for Croatian waters.\"", name: "James, sailing Ancona to Dubrovnik" },
-    { q: "\"Bura warning 2 hours before it hit. Stayed in Šibenik. Boat was fine.\"", name: "Sarah & Tom, Hanse 458" },
-  ],
-  en_camper: [
-    { q: "\"Saved us from a €200 fine — found a legal spot Google Maps doesn't even show.\"", name: "Dave & Sarah, motorhome Split to Istria" },
-    { q: "\"Height warning 10 minutes before the tunnel. Our van wouldn't have made it through.\"", name: "Mike, Lancashire → Dalmatia" },
-  ],
-  en_couple: [
-    { q: "\"We had the beach completely to ourselves for two hours. No travel blog mentioned it.\"", name: "Sophie & Tom, island-hopping from Split" },
-    { q: "\"The restaurant recommendation was so good the owner came out to talk to us.\"", name: "Anna & Felix, honeymoon Croatia" },
-  ],
+  de_family: {
+    lang: "de",
+    hero: {
+      tag: "FAMILIENURLAUB AN DER ADRIA",
+      h1: "Kroatien mit Kindern —\nentspannt und sicher",
+      sub: "Kinderfreundliche Strände, sichere Buchten, Restaurants ohne Touristenfallen — auf Deutsch.",
+      cta: "Kostenlos testen",
+      ctaHref: "/ai?niche=camper&lang=de",
+      ctaSub: "Keine Registrierung · 7 Fragen gratis",
+    },
+    steps: [
+      { n:"1", title:"App öffnen", desc:"Keine Installation. Direkt im Browser." },
+      { n:"2", title:"Frage stellen", desc:"Strand für Kleinkinder, Restaurant, Ausflug — einfach fragen." },
+      { n:"3", title:"Konkrete Empfehlung", desc:"Echte Orte, Preise, Öffnungszeiten — kein Touristenführer von 2019." },
+    ],
+    features: [
+      { icon:"🏖️", title:"Kinderfreundliche Strände", desc:"Flaches Wasser, Sandstrand, keine gefährlichen Strömungen. Mit GPS-Koordinaten." },
+      { icon:"🍕", title:"Familienrestaurants", desc:"Lokale Konobas mit Kinderteller — nicht die überteuerten Touristenrestaurants." },
+      { icon:"🚗", title:"Parken & Anreise", desc:"Park&Ride-Optionen, Shuttle-Busse, Zugang zu Stränden mit dem Auto." },
+      { icon:"🌊", title:"Badequalität live", desc:"Wassertemperatur, Wellen, UV-Index — für den perfekten Badetag." },
+      { icon:"🎡", title:"Aktivitäten", desc:"Wasserparks, Ausflüge, Nationalparks — gefiltert nach Kinderalter." },
+      { icon:"🌬️", title:"Wetterwarnungen", desc:"Bura und Gewitter rechtzeitig — damit der Strandtag nicht ins Wasser fällt." },
+    ],
+    demo: {
+      label: "PROBIERE ES SELBST",
+      placeholder: "z.B. Welcher Strand in der Nähe von Split ist sicher für Kleinkinder?",
+      chips: ["Strand für Kleinkinder Split?","Kinderfreundliches Restaurant Hvar?","Wasserpark Kroatien?","Sichere Bucht ohne Strömung?"],
+      errText: "Keine Antwort — bitte nochmal versuchen.",
+    },
+    pricing: {
+      label: "PREISE",
+      free: { label:"Kostenlos", price:"0 €", features:["7 Fragen gratis","Kein Konto","Alle Regionen"] },
+      week: { label:"Woche", price:"9,99 €", per:"/Woche", features:["Unbegrenzte Fragen","Live Wetter","Alle Strände & Restaurants","Deutsch"] },
+      season: { label:"Saisonpass", price:"29 €", per:"/Saison", badge:"BELIEBT", features:["Alles aus Woche","April–Oktober","Familienrouten","Priority Support"] },
+      ctaWeek:"Woche kaufen", ctaSeason:"Saisonpass kaufen",
+    },
+    proof: [
+      { text:"Meine Kinder haben mitgeplant statt zu quengeln. Der beste Urlaub seit Jahren.", name:"Familie Weber", origin:"Split–Hvar–Brač" },
+      { text:"Hat uns den einzigen Strand ohne Strömung in der Gegend gezeigt. Perfekt für unsere 3-Jährige.", name:"Sandra M.", origin:"Wien, Makarska Riviera" },
+      { text:"Restaurants die JADRAN.AI empfiehlt sind tatsächlich lokal und günstig. Kein einziges war eine Touristenfalle.", name:"Peter & Monika", origin:"München, Split-Urlaub" },
+    ],
+    faq: [
+      { q:"Brauche ich ein Konto?", a:"Nein. Einfach öffnen und loslegen. 7 Fragen kostenlos." },
+      { q:"Funktioniert es auf dem Smartphone?", a:"Ja, vollständig für Mobilgeräte optimiert." },
+      { q:"Auf Deutsch?", a:"Ja, vollständig auf Deutsch — Fragen und Antworten." },
+      { q:"Was kostet der Saisonpass?", a:"29 € für die gesamte Saison April–Oktober. Einmalige Zahlung." },
+    ],
+    finalCta: "Jetzt kostenlos testen →",
+    finalHref: "/ai?niche=camper&lang=de",
+  },
+
+  it_sailor: {
+    lang: "it",
+    hero: {
+      tag: "GUIDA AI PER VELISTI IN CROAZIA",
+      h1: "Veleggia la Croazia —\nsenza sorprese",
+      sub: "Marine ACI, ancoraggi liberi, previsioni Bora e Jugo — tutto in italiano, tutto in tempo reale.",
+      cta: "Prova gratis",
+      ctaHref: "/ai?niche=sailing&lang=it",
+      ctaSub: "Nessuna registrazione · 7 domande gratis",
+    },
+    steps: [
+      { n:"1", title:"Apri l'app", desc:"Nessuna installazione. Direttamente nel browser, su qualsiasi dispositivo." },
+      { n:"2", title:"Fai la tua domanda", desc:"In italiano. Marina, ancoraggio, meteo, rotta — chiedi semplicemente." },
+      { n:"3", title:"Risposta concreta", desc:"Coordinate GPS, prezzi reali e avvisi — non informazioni generiche da depliant." },
+    ],
+    features: [
+      { icon:"⚓", title:"Marine ACI", desc:"Disponibilità in tempo reale, prezzi e servizi per tutte le marine ACI della Dalmazia." },
+      { icon:"🌬️", title:"Previsioni Bora e Jugo", desc:"Avvisi NAVTEX e meteo marino prima che la situazione diventi pericolosa. Non salpare alla cieca." },
+      { icon:"🏝️", title:"Ancoraggi liberi", desc:"Le baie più belle dove passare la notte gratuitamente — lontano dalle flotte charter." },
+      { icon:"🐟", title:"Ristoranti di pesce", desc:"Dove mangiano i pescatori locali, non i turisti. Con prezzi e indicazioni per arrivarci in barca." },
+      { icon:"🗺️", title:"Rotte sicure", desc:"Rotte ottimizzate per velisti, scogli e bassi fondali inclusi." },
+      { icon:"🌊", title:"Meteo marino live", desc:"Temperatura dell'acqua, altezza onde, direzione vento — aggiornati ogni ora." },
+    ],
+    demo: {
+      label: "PROVALO TU STESSO — SENZA REGISTRAZIONE",
+      placeholder: "es. Dove posso ancorare stanotte vicino a Hvar?",
+      chips: ["Ancoraggio libero vicino Hvar?","Bora domani?","Marina ACI Šibenik disponibile?","Ristorante pesce Vis?"],
+      errText: "Nessuna risposta — riprova.",
+    },
+    pricing: {
+      label: "PREZZI",
+      free: { label:"Gratis", price:"0 €", features:["7 domande gratis","Nessun account","Tutte le regioni"] },
+      week: { label:"Settimana", price:"9,99 €", per:"/settimana", features:["Domande illimitate","Meteo marino live","Tutte le rotte","Italiano"] },
+      season: { label:"Pass stagione", price:"29 €", per:"/stagione", badge:"POPOLARE", features:["Tutto dalla settimana","Valido aprile–ottobre","Link webcam live","Supporto prioritario"] },
+      ctaWeek:"Acquista settimana", ctaSeason:"Acquista pass stagione",
+    },
+    proof: [
+      { text:"Tre baie che non esistono su nessuna app. Incredibile per chi naviga in Croazia.", name:"Marco", origin:"Ancona → Spalato" },
+      { text:"Avviso Bora 2 ore prima. Abbiamo aspettato a Šibenik. La barca era al sicuro.", name:"Giulia & Luca", origin:"Costa Dalmata, Oceanis 40" },
+      { text:"La marina ACI era al completo ma JADRAN.AI mi ha trovato un ancoraggio gratuito a 200m.", name:"Roberto F.", origin:"Genova → Isole Elafiti" },
+    ],
+    faq: [
+      { q:"Serve un account?", a:"No. Apri e inizia subito. 7 domande gratis, nessuna registrazione." },
+      { q:"Funziona su smartphone?", a:"Sì, completamente ottimizzato per mobile." },
+      { q:"I dati NAVTEX sono aggiornati?", a:"Sì, dati DHMZ in tempo reale aggiornati ogni ora." },
+      { q:"Cosa succede dopo 7 domande?", a:"Puoi acquistare la settimana (9,99 €) o il pass stagione (29 €). Carta o PayPal." },
+    ],
+    finalCta: "Prova adesso gratis →",
+    finalHref: "/ai?niche=sailing&lang=it",
+  },
+
+  en_cruiser: {
+    lang: "en",
+    hero: {
+      tag: "AI GUIDE FOR SAILORS & CRUISERS",
+      h1: "Cruise Croatia's Adriatic —\nsmarter",
+      sub: "ACI marina availability, free anchorages, Bura forecasts, hidden bays — in English, in real time.",
+      cta: "Try free",
+      ctaHref: "/ai?niche=sailing&lang=en",
+      ctaSub: "No registration · 7 questions free",
+    },
+    steps: [
+      { n:"1", title:"Open the app", desc:"No install. Works in any browser, on any device." },
+      { n:"2", title:"Ask your question", desc:"In English. Marina, anchorage, weather, route — just ask." },
+      { n:"3", title:"Get a real answer", desc:"GPS coordinates, real prices and warnings — not generic tourist brochure copy." },
+    ],
+    features: [
+      { icon:"⚓", title:"ACI Marina availability", desc:"Real-time berth availability, prices and services for all ACI marinas along the Dalmatian coast." },
+      { icon:"🌬️", title:"Bura & Jugo forecasts", desc:"NAVTEX and marine weather before conditions turn dangerous. Don't leave port blind." },
+      { icon:"🏝️", title:"Free anchorages", desc:"Beautiful bays to anchor overnight for free — away from charter flotillas and tourist crowds." },
+      { icon:"🐟", title:"Where locals eat", desc:"Fish restaurants where the fishermen go, not the tourists. With prices and how to arrive by boat." },
+      { icon:"🗺️", title:"Safe routes", desc:"Sailor-optimised routes. Rocks, shallow water and restricted areas all included." },
+      { icon:"🌊", title:"Live marine weather", desc:"Sea temperature, wave height, wind direction — updated hourly from DHMZ." },
+    ],
+    demo: {
+      label: "TRY IT YOURSELF — NO REGISTRATION",
+      placeholder: "e.g. Where can I anchor tonight near Hvar for free?",
+      chips: ["Free anchorage near Hvar?","Bura forecast tomorrow?","ACI Šibenik berth available?","Best fish restaurant Vis?"],
+      errText: "No response — please try again.",
+    },
+    pricing: {
+      label: "PRICING",
+      free: { label:"Free", price:"€0", features:["7 questions free","No account needed","All regions"] },
+      week: { label:"Week", price:"€9.99", per:"/week", features:["Unlimited questions","Live marine weather","All routes & charts","English"] },
+      season: { label:"Season pass", price:"€29", per:"/season", badge:"POPULAR", features:["Everything in week","Valid April–October","Live webcam links","Priority support"] },
+      ctaWeek:"Buy week pass", ctaSeason:"Buy season pass",
+    },
+    proof: [
+      { text:"Found three anchorages that aren't on any chart app. Best tool I've used for Croatian waters.", name:"James", origin:"Sailing Ancona to Dubrovnik" },
+      { text:"Bura warning 2 hours before it hit. Stayed in Šibenik. Boat was fine.", name:"Sarah & Tom", origin:"Hanse 458, Dalmatian coast" },
+      { text:"The ACI was full but JADRAN.AI found me a free anchorage 200m away. Perfect night.", name:"Robert F.", origin:"Geneva → Elaphiti Islands" },
+    ],
+    faq: [
+      { q:"Do I need an account?", a:"No. Open it and start immediately. 7 questions free, no signup." },
+      { q:"Does it work on a phone?", a:"Yes, fully optimised for mobile. Works offline for cached responses." },
+      { q:"Is the NAVTEX data live?", a:"Yes, DHMZ data updated hourly." },
+      { q:"What happens after 7 questions?", a:"Buy a week pass (€9.99) or season pass (€29). Card or PayPal." },
+    ],
+    finalCta: "Try it free now →",
+    finalHref: "/ai?niche=sailing&lang=en",
+  },
+
+  en_camper: {
+    lang: "en",
+    hero: {
+      tag: "AI GUIDE FOR MOTORHOME TRAVELLERS",
+      h1: "Road trip Croatia —\nwithout the nasty surprises",
+      sub: "Legal camper spots, height restrictions, Bura warnings — in English, in real time.",
+      cta: "Try free",
+      ctaHref: "/ai?niche=camper&lang=en",
+      ctaSub: "No registration · 7 questions free",
+    },
+    steps: [
+      { n:"1", title:"Open the app", desc:"No install. Works in any browser, on any device." },
+      { n:"2", title:"Ask your question", desc:"In English. Parking spot, route, tunnel, weather — just ask." },
+      { n:"3", title:"Get a real answer", desc:"Real place names, prices and warnings — not generic tourist copy." },
+    ],
+    features: [
+      { icon:"🅿️", title:"Legal camper spots", desc:"All approved motorhome stops along the Adriatic. With hookups, water, dump stations. No fine risk." },
+      { icon:"📏", title:"Height restrictions", desc:"Učka tunnel (4.2m), bridges and roads with vehicle limits — before you drive into them." },
+      { icon:"🌬️", title:"Bura wind warnings", desc:"Real-time alerts when dangerous gusts are active on coastal roads. Automatic for your route." },
+      { icon:"⛽", title:"Cheapest fuel stops", desc:"Diesel prices along the route. Croatia can be 20% cheaper than Germany if you know where." },
+      { icon:"🌊", title:"Live weather & sea", desc:"Temperature, wind, swell — for the next beach or harbour on your route." },
+      { icon:"🗺️", title:"Route planning", desc:"Motorhome-friendly routes. No prohibited roads, no surprises on the coastal highway." },
+    ],
+    demo: {
+      label: "TRY IT YOURSELF — NO REGISTRATION",
+      placeholder: "e.g. Where can I legally park my motorhome near Split tonight?",
+      chips: ["Legal spots near Split?","Bura active now?","Učka tunnel height?","Cheap dump station Istria?"],
+      errText: "No response — please try again.",
+    },
+    pricing: {
+      label: "PRICING",
+      free: { label:"Free", price:"€0", features:["7 questions free","No account needed","All regions"] },
+      week: { label:"Week", price:"€9.99", per:"/week", features:["Unlimited questions","Live Bura warnings","All routes & maps","English"] },
+      season: { label:"Season pass", price:"€29", per:"/season", badge:"POPULAR", features:["Everything in week","Valid April–October","Live webcam links","Priority support"] },
+      ctaWeek:"Buy week pass", ctaSeason:"Buy season pass",
+    },
+    proof: [
+      { text:"Saved us from a €200 fine — found a legal spot that Google Maps doesn't even show.", name:"Dave & Sarah", origin:"Motorhome Split to Istria" },
+      { text:"Height warning 10 minutes before the tunnel. Our van wouldn't have made it through.", name:"Mike", origin:"Lancashire → Dalmatia" },
+      { text:"Finally a guide that gives real place names and prices, not tourist brochure nonsense.", name:"Clive & Jan", origin:"Touring from Split" },
+    ],
+    faq: [
+      { q:"Do I need an account?", a:"No. Open it and start immediately. 7 questions free, no signup." },
+      { q:"Does it work on a phone?", a:"Yes, fully optimised for mobile." },
+      { q:"Are the parking spots up to date?", a:"Yes, verified database of 400+ spots across Croatia, updated continuously." },
+      { q:"What happens after 7 questions?", a:"Buy a week pass (€9.99) or season pass (€29). Card or PayPal." },
+    ],
+    finalCta: "Try it free now →",
+    finalHref: "/ai?niche=camper&lang=en",
+  },
+
+  en_couple: {
+    lang: "en",
+    hero: {
+      tag: "AI GUIDE FOR CROATIA TRAVELLERS",
+      h1: "Discover Croatia's\nsecret Adriatic",
+      sub: "Hidden beaches, local restaurants, sunset spots — places TripAdvisor has never heard of.",
+      cta: "Try free",
+      ctaHref: "/ai?niche=apartment&lang=en",
+      ctaSub: "No registration · 7 questions free",
+    },
+    steps: [
+      { n:"1", title:"Open the app", desc:"No install. Works in any browser, on any device." },
+      { n:"2", title:"Ask your question", desc:"Beach, restaurant, excursion, sunset spot — just ask." },
+      { n:"3", title:"Get a real answer", desc:"Real places with GPS, prices and opening hours — not year-old blog posts." },
+    ],
+    features: [
+      { icon:"🏖️", title:"Secret beaches", desc:"GPS coordinates to coves that aren't on Google Maps. Empty even in peak season." },
+      { icon:"🍷", title:"Local restaurants", desc:"Where fishermen eat, not tourists. Konobas with no English menu and actual fresh fish." },
+      { icon:"🌅", title:"Sunset spots", desc:"Best viewpoints for golden hour along the coast. With parking and how to get there." },
+      { icon:"🌊", title:"Live sea conditions", desc:"Water temperature, waves, crowds — before you drive an hour to the beach." },
+      { icon:"🗺️", title:"Island hopping", desc:"Ferry schedules, boat taxis, which islands are worth the trip and which to skip." },
+      { icon:"🌬️", title:"Weather & wind", desc:"Bura and storm forecasts. Know before you go." },
+    ],
+    demo: {
+      label: "TRY IT YOURSELF — NO REGISTRATION",
+      placeholder: "e.g. What's the most secluded beach near Dubrovnik?",
+      chips: ["Secluded beach near Dubrovnik?","Best local restaurant Split?","Sunset viewpoint Hvar?","Quiet island to visit?"],
+      errText: "No response — please try again.",
+    },
+    pricing: {
+      label: "PRICING",
+      free: { label:"Free", price:"€0", features:["7 questions free","No account needed","All regions"] },
+      week: { label:"Week", price:"€9.99", per:"/week", features:["Unlimited questions","Live conditions","All regions","English"] },
+      season: { label:"Season pass", price:"€29", per:"/season", badge:"POPULAR", features:["Everything in week","Valid April–October","Live webcam links","Priority support"] },
+      ctaWeek:"Buy week pass", ctaSeason:"Buy season pass",
+    },
+    proof: [
+      { text:"We had the beach completely to ourselves for two hours. No travel blog has mentioned it.", name:"Sophie & Tom", origin:"Island-hopping from Split" },
+      { text:"The restaurant recommendation was so good the owner came out to talk to us.", name:"Anna & Felix", origin:"Honeymoon, Dubrovnik" },
+      { text:"Found a cove on Vis that wasn't on any map. Best day of the whole holiday.", name:"Claire", origin:"Solo trip, Dalmatia" },
+    ],
+    faq: [
+      { q:"Do I need an account?", a:"No. Open it and start immediately. 7 questions free, no signup." },
+      { q:"Does it work on a phone?", a:"Yes, fully optimised for mobile." },
+      { q:"Is it just a chatbot?", a:"It's a local knowledge system with live weather, crowd data and real-time conditions — not just a chatbot." },
+      { q:"What happens after 7 questions?", a:"Buy a week pass (€9.99) or season pass (€29). Card or PayPal." },
+    ],
+    finalCta: "Try it free now →",
+    finalHref: "/ai?niche=apartment&lang=en",
+  },
 };
 
 const WA_NUMBER = "381695561699";
-const WA_MESSAGES = {
-  de_camper:  "Hallo, ich interessiere mich für den Wohnmobil-Guide für Kroatien 🚐",
-  de_family:  "Hallo, ich interessiere mich für den Familien-Guide für Kroatien 🏖️",
-  it_sailor:  "Ciao, sono interessato alla guida vela per la Croazia ⛵",
-  en_cruiser: "Hi, I'm interested in the Croatia sailing guide ⚓",
-  en_camper:  "Hi, I'm interested in the Croatia camper guide 🚐",
-  en_couple:  "Hi, I'm interested in the Croatia couples guide 🌊",
-};
-
-const LABELS = {
-  de: { namePh: "Vorname (optional)", emailPh: "E-Mail-Adresse", trust: "Kein Spam · Jederzeit abmeldbar", or: "oder", wa: "Per WhatsApp fragen" },
-  it: { namePh: "Nome (opzionale)", emailPh: "Indirizzo email", trust: "Niente spam · Disiscrizione sempre possibile", or: "o", wa: "Chatta su WhatsApp" },
-  en: { namePh: "First name (optional)", emailPh: "Email address", trust: "No spam · Unsubscribe anytime", or: "or", wa: "Ask via WhatsApp" },
-};
 
 function getVid() {
   const KEY = "jadran_vid";
@@ -235,324 +325,392 @@ function getVid() {
   if (!vid) {
     vid = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36);
     localStorage.setItem(KEY, vid);
-    const exp = new Date(Date.now() + 30*86400000).toUTCString();
-    document.cookie = `jadran_vid=${vid}; expires=${exp}; path=/; SameSite=Lax`;
+    document.cookie = `jadran_vid=${vid}; expires=${new Date(Date.now()+30*86400000).toUTCString()}; path=/; SameSite=Lax`;
     return { vid, returning: false };
   }
   return { vid, returning: true };
 }
 
+const B = "'Outfit', system-ui, sans-serif";
+const SKY = "#0ea5e9";
+const DARK = "#050d1a";
+
 export default function SegmentLandingPage({ slug }) {
   const seg = SEGMENTS[slug];
-  const demo = DEMO[slug] || DEMO.en_camper;
-  const proof = PROOF[slug] || PROOF.en_camper;
-  const labels = LABELS[seg?.lang] || LABELS.en;
+  const c = CONTENT[slug] || CONTENT.en_camper;
 
   const [variantId, setVariantId] = useState("default");
   const [vid, setVid] = useState("");
   const [returning, setReturning] = useState(false);
 
-  // Chat state
+  // Demo chat
   const [msgs, setMsgs] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showGate, setShowGate] = useState(false);
-  const [gateUnlocked, setGateUnlocked] = useState(false);
-  const [pendingQuestion, setPendingQuestion] = useState("");
-  const chatBoxRef = useRef(null);
+  const chatRef = useRef(null);
 
-  // Email form state
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [formLoading, setFormLoading] = useState(false);
-  const [done, setDone] = useState(false);
-  const [formError, setFormError] = useState("");
+  // Email capture (optional, at bottom)
+  const [capEmail, setCapEmail] = useState("");
+  const [capName, setCapName] = useState("");
+  const [capDone, setCapDone] = useState(false);
+  const [capLoading, setCapLoading] = useState(false);
 
   useEffect(() => {
-    if (!seg) return;
     const v = new URLSearchParams(window.location.search).get("v") || "default";
     setVariantId(v);
-    const { vid: visitorId, returning: isReturning } = getVid();
-    setVid(visitorId);
-    setReturning(isReturning);
-    fetch("/api/ab-impression", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ variantId: v, segmentId: slug, source: document.referrer || "direct" }),
-    }).catch(() => {});
+    const { vid: visitorId, returning: r } = getVid();
+    setVid(visitorId); setReturning(r);
+    fetch("/api/ab-impression", { method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ variantId: v, segmentId: slug, source: document.referrer || "direct" }) }).catch(()=>{});
   }, [slug]);
 
   useEffect(() => {
-    if (chatBoxRef.current) chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+    if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [msgs, loading]);
 
   if (!seg) return (
-    <div style={{ minHeight:"100dvh", display:"flex", alignItems:"center", justifyContent:"center", background:"#050d1a", color:"#f0f9ff", fontFamily:"system-ui" }}>
+    <div style={{ minHeight:"100dvh", display:"flex", alignItems:"center", justifyContent:"center", background:DARK, color:"#f0f9ff", fontFamily:B }}>
       <div style={{ textAlign:"center" }}>
         <div style={{ fontSize:48, marginBottom:16 }}>🌊</div>
-        <p>Page not found</p>
-        <a href="/" style={{ color:"#0ea5e9", marginTop:16, display:"block" }}>Go home</a>
+        <p>Page not found</p><a href="/" style={{ color:SKY, marginTop:16, display:"block" }}>Go home</a>
       </div>
     </div>
   );
 
-  async function askAI(question) {
-    if (loading) return;
-    // After 1st real question, show email gate (but still send the question)
-    const isFirstQ = msgs.length === 0;
-
-    const uMsg = { role: "user", content: question };
+  async function askAI(q) {
+    if (!q.trim() || loading) return;
+    const uMsg = { role:"user", content:q.trim() };
     setMsgs(p => [...p, uMsg]);
     setInput("");
     setLoading(true);
-
-    // If gate not unlocked, store question and show gate after response
-    if (!gateUnlocked && !isFirstQ) {
-      setShowGate(true);
-      setPendingQuestion(question);
-      setLoading(false);
-      return;
-    }
-
     try {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 25000);
       const r = await fetch("/api/chat", {
-        method: "POST", headers: { "Content-Type": "application/json" }, signal: ctrl.signal,
-        body: JSON.stringify({
-          mode: demo.mode, plan: "free", lang: demo.lang, region: "all",
-          messages: [...msgs, uMsg].slice(-4),
-        }),
+        method:"POST", headers:{"Content-Type":"application/json"}, signal: ctrl.signal,
+        body: JSON.stringify({ mode: slug.includes("sail") || slug.includes("cruis") ? "sailing" : slug.includes("camper") ? "camper" : "landing",
+          plan:"free", lang: c.lang === "de" ? "de" : c.lang === "it" ? "it" : "en",
+          region:"all", messages:[...msgs, uMsg].slice(-4) }),
       });
       clearTimeout(t);
       const d = await r.json();
-      const reply = d.content?.[0]?.text || d.reply || d.text || (seg.lang === "de" ? "Keine Antwort — bitte nochmal versuchen." : seg.lang === "it" ? "Nessuna risposta — riprova." : "No response — please try again.");
-      setMsgs(p => [...p, { role: "assistant", content: reply }]);
-      // Show gate after first AI response
-      if (isFirstQ && !gateUnlocked) setShowGate(true);
+      const reply = d.content?.[0]?.text || d.reply || d.text || c.demo.errText;
+      setMsgs(p => [...p, { role:"assistant", content:reply }]);
     } catch {
-      const err = seg.lang === "de" ? "Keine Antwort — bitte nochmal versuchen." : seg.lang === "it" ? "Nessuna risposta — riprova." : "No response — please try again.";
-      setMsgs(p => [...p, { role: "assistant", content: err }]);
-      if (isFirstQ && !gateUnlocked) setShowGate(true);
+      setMsgs(p => [...p, { role:"assistant", content: c.demo.errText }]);
     }
     setLoading(false);
   }
 
-  async function handleGate(e) {
+  async function handleCapture(e) {
     e.preventDefault();
-    if (!email) return;
-    setFormLoading(true);
-    setFormError("");
+    if (!capEmail || capDone) return;
+    setCapLoading(true);
     try {
-      const r = await fetch("/api/lead-capture", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name, segmentId: slug, variantId, source: "landing", vid, returning,
-          fingerprint: { ua: navigator.userAgent, lang: navigator.language, tz: Intl.DateTimeFormat().resolvedOptions().timeZone } }),
-      });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || "error");
-      fetch("/api/ab-convert", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ variantId, segmentId: slug }),
-      }).catch(() => {});
-      setGateUnlocked(true);
-      setShowGate(false);
-      // If there's a pending question, answer it now
-      if (pendingQuestion) {
-        const q = pendingQuestion;
-        setPendingQuestion("");
-        await askAI(q);
-      }
-    } catch (err) {
-      setFormError(err.message === "invalid email" ? (seg.lang === "de" ? "Bitte gültige E-Mail eingeben." : "Please enter a valid email.") : (seg.lang === "de" ? "Fehler — bitte nochmal versuchen." : "Error — please try again."));
-    }
-    setFormLoading(false);
-  }
-
-  async function handleFinalSubmit(e) {
-    e.preventDefault();
-    if (!email || done) return;
-    setFormLoading(true); setFormError("");
-    try {
-      const r = await fetch("/api/lead-capture", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name, segmentId: slug, variantId, source: "landing_bottom", vid, returning,
-          fingerprint: { ua: navigator.userAgent, lang: navigator.language, tz: Intl.DateTimeFormat().resolvedOptions().timeZone } }),
-      });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || "error");
+      await fetch("/api/lead-capture", { method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ email: capEmail, name: capName, segmentId: slug, variantId, source:"landing_bottom", vid, returning,
+          fingerprint:{ ua:navigator.userAgent, lang:navigator.language, tz:Intl.DateTimeFormat().resolvedOptions().timeZone } }) });
       fetch("/api/ab-convert", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ variantId, segmentId: slug }) }).catch(()=>{});
-      setDone(true);
-    } catch (err) {
-      setFormError(seg.lang === "de" ? "Fehler — bitte nochmal versuchen." : "Error — please try again.");
-    }
-    setFormLoading(false);
+      setCapDone(true);
+    } catch {}
+    setCapLoading(false);
   }
 
-  const waMsg = encodeURIComponent(WA_MESSAGES[slug] || "Hi, I'm interested in JADRAN.AI 🌊");
+  const { hero, steps, features, demo, pricing, proof, faq } = c;
+  const isDE = c.lang === "de";
+  const isIT = c.lang === "it";
+  const waMsg = encodeURIComponent(isDE ? "Hallo, ich interessiere mich für JADRAN.AI 🌊" : isIT ? "Ciao, sono interessato a JADRAN.AI 🌊" : "Hi, I'm interested in JADRAN.AI 🌊");
+
+  // ── helpers ──
+  const Section = ({ children, bg, pt=48, pb=48 }) => (
+    <div style={{ background: bg || "transparent", padding:`${pt}px 20px ${pb}px` }}>
+      <div style={{ maxWidth:640, margin:"0 auto" }}>{children}</div>
+    </div>
+  );
+  const SectionLabel = ({ text }) => (
+    <p style={{ fontSize:10, letterSpacing:3, color:SKY, fontWeight:700, textAlign:"center", marginBottom:24 }}>{text}</p>
+  );
+  const PrimaryBtn = ({ href, text, sub, style:s }) => (
+    <div style={{ textAlign:"center", ...s }}>
+      <a href={href} style={{ display:"inline-block", padding:"16px 36px", background:`linear-gradient(135deg,${SKY},#0284c7)`,
+        color:"#fff", textDecoration:"none", borderRadius:16, fontWeight:700, fontSize:18, fontFamily:B,
+        boxShadow:"0 8px 32px rgba(14,165,233,0.35)", transition:"all .2s" }}>{text}</a>
+      {sub && <p style={{ marginTop:10, fontSize:13, color:"#475569" }}>{sub}</p>}
+    </div>
+  );
 
   return (
-    <>
-      <style>{STYLES}</style>
+    <div style={{ background:DARK, color:"#f0f9ff", fontFamily:B, minHeight:"100dvh", overflowX:"hidden" }}>
 
-      {/* ── HERO ── */}
-      <div className="hero">
-        <div className="logo">JADRAN.AI</div>
-        <h1 className="hook">{seg.headline}</h1>
-        <p className="sub">{seg.subheadline}</p>
-        <p className="social-proof">
-          <span>412 </span>
-          {seg.lang === "de" ? "Reisende nutzen Jadran.ai diese Saison" : seg.lang === "it" ? "viaggiatori usano Jadran.ai questa stagione" : "travellers using Jadran.ai this season"}
-        </p>
+      {/* ── NAV ── */}
+      <div style={{ padding:"16px 20px", display:"flex", alignItems:"center", justifyContent:"space-between",
+        borderBottom:"1px solid rgba(255,255,255,0.04)", background:"rgba(5,13,26,0.95)",
+        position:"sticky", top:0, zIndex:100, backdropFilter:"blur(12px)" }}>
+        <span style={{ fontSize:13, letterSpacing:3, color:SKY, fontWeight:700 }}>JADRAN.AI</span>
+        <a href={hero.ctaHref} style={{ padding:"9px 20px", background:`linear-gradient(135deg,${SKY},#0284c7)`,
+          color:"#fff", textDecoration:"none", borderRadius:10, fontWeight:700, fontSize:13 }}>
+          {isDE ? "App öffnen" : isIT ? "Apri l'app" : "Open app"}
+        </a>
       </div>
 
-      {/* ── DEMO CHAT ── */}
-      <div className="demo-wrap" style={{ padding:"0 16px 40px" }}>
-        <p className="demo-label">
-          {seg.lang === "de" ? "TESTE ES JETZT — KOSTENLOS" : seg.lang === "it" ? "PROVALO ADESSO — GRATIS" : "TRY IT NOW — FREE"}
-        </p>
-        <div className="chat-box">
-          {/* Teaser — pre-loaded conversation */}
-          <div className="teaser-msgs">
-            <div className="tmsg user"><div className="bubble">{demo.teaserQ}</div></div>
-            <div className="tmsg ai">
-              <div style={{ flex:1 }}>
-                <div className="ai-badge">JADRAN.AI</div>
-                <div className="bubble">{demo.teaserA}</div>
-              </div>
-            </div>
-          </div>
+      {/* ── HERO ── */}
+      <Section pt={56} pb={48} bg="linear-gradient(180deg,#071828 0%,#050d1a 100%)">
+        <p style={{ fontSize:11, letterSpacing:3, color:SKY, fontWeight:700, textAlign:"center", marginBottom:16 }}>{hero.tag}</p>
+        <h1 style={{ fontSize:"clamp(26px,6vw,52px)", fontWeight:700, lineHeight:1.15, textAlign:"center",
+          marginBottom:16, whiteSpace:"pre-line" }}>{hero.h1}</h1>
+        <p style={{ fontSize:"clamp(15px,2.5vw,18px)", color:"#7dd3fc", textAlign:"center", lineHeight:1.6,
+          marginBottom:40, maxWidth:520, margin:"0 auto 40px" }}>{hero.sub}</p>
+        <PrimaryBtn href={hero.ctaHref} text={hero.cta} sub={hero.ctaSub} />
+      </Section>
 
-          {/* Live messages */}
+      {/* ── HOW IT WORKS ── */}
+      <Section pt={48} pb={48} bg="#071828">
+        <SectionLabel text={isDE ? "SO FUNKTIONIERT ES" : isIT ? "COME FUNZIONA" : "HOW IT WORKS"} />
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16 }}>
+          {steps.map((s, i) => (
+            <div key={i} style={{ textAlign:"center", padding:"20px 14px", background:"rgba(255,255,255,0.02)",
+              border:"1px solid rgba(255,255,255,0.05)", borderRadius:16 }}>
+              <div style={{ width:36, height:36, borderRadius:"50%", background:`rgba(14,165,233,0.12)`,
+                border:`1px solid rgba(14,165,233,0.25)`, display:"flex", alignItems:"center",
+                justifyContent:"center", margin:"0 auto 12px", fontSize:14, fontWeight:700, color:SKY }}>{s.n}</div>
+              <div style={{ fontSize:14, fontWeight:600, marginBottom:6 }}>{s.title}</div>
+              <div style={{ fontSize:12, color:"#475569", lineHeight:1.5 }}>{s.desc}</div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* ── LIVE DEMO ── */}
+      <Section pt={48} pb={48} bg={DARK}>
+        <SectionLabel text={demo.label} />
+        <div style={{ background:"rgba(10,18,32,0.95)", border:"1px solid rgba(14,165,233,0.18)",
+          borderRadius:20, overflow:"hidden", boxShadow:"0 20px 60px rgba(0,0,0,0.5)" }}>
+
+          {/* Messages */}
           {msgs.length > 0 && (
-            <div ref={chatBoxRef} className={`live-msgs ${msgs.length > 0 ? "has-msgs" : ""}`} style={{ maxHeight:300, overflowY:"auto" }}>
+            <div ref={chatRef} style={{ padding:"16px 16px 8px", maxHeight:320, overflowY:"auto" }}>
               {msgs.map((m, i) => (
-                <div key={i} className={`lmsg ${m.role === "user" ? "user" : "ai"}`}>
-                  <div className="bubble">{m.content}</div>
+                <div key={i} style={{ display:"flex", justifyContent:m.role==="user"?"flex-end":"flex-start",
+                  marginBottom:10, animation:"msgIn .3s both" }}>
+                  {m.role === "assistant" && (
+                    <div style={{ marginRight:8, paddingTop:2 }}>
+                      <div style={{ width:28, height:28, borderRadius:"50%", background:`rgba(14,165,233,0.12)`,
+                        border:"1px solid rgba(14,165,233,0.2)", display:"flex", alignItems:"center",
+                        justifyContent:"center", fontSize:12, color:SKY, fontWeight:700, flexShrink:0 }}>AI</div>
+                    </div>
+                  )}
+                  <div style={{ background:m.role==="user"?"linear-gradient(135deg,#0ea5e9,#0284c7)":"rgba(14,165,233,0.07)",
+                    border:m.role==="user"?"none":"1px solid rgba(14,165,233,0.1)",
+                    borderRadius:m.role==="user"?"16px 4px 16px 16px":"4px 16px 16px 16px",
+                    padding:"11px 15px", fontSize:14, color:m.role==="user"?"#fff":"#cbd5e1",
+                    lineHeight:1.65, maxWidth:"82%", whiteSpace:"pre-wrap" }}>{m.content}</div>
                 </div>
               ))}
               {loading && (
-                <div className="lmsg ai">
-                  <div className="bubble" style={{ display:"flex", gap:5, alignItems:"center" }}>
-                    {[0,1,2].map(i => <span key={i} style={{ width:6, height:6, borderRadius:"50%", background:"#38bdf8", display:"inline-block", animation:`blink 1.4s ease ${i*0.22}s infinite` }}/>)}
+                <div style={{ display:"flex", marginBottom:10 }}>
+                  <div style={{ width:28,height:28,borderRadius:"50%",background:"rgba(14,165,233,0.12)",border:"1px solid rgba(14,165,233,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,color:SKY,fontWeight:700,flexShrink:0,marginRight:8 }}>AI</div>
+                  <div style={{ background:"rgba(14,165,233,0.07)",border:"1px solid rgba(14,165,233,0.1)",borderRadius:"4px 16px 16px 16px",padding:"13px 15px",display:"flex",gap:5,alignItems:"center" }}>
+                    {[0,1,2].map(i=><span key={i} style={{ width:6,height:6,borderRadius:"50%",background:"#38bdf8",display:"inline-block",animation:`blink 1.4s ease ${i*.22}s infinite` }}/>)}
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* Email gate — shown after first response */}
-          {showGate && !gateUnlocked && (
-            <div className="gate">
-              <div className="gate-title">{demo.gateTitle}</div>
-              <div className="gate-sub">{demo.gateSub}</div>
-              <form onSubmit={handleGate}>
-                <input type="text" placeholder={labels.namePh} value={name} onChange={e => setName(e.target.value)} autoComplete="given-name" />
-                <input type="email" placeholder={labels.emailPh} value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
-                {formError && <p style={{ color:"#f87171", fontSize:13, marginBottom:8 }}>{formError}</p>}
-                <button type="submit" className="gate-btn" disabled={formLoading}>{formLoading ? "..." : demo.gateCta}</button>
-                <p className="gate-trust">{labels.trust}</p>
-              </form>
-              <div className="wa-sep">{labels.or}</div>
-              <button className="btn-wa" onClick={() => window.open(`https://wa.me/${WA_NUMBER}?text=${waMsg}`, "_blank")}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                {labels.wa}
-              </button>
-            </div>
-          )}
-
-          {/* Question chips — shown before gate or after unlock */}
-          {(!showGate || gateUnlocked) && !loading && (
-            <div className="chips">
-              {demo.chips.map((c, i) => (
-                <button key={i} className="chip" disabled={loading} onClick={() => askAI(c)}>{c}</button>
+          {/* Chips */}
+          {!loading && (
+            <div style={{ display:"flex", flexWrap:"wrap", gap:8, padding: msgs.length ? "8px 14px 12px" : "16px 14px 12px",
+              borderTop: msgs.length ? "1px solid rgba(14,165,233,0.07)" : "none" }}>
+              {demo.chips.map((ch, i) => (
+                <button key={i} onClick={() => askAI(ch)} disabled={loading}
+                  style={{ padding:"9px 14px", background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.2)",
+                    borderRadius:20, fontSize:13, color:"#7dd3fc", cursor:"pointer", fontFamily:B,
+                    transition:"all .2s", opacity:loading?.4:1 }}>{ch}</button>
               ))}
             </div>
           )}
 
-          {/* Input row */}
-          <div className="input-row">
-            <input className="chat-input"
-              value={input} onChange={e => setInput(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), input.trim() && askAI(input))}
-              placeholder={seg.lang === "de" ? "Eigene Frage stellen…" : seg.lang === "it" ? "Fai una domanda…" : "Ask your own question…"}
-              disabled={loading || (showGate && !gateUnlocked)}
-            />
-            <button className={`send-btn ${input.trim() && !loading && (!showGate || gateUnlocked) ? "active" : "inactive"}`}
-              onClick={() => input.trim() && askAI(input)}
-              disabled={!input.trim() || loading || (showGate && !gateUnlocked)}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="#fff" strokeWidth="2.2" strokeLinecap="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          {/* Input */}
+          <div style={{ display:"flex", gap:8, padding:"10px 12px", borderTop:"1px solid rgba(14,165,233,0.07)" }}>
+            <input value={input} onChange={e=>setInput(e.target.value)}
+              onKeyDown={e=>e.key==="Enter"&&!e.shiftKey&&(e.preventDefault(),askAI(input))}
+              placeholder={demo.placeholder} disabled={loading}
+              style={{ flex:1, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(14,165,233,0.18)",
+                borderRadius:12, padding:"12px 16px", fontSize:14, color:"#e2e8f0", outline:"none",
+                fontFamily:B, caretColor:SKY }} />
+            <button onClick={() => askAI(input)} disabled={!input.trim()||loading}
+              style={{ width:44, height:44, borderRadius:11, border:"none", cursor:input.trim()&&!loading?"pointer":"default",
+                background:input.trim()&&!loading?"linear-gradient(135deg,#0ea5e9,#0284c7)":"rgba(14,165,233,0.07)",
+                display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                <path d="M22 2L11 13" stroke="#fff" strokeWidth="2.2" strokeLinecap="round"/>
+                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
             </button>
           </div>
-        </div>
-      </div>
 
-      {/* ── SOCIAL PROOF ── */}
-      <div className="section">
-        <p className="section-label">
-          {seg.lang === "de" ? "WAS ANDERE SAGEN" : seg.lang === "it" ? "COSA DICONO GLI ALTRI" : "WHAT OTHERS SAY"}
+          <p style={{ textAlign:"center", fontSize:12, color:"#1e293b", padding:"8px 16px 14px" }}>
+            {isDE ? "7 Fragen kostenlos · Danach ab 9,99 €/Woche" : isIT ? "7 domande gratis · Poi da 9,99 €/settimana" : "7 questions free · Then from €9.99/week"}{" · "}
+            <a href={hero.ctaHref} style={{ color:"#334155", textDecoration:"underline" }}>
+              {isDE ? "Vollversion öffnen" : isIT ? "Apri versione completa" : "Open full version"}
+            </a>
+          </p>
+        </div>
+      </Section>
+
+      {/* ── FEATURES ── */}
+      <Section pt={48} pb={48} bg="#071828">
+        <SectionLabel text={isDE ? "FUNKTIONEN" : isIT ? "FUNZIONALITÀ" : "FEATURES"} />
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:14 }}>
+          {features.map((f, i) => (
+            <div key={i} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.05)",
+              borderRadius:16, padding:"18px 16px" }}>
+              <div style={{ fontSize:24, marginBottom:10 }}>{f.icon}</div>
+              <div style={{ fontSize:14, fontWeight:600, marginBottom:6 }}>{f.title}</div>
+              <div style={{ fontSize:12, color:"#475569", lineHeight:1.55 }}>{f.desc}</div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* ── PRICING ── */}
+      <Section pt={48} pb={48} bg={DARK}>
+        <SectionLabel text={pricing.label} />
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12 }}>
+          {[
+            { ...pricing.free, isFree:true },
+            { ...pricing.week, ctaText: pricing.ctaWeek, ctaHref: hero.ctaHref },
+            { ...pricing.season, ctaText: pricing.ctaSeason, ctaHref: hero.ctaHref },
+          ].map((tier, i) => (
+            <div key={i} style={{ background: i===2 ? "rgba(14,165,233,0.06)" : "rgba(255,255,255,0.02)",
+              border: i===2 ? `1px solid rgba(14,165,233,0.3)` : "1px solid rgba(255,255,255,0.05)",
+              borderRadius:16, padding:"20px 14px", textAlign:"center", position:"relative" }}>
+              {tier.badge && (
+                <div style={{ position:"absolute", top:-10, left:"50%", transform:"translateX(-50%)",
+                  background:`linear-gradient(135deg,${SKY},#0284c7)`, color:"#fff",
+                  fontSize:10, fontWeight:700, padding:"3px 10px", borderRadius:20, letterSpacing:1, whiteSpace:"nowrap" }}>
+                  {tier.badge}
+                </div>
+              )}
+              <div style={{ fontSize:13, color:"#64748b", marginBottom:6 }}>{tier.label}</div>
+              <div style={{ fontSize:26, fontWeight:700, color:"#f0f9ff", marginBottom:2 }}>{tier.price}</div>
+              {tier.per && <div style={{ fontSize:12, color:"#475569", marginBottom:14 }}>{tier.per}</div>}
+              <div style={{ marginBottom:16 }}>
+                {tier.features.map((f, j) => (
+                  <div key={j} style={{ fontSize:12, color:"#64748b", padding:"4px 0", borderBottom:"1px solid rgba(255,255,255,0.03)" }}>
+                    ✓ {f}
+                  </div>
+                ))}
+              </div>
+              {tier.isFree ? (
+                <a href={hero.ctaHref} style={{ display:"block", padding:"10px", background:"rgba(14,165,233,0.08)",
+                  border:"1px solid rgba(14,165,233,0.2)", color:SKY, textDecoration:"none",
+                  borderRadius:10, fontSize:13, fontWeight:600 }}>
+                  {isDE ? "Kostenlos starten" : isIT ? "Inizia gratis" : "Start free"}
+                </a>
+              ) : (
+                <a href={`/ai?niche=${seg.niche}&lang=${seg.lang_param}`} style={{ display:"block", padding:"10px",
+                  background:`linear-gradient(135deg,${SKY},#0284c7)`, color:"#fff",
+                  textDecoration:"none", borderRadius:10, fontSize:13, fontWeight:700 }}>
+                  {tier.ctaText}
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+        <p style={{ textAlign:"center", fontSize:12, color:"#334155", marginTop:14 }}>
+          {isDE ? "Karte oder PayPal · Sofortiger Zugang · Keine Abo-Falle" : isIT ? "Carta o PayPal · Accesso immediato · Nessun abbonamento" : "Card or PayPal · Instant access · No subscription trap"}
         </p>
-        <div className="proof-grid">
+      </Section>
+
+      {/* ── TESTIMONIALS ── */}
+      <Section pt={40} pb={40} bg="#071828">
+        <SectionLabel text={isDE ? "WAS ANDERE SAGEN" : isIT ? "COSA DICONO" : "WHAT OTHERS SAY"} />
+        <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
           {proof.map((p, i) => (
-            <div key={i} className="proof-card">
-              <blockquote>{p.q}</blockquote>
-              <cite>— {p.name}</cite>
+            <div key={i} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.05)",
+              borderRadius:16, padding:"18px 18px" }}>
+              <p style={{ fontSize:14, color:"#94a3b8", lineHeight:1.6, fontStyle:"italic", marginBottom:10 }}>"{p.text}"</p>
+              <p style={{ fontSize:12, color:"#475569" }}>— <strong style={{ color:"#64748b" }}>{p.name}</strong>, {p.origin}</p>
             </div>
           ))}
         </div>
-      </div>
+      </Section>
 
-      {/* ── BENEFITS ── */}
-      <div className="section" style={{ paddingTop:0 }}>
-        <p className="section-label">
-          {seg.lang === "de" ? "WAS DU BEKOMMST" : seg.lang === "it" ? "COSA OTTIENI" : "WHAT YOU GET"}
-        </p>
-        <div className="ben-list">
-          {(DEMO[slug] ? [
-            slug.startsWith("de_camper") || slug === "en_camper" ? { icon:"🅿️", title: seg.lang==="de"?"Legale Stellplätze":"Legal camper spots", desc: seg.lang==="de"?"Alle genehmigten Stellplätze entlang der Adria — kein Bußgeldrisiko.":"All approved spots along the Adriatic — no fine risk." } : { icon:"⚓", title:"Marina availability", desc:"Real-time ACI marina berth info and pricing." },
-            slug.startsWith("de_camper") || slug === "en_camper" ? { icon:"📏", title: seg.lang==="de"?"Höhenbeschränkungen":"Height restrictions", desc: seg.lang==="de"?"Tunnel und Brücken mit Limits — bevor es zu spät ist.":"Tunnels and bridges with limits — before it's too late." } : { icon:"🌊", title:"Hidden anchorages", desc:"Quiet bays away from the charter flotillas." },
-            { icon:"🌬️", title: seg.lang==="de"?"Bora-Warnungen":seg.lang==="it"?"Avvisi Bora":"Bura wind warnings", desc: seg.lang==="de"?"KI warnt dich vor gefährlichen Böen — automatisch.":seg.lang==="it"?"Avvisi automatici prima che la Bora colpisca.":"AI alerts before dangerous gusts hit coastal roads." },
-          ] : []).map((b, i) => (
-            <div key={i} className="ben">
-              <span className="ben-icon">{b.icon}</span>
-              <div className="ben-text"><strong>{b.title}</strong><span>{b.desc}</span></div>
+      {/* ── FAQ ── */}
+      <Section pt={40} pb={40} bg={DARK}>
+        <SectionLabel text="FAQ" />
+        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+          {faq.map((f, i) => (
+            <div key={i} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.05)",
+              borderRadius:14, padding:"16px 18px" }}>
+              <div style={{ fontSize:14, fontWeight:600, marginBottom:6 }}>{f.q}</div>
+              <div style={{ fontSize:13, color:"#64748b", lineHeight:1.55 }}>{f.a}</div>
             </div>
           ))}
         </div>
-      </div>
+      </Section>
 
-      {/* ── FINAL CTA (for users who scrolled past gate) ── */}
-      {!done && !gateUnlocked && (
-        <div className="final-cta">
-          <form onSubmit={handleFinalSubmit}>
-            <input type="text" placeholder={labels.namePh} value={name} onChange={e => setName(e.target.value)}
-              style={{ width:"100%", padding:"13px 16px", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(14,165,233,0.18)", borderRadius:12, color:"#f0f9ff", fontSize:15, marginBottom:10, outline:"none", fontFamily:"inherit" }} />
-            <input type="email" placeholder={labels.emailPh} value={email} onChange={e => setEmail(e.target.value)} required
-              style={{ width:"100%", padding:"13px 16px", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(14,165,233,0.18)", borderRadius:12, color:"#f0f9ff", fontSize:15, marginBottom:10, outline:"none", fontFamily:"inherit" }} />
-            {formError && <p style={{ color:"#f87171", fontSize:13, marginBottom:8 }}>{formError}</p>}
-            <button type="submit" disabled={formLoading}
-              style={{ width:"100%", padding:"15px", background:"linear-gradient(135deg,#0ea5e9,#0284c7)", color:"#fff", border:"none", borderRadius:12, fontSize:16, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>
-              {formLoading ? "..." : demo.gateCta}
+      {/* ── FINAL CTA ── */}
+      <Section pt={48} pb={16} bg="#071828">
+        <PrimaryBtn href={hero.ctaHref} text={c.finalCta} sub={hero.ctaSub} />
+        <div style={{ display:"flex", alignItems:"center", gap:10, margin:"24px 0 16px", color:"#1e293b", fontSize:12 }}>
+          <div style={{ flex:1, height:1, background:"rgba(255,255,255,0.04)" }}/><span>{isDE?"oder":isIT?"o":"or"}</span>
+          <div style={{ flex:1, height:1, background:"rgba(255,255,255,0.04)" }}/>
+        </div>
+        <button onClick={() => window.open(`https://wa.me/${WA_NUMBER}?text=${waMsg}`, "_blank")}
+          style={{ width:"100%", padding:"13px", background:"#25D366", color:"#fff", border:"none",
+            borderRadius:12, fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:B,
+            display:"flex", alignItems:"center", justifyContent:"center", gap:8 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          {isDE ? "Frage per WhatsApp" : isIT ? "Chiedi su WhatsApp" : "Ask via WhatsApp"}
+        </button>
+      </Section>
+
+      {/* ── EMAIL CAPTURE (optional, below fold) ── */}
+      {!capDone && (
+        <Section pt={24} pb={48} bg="#071828">
+          <p style={{ textAlign:"center", fontSize:12, color:"#334155", marginBottom:14 }}>
+            {isDE ? "Oder: Guide per E-Mail erhalten" : isIT ? "Oppure: ricevi la guida per email" : "Or: get the guide by email"}
+          </p>
+          <form onSubmit={handleCapture} style={{ display:"flex", gap:8 }}>
+            <input type="email" required placeholder={isDE?"E-Mail-Adresse":isIT?"Indirizzo email":"Email address"}
+              value={capEmail} onChange={e=>setCapEmail(e.target.value)}
+              style={{ flex:1, padding:"12px 14px", background:"rgba(255,255,255,0.04)",
+                border:"1px solid rgba(255,255,255,0.07)", borderRadius:11, color:"#94a3b8",
+                fontSize:14, outline:"none", fontFamily:B }} />
+            <button type="submit" disabled={capLoading}
+              style={{ padding:"12px 20px", background:"rgba(14,165,233,0.1)", border:"1px solid rgba(14,165,233,0.2)",
+                color:SKY, borderRadius:11, fontSize:14, fontWeight:600, cursor:"pointer", fontFamily:B, whiteSpace:"nowrap" }}>
+              {capLoading ? "..." : isDE ? "Senden" : isIT ? "Invia" : "Send"}
             </button>
-            <p style={{ fontSize:11, color:"#334155", marginTop:8, textAlign:"center" }}>{labels.trust}</p>
           </form>
-        </div>
+        </Section>
+      )}
+      {capDone && (
+        <Section pt={16} pb={48} bg="#071828">
+          <p style={{ textAlign:"center", fontSize:13, color:"#38bdf8" }}>
+            {isDE ? `✓ Guide an ${capEmail} gesendet` : isIT ? `✓ Guida inviata a ${capEmail}` : `✓ Guide sent to ${capEmail}`}
+          </p>
+        </Section>
       )}
 
-      {done && (
-        <div className="success-wrap">
-          <div className="wave">🌊</div>
-          <h2>{seg.lang === "de" ? "Guide unterwegs!" : seg.lang === "it" ? "Guida in arrivo!" : "Guide on its way!"}</h2>
-          <p>{seg.lang === "de" ? `Wir haben deinen Guide an ${email} geschickt.` : seg.lang === "it" ? `Abbiamo inviato la tua guida a ${email}.` : `We sent your guide to ${email}.`}</p>
-          <a href={`/ai?niche=${seg.niche}&lang=${seg.lang_param}`} className="open-btn">
-            {seg.lang === "de" ? "JADRAN.AI öffnen →" : seg.lang === "it" ? "Apri JADRAN.AI →" : "Open JADRAN.AI →"}
-          </a>
-        </div>
-      )}
-
-      <footer className="footer">
+      <footer style={{ padding:"24px 20px", textAlign:"center", fontSize:11, color:"#1e293b", background:DARK, borderTop:"1px solid rgba(255,255,255,0.03)" }}>
         <a href="/privacy" style={{ color:"#1e293b", textDecoration:"none" }}>Privacy</a>
         {" · "}JADRAN.AI · SIAL Consulting d.o.o.
       </footer>
-    </>
+
+      <style>{`
+        @keyframes msgIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+        @keyframes blink { 0%,80%,100%{opacity:.15} 40%{opacity:1} }
+        * { box-sizing:border-box; }
+        html,body { overflow-x:hidden; max-width:100vw; margin:0; padding:0; }
+        input::placeholder { color:#334155; }
+        input { transition:border-color .2s; }
+        input:focus { border-color:${SKY} !important; }
+        button:hover { opacity:.9; }
+        a:hover { opacity:.85; }
+      `}</style>
+    </div>
   );
 }
