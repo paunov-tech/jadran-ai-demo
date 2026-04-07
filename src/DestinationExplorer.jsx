@@ -568,105 +568,39 @@ export default function DestinationExplorer() {
 
       {/* ═══ INSTANT AI CHAT ═══ */}
       <section style={{ padding:"0 20px 52px", background:"#0a0e17" }}>
-        <style>{`
-          @keyframes qc-pulse{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.2);opacity:.1}}
-          @keyframes qc-blink{0%,80%,100%{opacity:.15}40%{opacity:1}}
-          @keyframes qc-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-          @keyframes qc-glow{0%,100%{box-shadow:0 0 28px rgba(14,165,233,0.2)}50%{box-shadow:0 0 48px rgba(99,102,241,0.35)}}
-        `}</style>
+        <style>{`@keyframes qc-blink{0%,80%,100%{opacity:.15}40%{opacity:1}} @keyframes qc-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`}</style>
         <div style={{ maxWidth:640, margin:"0 auto" }}>
+          <div style={{ background:"rgba(10,18,32,0.92)", border:"1px solid rgba(14,165,233,0.13)", borderRadius:20, overflow:"hidden", boxShadow:"0 16px 48px rgba(0,0,0,0.5)" }}>
 
-          {/* Avatar row */}
-          <div style={{ display:"flex", alignItems:"center", gap:16, marginBottom:18 }}>
-            <div style={{ position:"relative", flexShrink:0 }}>
-              <div style={{ position:"absolute", inset:-10, borderRadius:"50%", background:"rgba(14,165,233,0.07)", animation:"qc-pulse 3.5s ease-in-out infinite" }} />
-              <div style={{ position:"absolute", inset:-5, borderRadius:"50%", background:"rgba(99,102,241,0.07)", animation:"qc-pulse 3.5s ease-in-out 0.6s infinite" }} />
-              <div style={{ width:58, height:58, borderRadius:"50%", background:"linear-gradient(135deg,#0ea5e9,#6366f1,#a855f7)", animation:"qc-glow 4s ease-in-out infinite", display:"flex", alignItems:"center", justifyContent:"center", position:"relative" }}>
-                <svg width="32" height="32" viewBox="0 0 34 34" fill="none">
-                  <ellipse cx="17" cy="13" rx="8" ry="9" fill="#fde8cc"/>
-                  <path d="M9 10 Q12 2 17 2 Q22 2 25 10 Q24 4 17 3 Q10 4 9 10Z" fill="#4b3a8c"/>
-                  <ellipse cx="14" cy="12" rx="1.5" ry="1.9" fill="#1e293b"/>
-                  <ellipse cx="20" cy="12" rx="1.5" ry="1.9" fill="#1e293b"/>
-                  <ellipse cx="14.5" cy="11.3" rx=".55" ry=".55" fill="#fff"/>
-                  <ellipse cx="20.5" cy="11.3" rx=".55" ry=".55" fill="#fff"/>
-                  <path d="M14 17.5 Q17 20 20 17.5" stroke="#b8644a" strokeWidth="1.3" fill="none" strokeLinecap="round"/>
-                  <ellipse cx="17" cy="22.5" rx="5" ry="3.5" fill="#fde8cc"/>
-                  <path d="M12 22 Q8.5 24.5 8.5 29 Q12.5 32 17 32 Q21.5 32 25.5 29 Q25.5 24.5 22 22" fill="#4b3a8c"/>
-                </svg>
-                <div style={{ position:"absolute", bottom:2, right:2, width:12, height:12, borderRadius:"50%", background:"#22c55e", border:"2.5px solid #0a0e17" }} />
-              </div>
-            </div>
-            <div>
-              <div style={{ fontFamily:F, fontSize:18, fontWeight:600, color:"#f0f4f8", lineHeight:1.2 }}>
-                {dl==="de"?"Frag mich — ich kenne die Adria":dl==="en"?"Ask me — I know the Adriatic":dl==="it"?"Chiedimi — conosco l'Adriatico":"Pitaj me — poznajem Jadran"}
-              </div>
-              <div style={{ fontSize:11, color:"#22c55e", marginTop:4, display:"flex", alignItems:"center", gap:6 }}>
-                <span style={{ width:6, height:6, borderRadius:"50%", background:"#22c55e", display:"inline-block", boxShadow:"0 0 8px #22c55e" }} />
-                JADRAN.AI · {dl==="de"?"Jetzt aktiv · 5 Fragen gratis":dl==="en"?"Online now · 5 questions free":dl==="it"?"Ora attiva · 5 domande gratis":"Aktivna · 5 pitanja besplatno"}
-              </div>
-            </div>
-          </div>
-
-          {/* Chat card */}
-          <div style={{ background:"rgba(10,18,32,0.92)", border:"1px solid rgba(14,165,233,0.13)", borderRadius:22, overflow:"hidden", boxShadow:"0 20px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.03)" }}>
-
-            {/* Messages */}
-            <div style={{ padding:"20px 18px 8px", minHeight:110, maxHeight:300, overflowY:"auto" }}>
-              {!qcStarted && (
-                <div style={{ display:"flex", gap:10, marginBottom:10, animation:"qc-in .5s both" }}>
-                  <div style={{ width:30, height:30, borderRadius:"50%", background:"linear-gradient(135deg,#0ea5e9,#a855f7)", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                    <svg width="17" height="17" viewBox="0 0 34 34" fill="none"><ellipse cx="17" cy="13" rx="8" ry="9" fill="#fde8cc"/><path d="M9 10 Q12 2 17 2 Q22 2 25 10" fill="#4b3a8c"/><ellipse cx="14" cy="12" rx="1.5" ry="1.9" fill="#1e293b"/><ellipse cx="20" cy="12" rx="1.5" ry="1.9" fill="#1e293b"/><path d="M14 17.5 Q17 20 20 17.5" stroke="#b8644a" strokeWidth="1.3" fill="none" strokeLinecap="round"/></svg>
+            {/* Messages — only shown after first send */}
+            {qcMsgs.length > 0 && (
+              <div style={{ padding:"18px 18px 8px", maxHeight:280, overflowY:"auto" }}>
+                {qcMsgs.map((m,i) => (
+                  <div key={i} style={{ display:"flex", justifyContent:m.role==="user"?"flex-end":"flex-start", marginBottom:10, animation:"qc-in .3s both" }}>
+                    <div style={{ background:m.role==="user"?"linear-gradient(135deg,#0ea5e9,#0284c7)":"rgba(14,165,233,0.07)", border:m.role==="user"?"none":"1px solid rgba(14,165,233,0.1)", borderRadius:m.role==="user"?"16px 4px 16px 16px":"4px 16px 16px 16px", padding:"10px 15px", fontSize:14, color:m.role==="user"?"#fff":"#cbd5e1", lineHeight:1.65, maxWidth:"82%", whiteSpace:"pre-wrap" }}>{m.text}</div>
                   </div>
-                  <div style={{ background:"rgba(14,165,233,0.07)", border:"1px solid rgba(14,165,233,0.1)", borderRadius:"4px 16px 16px 16px", padding:"11px 15px", fontSize:14, color:"#cbd5e1", lineHeight:1.65, maxWidth:"88%" }}>
-                    {dl==="de"?"Hallo! Ich kenne die kroatische Adria in- und auswendig — Strände, Stellplätze, Marinas, Restaurants. Was möchtest du wissen?":dl==="en"?"Hello! I know the Croatian Adriatic inside out — beaches, camper spots, marinas, restaurants. What would you like to know?":dl==="it"?"Ciao! Conosco l'Adriatico croato a fondo — spiagge, posteggi, marine, ristoranti. Cosa vuoi sapere?":"Bok! Poznajem Jadransku obalu u detalje — plaže, kamperi, marine, restorani. Što te zanima?"}
-                  </div>
-                </div>
-              )}
-              {qcMsgs.map((m,i) => (
-                <div key={i} style={{ display:"flex", justifyContent:m.role==="user"?"flex-end":"flex-start", gap:10, marginBottom:10, animation:"qc-in .3s both" }}>
-                  {m.role==="assistant" && <div style={{ width:30, height:30, borderRadius:"50%", background:"linear-gradient(135deg,#0ea5e9,#a855f7)", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}><svg width="17" height="17" viewBox="0 0 34 34" fill="none"><ellipse cx="17" cy="13" rx="8" ry="9" fill="#fde8cc"/><path d="M9 10 Q12 2 17 2 Q22 2 25 10" fill="#4b3a8c"/><ellipse cx="14" cy="12" rx="1.5" ry="1.9" fill="#1e293b"/><ellipse cx="20" cy="12" rx="1.5" ry="1.9" fill="#1e293b"/><path d="M14 17.5 Q17 20 20 17.5" stroke="#b8644a" strokeWidth="1.3" fill="none" strokeLinecap="round"/></svg></div>}
-                  <div style={{ background:m.role==="user"?"linear-gradient(135deg,#0ea5e9,#0284c7)":"rgba(14,165,233,0.07)", border:m.role==="user"?"none":"1px solid rgba(14,165,233,0.1)", borderRadius:m.role==="user"?"16px 4px 16px 16px":"4px 16px 16px 16px", padding:"10px 15px", fontSize:14, color:m.role==="user"?"#fff":"#cbd5e1", lineHeight:1.65, maxWidth:"82%", whiteSpace:"pre-wrap" }}>{m.text}</div>
-                </div>
-              ))}
-              {qcLoading && (
-                <div style={{ display:"flex", gap:10, marginBottom:10 }}>
-                  <div style={{ width:30, height:30, borderRadius:"50%", background:"linear-gradient(135deg,#0ea5e9,#a855f7)", flexShrink:0 }} />
-                  <div style={{ background:"rgba(14,165,233,0.07)", border:"1px solid rgba(14,165,233,0.1)", borderRadius:"4px 16px 16px 16px", padding:"13px 16px", display:"flex", gap:5, alignItems:"center" }}>
-                    {[0,1,2].map(i=><span key={i} style={{ width:6,height:6,borderRadius:"50%",background:"#38bdf8",display:"inline-block",animation:`qc-blink 1.4s ease ${i*0.22}s infinite` }}/>)}
-                  </div>
-                </div>
-              )}
-              <div ref={qcEndRef}/>
-            </div>
-
-            {/* Suggested chips */}
-            {!qcStarted && (
-              <div style={{ padding:"4px 18px 14px", display:"flex", gap:8, flexWrap:"wrap" }}>
-                {(dl==="de"?["🚐 Camper nach Dubrovnik?","🏖️ Geheimstrände Istrien","⛵ Marina Hvar frei?","🍽️ Konoba ohne Touristenpreise"]:dl==="en"?["🚐 Camper to Dubrovnik?","🏖️ Hidden beaches Istria","⛵ Marina Hvar berths","🍽️ Local restaurant no tourists"]:dl==="it"?["🚐 Camper a Dubrovnik?","🏖️ Spiagge nascoste Istria","⛵ Marina Hvar disponibile?","🍽️ Ristorante locale no turisti"]:["🚐 Kamperom u Dubrovnik?","🏖️ Tajne plaže Istre","⛵ Marina Hvar — vezovi?","🍽️ Konoba bez turističkih cijena"]).map(q=>(
-                  <button key={q} onClick={()=>qcSend(q)} style={{ background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.18)", borderRadius:20, padding:"7px 14px", fontSize:12, color:"#7dd3fc", cursor:"pointer", whiteSpace:"nowrap", fontFamily:B, transition:"background .2s" }}
-                    onMouseEnter={e=>e.currentTarget.style.background="rgba(14,165,233,0.14)"}
-                    onMouseLeave={e=>e.currentTarget.style.background="rgba(14,165,233,0.06)"}>
-                    {q}
-                  </button>
                 ))}
+                {qcLoading && (
+                  <div style={{ display:"flex", marginBottom:10 }}>
+                    <div style={{ background:"rgba(14,165,233,0.07)", border:"1px solid rgba(14,165,233,0.1)", borderRadius:"4px 16px 16px 16px", padding:"13px 16px", display:"flex", gap:5, alignItems:"center" }}>
+                      {[0,1,2].map(i=><span key={i} style={{ width:6,height:6,borderRadius:"50%",background:"#38bdf8",display:"inline-block",animation:`qc-blink 1.4s ease ${i*0.22}s infinite` }}/>)}
+                    </div>
+                  </div>
+                )}
+                <div ref={qcEndRef}/>
               </div>
             )}
 
             {/* Input */}
-            <div style={{ padding:"10px 16px 16px", display:"flex", gap:10, borderTop:"1px solid rgba(255,255,255,0.04)" }}>
+            <div style={{ padding:"14px 16px", display:"flex", gap:10 }}>
               <input value={qcInput} onChange={e=>setQcInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&!e.shiftKey&&(e.preventDefault(),qcSend(qcInput))}
                 placeholder={dl==="de"?"Frag mich etwas über die Adria…":dl==="en"?"Ask me anything about the Adriatic…":dl==="it"?"Chiedimi qualcosa sull'Adriatico…":"Pitaj me nešto o Jadranu…"}
                 disabled={qcLoading}
-                style={{ flex:1, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(14,165,233,0.18)", borderRadius:13, padding:"12px 16px", fontSize:14, color:"#e2e8f0", outline:"none", fontFamily:B, caretColor:"#0ea5e9" }}
+                style={{ flex:1, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(14,165,233,0.18)", borderRadius:13, padding:"13px 18px", fontSize:15, color:"#e2e8f0", outline:"none", fontFamily:B, caretColor:"#0ea5e9" }}
               />
-              <button onClick={()=>qcSend(qcInput)} disabled={qcLoading||!qcInput.trim()} style={{ width:46, height:46, borderRadius:13, background:qcInput.trim()&&!qcLoading?"linear-gradient(135deg,#0ea5e9,#0284c7)":"rgba(14,165,233,0.08)", border:"none", cursor:qcInput.trim()&&!qcLoading?"pointer":"default", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"all .2s" }}>
+              <button onClick={()=>qcSend(qcInput)} disabled={qcLoading||!qcInput.trim()} style={{ width:48, height:48, borderRadius:13, background:qcInput.trim()&&!qcLoading?"linear-gradient(135deg,#0ea5e9,#0284c7)":"rgba(14,165,233,0.08)", border:"none", cursor:qcInput.trim()&&!qcLoading?"pointer":"default", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"all .2s" }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="#fff" strokeWidth="2.2" strokeLinecap="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
-            </div>
-
-            <div style={{ padding:"0 18px 14px", textAlign:"center", fontSize:11, color:"#1e293b" }}>
-              5 {dl==="de"?"Fragen gratis · ohne Anmeldung · ":dl==="en"?"messages free · no registration · ":dl==="it"?"messaggi gratis · senza registrazione · ":"pitanja besplatno · bez registracije · "}
-              <a href="/ai" style={{ color:"#0ea5e9", textDecoration:"none" }}>{dl==="de"?"Vollversion →":dl==="en"?"Full version →":dl==="it"?"Versione completa →":"Puna verzija →"}</a>
             </div>
           </div>
         </div>
