@@ -130,10 +130,10 @@ export default function LandingPage() {
       const r = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: "landing", plan: "free", lang: lang === "at" ? "de" : lang || "en", region: "all", msgs: [...qcMsgs, userMsg].slice(-6) }),
+        body: JSON.stringify({ mode: "landing", plan: "free", lang: lang === "at" ? "de" : lang || "en", region: "all", messages: [...qcMsgs, userMsg].slice(-6).map(m => ({ role: m.role, content: m.text || m.content || "" })) }),
       });
       const d = await r.json();
-      const reply = d.reply || d.text || (lang === "de" || lang === "at" ? "Einen Moment…" : lang === "en" ? "One moment…" : "Trenutak…");
+      const reply = d.content?.[0]?.text || d.reply || d.text || (lang === "de" || lang === "at" ? "Einen Moment…" : lang === "en" ? "One moment…" : "Trenutak…");
       setQcMsgs(prev => [...prev, { role: "assistant", text: reply }]);
     } catch {
       setQcMsgs(prev => [...prev, { role: "assistant", text: lang === "de" || lang === "at" ? "Verbindungsfehler. Bitte nochmal versuchen." : lang === "en" ? "Connection error. Please try again." : "Greška veze. Pokušaj ponovo." }]);
