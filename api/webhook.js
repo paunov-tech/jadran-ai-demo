@@ -37,6 +37,48 @@ async function writePremium(deviceId, data) {
   } catch (err) { console.error("Firestore write error:", err.message); }
 }
 
+// Meta Conversions API — server-side Purchase event
+async function sha256(str) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str.trim().toLowerCase()));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function fireMetaPurchase(email, plan, amount, { deviceId } = {}) {
+  const pixelId = process.env.META_PIXEL_ID;
+  const token = process.env.META_CAPI_TOKEN;
+  if (!pixelId || !token || !email) return;
+
+  const emHash = await sha256(email);
+  const userData = {
+    em: [emHash],
+    ...(deviceId ? { external_id: [await sha256(deviceId)] } : {}),
+  };
+
+  try {
+    const r = await fetch(`https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${token}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        data: [{
+          event_name: "Purchase",
+          event_time: Math.floor(Date.now() / 1000),
+          event_id: `purchase_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+          user_data: userData,
+          custom_data: {
+            value: amount ? (amount / 100) : 0,
+            currency: "EUR",
+            content_name: plan || "week",
+          },
+          action_source: "website",
+          event_source_url: "https://jadran.ai/ai",
+        }],
+      }),
+    });
+    if (r.ok) console.log(`✅ Meta CAPI Purchase fired for ${email}`);
+    else console.warn(`⚠️ Meta CAPI Purchase failed: ${r.status}`);
+  } catch (err) { console.error("Meta CAPI Purchase error:", err.message); }
+}
+
 async function sendPaymentAlert(email, plan, amount) {
   const key = process.env.RESEND_API_KEY;
   if (!key) return;
@@ -117,8 +159,9 @@ export default async function handler(req, res) {
         partnerRef: meta.partnerRef || "",
       });
     }
-    // Fire-and-forget payment alert email
+    // Fire-and-forget payment alert email + Meta CAPI Purchase
     sendPaymentAlert(email, meta.plan || "week", session.amount_total).catch(() => {});
+    fireMetaPurchase(email, meta.plan || "week", session.amount_total, { deviceId: meta.deviceId }).catch(() => {});
   }
 
   return res.status(200).json({ received: true });
