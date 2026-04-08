@@ -1,0 +1,151 @@
+{
+  "name": "JADRAN — Auto-Optimize Campaigns",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "days", "daysInterval": 3, "triggerAtHour": 7 }] }
+      },
+      "id": "cron",
+      "name": "Every 3 Days 07:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://jadran.ai/api/meta-ads",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-admin-token", "value": "={{ $env.JADRAN_ADMIN_TOKEN }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{ \"action\": \"list_campaigns\" }"
+      },
+      "id": "list",
+      "name": "1. List Active Campaigns",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "id": "split",
+      "name": "Split Campaigns",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            { "leftValue": "={{ $json.status }}", "rightValue": "ACTIVE", "operator": { "type": "string", "operation": "equals" } }
+          ]
+        }
+      },
+      "id": "filter_active",
+      "name": "Only Active",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://jadran.ai/api/meta-ads",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-admin-token", "value": "={{ $env.JADRAN_ADMIN_TOKEN }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"action\": \"get_insights\",\n  \"objectId\": \"{{ $json.id }}\",\n  \"dateRange\": 3\n}"
+      },
+      "id": "insights",
+      "name": "2. Get 3-Day Insights",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const data = item.json.data?.[0];\n  if (!data) continue;\n  \n  const spend = parseFloat(data.spend || 0);\n  const clicks = parseInt(data.clicks || 0);\n  const impressions = parseInt(data.impressions || 0);\n  const ctr = impressions > 0 ? (clicks / impressions * 100) : 0;\n  const leads = (data.actions || []).find(a => a.action_type === 'lead')?.value || 0;\n  const cpl = leads > 0 ? spend / leads : 999;\n  \n  let action = 'keep';\n  let reason = '';\n  \n  // Auto-pause: spent >15€ with 0 leads\n  if (spend > 15 && leads === 0) {\n    action = 'pause';\n    reason = `${spend.toFixed(2)}€ potrošeno, 0 leadova`;\n  }\n  // Auto-pause: CPL > 8€ (too expensive)\n  else if (leads > 0 && cpl > 8) {\n    action = 'pause';\n    reason = `CPL ${cpl.toFixed(2)}€ (limit 8€)`;\n  }\n  // Flag for refresh: CTR < 0.3%\n  else if (impressions > 1000 && ctr < 0.3) {\n    action = 'refresh';\n    reason = `CTR ${ctr.toFixed(2)}% — treba nove varijante`;\n  }\n  \n  results.push({\n    campaignId: item.json.id || 'unknown',\n    campaignName: item.json.name || 'unknown',\n    spend, clicks, impressions, ctr: ctr.toFixed(2), leads, cpl: cpl.toFixed(2),\n    action, reason\n  });\n}\n\nreturn results.map(r => ({ json: r }));"
+      },
+      "id": "evaluate",
+      "name": "3. Evaluate Performance",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            { "leftValue": "={{ $json.action }}", "rightValue": "pause", "operator": { "type": "string", "operation": "equals" } }
+          ]
+        }
+      },
+      "id": "should_pause",
+      "name": "Should Pause?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1560, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://jadran.ai/api/meta-ads",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-admin-token", "value": "={{ $env.JADRAN_ADMIN_TOKEN }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"action\": \"pause\",\n  \"objectId\": \"{{ $json.campaignId }}\"\n}"
+      },
+      "id": "pause",
+      "name": "4a. Pause Campaign",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1780, 100]
+    },
+    {
+      "parameters": {
+        "channel": "#jadran-marketing",
+        "text": "=🤖 *Auto-Optimize Report*\n\n{{ $('3. Evaluate Performance').all().map(i => {\n  const r = i.json;\n  const icon = r.action === 'pause' ? '⏸️' : r.action === 'refresh' ? '🔄' : '✅';\n  return `${icon} *${r.campaignName}*: ${r.spend}€ spent, ${r.leads} leads, CTR ${r.ctr}%, CPL ${r.cpl}€${r.reason ? ' — ' + r.reason : ''}`;\n}).join('\\n') }}",
+        "otherOptions": {}
+      },
+      "id": "slack_report",
+      "name": "5. Slack Summary",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [1780, 360],
+      "credentials": { "slackApi": { "id": "SLACK_CREDENTIAL_ID", "name": "Slack" } }
+    }
+  ],
+  "connections": {
+    "Every 3 Days 07:00": { "main": [[{ "node": "1. List Active Campaigns", "type": "main", "index": 0 }]] },
+    "1. List Active Campaigns": { "main": [[{ "node": "Split Campaigns", "type": "main", "index": 0 }]] },
+    "Split Campaigns": { "main": [[{ "node": "Only Active", "type": "main", "index": 0 }]] },
+    "Only Active": { "main": [[{ "node": "2. Get 3-Day Insights", "type": "main", "index": 0 }], []] },
+    "2. Get 3-Day Insights": { "main": [[{ "node": "3. Evaluate Performance", "type": "main", "index": 0 }]] },
+    "3. Evaluate Performance": { "main": [[{ "node": "Should Pause?", "type": "main", "index": 0 }, { "node": "5. Slack Summary", "type": "main", "index": 0 }]] },
+    "Should Pause?": { "main": [[{ "node": "4a. Pause Campaign", "type": "main", "index": 0 }], []] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "jadran-marketing" }]
+}

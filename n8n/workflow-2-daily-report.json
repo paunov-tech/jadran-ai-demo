@@ -1,0 +1,110 @@
+{
+  "name": "JADRAN — Daily Campaign Report",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "hours", "hoursInterval": 24, "triggerAtHour": 8 }] }
+      },
+      "id": "cron",
+      "name": "Every Day 08:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://jadran.ai/api/cron-insights?secret={{ $env.JADRAN_CRON_SECRET }}",
+        "options": { "timeout": 30000 }
+      },
+      "id": "insights",
+      "name": "Pull Meta Insights",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const campaigns = $input.first().json.campaigns || [];\nconst totalSpend = campaigns.reduce((s, c) => s + (c.spend || 0), 0);\nconst totalLeads = campaigns.reduce((s, c) => s + (c.leads || 0), 0);\nconst totalClicks = campaigns.reduce((s, c) => s + (c.clicks || 0), 0);\nconst totalImpressions = campaigns.reduce((s, c) => s + (c.impressions || 0), 0);\nconst avgCPL = totalLeads > 0 ? (totalSpend / totalLeads).toFixed(2) : 'N/A';\nconst avgCTR = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : '0';\n\nconst alerts = [];\ncampaigns.forEach(c => {\n  if (c.cost_per_lead > 5) alerts.push(`⚠️ ${c.campaign_name}: CPA ${c.cost_per_lead}€ (previsok!)`);\n  if (c.leads === 0 && c.spend > 10) alerts.push(`🚨 ${c.campaign_name}: ${c.spend}€ potrošeno, 0 leadova`);\n  if (c.ctr < 0.5 && c.impressions > 500) alerts.push(`📉 ${c.campaign_name}: CTR ${c.ctr}% (ispod 0.5%)`);\n});\n\nconst topCampaign = campaigns.filter(c => c.leads > 0).sort((a, b) => a.cost_per_lead - b.cost_per_lead)[0];\n\nreturn [{\n  json: {\n    date: $input.first().json.date,\n    totalSpend: totalSpend.toFixed(2),\n    totalLeads,\n    totalClicks,\n    totalImpressions,\n    avgCPL,\n    avgCTR,\n    alerts,\n    topCampaign: topCampaign ? topCampaign.campaign_name : 'N/A',\n    campaigns,\n    hasAlerts: alerts.length > 0\n  }\n}];"
+      },
+      "id": "analyze",
+      "name": "Analyze Performance",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "channel": "#jadran-marketing",
+        "text": "=📊 *JADRAN Daily Report — {{ $json.date }}*\n\n💶 *Potrošeno:* {{ $json.totalSpend }}€\n👥 *Leadovi:* {{ $json.totalLeads }}\n🖱️ *Klikovi:* {{ $json.totalClicks }}\n👀 *Impressions:* {{ $json.totalImpressions }}\n📈 *CTR:* {{ $json.avgCTR }}%\n💰 *Avg CPL:* {{ $json.avgCPL }}€\n🏆 *Best:* {{ $json.topCampaign }}\n\n{{ $json.alerts.length > 0 ? '⚠️ *UPOZORENJA:*\\n' + $json.alerts.join('\\n') : '✅ Sve kampanje u normali.' }}",
+        "otherOptions": {}
+      },
+      "id": "slack",
+      "name": "Slack Report",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [900, 200],
+      "credentials": { "slackApi": { "id": "SLACK_CREDENTIAL_ID", "name": "Slack" } }
+    },
+    {
+      "parameters": {
+        "documentId": { "__rl": true, "mode": "id", "value": "GOOGLE_SHEET_ID" },
+        "sheetName": "Insights",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": "={{ $json.date }}",
+            "spend": "={{ $json.totalSpend }}",
+            "leads": "={{ $json.totalLeads }}",
+            "clicks": "={{ $json.totalClicks }}",
+            "impressions": "={{ $json.totalImpressions }}",
+            "ctr": "={{ $json.avgCTR }}",
+            "cpl": "={{ $json.avgCPL }}"
+          }
+        }
+      },
+      "id": "sheets",
+      "name": "Google Sheets Log",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.2,
+      "position": [900, 420],
+      "credentials": { "googleSheetsOAuth2Api": { "id": "GSHEETS_CREDENTIAL_ID", "name": "Google Sheets" } }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true },
+          "conditions": [
+            { "leftValue": "={{ $json.hasAlerts }}", "rightValue": true, "operator": { "type": "boolean", "operation": "equals" } }
+          ]
+        }
+      },
+      "id": "check_alerts",
+      "name": "Has Alerts?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@jadran.ai",
+        "toEmail": "info@sialconsulting.com",
+        "subject": "=⚠️ JADRAN kampanje — {{ $('Analyze Performance').item.json.alerts.length }} upozorenja",
+        "text": "={{ $('Analyze Performance').item.json.alerts.join('\\n') }}\n\nUkupno potrošeno: {{ $('Analyze Performance').item.json.totalSpend }}€\nLeadovi: {{ $('Analyze Performance').item.json.totalLeads }}\n\nProvjeri Ads Manager."
+      },
+      "id": "email_alert",
+      "name": "Email Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1340, 200]
+    }
+  ],
+  "connections": {
+    "Every Day 08:00": { "main": [[{ "node": "Pull Meta Insights", "type": "main", "index": 0 }]] },
+    "Pull Meta Insights": { "main": [[{ "node": "Analyze Performance", "type": "main", "index": 0 }]] },
+    "Analyze Performance": { "main": [[{ "node": "Slack Report", "type": "main", "index": 0 }, { "node": "Google Sheets Log", "type": "main", "index": 0 }, { "node": "Has Alerts?", "type": "main", "index": 0 }]] },
+    "Has Alerts?": { "main": [[{ "node": "Email Alert", "type": "main", "index": 0 }], []] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "jadran-marketing" }]
+}

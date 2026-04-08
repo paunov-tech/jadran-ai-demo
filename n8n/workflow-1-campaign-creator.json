@@ -1,0 +1,144 @@
+{
+  "name": "JADRAN — Campaign Creator",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "segmentId", "value": "de_camper" },
+            { "name": "variantCount", "value": "10" },
+            { "name": "dailyBudget", "value": "1500" },
+            { "name": "campaignName", "value": "JADRAN_DE_CAMPER_{{ $now.format('yyyy_MM') }}" }
+          ]
+        }
+      },
+      "id": "config",
+      "name": "Campaign Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [460, 300],
+      "notesInFlow": true,
+      "notes": "Promijeni segmentId za drugu kampanju: de_camper, de_family, it_sailor, en_cruiser, en_camper, en_couple"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://jadran.ai/api/campaign-generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-admin-token", "value": "={{ $env.JADRAN_ADMIN_TOKEN }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "segmentId", "value": "={{ $json.segmentId }}" },
+            { "name": "count", "value": "={{ Number($json.variantCount) }}" }
+          ]
+        },
+        "options": { "timeout": 30000 }
+      },
+      "id": "generate",
+      "name": "1. Generate Ad Variants (Claude)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://jadran.ai/api/meta-ads",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-admin-token", "value": "={{ $env.JADRAN_ADMIN_TOKEN }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"action\": \"create_campaign\",\n  \"name\": \"{{ $('Campaign Config').item.json.campaignName }}\"\n}"
+      },
+      "id": "campaign",
+      "name": "2. Create Campaign (PAUSED)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://jadran.ai/api/meta-ads",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-admin-token", "value": "={{ $env.JADRAN_ADMIN_TOKEN }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"action\": \"create_adset\",\n  \"campaignId\": \"{{ $json.id }}\",\n  \"segmentId\": \"{{ $('Campaign Config').item.json.segmentId }}\",\n  \"dailyBudget\": {{ Number($('Campaign Config').item.json.dailyBudget) }},\n  \"name\": \"{{ $('Campaign Config').item.json.segmentId }}_adset\"\n}"
+      },
+      "id": "adset",
+      "name": "3. Create AdSet (Targeting)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://jadran.ai/api/meta-ads",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-admin-token", "value": "={{ $env.JADRAN_ADMIN_TOKEN }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"action\": \"push_winners\",\n  \"segmentId\": \"{{ $('Campaign Config').item.json.segmentId }}\",\n  \"adsetId\": \"{{ $json.id }}\",\n  \"variants\": {{ JSON.stringify($('1. Generate Ad Variants (Claude)').item.json.variants.slice(0, 5)) }}\n}"
+      },
+      "id": "push",
+      "name": "4. Push Top 5 Ads",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "channel": "#jadran-marketing",
+        "text": "=🚀 *Nova kampanja kreirana*\n\n*Kampanja:* {{ $('Campaign Config').item.json.campaignName }}\n*Segment:* {{ $('Campaign Config').item.json.segmentId }}\n*Budget:* {{ Number($('Campaign Config').item.json.dailyBudget) / 100 }}€/dan\n*Varijante:* {{ $json.results.length }} ads kreirano\n*Status:* PAUSED — aktiviraj u Ads Manageru\n\n✅ {{ $json.results.filter(r => r.status === 'created').length }} uspješno\n❌ {{ $json.results.filter(r => r.error).length }} greška",
+        "otherOptions": {}
+      },
+      "id": "slack",
+      "name": "5. Slack Notification",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [1560, 300],
+      "credentials": { "slackApi": { "id": "SLACK_CREDENTIAL_ID", "name": "Slack" } }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": { "main": [[{ "node": "Campaign Config", "type": "main", "index": 0 }]] },
+    "Campaign Config": { "main": [[{ "node": "1. Generate Ad Variants (Claude)", "type": "main", "index": 0 }]] },
+    "1. Generate Ad Variants (Claude)": { "main": [[{ "node": "2. Create Campaign (PAUSED)", "type": "main", "index": 0 }]] },
+    "2. Create Campaign (PAUSED)": { "main": [[{ "node": "3. Create AdSet (Targeting)", "type": "main", "index": 0 }]] },
+    "3. Create AdSet (Targeting)": { "main": [[{ "node": "4. Push Top 5 Ads", "type": "main", "index": 0 }]] },
+    "4. Push Top 5 Ads": { "main": [[{ "node": "5. Slack Notification", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "jadran-marketing" }]
+}
