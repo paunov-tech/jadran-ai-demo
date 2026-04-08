@@ -18,6 +18,7 @@ const GRAPH = "https://graph.facebook.com/v19.0";
 function metaEnv() {
   return {
     token: process.env.META_CAPI_TOKEN,
+    pageToken: process.env.META_PAGE_TOKEN || process.env.META_CAPI_TOKEN,
     account: process.env.META_AD_ACCOUNT_ID,
     page: process.env.META_PAGE_ID,
     pixel: process.env.META_PIXEL_ID,
@@ -159,7 +160,7 @@ async function createAdSet(env, { campaignId, name, segmentId, dailyBudget = 100
 async function createAd(env, { adsetId, name, hook, body, cta = "LEARN_MORE", link, imageUrl }) {
   if (!env.page) throw new Error("META_PAGE_ID required for ad creation");
 
-  // Create ad creative
+  // Create ad creative — use page token for page-owned creatives
   const creative = await graphPost(`${env.account}/adcreatives`, {
     name: `creative_${name || Date.now()}`,
     object_story_spec: {
@@ -171,7 +172,7 @@ async function createAd(env, { adsetId, name, hook, body, cta = "LEARN_MORE", li
         ...(imageUrl ? { picture: imageUrl } : {}),
       },
     },
-  }, env.token);
+  }, env.pageToken);
 
   // Create ad using creative
   return graphPost(`${env.account}/ads`, {
