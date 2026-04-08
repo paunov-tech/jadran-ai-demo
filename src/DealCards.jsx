@@ -123,7 +123,7 @@ export function DealCards({ region = "all", lang = "de", C, maxCards = 6 }) {
       <div style={{
         display: "flex", gap: 12, overflowX: "auto", paddingBottom: 12,
         WebkitOverflowScrolling: "touch", scrollSnapType: "x mandatory",
-        margin: "0 -4px", padding: "0 4px 12px",
+        overscrollBehaviorX: "contain",
       }}>
         {cards.map((deal, i) => (
           <a

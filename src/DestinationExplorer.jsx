@@ -584,30 +584,80 @@ export default function DestinationExplorer() {
 
       {/* ═══ INSTANT AI CHAT ═══ */}
       <section style={{ padding:"0 20px 52px", background:"#0a0e17" }}>
-        <style>{`@keyframes qc-blink{0%,80%,100%{opacity:.15}40%{opacity:1}} @keyframes qc-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}`}</style>
+        <style>{`
+          @keyframes qc-blink{0%,80%,100%{opacity:.15}40%{opacity:1}}
+          @keyframes qc-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+          .qc-chip{transition:all .18s;border:1px solid rgba(14,165,233,0.22);background:rgba(14,165,233,0.06);border-radius:20px;padding:7px 13px;font-size:12px;color:#7dd3fc;cursor:pointer;white-space:nowrap;font-family:inherit;line-height:1.3;}
+          .qc-chip:active{background:rgba(14,165,233,0.18);transform:scale(0.96);}
+          @media(hover:hover){.qc-chip:hover{background:rgba(14,165,233,0.14);border-color:rgba(14,165,233,0.4);color:#e0f2fe;}}
+        `}</style>
         <div style={{ maxWidth:640, margin:"0 auto" }}>
           <div ref={qcCardRef} style={{ background:"rgba(10,18,32,0.92)", border:"1px solid rgba(14,165,233,0.13)", borderRadius:20, overflow:"hidden", boxShadow:"0 16px 48px rgba(0,0,0,0.5)" }}>
 
-            {/* Messages — only shown after first send */}
-            {qcMsgs.length > 0 && (
-              <div ref={qcBoxRef} style={{ padding:"18px 18px 8px", maxHeight:280, overflowY:"auto" }}>
-                {qcMsgs.map((m,i) => (
-                  <div key={i} style={{ display:"flex", justifyContent:m.role==="user"?"flex-end":"flex-start", marginBottom:10, animation:"qc-in .3s both" }}>
-                    <div style={{ background:m.role==="user"?"linear-gradient(135deg,#0ea5e9,#0284c7)":"rgba(14,165,233,0.07)", border:m.role==="user"?"none":"1px solid rgba(14,165,233,0.1)", borderRadius:m.role==="user"?"16px 4px 16px 16px":"4px 16px 16px 16px", padding:"10px 15px", fontSize:14, color:m.role==="user"?"#fff":"#cbd5e1", lineHeight:1.65, maxWidth:"82%", whiteSpace:"pre-wrap" }}>{m.content}</div>
+            {/* Messages area */}
+            <div ref={qcBoxRef} style={{ padding:"16px 16px 4px", maxHeight:320, overflowY:"auto" }}>
+
+              {/* Static welcome message — always shown */}
+              {qcMsgs.length === 0 && (
+                <div style={{ display:"flex", marginBottom:10, animation:"qc-in .4s both" }}>
+                  <div style={{ background:"rgba(14,165,233,0.07)", border:"1px solid rgba(14,165,233,0.12)", borderRadius:"4px 16px 16px 16px", padding:"12px 15px", fontSize:13.5, color:"#cbd5e1", lineHeight:1.65, maxWidth:"90%" }}>
+                    {dl==="de" ? <>Ich kenne jeden Parkplatz, jede versteckte Bucht und jeden Fährabfahrtsplan an der Adria. <strong style={{color:"#7dd3fc"}}>160+ Live-Sensoren</strong> — Strandbesetzung, Stau, Parken — in Echtzeit. Frag mich was.</> :
+                     dl==="en" ? <>I know every parking spot, hidden beach and ferry schedule on the Adriatic. <strong style={{color:"#7dd3fc"}}>160+ live sensors</strong> — beach crowds, traffic, parking — real time. Ask me anything.</> :
+                     dl==="it" ? <>Conosco ogni parcheggio, spiaggia nascosta e orario dei traghetti sull'Adriatico. <strong style={{color:"#7dd3fc"}}>160+ sensori live</strong> — spiagge, traffico, parcheggi — in tempo reale. Chiedimi.</> :
+                     <>Znam svaki parking, skrivenu plažu i raspored trajekta na Jadranu. <strong style={{color:"#7dd3fc"}}>160+ live senzora</strong> — gužve, plaže, promet — u realnom vremenu. Pitaj me što hoćeš.</>}
                   </div>
+                </div>
+              )}
+
+              {qcMsgs.map((m,i) => (
+                <div key={i} style={{ display:"flex", justifyContent:m.role==="user"?"flex-end":"flex-start", marginBottom:10, animation:"qc-in .3s both" }}>
+                  <div style={{ background:m.role==="user"?"linear-gradient(135deg,#0ea5e9,#0284c7)":"rgba(14,165,233,0.07)", border:m.role==="user"?"none":"1px solid rgba(14,165,233,0.1)", borderRadius:m.role==="user"?"16px 4px 16px 16px":"4px 16px 16px 16px", padding:"10px 15px", fontSize:14, color:m.role==="user"?"#fff":"#cbd5e1", lineHeight:1.65, maxWidth:"82%", whiteSpace:"pre-wrap" }}>{m.content}</div>
+                </div>
+              ))}
+              {qcLoading && (
+                <div style={{ display:"flex", marginBottom:10 }}>
+                  <div style={{ background:"rgba(14,165,233,0.07)", border:"1px solid rgba(14,165,233,0.1)", borderRadius:"4px 16px 16px 16px", padding:"13px 16px", display:"flex", gap:5, alignItems:"center" }}>
+                    {[0,1,2].map(i=><span key={i} style={{ width:6,height:6,borderRadius:"50%",background:"#38bdf8",display:"inline-block",animation:`qc-blink 1.4s ease ${i*0.22}s infinite` }}/>)}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Quick-tap suggestion chips — hidden after first user message */}
+            {qcMsgs.filter(m=>m.role==="user").length === 0 && !qcLoading && (
+              <div style={{ padding:"4px 16px 10px", overflowX:"auto", display:"flex", gap:7, flexWrap:"nowrap", overscrollBehaviorX:"contain", scrollbarWidth:"none" }}>
+                {(dl==="de" ? [
+                  "Parking Dubrovnik — wo jetzt?",
+                  "Fähre nach Rab — wann?",
+                  "Rajska Plaža voll heute?",
+                  "Split Abendessen Insider",
+                  "Camper A1 → Makarska",
+                ] : dl==="en" ? [
+                  "Parking Dubrovnik — live?",
+                  "Ferry to Rab — schedule?",
+                  "Rajska Plaža crowds now?",
+                  "Split dinner insider pick",
+                  "Camper route → Makarska",
+                ] : dl==="it" ? [
+                  "Parcheggio Dubrovnik live?",
+                  "Traghetto per Rab — orari?",
+                  "Rajska Plaža affollata?",
+                  "Cena insider Split",
+                  "Camper A1 → Makarska",
+                ] : [
+                  "Parking Dubrovnik — sada?",
+                  "Trajekt za Rab — kad?",
+                  "Rajska Plaža gužva danas?",
+                  "Split večera insajder",
+                  "Kamp ruta A1 → Makarska",
+                ]).map((chip,i) => (
+                  <button key={i} className="qc-chip" onClick={()=>qcSend(chip)}>{chip}</button>
                 ))}
-                {qcLoading && (
-                  <div style={{ display:"flex", marginBottom:10 }}>
-                    <div style={{ background:"rgba(14,165,233,0.07)", border:"1px solid rgba(14,165,233,0.1)", borderRadius:"4px 16px 16px 16px", padding:"13px 16px", display:"flex", gap:5, alignItems:"center" }}>
-                      {[0,1,2].map(i=><span key={i} style={{ width:6,height:6,borderRadius:"50%",background:"#38bdf8",display:"inline-block",animation:`qc-blink 1.4s ease ${i*0.22}s infinite` }}/>)}
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
             {/* Input */}
-            <div style={{ padding:"14px 16px 12px", display:"flex", gap:10 }}>
+            <div style={{ padding:"10px 16px 12px", display:"flex", gap:10 }}>
               <input value={qcInput} onChange={e=>setQcInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&!e.shiftKey&&(e.preventDefault(),qcSend(qcInput))}
                 placeholder={dl==="de"?"Frag mich etwas über die Adria…":dl==="en"?"Ask me anything about the Adriatic…":dl==="it"?"Chiedimi qualcosa sull'Adriatico…":"Pitaj me nešto o Jadranu…"}
                 disabled={qcLoading}
@@ -676,7 +726,7 @@ export default function DestinationExplorer() {
               <div style={{ fontSize:10, color:"#f97316", letterSpacing:4, fontWeight:700 }}>NAŠI PARTNERI</div>
               <div style={{ flex:1, height:1, background:"linear-gradient(90deg, rgba(249,115,22,0.2), transparent)" }} />
             </div>
-            <div style={{ display:"flex", gap:12, overflowX:"auto", paddingBottom:8, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
+            <div style={{ display:"flex", gap:12, overflowX:"auto", paddingBottom:8, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", overscrollBehaviorX:"contain" }}>
               {/* Black Jack */}
               <button onClick={() => { setShowBJ(true); setSelectedMenuItem(null); }} style={{ minWidth:190, height:150, borderRadius:16, overflow:"hidden", position:"relative", flexShrink:0, scrollSnapAlign:"start", border:"1px solid rgba(249,115,22,0.25)", cursor:"pointer", background:"none", padding:0 }}>
                 <img src={BJ.img} alt="Black Jack" loading="lazy" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} />
@@ -741,7 +791,7 @@ export default function DestinationExplorer() {
           </div>
 
           {/* Review cards — horizontal scroll */}
-          <div style={{ display:"flex", gap:12, overflowX:"auto", scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", paddingBottom:8 }}>
+          <div style={{ display:"flex", gap:12, overflowX:"auto", scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", paddingBottom:8, overscrollBehaviorX:"contain" }}>
             {APP_REVIEWS.map((rv, i) => (
               <div key={i} style={{ minWidth:260, maxWidth:280, borderRadius:16, background:"#0a1628", border:"1px solid rgba(255,255,255,0.05)", padding:"16px 16px", flexShrink:0, scrollSnapAlign:"start" }}>
                 <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
@@ -891,7 +941,7 @@ export default function DestinationExplorer() {
               </div>
 
               {/* City tabs — photo cards (transit style) */}
-              <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:14, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
+              <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:14, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", overscrollBehaviorX:"contain" }}>
                 {rData.destinations.map(d => {
                   const isActive = activeDestId === d.id;
                   return (
@@ -915,7 +965,7 @@ export default function DestinationExplorer() {
               {affiliates.length > 0 && (
                 <div style={{ marginBottom:20 }}>
                   <div style={{ fontSize:9, color:"#f97316", letterSpacing:3, fontWeight:700, marginBottom:10 }}>NAŠI PARTNERI</div>
-                  <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:4, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
+                  <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:4, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", overscrollBehaviorX:"contain" }}>
                     {affiliates.map(aff => (
                       aff.action === "bj"
                         ? <button key={aff.id} onClick={e => { e.stopPropagation(); setShowBJ(true); setSelectedMenuItem(null); }}
@@ -949,7 +999,7 @@ export default function DestinationExplorer() {
               {gygDeals.length > 0 && (
                 <div style={{ marginBottom:20 }}>
                   <div style={{ fontSize:9, color:"#22c55e", letterSpacing:3, fontWeight:700, marginBottom:10 }}>GETYOURGUIDE</div>
-                  <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:4, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch" }}>
+                  <div style={{ display:"flex", gap:10, overflowX:"auto", paddingBottom:4, scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", overscrollBehaviorX:"contain" }}>
                     {gygDeals.map((o, i) => o.gygId ? (
                       /* GYG official widget — loads real activity image, price & rating */
                       <div key={i} style={{ minWidth:200, flexShrink:0, scrollSnapAlign:"start", borderRadius:14, overflow:"hidden", border:"1px solid rgba(34,197,94,0.15)" }}>
@@ -1064,7 +1114,7 @@ export default function DestinationExplorer() {
               {/* Photo gallery */}
               <div style={{ padding:"14px 0 0 16px" }}>
                 <div style={{ fontSize:9, color:"#f97316", letterSpacing:3, fontWeight:700, marginBottom:8, textTransform:"uppercase" }}>{({hr:"GALERIJA",de:"GALERIE",en:"GALLERY",it:"GALLERIA"})[dl]||"GALLERY"}</div>
-                <div style={{ display:"flex", gap:8, overflowX:"auto", scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", paddingRight:16, paddingBottom:4 }}>
+                <div style={{ display:"flex", gap:8, overflowX:"auto", scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", paddingRight:16, paddingBottom:4, overscrollBehaviorX:"contain" }}>
                   {BJ.gallery.map((src, gi) => (
                     <div key={gi} style={{ minWidth:130, height:90, borderRadius:12, overflow:"hidden", flexShrink:0, scrollSnapAlign:"start" }}>
                       <img src={src} alt="" style={{ width:"100%", height:"100%", objectFit:"cover" }} loading="lazy" />
@@ -1127,7 +1177,7 @@ export default function DestinationExplorer() {
                 <div style={{ fontSize:10, color:"#22c55e", letterSpacing:3, fontWeight:700, marginBottom:10, textTransform:"uppercase" }}>
                   {({hr:"SMJEŠTAJ",de:"UNTERKUNFT",en:"ACCOMMODATION",it:"ALLOGGIO"})[dl]||"ACCOMMODATION"}
                 </div>
-                <div style={{ display:"flex", gap:10, overflowX:"auto", scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", paddingBottom:4 }}>
+                <div style={{ display:"flex", gap:10, overflowX:"auto", scrollSnapType:"x mandatory", WebkitOverflowScrolling:"touch", paddingBottom:4, overscrollBehaviorX:"contain" }}>
                   {BJ.rooms.map(room => (
                     <div key={room.id} style={{ minWidth:220, borderRadius:14, overflow:"hidden", border:"1px solid rgba(34,197,94,0.15)", background:"rgba(0,0,0,0.2)", flexShrink:0, scrollSnapAlign:"start" }}>
                       <div style={{ position:"relative", height:90 }}>
@@ -1174,7 +1224,7 @@ export default function DestinationExplorer() {
                 <div style={{ fontSize:10, color:"#0ea5e9", letterSpacing:3, fontWeight:700, marginBottom:10, textTransform:"uppercase" }}>
                   {({hr:"Mjesta u blizini",de:"In der Nähe",en:"Nearby",it:"Nelle vicinanze"})[dl]||"Nearby"}
                 </div>
-                <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:8, scrollSnapType:"x mandatory" }}>
+                <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:8, scrollSnapType:"x mandatory", overscrollBehaviorX:"contain" }}>
                   {BJ.nearby.map(n => (
                     <a key={n.id} href={n.link.replace("lang=de", `lang=${lang}`)} onClick={e => e.stopPropagation()} style={{ minWidth:130, borderRadius:14, border:"1px solid rgba(14,165,233,0.1)", background:"rgba(14,165,233,0.03)", padding:"12px 12px 10px", textDecoration:"none", color:"#f0f4f8", scrollSnapAlign:"start", flexShrink:0, transition:"all 0.2s" }}
                       onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.3)"; e.currentTarget.style.background = "rgba(14,165,233,0.07)"; }}
