@@ -10,7 +10,7 @@ export const BRAND = {
   primaryColor: "#0ea5e9",
   darkBg: "#0a1628",
   firestorePrefix: "mkt",               // Firestore collection prefix
-  metaPixelId: null,                    // set in Vercel env: META_PIXEL_ID
+  metaPixelId: "1284802997089070",       // also in index.html; server CAPI uses META_PIXEL_ID env var
   resendFromEmail: "noreply@jadran.ai",
   qualifyRoute: "/qualify",
   campaignsRoute: "/campaigns",
