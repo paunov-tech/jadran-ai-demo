@@ -130,7 +130,7 @@ export default function LandingPage() {
       const r = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: "apartment", plan: "free", lang: lang === "at" ? "de" : lang || "en", region: "all", msgs: [...qcMsgs, userMsg].slice(-6) }),
+        body: JSON.stringify({ mode: "landing", plan: "free", lang: lang === "at" ? "de" : lang || "en", region: "all", msgs: [...qcMsgs, userMsg].slice(-6) }),
       });
       const d = await r.json();
       const reply = d.reply || d.text || (lang === "de" || lang === "at" ? "Einen Moment…" : lang === "en" ? "One moment…" : "Trenutak…");
@@ -1096,18 +1096,6 @@ Specifico. Nomi reali.`,
               <div ref={qcEndRef} />
             </div>
 
-            {/* Suggested questions */}
-            {!qcStarted && (
-              <div style={{ padding:"0 18px 14px", display:"flex", gap:8, flexWrap:"wrap" }}>
-                {(lang==="de"||lang==="at" ? ["🚐 Camper nach Dubrovnik?","🏖️ Geheimstrände Istrien","⛵ Marina Hvar Plätze","🌬️ Bora-Warnung heute"] : lang==="en" ? ["🚐 Camper to Dubrovnik?","🏖️ Hidden beaches Istria","⛵ Marina Hvar berths","🌬️ Bura warning today"] : lang==="it" ? ["🚐 Camper a Dubrovnik?","🏖️ Spiagge nascoste Istria","⛵ Marina Hvar ormeggi","🌬️ Allerta Bora oggi"] : ["🚐 Kamperom u Dubrovnik?","🏖️ Tajne plaže Istre","⛵ Marine Hvara","🌬️ Bura upozorenje danas"]).map(q => (
-                  <button key={q} onClick={() => qcSendMsg(q)} style={{ background:"rgba(14,165,233,0.07)", border:"1px solid rgba(14,165,233,0.18)", borderRadius:20, padding:"7px 14px", fontSize:12, color:"#7dd3fc", cursor:"pointer", whiteSpace:"nowrap", transition:"all .2s", fontFamily:B }}
-                    onMouseEnter={e=>e.currentTarget.style.background="rgba(14,165,233,0.15)"}
-                    onMouseLeave={e=>e.currentTarget.style.background="rgba(14,165,233,0.07)"}>
-                    {q}
-                  </button>
-                ))}
-              </div>
-            )}
 
             {/* Input row */}
             <div style={{ padding:"12px 18px 16px", display:"flex", gap:10, borderTop:"1px solid rgba(255,255,255,0.04)" }}>

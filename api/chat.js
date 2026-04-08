@@ -1602,6 +1602,61 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
     const detectedRegion = (region === "all" || !region) ? detectRegionFromText(lastUserMessage) : null;
     const _reg = detectedRegion || (region !== "all" ? region : null) || "dubrovnik";
 
+    // Auto-fetch live weather for landing mode when client sends no weather data
+    let resolvedWeather = weather;
+    if (!weather && mode === "landing") {
+      const CITY_COORDS = {
+        dubrovnik:      { lat: 42.65, lon: 18.09 },
+        split_makarska: { lat: 43.51, lon: 16.44 },
+        zadar_sibenik:  { lat: 44.12, lon: 15.23 },
+        kvarner:        { lat: 45.33, lon: 14.44 },
+        istra:          { lat: 45.08, lon: 13.64 },
+      };
+      const coords = CITY_COORDS[_reg] || CITY_COORDS.dubrovnik;
+      try {
+        const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,pressure_msl&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,weather_code,precipitation_probability&daily=sunset&timezone=Europe/Zagreb&forecast_days=1`;
+        const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${coords.lat}&longitude=${coords.lon}&current=sea_surface_temperature,wave_height&timezone=Europe/Zagreb&forecast_days=1`;
+        const [wxSettled, marSettled] = await Promise.allSettled([fetch(wxUrl), fetch(marineUrl)]);
+        const wx = wxSettled.status === "fulfilled" ? await wxSettled.value.json().catch(() => null) : null;
+        const marine = marSettled.status === "fulfilled" ? await marSettled.value.json().catch(() => null) : null;
+        if (wx?.current) {
+          const wDeg = wx.current.wind_direction_10m || 0;
+          const wSpd = Math.round(wx.current.wind_speed_10m || 0);
+          const adriaticWN = (deg, spd) => {
+            if (spd < 5) return "Bonaca";
+            if (deg >= 10 && deg <= 80) return "Bura";
+            if (deg >= 100 && deg <= 170) return "Jugo";
+            if (deg >= 240 && deg <= 310) return "Maestral";
+            return "Vjetar";
+          };
+          const wE = (c) => c <= 1 ? "☀️" : c <= 3 ? "⛅" : c <= 48 ? "🌫️" : c <= 65 ? "🌧️" : c >= 95 ? "⛈️" : "☁️";
+          const nowH = new Date().getHours();
+          const hTimes = wx.hourly?.time || [];
+          const si = Math.max(0, hTimes.findIndex(t => new Date(t).getHours() >= nowH));
+          resolvedWeather = {
+            temp: Math.round(wx.current.temperature_2m || 20),
+            feelsLike: Math.round(wx.current.apparent_temperature || 20),
+            icon: wE(wx.current.weather_code || 0),
+            uv: Math.round(wx.current.uv_index || 5),
+            windSpeed: wSpd,
+            windName: adriaticWN(wDeg, wSpd),
+            gusts: Math.round(wx.current.wind_gusts_10m || 0),
+            sea: Math.round(marine?.current?.sea_surface_temperature || 22),
+            waveHeight: marine?.current?.wave_height || 0,
+            pressure: Math.round(wx.current.pressure_msl || 1013),
+            sunset: wx.daily?.sunset?.[0]?.split("T")[1]?.substring(0, 5) || "19:30",
+            hourly: hTimes.slice(si, si + 6).map((t, i) => ({
+              h: t.split("T")[1]?.substring(0, 5) || "",
+              temp: Math.round(wx.hourly.temperature_2m?.[si + i] ?? 20),
+              gusts: Math.round(wx.hourly.wind_gusts_10m?.[si + i] ?? 0),
+              rain: Math.round(wx.hourly.precipitation_probability?.[si + i] ?? 0),
+              icon: wE(wx.hourly.weather_code?.[si + i] ?? 0),
+            })),
+          };
+        }
+      } catch (_) { /* weather unavailable — continue without it */ }
+    }
+
     const [
       campsResult,
       fuelMod,
@@ -1685,7 +1740,7 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
     try {
       // SECURITY: Never use `system` field from req.body — always build server-side
       systemPrompt = mode
-        ? buildPrompt({ mode, region: _reg, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan, yoloCrowdData, campCatalog })
+        ? buildPrompt({ mode, region: _reg, lang, weather: resolvedWeather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan, yoloCrowdData, campCatalog })
         : 'Ti si Jadran.ai, lokalni turistički vodič za hrvatsku obalu Jadrana. Kratki, korisni odgovori na jeziku korisnika.';
     } catch (promptErr) {
       systemPrompt = 'Ti si Jadran.ai, lokalni turistički vodič za hrvatsku obalu Jadrana. Kratki, korisni odgovori.';
@@ -1760,7 +1815,7 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
     // Claude-sonnet-4-6 does not support assistant prefill.
     // We inject a [SYSTEM_NOTE] at the start of the user's last message instead.
     let finalMessages = sanitizedMessages;
-    const wxForPrefill = req.body.weather || {};
+    const wxForPrefill = resolvedWeather || {};
     const uvVal = parseFloat(wxForPrefill.uv) || 0;
     const tempVal = parseFloat(wxForPrefill.temp) || 0;
     const hasKids = JSON.stringify(req.body.delta_context || {}).includes("kids");
