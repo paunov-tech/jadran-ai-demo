@@ -61,7 +61,7 @@ const SEGMENT_TARGETING = {
       { id: "6003384912200", name: "Camping" },
       { id: "6003277229894", name: "Recreational vehicle" },
     ],
-    locales: [{ key: 5 }], // German
+    locales: [5], // German
   },
   de_family: {
     geo: { countries: ["DE", "AT", "CH"] },
@@ -70,7 +70,7 @@ const SEGMENT_TARGETING = {
       { id: "6003397425735", name: "Family travel" },
       { id: "6003020834693", name: "Beach" },
     ],
-    locales: [{ key: 5 }],
+    locales: [5],
   },
   it_sailor: {
     geo: { countries: ["IT"] },
@@ -79,7 +79,7 @@ const SEGMENT_TARGETING = {
       { id: "6003012949498", name: "Sailing" },
       { id: "6003348604980", name: "Boating" },
     ],
-    locales: [{ key: 22 }], // Italian
+    locales: [22], // Italian
   },
   en_cruiser: {
     geo: { countries: ["GB", "US", "AU", "NL"] },
@@ -88,7 +88,7 @@ const SEGMENT_TARGETING = {
       { id: "6003012949498", name: "Sailing" },
       { id: "6003107902433", name: "Travel" },
     ],
-    locales: [{ key: 6 }], // English
+    locales: [6], // English
   },
   en_camper: {
     geo: { countries: ["GB", "US", "AU", "NL"] },
@@ -97,7 +97,7 @@ const SEGMENT_TARGETING = {
       { id: "6003384912200", name: "Camping" },
       { id: "6003277229894", name: "Recreational vehicle" },
     ],
-    locales: [{ key: 6 }],
+    locales: [6],
   },
   en_couple: {
     geo: { countries: ["GB", "US", "AU", "NL"] },
@@ -106,7 +106,7 @@ const SEGMENT_TARGETING = {
       { id: "6003020834693", name: "Beach" },
       { id: "6003107902433", name: "Travel" },
     ],
-    locales: [{ key: 6 }],
+    locales: [6],
   },
 };
 
