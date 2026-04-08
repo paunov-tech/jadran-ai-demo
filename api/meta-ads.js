@@ -113,12 +113,12 @@ const SEGMENT_TARGETING = {
 
 // ── ACTIONS ────────────────────────────────────────────────────────────
 
-async function createCampaign(env, { name, objective = "OUTCOME_LEADS", dailyBudget }) {
+async function createCampaign(env, { name, objective = "OUTCOME_SALES" }) {
   return graphPost(`${env.account}/campaigns`, {
     name: name || `JADRAN_${Date.now()}`,
     objective,
     special_ad_categories: [],
-    is_adset_budget_sharing_enabled: false, // budget per adset, not CBO
+    is_adset_budget_sharing_enabled: false,
     status: "PAUSED",
   }, env.token);
 }
@@ -127,19 +127,16 @@ async function createAdSet(env, { campaignId, name, segmentId, dailyBudget = 100
   const target = SEGMENT_TARGETING[segmentId];
   if (!target) throw new Error(`Unknown segment: ${segmentId}`);
 
-  // Broad targeting — Advantage+ lets Meta's algorithm find the audience
-  // Interest IDs deprecate frequently; geo+age+locale is stable
   const targeting = {
     geo_locations: target.geo,
     age_min: target.age_min,
     age_max: target.age_max,
     publisher_platforms: ["facebook", "instagram"],
+    targeting_automation: { advantage_audience: 0 },
   };
   if (target.locales?.length) targeting.locales = target.locales;
 
-  targeting.targeting_automation = { advantage_audience: 0 }; // explicit manual targeting
-
-  const body = {
+  return graphPost(`${env.account}/adsets`, {
     campaign_id: campaignId,
     name: name || `${segmentId}_adset`,
     daily_budget: dailyBudget,
@@ -149,12 +146,10 @@ async function createAdSet(env, { campaignId, name, segmentId, dailyBudget = 100
     targeting,
     promoted_object: {
       pixel_id: env.pixel,
-      custom_event_type: "LEAD",
+      custom_event_type: "PURCHASE",
     },
     status: "PAUSED",
-  };
-
-  return graphPost(`${env.account}/adsets`, body, env.token);
+  }, env.token);
 }
 
 async function createAd(env, { adsetId, name, hook, body, cta = "LEARN_MORE", link, imageUrl }) {
@@ -217,7 +212,8 @@ async function pushWinners(env, { segmentId, campaignId, adsetId, variants }) {
         name: `${segmentId}_${v.id}`,
         hook: v.hook,
         body: v.body,
-        link: `https://jadran.ai/m/${segmentId}?v=${v.id}&utm_source=meta&utm_medium=paid&utm_campaign=${segmentId}`,
+        cta: "SUBSCRIBE",
+        link: `https://jadran.ai/m/${segmentId}?v=${v.id}&utm_source=meta&utm_medium=paid&utm_campaign=${segmentId}&utm_content=purchase`,
       });
       results.push({ variantId: v.id, adId: ad.id, status: "created" });
     } catch (err) {
