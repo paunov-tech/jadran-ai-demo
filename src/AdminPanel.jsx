@@ -692,30 +692,32 @@ function MarketingTab({ token, C, segment, setSegment, budget, setBudget, loadin
       const variants = gData.variants || [];
       setLog(l => [...l, { ok: true, text: `    ✓ ${variants.length} varijanti generirano` }]);
 
+      // Helper: fetch meta-ads and surface real error message
+      const metaCall = async (action, body) => {
+        const r = await fetch("/api/meta-ads", { method: "POST", headers: hdr, body: JSON.stringify({ action, ...body }) });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(d.error || `${action}: HTTP ${r.status}`);
+        return d;
+      };
+
       // Step 2 — create campaign
       setStep(2);
       setLog(l => [...l, { ok: true, text: `[2/4] Kreiranje kampanje "${name}"…` }]);
-      const c = await fetch("/api/meta-ads", { method: "POST", headers: hdr, body: JSON.stringify({ action: "create_campaign", name }) });
-      if (!c.ok) throw new Error(`create_campaign: ${c.status}`);
-      const cData = await c.json();
+      const cData = await metaCall("create_campaign", { name });
       const campaignId = cData.id;
       setLog(l => [...l, { ok: true, text: `    ✓ Campaign ID: ${campaignId} (PAUSED)` }]);
 
       // Step 3 — create adset
       setStep(3);
       setLog(l => [...l, { ok: true, text: `[3/4] Kreiranje AdSeta (${budgetCents/100}€/dan)…` }]);
-      const a = await fetch("/api/meta-ads", { method: "POST", headers: hdr, body: JSON.stringify({ action: "create_adset", campaignId, segmentId: segment, dailyBudget: budgetCents, name: `${segment}_adset` }) });
-      if (!a.ok) throw new Error(`create_adset: ${a.status}`);
-      const aData = await a.json();
+      const aData = await metaCall("create_adset", { campaignId, segmentId: segment, dailyBudget: budgetCents, name: `${segment}_adset` });
       const adsetId = aData.id;
       setLog(l => [...l, { ok: true, text: `    ✓ AdSet ID: ${adsetId}` }]);
 
       // Step 4 — push top 5 ads
       setStep(4);
       setLog(l => [...l, { ok: true, text: `[4/4] Push top 5 ads…` }]);
-      const p = await fetch("/api/meta-ads", { method: "POST", headers: hdr, body: JSON.stringify({ action: "push_winners", segmentId: segment, adsetId, variants: variants.slice(0, 5) }) });
-      if (!p.ok) throw new Error(`push_winners: ${p.status}`);
-      const pData = await p.json();
+      const pData = await metaCall("push_winners", { segmentId: segment, adsetId, variants: variants.slice(0, 5) });
       const ok = (pData.results || []).filter(r => !r.error).length;
       setLog(l => [...l, { ok: true, text: `    ✓ ${ok} ads kreirano` }]);
 
