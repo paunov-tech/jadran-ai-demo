@@ -126,27 +126,34 @@ async function createAdSet(env, { campaignId, name, segmentId, dailyBudget = 100
   const target = SEGMENT_TARGETING[segmentId];
   if (!target) throw new Error(`Unknown segment: ${segmentId}`);
 
-  return graphPost(`${env.account}/adsets`, {
+  // Broad targeting — Advantage+ lets Meta's algorithm find the audience
+  // Interest IDs deprecate frequently; geo+age+locale is stable
+  const targeting = {
+    geo_locations: target.geo,
+    age_min: target.age_min,
+    age_max: target.age_max,
+    publisher_platforms: ["facebook", "instagram"],
+  };
+  if (target.locales?.length) targeting.locales = target.locales;
+
+  targeting.targeting_automation = { advantage_audience: 0 }; // explicit manual targeting
+
+  const body = {
     campaign_id: campaignId,
     name: name || `${segmentId}_adset`,
-    daily_budget: dailyBudget, // cents
+    daily_budget: dailyBudget,
     billing_event: "IMPRESSIONS",
-    optimization_goal: "LEAD_GENERATION",
+    optimization_goal: "OFFSITE_CONVERSIONS",
     bid_strategy: "LOWEST_COST_WITHOUT_CAP",
-    targeting: {
-      geo_locations: target.geo,
-      age_min: target.age_min,
-      age_max: target.age_max,
-      flexible_spec: [{ interests: target.interests }],
-      locales: target.locales,
-      publisher_platforms: ["facebook", "instagram"],
-    },
+    targeting,
     promoted_object: {
       pixel_id: env.pixel,
       custom_event_type: "LEAD",
     },
     status: "PAUSED",
-  }, env.token);
+  };
+
+  return graphPost(`${env.account}/adsets`, body, env.token);
 }
 
 async function createAd(env, { adsetId, name, hook, body, cta = "LEARN_MORE", link, imageUrl }) {
