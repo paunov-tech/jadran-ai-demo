@@ -733,7 +733,7 @@ function MarketingTab({ token, C, segment, setSegment, budget, setBudget, loadin
   const pullInsights = async () => {
     setInsightsLoading(true);
     try {
-      const r = await fetch("/api/cron-insights", { headers: hdr });
+      const r = await fetch(`/api/cron-insights?secret=${encodeURIComponent(token)}`);
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d.error || r.status);
       setInsights(d);
@@ -747,7 +747,7 @@ function MarketingTab({ token, C, segment, setSegment, budget, setBudget, loadin
     setOptLoading(true);
     setOptResult(null);
     try {
-      const r = await fetch("/api/cron-meta-optimize", { headers: hdr });
+      const r = await fetch(`/api/cron-meta-optimize?secret=${encodeURIComponent(token)}`);
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(d.error || r.status);
       setOptResult(d);

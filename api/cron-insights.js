@@ -39,7 +39,8 @@ export default async function handler(req, res) {
   const secret = req.query.secret || req.headers["x-cron-secret"];
   const adminRaw = req.headers["x-admin-token"] || "";
   const adminDecoded = (() => { try { return Buffer.from(adminRaw, "base64").toString("utf8"); } catch { return adminRaw; } })();
-  const isAdmin = adminDecoded.trim() === (process.env.ADMIN_TOKEN || "").trim();
+  const ADMIN = (process.env.ADMIN_TOKEN || "").trim();
+  const isAdmin = adminDecoded.trim() === ADMIN || secret === ADMIN;
   if (secret !== process.env.CRON_SECRET && !isAdmin) return res.status(401).json({ error: "unauthorized" });
 
   const token = process.env.META_CAPI_TOKEN;
