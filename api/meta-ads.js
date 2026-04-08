@@ -117,7 +117,8 @@ async function createCampaign(env, { name, objective = "OUTCOME_LEADS", dailyBud
     name: name || `JADRAN_${Date.now()}`,
     objective,
     special_ad_categories: [],
-    status: "PAUSED", // always start paused for review
+    is_adset_budget_sharing_enabled: false, // budget per adset, not CBO
+    status: "PAUSED",
   }, env.token);
 }
 
