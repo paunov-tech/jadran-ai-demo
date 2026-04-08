@@ -36,7 +36,9 @@
     "api/daily.js":              { "maxDuration": 15 },
     "api/places.js":             { "maxDuration": 15 },
     "api/re-engage.js":          { "maxDuration": 30 },
-    "api/cron-reengage.js":      { "maxDuration": 30 }
+    "api/cron-reengage.js":      { "maxDuration": 30 },
+    "api/cron-insights.js":      { "maxDuration": 60 },
+    "api/cron-meta-optimize.js": { "maxDuration": 60 }
   },
   "headers": [
     {
@@ -169,7 +171,9 @@
   "crons": [
     { "path": "/api/cron-email",     "schedule": "0 */6 * * *"  },
     { "path": "/api/cron-audience",  "schedule": "0 3 * * *"    },
-    { "path": "/api/cron-reengage",  "schedule": "0 */12 * * *" }
+    { "path": "/api/cron-reengage",      "schedule": "0 */12 * * *" },
+    { "path": "/api/cron-insights",      "schedule": "0 8 * * *"    },
+    { "path": "/api/cron-meta-optimize", "schedule": "0 7 */3 * *"  }
   ],
   "redirects": [
     { "source": "/blog/", "destination": "/blog", "permanent": true }
