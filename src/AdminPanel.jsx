@@ -720,6 +720,9 @@ function MarketingTab({ token, C, segment, setSegment, budget, setBudget, loadin
       const pData = await metaCall("push_winners", { segmentId: segment, adsetId, variants: variants.slice(0, 5) });
       const ok = (pData.results || []).filter(r => !r.error).length;
       setLog(l => [...l, { ok: true, text: `    ✓ ${ok} ads kreirano` }]);
+      (pData.results || []).filter(r => r.error).forEach(r => {
+        setLog(l => [...l, { ok: false, text: `    ✗ v${r.variantId}: ${r.error}` }]);
+      });
 
       setStep("done");
       setLog(l => [...l, { ok: true, text: `\nKampanja kreirana. Status: PAUSED — aktiviraj u Ads Manageru.` }]);
