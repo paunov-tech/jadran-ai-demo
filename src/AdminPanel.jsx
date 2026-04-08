@@ -57,7 +57,18 @@ export default function AdminPanel() {
   const [pin, setPin] = useState("");
   const [pinErr, setPinErr] = useState("");
 
-  const [mainTab, setMainTab] = useState("bookings"); // bookings | partners
+  const [mainTab, setMainTab] = useState("bookings"); // bookings | partners | marketing
+
+  // Marketing tab state
+  const [mkSegment, setMkSegment] = useState("de_camper");
+  const [mkBudget, setMkBudget] = useState("10");
+  const [mkLoading, setMkLoading] = useState(false);
+  const [mkStep, setMkStep] = useState(null); // null | 1 | 2 | 3 | 4 | "done" | "error"
+  const [mkLog, setMkLog] = useState([]);
+  const [mkInsights, setMkInsights] = useState(null);
+  const [mkInsightsLoading, setMkInsightsLoading] = useState(false);
+  const [mkOptLoading, setMkOptLoading] = useState(false);
+  const [mkOptResult, setMkOptResult] = useState(null);
 
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -287,6 +298,7 @@ export default function AdminPanel() {
         {[
           { id: "bookings", label: "🏨 Bookings" },
           { id: "partners", label: "🤝 Partneri" },
+          { id: "marketing", label: "📣 Marketing" },
         ].map(t => (
           <button key={t.id} onClick={() => setMainTab(t.id)}
             style={{ padding: "14px 20px", border: "none", background: "none", cursor: "pointer", fontFamily: "inherit",
@@ -538,6 +550,21 @@ export default function AdminPanel() {
 
         </> /* end partners tab */}
 
+        {mainTab === "marketing" && (
+          <MarketingTab
+            token={token} C={C}
+            segment={mkSegment} setSegment={setMkSegment}
+            budget={mkBudget} setBudget={setMkBudget}
+            loading={mkLoading} setLoading={setMkLoading}
+            step={mkStep} setStep={setMkStep}
+            log={mkLog} setLog={setMkLog}
+            insights={mkInsights} setInsights={setMkInsights}
+            insightsLoading={mkInsightsLoading} setInsightsLoading={setMkInsightsLoading}
+            optLoading={mkOptLoading} setOptLoading={setMkOptLoading}
+            optResult={mkOptResult} setOptResult={setMkOptResult}
+          />
+        )}
+
       </div>
 
       {/* DETAIL MODAL */}
@@ -616,6 +643,233 @@ export default function AdminPanel() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── MARKETING TAB ────────────────────────────────────────────────────────────
+const SEGMENTS = [
+  { id: "de_camper",  label: "🚐 DE Camper",   geo: "DE/AT/CH" },
+  { id: "de_family",  label: "👨‍👩‍👧 DE Family",   geo: "DE/AT/CH" },
+  { id: "it_sailor",  label: "⛵ IT Sailor",    geo: "IT" },
+  { id: "en_cruiser", label: "🚢 EN Cruiser",   geo: "GB/US/AU" },
+  { id: "en_camper",  label: "🏕️ EN Camper",    geo: "GB/US/AU" },
+  { id: "en_couple",  label: "💑 EN Couple",    geo: "GB/US/AU" },
+];
+
+function MkCard({ children, C, style }) {
+  return (
+    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "20px 22px", ...style }}>
+      {children}
+    </div>
+  );
+}
+
+function MkLabel({ children, C }) {
+  return (
+    <div style={{ fontSize: 10, letterSpacing: 2, textTransform: "uppercase", fontWeight: 700, color: C.accent, marginBottom: 10 }}>
+      {children}
+    </div>
+  );
+}
+
+function MarketingTab({ token, C, segment, setSegment, budget, setBudget, loading, setLoading, step, setStep, log, setLog, insights, setInsights, insightsLoading, setInsightsLoading, optLoading, setOptLoading, optResult, setOptResult }) {
+  const hdr = { "Content-Type": "application/json", "x-admin-token": btoa(token) };
+
+  const runCampaign = async () => {
+    setLoading(true);
+    setLog([]);
+    setStep(1);
+    const name = `JADRAN_${segment.toUpperCase()}_${new Date().toISOString().slice(0,7).replace("-","_")}`;
+    const budgetCents = Math.round(parseFloat(budget) * 100);
+
+    try {
+      // Step 1 — generate variants
+      setLog(l => [...l, { ok: true,  text: `[1/4] Generiranje varijanti za ${segment}…` }]);
+      const g = await fetch("/api/campaign-generate", { method: "POST", headers: hdr, body: JSON.stringify({ segmentId: segment, count: 10 }) });
+      if (!g.ok) throw new Error(`campaign-generate: ${g.status}`);
+      const gData = await g.json();
+      const variants = gData.variants || [];
+      setLog(l => [...l, { ok: true, text: `    ✓ ${variants.length} varijanti generirano` }]);
+
+      // Step 2 — create campaign
+      setStep(2);
+      setLog(l => [...l, { ok: true, text: `[2/4] Kreiranje kampanje "${name}"…` }]);
+      const c = await fetch("/api/meta-ads", { method: "POST", headers: hdr, body: JSON.stringify({ action: "create_campaign", name }) });
+      if (!c.ok) throw new Error(`create_campaign: ${c.status}`);
+      const cData = await c.json();
+      const campaignId = cData.id;
+      setLog(l => [...l, { ok: true, text: `    ✓ Campaign ID: ${campaignId} (PAUSED)` }]);
+
+      // Step 3 — create adset
+      setStep(3);
+      setLog(l => [...l, { ok: true, text: `[3/4] Kreiranje AdSeta (${budgetCents/100}€/dan)…` }]);
+      const a = await fetch("/api/meta-ads", { method: "POST", headers: hdr, body: JSON.stringify({ action: "create_adset", campaignId, segmentId: segment, dailyBudget: budgetCents, name: `${segment}_adset` }) });
+      if (!a.ok) throw new Error(`create_adset: ${a.status}`);
+      const aData = await a.json();
+      const adsetId = aData.id;
+      setLog(l => [...l, { ok: true, text: `    ✓ AdSet ID: ${adsetId}` }]);
+
+      // Step 4 — push top 5 ads
+      setStep(4);
+      setLog(l => [...l, { ok: true, text: `[4/4] Push top 5 ads…` }]);
+      const p = await fetch("/api/meta-ads", { method: "POST", headers: hdr, body: JSON.stringify({ action: "push_winners", segmentId: segment, adsetId, variants: variants.slice(0, 5) }) });
+      if (!p.ok) throw new Error(`push_winners: ${p.status}`);
+      const pData = await p.json();
+      const ok = (pData.results || []).filter(r => !r.error).length;
+      setLog(l => [...l, { ok: true, text: `    ✓ ${ok} ads kreirano` }]);
+
+      setStep("done");
+      setLog(l => [...l, { ok: true, text: `\nKampanja kreirana. Status: PAUSED — aktiviraj u Ads Manageru.` }]);
+    } catch (e) {
+      setStep("error");
+      setLog(l => [...l, { ok: false, text: `✗ Greška: ${e.message}` }]);
+    }
+    setLoading(false);
+  };
+
+  const pullInsights = async () => {
+    setInsightsLoading(true);
+    try {
+      const r = await fetch(`/api/cron-insights?secret=${token}`);
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json();
+      setInsights(d);
+    } catch (e) {
+      setInsights({ error: e.message });
+    }
+    setInsightsLoading(false);
+  };
+
+  const runOptimize = async () => {
+    setOptLoading(true);
+    setOptResult(null);
+    try {
+      const r = await fetch(`/api/cron-meta-optimize?secret=${token}`);
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json();
+      setOptResult(d);
+    } catch (e) {
+      setOptResult({ error: e.message });
+    }
+    setOptLoading(false);
+  };
+
+  const stepColor = s => s === "done" ? C.success : s === "error" ? C.danger : C.gold;
+
+  return (
+    <div style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 20, maxWidth: 760 }}>
+
+      {/* ── Campaign Creator ── */}
+      <MkCard C={C}>
+        <MkLabel C={C}>Nova Kampanja</MkLabel>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+          <div>
+            <div style={{ fontSize: 11, color: C.muted, marginBottom: 6 }}>Segment</div>
+            <select value={segment} onChange={e => setSegment(e.target.value)}
+              style={{ width: "100%", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 12px", color: C.white, fontSize: 13, fontFamily: "inherit", cursor: "pointer" }}>
+              {SEGMENTS.map(s => (
+                <option key={s.id} value={s.id}>{s.label} · {s.geo}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: C.muted, marginBottom: 6 }}>Dnevni budget (€)</div>
+            <input type="number" min="1" max="500" value={budget} onChange={e => setBudget(e.target.value)}
+              style={{ width: "100%", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "10px 12px", color: C.white, fontSize: 13, fontFamily: "inherit", boxSizing: "border-box" }} />
+          </div>
+        </div>
+
+        <button onClick={runCampaign} disabled={loading}
+          style={{ padding: "11px 28px", background: loading ? C.muted : C.accent, color: "#fff", border: "none", borderRadius: 10, fontFamily: "inherit", fontSize: 13, fontWeight: 700, cursor: loading ? "wait" : "pointer", transition: "background 0.2s" }}>
+          {loading ? `Korak ${typeof step === "number" ? step : "…"}/4` : "Kreiraj kampanju →"}
+        </button>
+
+        {/* Log output */}
+        {log.length > 0 && (
+          <div style={{ marginTop: 16, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px", fontFamily: "monospace", fontSize: 12, lineHeight: 1.9, maxHeight: 220, overflowY: "auto" }}>
+            {log.map((l, i) => (
+              <div key={i} style={{ color: l.ok ? (l.text.startsWith("\n") ? C.success : C.white) : C.danger }}>{l.text}</div>
+            ))}
+            {step === "done" && (
+              <div style={{ marginTop: 8, color: C.muted, fontSize: 11 }}>
+                Otvori Meta Ads Manager → pronađi kampanju → aktiviraj ručno.
+              </div>
+            )}
+          </div>
+        )}
+      </MkCard>
+
+      {/* ── Insights ── */}
+      <MkCard C={C}>
+        <MkLabel C={C}>Insights (juče)</MkLabel>
+        <button onClick={pullInsights} disabled={insightsLoading}
+          style={{ padding: "9px 20px", background: "transparent", color: C.accent, border: `1px solid ${C.accent}40`, borderRadius: 8, fontFamily: "inherit", fontSize: 12, fontWeight: 600, cursor: insightsLoading ? "wait" : "pointer", marginBottom: insights ? 14 : 0 }}>
+          {insightsLoading ? "Učitava…" : "Povuci Meta Insights"}
+        </button>
+
+        {insights && !insights.error && (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+              <thead>
+                <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+                  {["Kampanja", "Imp.", "Klikovi", "Leadi", "Spend", "CPL", "CTR"].map(h => (
+                    <th key={h} style={{ padding: "8px 10px", textAlign: h === "Kampanja" ? "left" : "right", color: C.muted, fontWeight: 600 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {(insights.campaigns || []).filter(c => !c.error).map((c, i) => (
+                  <tr key={i} style={{ borderBottom: `1px solid ${C.border}20` }}>
+                    <td style={{ padding: "8px 10px", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.campaign_name}</td>
+                    <td style={{ padding: "8px 10px", textAlign: "right" }}>{(c.impressions||0).toLocaleString()}</td>
+                    <td style={{ padding: "8px 10px", textAlign: "right" }}>{c.clicks||0}</td>
+                    <td style={{ padding: "8px 10px", textAlign: "right", color: c.leads > 0 ? C.success : C.muted }}>{c.leads||0}</td>
+                    <td style={{ padding: "8px 10px", textAlign: "right" }}>{(c.spend||0).toFixed(2)}€</td>
+                    <td style={{ padding: "8px 10px", textAlign: "right", color: c.cost_per_lead > 5 ? C.danger : C.success }}>{c.cost_per_lead > 0 ? c.cost_per_lead.toFixed(2)+"€" : "–"}</td>
+                    <td style={{ padding: "8px 10px", textAlign: "right", color: c.ctr < 0.5 ? C.warning : C.white }}>{c.ctr > 0 ? c.ctr.toFixed(2)+"%" : "–"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ fontSize: 10, color: C.muted, marginTop: 8 }}>Datum: {insights.date}</div>
+          </div>
+        )}
+        {insights?.error && <div style={{ color: C.danger, fontSize: 12, marginTop: 8 }}>Greška: {insights.error}</div>}
+      </MkCard>
+
+      {/* ── Auto-Optimize ── */}
+      <MkCard C={C}>
+        <MkLabel C={C}>Auto-Optimizer (zadnjih 3 dana)</MkLabel>
+        <div style={{ fontSize: 12, color: C.muted, marginBottom: 12, lineHeight: 1.6 }}>
+          Pauziraj kampanje s &gt;15€ spend + 0 leadova · CPL &gt;8€ · Flagiraj CTR &lt;0.3%
+        </div>
+        <button onClick={runOptimize} disabled={optLoading}
+          style={{ padding: "9px 20px", background: "transparent", color: C.warning, border: `1px solid ${C.warning}40`, borderRadius: 8, fontFamily: "inherit", fontSize: 12, fontWeight: 600, cursor: optLoading ? "wait" : "pointer", marginBottom: optResult ? 14 : 0 }}>
+          {optLoading ? "Evaluira…" : "Pokreni Optimizer"}
+        </button>
+
+        {optResult && !optResult.error && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {(optResult.results || []).map((r, i) => {
+              const color = r.action === "pause" ? C.danger : r.action === "flag" ? C.warning : C.success;
+              const icon = r.action === "pause" ? "⏸" : r.action === "flag" ? "🔄" : "✅";
+              return (
+                <div key={i} style={{ display: "flex", gap: 10, alignItems: "center", padding: "8px 12px", background: C.bg, borderRadius: 8, fontSize: 12 }}>
+                  <span>{icon}</span>
+                  <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</span>
+                  <span style={{ color: C.muted }}>{r.spend?.toFixed(2)}€</span>
+                  <span style={{ color: C.muted }}>{r.leads} leada</span>
+                  <span style={{ color, fontWeight: 700, minWidth: 50 }}>{r.action?.toUpperCase()}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {optResult?.error && <div style={{ color: C.danger, fontSize: 12, marginTop: 8 }}>Greška: {optResult.error}</div>}
+      </MkCard>
+
     </div>
   );
 }
