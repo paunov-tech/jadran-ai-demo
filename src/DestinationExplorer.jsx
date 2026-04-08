@@ -440,15 +440,14 @@ export default function DestinationExplorer() {
   const destList = activeRegionData?.destinations ?? [];
 
   return (
-    <div style={{ background:"#0a0e17", color:"#f0f4f8", fontFamily:B, minHeight:"100dvh", overflowX:"hidden" }}>
+    <div style={{ background:"#0a0e17", color:"#f0f4f8", fontFamily:B, minHeight:"100dvh", overflowX:"hidden", maxWidth:"100vw", width:"100%" }}>
 
       {/* ── CSS ── */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@200;300;400;500;600;700&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        html { scroll-behavior: smooth; }
-        body { overscroll-behavior: none; overflow-x: hidden; }
-        html { overflow-x: hidden; }
+        html { scroll-behavior: smooth; overflow-x: hidden !important; max-width: 100%; }
+        body { overscroll-behavior: none; overflow-x: hidden !important; max-width: 100%; }
         @keyframes heroReveal { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
         @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
         @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
@@ -594,20 +593,9 @@ export default function DestinationExplorer() {
         <div style={{ maxWidth:640, margin:"0 auto" }}>
           <div ref={qcCardRef} style={{ background:"rgba(10,18,32,0.92)", border:"1px solid rgba(14,165,233,0.13)", borderRadius:20, overflow:"hidden", boxShadow:"0 16px 48px rgba(0,0,0,0.5)" }}>
 
-            {/* Messages area */}
+            {/* Messages area — only visible when conversation started */}
+            {(qcMsgs.length > 0 || qcLoading) && (
             <div ref={qcBoxRef} style={{ padding:"16px 16px 4px", maxHeight:320, overflowY:"auto" }}>
-
-              {/* Static welcome message — always shown */}
-              {qcMsgs.length === 0 && (
-                <div style={{ display:"flex", marginBottom:10, animation:"qc-in .4s both" }}>
-                  <div style={{ background:"rgba(14,165,233,0.07)", border:"1px solid rgba(14,165,233,0.12)", borderRadius:"4px 16px 16px 16px", padding:"12px 15px", fontSize:13.5, color:"#cbd5e1", lineHeight:1.65, maxWidth:"90%" }}>
-                    {dl==="de" ? <>Ich kenne jeden Parkplatz, jede versteckte Bucht und jeden Fährabfahrtsplan an der Adria. <strong style={{color:"#7dd3fc"}}>160+ Live-Sensoren</strong> — Strandbesetzung, Stau, Parken — in Echtzeit. Frag mich was.</> :
-                     dl==="en" ? <>I know every parking spot, hidden beach and ferry schedule on the Adriatic. <strong style={{color:"#7dd3fc"}}>160+ live sensors</strong> — beach crowds, traffic, parking — real time. Ask me anything.</> :
-                     dl==="it" ? <>Conosco ogni parcheggio, spiaggia nascosta e orario dei traghetti sull'Adriatico. <strong style={{color:"#7dd3fc"}}>160+ sensori live</strong> — spiagge, traffico, parcheggi — in tempo reale. Chiedimi.</> :
-                     <>Znam svaki parking, skrivenu plažu i raspored trajekta na Jadranu. <strong style={{color:"#7dd3fc"}}>160+ live senzora</strong> — gužve, plaže, promet — u realnom vremenu. Pitaj me što hoćeš.</>}
-                  </div>
-                </div>
-              )}
 
               {qcMsgs.map((m,i) => (
                 <div key={i} style={{ display:"flex", justifyContent:m.role==="user"?"flex-end":"flex-start", marginBottom:10, animation:"qc-in .3s both" }}>
@@ -622,44 +610,12 @@ export default function DestinationExplorer() {
                 </div>
               )}
             </div>
-
-            {/* Quick-tap suggestion chips — hidden after first user message */}
-            {qcMsgs.filter(m=>m.role==="user").length === 0 && !qcLoading && (
-              <div style={{ padding:"4px 16px 10px", overflowX:"auto", display:"flex", gap:7, flexWrap:"nowrap", overscrollBehaviorX:"contain", scrollbarWidth:"none" }}>
-                {(dl==="de" ? [
-                  "Parking Dubrovnik — wo jetzt?",
-                  "Fähre nach Rab — wann?",
-                  "Rajska Plaža voll heute?",
-                  "Split Abendessen Insider",
-                  "Camper A1 → Makarska",
-                ] : dl==="en" ? [
-                  "Parking Dubrovnik — live?",
-                  "Ferry to Rab — schedule?",
-                  "Rajska Plaža crowds now?",
-                  "Split dinner insider pick",
-                  "Camper route → Makarska",
-                ] : dl==="it" ? [
-                  "Parcheggio Dubrovnik live?",
-                  "Traghetto per Rab — orari?",
-                  "Rajska Plaža affollata?",
-                  "Cena insider Split",
-                  "Camper A1 → Makarska",
-                ] : [
-                  "Parking Dubrovnik — sada?",
-                  "Trajekt za Rab — kad?",
-                  "Rajska Plaža gužva danas?",
-                  "Split večera insajder",
-                  "Kamp ruta A1 → Makarska",
-                ]).map((chip,i) => (
-                  <button key={i} className="qc-chip" onClick={()=>qcSend(chip)}>{chip}</button>
-                ))}
-              </div>
             )}
 
             {/* Input */}
             <div style={{ padding:"10px 16px 12px", display:"flex", gap:10 }}>
               <input value={qcInput} onChange={e=>setQcInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&!e.shiftKey&&(e.preventDefault(),qcSend(qcInput))}
-                placeholder={dl==="de"?"Frag mich etwas über die Adria…":dl==="en"?"Ask me anything about the Adriatic…":dl==="it"?"Chiedimi qualcosa sull'Adriatico…":"Pitaj me nešto o Jadranu…"}
+                placeholder={dl==="de"?"Frag mich etwas über die Adria…":dl==="en"?"Ask me something about the Adriatic…":dl==="it"?"Chiedimi qualcosa sull'Adriatico…":dl==="pl"?"Zapytaj mnie o Adriatyk…":dl==="si"?"Vprašaj me kaj o Jadranu…":"Pitaj me nešto o Jadranu…"}
                 disabled={qcLoading}
                 style={{ flex:1, background:"rgba(255,255,255,0.04)", border:"1px solid rgba(14,165,233,0.18)", borderRadius:13, padding:"13px 18px", fontSize:15, color:"#e2e8f0", outline:"none", fontFamily:B, caretColor:"#0ea5e9" }}
               />
@@ -668,14 +624,6 @@ export default function DestinationExplorer() {
               </button>
             </div>
 
-            {/* Freemium note */}
-            <div style={{ padding:"0 16px 14px", textAlign:"center", fontSize:12, color:"#475569" }}>
-              {dl==="de"?"7 Fragen gratis · danach":dl==="en"?"7 messages free · then":dl==="it"?"7 domande gratis · poi":"7 poruka besplatno · zatim"}{" "}
-              <a href={`/ai?lang=${dl}&niche=local${qcMsgs.filter(m=>m.role==="user").length>0?"&q="+encodeURIComponent((qcMsgs.filter(m=>m.role==="user").at(-1)?.content||"").slice(0,120)):""}`}
-                style={{ color:"#0ea5e9", textDecoration:"none", fontWeight:600 }}>
-                {dl==="de"?"Vollzugang ab 9,99 €":dl==="en"?"full access from €9.99":dl==="it"?"accesso completo da 9,99 €":"puni pristup od 9,99 €"}
-              </a>
-            </div>
           </div>
         </div>
       </section>
