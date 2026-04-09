@@ -448,16 +448,24 @@ export async function readSatelliteCache(zoneIds = []) {
 // ── VERCEL HANDLER ────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Cache-Control", "public, max-age=3600, s-maxage=86400"); // 1h browser, 24h CDN
 
   const region = req.query.region || null;
 
   try {
     const results = await fetchSatelliteOccupancy(region);
+    const zoneCount = Object.keys(results).length;
     const prompt  = buildSatellitePrompt(results, region);
+
+    // Only cache successful non-empty responses — never cache failures
+    if (zoneCount > 0) {
+      res.setHeader("Cache-Control", "public, max-age=3600, s-maxage=14400"); // 1h browser, 4h CDN
+    } else {
+      res.setHeader("Cache-Control", "no-store"); // don't cache empty/failed responses
+    }
+
     res.json({
       ts: new Date().toISOString(),
-      zoneCount: Object.keys(results).length,
+      zoneCount,
       zones: Object.fromEntries(
         Object.entries(results).map(([id, d]) => [id, { name: d.zone.name, occ: d.occ }])
       ),
@@ -465,6 +473,7 @@ export default async function handler(req, res) {
     });
   } catch (e) {
     console.error("[satellite]", e.message);
+    res.setHeader("Cache-Control", "no-store");
     res.status(500).json({ error: e.message });
   }
 }
