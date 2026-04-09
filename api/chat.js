@@ -1293,6 +1293,53 @@ PRAVILA ZA KAMPOVE:
 - NIKAD ne izmišljaj kampove koji nisu na listi. Ako ne znaš, reci "provjerite camping.hr za kompletnu ponudu".`);
   }
 
+  // 4b. CROSS-SOURCE SYNTHESIS RULES — tells LLM HOW to combine all injected data
+  // This is the key missing layer: without explicit rules, LLM picks only one source
+  parts.push(`SINTEZA IZVORA — OBAVEZNO PRAVILO (ne ignorisiraj injektirane podatke!):
+Imaš live podatke iz više izvora. Za svaku vrstu pitanja KOMBINIRAJ relevantne izvore:
+
+🏕️ KAMP / NOĆENJE KAMPEROM — uvijek sve tri:
+  (1) Kamp katalog: infra, cijena, max. dimenzije
+  (2) Firestore status: 🟢 slobodan / 🟡 gusto / 🔴 puno / ⛔ zatvoreno
+  (3) YOLO live: promet na pristupnoj cesti (ako je dostupan)
+  Odgovor: "Camping X [🟢 slobodan] — dump✓, 52€/noć, max 12m. Pristup D8: YOLO umjeren."
+  NIKAD ne preporuči kamp bez navođenja Firestore statusa ako je dostupan.
+
+📍 GUŽVA / PARKING — uvijek sve dostupne:
+  (1) YOLO senzori: broj detekcija po regiji (najtočniji)
+  (2) Sentinel satelit: postotak popunjenosti parkinga
+  (3) Live kamera: link na kameru ako je dostupna za to mjesto
+  Odgovor: "YOLO: ~50 detekcija u Splitu. Sentinel: P+R Supaval 70% pun. Live: [link]."
+  NIKAD: "Ne mogu znati stanje parkinga" — imaš senzore.
+
+🛣️ RUTA / CESTA — uvijek sve dostupne:
+  (1) HAC incidenti: zatvorene ceste, radovi, kolone
+  (2) YOLO autocesta: gužva na A1/A6/A2
+  (3) Bura: stanje na kvarnerskim mostovima i tunelima
+  Odgovor: "HAC: nema incidenata. YOLO: A1 slobodna. Bura: 0 km/h. Kreni odmah."
+
+🌿 NACIONALNI PARK — uvijek sve dostupne:
+  (1) Sentinel: postotak popunjenosti parkirnih zona
+  (2) NP kapacitet: online/offline status ulaznica
+  (3) YOLO: promet na pristupnoj cesti
+  Odgovor: "Sentinel: Plitvice P1 75% puno. NP.hr: karte dostupne. Preporuka: polazak 07:00."
+
+⛵ PLOVIDBA — uvijek sve dostupne:
+  (1) NAVTEX: službena pomorska prognoza DHMZ
+  (2) Marina katalog: vezovi, max. dužina, gorivo, VHF
+  (3) Sidrišta: dubina, dno, zaštita, naknada
+
+PRIORITET POUZDANOSTI — kojim podacima vjerovati:
+  1. HAC incidenti (zatvorenost ceste) — uvijek provjeri
+  2. YOLO live senzori — najtočniji za trenutnu gužvu
+  3. Firestore status (kampovi) — realtime
+  4. Sentinel satelit — ažurno svakih 2-3 dana
+  5. Statički katalog (kamp, marina, sidrište) — bazni podaci
+  6. LLM opće znanje — SAMO kad injektirani podaci ne pokrivaju detalj
+
+ZABRANA: Nikad "ne znam trenutno stanje" ako imaš YOLO/Sentinel/Firestore podatke.
+Uvijek navedi izvor: "prema YOLO senzorima", "Sentinel bilježi", "Firestore status".`);
+
   // 5. LOCATION
   const locPrompt = LOCATIONS[region];
   if (locPrompt) parts.push(locPrompt);
