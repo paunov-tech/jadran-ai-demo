@@ -1760,9 +1760,13 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
       cascadeResult,
       satResult,
     ] = await Promise.allSettled([
-      // Layer 1: Camp catalog
+      // Layer 1: Camp catalog — map user region keys to camps-data.js keys
       region
-        ? import("./camps.js").then(m => m.fetchCampData(_reg, camperLen || 7, camperHeight || null))
+        ? import("./camps.js").then(m => {
+            const CAMP_REGION_MAP = { split: "split_makarska", makarska: "split_makarska", zadar: "zadar_sibenik", sibenik: "zadar_sibenik" };
+            const campReg = CAMP_REGION_MAP[_reg] || _reg;
+            return m.fetchCampData(campReg, camperLen || 7, camperHeight || null);
+          })
         : Promise.resolve(null),
 
       // Layer 4: Fuel intelligence
