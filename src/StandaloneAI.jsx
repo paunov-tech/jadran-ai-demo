@@ -1105,25 +1105,25 @@ const [lang, setLang] = useState(() => {
   };
 
   const startCheckout = async (plan = "week") => {
+    // Fire pixel FIRST — before any guard — so in-app browser users enter retargeting audience
+    track("checkout_click", { plan, lang, region, niche });
+    fbqSafe("track", "AddPaymentInfo", { content_name: plan, currency: "EUR", value: plan === "vip" ? 49.99 : plan === "season" ? 19.99 : 9.99, event_id: genEventId("checkout") });
+
     // ── IN-APP BROWSER GUARD ──────────────────────────────────────────────
     // Facebook/Instagram in-app browsers silently block Stripe checkout.stripe.com redirects.
     // 82% of our traffic is in-app browser (Plausible: "Mobile App" = 1.9k visitors).
-    // Must escape to real browser before initiating payment.
+    // Pixel already fired above — these users are now in retargeting audience.
     if (isInAppBrowser) {
       if (isAndroidDevice) {
-        // Android: force-open current page in Chrome via intent URI
         const here = window.location.href;
         window.location.href = `intent://${here.replace(/^https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;end`;
-        setTimeout(() => { window.open(here, "_blank"); }, 1200); // fallback
+        setTimeout(() => { window.open(here, "_blank"); }, 1200);
       } else {
-        // iOS: cannot auto-open Safari — show step-by-step instructions
         setShowBrowserModal(true);
       }
       return;
     }
     // ─────────────────────────────────────────────────────────────────────
-    track("checkout_click", { plan, lang, region, niche });
-    fbqSafe("track", "AddPaymentInfo", { content_name: plan, currency: "EUR", value: plan === "vip" ? 49.99 : plan === "season" ? 19.99 : 9.99, event_id: genEventId("checkout") });
     // Persist session state so it survives Stripe redirect
     try { localStorage.setItem("jadran_session", JSON.stringify({ region, travelMode, lang, niche })); } catch {}
     setPayLoading(true);
