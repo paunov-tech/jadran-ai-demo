@@ -173,12 +173,15 @@ async function getSentinelToken() {
 const EVALSCRIPT = `//VERSION=3
 function setup() {
   return {
-    input: [{ bands: ["B04"], units: "REFLECTANCE" }],
-    output: [{ id: "b04", bands: 1, sampleType: "FLOAT32" }]
+    input: [{ bands: ["B04", "dataMask"], units: "REFLECTANCE" }],
+    output: [
+      { id: "b04", bands: 1, sampleType: "FLOAT32" },
+      { id: "dataMask", bands: 1 }
+    ]
   };
 }
 function evaluatePixel(s) {
-  return { b04: [s.B04] };
+  return { b04: [s.B04], dataMask: [s.dataMask] };
 }`;
 
 // ── QUERY STATISTICAL API ─────────────────────────────────────────────────
