@@ -312,6 +312,8 @@ export async function fetchSatelliteOccupancy(locationFilter = null) {
       if (r.status === "fulfilled") {
         const [id, data] = r.value;
         results[id] = data;
+      } else {
+        console.warn("[satellite] zone query failed:", r.reason?.message || r.reason);
       }
     }
   }
@@ -451,13 +453,23 @@ export default async function handler(req, res) {
 
   const region = req.query.region || null;
 
-  // Debug mode — exposes auth errors (no credentials in output)
+  // Debug mode — exposes errors (no credentials in output)
   const debug = req.query.debug === "1";
 
   try {
     let authError = null;
+    let zoneTestError = null;
     if (debug) {
-      try { await getSentinelToken(); } catch(e) { authError = e.message; }
+      try {
+        const tok = await getSentinelToken();
+        // Test one zone directly to see Sentinel API response
+        const testZone = Object.values(PARKING_ZONES)[0];
+        try {
+          await queryZoneStats(testZone, tok);
+        } catch(e) {
+          zoneTestError = e.message;
+        }
+      } catch(e) { authError = e.message; }
     }
     const results = await fetchSatelliteOccupancy(region);
     const zoneCount = Object.keys(results).length;
@@ -478,6 +490,7 @@ export default async function handler(req, res) {
       ),
       promptBlock: prompt,
       ...(debug && authError ? { authError } : {}),
+      ...(debug && zoneTestError ? { zoneTestError } : {}),
     });
   } catch (e) {
     console.error("[satellite]", e.message);
