@@ -665,7 +665,7 @@ export default function LandingPage() {
                       const city = u.searchParams.get("kiosk") || "";
                       const tLat = parseFloat(u.searchParams.get("tLat") || "0");
                       const tLng = parseFloat(u.searchParams.get("tLng") || "0");
-                      sessionStorage.setItem("jadran_after_pay_kiosk", JSON.stringify({ city, lat: tLat || 0, lng: tLng || 0, lang: lang || null, transitUrl: gb.transitUrl }));
+                      sessionStorage.setItem("jadran_after_pay_kiosk", JSON.stringify({ city, lat: tLat || 0, lng: tLng || 0, lang: lang || null }));
                     } catch {}
                     window.location.href = "/?paywall=1";
                   }} style={{ width: "100%", marginTop: 14, padding: "16px 20px", borderRadius: 14, background: gb.isArrival ? "linear-gradient(135deg, #06b6d4, #0284c7)" : "linear-gradient(135deg, #22c55e, #16a34a)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: F, letterSpacing: 0.5, boxShadow: gb.isArrival ? "0 4px 24px rgba(6,182,212,0.3)" : "0 4px 24px rgba(34,197,94,0.3)" }}>
