@@ -328,6 +328,8 @@ export default function DestinationExplorer() {
   const [liveMarine, setLiveMarine] = useState(null);
   const [liveCity, setLiveCity] = useState(null);
   const [liveLoadState, setLiveLoadState] = useState("idle"); // idle|loading|done|error|noperm
+  const [partnerModal, setPartnerModal] = useState(null); // null | "airserbia" | "booking" | "gyg"
+  const [bkgSearch, setBkgSearch] = useState("");
   const heroRef = useRef(null);
   const [qcMsgs, setQcMsgs] = useState([]);
   const [qcInput, setQcInput] = useState("");
@@ -1198,6 +1200,202 @@ export default function DestinationExplorer() {
         </div>
         );
       })()}
+
+      {/* ═══ NAŠI PARTNERI ═══ */}
+      <section style={{ padding:"36px 20px 28px", background:"#030810" }}>
+        <div style={{ maxWidth:560, margin:"0 auto" }}>
+          <div style={{ fontSize:9, color:"#334155", letterSpacing:5, fontWeight:700, textAlign:"center", marginBottom:18, textTransform:"uppercase" }}>
+            {({hr:"Naši partneri",de:"Unsere Partner",en:"Our Partners",it:"I nostri partner",pl:"Nasi partnerzy",si:"Naši partnerji"})[dl]||"Partners"}
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+
+            {/* ── Air Serbia ── */}
+            <button onClick={() => setPartnerModal("airserbia")} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:16, background:"rgba(200,16,46,0.06)", border:"1px solid rgba(200,16,46,0.18)", cursor:"pointer", fontFamily:"inherit", textAlign:"left", transition:"all 0.2s" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(200,16,46,0.4)"; e.currentTarget.style.background="rgba(200,16,46,0.1)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(200,16,46,0.18)"; e.currentTarget.style.background="rgba(200,16,46,0.06)"; }}>
+              <div style={{ width:44, height:44, borderRadius:12, background:"rgba(200,16,46,0.12)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, flexShrink:0 }}>✈️</div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:14, fontWeight:700, color:"#f1f5f9" }}>Air Serbia</div>
+                <div style={{ fontSize:11, color:"#94a3b8", marginTop:2 }}>
+                  {({hr:"Direktni letovi na Brač · Rezerviši odmah",de:"Direktflüge nach Brač · Jetzt buchen",en:"Direct flights to Brač · Book now",it:"Voli diretti per Brač · Prenota ora",pl:"Loty bezpośrednie na Brač · Rezerwuj",si:"Direktni leti na Brač · Rezerviraj"})[dl]||"Direct flights · Book now"}
+                </div>
+              </div>
+              <div style={{ fontSize:10, fontWeight:700, color:"#C8102E", background:"rgba(200,16,46,0.1)", border:"1px solid rgba(200,16,46,0.25)", borderRadius:8, padding:"4px 9px", flexShrink:0 }}>
+                {({hr:"PONUDA",de:"ANGEBOT",en:"DEALS",it:"OFFERTA",pl:"OFERTA",si:"PONUDBA"})[dl]||"DEALS"}
+              </div>
+            </button>
+
+            {/* ── Booking.com ── */}
+            <button onClick={() => setPartnerModal("booking")} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:16, background:"rgba(0,53,128,0.06)", border:"1px solid rgba(0,53,128,0.18)", cursor:"pointer", fontFamily:"inherit", textAlign:"left", transition:"all 0.2s" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(0,53,128,0.4)"; e.currentTarget.style.background="rgba(0,53,128,0.1)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(0,53,128,0.18)"; e.currentTarget.style.background="rgba(0,53,128,0.06)"; }}>
+              <div style={{ width:44, height:44, borderRadius:12, background:"rgba(0,53,128,0.12)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, fontWeight:900, color:"#003580", flexShrink:0 }}>B.</div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:14, fontWeight:700, color:"#f1f5f9" }}>Booking.com</div>
+                <div style={{ fontSize:11, color:"#94a3b8", marginTop:2 }}>
+                  {({hr:"Hoteli i apartmani na Jadranu",de:"Hotels & Apartments an der Adria",en:"Hotels & apartments on the Adriatic",it:"Hotel e appartamenti sull'Adriatico",pl:"Hotele i apartamenty nad Adriatykiem",si:"Hoteli in apartmaji na Jadranu"})[dl]||"Hotels & apartments"}
+                </div>
+              </div>
+              <div style={{ fontSize:10, fontWeight:700, color:"#003580", background:"rgba(0,53,128,0.1)", border:"1px solid rgba(0,53,128,0.25)", borderRadius:8, padding:"4px 9px", flexShrink:0 }}>
+                {({hr:"TRAŽI",de:"SUCHEN",en:"SEARCH",it:"CERCA",pl:"SZUKAJ",si:"IŠČI"})[dl]||"SEARCH"}
+              </div>
+            </button>
+
+            {/* ── GetYourGuide ── */}
+            <button onClick={() => setPartnerModal("gyg")} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:16, background:"rgba(255,87,34,0.05)", border:"1px solid rgba(255,87,34,0.15)", cursor:"pointer", fontFamily:"inherit", textAlign:"left", transition:"all 0.2s" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(255,87,34,0.35)"; e.currentTarget.style.background="rgba(255,87,34,0.08)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(255,87,34,0.15)"; e.currentTarget.style.background="rgba(255,87,34,0.05)"; }}>
+              <div style={{ width:44, height:44, borderRadius:12, background:"rgba(255,87,34,0.1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, flexShrink:0 }}>🎟️</div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontSize:14, fontWeight:700, color:"#f1f5f9" }}>GetYourGuide</div>
+                <div style={{ fontSize:11, color:"#94a3b8", marginTop:2 }}>
+                  {({hr:"Izleti, ture i aktivnosti",de:"Ausflüge, Touren & Aktivitäten",en:"Excursions, tours & activities",it:"Escursioni, tour e attività",pl:"Wycieczki, wycieczki i zajęcia",si:"Izleti, ture in aktivnosti"})[dl]||"Tours & activities"}
+                </div>
+              </div>
+              <div style={{ fontSize:10, fontWeight:700, color:"#FF5722", background:"rgba(255,87,34,0.1)", border:"1px solid rgba(255,87,34,0.25)", borderRadius:8, padding:"4px 9px", flexShrink:0 }}>
+                {({hr:"AKTIVNOSTI",de:"AKTIVITÄTEN",en:"ACTIVITIES",it:"ATTIVITÀ",pl:"AKTYWNOŚCI",si:"AKTIVNOSTI"})[dl]||"ACTIVITIES"}
+              </div>
+            </button>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ PARTNER MODAL ═══ */}
+      {partnerModal && (
+        <div onClick={() => setPartnerModal(null)} style={{ position:"fixed", inset:0, zIndex:600, background:"rgba(3,8,16,0.92)", backdropFilter:"blur(12px)", WebkitBackdropFilter:"blur(12px)", display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
+          <div onClick={e => e.stopPropagation()} style={{ width:"100%", maxWidth:560, background:"#0a1628", borderRadius:"24px 24px 0 0", border:"1px solid rgba(255,255,255,0.08)", borderBottom:"none", maxHeight:"85dvh", overflow:"hidden", display:"flex", flexDirection:"column", animation:"fadeUp 0.3s cubic-bezier(0.16,1,0.3,1)" }}>
+
+            {/* Header */}
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"20px 20px 16px", borderBottom:"1px solid rgba(255,255,255,0.05)", flexShrink:0 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                <div style={{ fontSize:24 }}>
+                  {partnerModal === "airserbia" ? "✈️" : partnerModal === "booking" ? "🏨" : "🎟️"}
+                </div>
+                <div>
+                  <div style={{ fontSize:15, fontWeight:700, color:"#f1f5f9" }}>
+                    {partnerModal === "airserbia" ? "Air Serbia" : partnerModal === "booking" ? "Booking.com" : "GetYourGuide"}
+                  </div>
+                  <div style={{ fontSize:10, color:"#475569", marginTop:1 }}>
+                    {({hr:"Verificirani partner",de:"Verifizierter Partner",en:"Verified partner",it:"Partner verificato",pl:"Zweryfikowany partner",si:"Preverjen partner"})[dl]||"Verified partner"}
+                  </div>
+                </div>
+              </div>
+              <button onClick={() => setPartnerModal(null)} style={{ width:32, height:32, borderRadius:10, border:"1px solid rgba(255,255,255,0.08)", background:"rgba(255,255,255,0.04)", color:"#94a3b8", fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>×</button>
+            </div>
+
+            {/* Body */}
+            <div style={{ overflowY:"auto", flex:1, padding:"16px 20px 24px", paddingBottom:"calc(24px + env(safe-area-inset-bottom, 0px))" }}>
+
+              {/* ── AIR SERBIA MODAL ── */}
+              {partnerModal === "airserbia" && (
+                <div>
+                  <p style={{ fontSize:12, color:"#64748b", marginBottom:16, lineHeight:1.6 }}>
+                    {({hr:"Air Serbia nudi direktne letove na Brač — jedina direktna regionalna veza na jedan od najljepših jadranskih otoka.",de:"Air Serbia bietet Direktflüge nach Brač — die einzige Direktverbindung auf eine der schönsten Adria-Inseln.",en:"Air Serbia offers direct flights to Brač — the only direct regional connection to one of the most beautiful Adriatic islands.",it:"Air Serbia offre voli diretti per Brač — l'unico collegamento diretto regionale verso una delle più belle isole adriatiche.",pl:"Air Serbia oferuje bezpośrednie loty na Brač — jedyne bezpośrednie połączenie regionalne na jedną z najpiękniejszych wysp adriatyckich.",si:"Air Serbia ponuja direktne lete na Brač — edina direktna regionalna povezava na enega najlepših jadranskih otokov."})[dl]||"Air Serbia direct flights to Brač."}
+                  </p>
+                  {/* Featured offer */}
+                  <div style={{ borderRadius:16, background:"rgba(200,16,46,0.06)", border:"1px solid rgba(200,16,46,0.2)", overflow:"hidden", marginBottom:12 }}>
+                    <div style={{ padding:"4px 14px", background:"rgba(200,16,46,0.15)", fontSize:9, fontWeight:700, color:"#C8102E", letterSpacing:2 }}>
+                      {({hr:"DIREKTNI LET",de:"DIREKTFLUG",en:"DIRECT FLIGHT",it:"VOLO DIRETTO",pl:"LOT BEZPOŚREDNI",si:"DIREKTNI LET"})[dl]||"DIRECT FLIGHT"}
+                    </div>
+                    <div style={{ padding:"14px 16px" }}>
+                      <div style={{ fontSize:20, fontWeight:700, color:"#f1f5f9", marginBottom:4 }}>
+                        🇷🇸 BEG → BWK 🇭🇷
+                      </div>
+                      <div style={{ fontSize:13, color:"#94a3b8", marginBottom:6 }}>
+                        {({hr:"Beograd → Brač (aerodrom Bol)",de:"Belgrad → Brač (Flughafen Bol)",en:"Belgrade → Brač (Bol Airport)",it:"Belgrado → Brač (Aeroporto di Bol)",pl:"Belgrad → Brač (Lotnisko Bol)",si:"Beograd → Brač (Letališče Bol)"})[dl]||"Belgrade → Brač (Bol Airport)"}
+                      </div>
+                      <div style={{ fontSize:11, color:"#475569", marginBottom:14 }}>
+                        ✓ {({hr:"Bez presjedanja · Izravno na otok",de:"Ohne Umstieg · Direkt auf die Insel",en:"Non-stop · Directly to the island",it:"Senza scalo · Direttamente sull'isola",pl:"Bez przesiadki · Bezpośrednio na wyspę",si:"Brez prestopa · Direktno na otok"})[dl]||"Non-stop · Direct to island"}
+                      </div>
+                      <button onClick={() => window.open("https://www.dpbolvw.net/click-101704203-17263146", "_blank")} style={{ width:"100%", padding:"13px", borderRadius:12, background:"#C8102E", border:"none", color:"#fff", fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>
+                        {({hr:"Rezerviši let →",de:"Flug buchen →",en:"Book flight →",it:"Prenota il volo →",pl:"Zarezerwuj lot →",si:"Rezerviraj let →"})[dl]||"Book flight →"}
+                      </button>
+                    </div>
+                  </div>
+                  <p style={{ fontSize:10, color:"#1e3a5f", textAlign:"center" }}>
+                    {({hr:"Otvara se u novom tabu. Aplikacija ostaje otvorena.",de:"Öffnet in einem neuen Tab. Die App bleibt geöffnet.",en:"Opens in a new tab. App stays open.",it:"Si apre in una nuova scheda. L'app rimane aperta.",pl:"Otwiera się w nowej karcie. Aplikacja pozostaje otwarta.",si:"Odpre se v novem zavihku. Aplikacija ostane odprta."})[dl]||"Opens in new tab. App stays open."}
+                  </p>
+                </div>
+              )}
+
+              {/* ── BOOKING.COM MODAL ── */}
+              {partnerModal === "booking" && (
+                <div>
+                  {/* Search bar */}
+                  <div style={{ display:"flex", gap:8, marginBottom:16 }}>
+                    <input
+                      value={bkgSearch}
+                      onChange={e => setBkgSearch(e.target.value)}
+                      onKeyDown={e => e.key === "Enter" && bkgSearch.trim() && window.open(`https://www.booking.com/searchresults.html?aid=101704203&ss=${encodeURIComponent(bkgSearch)}&lang=${dl === "de" ? "de" : dl === "it" ? "it" : "en"}`, "_blank")}
+                      placeholder={({hr:"Unesi destinaciju...",de:"Ziel eingeben...",en:"Enter destination...",it:"Inserisci destinazione...",pl:"Wpisz cel...",si:"Vnesi destinacijo..."})[dl]||"Enter destination..."}
+                      style={{ flex:1, padding:"11px 14px", borderRadius:12, border:"1px solid rgba(0,53,128,0.3)", background:"rgba(0,53,128,0.08)", color:"#f1f5f9", fontSize:13, fontFamily:"inherit", outline:"none" }}
+                    />
+                    <button onClick={() => bkgSearch.trim() && window.open(`https://www.booking.com/searchresults.html?aid=101704203&ss=${encodeURIComponent(bkgSearch)}&lang=${dl === "de" ? "de" : dl === "it" ? "it" : "en"}`, "_blank")} style={{ padding:"11px 16px", borderRadius:12, background:"#003580", border:"none", color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>
+                      {({hr:"Traži",de:"Suchen",en:"Search",it:"Cerca",pl:"Szukaj",si:"Išči"})[dl]||"Search"}
+                    </button>
+                  </div>
+                  {/* Quick destinations */}
+                  <div style={{ fontSize:10, color:"#475569", marginBottom:10, fontWeight:600, letterSpacing:1 }}>
+                    {({hr:"POPULARNE DESTINACIJE",de:"BELIEBTE ZIELE",en:"POPULAR DESTINATIONS",it:"DESTINAZIONI POPOLARI",pl:"POPULARNE DESTYNACJE",si:"PRILJUBLJENE DESTINACIJE"})[dl]||"POPULAR DESTINATIONS"}
+                  </div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+                    {[
+                      { name:"Split", emoji:"🏛️" },
+                      { name:"Dubrovnik", emoji:"🏰" },
+                      { name:"Hvar", emoji:"🌿" },
+                      { name:"Rovinj", emoji:"⛪" },
+                      { name:"Zadar", emoji:"🌅" },
+                      { name:"Makarska", emoji:"🏖️" },
+                    ].map(d => (
+                      <button key={d.name} onClick={() => window.open(`https://www.booking.com/searchresults.html?aid=101704203&ss=${encodeURIComponent(d.name + ", Croatia")}&lang=${dl === "de" ? "de" : dl === "it" ? "it" : "en"}`, "_blank")} style={{ display:"flex", alignItems:"center", gap:10, padding:"11px 14px", borderRadius:12, background:"rgba(0,53,128,0.05)", border:"1px solid rgba(0,53,128,0.15)", cursor:"pointer", fontFamily:"inherit", transition:"all 0.2s" }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(0,53,128,0.4)"; e.currentTarget.style.background="rgba(0,53,128,0.1)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(0,53,128,0.15)"; e.currentTarget.style.background="rgba(0,53,128,0.05)"; }}>
+                        <span style={{ fontSize:18 }}>{d.emoji}</span>
+                        <div style={{ textAlign:"left" }}>
+                          <div style={{ fontSize:13, fontWeight:600, color:"#f1f5f9" }}>{d.name}</div>
+                          <div style={{ fontSize:9, color:"#475569" }}>Booking.com →</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                  <p style={{ fontSize:10, color:"#1e3a5f", textAlign:"center", marginTop:12 }}>
+                    {({hr:"Svaka rezervacija ostaje s vama i prati vas u aplikaciji.",de:"Jede Buchung bleibt bei Ihnen und folgt Ihnen in der App.",en:"Every booking stays with you and follows you in the app.",it:"Ogni prenotazione rimane con te e ti segue nell'app.",pl:"Każda rezerwacja pozostaje z tobą i śledzi cię w aplikacji.",si:"Vsaka rezervacija ostane z vami in vas sledi v aplikaciji."})[dl]||"Opens in new tab. App stays open."}
+                  </p>
+                </div>
+              )}
+
+              {/* ── GETYOURGUIDE MODAL ── */}
+              {partnerModal === "gyg" && (
+                <div>
+                  <p style={{ fontSize:12, color:"#64748b", marginBottom:16, lineHeight:1.6 }}>
+                    {({hr:"Odabrane aktivnosti i ture na Jadranu — rezerviraj unaprijed, uštedi na ulaznici.",de:"Ausgewählte Aktivitäten & Touren an der Adria — im Voraus buchen, an der Kasse sparen.",en:"Curated activities & tours on the Adriatic — book ahead, save at the gate.",it:"Attività e tour selezionati sull'Adriatico — prenota in anticipo, risparmia all'ingresso.",pl:"Wyselekcjonowane aktywności i wycieczki nad Adriatykiem.",si:"Izbrane aktivnosti in ture na Jadranu."})[dl]||"Curated tours & activities."}
+                  </p>
+                  <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                    {GYG_OFFERS.map((o, i) => (
+                      <button key={i} onClick={() => window.open(o.link, "_blank")} style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 14px", borderRadius:14, background:"rgba(255,87,34,0.04)", border:"1px solid rgba(255,87,34,0.12)", cursor:"pointer", fontFamily:"inherit", textAlign:"left", transition:"all 0.2s" }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(255,87,34,0.3)"; e.currentTarget.style.background="rgba(255,87,34,0.08)"; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(255,87,34,0.12)"; e.currentTarget.style.background="rgba(255,87,34,0.04)"; }}>
+                        <img src={o.img} alt="" style={{ width:52, height:52, borderRadius:10, objectFit:"cover", flexShrink:0 }} />
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ fontSize:9, color:"#FF5722", fontWeight:700, letterSpacing:1, marginBottom:3 }}>{o.tag}</div>
+                          <div style={{ fontSize:13, fontWeight:600, color:"#f1f5f9", lineHeight:1.3 }}>{t(o.title)}</div>
+                          <div style={{ fontSize:12, color:"#22c55e", fontWeight:700, marginTop:4 }}>od {o.price}</div>
+                        </div>
+                        <span style={{ fontSize:16, color:"#FF5722", flexShrink:0 }}>→</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p style={{ fontSize:10, color:"#1e3a5f", textAlign:"center", marginTop:12 }}>
+                    {({hr:"Otvara se u novom tabu. Aplikacija ostaje otvorena.",de:"Öffnet in einem neuen Tab. Die App bleibt geöffnet.",en:"Opens in a new tab. App stays open.",it:"Si apre in una nuova scheda. L'app rimane aperta.",pl:"Otwiera się w nowej karcie. Aplikacja pozostaje otwarta.",si:"Odpre se v novem zavihku. Aplikacija ostane odprta."})[dl]||"Opens in new tab. App stays open."}
+                  </p>
+                </div>
+              )}
+
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ═══ FOOTER ═══ */}
       <footer style={{ padding:"28px 20px", paddingBottom:"calc(80px + env(safe-area-inset-bottom, 0px))", textAlign:"center", background:"#030810", borderTop:"1px solid rgba(255,255,255,0.03)" }}>
