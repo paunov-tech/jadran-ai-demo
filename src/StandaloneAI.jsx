@@ -1137,6 +1137,8 @@ const [lang, setLang] = useState(() => {
       // Retrieve UTM params for Stripe metadata
       let utmData = {};
       try { utmData = JSON.parse(localStorage.getItem("jadran_utm") || "{}"); } catch {}
+      const { fbp, fbc } = getMetaCookies();
+      const capiEventId = genEventId("api_checkout");
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1144,7 +1146,7 @@ const [lang, setLang] = useState(() => {
           roomCode: "AI-STANDALONE", guestName: "AI User", lang,
           returnPath: "/ai" + (niche ? "?niche=" + niche + "&lang=" + lang : "?lang=" + lang),
           plan, region: plan === "week" ? (region || "split") : "all",
-          deviceId,
+          deviceId, fbp, fbc, capiEventId,
           utm_source: utmData.utm_source || "",
           utm_medium: utmData.utm_medium || "",
           utm_campaign: utmData.utm_campaign || "",

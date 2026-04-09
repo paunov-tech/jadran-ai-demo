@@ -1,5 +1,47 @@
 import Stripe from "stripe";
 
+// ── META CAPI — server-side AddPaymentInfo ────────────────────────────────
+// Fires regardless of browser consent / ad blockers.
+// Feeds the retargeting audience even for in-app browser users.
+async function sha256(str) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str.trim().toLowerCase()));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function fireCapiAddPaymentInfo(plan, amount, { deviceId, ip, userAgent, fbp, fbc, eventId } = {}) {
+  const pixelId = process.env.META_PIXEL_ID;
+  const token   = process.env.META_CAPI_TOKEN;
+  if (!pixelId || !token) return;
+
+  const userData = {
+    ...(ip         ? { client_ip_address: ip }                          : {}),
+    ...(userAgent  ? { client_user_agent: userAgent }                   : {}),
+    ...(deviceId   ? { external_id: [await sha256(deviceId)]  }        : {}),
+    ...(fbp        ? { fbp }                                            : {}),
+    ...(fbc        ? { fbc }                                            : {}),
+  };
+
+  try {
+    const r = await fetch(`https://graph.facebook.com/v19.0/${pixelId}/events?access_token=${token}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        data: [{
+          event_name:       "AddPaymentInfo",
+          event_time:       Math.floor(Date.now() / 1000),
+          event_id:         eventId || `api_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          user_data:        userData,
+          custom_data:      { value: amount / 100, currency: "EUR", content_name: plan },
+          action_source:    "website",
+          event_source_url: "https://jadran.ai/ai",
+        }],
+      }),
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!r.ok) console.warn("[checkout] CAPI AddPaymentInfo failed:", r.status);
+  } catch (err) { console.warn("[checkout] CAPI AddPaymentInfo error:", err.message); }
+}
+
 // Rate limit: 20 checkout attempts/hour per IP
 const _rl = new Map();
 function checkoutRateOk(ip) {
@@ -111,6 +153,16 @@ export default async function handler(req, res) {
     } catch {}
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
+
+    // CAPI AddPaymentInfo — fire-and-forget, no await (don't block response)
+    const clientIp2 = (req.headers["x-forwarded-for"] || "").split(",")[0].trim();
+    fireCapiAddPaymentInfo(plan, p.amount, {
+      deviceId, ip: clientIp2,
+      userAgent: req.headers["user-agent"] || "",
+      fbp: typeof fbp === "string" ? fbp : "",
+      fbc: typeof fbc === "string" ? fbc : "",
+      eventId: capiEventId || `api_${session.id}`,
+    }).catch(() => {});
 
     return res.status(200).json({ sessionId: session.id, url: session.url });
   } catch (err) {
