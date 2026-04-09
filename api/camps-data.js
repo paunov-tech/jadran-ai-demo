@@ -275,6 +275,31 @@ export const CAMPS = [
     notes: "33ha, poluotok Stoja. Vizura na Pulsku arenu. Premium parcele uz more. LPG: Pula 3km.",
   },
 
+  {
+    id: "HR-IST-012",
+    name: "Kemp Peroj",
+    region: "istra", sub: "pula",
+    coords: [44.9570, 13.7849],
+    website: "",
+    phone: "",
+    season: { open: "05-01", close: "09-30" },
+    capacity: { total: 50, motorhomePitches: 20, maxLen: 8, maxH: null },
+    access: {
+      road: "lokalna cesta", maxLen: null, maxH: null, maxW: null,
+      notes: "Selo Peroj, 10km sjeverno od Pule. Mali lokalni kamp uz more.",
+      yoloSensors: ["pula","istra_south"],
+      ferry: null,
+    },
+    infra: {
+      electricity: "", dumpStation: false, freshWater: true, greyWater: false,
+      lpg: false, wifi: false, laundry: false, shop: false, restaurant: false,
+      pool: false, beach: "kamen", dogFriendly: true,
+    },
+    price: { low: 12, mid: 22, high: 34 },
+    partner: false, bookUrl: null,
+    notes: "Mali kamp u Peroju ~1.1ha. Detektiran Copernicus satelitskim snimkom. Ograničeni podaci — provjeri lokalno.",
+  },
+
   // ── KVARNER ───────────────────────────────────────────────────────────────
 
   {
@@ -543,6 +568,31 @@ export const CAMPS = [
     notes: "Uz grad Krk, 1km do starih bedema. Pinijeva šuma, direktna plaža.",
   },
 
+  {
+    id: "HR-KVA-012",
+    name: "Aminess Atea Camping Resort",
+    region: "kvarner", sub: "opatija",
+    coords: [45.1712, 14.5454],
+    website: "aminess-campsites.com",
+    phone: "+385 51 846 168",
+    season: { open: "04-15", close: "10-15" },
+    capacity: { total: 320, motorhomePitches: 100, maxLen: 10, maxH: null },
+    access: {
+      road: "asfalt", maxLen: null, maxH: null, maxW: null,
+      notes: "Uz Riječki zaljev, u Kvarneru. Direktan pristup s magistrale.",
+      yoloSensors: ["rijeka","opatija","kvarner"],
+      ferry: null,
+    },
+    infra: {
+      electricity: "10A", dumpStation: false, freshWater: true, greyWater: false,
+      lpg: false, wifi: true, laundry: true, shop: true, restaurant: true,
+      pool: false, beach: "kamen/šljunak", dogFriendly: true,
+    },
+    price: { low: 20, mid: 38, high: 58 },
+    partner: false, bookUrl: null,
+    notes: "Aminess Atea, ~7.6ha. Rivijera Opatija, sjeverozapadni Kvarner. Detektiran Copernicus satelitom.",
+  },
+
   // ── ZADAR / ŠIBENIK ────────────────────────────────────────────────────────
 
   {
@@ -738,6 +788,206 @@ export const CAMPS = [
     notes: "Jedina pješčana plaža u okolici. Ljekovito blato sabunara uz plaži. Miran obiteljski kamp.",
   },
 
+  {
+    id: "HR-ZAD-009",
+    name: "Adria Sol Camping",
+    region: "zadar_sibenik", sub: "biograd",
+    coords: [44.1905, 15.5482],
+    website: "",
+    phone: "",
+    season: { open: "05-01", close: "09-30" },
+    capacity: { total: 100, motorhomePitches: 35, maxLen: 9, maxH: null },
+    access: {
+      road: "asfalt", maxLen: null, maxH: null, maxW: null,
+      notes: "Novigrad Dalmatinski, sjever šibenskog zaleđa, ~35km SI od Biograda.",
+      yoloSensors: ["biograd","sibenik","zadar"],
+      ferry: null,
+    },
+    infra: {
+      electricity: "", dumpStation: false, freshWater: true, greyWater: false,
+      lpg: false, wifi: false, laundry: false, shop: false, restaurant: false,
+      pool: false, beach: "kamen/šljunak", dogFriendly: true,
+    },
+    price: { low: 14, mid: 25, high: 38 },
+    partner: false, bookUrl: null,
+    notes: "~2.5ha. Detektiran Copernicus satelitskim snimkom. Ograničeni podaci.",
+  },
+
+  {
+    id: "HR-ZAD-010",
+    name: "Ninska Laguna",
+    region: "zadar_sibenik", sub: "nin",
+    coords: [44.2470, 15.1744],
+    website: "ninskalaguna.hr",
+    phone: "",
+    season: { open: "05-01", close: "09-30" },
+    capacity: { total: 40, motorhomePitches: 15, maxLen: 8, maxH: null },
+    access: {
+      road: "asfalt", maxLen: null, maxH: null, maxW: null,
+      notes: "Nin, 13km sjeverno od Zadra, D306. Uz lagunu i pješčanu plažu.",
+      yoloSensors: ["zadar","nin","biograd"],
+      ferry: null,
+    },
+    infra: {
+      electricity: "", dumpStation: true, freshWater: true, greyWater: false,
+      lpg: false, wifi: true, laundry: false, shop: false, restaurant: false,
+      pool: false, beach: "pijesak/laguna direktno", dogFriendly: true,
+    },
+    price: { low: 15, mid: 28, high: 42 },
+    partner: false, bookUrl: null,
+    notes: "Malo kampovalište uz Ninsku lagunu, nadomak čuvene pješčane plaže. Dump stanica prisutna (OSM).",
+  },
+
+  {
+    id: "HR-ZAD-011",
+    name: "Kamp Cota",
+    region: "zadar_sibenik", sub: "zadar_south",
+    coords: [44.1444, 15.0834],
+    website: "camp-coto.hr",
+    phone: "+385 98 986 7581",
+    season: { open: "05-01", close: "09-30" },
+    capacity: { total: 45, motorhomePitches: 15, maxLen: 8, maxH: null },
+    access: {
+      road: "lokalna cesta", maxLen: null, maxH: null, maxW: null,
+      notes: "Jugoistočno od Zadra, uz more. Mali obiteljski kamp.",
+      yoloSensors: ["zadar","biograd"],
+      ferry: null,
+    },
+    infra: {
+      electricity: "", dumpStation: false, freshWater: true, greyWater: false,
+      lpg: false, wifi: false, laundry: false, shop: false, restaurant: false,
+      pool: false, beach: "kamen", dogFriendly: true,
+    },
+    price: { low: 13, mid: 24, high: 36 },
+    partner: false, bookUrl: null,
+    notes: "Mali kamp ~0.9ha. Web: camp-coto.hr. Detektiran Copernicus satelitom.",
+  },
+
+  {
+    id: "HR-ZAD-012",
+    name: "Kamp Pavlešina",
+    region: "zadar_sibenik", sub: "zadar_south",
+    coords: [44.1270, 15.0787],
+    website: "",
+    phone: "",
+    season: { open: "06-01", close: "09-15" },
+    capacity: { total: 30, motorhomePitches: 10, maxLen: 7, maxH: null },
+    access: {
+      road: "lokalna cesta", maxLen: null, maxH: null, maxW: null,
+      notes: "Mala lokacija south of Zadar. Minimalna infrastruktura.",
+      yoloSensors: ["zadar"],
+      ferry: null,
+    },
+    infra: {
+      electricity: "", dumpStation: false, freshWater: true, greyWater: false,
+      lpg: false, wifi: false, laundry: false, shop: false, restaurant: false,
+      pool: false, beach: "kamen", dogFriendly: true,
+    },
+    price: { low: 10, mid: 18, high: 28 },
+    partner: false, bookUrl: null,
+    notes: "Vrlo mali kamp 1★ ~0.58ha. Detektiran Copernicus satelitom. Provjeri dostupnost lokalno.",
+  },
+
+  {
+    id: "HR-ZAD-013",
+    name: "Kamp Nina",
+    region: "zadar_sibenik", sub: "nin",
+    coords: [44.2491, 15.1324],
+    website: "",
+    phone: "",
+    season: { open: "05-15", close: "09-30" },
+    capacity: { total: 20, motorhomePitches: 8, maxLen: 7, maxH: null },
+    access: {
+      road: "lokalna cesta", maxLen: null, maxH: null, maxW: null,
+      notes: "Okolica Nina, manji obiteljski kamp.",
+      yoloSensors: ["zadar","nin"],
+      ferry: null,
+    },
+    infra: {
+      electricity: "", dumpStation: false, freshWater: true, greyWater: false,
+      lpg: false, wifi: false, laundry: false, shop: false, restaurant: false,
+      pool: false, beach: "pijesak/kamen", dogFriendly: true,
+    },
+    price: { low: 10, mid: 18, high: 28 },
+    partner: false, bookUrl: null,
+    notes: "Mikro kamp ~0.37ha uz Nin. Detektiran Copernicus satelitom. Minimalni podaci.",
+  },
+
+  {
+    id: "HR-ZAD-014",
+    name: "Kamp Marijo",
+    region: "zadar_sibenik", sub: "zadar_south",
+    coords: [44.1260, 15.1199],
+    website: "",
+    phone: "",
+    season: { open: "06-01", close: "09-15" },
+    capacity: { total: 20, motorhomePitches: 8, maxLen: 7, maxH: null },
+    access: {
+      road: "lokalna cesta", maxLen: null, maxH: null, maxW: null,
+      notes: "Jugozapadno od Biograda. Mali kamp bez poznatih amenitija.",
+      yoloSensors: ["zadar","biograd"],
+      ferry: null,
+    },
+    infra: {
+      electricity: "", dumpStation: false, freshWater: true, greyWater: false,
+      lpg: false, wifi: false, laundry: false, shop: false, restaurant: false,
+      pool: false, beach: "kamen", dogFriendly: true,
+    },
+    price: { low: 10, mid: 18, high: 26 },
+    partner: false, bookUrl: null,
+    notes: "Mikro kamp ~0.39ha. Detektiran Copernicus satelitom. Provjeri lokalno.",
+  },
+
+  {
+    id: "HR-ZAD-015",
+    name: "Odmoree Camp & Hostel",
+    region: "zadar_sibenik", sub: "zadar",
+    coords: [44.3005, 15.2890],
+    website: "",
+    phone: "",
+    season: { open: "04-15", close: "10-15" },
+    capacity: { total: 25, motorhomePitches: 10, maxLen: 8, maxH: null },
+    access: {
+      road: "asfalt", maxLen: null, maxH: null, maxW: null,
+      notes: "Sjeverno od Zadra, uz magistralu. Kombinirani hostel i kamp.",
+      yoloSensors: ["zadar","nin","biograd"],
+      ferry: null,
+    },
+    infra: {
+      electricity: "", dumpStation: false, freshWater: true, greyWater: false,
+      lpg: false, wifi: false, laundry: false, shop: false, restaurant: false,
+      pool: false, beach: "kamen", dogFriendly: true,
+    },
+    price: { low: 12, mid: 22, high: 32 },
+    partner: false, bookUrl: null,
+    notes: "Kombinirani hostel + kamp ~0.4ha. Detektiran Copernicus satelitom.",
+  },
+
+  {
+    id: "HR-ZAD-016",
+    name: "Novi Kamp",
+    region: "zadar_sibenik", sub: "zadar_south",
+    coords: [44.1067, 15.1549],
+    website: "",
+    phone: "",
+    season: { open: "05-15", close: "09-15" },
+    capacity: { total: 60, motorhomePitches: 20, maxLen: 8, maxH: null },
+    access: {
+      road: "lokalna cesta", maxLen: null, maxH: null, maxW: null,
+      notes: "Jugoistočno od Zadra. Kamp uz obalu.",
+      yoloSensors: ["zadar","biograd"],
+      ferry: null,
+    },
+    infra: {
+      electricity: "", dumpStation: false, freshWater: true, greyWater: false,
+      lpg: false, wifi: false, laundry: false, shop: false, restaurant: false,
+      pool: false, beach: "kamen", dogFriendly: true,
+    },
+    price: { low: 12, mid: 22, high: 33 },
+    partner: false, bookUrl: null,
+    notes: "~1.5ha. Detektiran Copernicus satelitom. Provjeri aktualnost podataka lokalno.",
+  },
+
   // ── SPLIT / MAKARSKA ──────────────────────────────────────────────────────
 
   {
@@ -884,6 +1134,31 @@ export const CAMPS = [
     price: { low: 24, mid: 46, high: 70 },
     partner: false, bookUrl: null,
     notes: "⛔ Tunel Pitve ZABRANJENO! Koristiti obilazac. Drvenik-Sučuraj trajekt manje gužve.",
+  },
+
+  {
+    id: "HR-SPL-007",
+    name: "Autocamp Mido",
+    region: "split_makarska", sub: "trogir",
+    coords: [43.3680, 16.3520],
+    website: "",
+    phone: "",
+    season: { open: "05-01", close: "09-30" },
+    capacity: { total: 45, motorhomePitches: 15, maxLen: 8, maxH: null },
+    access: {
+      road: "lokalna cesta", maxLen: null, maxH: null, maxW: null,
+      notes: "Jugozapadno od Splita, uz Kaštelanski zaljev. Mali kamp.",
+      yoloSensors: ["split","trogir"],
+      ferry: null,
+    },
+    infra: {
+      electricity: "", dumpStation: false, freshWater: true, greyWater: false,
+      lpg: false, wifi: false, laundry: false, shop: false, restaurant: false,
+      pool: false, beach: "kamen/šljunak", dogFriendly: true,
+    },
+    price: { low: 13, mid: 24, high: 36 },
+    partner: false, bookUrl: null,
+    notes: "Mali kamp ~0.9ha uz Split. Detektiran Copernicus satelitom. Ograničeni podaci.",
   },
 
   // ── DUBROVNIK / JUŽNA DALMACIJA ───────────────────────────────────────────
