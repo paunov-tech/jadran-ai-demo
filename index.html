@@ -32,6 +32,10 @@
   <link rel="alternate" hreflang="pl" href="https://jadran.ai" />
   <link rel="alternate" hreflang="x-default" href="https://jadran.ai" />
 
+  <!-- Facebook App — links site to FB App for sharing analytics & SDK -->
+  <meta property="fb:app_id" content="4504299896512667" />
+  <meta property="fb:pages" content="985367731332661" />
+
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://jadran.ai" />
@@ -333,6 +337,7 @@
         localStorage.setItem('jadran_consent', '1');
         fbq('consent', 'grant');
         fbq('track', 'PageView');
+        loadFBSDK(); // load FB SDK on consent
         bar.remove();
       };
       document.getElementById('gdpr-decline').onclick = function() {
@@ -340,6 +345,24 @@
         bar.remove();
       };
     });
+  </script>
+
+  <!-- Facebook JS SDK — GDPR-safe: loads only after consent -->
+  <script>
+    function loadFBSDK() {
+      if (window.FB || document.getElementById('facebook-jssdk')) return;
+      window.fbAsyncInit = function() {
+        FB.init({ appId: '4504299896512667', cookie: true, xfbml: false, version: 'v19.0' });
+        FB.AppEvents.logPageView();
+      };
+      var js = document.createElement('script');
+      js.id = 'facebook-jssdk';
+      js.async = true;
+      js.src = 'https://connect.facebook.net/en_US/sdk.js';
+      document.head.appendChild(js);
+    }
+    // Load immediately if already consented
+    if (localStorage.getItem('jadran_consent') === '1') loadFBSDK();
   </script>
 
   <!-- UTM capture — persist 7 params for 30 days -->
