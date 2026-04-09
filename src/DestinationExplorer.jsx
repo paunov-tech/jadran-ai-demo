@@ -132,12 +132,13 @@ function wxEmoji(code) {
 }
 
 // ─── GYG OFFERS — GetYourGuide affiliate ───
+// NOTE: Use croatia-l62 as base (verified GYG Croatia ID) + q= search — avoids wrong destination IDs
 const GYG_OFFERS = [
-  { title:{hr:"Tura brodom — Rab",de:"Bootstour — Rab",en:"Boat tour — Rab",it:"Tour in barca — Rab"}, price:"45€", tag:"RAB", img:"https://images.unsplash.com/photo-1592486882552-9c2a022c529b?w=400&q=75", link:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=boat+tour" },
-  { title:{hr:"Blue Cave & 5 otoka",de:"Blaue Grotte & 5 Inseln",en:"Blue Cave & 5 islands",it:"Grotta Azzurra & 5 isole"}, price:"110€", tag:"SPLIT", img:"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=75", link:"https://www.getyourguide.com/split-l268/?partner_id=9OEGOYI&q=blue+cave" },
-  { title:{hr:"Lov na tartufe — Motovun",de:"Trüffeljagd — Motovun",en:"Truffle hunting — Motovun",it:"Caccia al tartufo — Montona"}, price:"45€", tag:"ISTRA", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=75", link:"https://www.getyourguide.com/istria-county-l1297/?partner_id=9OEGOYI&q=truffle" },
-  { title:{hr:"Kajak Dubrovnik zidine",de:"Kajak Dubrovnik Mauern",en:"Kayak Dubrovnik walls",it:"Kayak mura Dubrovnik"}, price:"40€", tag:"DUBROVNIK", img:"https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=400&q=75", link:"https://www.getyourguide.com/dubrovnik-l213/?partner_id=9OEGOYI&q=kayak" },
-  { title:{hr:"Degustacija vina — Pelješac",de:"Weinverkostung — Pelješac",en:"Wine tasting — Pelješac",it:"Degustazione vini — Pelješac"}, price:"35€", tag:"DUBROVNIK", img:"https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=400&q=75", link:"https://www.getyourguide.com/ston-l4159/?partner_id=9OEGOYI&q=wine" },
+  { title:{hr:"Privatna jahta — Kvarner luksuz",de:"Privat-Yacht — Kvarner Luxus",en:"Private yacht — Kvarner luxury",it:"Yacht privato — lusso Quarnero"}, price:"od 280€", tag:"KVARNER", img:"https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=400&q=75", link:"https://www.getyourguide.com/croatia-l62/?partner_id=9OEGOYI&q=private+yacht+kvarner" },
+  { title:{hr:"Blue Cave & 5 otoka",de:"Blaue Grotte & 5 Inseln",en:"Blue Cave & 5 islands",it:"Grotta Azzurra & 5 isole"}, price:"od 110€", tag:"SPLIT", img:"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=75", link:"https://www.getyourguide.com/split-l268/?partner_id=9OEGOYI&q=blue+cave" },
+  { title:{hr:"Lov na tartufe — Motovun VIP",de:"Trüffeljagd VIP — Motovun",en:"Truffle hunting VIP — Motovun",it:"Caccia al tartufo VIP — Montona"}, price:"od 45€", tag:"ISTRA", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=75", link:"https://www.getyourguide.com/istria-county-l1297/?partner_id=9OEGOYI&q=truffle" },
+  { title:{hr:"Kajak Dubrovnik zidine",de:"Kajak Dubrovnik Mauern",en:"Kayak Dubrovnik walls",it:"Kayak mura Dubrovnik"}, price:"od 40€", tag:"DUBROVNIK", img:"https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=400&q=75", link:"https://www.getyourguide.com/dubrovnik-l213/?partner_id=9OEGOYI&q=kayak" },
+  { title:{hr:"Degustacija vina — Pelješac",de:"Weinverkostung — Pelješac",en:"Wine tasting — Pelješac",it:"Degustazione vini — Pelješac"}, price:"od 35€", tag:"DUBROVNIK", img:"https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=400&q=75", link:"https://www.getyourguide.com/croatia-l62/?partner_id=9OEGOYI&q=wine+tasting+peljesac" },
 ];
 
 // ─── CITY-LEVEL AFFILIATES (our contracted partners, appear first in city deals) ───
@@ -152,7 +153,11 @@ const CITY_AFFILIATES = {
 // gygId: renders official GYG widget with real activity image/price/rating
 // img: fallback for cities without a specific GYG activity widget
 const CITY_GYG = {
-  rab:      [{ title:{hr:"Tura brodom — Rab",de:"Bootstour — Rab",en:"Boat tour — Rab",it:"Tour in barca — Rab"}, price:"45€", img:"https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=400&q=75", link:"https://www.getyourguide.com/rab-l97509/?partner_id=9OEGOYI&q=boat+tour" }],
+  rab:      [
+    { title:{hr:"Privatna jahta — Kvarner (cijeli dan)",de:"Private Yacht — Kvarner (ganzer Tag)",en:"Private yacht — Kvarner (full day)",it:"Yacht privato — Quarnero (giornata intera)"}, price:"od 280€", tag:"LUXURY", img:"https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=400&q=75", link:"https://www.getyourguide.com/croatia-l62/?partner_id=9OEGOYI&q=private+yacht+kvarner" },
+    { title:{hr:"Sunset sailing cruise — Kvarner",de:"Sunset-Sailing — Kvarner",en:"Sunset sailing cruise — Kvarner",it:"Crociera al tramonto — Quarnero"}, price:"od 85€", tag:"PREMIUM", img:"https://images.unsplash.com/photo-1534008897995-27a23e859048?w=400&q=75", link:"https://www.getyourguide.com/croatia-l62/?partner_id=9OEGOYI&q=sunset+sailing+kvarner" },
+    { title:{hr:"Degustacija vina — Krk & Rab",de:"Weinverkostung — Krk & Rab",en:"Wine tasting — Krk & Rab islands",it:"Degustazione vini — Krk & Rab"}, price:"od 55€", tag:"KVARNER", img:"https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=400&q=75", link:"https://www.getyourguide.com/croatia-l62/?partner_id=9OEGOYI&q=wine+tasting+krk+rab" },
+  ],
   split:    [
     { gygId:"t326676", title:{hr:"Blue Cave, Hvar & 5 otoka",de:"Blaue Grotte, Hvar & 5 Inseln",en:"Blue Cave, Hvar & 5 islands",it:"Grotta Azzurra, Hvar & 5 isole"}, price:"145€", rating:"4.6", reviews:"6325", link:"https://www.getyourguide.com/activity/-t326676?partner_id=9OEGOYI" },
   ],
