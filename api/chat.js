@@ -36,9 +36,11 @@ function tierRateOk(deviceId, plan, ip) {
   const key = deviceId || ("ip_" + (ip || "unknown"));
   const keyLimit = deviceId ? limit.daily : Math.min(limit.daily, 12); // IP-only = max 12
   
-  // Cleanup stale entries
+  // Cleanup stale entries (both maps, max 50 per request to avoid blocking)
   let cleaned = 0;
-  for (const [k, v] of _devRL) { if (now > v.r) { _devRL.delete(k); if (++cleaned > 30) break; } }
+  for (const [k, v] of _devRL) { if (now > v.r) { _devRL.delete(k); if (++cleaned > 50) break; } }
+  let fpCleaned = 0;
+  for (const [k, v] of _fpRL) { if (now > v.r) { _fpRL.delete(k); if (++fpCleaned > 50) break; } }
   
   const e = _devRL.get(key);
   if (!e || now > e.r) { _devRL.set(key, { c: 1, r: now + RL_WIN, plan }); return { ok: true, remaining: keyLimit - 1 }; }

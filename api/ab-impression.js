@@ -5,8 +5,10 @@
 const PROJECT = "molty-portal";
 const FS = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents`;
 
+const FS_SIG = () => ({ signal: AbortSignal.timeout(5000) });
+
 async function fsGet(col, id) {
-  const r = await fetch(`${FS}/${col}/${id}?key=${process.env.VITE_FB_API_KEY}`);
+  const r = await fetch(`${FS}/${col}/${id}?key=${process.env.VITE_FB_API_KEY}`, FS_SIG());
   if (!r.ok) return null;
   return r.json();
 }
@@ -15,7 +17,7 @@ async function fsSet(col, id, fields) {
   const body = { fields };
   const r = await fetch(
     `${FS}/${col}/${id}?key=${process.env.VITE_FB_API_KEY}`,
-    { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
+    { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), ...FS_SIG() }
   );
   return r.ok;
 }

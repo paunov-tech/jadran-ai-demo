@@ -45,9 +45,10 @@ async function sendEmail(to, subject, html) {
   if (to && to !== NOTIFY_EMAIL) recipients.push(to);
   await fetch(RESEND_API, {
     method: "POST",
+    signal: AbortSignal.timeout(8000),
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({ from: FROM, to: recipients, subject, html }),
-  });
+  }).catch(() => {});
 }
 
 export default async function handler(req, res) {

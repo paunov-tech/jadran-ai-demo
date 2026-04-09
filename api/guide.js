@@ -38,7 +38,7 @@ async function fetchHereTraffic(oLat, oLng, dLat, dLng) {
     const westLng  = Math.min(oLng, dLng) - 2.5;   // was 0.3 — misses Ljubljana/Graz
     const eastLng  = Math.max(oLng, dLng) + 0.5;
     const url = `https://data.traffic.hereapi.com/v7/incidents?in=bbox:${westLng.toFixed(4)},${southLat.toFixed(4)},${eastLng.toFixed(4)},${northLat.toFixed(4)}&locationReferencing=shape&apiKey=${HERE_KEY}`;
-    console.log("guide: HERE bbox", westLng.toFixed(2), southLat.toFixed(2), eastLng.toFixed(2), northLat.toFixed(2));
+    // bbox logged removed
     const r = await fetch(url, { signal: AbortSignal.timeout(5000) });
     if (!r.ok) {
       const errText = await r.text().catch(() => "");
@@ -47,7 +47,7 @@ async function fetchHereTraffic(oLat, oLng, dLat, dLng) {
     }
     const data = await r.json();
     const incidents = data.results || data.items || [];
-    console.log("guide: HERE incidents count:", incidents.length);
+    // incidents count log removed
     return incidents.map(i => ({
       type: i.incidentDetails?.type || "UNKNOWN",
       desc: i.incidentDetails?.description?.value || i.incidentDetails?.summary?.value || "",
@@ -128,7 +128,7 @@ async function fetchHAK() {
       const pubDate = /<pubDate>([^<]*)<\/pubDate>/.exec(chunk)?.[1]?.trim() || "";
       if (title) items.push({ title, desc: desc.slice(0, 300), pubDate });
     }
-    console.log("guide: HAK items", items.length);
+    // hak items log removed
     return items;
   } catch (e) { console.warn("guide: HAK error:", e.message); return []; }
 }

@@ -15,8 +15,10 @@ function adminOk(req) {
   return decoded === process.env.ADMIN_TOKEN && decoded.length > 0;
 }
 
+const FS_SIG = () => ({ signal: AbortSignal.timeout(5000) });
+
 async function fsGet(col, id) {
-  const r = await fetch(`${FS}/${col}/${id}?key=${process.env.VITE_FB_API_KEY}`);
+  const r = await fetch(`${FS}/${col}/${id}?key=${process.env.VITE_FB_API_KEY}`, FS_SIG());
   if (!r.ok) return null;
   return r.json();
 }
@@ -24,7 +26,7 @@ async function fsGet(col, id) {
 async function fsSet(col, id, fields) {
   const r = await fetch(
     `${FS}/${col}/${id}?key=${process.env.VITE_FB_API_KEY}`,
-    { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fields }) }
+    { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fields }), ...FS_SIG() }
   );
   return r.ok;
 }
@@ -43,6 +45,7 @@ async function querySegment(segmentId) {
         limit: 100,
       },
     }),
+    ...FS_SIG(),
   });
   if (!r.ok) return [];
   const data = await r.json();

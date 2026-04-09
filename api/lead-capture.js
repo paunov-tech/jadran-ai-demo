@@ -8,10 +8,12 @@ const FS = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(d
 function strV(s) { return { stringValue: String(s) }; }
 function intV(n) { return { integerValue: String(n) }; }
 
+const FS_SIG = () => ({ signal: AbortSignal.timeout(5000) });
+
 async function fsSet(col, id, fields) {
   const r = await fetch(
     `${FS}/${col}/${id}?key=${process.env.VITE_FB_API_KEY}`,
-    { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fields }) }
+    { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fields }), ...FS_SIG() }
   );
   return r.ok;
 }
@@ -69,6 +71,7 @@ async function sendWelcomeEmail(email, name, segmentId) {
 
   await fetch("https://api.resend.com/emails", {
     method: "POST",
+    signal: AbortSignal.timeout(8000),
     headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       from: "JADRAN.AI <noreply@jadran.ai>",
