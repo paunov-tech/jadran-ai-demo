@@ -1518,12 +1518,12 @@ const [lang, setLang] = useState(() => {
           <div style={{ fontSize: 10, color: C.mut, marginTop: 4 }}>{lang === "en" ? "Prices incl. VAT" : lang === "de" || lang === "at" ? "Preise inkl. MwSt." : lang === "it" ? "Prezzi IVA inclusa" : "Cijene uklj. PDV"} · SIAL Consulting d.o.o.</div>
         </div>
 
-        {/* ── AIR SERBIA affiliate — shown in paywall (flight deal) ── */}
-        <a href="https://www.dpbolvw.net/click-101704203-17263146" target="_blank" rel="noopener noreferrer"
+        {/* ── AIR SERBIA affiliate — shown in paywall (official banner) ── */}
+        <a href="https://www.kqzyfj.com/click-101704203-13957399" target="_blank" rel="noopener noreferrer"
           style={{ display:"block", textDecoration:"none", marginTop:10 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px",
+          <div style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 14px",
             borderRadius:12, background:"rgba(200,16,46,0.06)", border:"1px solid rgba(200,16,46,0.18)", cursor:"pointer" }}>
-            <span style={{ fontSize:18, flexShrink:0 }}>✈️</span>
+            <img src="https://www.ftjcfx.com/image-101704203-13957399" width="44" height="44" alt="Air Serbia" style={{ borderRadius:8, flexShrink:0 }} />
             <div style={{ flex:1, minWidth:0 }}>
               <div style={{ fontSize:11, fontWeight:700, color:"#f8fafc" }}>
                 {lang === "de" || lang === "at" ? "Air Serbia — Direktflug auf Brač" : lang === "en" ? "Air Serbia — Direct flight to Brač" : lang === "it" ? "Air Serbia — Volo diretto per Brač" : "Air Serbia — Direktni let na Brač"}

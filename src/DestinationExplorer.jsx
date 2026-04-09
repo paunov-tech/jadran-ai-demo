@@ -1290,31 +1290,39 @@ export default function DestinationExplorer() {
               {/* ── AIR SERBIA MODAL ── */}
               {partnerModal === "airserbia" && (
                 <div>
-                  <p style={{ fontSize:12, color:"#64748b", marginBottom:16, lineHeight:1.6 }}>
-                    {({hr:"Air Serbia nudi direktne letove na Brač — jedina direktna regionalna veza na jedan od najljepših jadranskih otoka.",de:"Air Serbia bietet Direktflüge nach Brač — die einzige Direktverbindung auf eine der schönsten Adria-Inseln.",en:"Air Serbia offers direct flights to Brač — the only direct regional connection to one of the most beautiful Adriatic islands.",it:"Air Serbia offre voli diretti per Brač — l'unico collegamento diretto regionale verso una delle più belle isole adriatiche.",pl:"Air Serbia oferuje bezpośrednie loty na Brač — jedyne bezpośrednie połączenie regionalne na jedną z najpiękniejszych wysp adriatyckich.",si:"Air Serbia ponuja direktne lete na Brač — edina direktna regionalna povezava na enega najlepših jadranskih otokov."})[dl]||"Air Serbia direct flights to Brač."}
-                  </p>
-                  {/* Featured offer */}
-                  <div style={{ borderRadius:16, background:"rgba(200,16,46,0.06)", border:"1px solid rgba(200,16,46,0.2)", overflow:"hidden", marginBottom:12 }}>
-                    <div style={{ padding:"4px 14px", background:"rgba(200,16,46,0.15)", fontSize:9, fontWeight:700, color:"#C8102E", letterSpacing:2 }}>
+                  {/* Official banner + CTA */}
+                  <a href="https://www.kqzyfj.com/click-101704203-13957399" target="_blank" rel="noopener noreferrer"
+                    style={{ display:"flex", alignItems:"center", gap:16, textDecoration:"none", borderRadius:18, overflow:"hidden", background:"linear-gradient(135deg,#C8102E 0%,#8B0000 100%)", padding:"16px 20px", marginBottom:16, cursor:"pointer" }}>
+                    <img src="https://www.ftjcfx.com/image-101704203-13957399" width="80" height="80" alt="Air Serbia" style={{ borderRadius:12, flexShrink:0, background:"rgba(255,255,255,0.1)" }} />
+                    <div>
+                      <div style={{ fontSize:16, fontWeight:800, color:"#fff", letterSpacing:0.5 }}>Air Serbia</div>
+                      <div style={{ fontSize:12, color:"rgba(255,255,255,0.8)", margin:"4px 0 10px" }}>
+                        {({hr:"Direktni letovi na Jadran",de:"Direktflüge an die Adria",en:"Direct flights to the Adriatic",it:"Voli diretti sull'Adriatico",pl:"Loty bezpośrednie nad Adriatyk",si:"Direktni leti na Jadran"})[dl]||"Direct flights to the Adriatic"}
+                      </div>
+                      <div style={{ display:"inline-block", padding:"6px 14px", borderRadius:8, background:"rgba(255,255,255,0.2)", border:"1px solid rgba(255,255,255,0.35)", fontSize:12, fontWeight:700, color:"#fff" }}>
+                        {({hr:"Rezerviši let →",de:"Flug buchen →",en:"Book flight →",it:"Prenota il volo →",pl:"Zarezerwuj →",si:"Rezerviraj →"})[dl]||"Book flight →"}
+                      </div>
+                    </div>
+                  </a>
+                  {/* Route card */}
+                  <div style={{ borderRadius:14, background:"rgba(200,16,46,0.06)", border:"1px solid rgba(200,16,46,0.18)", overflow:"hidden", marginBottom:12 }}>
+                    <div style={{ padding:"4px 14px", background:"rgba(200,16,46,0.12)", fontSize:9, fontWeight:700, color:"#C8102E", letterSpacing:2 }}>
                       {({hr:"DIREKTNI LET",de:"DIREKTFLUG",en:"DIRECT FLIGHT",it:"VOLO DIRETTO",pl:"LOT BEZPOŚREDNI",si:"DIREKTNI LET"})[dl]||"DIRECT FLIGHT"}
                     </div>
-                    <div style={{ padding:"14px 16px" }}>
-                      <div style={{ fontSize:20, fontWeight:700, color:"#f1f5f9", marginBottom:4 }}>
-                        🇷🇸 BEG → BWK 🇭🇷
+                    <div style={{ padding:"14px 16px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                      <div>
+                        <div style={{ fontSize:18, fontWeight:700, color:"#f1f5f9" }}>🇷🇸 BEG → BWK 🇭🇷</div>
+                        <div style={{ fontSize:11, color:"#64748b", marginTop:4 }}>
+                          {({hr:"Beograd → Brač (aerodrom Bol) · bez presjedanja",de:"Belgrad → Brač (Flughafen Bol) · ohne Umstieg",en:"Belgrade → Brač (Bol Airport) · non-stop",it:"Belgrado → Brač (Aeroporto Bol) · senza scalo",pl:"Belgrad → Brač (Bol) · bez przesiadki",si:"Beograd → Brač (Bol) · brez prestopa"})[dl]||"Belgrade → Brač (Bol) · non-stop"}
+                        </div>
                       </div>
-                      <div style={{ fontSize:13, color:"#94a3b8", marginBottom:6 }}>
-                        {({hr:"Beograd → Brač (aerodrom Bol)",de:"Belgrad → Brač (Flughafen Bol)",en:"Belgrade → Brač (Bol Airport)",it:"Belgrado → Brač (Aeroporto di Bol)",pl:"Belgrad → Brač (Lotnisko Bol)",si:"Beograd → Brač (Letališče Bol)"})[dl]||"Belgrade → Brač (Bol Airport)"}
-                      </div>
-                      <div style={{ fontSize:11, color:"#475569", marginBottom:14 }}>
-                        ✓ {({hr:"Bez presjedanja · Izravno na otok",de:"Ohne Umstieg · Direkt auf die Insel",en:"Non-stop · Directly to the island",it:"Senza scalo · Direttamente sull'isola",pl:"Bez przesiadki · Bezpośrednio na wyspę",si:"Brez prestopa · Direktno na otok"})[dl]||"Non-stop · Direct to island"}
-                      </div>
-                      <button onClick={() => window.open("https://www.dpbolvw.net/click-101704203-17263146", "_blank")} style={{ width:"100%", padding:"13px", borderRadius:12, background:"#C8102E", border:"none", color:"#fff", fontSize:14, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>
-                        {({hr:"Rezerviši let →",de:"Flug buchen →",en:"Book flight →",it:"Prenota il volo →",pl:"Zarezerwuj lot →",si:"Rezerviraj let →"})[dl]||"Book flight →"}
+                      <button onClick={() => window.open("https://www.kqzyfj.com/click-101704203-13957399", "_blank")} style={{ padding:"10px 16px", borderRadius:10, background:"#C8102E", border:"none", color:"#fff", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit", flexShrink:0, marginLeft:12 }}>
+                        {({hr:"Kupi",de:"Buchen",en:"Book",it:"Prenota",pl:"Kup",si:"Kupi"})[dl]||"Book"}
                       </button>
                     </div>
                   </div>
                   <p style={{ fontSize:10, color:"#1e3a5f", textAlign:"center" }}>
-                    {({hr:"Otvara se u novom tabu. Aplikacija ostaje otvorena.",de:"Öffnet in einem neuen Tab. Die App bleibt geöffnet.",en:"Opens in a new tab. App stays open.",it:"Si apre in una nuova scheda. L'app rimane aperta.",pl:"Otwiera się w nowej karcie. Aplikacja pozostaje otwarta.",si:"Odpre se v novem zavihku. Aplikacija ostane odprta."})[dl]||"Opens in new tab. App stays open."}
+                    {({hr:"Otvara se u novom tabu · Aplikacija ostaje otvorena",de:"Öffnet in neuem Tab · App bleibt geöffnet",en:"Opens in new tab · App stays open",it:"Si apre in nuova scheda · L'app rimane aperta",pl:"Otwiera się w nowej karcie · Aplikacja pozostaje otwarta",si:"Odpre se v novem zavihku · Aplikacija ostane odprta"})[dl]||"Opens in new tab · App stays open"}
                   </p>
                 </div>
               )}

@@ -1466,7 +1466,7 @@ PRAVILA PERSONALIZACIJE:
   // Trigger: svaki put kad korisnik pita o letovima, dolasku na Jadran, Brač, ili sličnim temama
   parts.push(`PARTNERSKI LETOVI — AIR SERBIA (verificirani affiliate):
 Air Serbia leti DIREKTNO na Brač (aerodrom BWK, Bol) — jedina direktna regionalna veza na otok iz centralnog dijela Balkana.
-Affiliate link (OBAVEZNO koristiti kad je relevantno): https://www.dpbolvw.net/click-101704203-17263146
+Affiliate link (OBAVEZNO koristiti kad je relevantno): https://www.kqzyfj.com/click-101704203-13957399
 
 KADA KORISTITI (sve situacije):
 - Gost pita "kako doći na Brač" / "letovi za Brač" / "Brač airport"
@@ -1476,8 +1476,8 @@ KADA KORISTITI (sve situacije):
 - Gost u VIP/luxury modu pita o dolasku — Air Serbia nudi i poslovnu klasu
 
 FORMAT PREPORUKE:
-"Air Serbia leti direktno na Brač — [rezervirajte let ovdje](https://www.dpbolvw.net/click-101704203-17263146)"
-ili kratko: "[Air Serbia direktni let na Brač](https://www.dpbolvw.net/click-101704203-17263146)"
+"Air Serbia leti direktno na Brač — [rezervirajte let ovdje](https://www.kqzyfj.com/click-101704203-13957399)"
+ili kratko: "[Air Serbia direktni let na Brač](https://www.kqzyfj.com/click-101704203-13957399)"
 
 NIKAD ne izmišljaj druge Air Serbia rute. SAMO Brač direktni let je verificiran u ovom sistemu.
 NIKAD ne govori "naš partner" — samo prirodno preporuči kao korisnu opciju.`);

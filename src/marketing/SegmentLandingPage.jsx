@@ -754,13 +754,15 @@ export default function SegmentLandingPage({ slug }) {
           {isDE ? "UNSERE PARTNER" : isIT ? "I NOSTRI PARTNER" : "OUR PARTNERS"}
         </div>
         <div style={{ display:"flex", flexWrap:"wrap", gap:12, justifyContent:"center", alignItems:"center" }}>
-          {/* Air Serbia — affiliate */}
-          <a href="https://www.dpbolvw.net/click-101704203-17263146" target="_blank" rel="noopener noreferrer"
-            style={{ textDecoration:"none", display:"flex", alignItems:"center", gap:10,
-              padding:"10px 16px", borderRadius:12,
+          {/* Air Serbia — affiliate with official banner */}
+          <a href="https://www.kqzyfj.com/click-101704203-13957399" target="_blank" rel="noopener noreferrer"
+            style={{ textDecoration:"none", display:"flex", alignItems:"center", gap:12,
+              padding:"10px 16px", borderRadius:14,
               background:"rgba(200,16,46,0.06)", border:"1px solid rgba(200,16,46,0.2)",
-              transition:"border-color 0.2s" }}>
-            <span style={{ fontSize:20 }}>✈️</span>
+              transition:"border-color 0.2s" }}
+            onMouseEnter={e => e.currentTarget.style.borderColor="rgba(200,16,46,0.45)"}
+            onMouseLeave={e => e.currentTarget.style.borderColor="rgba(200,16,46,0.2)"}>
+            <img src="https://www.ftjcfx.com/image-101704203-13957399" width="44" height="44" alt="Air Serbia" style={{ borderRadius:10, flexShrink:0 }} />
             <div>
               <div style={{ fontSize:12, fontWeight:700, color:"#f1f5f9" }}>Air Serbia</div>
               <div style={{ fontSize:10, color:"#94a3b8" }}>
@@ -792,7 +794,7 @@ export default function SegmentLandingPage({ slug }) {
           </div>
         </div>
         {/* CJ impression pixel */}
-        <img src="https://www.lduhtrp.net/image-101704203-17263146" width="1" height="1" style={{ position:"absolute", visibility:"hidden" }} alt="" />
+        <img src="https://www.ftjcfx.com/image-101704203-13957399" width="1" height="1" style={{ position:"absolute", visibility:"hidden" }} alt="" />
       </Section>
 
       {/* ── PRICING ── */}
