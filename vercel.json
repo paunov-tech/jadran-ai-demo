@@ -22,7 +22,6 @@
     "api/border-intelligence.js":{ "maxDuration": 60 },
     "api/pulse.js":              { "maxDuration": 60 },
     "api/guide.js":              { "maxDuration": 60 },
-    "api/gemini.js":             { "maxDuration": 30 },
     "api/vision.js":             { "maxDuration": 30 },
     "api/alerts.js":             { "maxDuration": 30 },
     "api/nearby.js":             { "maxDuration": 30 },
