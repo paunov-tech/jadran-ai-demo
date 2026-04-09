@@ -510,6 +510,13 @@ const [lang, setLang] = useState(() => {
   const [recoveryError, setRecoveryError] = useState("");
   const [showRestore, setShowRestore] = useState(false);   // session recovery banner
   const [feedbackSent, setFeedbackSent] = useState({});    // msgIndex → true (flag sent)
+  const [showBrowserModal, setShowBrowserModal] = useState(false);
+
+  // In-app browser detection — Facebook/Instagram in-app browsers block Stripe redirects
+  const _UA = typeof navigator !== "undefined" ? (navigator.userAgent || "") : "";
+  const isInAppBrowser = /FBAN|FBAV|FB_IAB|Instagram/i.test(_UA);
+  const isIOSDevice    = /iPhone|iPad|iPod/i.test(_UA);
+  const isAndroidDevice = /Android/i.test(_UA);
 
   // GDPR-safe Meta Pixel helper — only fires if user consented
   const fbqSafe = (action, eventName, params) => {
@@ -1098,6 +1105,23 @@ const [lang, setLang] = useState(() => {
   };
 
   const startCheckout = async (plan = "week") => {
+    // ── IN-APP BROWSER GUARD ──────────────────────────────────────────────
+    // Facebook/Instagram in-app browsers silently block Stripe checkout.stripe.com redirects.
+    // 82% of our traffic is in-app browser (Plausible: "Mobile App" = 1.9k visitors).
+    // Must escape to real browser before initiating payment.
+    if (isInAppBrowser) {
+      if (isAndroidDevice) {
+        // Android: force-open current page in Chrome via intent URI
+        const here = window.location.href;
+        window.location.href = `intent://${here.replace(/^https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;end`;
+        setTimeout(() => { window.open(here, "_blank"); }, 1200); // fallback
+      } else {
+        // iOS: cannot auto-open Safari — show step-by-step instructions
+        setShowBrowserModal(true);
+      }
+      return;
+    }
+    // ─────────────────────────────────────────────────────────────────────
     track("checkout_click", { plan, lang, region, niche });
     fbqSafe("track", "AddPaymentInfo", { content_name: plan, currency: "EUR", value: plan === "vip" ? 49.99 : plan === "season" ? 19.99 : 9.99, event_id: genEventId("checkout") });
     // Persist session state so it survives Stripe redirect
@@ -1596,6 +1620,43 @@ const [lang, setLang] = useState(() => {
   );
 
   // ═══ INVITE WELCOME — what the referred friend sees ═══
+  // ── iOS IN-APP BROWSER MODAL ─────────────────────────────────────────────
+  const browserModalJsx = showBrowserModal && (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.94)", zIndex: 9999, display: "grid", placeItems: "center", padding: 24 }}
+      onClick={() => setShowBrowserModal(false)}>
+      <div onClick={e => e.stopPropagation()} style={{ background: isNight ? "rgba(12,28,50,0.98)" : "rgba(255,255,255,0.98)", borderRadius: 24, padding: "32px 24px", maxWidth: 380, width: "100%", border: "1px solid rgba(245,158,11,0.25)", textAlign: "center" }}>
+        <div style={{ fontSize: 44, marginBottom: 12 }}>🔒</div>
+        <div style={{ fontFamily: "'Playfair Display',Georgia,serif", fontSize: 20, fontWeight: 700, color: C.text, marginBottom: 10 }}>
+          {lang === "de" || lang === "at" ? "In Safari öffnen" : lang === "en" ? "Open in Safari" : lang === "it" ? "Apri in Safari" : "Otvori u Safariju"}
+        </div>
+        <div style={{ fontSize: 13, color: C.mut, lineHeight: 1.6, marginBottom: 24 }}>
+          {lang === "de" || lang === "at"
+            ? "Facebook blockiert die sichere Bezahlseite. Bitte öffne die Seite in Safari:"
+            : lang === "en"
+            ? "Facebook blocks secure payment pages. Please open in Safari to pay:"
+            : lang === "it"
+            ? "Facebook blocca la pagina di pagamento. Apri in Safari per pagare:"
+            : "Facebook blokira sigurnu stranicu za plaćanje. Otvori u Safariju:"}
+        </div>
+        <div style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 16, padding: "20px 16px", marginBottom: 24, textAlign: "left" }}>
+          {[
+            lang === "de" || lang === "at" ? "Tippe auf  ···  (unten rechts)" : lang === "en" ? "Tap  ···  (bottom right)" : lang === "it" ? "Tocca  ···  (in basso a destra)" : "Tapni na  ···  (dolje desno)",
+            lang === "de" || lang === "at" ? 'Wähle „In Safari öffnen"' : lang === "en" ? 'Choose "Open in Safari"' : lang === "it" ? 'Scegli "Apri in Safari"' : 'Odaberi „Otvori u Safariju"',
+            lang === "de" || lang === "at" ? 'Dann auf „Bezahlen" tippen' : lang === "en" ? 'Then tap "Pay" again' : lang === "it" ? 'Poi tocca "Paga" di nuovo' : 'Zatim tapni „Plati" ponovo',
+          ].map((step, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: i < 2 ? 14 : 0 }}>
+              <div style={{ width: 24, height: 24, borderRadius: "50%", background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.3)", color: "#f59e0b", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
+              <span style={{ fontSize: 14, color: C.text, lineHeight: 1.4 }}>{step}</span>
+            </div>
+          ))}
+        </div>
+        <button onClick={() => setShowBrowserModal(false)} style={{ width: "100%", padding: "14px 0", borderRadius: 14, background: "rgba(100,116,139,0.15)", border: "1px solid rgba(100,116,139,0.2)", color: C.mut, fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+          {lang === "de" || lang === "at" ? "Schließen" : lang === "en" ? "Close" : lang === "it" ? "Chiudi" : "Zatvori"}
+        </button>
+      </div>
+    </div>
+  );
+
   const inviteWelcomeJsx = showInviteWelcome && (
     <div style={{ position: "fixed", inset: 0, background: "rgba(5,14,30,0.92)", zIndex: 280, display: "grid", placeItems: "center", padding: 24 }}
       onClick={() => setShowInviteWelcome(false)}>
@@ -2093,12 +2154,16 @@ const [lang, setLang] = useState(() => {
   return (
     <div style={{ height: "100dvh", display: "flex", flexDirection: "column", background: C.chatBg, fontFamily: "'Outfit',system-ui,sans-serif", color: C.text }}>
 
-      {/* FB in-app browser warning */}
-      {isFBBrowser && (
-        <div style={{ background: "#1877f2", color: "#fff", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexShrink: 0, fontSize: 13 }}>
-          <span>{lang === "de" || lang === "at" ? "Für beste Erfahrung in Chrome öffnen" : lang === "it" ? "Apri in Chrome per la migliore esperienza" : "Open in Chrome for best experience"}</span>
-          <button onClick={openInChrome} style={{ background: "#fff", color: "#1877f2", border: "none", borderRadius: 8, padding: "6px 14px", fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
-            {lang === "de" || lang === "at" ? "In Chrome öffnen →" : lang === "it" ? "Apri in Chrome →" : "Open in Chrome →"}
+      {/* FB in-app browser warning — payment is blocked in this browser */}
+      {isInAppBrowser && (
+        <div style={{ background: "#d97706", color: "#fff", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexShrink: 0, fontSize: 13 }}>
+          <span style={{ fontWeight: 600 }}>
+            {lang === "de" || lang === "at" ? "⚠️ Zahlung nur in Safari/Chrome möglich" : lang === "it" ? "⚠️ Pagamento solo in Safari/Chrome" : lang === "en" ? "⚠️ Payment requires Safari/Chrome" : "⚠️ Plaćanje radi samo u Safariju/Chromeu"}
+          </span>
+          <button onClick={isAndroidDevice ? openInChrome : () => setShowBrowserModal(true)} style={{ background: "#fff", color: "#d97706", border: "none", borderRadius: 8, padding: "6px 14px", fontWeight: 700, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" }}>
+            {isAndroidDevice
+              ? (lang === "de" || lang === "at" ? "Chrome öffnen →" : lang === "en" ? "Open Chrome →" : "Otvori Chrome →")
+              : (lang === "de" || lang === "at" ? "Wie? →" : lang === "en" ? "How? →" : "Kako? →")}
           </button>
         </div>
       )}
@@ -2975,6 +3040,7 @@ const [lang, setLang] = useState(() => {
       </div>
 
       {paywallJsx}
+      {browserModalJsx}
       {inviteWelcomeJsx}
 
       {/* ═══ EXIT INTENT POPUP ═══ */}
