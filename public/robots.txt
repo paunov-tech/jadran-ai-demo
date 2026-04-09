@@ -38,4 +38,27 @@ Allow: /blog/
 Allow: /ai
 Disallow: /api/
 
+User-agent: ClaudeBot
+Allow: /blog/
+Allow: /ai
+Disallow: /api/
+
+User-agent: OAI-SearchBot
+Allow: /blog/
+Disallow: /api/
+
+User-agent: PerplexityBot
+Allow: /blog/
+Allow: /ai
+Crawl-delay: 10
+Disallow: /api/
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /og-image.jpg
+Allow: /icon-512.png
+Allow: /icon-512.svg
+
 Sitemap: https://jadran.ai/sitemap.xml

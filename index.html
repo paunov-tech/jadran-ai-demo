@@ -15,6 +15,11 @@
   <meta name="geo.placename" content="Croatian Adriatic Coast" />
   <meta name="geo.position" content="43.508;16.440" />
   <meta name="ICBM" content="43.508, 16.440" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="application-name" content="JADRAN.AI" />
+  <meta name="msapplication-TileColor" content="#0a1628" />
+  <meta name="msapplication-TileImage" content="/icon-512.png" />
+  <meta name="msapplication-config" content="none" />
 
   <!-- Hreflang — critical for multilingual SEO -->
   <link rel="alternate" hreflang="hr" href="https://jadran.ai" />
@@ -37,11 +42,13 @@
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="JADRAN.AI — AI tourist guide for the Croatian Adriatic coast showing Split, Dubrovnik, and island scenery" />
   <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:secure_url" content="https://jadran.ai/og-image.jpg" />
   <meta property="og:site_name" content="JADRAN.AI" />
   <meta property="og:locale" content="hr_HR" />
   <meta property="og:locale:alternate" content="de_DE" />
   <meta property="og:locale:alternate" content="de_AT" />
   <meta property="og:locale:alternate" content="en_GB" />
+  <meta property="og:locale:alternate" content="en_US" />
   <meta property="og:locale:alternate" content="it_IT" />
 
   <!-- Twitter Card -->
@@ -51,6 +58,7 @@
   <meta name="twitter:title" content="JADRAN.AI — AI turistički vodič za hrvatsku obalu" />
   <meta name="twitter:description" content="Skrivene plaže, restorani, parking, marine — AI vodič od lokalaca, 8 jezika." />
   <meta name="twitter:image" content="https://jadran.ai/og-image.jpg" />
+  <meta name="twitter:domain" content="jadran.ai" />
 
   <!-- Favicon -->
   <link rel="icon" href="/icon-192.svg" type="image/svg+xml" />
@@ -81,6 +89,10 @@
   <link rel="dns-prefetch" href="https://api.open-meteo.com" />
   <link rel="dns-prefetch" href="https://marine-api.open-meteo.com" />
   <link rel="dns-prefetch" href="https://plausible.io" />
+  <link rel="preconnect" href="https://connect.facebook.net" crossorigin />
+  <link rel="preconnect" href="https://www.facebook.com" crossorigin />
+  <link rel="dns-prefetch" href="https://connect.facebook.net" />
+  <link rel="dns-prefetch" href="https://www.facebook.com" />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
   <noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" /></noscript>
 
@@ -93,14 +105,26 @@
     "description": "AI turistički vodič za hrvatsku obalu Jadrana. Skrivene plaže, restorani, parking, marine — na 8 jezika.",
     "url": "https://jadran.ai",
     "applicationCategory": "TravelApplication",
-    "operatingSystem": "Web",
+    "operatingSystem": "Web, iOS, Android",
+    "image": "https://jadran.ai/og-image.jpg",
+    "screenshot": { "@type": "ImageObject", "url": "https://jadran.ai/og-image.jpg", "width": 1200, "height": 630 },
+    "featureList": "Real-time weather and sea conditions, Camper van parking guide, Sailing marina guide, AI chat in 8 languages, Storm and fire alerts, Hidden beaches and restaurants, NAVTEX maritime data, Offline support (PWA)",
     "offers": {
-      "@type": "Offer",
-      "price": "9.99",
-      "priceCurrency": "EUR"
+      "@type": "AggregateOffer",
+      "lowPrice": "9.99",
+      "highPrice": "49.99",
+      "priceCurrency": "EUR",
+      "offerCount": 3,
+      "offers": [
+        { "@type": "Offer", "name": "Explorer (1 week)", "price": "9.99", "priceCurrency": "EUR" },
+        { "@type": "Offer", "name": "Season Pass", "price": "19.99", "priceCurrency": "EUR" },
+        { "@type": "Offer", "name": "VIP Lifetime", "price": "49.99", "priceCurrency": "EUR" }
+      ]
     },
     "areaServed": { "@type": "Country", "name": "Croatia" },
-    "availableLanguage": ["Croatian","German","English","Italian","Slovenian","Czech","Polish"],
+    "availableLanguage": ["Croatian","German","Austrian German","English","Italian","Slovenian","Czech","Polish"],
+    "inLanguage": ["hr","de","en","it","sl","cs","pl"],
+    "audience": { "@type": "Audience", "audienceType": "Tourists, campers, sailors, cruise passengers" },
     "author": { "@type": "Organization", "name": "SIAL Consulting d.o.o." }
   }
   </script>
