@@ -132,13 +132,13 @@ function wxEmoji(code) {
 }
 
 // ─── GYG OFFERS — GetYourGuide affiliate ───
-// NOTE: Use croatia-l62 as base (verified GYG Croatia ID) + q= search — avoids wrong destination IDs
+// RULE: ONLY use t-XXXXXX activity IDs — destination l-XXXXXX IDs are unreliable (redirect to wrong countries)
+// Fallback browsing is handled by the iframe widget in the modal
 const GYG_OFFERS = [
-  { title:{hr:"Privatna jahta — Kvarner luksuz",de:"Privat-Yacht — Kvarner Luxus",en:"Private yacht — Kvarner luxury",it:"Yacht privato — lusso Quarnero"}, price:"od 280€", tag:"KVARNER", img:"https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=400&q=75", link:"https://www.getyourguide.com/croatia-l62/?partner_id=9OEGOYI&q=private+yacht+kvarner" },
-  { title:{hr:"Blue Cave & 5 otoka",de:"Blaue Grotte & 5 Inseln",en:"Blue Cave & 5 islands",it:"Grotta Azzurra & 5 isole"}, price:"od 110€", tag:"SPLIT", img:"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=75", link:"https://www.getyourguide.com/split-l268/?partner_id=9OEGOYI&q=blue+cave" },
-  { title:{hr:"Lov na tartufe — Motovun VIP",de:"Trüffeljagd VIP — Motovun",en:"Truffle hunting VIP — Motovun",it:"Caccia al tartufo VIP — Montona"}, price:"od 45€", tag:"ISTRA", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=75", link:"https://www.getyourguide.com/istria-county-l1297/?partner_id=9OEGOYI&q=truffle" },
-  { title:{hr:"Kajak Dubrovnik zidine",de:"Kajak Dubrovnik Mauern",en:"Kayak Dubrovnik walls",it:"Kayak mura Dubrovnik"}, price:"od 40€", tag:"DUBROVNIK", img:"https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=400&q=75", link:"https://www.getyourguide.com/dubrovnik-l213/?partner_id=9OEGOYI&q=kayak" },
-  { title:{hr:"Degustacija vina — Pelješac",de:"Weinverkostung — Pelješac",en:"Wine tasting — Pelješac",it:"Degustazione vini — Pelješac"}, price:"od 35€", tag:"DUBROVNIK", img:"https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=400&q=75", link:"https://www.getyourguide.com/croatia-l62/?partner_id=9OEGOYI&q=wine+tasting+peljesac" },
+  { gygId:"t326676", title:{hr:"Blue Cave, Hvar & 5 otoka",de:"Blaue Grotte, Hvar & 5 Inseln",en:"Blue Cave, Hvar & 5 islands",it:"Grotta Azzurra, Hvar & 5 isole"}, price:"od 145€", tag:"SPLIT", link:"https://www.getyourguide.com/activity/-t326676?partner_id=9OEGOYI" },
+  { gygId:"t217212", title:{hr:"Game of Thrones tura + Lokrum",de:"Game of Thrones Tour + Lokrum",en:"Game of Thrones Tour + Lokrum",it:"Tour Game of Thrones + Lokrum"}, price:"od 20€", tag:"DUBROVNIK", link:"https://www.getyourguide.com/activity/-t217212?partner_id=9OEGOYI" },
+  { gygId:"t131646", title:{hr:"Crna Gora — Perast & Kotor brodom",de:"Montenegro — Perast & Kotor Bootstour",en:"Montenegro — Perast & Kotor boat",it:"Montenegro — Perast & Kotor in barca"}, price:"od 58€", tag:"DUBROVNIK", link:"https://www.getyourguide.com/activity/-t131646?partner_id=9OEGOYI" },
+  { gygId:"t406236", title:{hr:"Plitvice & Rastoke s ulazninom",de:"Plitvicer Seen & Rastoke",en:"Plitvice & Rastoke with ticket",it:"Plitvice & Rastoke con biglietto"}, price:"od 99€", tag:"INLAND", link:"https://www.getyourguide.com/activity/-t406236?partner_id=9OEGOYI" },
 ];
 
 // ─── CITY-LEVEL AFFILIATES (our contracted partners, appear first in city deals) ───
@@ -149,33 +149,18 @@ const CITY_AFFILIATES = {
   ],
 };
 
-// ─── GYG DEALS PER CITY ───
-// gygId: renders official GYG widget with real activity image/price/rating
-// img: fallback for cities without a specific GYG activity widget
+// ─── GYG DEALS PER CITY — only verified t-XXXXXX activity IDs ───
+// For cities without a verified ID, leave empty — iframe widget handles browsing
 const CITY_GYG = {
-  rab:      [
-    { title:{hr:"Privatna jahta — Kvarner (cijeli dan)",de:"Private Yacht — Kvarner (ganzer Tag)",en:"Private yacht — Kvarner (full day)",it:"Yacht privato — Quarnero (giornata intera)"}, price:"od 280€", tag:"LUXURY", img:"https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?w=400&q=75", link:"https://www.getyourguide.com/croatia-l62/?partner_id=9OEGOYI&q=private+yacht+kvarner" },
-    { title:{hr:"Sunset sailing cruise — Kvarner",de:"Sunset-Sailing — Kvarner",en:"Sunset sailing cruise — Kvarner",it:"Crociera al tramonto — Quarnero"}, price:"od 85€", tag:"PREMIUM", img:"https://images.unsplash.com/photo-1534008897995-27a23e859048?w=400&q=75", link:"https://www.getyourguide.com/croatia-l62/?partner_id=9OEGOYI&q=sunset+sailing+kvarner" },
-    { title:{hr:"Degustacija vina — Krk & Rab",de:"Weinverkostung — Krk & Rab",en:"Wine tasting — Krk & Rab islands",it:"Degustazione vini — Krk & Rab"}, price:"od 55€", tag:"KVARNER", img:"https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=400&q=75", link:"https://www.getyourguide.com/croatia-l62/?partner_id=9OEGOYI&q=wine+tasting+krk+rab" },
-  ],
-  split:    [
-    { gygId:"t326676", title:{hr:"Blue Cave, Hvar & 5 otoka",de:"Blaue Grotte, Hvar & 5 Inseln",en:"Blue Cave, Hvar & 5 islands",it:"Grotta Azzurra, Hvar & 5 isole"}, price:"145€", rating:"4.6", reviews:"6325", link:"https://www.getyourguide.com/activity/-t326676?partner_id=9OEGOYI" },
-  ],
+  rab:      [], // Kvarner luxury: shown via GYG iframe with q="kvarner yacht sailing"
+  split:    [{ gygId:"t326676", title:{hr:"Blue Cave, Hvar & 5 otoka",de:"Blaue Grotte, Hvar & 5 Inseln",en:"Blue Cave, Hvar & 5 islands",it:"Grotta Azzurra, Hvar & 5 isole"}, price:"145€", rating:"4.6", reviews:"6325", link:"https://www.getyourguide.com/activity/-t326676?partner_id=9OEGOYI" }],
   dubrovnik:[
     { gygId:"t217212", title:{hr:"Game of Thrones tura + Lokrum",de:"Game of Thrones Tour + Lokrum",en:"Game of Thrones Tour + Lokrum",it:"Tour Game of Thrones + Lokrum"}, price:"20€", rating:"4.9", reviews:"4307", link:"https://www.getyourguide.com/activity/-t217212?partner_id=9OEGOYI" },
     { gygId:"t131646", title:{hr:"Crna Gora — Perast & Kotor brodom",de:"Montenegro — Perast & Kotor Bootstour",en:"Montenegro — Perast & Kotor boat tour",it:"Montenegro — Perast & Kotor in barca"}, price:"58€", rating:"4.6", reviews:"4127", link:"https://www.getyourguide.com/activity/-t131646?partner_id=9OEGOYI" },
-    { title:{hr:"Kajak — zidine Dubrovnika",de:"Kajak — Dubrovnik Mauern",en:"Kayak — Dubrovnik walls",it:"Kayak — mura Dubrovnik"}, price:"40€", img:"https://images.unsplash.com/photo-1530866495561-507c9faab2ed?w=400&q=75", link:"https://www.getyourguide.com/dubrovnik-l213/?partner_id=9OEGOYI&q=kayak" },
   ],
-  zagreb:   [
-    { gygId:"t406236", title:{hr:"Plitvice & Rastoke s ulazninom",de:"Plitvicer Seen & Rastoke mit Ticket",en:"Plitvice & Rastoke with ticket",it:"Plitvice & Rastoke con biglietto"}, price:"99€", rating:"4.9", reviews:"3015", link:"https://www.getyourguide.com/activity/-t406236?partner_id=9OEGOYI" },
-  ],
-  rovinj:   [{ title:{hr:"Lov na tartufe — Motovun",de:"Trüffeljagd — Motovun",en:"Truffle hunting — Motovun",it:"Caccia al tartufo"}, price:"45€", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=75", link:"https://www.getyourguide.com/istria-county-l1297/?partner_id=9OEGOYI&q=truffle" }],
-  motovun:  [{ title:{hr:"Lov na tartufe — Motovun",de:"Trüffeljagd — Motovun",en:"Truffle hunting — Motovun",it:"Caccia al tartufo"}, price:"45€", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=75", link:"https://www.getyourguide.com/istria-county-l1297/?partner_id=9OEGOYI&q=truffle" }],
-  hvar:     [{ title:{hr:"Tura brodom — Hvar & Blue Lagoon",de:"Bootstour — Hvar & Blaue Lagune",en:"Boat tour — Hvar & Blue Lagoon",it:"Tour in barca — Hvar"}, price:"65€", img:"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=75", link:"https://www.getyourguide.com/hvar-l4149/?partner_id=9OEGOYI&q=boat+tour" }],
-  makarska: [{ title:{hr:"Izlet na Biokovo",de:"Ausflug auf Biokovo",en:"Biokovo excursion",it:"Escursione Biokovo"}, price:"35€", img:"https://images.unsplash.com/photo-1573599852326?w=400&q=75", link:"https://www.getyourguide.com/makarska-l4150/?partner_id=9OEGOYI&q=biokovo" }],
-  zadar:    [{ title:{hr:"Krka & Šibenik vodopadi",de:"Krka & Šibenik Wasserfälle",en:"Krka & Šibenik waterfalls",it:"Cascate Krka & Šibenik"}, price:"55€", img:"https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=400&q=75", link:"https://www.getyourguide.com/zadar-l4157/?partner_id=9OEGOYI&q=krka" }],
-  pula:     [{ title:{hr:"Tura rimske arene — Pula",de:"Führung Röm. Arena — Pula",en:"Roman Arena tour — Pula",it:"Tour Arena Romana — Pola"}, price:"20€", img:"https://images.unsplash.com/photo-1592486882552-9c2a022c529b?w=400&q=75", link:"https://www.getyourguide.com/pula-l4161/?partner_id=9OEGOYI&q=arena" }],
-  opatija:  [{ title:{hr:"Šetnja Lungomare & SPA",de:"Lungomare-Spaziergang & SPA",en:"Lungomare walk & SPA",it:"Passeggiata Lungomare & SPA"}, price:"30€", img:"https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&q=75", link:"https://www.getyourguide.com/opatija-l4163/?partner_id=9OEGOYI&q=spa" }],
+  zagreb:   [{ gygId:"t406236", title:{hr:"Plitvice & Rastoke s ulazninom",de:"Plitvicer Seen & Rastoke mit Ticket",en:"Plitvice & Rastoke with ticket",it:"Plitvice & Rastoke con biglietto"}, price:"99€", rating:"4.9", reviews:"3015", link:"https://www.getyourguide.com/activity/-t406236?partner_id=9OEGOYI" }],
+  rovinj:   [], motovun: [], hvar: [], makarska: [], zadar: [], pula: [], opatija: [],
+  // ^ iframe widget covers these with destination-based search (q= param in modal pills)
 };
 
 // ─── CITY → FIRESTORE REGION KEY MAPPING ───
@@ -1381,41 +1366,55 @@ export default function DestinationExplorer() {
                 </div>
               )}
 
-              {/* ── GETYOURGUIDE MODAL — official embedded widget ── */}
-              {partnerModal === "gyg" && (
-                <div>
-                  <p style={{ fontSize:11, color:"#64748b", marginBottom:14, lineHeight:1.6 }}>
-                    {({hr:"Rezerviraj direktno — aktivnosti se učitavaju uživo od GetYourGuide.",de:"Direkt buchen — Aktivitäten werden live von GetYourGuide geladen.",en:"Book directly — activities loaded live from GetYourGuide.",it:"Prenota direttamente — attività caricate in diretta da GetYourGuide.",pl:"Rezerwuj bezpośrednio — aktywności ładowane na żywo z GetYourGuide.",si:"Rezerviraj neposredno — aktivnosti se nalagajo v živo iz GetYourGuide."})[dl]||"Book directly via GetYourGuide."}
-                  </p>
-                  {/* Official GYG activities widget — renders in-place, booking stays in app */}
-                  <div
-                    key={`gyg-modal-${activeDest?.name || "hr"}-${dl}`}
-                    data-gyg-widget="activities"
-                    data-gyg-partner-id="9OEGOYI"
-                    data-gyg-number-of-items="4"
-                    data-gyg-locale-code={dl === "de" ? "de-DE" : dl === "it" ? "it-IT" : dl === "hr" ? "hr-HR" : dl === "pl" ? "pl-PL" : "en-US"}
-                    data-gyg-q={activeDest?.liveCity || "Croatia"}
-                    style={{ minHeight:200 }}
-                  />
-                  {/* Individual featured activity widgets */}
-                  <div style={{ marginTop:16, display:"flex", flexDirection:"column", gap:10 }}>
-                    {(activeDest ? (CITY_GYG[activeDest.liveCity?.toLowerCase()] || []) : GYG_OFFERS.slice(0,3)).map((o, i) =>
-                      o.gygId ? (
-                        <div key={i} data-gyg-widget="auto" data-gyg-partner-id="9OEGOYI" data-gyg-cmp={o.gygId} />
-                      ) : (
-                        <button key={i} onClick={() => window.open(o.link, "_blank")} style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 14px", borderRadius:14, background:"rgba(255,87,34,0.04)", border:"1px solid rgba(255,87,34,0.12)", cursor:"pointer", fontFamily:"inherit", textAlign:"left" }}>
-                          <img src={o.img} alt="" style={{ width:52, height:52, borderRadius:10, objectFit:"cover", flexShrink:0 }} />
-                          <div style={{ flex:1 }}>
-                            <div style={{ fontSize:13, fontWeight:600, color:"#f1f5f9", lineHeight:1.3 }}>{t(o.title)}</div>
-                            <div style={{ fontSize:12, color:"#22c55e", fontWeight:700, marginTop:4 }}>od {o.price}</div>
-                          </div>
-                          <span style={{ color:"#FF5722" }}>→</span>
+              {/* ── GETYOURGUIDE MODAL — oficial iframe widget (in-app, no redirect) ── */}
+              {partnerModal === "gyg" && (() => {
+                const gygLocale = dl === "de" ? "de-DE" : dl === "it" ? "it-IT" : dl === "hr" ? "hr-HR" : dl === "pl" ? "pl-PL" : "en-US";
+                // Default: active destination or Kvarner luxury for Rab users
+                const defaultQ = activeDest?.liveCity
+                  ? activeDest.liveCity
+                  : (activeRegion === "kvarner" ? "kvarner yacht sailing" : "Croatia");
+                const gygQ = encodeURIComponent(defaultQ);
+                // GYG activities.frame: official embeddable iframe — renders live booking cards in-app
+                const gygSrc = `https://widget.getyourguide.com/default/activities.frame?partner_id=9OEGOYI&locale=${gygLocale}&number_of_items=4&q=${gygQ}`;
+                return (
+                  <div>
+                    {/* Destination pills */}
+                    <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:12 }}>
+                      {[
+                        { label:"🛥️ Kvarner", q:"kvarner yacht sailing Croatia" },
+                        { label:"🏛️ Split", q:"Split Croatia tours" },
+                        { label:"🏰 Dubrovnik", q:"Dubrovnik Croatia tours" },
+                        { label:"🌿 Hvar", q:"Hvar island boat Croatia" },
+                        { label:"🍄 Istra", q:"Istria truffle wine Croatia" },
+                        { label:"💧 Plitvice", q:"Plitvice Lakes Croatia" },
+                      ].map(d => (
+                        <button key={d.q} style={{ padding:"6px 12px", borderRadius:20, background:"rgba(255,87,34,0.07)", border:"1px solid rgba(255,87,34,0.2)", cursor:"pointer", fontFamily:"inherit", fontSize:11, color:"#f1f5f9" }}
+                          onClick={() => {
+                            const el = document.getElementById("gyg-frame");
+                            if (el) el.src = `https://widget.getyourguide.com/default/activities.frame?partner_id=9OEGOYI&locale=${gygLocale}&number_of_items=4&q=${encodeURIComponent(d.q)}`;
+                          }}>
+                          {d.label}
                         </button>
-                      )
-                    )}
+                      ))}
+                    </div>
+                    {/* GYG iframe — full in-app booking experience */}
+                    <div style={{ borderRadius:16, overflow:"hidden", border:"1px solid rgba(255,87,34,0.15)", background:"#fff", marginBottom:10 }}>
+                      <iframe
+                        id="gyg-frame"
+                        key={`gyg-${activeDest?.name || "hr"}-${dl}`}
+                        src={gygSrc}
+                        style={{ width:"100%", height:480, border:"none", display:"block" }}
+                        title="GetYourGuide activities"
+                        loading="lazy"
+                        allow="payment"
+                      />
+                    </div>
+                    <p style={{ fontSize:10, color:"#1e3a5f", textAlign:"center" }}>
+                      {({hr:"Rezervacija direktno u aplikaciji · Powered by GetYourGuide",de:"Buchung direkt in der App · Powered by GetYourGuide",en:"Book directly in app · Powered by GetYourGuide",it:"Prenota direttamente nell'app · Powered by GetYourGuide",pl:"Rezerwacja bezpośrednio w aplikacji · Powered by GetYourGuide",si:"Rezervacija neposredno v aplikaciji · Powered by GetYourGuide"})[dl]||"Powered by GetYourGuide"}
+                    </p>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
             </div>
           </div>
