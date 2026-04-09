@@ -160,7 +160,20 @@ PRAVILA:
 - CIJENE: Uvijek dodaj "provjerite aktualne cijene" uz specifičnu cijenu ulaznice, parkinga ili restorana.
 - Svaki odgovor MORA završiti konkretnom preporukom, sljedećim korakom ili akcijskim savjetom.
 - HITNOĆE: Za medicinske hitnoće: "Nazovite 112 ili posjetite najbližu bolnicu/ambulantu." Za pravna pitanja: "Kontaktirajte lokalnog odvjetnika." Za obalne hitnoće na moru: "Kontaktirajte lučku kapetaniju ili nazovite 195 (pomorska spašavanja)."
-- ODGOVORNOST: Ti si AI asistent. Informacije su informativnog karaktera — putnik sam donosi konačnu odluku.`;
+- ODGOVORNOST: Ti si AI asistent. Informacije su informativnog karaktera — putnik sam donosi konačnu odluku.
+
+ROUTING I NAVIGACIJA — KRITIČNO:
+- NIKAD ne upućuj korisnika na "Google Maps" ili "Waze" — naša aplikacija ima HERE Maps integriran.
+- Za rute: opiši konkretno (A1 izlaz Zadar Jug, D8 obalna, km X skretanje) + naglasi ključne opasnosti.
+- Ako korisnik treba live navigaciju: "Koristite HERE kartu unutar aplikacije (ikona karte) za navigaciju."
+- Za rute prema Hrvatskoj: opiši dionice autoceste po zemljama s ključnim točkama.
+
+TRANZITNE RUTE DO JADRANA — VRIJEDI ZA SVE NAČINE PUTOVANJA:
+🇸🇮 Slovenija (DARS): A1 Ljubljana↔Koper, A2 Ljubljana↔Macelj↔Zagreb, A10 Karavanke tunel (AT↔SLO). Vinjeta: 15€/tjedan, 30€/mesec — dars.si. Granice: Šentilj, Bregana, Rupa/Jelšane.
+🇦🇹 Austrija (ASFINAG): A10 Tauern (Salzburg↔Spielfeld), A9 Pyhrn, A2 Südautobahn (Graz↔Spielfeld). Vinjeta: 10.60€/10 dana, 29€/2 meseca — asfinag.at.
+🇩🇪 Njemačka: A8 München↔Salzburg, A93 Rosenheim↔Kiefersfelden. Autobahn besplatan za osobna vozila (kamperi: BFStr od 2024).
+Česte kolone: Karavanke tunel (AT/SLO), Šentilj/Spielfeld (AT/SLO), Bregana/Gruškovje (SLO/HR), Macelj (SLO/HR).
+🚨 Hrvatska free-flow cestarina 2026: nema rampi — prođeš kamerama, MORAŠ platiti na hac.hr u roku 30 dana. Kazna 200–500€.`;
 
 // ── MODE PROMPTS ──
 const MODES = {
@@ -654,6 +667,14 @@ function buildWeatherCtx(weather) {
     ctx += `\nPROGNOZA NAREDNIH 6H: ${hStr}`;
     if (rainSlots.length >= 2) ctx += `\n⚠️ KIŠA SE OČEKUJE: ${rainSlots.map(h => h.h).join(", ")} — savjetuj kišobran ili promjenu planova`;
     if (windSlots.length >= 1) ctx += `\n⚠️ JAKI UDARI: ${windSlots.map(h => `${h.h} ${h.gusts}km/h`).join(", ")} — oprez za kampere i plovila`;
+  }
+
+  // Daily forecast — tomorrow + day after
+  if (Array.isArray(weather.daily) && weather.daily.length > 0) {
+    const dStr = weather.daily.map(d =>
+      `${d.dayName}: ${d.icon} ${d.h}°/${d.l}°${d.rain > 2 ? ` 🌧${d.rain}mm` : ""}`
+    ).join(" | ");
+    ctx += `\nPROGNOZA SUTRA/PREKOSUTRA: ${dStr}`;
   }
 
   ctx += `\nPRAVILO: Ove podatke UVIJEK prevedi u konkretne akcijske savjete za turista — ne izlistaj samo brojeve.`;
@@ -1559,15 +1580,15 @@ PRAVILA ZA KAMERE:
     const beachAdvice = hour >= 11 && hour <= 16 && isSeason
       ? "Plaže su najgušće 11-16h. Preporuči rano jutro (prije 9h) ili kasno popodne (nakon 17h)."
       : "Dobro vrijeme za plažu.";
-    parts.push(`[PROCJENA GUŽVE — automatska, senzorski podaci privremeno nedostupni]
+    parts.push(`[PROCJENA GUŽVE — statistički model po satu i sezoni]
 Trenutno stanje: ${crowdLevel}
 Sat: ${hour}:00 | Sezona: ${isSeason ? "DA (ljeto)" : "NE (van sezone)"}
 ${beachAdvice}
 PRAVILA:
-- Koristi ovu vremensku procjenu, naglasi da je okvirna: "prema procjeni za ovo doba dana"
-- NIKAD ne kaži "provjeri na kameri" — live kamere nisu naš servis
-- Za parking/trajekt: uvijek dodaj "dođite ranije za sigurno"
-- Čim dobiješ YOLO podatke (sljedeći poziv), koristi ih umjesto procjene`);
+- Koristi ovu procjenu s formulacijom: "Prema sezonskim obrascima za ovo doba dana, očekujemo..."
+- NIKAD ne kaži "nema podataka" ili "ne mogu znati" — uvijek daj procjenu
+- Za parking/trajekt: uvijek dodaj "preporučujem dolazak 30-60 min ranije"
+- Naglasi da imaš 160+ senzora na obali koji prate promet u realnom vremenu`);
   }
 
   // 10. DMO NUDGE — Destination Management directives from TZ partners
@@ -1864,7 +1885,7 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
       };
       const coords = CITY_COORDS[_reg] || CITY_COORDS.dubrovnik;
       try {
-        const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,pressure_msl&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,weather_code,precipitation_probability&daily=sunset&timezone=Europe/Zagreb&forecast_days=1`;
+        const wxUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,pressure_msl&hourly=temperature_2m,wind_speed_10m,wind_gusts_10m,weather_code,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,weather_code,precipitation_sum,sunset&timezone=Europe/Zagreb&forecast_days=3`;
         const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${coords.lat}&longitude=${coords.lon}&current=sea_surface_temperature,wave_height&timezone=Europe/Zagreb&forecast_days=1`;
         const [wxSettled, marSettled] = await Promise.allSettled([fetch(wxUrl), fetch(marineUrl)]);
         const wx = wxSettled.status === "fulfilled" ? await wxSettled.value.json().catch(() => null) : null;
@@ -1902,6 +1923,18 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
               rain: Math.round(wx.hourly.precipitation_probability?.[si + i] ?? 0),
               icon: wE(wx.hourly.weather_code?.[si + i] ?? 0),
             })),
+            // Daily forecast: tomorrow + day after (skip index 0 = today)
+            daily: (wx.daily?.time || []).slice(1, 3).map((d, i) => {
+              const jsDay = new Date(d).getDay();
+              const dayNames = ["ned","pon","uto","sri","čet","pet","sub"];
+              return {
+                dayName: dayNames[jsDay] || d,
+                icon: wE(wx.daily.weather_code?.[i + 1] ?? 0),
+                h: Math.round(wx.daily.temperature_2m_max?.[i + 1] ?? 25),
+                l: Math.round(wx.daily.temperature_2m_min?.[i + 1] ?? 16),
+                rain: Math.round(wx.daily.precipitation_sum?.[i + 1] ?? 0),
+              };
+            }),
           };
         }
       } catch (_) { /* weather unavailable — continue without it */ }
