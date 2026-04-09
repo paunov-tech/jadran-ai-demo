@@ -1518,6 +1518,24 @@ const [lang, setLang] = useState(() => {
           <div style={{ fontSize: 10, color: C.mut, marginTop: 4 }}>{lang === "en" ? "Prices incl. VAT" : lang === "de" || lang === "at" ? "Preise inkl. MwSt." : lang === "it" ? "Prezzi IVA inclusa" : "Cijene uklj. PDV"} · SIAL Consulting d.o.o.</div>
         </div>
 
+        {/* ── AIR SERBIA affiliate — shown in paywall (flight deal) ── */}
+        <a href="https://www.tkqlhce.com/click-101704203-17263146" target="_blank" rel="noopener noreferrer"
+          style={{ display:"block", textDecoration:"none", marginTop:10 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px",
+            borderRadius:12, background:"rgba(200,16,46,0.06)", border:"1px solid rgba(200,16,46,0.18)", cursor:"pointer" }}>
+            <span style={{ fontSize:18, flexShrink:0 }}>✈️</span>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:11, fontWeight:700, color:"#f8fafc" }}>
+                {lang === "de" || lang === "at" ? "Air Serbia — Direktflug auf Brač" : lang === "en" ? "Air Serbia — Direct flight to Brač" : lang === "it" ? "Air Serbia — Volo diretto per Brač" : "Air Serbia — Direktni let na Brač"}
+              </div>
+              <div style={{ fontSize:10, color:"#94a3b8" }}>
+                {lang === "de" || lang === "at" ? "Einzige Direktverbindung aus der Region →" : lang === "en" ? "Only direct regional connection →" : lang === "it" ? "Unico collegamento diretto →" : "Jedina direktna regionalna veza →"}
+              </div>
+            </div>
+            <span style={{ fontSize:9, fontWeight:700, color:"#C8102E", background:"rgba(200,16,46,0.1)", border:"1px solid rgba(200,16,46,0.25)", borderRadius:6, padding:"3px 7px", flexShrink:0 }}>PARTNER</span>
+          </div>
+        </a>
+
         {/* ═══ RECOVERY FLOW — above referral, easy to reach ═══ */}
         {!showRecovery ? (
           <div style={{ textAlign: "center", marginTop: 8 }}>

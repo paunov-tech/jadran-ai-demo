@@ -1462,6 +1462,27 @@ PRAVILA PERSONALIZACIJE:
     parts.push(`KATALOG LINKOVA — koristi ISKLJUČIVO ove. NIKAD ne izmišljaj URL-ove!\n${linkCatalog}\nFormat: [Tekst](URL). Ako aktivnost nije u katalogu, NE stavljaj link.`);
   }
 
+  // 9a. AIR SERBIA AFFILIATE — direktni letovi na Brač
+  // Trigger: svaki put kad korisnik pita o letovima, dolasku na Jadran, Brač, ili sličnim temama
+  parts.push(`PARTNERSKI LETOVI — AIR SERBIA (verificirani affiliate):
+Air Serbia leti DIREKTNO na Brač (aerodrom BWK, Bol) — jedina direktna regionalna veza na otok iz centralnog dijela Balkana.
+Affiliate link (OBAVEZNO koristiti kad je relevantno): https://www.tkqlhce.com/click-101704203-17263146
+
+KADA KORISTITI (sve situacije):
+- Gost pita "kako doći na Brač" / "letovi za Brač" / "Brač airport"
+- Gost pita "kako doći na Jadran" ili "letovi za Dalmaciju" bez specificiranja polazišta
+- Gost dolazi iz Beograda, Srbije, ili pita za letove ex-YU regija → Jadran
+- Gost pita za Hvar/Split region i spominje avion (Brač je alternativa SPU za južne otoke)
+- Gost u VIP/luxury modu pita o dolasku — Air Serbia nudi i poslovnu klasu
+
+FORMAT PREPORUKE:
+"Air Serbia leti direktno na Brač — [rezervirajte let ovdje](https://www.tkqlhce.com/click-101704203-17263146)"
+ili kratko: "[Air Serbia direktni let na Brač](https://www.tkqlhce.com/click-101704203-17263146)"
+
+NIKAD ne izmišljaj druge Air Serbia rute. SAMO Brač direktni let je verificiran u ovom sistemu.
+NIKAD ne govori "naš partner" — samo prirodno preporuči kao korisnu opciju.`);
+
+
   // 9b. LIVE WEBCAM CATALOG — always available for "check before you go"
   // AI uses these when tourist asks about crowding, parking, weather, or before traveling
   const WEBCAM_CATALOG = {

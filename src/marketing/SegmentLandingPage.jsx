@@ -748,6 +748,51 @@ export default function SegmentLandingPage({ slug }) {
         </div>
       </Section>
 
+      {/* ── AIR SERBIA AFFILIATE — direct flights to Brač ── */}
+      <Section pt={24} pb={24} bg="#071828">
+        <a
+          href="https://www.tkqlhce.com/click-101704203-17263146"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ display:"block", textDecoration:"none" }}
+        >
+          <div style={{
+            display:"flex", alignItems:"center", gap:16,
+            background:"linear-gradient(135deg,rgba(200,16,46,0.12),rgba(200,16,46,0.04))",
+            border:"1px solid rgba(200,16,46,0.25)",
+            borderRadius:16, padding:"14px 20px",
+            cursor:"pointer", transition:"border-color 0.2s",
+          }}>
+            <div style={{ fontSize:28, flexShrink:0 }}>✈️</div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:"#f8fafc", lineHeight:1.3 }}>
+                {isDE
+                  ? "Air Serbia — Direktflug auf die Insel Brač"
+                  : isIT
+                  ? "Air Serbia — Volo diretto per l'isola di Brač"
+                  : "Air Serbia — Direct flights to Brač island"}
+              </div>
+              <div style={{ fontSize:11, color:"#94a3b8", marginTop:3 }}>
+                {isDE
+                  ? "Einzige Direktverbindung aus der Region · Flug buchen →"
+                  : isIT
+                  ? "Unico collegamento diretto dalla regione · Prenota il volo →"
+                  : "Only direct regional connection · Book your flight →"}
+              </div>
+            </div>
+            <div style={{
+              fontSize:11, fontWeight:700, color:"#C8102E", letterSpacing:0.5,
+              background:"rgba(200,16,46,0.1)", border:"1px solid rgba(200,16,46,0.3)",
+              borderRadius:8, padding:"4px 10px", flexShrink:0, whiteSpace:"nowrap",
+            }}>
+              {isDE ? "PARTNER" : isIT ? "PARTNER" : "PARTNER"}
+            </div>
+          </div>
+        </a>
+        {/* CJ tracking pixel — fires on section render */}
+        <img src="https://www.lduhtrp.net/image-101704203-17263146" width="1" height="1" style={{ position:"absolute", visibility:"hidden" }} alt="" />
+      </Section>
+
       {/* ── PRICING ── */}
       <Section pt={48} pb={48} bg={DARK}>
         <SectionLabel text={pricing.label} />
