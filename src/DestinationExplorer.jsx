@@ -1316,7 +1316,7 @@ export default function DestinationExplorer() {
                           {({hr:"Beograd → Brač (aerodrom Bol) · bez presjedanja",de:"Belgrad → Brač (Flughafen Bol) · ohne Umstieg",en:"Belgrade → Brač (Bol Airport) · non-stop",it:"Belgrado → Brač (Aeroporto Bol) · senza scalo",pl:"Belgrad → Brač (Bol) · bez przesiadki",si:"Beograd → Brač (Bol) · brez prestopa"})[dl]||"Belgrade → Brač (Bol) · non-stop"}
                         </div>
                       </div>
-                      <button onClick={() => window.open("https://www.kqzyfj.com/click-101704203-13957399", "_blank")} style={{ padding:"10px 16px", borderRadius:10, background:"#C8102E", border:"none", color:"#fff", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit", flexShrink:0, marginLeft:12 }}>
+                      <button onClick={() => window.open("https://www.dpbolvw.net/click-101704203-15735227", "_blank")} style={{ padding:"10px 16px", borderRadius:10, background:"#C8102E", border:"none", color:"#fff", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit", flexShrink:0, marginLeft:12 }}>
                         {({hr:"Kupi",de:"Buchen",en:"Book",it:"Prenota",pl:"Kup",si:"Kupi"})[dl]||"Book"}
                       </button>
                     </div>

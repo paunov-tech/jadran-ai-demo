@@ -952,7 +952,7 @@ export default function LandingPage() {
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", alignItems: "center" }}>
             {/* Air Serbia — affiliate with official banner */}
-            <a href="https://www.kqzyfj.com/click-101704203-13957399" target="_blank" rel="noopener noreferrer"
+            <a href="https://www.dpbolvw.net/click-101704203-15735227" target="_blank" rel="noopener noreferrer"
               style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12,
                 padding: "10px 16px", borderRadius: 14,
                 background: "rgba(200,16,46,0.06)", border: "1px solid rgba(200,16,46,0.2)",
