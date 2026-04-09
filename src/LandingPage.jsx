@@ -40,18 +40,18 @@ const L = {
 };
 
 const TRENDING = [
-  { emoji: "🚤", title: { hr: "Limski kanal — tura brodom", de: "Lim-Kanal — Bootsfahrt", en: "Lim Channel — boat tour", it: "Canale di Leme — gita in barca" }, sub: { hr: "Samo 12 mjesta", de: "Nur 12 Plätze", en: "Only 12 spots", it: "Solo 12 posti" }, price: "45€", link: GYG("rovinj-l1299/from-rovinj-rovinj-motovun-and-groznjan-day-tour-t132468"), tag: "ISTRA" },
-  { emoji: "🍄", title: { hr: "Lov na tartufe — Motovun", de: "Trüffeljagd — Motovun", en: "Truffle hunting — Motovun", it: "Caccia al tartufo — Motovun" }, sub: { hr: "Pravi lovac i pas", de: "Echter Jäger mit Hund", en: "Real hunter & dog", it: "Vero cacciatore con cane" }, price: "45€", link: GYG("istria-county-l1297/livade-guided-truffle-hunting-walking-tour-t413975"), tag: "ISTRA" },
-  { emoji: "🏟️", title: { hr: "Pula Arena — noćna tura", de: "Pula Arena — Nachttour", en: "Pula Arena — night tour", it: "Arena di Pola — tour notturno" }, sub: { hr: "2000 godina povijesti", de: "2000 Jahre Geschichte", en: "2000 years of history", it: "2000 anni di storia" }, price: "19€", link: GYG("pula-l1350/?q=arena+tour"), tag: "ISTRA" },
-  { emoji: "🏝️", title: { hr: "Blue Cave & 5 otoka", de: "Blaue Grotte & 5 Inseln", en: "Blue Cave & 5 islands", it: "Grotta Azzurra & 5 isole" }, sub: { hr: "Cijeli dan na moru", de: "Ganztagesausflug", en: "Full day at sea", it: "Giornata intera in mare" }, price: "110€", link: GYG("split-l268/from-split-blue-cave-mamma-mia-vis-hvar-5-islands-tour-t326676"), tag: "SPLIT" },
-  { emoji: "🌊", title: { hr: "Rafting na Cetini", de: "Rafting auf der Cetina", en: "Cetina river rafting", it: "Rafting sul Cetina" }, sub: { hr: "Kanjon + slapovi", de: "Schlucht + Wasserfälle", en: "Canyon + waterfalls", it: "Canyon + cascate" }, price: "40€", link: GYG("omis-l2760/?q=rafting+cetina"), tag: "SPLIT" },
-  { emoji: "🌿", title: { hr: "Hvar & Pakleni otoci", de: "Hvar & Pakleni-Inseln", en: "Hvar & Pakleni islands", it: "Hvar & isole Pakleni" }, sub: { hr: "Brodska tura cijeli dan", de: "Ganztags Bootstour", en: "Full day boat trip", it: "Gita in barca giornata intera" }, price: "89€", link: GYG("split-l268/?q=hvar+pakleni+boat"), tag: "SPLIT" },
-  { emoji: "💧", title: { hr: "NP Krka — izlet s prijevozom", de: "NP Krka — Tagesausflug", en: "Krka NP — day trip", it: "NP Krka — escursione" }, sub: { hr: "Kupanje uključeno", de: "Baden inklusive", en: "Swimming included", it: "Nuoto incluso" }, price: "65€", link: GYG("split-l268/?q=krka+waterfalls+day+trip"), tag: "ZADAR" },
-  { emoji: "🌅", title: { hr: "Zadar — zalazak & morske orgulje", de: "Zadar — Sonnenuntergang & Meeresorgel", en: "Zadar — sunset & sea organ", it: "Zadar — tramonto & organo marino" }, sub: { hr: "Najljepši zalazak na svijetu", de: "Schönster Sonnenuntergang der Welt", en: "World's most beautiful sunset", it: "Il tramonto più bello del mondo" }, price: "25€", link: GYG("zadar-l5008/?q=sunset+sea+organ"), tag: "ZADAR" },
-  { emoji: "🍷", title: { hr: "Degustacija na Pelješcu", de: "Weinprobe auf Pelješac", en: "Wine tasting on Pelješac", it: "Degustazione a Pelješac" }, sub: { hr: "Parking za kampere", de: "Camper-Parkplatz", en: "Camper parking", it: "Parcheggio camper" }, price: "35€", link: GYG("ston-l4159/?q=wine+tasting+peljesac"), tag: "DUBROVNIK" },
-  { emoji: "🏰", title: { hr: "Dubrovnik zidine — vodič", de: "Dubrovnik Stadtmauern — Guide", en: "Dubrovnik city walls — guided", it: "Mura di Dubrovnik — guidato" }, sub: { hr: "Bez čekanja", de: "Ohne Wartezeit", en: "Skip the queue", it: "Senza fila" }, price: "45€", link: GYG("activity/-t217212"), tag: "DUBROVNIK" },
-  { emoji: "🚣", title: { hr: "Kajak — zidine Dubrovnika", de: "Kajak — Dubrovnik Mauern", en: "Kayak — Dubrovnik walls", it: "Kayak — mura Dubrovnik" }, sub: { hr: "Pogled s mora", de: "Blick vom Meer", en: "View from the sea", it: "Vista dal mare" }, price: "40€", link: GYG("dubrovnik-l213/?q=kayak+walls"), tag: "DUBROVNIK" },
-  { emoji: "🏔️", title: { hr: "Plitvička jezera & Rastoke", de: "Plitvicer Seen & Rastoke", en: "Plitvice Lakes & Rastoke", it: "Laghi di Plitvice & Rastoke" }, sub: { hr: "Ulaznica uključena", de: "Ticket inklusive", en: "Ticket included", it: "Biglietto incluso" }, price: "99€", link: GYG("activity/-t406236"), tag: "PLITVICE" },
+  { title: { hr: "Limski kanal — tura brodom", de: "Lim-Kanal — Bootsfahrt", en: "Lim Channel — boat tour", it: "Canale di Leme — gita in barca" }, sub: { hr: "Samo 12 mjesta", de: "Nur 12 Plätze", en: "Only 12 spots", it: "Solo 12 posti" }, price: "45€", link: GYG("rovinj-l1299/from-rovinj-rovinj-motovun-and-groznjan-day-tour-t132468"), tag: "ISTRA", img: "https://upload.wikimedia.org/wikipedia/commons/1/1c/Boats_in_Rovinj_%2843682081675%29.jpg" },
+  { title: { hr: "Lov na tartufe — Motovun", de: "Trüffeljagd — Motovun", en: "Truffle hunting — Motovun", it: "Caccia al tartufo — Motovun" }, sub: { hr: "Pravi lovac i pas", de: "Echter Jäger mit Hund", en: "Real hunter & dog", it: "Vero cacciatore con cane" }, price: "45€", link: GYG("istria-county-l1297/livade-guided-truffle-hunting-walking-tour-t413975"), tag: "ISTRA", img: "https://upload.wikimedia.org/wikipedia/commons/7/78/HR-IS-Motovun79.jpg" },
+  { title: { hr: "Pula Arena — vodič", de: "Pula Arena — Führung", en: "Pula Arena — guided tour", it: "Arena di Pola — visita guidata" }, sub: { hr: "2000 godina povijesti", de: "2000 Jahre Geschichte", en: "2000 years of history", it: "2000 anni di storia" }, price: "19€", link: GYG("activity/-t1047000"), tag: "ISTRA", img: "https://upload.wikimedia.org/wikipedia/commons/f/ff/Anfiteatro_de_Pula%2C_Croacia%2C_2017-04-17%2C_DD_13-18_HDR_PAN.jpg" },
+  { title: { hr: "Blue Cave & 5 otoka", de: "Blaue Grotte & 5 Inseln", en: "Blue Cave & 5 islands", it: "Grotta Azzurra & 5 isole" }, sub: { hr: "Cijeli dan na moru", de: "Ganztagesausflug", en: "Full day at sea", it: "Giornata intera in mare" }, price: "110€", link: GYG("split-l268/from-split-blue-cave-mamma-mia-vis-hvar-5-islands-tour-t326676"), tag: "SPLIT", img: "https://upload.wikimedia.org/wikipedia/commons/0/09/Inside_the_Blue_Cave_on_Bisevo_island%2C_Croatia_%2848693429148%29.jpg" },
+  { title: { hr: "Rafting na Cetini", de: "Rafting auf der Cetina", en: "Cetina river rafting", it: "Rafting sul Cetina" }, sub: { hr: "Kanjon + slapovi", de: "Schlucht + Wasserfälle", en: "Canyon + waterfalls", it: "Canyon + cascate" }, price: "40€", link: GYG("omis-l2096/rafting-on-cetina-river-from-omis-t35592"), tag: "SPLIT", img: "https://upload.wikimedia.org/wikipedia/commons/b/bf/Rafting_Cetina_07.jpg" },
+  { title: { hr: "Hvar & Pakleni otoci", de: "Hvar & Pakleni-Inseln", en: "Hvar & Pakleni islands", it: "Hvar & isole Pakleni" }, sub: { hr: "Brodska tura cijeli dan", de: "Ganztags Bootstour", en: "Full day boat trip", it: "Gita in barca giornata intera" }, price: "89€", link: GYG("pakleni-islands-l110177/from-hvar-pakleni-islands-and-red-rocks-sailboat-tour-t400399"), tag: "SPLIT", img: "https://upload.wikimedia.org/wikipedia/commons/a/a4/Croatia_-_Harbor_of_Hvar_and_Pakleni_islands_2006.jpg" },
+  { title: { hr: "NP Krka — izlet s prijevozom", de: "NP Krka — Tagesausflug", en: "Krka NP — day trip", it: "NP Krka — escursione" }, sub: { hr: "Kupanje uključeno", de: "Baden inklusive", en: "Swimming included", it: "Nuoto incluso" }, price: "65€", link: GYG("split-l268/krka-waterfalls-tour-from-split-t88724"), tag: "ZADAR", img: "https://upload.wikimedia.org/wikipedia/commons/7/72/Skradinski_buk_waterfall_%E2%80%93_NP_Krka_%E2%80%93_2016.jpg" },
+  { title: { hr: "Zadar — zalazak & morske orgulje", de: "Zadar — Sonnenuntergang & Meeresorgel", en: "Zadar — sunset & sea organ", it: "Zadar — tramonto & organo marino" }, sub: { hr: "Najljepši zalazak na svijetu", de: "Schönster Sonnenuntergang der Welt", en: "World's most beautiful sunset", it: "Il tramonto più bello del mondo" }, price: "25€", link: GYG("zadar-l1328/zadar-city-sightseeing-sunset-cruise-sea-organ-symphony-t417141"), tag: "ZADAR", img: "https://upload.wikimedia.org/wikipedia/commons/e/ea/Sea_organ_Zadar_3.JPG" },
+  { title: { hr: "Degustacija na Pelješcu", de: "Weinprobe auf Pelješac", en: "Wine tasting on Pelješac", it: "Degustazione a Pelješac" }, sub: { hr: "Dingač, Postup, Plavac mali", de: "Dingač, Postup, Plavac mali", en: "Dingač, Postup, Plavac mali", it: "Dingač, Postup, Plavac mali" }, price: "35€", link: GYG("activity/-t28885"), tag: "DUBROVNIK", img: "https://upload.wikimedia.org/wikipedia/commons/b/b0/Vinogradi%2C_Dinga%C4%8D_112004.jpg" },
+  { title: { hr: "Dubrovnik zidine — vodič", de: "Dubrovnik Stadtmauern — Guide", en: "Dubrovnik city walls — guided", it: "Mura di Dubrovnik — guidato" }, sub: { hr: "Bez čekanja", de: "Ohne Wartezeit", en: "Skip the queue", it: "Senza fila" }, price: "45€", link: GYG("activity/-t217212"), tag: "DUBROVNIK", img: "https://upload.wikimedia.org/wikipedia/commons/7/70/Dubrovnik_Old_Town_1.jpg" },
+  { title: { hr: "Kajak — zidine Dubrovnika", de: "Kajak — Dubrovnik Mauern", en: "Kayak — Dubrovnik walls", it: "Kayak — mura Dubrovnik" }, sub: { hr: "Pogled s mora", de: "Blick vom Meer", en: "View from the sea", it: "Vista dal mare" }, price: "40€", link: GYG("dubrovnik-l513/dubrovnik-sea-kayaking-snorkeling-tour-t740343"), tag: "DUBROVNIK", img: "https://upload.wikimedia.org/wikipedia/commons/6/66/Kayaks_in_the_Adriatic_Sea_of_Dubrovnik%2C_Croatia_%2848612968121%29.jpg" },
+  { title: { hr: "Plitvička jezera & Rastoke", de: "Plitvicer Seen & Rastoke", en: "Plitvice Lakes & Rastoke", it: "Laghi di Plitvice & Rastoke" }, sub: { hr: "Ulaznica uključena", de: "Ticket inklusive", en: "Ticket included", it: "Biglietto incluso" }, price: "99€", link: GYG("activity/-t406236"), tag: "PLITVICE", img: "https://upload.wikimedia.org/wikipedia/commons/4/48/Waterfall_in_plitvice_lakes_national_park%2C_croatia.jpg" },
 ];
 
 // Demo chat built dynamically from tx() translations
@@ -908,10 +908,10 @@ export default function LandingPage() {
                 <div style={{ minWidth: 260, borderRadius: 16, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden", transition: "all 0.3s" }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(14,165,233,0.15)"; e.currentTarget.style.transform = "translateY(-3px)"; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"; e.currentTarget.style.transform = ""; }}>
-                  <div style={{ height: 100, background: "linear-gradient(135deg, #0c2d48, #134e6f)", position: "relative", overflow: "hidden", display: "grid", placeItems: "center" }}>
-                    {trendImgs[t.tag] && <img src={trendImgs[t.tag]} alt={t.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.5 }} />}
-                    <span style={{ position: "relative", fontSize: 32 }}>{t.emoji}</span>
-                    <span style={{ position: "absolute", top: 8, left: 8, padding: "2px 8px", borderRadius: 6, background: "rgba(14,165,233,0.15)", color: "#38bdf8", fontSize: 9, fontWeight: 600, letterSpacing: 1 }}>{t.tag}</span>
+                  <div style={{ height: 120, background: "#0c2d48", position: "relative", overflow: "hidden" }}>
+                    {t.img && <img src={t.img} alt={t.title[lang] || t.title.en} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />}
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(3,8,16,0.1) 0%, rgba(3,8,16,0.45) 100%)" }} />
+                    <span style={{ position: "absolute", top: 8, left: 8, padding: "2px 8px", borderRadius: 6, background: "rgba(14,165,233,0.18)", backdropFilter: "blur(6px)", color: "#38bdf8", fontSize: 9, fontWeight: 600, letterSpacing: 1 }}>{t.tag}</span>
                   </div>
                   <div style={{ padding: "12px 14px" }}>
                     <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{t.title[lang] || t.title.de || t.title.en}</div>
@@ -945,63 +945,26 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ NAŠI PARTNERI ═══ */}
-      <section style={{ padding: "40px 24px", background: "#080e1a" }}>
-        <div style={{ maxWidth: 700, margin: "0 auto" }}>
-          <div style={{ fontSize: 9, color: "#64748b", letterSpacing: 5, fontWeight: 600, textAlign: "center", marginBottom: 20 }}>
-            {lang === "de" || lang === "at" ? "UNSERE PARTNER" : lang === "en" ? "OUR PARTNERS" : lang === "it" ? "I NOSTRI PARTNER" : "NAŠI PARTNERI"}
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", alignItems: "center" }}>
-            {/* Air Serbia — affiliate with official banner */}
-            <a href="https://www.dpbolvw.net/click-101704203-15735227" target="_blank" rel="noopener noreferrer"
-              style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12,
-                padding: "10px 16px", borderRadius: 14,
-                background: "rgba(200,16,46,0.06)", border: "1px solid rgba(200,16,46,0.2)",
-                transition: "border-color 0.2s" }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(200,16,46,0.45)"}
-              onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(200,16,46,0.2)"}>
-              <img src="https://www.ftjcfx.com/image-101704203-13957399" width="44" height="44" alt="Air Serbia" style={{ borderRadius: 10, flexShrink: 0 }} />
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9" }}>Air Serbia</div>
-                <div style={{ fontSize: 10, color: "#94a3b8" }}>
-                  {lang === "de" || lang === "at" ? "Direktflug → Brač" : lang === "en" ? "Direct flight → Brač" : lang === "it" ? "Volo diretto → Brač" : "Direktni let → Brač"}
-                </div>
-              </div>
-            </a>
-            {/* Booking.com */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8,
-              padding: "10px 16px", borderRadius: 12,
-              background: "rgba(0,115,230,0.05)", border: "1px solid rgba(0,115,230,0.15)" }}>
-              <span style={{ fontSize: 16, fontWeight: 900, color: "#0073E6", fontFamily: "'Outfit',sans-serif" }}>B.</span>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9" }}>Booking.com</div>
-                <div style={{ fontSize: 10, color: "#94a3b8" }}>
-                  {lang === "de" || lang === "at" ? "Unterkunft" : lang === "en" ? "Accommodation" : lang === "it" ? "Alloggi" : "Smještaj"}
-                </div>
+      <section style={{ padding: "28px 24px 24px", background: "#080e1a" }}>
+        <div style={{ maxWidth: 480, margin: "0 auto" }}>
+          <a href="https://www.dpbolvw.net/click-101704203-15735227" target="_blank" rel="noopener noreferrer"
+            style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 14,
+              padding: "12px 16px", borderRadius: 16,
+              background: "rgba(200,16,46,0.06)", border: "1px solid rgba(200,16,46,0.2)",
+              transition: "all 0.2s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(200,16,46,0.45)"; e.currentTarget.style.background = "rgba(200,16,46,0.1)"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(200,16,46,0.2)"; e.currentTarget.style.background = "rgba(200,16,46,0.06)"; }}>
+            <img src="https://www.ftjcfx.com/image-101704203-13957399" width="44" height="44" alt="Air Serbia" style={{ borderRadius: 10, flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#f1f5f9" }}>Air Serbia</div>
+              <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 2 }}>
+                {lang === "de" || lang === "at" ? "Direktflug → Brač · Jetzt buchen" : lang === "en" ? "Direct flight → Brač · Book now" : lang === "it" ? "Volo diretto → Brač · Prenota ora" : "Direktni let → Brač · Rezerviši odmah"}
               </div>
             </div>
-            {/* GetYourGuide */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8,
-              padding: "10px 16px", borderRadius: 12,
-              background: "rgba(255,87,34,0.05)", border: "1px solid rgba(255,87,34,0.15)" }}>
-              <span style={{ fontSize: 16 }}>🎟️</span>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9" }}>GetYourGuide</div>
-                <div style={{ fontSize: 10, color: "#94a3b8" }}>
-                  {lang === "de" || lang === "at" ? "Ausflüge & Touren" : lang === "en" ? "Tours & Activities" : lang === "it" ? "Tour e attività" : "Izleti i ture"}
-                </div>
-              </div>
+            <div style={{ fontSize: 9, fontWeight: 700, color: "#C8102E", background: "rgba(200,16,46,0.08)", border: "1px solid rgba(200,16,46,0.22)", borderRadius: 8, padding: "4px 9px", flexShrink: 0, letterSpacing: 1 }}>
+              PARTNER
             </div>
-            {/* HERE Maps */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8,
-              padding: "10px 16px", borderRadius: 12,
-              background: "rgba(0,175,170,0.05)", border: "1px solid rgba(0,175,170,0.15)" }}>
-              <span style={{ fontSize: 12, fontWeight: 800, color: "#00AFAA" }}>HERE</span>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9" }}>HERE Maps</div>
-                <div style={{ fontSize: 10, color: "#94a3b8" }}>BMW Group · Navigation</div>
-              </div>
-            </div>
-          </div>
+          </a>
         </div>
       </section>
 
