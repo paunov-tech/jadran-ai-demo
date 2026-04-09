@@ -944,6 +944,67 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ═══ NAŠI PARTNERI ═══ */}
+      <section style={{ padding: "40px 24px", background: "#080e1a" }}>
+        <div style={{ maxWidth: 700, margin: "0 auto" }}>
+          <div style={{ fontSize: 9, color: "#64748b", letterSpacing: 5, fontWeight: 600, textAlign: "center", marginBottom: 20 }}>
+            {lang === "de" || lang === "at" ? "UNSERE PARTNER" : lang === "en" ? "OUR PARTNERS" : lang === "it" ? "I NOSTRI PARTNER" : "NAŠI PARTNERI"}
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", alignItems: "center" }}>
+            {/* Air Serbia — affiliate */}
+            <a href="https://www.dpbolvw.net/click-101704203-17263146" target="_blank" rel="noopener noreferrer"
+              style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10,
+                padding: "10px 16px", borderRadius: 12,
+                background: "rgba(200,16,46,0.06)", border: "1px solid rgba(200,16,46,0.2)",
+                transition: "border-color 0.2s" }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(200,16,46,0.45)"}
+              onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(200,16,46,0.2)"}>
+              <span style={{ fontSize: 20 }}>✈️</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9" }}>Air Serbia</div>
+                <div style={{ fontSize: 10, color: "#94a3b8" }}>
+                  {lang === "de" || lang === "at" ? "Direktflug → Brač" : lang === "en" ? "Direct flight → Brač" : lang === "it" ? "Volo diretto → Brač" : "Direktni let → Brač"}
+                </div>
+              </div>
+            </a>
+            {/* Booking.com */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8,
+              padding: "10px 16px", borderRadius: 12,
+              background: "rgba(0,115,230,0.05)", border: "1px solid rgba(0,115,230,0.15)" }}>
+              <span style={{ fontSize: 16, fontWeight: 900, color: "#0073E6", fontFamily: "'Outfit',sans-serif" }}>B.</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9" }}>Booking.com</div>
+                <div style={{ fontSize: 10, color: "#94a3b8" }}>
+                  {lang === "de" || lang === "at" ? "Unterkunft" : lang === "en" ? "Accommodation" : lang === "it" ? "Alloggi" : "Smještaj"}
+                </div>
+              </div>
+            </div>
+            {/* GetYourGuide */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8,
+              padding: "10px 16px", borderRadius: 12,
+              background: "rgba(255,87,34,0.05)", border: "1px solid rgba(255,87,34,0.15)" }}>
+              <span style={{ fontSize: 16 }}>🎟️</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9" }}>GetYourGuide</div>
+                <div style={{ fontSize: 10, color: "#94a3b8" }}>
+                  {lang === "de" || lang === "at" ? "Ausflüge & Touren" : lang === "en" ? "Tours & Activities" : lang === "it" ? "Tour e attività" : "Izleti i ture"}
+                </div>
+              </div>
+            </div>
+            {/* HERE Maps */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8,
+              padding: "10px 16px", borderRadius: 12,
+              background: "rgba(0,175,170,0.05)", border: "1px solid rgba(0,175,170,0.15)" }}>
+              <span style={{ fontSize: 12, fontWeight: 800, color: "#00AFAA" }}>HERE</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#f1f5f9" }}>HERE Maps</div>
+                <div style={{ fontSize: 10, color: "#94a3b8" }}>BMW Group · Navigation</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* FOOTER */}
       <footer style={{ padding: "32px 24px", paddingBottom: gdprVisible ? "calc(32px + 52px + 52px)" : "calc(32px + 52px)", textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.03)", background: "#080e1a" }}>
         {/* Anthropic Claude badge */}

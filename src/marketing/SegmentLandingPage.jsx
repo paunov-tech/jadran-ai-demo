@@ -748,48 +748,50 @@ export default function SegmentLandingPage({ slug }) {
         </div>
       </Section>
 
-      {/* ── AIR SERBIA AFFILIATE — direct flights to Brač ── */}
-      <Section pt={24} pb={24} bg="#071828">
-        <a
-          href="https://www.dpbolvw.net/click-101704203-17263146"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ display:"block", textDecoration:"none" }}
-        >
-          <div style={{
-            display:"flex", alignItems:"center", gap:16,
-            background:"linear-gradient(135deg,rgba(200,16,46,0.12),rgba(200,16,46,0.04))",
-            border:"1px solid rgba(200,16,46,0.25)",
-            borderRadius:16, padding:"14px 20px",
-            cursor:"pointer", transition:"border-color 0.2s",
-          }}>
-            <div style={{ fontSize:28, flexShrink:0 }}>✈️</div>
-            <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontSize:13, fontWeight:700, color:"#f8fafc", lineHeight:1.3 }}>
-                {isDE
-                  ? "Air Serbia — Direktflug auf die Insel Brač"
-                  : isIT
-                  ? "Air Serbia — Volo diretto per l'isola di Brač"
-                  : "Air Serbia — Direct flights to Brač island"}
-              </div>
-              <div style={{ fontSize:11, color:"#94a3b8", marginTop:3 }}>
-                {isDE
-                  ? "Einzige Direktverbindung aus der Region · Flug buchen →"
-                  : isIT
-                  ? "Unico collegamento diretto dalla regione · Prenota il volo →"
-                  : "Only direct regional connection · Book your flight →"}
+      {/* ── NAŠI PARTNERI ── */}
+      <Section pt={32} pb={32} bg="#071828">
+        <div style={{ fontSize:9, color:"#475569", letterSpacing:5, fontWeight:600, textAlign:"center", marginBottom:20 }}>
+          {isDE ? "UNSERE PARTNER" : isIT ? "I NOSTRI PARTNER" : "OUR PARTNERS"}
+        </div>
+        <div style={{ display:"flex", flexWrap:"wrap", gap:12, justifyContent:"center", alignItems:"center" }}>
+          {/* Air Serbia — affiliate */}
+          <a href="https://www.dpbolvw.net/click-101704203-17263146" target="_blank" rel="noopener noreferrer"
+            style={{ textDecoration:"none", display:"flex", alignItems:"center", gap:10,
+              padding:"10px 16px", borderRadius:12,
+              background:"rgba(200,16,46,0.06)", border:"1px solid rgba(200,16,46,0.2)",
+              transition:"border-color 0.2s" }}>
+            <span style={{ fontSize:20 }}>✈️</span>
+            <div>
+              <div style={{ fontSize:12, fontWeight:700, color:"#f1f5f9" }}>Air Serbia</div>
+              <div style={{ fontSize:10, color:"#94a3b8" }}>
+                {isDE ? "Direktflug → Brač" : isIT ? "Volo diretto → Brač" : "Direct flight → Brač"}
               </div>
             </div>
-            <div style={{
-              fontSize:11, fontWeight:700, color:"#C8102E", letterSpacing:0.5,
-              background:"rgba(200,16,46,0.1)", border:"1px solid rgba(200,16,46,0.3)",
-              borderRadius:8, padding:"4px 10px", flexShrink:0, whiteSpace:"nowrap",
-            }}>
-              {isDE ? "PARTNER" : isIT ? "PARTNER" : "PARTNER"}
+          </a>
+          {/* Booking.com */}
+          <div style={{ display:"flex", alignItems:"center", gap:8,
+            padding:"10px 16px", borderRadius:12,
+            background:"rgba(0,115,230,0.05)", border:"1px solid rgba(0,115,230,0.15)" }}>
+            <span style={{ fontSize:16, fontWeight:900, color:"#0073E6" }}>B.</span>
+            <div>
+              <div style={{ fontSize:12, fontWeight:700, color:"#f1f5f9" }}>Booking.com</div>
+              <div style={{ fontSize:10, color:"#94a3b8" }}>
+                {isDE ? "Unterkunft" : isIT ? "Alloggi" : "Accommodation"}
+              </div>
             </div>
           </div>
-        </a>
-        {/* CJ tracking pixel — fires on section render */}
+          {/* HERE Maps */}
+          <div style={{ display:"flex", alignItems:"center", gap:8,
+            padding:"10px 16px", borderRadius:12,
+            background:"rgba(0,175,170,0.05)", border:"1px solid rgba(0,175,170,0.15)" }}>
+            <span style={{ fontSize:11, fontWeight:800, color:"#00AFAA" }}>HERE</span>
+            <div>
+              <div style={{ fontSize:12, fontWeight:700, color:"#f1f5f9" }}>HERE Maps</div>
+              <div style={{ fontSize:10, color:"#94a3b8" }}>BMW Group · Navigation</div>
+            </div>
+          </div>
+        </div>
+        {/* CJ impression pixel */}
         <img src="https://www.lduhtrp.net/image-101704203-17263146" width="1" height="1" style={{ position:"absolute", visibility:"hidden" }} alt="" />
       </Section>
 
