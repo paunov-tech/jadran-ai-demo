@@ -764,27 +764,89 @@ async function fetchYoloCrowd() {
   }
 }
 
+// Human-readable labels for known sensor ID patterns → shown to AI instead of raw IDs
+const SENSOR_LOCATION_LABELS = {
+  // Split
+  "split_riva": "Riva (šetalište Split)",
+  "split_promenada": "Promenada Split",
+  "split_harbor": "Luka Split",
+  "split_luka": "Luka Split",
+  "split_bacvice": "Bačvice plaža",
+  "split_bačvice": "Bačvice plaža",
+  "split_centar": "Centar Splita",
+  "split_dioklecijan": "Dioklecijanova palača",
+  "split_marmontova": "Marmontova ul.",
+  // Dubrovnik
+  "dubrovnik_stradun": "Stradun",
+  "dubrovnik_riva": "Dubrovnik Riva",
+  "dubrovnik_gruz": "Gruž luka",
+  "dubrovnik_gruž": "Gruž luka",
+  "dubrovnik_harbor": "Dubrovnik luka",
+  "dubrovnik_pile": "Pile vrata",
+  "dubrovnik_banje": "Banje plaža",
+  "dubrovnik_old": "Stari grad Dubrovnik",
+  // Zadar
+  "zadar_riva": "Riva Zadar",
+  "zadar_promenada": "Zadar šetalište",
+  "zadar_harbor": "Zadar luka",
+  // Šibenik
+  "sibenik_harbor": "Šibenik luka",
+  "sibenik_riva": "Šibenik Riva",
+  // Hvar
+  "hvar_riva": "Hvar Riva",
+  "hvar_harbor": "Hvar luka",
+  // Makarska
+  "makarska_riva": "Makarska Riva",
+  "makarska_promenada": "Makarska šetalište",
+  // Rovinj
+  "rovinj_harbor": "Rovinj luka",
+  "rovinj_riva": "Rovinj Riva",
+  // Ferries / terminals
+  "ferry": "trajektni terminal",
+  "trajekt": "trajektni terminal",
+  "pristaniste": "pristanište",
+};
+
+function getSensorLabel(camId) {
+  const id = camId.toLowerCase();
+  for (const [prefix, label] of Object.entries(SENSOR_LOCATION_LABELS)) {
+    if (id.includes(prefix)) return label;
+  }
+  return camId; // fallback to raw ID
+}
+
 function generateYoloCrowdPrompt(yoloData, userRegion) {
   if (!yoloData || !yoloData.regions) return "";
   const lines = [];
-  lines.push("[LIVE CROWD DATA — mreža prometnih senzora, ažurirano svakih 15 min]");
-  lines.push(`Ukupno: ${yoloData.totalObjects} detekcija na ${yoloData.activeSensors} aktivnih senzora\n`);
+  const totalObj = yoloData.totalObjects || 0;
+  const activeS  = yoloData.activeSensors || 0;
+  lines.push(`[LIVE CROWD DATA — ${activeS} aktivnih senzora, ažurirano svakih 15 min]`);
+  if (totalObj === 0) {
+    lines.push("Ukupno: 0 detekcija — senzori aktivni, sve lokacije MIRNE.\n");
+  } else {
+    lines.push(`Ukupno: ${totalObj} detekcija na ${activeS} senzora\n`);
+  }
 
-  // Sort regions by activity
   const sorted = Object.entries(yoloData.regions).sort((a, b) => b[1].totalObjects - a[1].totalObjects);
   for (const [region, data] of sorted) {
     const isUser = (region === userRegion) || (SENSE_TO_APP_REGION[userRegion] === region);
     const marker = isUser ? " ← KORISNIKOVA REGIJA" : "";
-    const top3 = data.sensors.slice(0, 3).filter(c => c.rawCount > 0).map(c => `${c.camId}:${c.rawCount}`).join(", ");
-    lines.push(`${region}: ${data.totalObjects} obj (${data.persons} osoba, ${data.cars} auta, ${data.boats} brodova) — ${data.activeSensors} aktivnih senzora${marker}`);
-    if (top3) lines.push(`  Top: ${top3}`);
+    // Show human-readable sensor labels instead of raw IDs
+    const top3 = data.sensors.slice(0, 3).map(c => {
+      const label = getSensorLabel(c.camId);
+      return c.rawCount > 0 ? `${label}: ${c.rawCount} obj` : `${label}: mirno`;
+    }).join(" | ");
+    const status = data.totalObjects === 0 ? "MIRNO" : data.totalObjects > 80 ? "GUSTO" : data.totalObjects > 30 ? "umjereno" : "malo";
+    lines.push(`${region} [${status}]: ${data.persons} osoba, ${data.cars} auta, ${data.boats} brodova — ${data.activeSensors} senzora${marker}`);
+    if (top3) lines.push(`  Lokacije: ${top3}`);
   }
 
   lines.push(`\nPRAVILA ZA LIVE PODATKE:`);
-  lines.push(`- Ovo su PRAVI podaci s prometnih senzora, NE procjene. Koristi ih kad gost pita o gužvi.`);
+  lines.push(`- Ovo su PRAVI podaci s YOLO senzora postavljenih na prometnicama, šetnicama i lukama. UVIJEK ih koristi.`);
   lines.push(`- NE navodi točan broj — zaokruži: "dvadesetak osoba", "pedesetak", "stotinjak"`);
-  lines.push(`- Ako je 0 detekcija → "Trenutno je mirno, idealno vrijeme za posjet."`);
-  lines.push(`- Usporedi regije: ako korisnikova regija ima puno, preporuči mirniju`);
+  lines.push(`- 0 detekcija = senzori rade, lokacija je MIRNA. Reci: "Naši senzori bilježe 0 aktivnosti — idealno za posjet."`);
+  lines.push(`- NIKAD ne kaži "provjeri na kameri" ako imaš YOLO podatke — imaš ih UVIJEK.`);
+  lines.push(`- Usporedi regije: ako korisnikova regija gusto, preporuči mirniju.`);
 
   return lines.join("\n");
 }
@@ -1429,17 +1491,18 @@ PRAVILA ZA KAMERE:
 - NIKAD ne govori "vidim na kameri" — ti NE gledaš kameru, samo daješ link gostu`);
 
   // 9c. YOLO SENSE DATA — injected from handler (async fetch happens there)
-  if (yoloCrowdData && yoloCrowdData.totalObjects > 0) {
+  // Inject whenever data object exists — 0 detections = locations are QUIET (not "no data")
+  if (yoloCrowdData) {
     if (mode === "camper") {
       parts.push(generateCamperYoloPrompt(yoloCrowdData));
     } else {
       parts.push(generateYoloCrowdPrompt(yoloCrowdData, region));
     }
   } else {
-    // FALLBACK: time-based crowd estimate so AI ALWAYS has crowd awareness
+    // FALLBACK: only when YOLO fetch completely failed — time-based estimate
     const hour = new Date().getHours();
-    const month = new Date().getMonth(); // 0-indexed
-    const isSeason = month >= 5 && month <= 8; // Jun-Sep
+    const month = new Date().getMonth();
+    const isSeason = month >= 5 && month <= 8;
     const crowdLevel = !isSeason ? "van sezone — mirno"
       : hour < 8 ? "rano jutro — mirno"
       : hour < 11 ? "jutro — umjereno"
@@ -1449,16 +1512,15 @@ PRAVILA ZA KAMERE:
     const beachAdvice = hour >= 11 && hour <= 16 && isSeason
       ? "Plaže su najgušće 11-16h. Preporuči rano jutro (prije 9h) ili kasno popodne (nakon 17h)."
       : "Dobro vrijeme za plažu.";
-    parts.push(`[PROCJENA GUŽVE — automatska (YOLO kamere trenutno nemaju podataka)]
+    parts.push(`[PROCJENA GUŽVE — automatska, senzorski podaci privremeno nedostupni]
 Trenutno stanje: ${crowdLevel}
 Sat: ${hour}:00 | Sezona: ${isSeason ? "DA (ljeto)" : "NE (van sezone)"}
 ${beachAdvice}
 PRAVILA:
-- Kad gost pita o gužvi, koristi ovu procjenu ALI naglasi da je okvirna
-- Reci "prema procjeni" umjesto "prema kamerama" kad nemaš YOLO podatke
-- Ako imaš live podatke iz YOLO kamera, UVIJEK ih koristi umjesto procjene
-- Preporuči gostu da pogleda live kameru za točnu situaciju
-- Za parking/trajekt: uvijek dodaj "dođite ranije za sigurno"`);
+- Koristi ovu vremensku procjenu, naglasi da je okvirna: "prema procjeni za ovo doba dana"
+- NIKAD ne kaži "provjeri na kameri" — live kamere nisu naš servis
+- Za parking/trajekt: uvijek dodaj "dođite ranije za sigurno"
+- Čim dobiješ YOLO podatke (sljedeći poziv), koristi ih umjesto procjene`);
   }
 
   // 10. DMO NUDGE — Destination Management directives from TZ partners
