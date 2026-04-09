@@ -353,6 +353,7 @@ export default function SegmentLandingPage({ slug }) {
   const [msgs, setMsgs] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [demoReplied, setDemoReplied] = useState(false);
   const chatRef = useRef(null);
 
   // Email capture (optional, at bottom)
@@ -402,6 +403,7 @@ export default function SegmentLandingPage({ slug }) {
       const d = await r.json();
       const reply = d.content?.[0]?.text || d.reply || d.text || c.demo.errText;
       setMsgs(p => [...p, { role:"assistant", content:reply }]);
+      setDemoReplied(true);
     } catch {
       setMsgs(p => [...p, { role:"assistant", content: c.demo.errText }]);
     }
@@ -555,12 +557,28 @@ export default function SegmentLandingPage({ slug }) {
             </button>
           </div>
 
-          <p style={{ textAlign:"center", fontSize:12, color:"#1e293b", padding:"8px 16px 14px" }}>
-            {isDE ? "7 Fragen kostenlos · Danach ab 9,99 €/Woche" : isIT ? "7 domande gratis · Poi da 9,99 €/settimana" : "7 questions free · Then from €9.99/week"}{" · "}
-            <a href={hero.ctaHref} style={{ color:"#334155", textDecoration:"underline" }}>
-              {isDE ? "Vollversion öffnen" : isIT ? "Apri versione completa" : "Open full version"}
-            </a>
-          </p>
+          {demoReplied ? (
+            <div style={{ margin:"10px 12px 14px", borderRadius:14, background:"linear-gradient(135deg, rgba(245,158,11,0.12), rgba(234,88,12,0.08))", border:"1px solid rgba(245,158,11,0.3)", padding:"14px 16px" }}>
+              <div style={{ fontSize:13, fontWeight:700, color:"#f59e0b", marginBottom:4 }}>
+                {isDE ? "Das war nur eine Vorschau." : isIT ? "Questa era solo un'anteprima." : "That was just a preview."}
+              </div>
+              <div style={{ fontSize:12, color:"#94a3b8", marginBottom:12, lineHeight:1.5 }}>
+                {isDE ? "Season Pass: ganzer Sommer, alle Regionen, Sturmwarnungen, Walkie-Talkie — einmalig 19,99 €." : isIT ? "Season Pass: tutta l'estate, tutte le regioni, allerte meteo, Walkie-Talkie — una tantum 19,99 €." : "Season Pass: full summer, all regions, storm alerts, Walkie-Talkie — one-time €19.99."}
+              </div>
+              <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                <a href={hero.ctaHref} style={{ flex:2, display:"block", padding:"11px 0", background:"linear-gradient(135deg,#f59e0b,#d97706)", borderRadius:10, color:"#0f172a", fontWeight:800, fontSize:14, textAlign:"center", textDecoration:"none", fontFamily:B, boxShadow:"0 2px 8px rgba(245,158,11,0.35)" }}>
+                  {isDE ? "Season Pass — 19,99 €" : isIT ? "Season Pass — 19,99 €" : "Season Pass — €19.99"} →
+                </a>
+                <a href={hero.ctaHref} style={{ flex:1, display:"block", padding:"11px 0", background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", borderRadius:10, color:"#7dd3fc", fontSize:12, fontWeight:600, textAlign:"center", textDecoration:"none", fontFamily:B }}>
+                  {isDE ? "Gratis testen" : isIT ? "Prova gratis" : "Try free"}
+                </a>
+              </div>
+            </div>
+          ) : (
+            <p style={{ textAlign:"center", fontSize:12, color:"#475569", padding:"8px 16px 14px" }}>
+              {isDE ? "7 Fragen kostenlos · Keine Registrierung" : isIT ? "7 domande gratis · Nessuna registrazione" : "7 questions free · No registration"}
+            </p>
+          )}
         </div>
       </Section>
 

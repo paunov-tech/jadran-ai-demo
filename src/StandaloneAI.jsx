@@ -2915,9 +2915,13 @@ const [lang, setLang] = useState(() => {
       )}
 
       {!premium && trialExpired && (
-        <div style={{ flexShrink: 0 }}>
-          <button onClick={() => setShowPaywall(true)} disabled={payLoading} style={{ width: "100%", padding: "14px 20px", background: "linear-gradient(135deg, #ef4444, #dc2626)", border: "none", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "'Playfair Display',Georgia,serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 -2px 12px rgba(239,68,68,0.3)" }}>
-            ⭐ {t.buyNow || "KUPI PREMIUM"} <span style={{ fontSize: 12, opacity: 0.8 }}>— 9.99€</span>
+        <div style={{ flexShrink: 0, display: "flex", gap: 0 }}>
+          <button onClick={() => startCheckout("season")} disabled={payLoading} style={{ flex: 2, padding: "14px 16px", background: "linear-gradient(135deg, #f59e0b, #d97706)", border: "none", color: "#0f172a", fontSize: 14, fontWeight: 800, cursor: "pointer", fontFamily: "inherit", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1, boxShadow: "0 -2px 12px rgba(245,158,11,0.35)" }}>
+            <span>⭐ {lang === "de" || lang === "at" ? "Season Pass kaufen" : lang === "en" ? "Buy Season Pass" : lang === "it" ? "Acquista Season Pass" : "Kupi Season Pass"}</span>
+            <span style={{ fontSize: 11, opacity: 0.75 }}>{lang === "de" || lang === "at" ? "ganzer Sommer — 19,99€" : lang === "en" ? "full summer — €19.99" : lang === "it" ? "tutta l'estate — 19,99€" : "cijelo ljeto — 19,99€"}</span>
+          </button>
+          <button onClick={() => setShowPaywall(true)} disabled={payLoading} style={{ flex: 1, padding: "14px 10px", background: "rgba(239,68,68,0.12)", border: "none", borderLeft: "1px solid rgba(239,68,68,0.2)", color: "#ef4444", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+            {lang === "de" || lang === "at" ? "Alle Pläne" : lang === "en" ? "All plans" : lang === "it" ? "Tutti i piani" : "Svi planovi"} ›
           </button>
         </div>
       )}
