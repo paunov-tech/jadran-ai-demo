@@ -69,7 +69,7 @@ export default async function handler(req, res) {
   const origin = "https://jadran.ai"; // Hardcoded — prevents open redirect via forged Origin header
 
   try {
-    const { roomCode, guestName, lang, returnPath, plan, region, deviceId, utm_source, utm_medium, utm_campaign, partnerRef } = req.body || {};
+    const { roomCode, guestName, lang, returnPath, plan, region, deviceId, utm_source, utm_medium, utm_campaign, partnerRef, capiEventId = null, fbp = null, fbc = null } = req.body || {};
     if (!plan || !["week", "season", "vip"].includes(plan)) return res.status(400).json({ error: "Invalid plan" });
     // Sanitize partnerRef: only allow JAD-XXX-NNN format (e.g. JAD-RAB-001), strip anything else
     const sanitizedPartnerRef = (typeof partnerRef === "string" && /^JAD-[A-Z]{2,5}-\d{3}$/.test(partnerRef)) ? partnerRef : "";

@@ -809,11 +809,27 @@ export default function JadranUnified() {
     kioskForcedCoords.current = [finalLat, finalLng]; // prevent GPS from overriding
     setTransitToCoords([finalLat, finalLng]);
     saveDelta({ destination: { city: cd[2], lat: finalLat, lng: finalLng } });
+    // ── KRAJ TESTING PERIODA: kiosk zahteva premium (affiliate QR kodovi i dalje dobijaju trial) ──
+    if (!isValidAffiliate) {
+      const hasPrem = (() => {
+        try {
+          if (localStorage.getItem("jadran_ai_premium") !== "1") return false;
+          const exp = parseInt(localStorage.getItem("jadran_premium_exp") || "0", 10);
+          return !exp || Date.now() < exp;
+        } catch { return false; }
+      })();
+      if (!hasPrem) {
+        try { sessionStorage.setItem("jadran_after_pay_kiosk", JSON.stringify({ city: cd[2], lat: finalLat, lng: finalLng, lang: urlLang || null })); } catch {}
+        window.history.replaceState({}, "", "/");
+        setSplash(false);
+        setShowPaywall(true);
+        return;
+      }
+    }
     setPhase("kiosk");
     setSubScreen(urlAffiliate ? "affiliate" : "home");
     setSplash(false);
     // Only grant 72h trial for verified affiliate partners (QR #1 with valid token)
-    // TZ QR without affiliate (QR #2) gets 3 free messages only
     if (isValidAffiliate) ensureTrialStart();
     // Auto-unlock premium if arriving from a paid TripGuide booking
     const bookingId = p.get("booking");
@@ -1053,6 +1069,15 @@ export default function JadranUnified() {
   // To test premium: use Stripe test mode or set jadran_ai_premium in Firebase console
   // useEffect(() => { ... }, []);
 
+  // ─── ?paywall=1 redirect from Guardian Brief (LandingPage) ───
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("paywall") !== "1") return;
+    window.history.replaceState({}, "", "/");
+    setSplash(false);
+    setShowPaywall(true);
+  }, []); // eslint-disable-line
+
   // ─── STRIPE: Detect payment redirect ───
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -1069,14 +1094,23 @@ export default function JadranUnified() {
       }).then(r => r.json()).then(data => {
         if (data.paid) {
           setPremium(true);
-          setSplash(false);
-          setPhase('kiosk');
-          setSubScreen('home');
           try {
             localStorage.setItem("jadran_ai_premium", "1");
             const days = parseInt(data.days || "7");
             localStorage.setItem("jadran_premium_exp", String(Date.now() + days * 86400000));
           } catch {}
+          // If user came from Guardian Brief, navigate to their chosen destination
+          const afterPayKiosk = (() => { try { return JSON.parse(sessionStorage.getItem("jadran_after_pay_kiosk") || "null"); } catch { return null; } })();
+          if (afterPayKiosk) {
+            try { sessionStorage.removeItem("jadran_after_pay_kiosk"); } catch {}
+            kioskForcedCoords.current = [afterPayKiosk.lat, afterPayKiosk.lng];
+            setTransitToCoords([afterPayKiosk.lat, afterPayKiosk.lng]);
+            saveDelta({ destination: { city: afterPayKiosk.city, lat: afterPayKiosk.lat, lng: afterPayKiosk.lng } });
+            if (afterPayKiosk.lang) { setLang(afterPayKiosk.lang); saveDelta({ lang: afterPayKiosk.lang }); }
+          }
+          setSplash(false);
+          setPhase('kiosk');
+          setSubScreen('home');
           updateGuest(roomCode.current, { premium: true, premiumSessionId: sessionId, phase: 'kiosk' });
         }
       }).catch(() => {
@@ -2594,7 +2628,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
   const KioskChat = () => {
     const prompts = [t("chatPrompt1",lang), t("chatPrompt2",lang), t("chatPrompt3",lang), t("chatPrompt4",lang)];
-    const canSend = premium || freeMsgUsed < 5;
+    const canSend = premium;
     return (
       <div style={{ position: "fixed", inset: 0, zIndex: 20, display: "flex", flexDirection: "column", background: C.bg }}>
         {/* Header — paddingTop includes notch/Dynamic Island clearance */}

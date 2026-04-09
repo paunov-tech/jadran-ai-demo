@@ -649,8 +649,26 @@ export default function LandingPage() {
                     </div>
                   )}
 
-                  {/* Launch CTA */}
-                  <button onClick={() => { window.location.href = gb.transitUrl; }} style={{ width: "100%", marginTop: 14, padding: "16px 20px", borderRadius: 14, background: gb.isArrival ? "linear-gradient(135deg, #06b6d4, #0284c7)" : "linear-gradient(135deg, #22c55e, #16a34a)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: F, letterSpacing: 0.5, boxShadow: gb.isArrival ? "0 4px 24px rgba(6,182,212,0.3)" : "0 4px 24px rgba(34,197,94,0.3)" }}>
+                  {/* Launch CTA — requires premium (Guardian Brief is last free step) */}
+                  <button onClick={() => {
+                    const hasPrem = (() => {
+                      try {
+                        if (localStorage.getItem("jadran_ai_premium") !== "1") return false;
+                        const exp = parseInt(localStorage.getItem("jadran_premium_exp") || "0", 10);
+                        return !exp || Date.now() < exp;
+                      } catch { return false; }
+                    })();
+                    if (hasPrem) { window.location.href = gb.transitUrl; return; }
+                    // Store destination, redirect to main app paywall
+                    try {
+                      const u = new URL(gb.transitUrl, "https://jadran.ai");
+                      const city = u.searchParams.get("kiosk") || "";
+                      const tLat = parseFloat(u.searchParams.get("tLat") || "0");
+                      const tLng = parseFloat(u.searchParams.get("tLng") || "0");
+                      sessionStorage.setItem("jadran_after_pay_kiosk", JSON.stringify({ city, lat: tLat || 0, lng: tLng || 0, lang: lang || null, transitUrl: gb.transitUrl }));
+                    } catch {}
+                    window.location.href = "/?paywall=1";
+                  }} style={{ width: "100%", marginTop: 14, padding: "16px 20px", borderRadius: 14, background: gb.isArrival ? "linear-gradient(135deg, #06b6d4, #0284c7)" : "linear-gradient(135deg, #22c55e, #16a34a)", border: "none", color: "#fff", fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: F, letterSpacing: 0.5, boxShadow: gb.isArrival ? "0 4px 24px rgba(6,182,212,0.3)" : "0 4px 24px rgba(34,197,94,0.3)" }}>
                     {gb.isArrival
                       ? (lang === "de" || lang === "at" ? "🛡️ Ankunft — Guardian führt mich →" : lang === "en" ? "🛡️ Arrival — Guardian guides me →" : lang === "it" ? "🛡️ Arrivo — il Guardian mi guida →" : "🛡️ Dolazak — Guardian me vodi →")
                       : (lang === "de" || lang === "at" ? "🛡️ Auf geht's — Guardian begleitet mich →" : lang === "en" ? "🛡️ Let's go — Guardian is with me →" : lang === "it" ? "🛡️ Partiamo — il Guardian mi accompagna →" : "🛡️ Krenimo — Guardian me prati →")}
