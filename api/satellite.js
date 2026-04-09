@@ -371,9 +371,12 @@ const LEVEL_TEXT = {
   empty:    "prazno — idealno za posjet",
 };
 
+// NP zones are always included regardless of region — tourists travel cross-region to NPs
+const NP_LOCATIONS = new Set(["np_plitvice", "np_krka", "np_kornati", "np_paklenica"]);
+
 export function buildSatellitePrompt(results, region) {
   const relevant = Object.entries(results)
-    .filter(([, d]) => !region || d.zone?.location === region || d.zone?.location === "all")
+    .filter(([, d]) => !region || d.zone?.location === region || d.zone?.location === "all" || NP_LOCATIONS.has(d.zone?.location))
     .filter(([, d]) => d.occ != null);
 
   if (!relevant.length) return "";
