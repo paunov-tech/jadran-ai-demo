@@ -319,7 +319,6 @@ export default function DestinationExplorer() {
   const [liveCity, setLiveCity] = useState(null);
   const [liveLoadState, setLiveLoadState] = useState("idle"); // idle|loading|done|error|noperm
   const [partnerModal, setPartnerModal] = useState(null); // null | "airserbia" | "booking" | "gyg"
-  const [bkgSearch, setBkgSearch] = useState("");
   const heroRef = useRef(null);
   const [qcMsgs, setQcMsgs] = useState([]);
   const [qcInput, setQcInput] = useState("");
@@ -1205,62 +1204,22 @@ export default function DestinationExplorer() {
       })()}
 
       {/* ═══ NAŠI PARTNERI ═══ */}
-      <section style={{ padding:"36px 20px 28px", background:"#030810" }}>
+      <section style={{ padding:"28px 20px 24px", background:"#030810" }}>
         <div style={{ maxWidth:560, margin:"0 auto" }}>
-          <div style={{ fontSize:9, color:"#334155", letterSpacing:5, fontWeight:700, textAlign:"center", marginBottom:18, textTransform:"uppercase" }}>
-            {({hr:"Naši partneri",de:"Unsere Partner",en:"Our Partners",it:"I nostri partner",pl:"Nasi partnerzy",si:"Naši partnerji"})[dl]||"Partners"}
-          </div>
-          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-
-            {/* ── Air Serbia ── */}
-            <button onClick={() => setPartnerModal("airserbia")} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:16, background:"rgba(200,16,46,0.06)", border:"1px solid rgba(200,16,46,0.18)", cursor:"pointer", fontFamily:"inherit", textAlign:"left", transition:"all 0.2s" }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(200,16,46,0.4)"; e.currentTarget.style.background="rgba(200,16,46,0.1)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(200,16,46,0.18)"; e.currentTarget.style.background="rgba(200,16,46,0.06)"; }}>
-              <div style={{ width:44, height:44, borderRadius:12, background:"rgba(200,16,46,0.12)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, flexShrink:0 }}>✈️</div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:14, fontWeight:700, color:"#f1f5f9" }}>Air Serbia</div>
-                <div style={{ fontSize:11, color:"#94a3b8", marginTop:2 }}>
-                  {({hr:"Direktni letovi na Brač · Rezerviši odmah",de:"Direktflüge nach Brač · Jetzt buchen",en:"Direct flights to Brač · Book now",it:"Voli diretti per Brač · Prenota ora",pl:"Loty bezpośrednie na Brač · Rezerwuj",si:"Direktni leti na Brač · Rezerviraj"})[dl]||"Direct flights · Book now"}
-                </div>
+          <button onClick={() => setPartnerModal("airserbia")} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:16, background:"rgba(200,16,46,0.06)", border:"1px solid rgba(200,16,46,0.18)", cursor:"pointer", fontFamily:"inherit", textAlign:"left", transition:"all 0.2s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(200,16,46,0.4)"; e.currentTarget.style.background="rgba(200,16,46,0.1)"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(200,16,46,0.18)"; e.currentTarget.style.background="rgba(200,16,46,0.06)"; }}>
+            <img src="https://www.ftjcfx.com/image-101704203-13957399" width="44" height="44" alt="Air Serbia" style={{ borderRadius:10, flexShrink:0, background:"rgba(200,16,46,0.12)" }} />
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:14, fontWeight:700, color:"#f1f5f9" }}>Air Serbia</div>
+              <div style={{ fontSize:11, color:"#94a3b8", marginTop:2 }}>
+                {({hr:"Direktni letovi na Brač · Rezerviši odmah",de:"Direktflüge nach Brač · Jetzt buchen",en:"Direct flights to Brač · Book now",it:"Voli diretti per Brač · Prenota ora",pl:"Loty bezpośrednie na Brač · Rezerwuj",si:"Direktni leti na Brač · Rezerviraj"})[dl]||"Direct flights · Book now"}
               </div>
-              <div style={{ fontSize:10, fontWeight:700, color:"#C8102E", background:"rgba(200,16,46,0.1)", border:"1px solid rgba(200,16,46,0.25)", borderRadius:8, padding:"4px 9px", flexShrink:0 }}>
-                {({hr:"PONUDA",de:"ANGEBOT",en:"DEALS",it:"OFFERTA",pl:"OFERTA",si:"PONUDBA"})[dl]||"DEALS"}
-              </div>
-            </button>
-
-            {/* ── Booking.com ── */}
-            <button onClick={() => setPartnerModal("booking")} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:16, background:"rgba(0,53,128,0.06)", border:"1px solid rgba(0,53,128,0.18)", cursor:"pointer", fontFamily:"inherit", textAlign:"left", transition:"all 0.2s" }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(0,53,128,0.4)"; e.currentTarget.style.background="rgba(0,53,128,0.1)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(0,53,128,0.18)"; e.currentTarget.style.background="rgba(0,53,128,0.06)"; }}>
-              <div style={{ width:44, height:44, borderRadius:12, background:"rgba(0,53,128,0.12)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, fontWeight:900, color:"#003580", flexShrink:0 }}>B.</div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:14, fontWeight:700, color:"#f1f5f9" }}>Booking.com</div>
-                <div style={{ fontSize:11, color:"#94a3b8", marginTop:2 }}>
-                  {({hr:"Hoteli i apartmani na Jadranu",de:"Hotels & Apartments an der Adria",en:"Hotels & apartments on the Adriatic",it:"Hotel e appartamenti sull'Adriatico",pl:"Hotele i apartamenty nad Adriatykiem",si:"Hoteli in apartmaji na Jadranu"})[dl]||"Hotels & apartments"}
-                </div>
-              </div>
-              <div style={{ fontSize:10, fontWeight:700, color:"#003580", background:"rgba(0,53,128,0.1)", border:"1px solid rgba(0,53,128,0.25)", borderRadius:8, padding:"4px 9px", flexShrink:0 }}>
-                {({hr:"TRAŽI",de:"SUCHEN",en:"SEARCH",it:"CERCA",pl:"SZUKAJ",si:"IŠČI"})[dl]||"SEARCH"}
-              </div>
-            </button>
-
-            {/* ── GetYourGuide ── */}
-            <button onClick={() => setPartnerModal("gyg")} style={{ width:"100%", display:"flex", alignItems:"center", gap:14, padding:"14px 16px", borderRadius:16, background:"rgba(255,87,34,0.05)", border:"1px solid rgba(255,87,34,0.15)", cursor:"pointer", fontFamily:"inherit", textAlign:"left", transition:"all 0.2s" }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(255,87,34,0.35)"; e.currentTarget.style.background="rgba(255,87,34,0.08)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(255,87,34,0.15)"; e.currentTarget.style.background="rgba(255,87,34,0.05)"; }}>
-              <div style={{ width:44, height:44, borderRadius:12, background:"rgba(255,87,34,0.1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, flexShrink:0 }}>🎟️</div>
-              <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:14, fontWeight:700, color:"#f1f5f9" }}>GetYourGuide</div>
-                <div style={{ fontSize:11, color:"#94a3b8", marginTop:2 }}>
-                  {({hr:"Izleti, ture i aktivnosti",de:"Ausflüge, Touren & Aktivitäten",en:"Excursions, tours & activities",it:"Escursioni, tour e attività",pl:"Wycieczki, wycieczki i zajęcia",si:"Izleti, ture in aktivnosti"})[dl]||"Tours & activities"}
-                </div>
-              </div>
-              <div style={{ fontSize:10, fontWeight:700, color:"#FF5722", background:"rgba(255,87,34,0.1)", border:"1px solid rgba(255,87,34,0.25)", borderRadius:8, padding:"4px 9px", flexShrink:0 }}>
-                {({hr:"AKTIVNOSTI",de:"AKTIVITÄTEN",en:"ACTIVITIES",it:"ATTIVITÀ",pl:"AKTYWNOŚCI",si:"AKTIVNOSTI"})[dl]||"ACTIVITIES"}
-              </div>
-            </button>
-
-          </div>
+            </div>
+            <div style={{ fontSize:9, fontWeight:700, color:"#C8102E", background:"rgba(200,16,46,0.08)", border:"1px solid rgba(200,16,46,0.22)", borderRadius:8, padding:"4px 9px", flexShrink:0, letterSpacing:1 }}>
+              PARTNER
+            </div>
+          </button>
         </div>
       </section>
 
@@ -1272,15 +1231,11 @@ export default function DestinationExplorer() {
             {/* Header */}
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"20px 20px 16px", borderBottom:"1px solid rgba(255,255,255,0.05)", flexShrink:0 }}>
               <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-                <div style={{ fontSize:24 }}>
-                  {partnerModal === "airserbia" ? "✈️" : partnerModal === "booking" ? "🏨" : "🎟️"}
-                </div>
+                <div style={{ fontSize:24 }}>✈️</div>
                 <div>
-                  <div style={{ fontSize:15, fontWeight:700, color:"#f1f5f9" }}>
-                    {partnerModal === "airserbia" ? "Air Serbia" : partnerModal === "booking" ? "Booking.com" : "GetYourGuide"}
-                  </div>
+                  <div style={{ fontSize:15, fontWeight:700, color:"#f1f5f9" }}>Air Serbia</div>
                   <div style={{ fontSize:10, color:"#475569", marginTop:1 }}>
-                    {({hr:"Verificirani partner",de:"Verifizierter Partner",en:"Verified partner",it:"Partner verificato",pl:"Zweryfikowany partner",si:"Preverjen partner"})[dl]||"Verified partner"}
+                    {({hr:"Zvanični partner",de:"Offizieller Partner",en:"Official partner",it:"Partner ufficiale",pl:"Oficjalny partner",si:"Uradni partner"})[dl]||"Official partner"}
                   </div>
                 </div>
               </div>
@@ -1329,92 +1284,6 @@ export default function DestinationExplorer() {
                   </p>
                 </div>
               )}
-
-              {/* ── BOOKING.COM MODAL — embedded affiliate search widget ── */}
-              {partnerModal === "booking" && (
-                <div>
-                  {/* Destination quick-select pills */}
-                  <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:14 }}>
-                    {[
-                      { name:"Split", emoji:"🏛️", id:"-91542" },
-                      { name:"Dubrovnik", emoji:"🏰", id:"-91254" },
-                      { name:"Hvar", emoji:"🌿", id:"-91296" },
-                      { name:"Rovinj", emoji:"⛪", id:"-91516" },
-                      { name:"Zadar", emoji:"🌅", id:"-91580" },
-                      { name:"Makarska", emoji:"🏖️", id:"-91444" },
-                    ].map(d => (
-                      <button key={d.name}
-                        onClick={() => setBkgSearch(d.name)}
-                        style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 12px", borderRadius:20, background: bkgSearch === d.name ? "rgba(0,53,128,0.25)" : "rgba(0,53,128,0.07)", border:`1px solid ${bkgSearch === d.name ? "rgba(0,53,128,0.5)" : "rgba(0,53,128,0.18)"}`, cursor:"pointer", fontFamily:"inherit", fontSize:12, color:"#f1f5f9", transition:"all 0.15s" }}>
-                        <span>{d.emoji}</span>{d.name}
-                      </button>
-                    ))}
-                  </div>
-                  {/* Booking.com affiliate search iframe — officially embeddable */}
-                  <div style={{ borderRadius:14, overflow:"hidden", border:"1px solid rgba(0,53,128,0.2)", background:"#fff", marginBottom:12 }}>
-                    <iframe
-                      key={bkgSearch}
-                      src={`https://www.booking.com/affiliate/b_search_box.html?aid=101704203&lang=${dl === "de" ? "de" : dl === "it" ? "it" : "en-gb"}&ss=${encodeURIComponent((bkgSearch || "") + (bkgSearch ? ", Croatia" : ""))}&dest_type=city`}
-                      style={{ width:"100%", height:340, border:"none", display:"block" }}
-                      title="Booking.com"
-                      loading="lazy"
-                    />
-                  </div>
-                  <p style={{ fontSize:10, color:"#1e3a5f", textAlign:"center" }}>
-                    {({hr:"Powered by Booking.com · rezervacija direktno u aplikaciji",de:"Powered by Booking.com · Buchung direkt in der App",en:"Powered by Booking.com · book directly in the app",it:"Powered by Booking.com · prenota direttamente nell'app",pl:"Powered by Booking.com · rezerwacja bezpośrednio w aplikacji",si:"Powered by Booking.com · rezervacija neposredno v aplikaciji"})[dl]||"Powered by Booking.com"}
-                  </p>
-                </div>
-              )}
-
-              {/* ── GETYOURGUIDE MODAL — oficial iframe widget (in-app, no redirect) ── */}
-              {partnerModal === "gyg" && (() => {
-                const gygLocale = dl === "de" ? "de-DE" : dl === "it" ? "it-IT" : dl === "hr" ? "hr-HR" : dl === "pl" ? "pl-PL" : "en-US";
-                // Default: active destination or Kvarner luxury for Rab users
-                const defaultQ = activeDest?.liveCity
-                  ? activeDest.liveCity
-                  : (activeRegion === "kvarner" ? "kvarner yacht sailing" : "Croatia");
-                const gygQ = encodeURIComponent(defaultQ);
-                // GYG activities.frame: official embeddable iframe — renders live booking cards in-app
-                const gygSrc = `https://widget.getyourguide.com/default/activities.frame?partner_id=9OEGOYI&locale=${gygLocale}&number_of_items=4&q=${gygQ}`;
-                return (
-                  <div>
-                    {/* Destination pills */}
-                    <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:12 }}>
-                      {[
-                        { label:"🛥️ Kvarner", q:"kvarner yacht sailing Croatia" },
-                        { label:"🏛️ Split", q:"Split Croatia tours" },
-                        { label:"🏰 Dubrovnik", q:"Dubrovnik Croatia tours" },
-                        { label:"🌿 Hvar", q:"Hvar island boat Croatia" },
-                        { label:"🍄 Istra", q:"Istria truffle wine Croatia" },
-                        { label:"💧 Plitvice", q:"Plitvice Lakes Croatia" },
-                      ].map(d => (
-                        <button key={d.q} style={{ padding:"6px 12px", borderRadius:20, background:"rgba(255,87,34,0.07)", border:"1px solid rgba(255,87,34,0.2)", cursor:"pointer", fontFamily:"inherit", fontSize:11, color:"#f1f5f9" }}
-                          onClick={() => {
-                            const el = document.getElementById("gyg-frame");
-                            if (el) el.src = `https://widget.getyourguide.com/default/activities.frame?partner_id=9OEGOYI&locale=${gygLocale}&number_of_items=4&q=${encodeURIComponent(d.q)}`;
-                          }}>
-                          {d.label}
-                        </button>
-                      ))}
-                    </div>
-                    {/* GYG iframe — full in-app booking experience */}
-                    <div style={{ borderRadius:16, overflow:"hidden", border:"1px solid rgba(255,87,34,0.15)", background:"#fff", marginBottom:10 }}>
-                      <iframe
-                        id="gyg-frame"
-                        key={`gyg-${activeDest?.name || "hr"}-${dl}`}
-                        src={gygSrc}
-                        style={{ width:"100%", height:480, border:"none", display:"block" }}
-                        title="GetYourGuide activities"
-                        loading="lazy"
-                        allow="payment"
-                      />
-                    </div>
-                    <p style={{ fontSize:10, color:"#1e3a5f", textAlign:"center" }}>
-                      {({hr:"Rezervacija direktno u aplikaciji · Powered by GetYourGuide",de:"Buchung direkt in der App · Powered by GetYourGuide",en:"Book directly in app · Powered by GetYourGuide",it:"Prenota direttamente nell'app · Powered by GetYourGuide",pl:"Rezerwacja bezpośrednio w aplikacji · Powered by GetYourGuide",si:"Rezervacija neposredno v aplikaciji · Powered by GetYourGuide"})[dl]||"Powered by GetYourGuide"}
-                    </p>
-                  </div>
-                );
-              })()}
 
             </div>
           </div>
