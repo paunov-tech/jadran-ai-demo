@@ -362,6 +362,23 @@ export default function SegmentLandingPage({ slug }) {
   const [capDone, setCapDone] = useState(false);
   const [capLoading, setCapLoading] = useState(false);
 
+  // In-app browser detection — FB/IG in-app browsers block Stripe redirects
+  const _UA = typeof navigator !== "undefined" ? (navigator.userAgent || "") : "";
+  const isInApp   = /FBAN|FBAV|FB_IAB|Instagram/i.test(_UA);
+  const isIOS     = /iPhone|iPad|iPod/i.test(_UA);
+  const isAndroid = /Android/i.test(_UA);
+  const [showBrowserModal, setShowBrowserModal] = useState(false);
+  const openInChrome = () => {
+    const here = window.location.href;
+    window.location.href = `intent://${here.replace(/^https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;end`;
+    setTimeout(() => { window.open(here, "_blank"); }, 1200);
+  };
+  const handleCta = (href) => {
+    if (isInApp && isIOS) { setShowBrowserModal(true); return; }
+    if (isInApp && isAndroid) { openInChrome(); return; }
+    window.location.href = href;
+  };
+
   useEffect(() => {
     const v = new URLSearchParams(window.location.search).get("v") || "default";
     setVariantId(v);
@@ -440,23 +457,71 @@ export default function SegmentLandingPage({ slug }) {
   );
   const PrimaryBtn = ({ href, text, sub, style:s }) => (
     <div style={{ textAlign:"center", ...s }}>
-      <a href={href} style={{ display:"inline-block", padding:"16px 36px", background:`linear-gradient(135deg,${SKY},#0284c7)`,
+      <a href={isInApp ? undefined : href} onClick={isInApp ? (e) => { e.preventDefault(); handleCta(href); } : undefined}
+        style={{ display:"inline-block", padding:"16px 36px", background:`linear-gradient(135deg,${SKY},#0284c7)`,
         color:"#fff", textDecoration:"none", borderRadius:16, fontWeight:700, fontSize:18, fontFamily:B,
-        boxShadow:"0 8px 32px rgba(14,165,233,0.35)", transition:"all .2s" }}>{text}</a>
+        boxShadow:"0 8px 32px rgba(14,165,233,0.35)", transition:"all .2s", cursor:"pointer" }}>{text}</a>
       {sub && <p style={{ marginTop:10, fontSize:13, color:"#475569" }}>{sub}</p>}
+    </div>
+  );
+
+  const browserModalJsx = showBrowserModal && (
+    <div style={{ position:"fixed", inset:0, background:"rgba(5,14,30,0.94)", zIndex:9999, display:"grid", placeItems:"center", padding:24 }}
+      onClick={() => setShowBrowserModal(false)}>
+      <div onClick={e => e.stopPropagation()} style={{ background:"rgba(12,28,50,0.98)", borderRadius:24, padding:"32px 24px", maxWidth:380, width:"100%", border:"1px solid rgba(245,158,11,0.25)", textAlign:"center" }}>
+        <div style={{ fontSize:44, marginBottom:12 }}>🔒</div>
+        <div style={{ fontSize:20, fontWeight:700, color:"#f0f9ff", marginBottom:10, fontFamily:B }}>
+          {isDE ? "In Safari öffnen" : isIT ? "Apri in Safari" : "Open in Safari"}
+        </div>
+        <div style={{ fontSize:13, color:"#94a3b8", lineHeight:1.6, marginBottom:24 }}>
+          {isDE ? "Facebook blockiert die sichere Bezahlseite. Öffne in Safari, dann kannst du bezahlen:" : isIT ? "Facebook blocca il pagamento. Apri in Safari:" : "Facebook blocks payments. Open in Safari to pay:"}
+        </div>
+        <div style={{ background:"rgba(245,158,11,0.08)", border:"1px solid rgba(245,158,11,0.2)", borderRadius:16, padding:"20px 16px", marginBottom:24, textAlign:"left" }}>
+          {[
+            isDE ? "Tippe auf  ···  (unten rechts)" : isIT ? "Tocca  ···  (in basso a destra)" : "Tap  ···  (bottom right)",
+            isDE ? 'Wähle „In Safari öffnen"' : isIT ? '"Apri in Safari"' : '"Open in Safari"',
+            isDE ? 'Dann auf \u201eKaufen\u201c tippen' : isIT ? 'Poi tocca "Acquista"' : 'Then tap "Buy"',
+          ].map((step, i) => (
+            <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:12, marginBottom: i < 2 ? 14 : 0 }}>
+              <div style={{ width:24, height:24, borderRadius:"50%", background:"rgba(245,158,11,0.15)", border:"1px solid rgba(245,158,11,0.3)", color:"#f59e0b", fontSize:12, fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>{i+1}</div>
+              <span style={{ fontSize:14, color:"#f0f9ff", lineHeight:1.4 }}>{step}</span>
+            </div>
+          ))}
+        </div>
+        <button onClick={() => setShowBrowserModal(false)} style={{ width:"100%", padding:"14px 0", borderRadius:14, background:"rgba(100,116,139,0.15)", border:"1px solid rgba(100,116,139,0.2)", color:"#94a3b8", fontSize:14, fontWeight:600, cursor:"pointer", fontFamily:B }}>
+          {isDE ? "Schließen" : isIT ? "Chiudi" : "Close"}
+        </button>
+      </div>
     </div>
   );
 
   return (
     <div style={{ background:DARK, color:"#f0f9ff", fontFamily:B, minHeight:"100dvh", overflowX:"hidden" }}>
 
+      {browserModalJsx}
+
+      {/* In-app browser warning */}
+      {isInApp && (
+        <div style={{ background:"#d97706", color:"#fff", padding:"10px 16px", display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, fontSize:13, position:"sticky", top:0, zIndex:200 }}>
+          <span style={{ fontWeight:600 }}>
+            {isDE ? "⚠️ Zahlung nur in Safari/Chrome möglich" : isIT ? "⚠️ Pagamento solo in Safari/Chrome" : "⚠️ Payment requires Safari/Chrome"}
+          </span>
+          <button onClick={isAndroid ? openInChrome : () => setShowBrowserModal(true)}
+            style={{ background:"#fff", color:"#d97706", border:"none", borderRadius:8, padding:"6px 14px", fontWeight:700, fontSize:12, cursor:"pointer", whiteSpace:"nowrap" }}>
+            {isAndroid ? (isDE ? "Chrome →" : "Chrome →") : (isDE ? "Wie? →" : isIT ? "Come? →" : "How? →")}
+          </button>
+        </div>
+      )}
+
       {/* ── NAV ── */}
       <div style={{ padding:"16px 20px", display:"flex", alignItems:"center", justifyContent:"space-between",
         borderBottom:"1px solid rgba(255,255,255,0.04)", background:"rgba(5,13,26,0.95)",
         position:"sticky", top:0, zIndex:100, backdropFilter:"blur(12px)" }}>
         <span style={{ fontSize:13, letterSpacing:3, color:SKY, fontWeight:700 }}>JADRAN.AI</span>
-        <a href={hero.ctaHref} style={{ padding:"9px 20px", background:`linear-gradient(135deg,${SKY},#0284c7)`,
-          color:"#fff", textDecoration:"none", borderRadius:10, fontWeight:700, fontSize:13 }}>
+        <a href={isInApp ? undefined : hero.ctaHref}
+          onClick={isInApp ? (e) => { e.preventDefault(); handleCta(hero.ctaHref); } : undefined}
+          style={{ padding:"9px 20px", background:`linear-gradient(135deg,${SKY},#0284c7)`,
+          color:"#fff", textDecoration:"none", borderRadius:10, fontWeight:700, fontSize:13, cursor:"pointer" }}>
           {isDE ? "App öffnen" : isIT ? "Apri l'app" : "Open app"}
         </a>
       </div>
@@ -566,10 +631,14 @@ export default function SegmentLandingPage({ slug }) {
                 {isDE ? "Season Pass: ganzer Sommer, alle Regionen, Sturmwarnungen, Walkie-Talkie — einmalig 19,99 €." : isIT ? "Season Pass: tutta l'estate, tutte le regioni, allerte meteo, Walkie-Talkie — una tantum 19,99 €." : "Season Pass: full summer, all regions, storm alerts, Walkie-Talkie — one-time €19.99."}
               </div>
               <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-                <a href={hero.ctaHref} style={{ flex:2, display:"block", padding:"11px 0", background:"linear-gradient(135deg,#f59e0b,#d97706)", borderRadius:10, color:"#0f172a", fontWeight:800, fontSize:14, textAlign:"center", textDecoration:"none", fontFamily:B, boxShadow:"0 2px 8px rgba(245,158,11,0.35)" }}>
+                <a href={isInApp ? undefined : hero.ctaHref}
+                  onClick={isInApp ? (e) => { e.preventDefault(); handleCta(hero.ctaHref); } : undefined}
+                  style={{ flex:2, display:"block", padding:"11px 0", background:"linear-gradient(135deg,#f59e0b,#d97706)", borderRadius:10, color:"#0f172a", fontWeight:800, fontSize:14, textAlign:"center", textDecoration:"none", fontFamily:B, boxShadow:"0 2px 8px rgba(245,158,11,0.35)", cursor:"pointer" }}>
                   {isDE ? "Season Pass — 19,99 €" : isIT ? "Season Pass — 19,99 €" : "Season Pass — €19.99"} →
                 </a>
-                <a href={hero.ctaHref} style={{ flex:1, display:"block", padding:"11px 0", background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", borderRadius:10, color:"#7dd3fc", fontSize:12, fontWeight:600, textAlign:"center", textDecoration:"none", fontFamily:B }}>
+                <a href={isInApp ? undefined : hero.ctaHref}
+                  onClick={isInApp ? (e) => { e.preventDefault(); handleCta(hero.ctaHref); } : undefined}
+                  style={{ flex:1, display:"block", padding:"11px 0", background:"rgba(14,165,233,0.08)", border:"1px solid rgba(14,165,233,0.2)", borderRadius:10, color:"#7dd3fc", fontSize:12, fontWeight:600, textAlign:"center", textDecoration:"none", fontFamily:B, cursor:"pointer" }}>
                   {isDE ? "Gratis testen" : isIT ? "Prova gratis" : "Try free"}
                 </a>
               </div>
