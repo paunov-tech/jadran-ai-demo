@@ -169,8 +169,9 @@
     }
   ],
   "crons": [
-    { "path": "/api/cron-email",     "schedule": "0 */6 * * *"  },
-    { "path": "/api/cron-audience",  "schedule": "0 3 * * *"    },
+    { "path": "/api/satellite",          "schedule": "0 5 * * *"    },
+    { "path": "/api/cron-email",         "schedule": "0 */6 * * *"  },
+    { "path": "/api/cron-audience",      "schedule": "0 3 * * *"    },
     { "path": "/api/cron-reengage",      "schedule": "0 */12 * * *" },
     { "path": "/api/cron-insights",      "schedule": "0 8 * * *"    },
     { "path": "/api/cron-meta-optimize", "schedule": "0 7 */3 * *"  }
