@@ -106,6 +106,40 @@
       ]
     },
     {
+      "source": "/m/de_(.*)",
+      "headers": [
+        { "key": "Content-Language", "value": "de" },
+        { "key": "Vary", "value": "Accept-Language" }
+      ]
+    },
+    {
+      "source": "/m/at_(.*)",
+      "headers": [
+        { "key": "Content-Language", "value": "de-AT" },
+        { "key": "Vary", "value": "Accept-Language" }
+      ]
+    },
+    {
+      "source": "/m/it_(.*)",
+      "headers": [
+        { "key": "Content-Language", "value": "it" },
+        { "key": "Vary", "value": "Accept-Language" }
+      ]
+    },
+    {
+      "source": "/m/en_(.*)",
+      "headers": [
+        { "key": "Content-Language", "value": "en" },
+        { "key": "Vary", "value": "Accept-Language" }
+      ]
+    },
+    {
+      "source": "/blog/kroatien-wohnmobil-reisefuehrer",
+      "headers": [
+        { "key": "Content-Language", "value": "de" }
+      ]
+    },
+    {
       "source": "/og-image.jpg",
       "headers": [
         {
