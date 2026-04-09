@@ -529,9 +529,9 @@ const [lang, setLang] = useState(() => {
     };
     if (pixelMap[event]) fbqSafe("track", pixelMap[event], { ...props, event_id: genEventId(event) });
   };
-  const trackPurchase = (plan, amount, currency = "EUR") => {
+  const trackPurchase = (plan, amount, currency = "EUR", eventId) => {
     try { window.plausible?.("purchase", { props: { plan, amount, currency } }); } catch {}
-    fbqSafe("track", "Purchase", { value: amount, currency, content_name: plan, event_id: genEventId("purchase") });
+    fbqSafe("track", "Purchase", { value: amount, currency, content_name: plan, event_id: eventId || genEventId("purchase") });
   };
   const [langOpen, setLangOpen] = useState(false);
   const curFlag = (LANGS.find(l => l.code === lang) || LANGS[0]).flag;
@@ -947,7 +947,7 @@ const [lang, setLang] = useState(() => {
               setPremium(true);
               setTrialExpired(false);
               setMsgCount(0);
-              trackPurchase(plan, plan === "vip" ? 49.99 : plan === "season" ? 19.99 : 9.99);
+              trackPurchase(plan, plan === "vip" ? 49.99 : plan === "season" ? 19.99 : 9.99, "EUR", `stripe_${sessionId}`);
               try { localStorage.removeItem("jadran_msg_count"); } catch {}
               try {
                 localStorage.setItem("jadran_ai_premium", "1");

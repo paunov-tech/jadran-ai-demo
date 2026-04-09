@@ -43,7 +43,7 @@ async function sha256(str) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function fireMetaPurchase(email, plan, amount, { deviceId } = {}) {
+async function fireMetaPurchase(email, plan, amount, { deviceId, sessionId } = {}) {
   const pixelId = process.env.META_PIXEL_ID;
   const token = process.env.META_CAPI_TOKEN;
   if (!pixelId || !token || !email) return;
@@ -62,7 +62,7 @@ async function fireMetaPurchase(email, plan, amount, { deviceId } = {}) {
         data: [{
           event_name: "Purchase",
           event_time: Math.floor(Date.now() / 1000),
-          event_id: `purchase_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+          event_id: sessionId ? `stripe_${sessionId}` : `purchase_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
           user_data: userData,
           custom_data: {
             value: amount ? (amount / 100) : 0,
@@ -161,7 +161,7 @@ export default async function handler(req, res) {
     }
     // Fire-and-forget payment alert email + Meta CAPI Purchase
     sendPaymentAlert(email, meta.plan || "week", session.amount_total).catch(() => {});
-    fireMetaPurchase(email, meta.plan || "week", session.amount_total, { deviceId: meta.deviceId }).catch(() => {});
+    fireMetaPurchase(email, meta.plan || "week", session.amount_total, { deviceId: meta.deviceId, sessionId: session.id }).catch(() => {});
   }
 
   return res.status(200).json({ received: true });
