@@ -451,7 +451,14 @@ export default async function handler(req, res) {
 
   const region = req.query.region || null;
 
+  // Debug mode — exposes auth errors (no credentials in output)
+  const debug = req.query.debug === "1";
+
   try {
+    let authError = null;
+    if (debug) {
+      try { await getSentinelToken(); } catch(e) { authError = e.message; }
+    }
     const results = await fetchSatelliteOccupancy(region);
     const zoneCount = Object.keys(results).length;
     const prompt  = buildSatellitePrompt(results, region);
@@ -470,6 +477,7 @@ export default async function handler(req, res) {
         Object.entries(results).map(([id, d]) => [id, { name: d.zone.name, occ: d.occ }])
       ),
       promptBlock: prompt,
+      ...(debug && authError ? { authError } : {}),
     });
   } catch (e) {
     console.error("[satellite]", e.message);
