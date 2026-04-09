@@ -381,6 +381,19 @@ export default function DestinationExplorer() {
     const id = setInterval(() => setHeroIdx(i => (i + 1) % HERO_DESTS.length), 4500);
     return () => clearInterval(id);
   }, []);
+  // Trigger GYG widget re-init when GYG modal opens
+  useEffect(() => {
+    if (partnerModal !== "gyg") return;
+    const timer = setTimeout(() => {
+      if (window.GYG?.renderWidgets) window.GYG.renderWidgets();
+      // Fallback: dispatch synthetic DOM mutation so GYG's MutationObserver picks up new divs
+      document.querySelectorAll("[data-gyg-widget]").forEach(el => {
+        el.setAttribute("data-gyg-initialized", "");
+      });
+    }, 120);
+    return () => clearTimeout(timer);
+  }, [partnerModal]);
+
   useEffect(() => {
     const anyModal = showBJ || showLive || activeFeature;
     const h = e => { if (e.key === "Escape") { setShowBJ(false); setSelectedMenuItem(null); setShowLive(false); setActiveFeature(null); } };
@@ -1327,76 +1340,75 @@ export default function DestinationExplorer() {
                 </div>
               )}
 
-              {/* ── BOOKING.COM MODAL ── */}
+              {/* ── BOOKING.COM MODAL — embedded affiliate search widget ── */}
               {partnerModal === "booking" && (
                 <div>
-                  {/* Search bar */}
-                  <div style={{ display:"flex", gap:8, marginBottom:16 }}>
-                    <input
-                      value={bkgSearch}
-                      onChange={e => setBkgSearch(e.target.value)}
-                      onKeyDown={e => e.key === "Enter" && bkgSearch.trim() && window.open(`https://www.booking.com/searchresults.html?aid=101704203&ss=${encodeURIComponent(bkgSearch)}&lang=${dl === "de" ? "de" : dl === "it" ? "it" : "en"}`, "_blank")}
-                      placeholder={({hr:"Unesi destinaciju...",de:"Ziel eingeben...",en:"Enter destination...",it:"Inserisci destinazione...",pl:"Wpisz cel...",si:"Vnesi destinacijo..."})[dl]||"Enter destination..."}
-                      style={{ flex:1, padding:"11px 14px", borderRadius:12, border:"1px solid rgba(0,53,128,0.3)", background:"rgba(0,53,128,0.08)", color:"#f1f5f9", fontSize:13, fontFamily:"inherit", outline:"none" }}
-                    />
-                    <button onClick={() => bkgSearch.trim() && window.open(`https://www.booking.com/searchresults.html?aid=101704203&ss=${encodeURIComponent(bkgSearch)}&lang=${dl === "de" ? "de" : dl === "it" ? "it" : "en"}`, "_blank")} style={{ padding:"11px 16px", borderRadius:12, background:"#003580", border:"none", color:"#fff", fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit", flexShrink:0 }}>
-                      {({hr:"Traži",de:"Suchen",en:"Search",it:"Cerca",pl:"Szukaj",si:"Išči"})[dl]||"Search"}
-                    </button>
-                  </div>
-                  {/* Quick destinations */}
-                  <div style={{ fontSize:10, color:"#475569", marginBottom:10, fontWeight:600, letterSpacing:1 }}>
-                    {({hr:"POPULARNE DESTINACIJE",de:"BELIEBTE ZIELE",en:"POPULAR DESTINATIONS",it:"DESTINAZIONI POPOLARI",pl:"POPULARNE DESTYNACJE",si:"PRILJUBLJENE DESTINACIJE"})[dl]||"POPULAR DESTINATIONS"}
-                  </div>
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+                  {/* Destination quick-select pills */}
+                  <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:14 }}>
                     {[
-                      { name:"Split", emoji:"🏛️" },
-                      { name:"Dubrovnik", emoji:"🏰" },
-                      { name:"Hvar", emoji:"🌿" },
-                      { name:"Rovinj", emoji:"⛪" },
-                      { name:"Zadar", emoji:"🌅" },
-                      { name:"Makarska", emoji:"🏖️" },
+                      { name:"Split", emoji:"🏛️", id:"-91542" },
+                      { name:"Dubrovnik", emoji:"🏰", id:"-91254" },
+                      { name:"Hvar", emoji:"🌿", id:"-91296" },
+                      { name:"Rovinj", emoji:"⛪", id:"-91516" },
+                      { name:"Zadar", emoji:"🌅", id:"-91580" },
+                      { name:"Makarska", emoji:"🏖️", id:"-91444" },
                     ].map(d => (
-                      <button key={d.name} onClick={() => window.open(`https://www.booking.com/searchresults.html?aid=101704203&ss=${encodeURIComponent(d.name + ", Croatia")}&lang=${dl === "de" ? "de" : dl === "it" ? "it" : "en"}`, "_blank")} style={{ display:"flex", alignItems:"center", gap:10, padding:"11px 14px", borderRadius:12, background:"rgba(0,53,128,0.05)", border:"1px solid rgba(0,53,128,0.15)", cursor:"pointer", fontFamily:"inherit", transition:"all 0.2s" }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(0,53,128,0.4)"; e.currentTarget.style.background="rgba(0,53,128,0.1)"; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(0,53,128,0.15)"; e.currentTarget.style.background="rgba(0,53,128,0.05)"; }}>
-                        <span style={{ fontSize:18 }}>{d.emoji}</span>
-                        <div style={{ textAlign:"left" }}>
-                          <div style={{ fontSize:13, fontWeight:600, color:"#f1f5f9" }}>{d.name}</div>
-                          <div style={{ fontSize:9, color:"#475569" }}>Booking.com →</div>
-                        </div>
+                      <button key={d.name}
+                        onClick={() => setBkgSearch(d.name)}
+                        style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 12px", borderRadius:20, background: bkgSearch === d.name ? "rgba(0,53,128,0.25)" : "rgba(0,53,128,0.07)", border:`1px solid ${bkgSearch === d.name ? "rgba(0,53,128,0.5)" : "rgba(0,53,128,0.18)"}`, cursor:"pointer", fontFamily:"inherit", fontSize:12, color:"#f1f5f9", transition:"all 0.15s" }}>
+                        <span>{d.emoji}</span>{d.name}
                       </button>
                     ))}
                   </div>
-                  <p style={{ fontSize:10, color:"#1e3a5f", textAlign:"center", marginTop:12 }}>
-                    {({hr:"Svaka rezervacija ostaje s vama i prati vas u aplikaciji.",de:"Jede Buchung bleibt bei Ihnen und folgt Ihnen in der App.",en:"Every booking stays with you and follows you in the app.",it:"Ogni prenotazione rimane con te e ti segue nell'app.",pl:"Każda rezerwacja pozostaje z tobą i śledzi cię w aplikacji.",si:"Vsaka rezervacija ostane z vami in vas sledi v aplikaciji."})[dl]||"Opens in new tab. App stays open."}
+                  {/* Booking.com affiliate search iframe — officially embeddable */}
+                  <div style={{ borderRadius:14, overflow:"hidden", border:"1px solid rgba(0,53,128,0.2)", background:"#fff", marginBottom:12 }}>
+                    <iframe
+                      key={bkgSearch}
+                      src={`https://www.booking.com/affiliate/b_search_box.html?aid=101704203&lang=${dl === "de" ? "de" : dl === "it" ? "it" : "en-gb"}&ss=${encodeURIComponent((bkgSearch || "") + (bkgSearch ? ", Croatia" : ""))}&dest_type=city`}
+                      style={{ width:"100%", height:340, border:"none", display:"block" }}
+                      title="Booking.com"
+                      loading="lazy"
+                    />
+                  </div>
+                  <p style={{ fontSize:10, color:"#1e3a5f", textAlign:"center" }}>
+                    {({hr:"Powered by Booking.com · rezervacija direktno u aplikaciji",de:"Powered by Booking.com · Buchung direkt in der App",en:"Powered by Booking.com · book directly in the app",it:"Powered by Booking.com · prenota direttamente nell'app",pl:"Powered by Booking.com · rezerwacja bezpośrednio w aplikacji",si:"Powered by Booking.com · rezervacija neposredno v aplikaciji"})[dl]||"Powered by Booking.com"}
                   </p>
                 </div>
               )}
 
-              {/* ── GETYOURGUIDE MODAL ── */}
+              {/* ── GETYOURGUIDE MODAL — official embedded widget ── */}
               {partnerModal === "gyg" && (
                 <div>
-                  <p style={{ fontSize:12, color:"#64748b", marginBottom:16, lineHeight:1.6 }}>
-                    {({hr:"Odabrane aktivnosti i ture na Jadranu — rezerviraj unaprijed, uštedi na ulaznici.",de:"Ausgewählte Aktivitäten & Touren an der Adria — im Voraus buchen, an der Kasse sparen.",en:"Curated activities & tours on the Adriatic — book ahead, save at the gate.",it:"Attività e tour selezionati sull'Adriatico — prenota in anticipo, risparmia all'ingresso.",pl:"Wyselekcjonowane aktywności i wycieczki nad Adriatykiem.",si:"Izbrane aktivnosti in ture na Jadranu."})[dl]||"Curated tours & activities."}
+                  <p style={{ fontSize:11, color:"#64748b", marginBottom:14, lineHeight:1.6 }}>
+                    {({hr:"Rezerviraj direktno — aktivnosti se učitavaju uživo od GetYourGuide.",de:"Direkt buchen — Aktivitäten werden live von GetYourGuide geladen.",en:"Book directly — activities loaded live from GetYourGuide.",it:"Prenota direttamente — attività caricate in diretta da GetYourGuide.",pl:"Rezerwuj bezpośrednio — aktywności ładowane na żywo z GetYourGuide.",si:"Rezerviraj neposredno — aktivnosti se nalagajo v živo iz GetYourGuide."})[dl]||"Book directly via GetYourGuide."}
                   </p>
-                  <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-                    {GYG_OFFERS.map((o, i) => (
-                      <button key={i} onClick={() => window.open(o.link, "_blank")} style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 14px", borderRadius:14, background:"rgba(255,87,34,0.04)", border:"1px solid rgba(255,87,34,0.12)", cursor:"pointer", fontFamily:"inherit", textAlign:"left", transition:"all 0.2s" }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor="rgba(255,87,34,0.3)"; e.currentTarget.style.background="rgba(255,87,34,0.08)"; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor="rgba(255,87,34,0.12)"; e.currentTarget.style.background="rgba(255,87,34,0.04)"; }}>
-                        <img src={o.img} alt="" style={{ width:52, height:52, borderRadius:10, objectFit:"cover", flexShrink:0 }} />
-                        <div style={{ flex:1, minWidth:0 }}>
-                          <div style={{ fontSize:9, color:"#FF5722", fontWeight:700, letterSpacing:1, marginBottom:3 }}>{o.tag}</div>
-                          <div style={{ fontSize:13, fontWeight:600, color:"#f1f5f9", lineHeight:1.3 }}>{t(o.title)}</div>
-                          <div style={{ fontSize:12, color:"#22c55e", fontWeight:700, marginTop:4 }}>od {o.price}</div>
-                        </div>
-                        <span style={{ fontSize:16, color:"#FF5722", flexShrink:0 }}>→</span>
-                      </button>
-                    ))}
+                  {/* Official GYG activities widget — renders in-place, booking stays in app */}
+                  <div
+                    key={`gyg-modal-${activeDest?.name || "hr"}-${dl}`}
+                    data-gyg-widget="activities"
+                    data-gyg-partner-id="9OEGOYI"
+                    data-gyg-number-of-items="4"
+                    data-gyg-locale-code={dl === "de" ? "de-DE" : dl === "it" ? "it-IT" : dl === "hr" ? "hr-HR" : dl === "pl" ? "pl-PL" : "en-US"}
+                    data-gyg-q={activeDest?.liveCity || "Croatia"}
+                    style={{ minHeight:200 }}
+                  />
+                  {/* Individual featured activity widgets */}
+                  <div style={{ marginTop:16, display:"flex", flexDirection:"column", gap:10 }}>
+                    {(activeDest ? (CITY_GYG[activeDest.liveCity?.toLowerCase()] || []) : GYG_OFFERS.slice(0,3)).map((o, i) =>
+                      o.gygId ? (
+                        <div key={i} data-gyg-widget="auto" data-gyg-partner-id="9OEGOYI" data-gyg-cmp={o.gygId} />
+                      ) : (
+                        <button key={i} onClick={() => window.open(o.link, "_blank")} style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 14px", borderRadius:14, background:"rgba(255,87,34,0.04)", border:"1px solid rgba(255,87,34,0.12)", cursor:"pointer", fontFamily:"inherit", textAlign:"left" }}>
+                          <img src={o.img} alt="" style={{ width:52, height:52, borderRadius:10, objectFit:"cover", flexShrink:0 }} />
+                          <div style={{ flex:1 }}>
+                            <div style={{ fontSize:13, fontWeight:600, color:"#f1f5f9", lineHeight:1.3 }}>{t(o.title)}</div>
+                            <div style={{ fontSize:12, color:"#22c55e", fontWeight:700, marginTop:4 }}>od {o.price}</div>
+                          </div>
+                          <span style={{ color:"#FF5722" }}>→</span>
+                        </button>
+                      )
+                    )}
                   </div>
-                  <p style={{ fontSize:10, color:"#1e3a5f", textAlign:"center", marginTop:12 }}>
-                    {({hr:"Otvara se u novom tabu. Aplikacija ostaje otvorena.",de:"Öffnet in einem neuen Tab. Die App bleibt geöffnet.",en:"Opens in a new tab. App stays open.",it:"Si apre in una nuova scheda. L'app rimane aperta.",pl:"Otwiera się w nowej karcie. Aplikacja pozostaje otwarta.",si:"Odpre se v novem zavihku. Aplikacija ostane odprta."})[dl]||"Opens in new tab. App stays open."}
-                  </p>
                 </div>
               )}
 
