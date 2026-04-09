@@ -799,7 +799,19 @@ async function fetchYoloCrowd() {
       r.topSensor = r.sensors[0] || null;
     }
 
-    _senseCache = { regions, totalObjects, activeSensors, timestamp: new Date().toISOString() };
+    // Find the most recent sensor timestamp to calculate real data age
+    let latestSensorMs = 0;
+    for (const r of Object.values(regions)) {
+      for (const s of r.sensors) {
+        if (s.ts) {
+          const ms = new Date(s.ts).getTime();
+          if (ms > latestSensorMs) latestSensorMs = ms;
+        }
+      }
+    }
+    const dataAgeMin = latestSensorMs > 0 ? Math.round((Date.now() - latestSensorMs) / 60000) : null;
+
+    _senseCache = { regions, totalObjects, activeSensors, dataAgeMin, timestamp: new Date().toISOString() };
     _senseCacheTime = Date.now();
     return _senseCache;
   } catch (e) {
@@ -864,11 +876,19 @@ function generateYoloCrowdPrompt(yoloData, userRegion) {
   const lines = [];
   const totalObj = yoloData.totalObjects || 0;
   const activeS  = yoloData.activeSensors || 0;
-  lines.push(`[LIVE CROWD DATA — ${activeS} aktivnih senzora, ažurirano svakih 15 min]`);
-  if (totalObj === 0) {
-    lines.push("Ukupno: 0 detekcija — senzori aktivni, sve lokacije MIRNE.\n");
+  const ageMin   = yoloData.dataAgeMin;
+  const isStale  = ageMin !== null && ageMin > 30;
+
+  if (isStale) {
+    lines.push(`[SENZORSKI PODACI — ZASTARJELI ${ageMin} min, zadnji update ${Math.round(ageMin/60*10)/10}h]`);
+    lines.push(`UPOZORENJE: Podaci su stari ${ageMin} minuta — ingest aplikacija nije pisala. Koristi vremensku procjenu umjesto ovih podataka i NEMOJ tvrditi da su podaci live.\n`);
   } else {
-    lines.push(`Ukupno: ${totalObj} detekcija na ${activeS} senzora\n`);
+    lines.push(`[LIVE CROWD DATA — ${activeS} aktivnih senzora, ažurirano svakih 10 min]`);
+    if (totalObj === 0) {
+      lines.push("Ukupno: 0 detekcija — senzori aktivni, sve lokacije MIRNE.\n");
+    } else {
+      lines.push(`Ukupno: ${totalObj} detekcija na ${activeS} senzora\n`);
+    }
   }
 
   const sorted = Object.entries(yoloData.regions).sort((a, b) => b[1].totalObjects - a[1].totalObjects);
@@ -898,6 +918,8 @@ function generateYoloCrowdPrompt(yoloData, userRegion) {
 // ═══ DELTA BIG EYE — Route-Aware Situational Intelligence ═══
 function generateCamperYoloPrompt(yoloData) {
   if (!yoloData || !yoloData.regions) return "";
+  const ageMin  = yoloData.dataAgeMin;
+  const isStale = ageMin !== null && ageMin > 30;
 
   const DELTA_EYE = {
     a1_zg_split: { label: "\u{1F1ED}\u{1F1F7} A1 Zagreb\u2192Split\u2192Dubrovnik", prefixes: ["hac_a1","a1_"], interpret: (c,t) => c>40 ? "GUST na A1 \u2014 kolone na naplatnim!" : c>15 ? "A1 umjeren" : "A1 slobodna" },
@@ -930,7 +952,8 @@ function generateCamperYoloPrompt(yoloData) {
   };
 
   const lines = [];
-  lines.push("[DELTA BIG EYE — Situaciona svest iz 165+ prometnih senzora, 3 zemlje]");
+  if (isStale) lines.push(`⚠️ PODACI ZASTARJELI ${ageMin} min — ne prikazuj kao live, koristi vremensku procjenu.`);
+  lines.push(`[DELTA BIG EYE — Situaciona svest iz 165+ prometnih senzora, 3 zemlje${isStale ? ` — STALE ${ageMin}min` : ""}]`);
 
   for (const [catId, cat] of Object.entries(DELTA_EYE)) {
     let totalObj = 0, totalCars = 0, totalPersons = 0, activeSensors = 0;
