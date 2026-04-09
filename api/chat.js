@@ -187,6 +187,27 @@ PROMETNA PRAVILA ZA KAMPERE U HRVATSKOJ:
 - Telefon: samo hands-free. Kazna: 130€.
 - Reflektirajući prsluk: obavezan u vozilu. Kazna za neposjedovanje: 50€.
 
+🚨 NOVA ELEKTRONSKA CESTARINA (FREE-FLOW) — KRITIČNO ZA SVE PUTNIKE:
+- Hrvatska od 2026. uvela FREE-FLOW na svim autocestama (A1, A6, A7/A8/A9, A2, A3)
+- NEMA više naplatnih rampi — prođeš kamere i gotovo. ALI moraš platiti!
+- OPCIJA 1 — ENC TRANSPONDER (preporučeno): OBU uređaj na vjetrobranskom staklu → automatska naplata, niže tarife
+  → Nabavi na: HAC centru, INA/OMV benzinskim, ili online hac.hr
+  → Europski ENC (Telepass, EETS) pun je kompatibilan!
+- OPCIJA 2 — BEZ TRANSPONDERA: tablice snima kamera → mora se platiti na hac.hr ili HAC mobi app u roku 30 dana
+  → Plaćanje kreditnom karticom, Google Pay, Apple Pay
+  → Upozorenje za strance: imate 30 dana, ali račun stiže na adresu registracije vozila (DE/AT/HR)!
+- KAZNA za neplaćanje: 200–500€ + troškovi ovrhe!
+- KAMPER/VOZILA >3.5t: obavezan GNSS uređaj (ili ENC OBU). Registriraj se na hac.hr PRIJE puta!
+- RUTA A1 Zagreb→Split: nema više čekanja na naplatnicama — ali provjeri je li sve plaćeno!
+- SAVJET: Registriraj tablice svog vozila na hac.hr (2 min) → dodaj kreditnu karticu → nula stresa!
+- Više info: hac.hr/slobodan-prolaz ili tel. HAC: +385 1 5555 555
+
+UPUTA ZA AI: Kad korisnik pita o putu autocestom kroz Hrvatsku, UVIJEK proaktivno upozori na novi free-flow sustav!
+Primjer: "⚠️ VAŽNO za 2026: Hrvatska nema više naplatnih rampi — prođeš kamerama, ali MORAŠ platiti na hac.hr do 30 dana, inače kazna 200-500€!"
+Na njemačkom: "⚠️ WICHTIG 2026: Kroatien hat Free-Flow-Maut eingeführt — kein Stopp nötig, aber Online-Zahlung auf hac.hr innerhalb 30 Tagen PFLICHT, sonst Bußgeld bis 500€!"
+Na engleskom: "⚠️ NEW in 2026: Croatia switched to free-flow tolls — no stopping, but you MUST pay online at hac.hr within 30 days or face fines up to €500!"
+Na talijanskom: "⚠️ NOVITÀ 2026: Croazia ha introdotto il pedaggio free-flow — nessuna fermata, ma DEVI pagare su hac.hr entro 30 giorni, multa fino a 500€!"
+
 DIVLJE KAMPIRANJE — ZAKON:
 - Strogo ZABRANJENO u cijeloj Hrvatskoj! Kazna: 130-1.300€.
 - Policija i rendžeri pojačano kontroliraju obalu ljeti.
@@ -1198,6 +1219,9 @@ OBAVEZNA PRAVILA (ne smiju se zaobići):
 14. Za KVALITET ZRAKA (Copernicus CAMS): PM2.5/PM10 su čestice dima ili prašine.
     Kritično (>75 µg/m³): Preporuči masku, zatvorene prostore, izbjegavanje napora vani.
     Visoko (>35 µg/m³): Upozori osjetljive grupe (djeca, astma, stariji). Saharski prašak: ispiraj auto.
+15. Za svako pitanje o putu/ruti/autocesti kroz Hrvatsku: OBAVEZNO umetni upozorenje o novoj FREE-FLOW cestarini!
+    "⚠️ NOVA CESTARINA 2026: Hrvatska uvela free-flow — prolaz bez zaustavljanja, ali plati online na hac.hr do 30 dana, kazna do 500€!"
+    Napiši na jeziku korisnika. Dodaj link: hac.hr
 [END ALERT_OVERRIDE]
 `);
     } else if (emergencyAlerts.length > 0) {

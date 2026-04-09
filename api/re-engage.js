@@ -95,7 +95,8 @@ function buildReEmail(templateId, email, segmentId, name, leadId) {
     const BODIES = {
       de_camper: `<p>${hi}</p>
 <p>Du hast deinen <strong>${guideName}</strong> fast freigeschaltet — 380+ Reisende aus dem DACH-Raum nutzen ihn bereits diese Saison.</p>
-<p>Was sie gefunden haben, was auf keiner Karte steht:</p>
+<p style="background:#fff3cd;border-left:4px solid #f59e0b;padding:10px 14px;border-radius:0 8px 8px 0;color:#92400e"><strong>⚠️ WICHTIG für 2026:</strong> Kroatien hat sein Mautsystem komplett umgestellt — <strong>Free-Flow auf allen Autobahnen</strong>. Keine Schranken mehr, aber Zahlung innerhalb 30 Tage auf hac.hr PFLICHT — sonst Bußgeld bis 500€! Unser Guide erklärt alles Schritt für Schritt.</p>
+<p>Was 380+ DACH-Wohnmobilisten außerdem gefunden haben:</p>
 <ul style="color:#334155">
   <li>🅿️ Legale Stellplätze direkt am Meer — kostenlos in der Nebensaison</li>
   <li>🌊 Buchten ohne Tagestouristen — nur per Boot oder früh morgens erreichbar</li>
@@ -146,7 +147,8 @@ ${btn(url, "Unlock my guide →")}${footer}`,
     const BODIES = {
       de_camper: `<p>${hi}</p>
 <p>Letzte Erinnerung — dein <strong>${guideName}</strong> wartet noch auf dich.</p>
-<p>JADRAN.AI kennt alle legalen Stellplätze, Höhenbeschränkungen, Bora-Warnungen und günstigen Konobas entlang der Dalmatinischen Küste.</p>
+<p style="background:#fef2f2;border-left:4px solid #ef4444;padding:10px 14px;border-radius:0 8px 8px 0;color:#7f1d1d"><strong>🛣️ NEU 2026 — bitte unbedingt lesen:</strong> Kroatien hat auf <strong>Free-Flow-Maut</strong> umgestellt. Keine Schranken, aber <strong>Zahlung PFLICHT innerhalb 30 Tage</strong> nach Durchfahrt (hac.hr) — Bußgeld bis 500€! Wohnmobile über 3,5t brauchen GNSS-Gerät. Unser Guide erklärt, wie du dich in 2 Minuten registrierst.</p>
+<p>JADRAN.AI kennt außerdem alle legalen Stellplätze, Höhenbeschränkungen, Bora-Warnungen und günstigen Konobas entlang der Dalmatinischen Küste.</p>
 <p><strong>7-Tage-Geld-zurück-Garantie</strong> — kein Risiko.</p>
 ${btn(url, "Jetzt freischalten — letzter Aufruf →")}${footer}`,
 
@@ -181,7 +183,7 @@ ${btn(url, "Take one last look →")}${footer}`,
 function getReSubject(templateId, segmentId, name) {
   const SUBJECTS = {
     re_discount: {
-      de_camper: "380+ DACH-Reisende nutzen deinen Guide — hast du ihn schon freigeschaltet? 🚐",
+      de_camper: "Kroatien 2026: Free-Flow-Maut, neue Regeln — dein Wohnmobil-Guide erklärt alles 🛣️🚐",
       de_family: "Dein Familien-Kroatien-Guide wartet — hier sind 3 Tipps ⛱️",
       it_sailor:  "380+ velisti stanno usando la tua guida — sei dentro? ⛵",
       en_cruiser: "380+ sailors are using their guide — are you? ⛵",
@@ -190,7 +192,7 @@ function getReSubject(templateId, segmentId, name) {
       default:    "380+ travellers are exploring Croatia with JADRAN.AI — are you? 🌊",
     },
     re_last: {
-      de_camper: "Kroatien-Saison startet bald — bist du vorbereitet? 🗺️",
+      de_camper: "⚠️ Neue Maut in Kroatien 2026 — bist du vorbereitet? Bußgeld bis 500€ 🛣️",
       de_family: "Letzter Aufruf: Dein Kroatien-Familienguide 🏖️",
       it_sailor:  "Ultima chiamata: la tua guida vela Croazia ⛵",
       en_cruiser: "Last call: your Croatia sailing guide ⛵",
