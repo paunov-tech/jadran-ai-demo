@@ -1519,7 +1519,7 @@ const [lang, setLang] = useState(() => {
         </div>
 
         {/* ── AIR SERBIA affiliate — shown in paywall (flight deal) ── */}
-        <a href="https://www.tkqlhce.com/click-101704203-17263146" target="_blank" rel="noopener noreferrer"
+        <a href="https://www.dpbolvw.net/click-101704203-17263146" target="_blank" rel="noopener noreferrer"
           style={{ display:"block", textDecoration:"none", marginTop:10 }}>
           <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px",
             borderRadius:12, background:"rgba(200,16,46,0.06)", border:"1px solid rgba(200,16,46,0.18)", cursor:"pointer" }}>

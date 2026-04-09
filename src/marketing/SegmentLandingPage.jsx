@@ -751,7 +751,7 @@ export default function SegmentLandingPage({ slug }) {
       {/* ── AIR SERBIA AFFILIATE — direct flights to Brač ── */}
       <Section pt={24} pb={24} bg="#071828">
         <a
-          href="https://www.tkqlhce.com/click-101704203-17263146"
+          href="https://www.dpbolvw.net/click-101704203-17263146"
           target="_blank"
           rel="noopener noreferrer"
           style={{ display:"block", textDecoration:"none" }}
