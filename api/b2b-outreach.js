@@ -24,6 +24,7 @@
 const PROJECT = "molty-portal";
 const FS      = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents`;
 const FSQ     = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents:runQuery`;
+const FSC     = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents:commit`;
 const FB_KEY  = () => process.env.FIREBASE_API_KEY || process.env.VITE_FB_API_KEY;
 const RESEND  = () => process.env.RESEND_API_KEY;
 const FROM_B2B = "Jadran AI Partnerstvo <partneri@jadran.ai>";
@@ -109,10 +110,45 @@ async function fsQuery(filters, limit = 100) {
         },
       }),
     });
-    if (!r.ok) return [];
+    if (!r.ok) return null; // null = query failed (quota/error), vs [] = genuinely empty
     const data = await r.json();
     return data.filter(d => d.document).map(d => fromDoc(d.document));
-  } catch { return []; }
+  } catch { return null; }
+}
+
+// Returns raw Firestore field map (fieldName -> JS value), for meta/stats docs
+async function fsGetFields(col, id) {
+  try {
+    const r = await fetch(`${FS}/${col}/${id}?key=${FB_KEY()}`);
+    if (!r.ok) return null;
+    const doc = await r.json();
+    const f = doc.fields;
+    if (!f) return null;
+    const out = {};
+    for (const [k, v] of Object.entries(f)) {
+      if (v.integerValue !== undefined) out[k] = parseInt(v.integerValue);
+      else if (v.stringValue  !== undefined) out[k] = v.stringValue;
+      else if (v.booleanValue !== undefined) out[k] = v.booleanValue;
+    }
+    return out;
+  } catch { return null; }
+}
+
+// Atomically increments fields in a Firestore doc (creates the doc if it doesn't exist)
+async function fsIncrement(col, id, deltas) {
+  const docPath = `projects/${PROJECT}/databases/(default)/documents/${col}/${id}`;
+  const fieldTransforms = Object.entries(deltas).map(([fieldPath, n]) => ({
+    fieldPath,
+    increment: { integerValue: String(n) },
+  }));
+  try {
+    const r = await fetch(`${FSC}?key=${FB_KEY()}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ writes: [{ transform: { document: docPath, fieldTransforms } }] }),
+    });
+    return r.ok;
+  } catch { return false; }
 }
 
 // ── EMAIL TEMPLATES ───────────────────────────────────────────────────────
@@ -405,7 +441,7 @@ async function actionAdd(body) {
   if (existing && !existing.paused) return { ok: false, error: "Already exists", id };
 
   const now = Date.now();
-  await fsPatch("b2b_contacts", id, {
+  const ok = await fsPatch("b2b_contacts", id, {
     email:      strV(email),
     name:       strV(name || ""),
     objectName: strV(objectName || ""),
@@ -426,6 +462,14 @@ async function actionAdd(body) {
     phone:      strV(phone || ""),
     address:    strV(address || ""),
   });
+  if (!ok) return { ok: false, error: "Firestore write failed" };
+
+  // Increment stats meta-doc (atomic, non-blocking)
+  const typeKey = `type_${(type || "smještaj").replace(/[^a-z0-9]/gi, "_").toLowerCase()}`;
+  const langKey = `lang_${(lang || "hr").replace(/[^a-z0-9]/g, "_")}`;
+  const tierKey = `tier_${(tier || "C")}`;
+  const regionKey = `region_${(region || "unknown").replace(/[^a-z0-9]/g, "_")}`;
+  fsIncrement("b2b_contacts", "__stats", { total: 1, step_0: 1, [typeKey]: 1, [langKey]: 1, [tierKey]: 1, [regionKey]: 1 }).catch(() => {});
 
   return { ok: true, id, scheduled: true };
 }
@@ -458,6 +502,8 @@ async function actionSend() {
   const all = await fsQuery([
     { fieldFilter: { field: { fieldPath: "paused" }, op: "EQUAL", value: boolV(false) } },
   ], 200);
+
+  if (!all) return { ok: false, error: "Firestore quota exceeded — cron skipped", sent: 0, failed: 0, skipped: 0, processed: 0 };
 
   const due = all
     .filter(c => !c.registered && (c.step || 0) < 5 && c.nextSendAt && c.nextSendAt <= now)
@@ -500,21 +546,49 @@ async function actionSend() {
 }
 
 async function actionStats() {
-  // Count contacts by step
+  // Fast path: read pre-aggregated meta-doc (1 point read, immune to runQuery quota)
+  const meta = await fsGetFields("b2b_contacts", "__stats");
+  if (meta && (meta.total || 0) > 0) {
+    const stats = { total: meta.total || 0, byStep: {}, opened: 0, clicked: 0, registered: 0, byLang: {}, byType: {}, byTier: {}, byRegion: {} };
+    for (const [k, v] of Object.entries(meta)) {
+      if (k.startsWith("step_"))   stats.byStep[k.slice(5)]   = v;
+      else if (k.startsWith("lang_"))   stats.byLang[k.slice(5)]   = v;
+      else if (k.startsWith("type_"))   stats.byType[k.slice(5)]   = v;
+      else if (k.startsWith("tier_"))   stats.byTier[k.slice(5)]   = v;
+      else if (k.startsWith("region_")) stats.byRegion[k.slice(7)] = v;
+    }
+    return { ok: true, stats, source: "meta" };
+  }
+
+  // Fallback: full collection scan (requires quota — works on Blaze after reset)
   const all = await fsQuery([
     { fieldFilter: { field: { fieldPath: "paused" }, op: "EQUAL", value: boolV(false) } },
   ], 500);
 
-  const stats = { total: all.length, byStep: {}, opened: 0, clicked: 0, registered: 0, byLang: {}, byType: {}, byTier: {} };
+  if (!all) return { ok: false, error: "Quota exceeded — try again later or check Firestore billing", stats: { total: 0 } };
+
+  const stats = { total: all.length, byStep: {}, opened: 0, clicked: 0, registered: 0, byLang: {}, byType: {}, byTier: {}, byRegion: {} };
   for (const c of all) {
     const s = String(c.step || 0);
     stats.byStep[s] = (stats.byStep[s] || 0) + 1;
     if (c.opened)     stats.opened++;
     if (c.clicked)    stats.clicked++;
     if (c.registered) stats.registered++;
-    if (c.lang)  stats.byLang[c.lang]  = (stats.byLang[c.lang]  || 0) + 1;
-    if (c.type)  stats.byType[c.type]  = (stats.byType[c.type]  || 0) + 1;
-    if (c.tier)  stats.byTier[c.tier]  = (stats.byTier[c.tier]  || 0) + 1;
+    if (c.lang)   stats.byLang[c.lang]     = (stats.byLang[c.lang]     || 0) + 1;
+    if (c.type)   stats.byType[c.type]     = (stats.byType[c.type]     || 0) + 1;
+    if (c.tier)   stats.byTier[c.tier]     = (stats.byTier[c.tier]     || 0) + 1;
+    if (c.region) stats.byRegion[c.region] = (stats.byRegion[c.region] || 0) + 1;
+  }
+
+  // Cache result in meta-doc so future calls don't need runQuery
+  if (stats.total > 0) {
+    const fields = { total: intV(stats.total) };
+    for (const [k,v] of Object.entries(stats.byStep))   fields[`step_${k}`]     = intV(v);
+    for (const [k,v] of Object.entries(stats.byLang))   fields[`lang_${k}`]     = intV(v);
+    for (const [k,v] of Object.entries(stats.byType))   fields[`type_${k.replace(/[^a-z0-9]/gi,"_").toLowerCase()}`] = intV(v);
+    for (const [k,v] of Object.entries(stats.byTier))   fields[`tier_${k}`]     = intV(v);
+    for (const [k,v] of Object.entries(stats.byRegion)) fields[`region_${k.replace(/[^a-z0-9]/g,"_")}`] = intV(v);
+    fsPatch("b2b_contacts", "__stats", fields).catch(() => {});
   }
 
   return { ok: true, stats };
