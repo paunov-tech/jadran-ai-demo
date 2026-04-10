@@ -1995,10 +1995,13 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
       // Layer 1+3: Cascade prediction
       import("./cascade.js").then(m => m.buildCascadePrompt(_reg, yoloCrowdData)),
 
-      // Layer 2 (new): Sentinel-2 satellite parking detection
+      // Layer 2 (new): Sentinel-2 satellite parking + sea quality detection
       import("./satellite.js").then(async m => {
-        const cached = await m.readSatelliteCache(); // read Firestore cache (daily update)
-        return { mod: m, cached };
+        const [cached, seaCached] = await Promise.all([
+          m.readSatelliteCache(),      // parking occupancy (daily update)
+          m.readSeaQualityCache(),     // sea water quality (daily update)
+        ]);
+        return { mod: m, cached, seaCached };
       }),
     ]);
 
@@ -2032,18 +2035,21 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
           _reg
         )
       : null;
+    const seaQualityPrompt = satData?.seaCached && satData?.mod
+      ? satData.mod.buildSeaQualityPrompt(satData.seaCached, _reg)
+      : null;
 
     // Camp catalog: inject for camper mode; for other modes only if explicitly asked about camps
     const campIsRelevant = mode === "camper" ||
       /kamp|camp|parking za kamper|noćenje/i.test(lastUserMessage || "");
 
     // Assemble intelligence blocks — PRIORITY ORDER (critical first)
-    // HAK/cascade (safety) → events (surges) → fuel (critical) → NP → camps
-    const intelligenceBlocks = [hakPrompt, cascadePrompt, eventsPrompt, fuelPrompt, npPrompt, satPrompt]
+    // HAK/cascade (safety) → events (surges) → fuel (critical) → NP → sat parking → sea quality
+    const intelligenceBlocks = [hakPrompt, cascadePrompt, eventsPrompt, fuelPrompt, npPrompt, satPrompt, seaQualityPrompt]
       .filter(Boolean)
       .join("\n\n");
 
-    console.warn(`[intel] events=${!!eventsPrompt} hak=${!!(hakData?.incidents?.length || hakData?.borders?.length)} cascade=${!!cascadePrompt} fuel=${!!fuelData?.prices} np=${npList?.length || 0} sat=${!!satPrompt} camp=${!!campCatalog}`);
+    console.warn(`[intel] events=${!!eventsPrompt} hak=${!!(hakData?.incidents?.length || hakData?.borders?.length)} cascade=${!!cascadePrompt} fuel=${!!fuelData?.prices} np=${npList?.length || 0} sat=${!!satPrompt} sea=${!!seaQualityPrompt} camp=${!!campCatalog}`);
 
     let systemPrompt = '';
     try {
