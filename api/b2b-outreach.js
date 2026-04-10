@@ -672,15 +672,15 @@ export default async function handler(req, res) {
     </body></html>`);
   }
 
-  // Admin auth — isti pattern kao bookings.js (s .trim())
-  const _raw     = req.headers["x-admin-token"] || "";
-  const _decoded = (() => { try { return Buffer.from(_raw, "base64").toString("utf8"); } catch { return _raw; } })();
-  const _ADMIN   = (process.env.ADMIN_TOKEN || "").trim();
-  const _CRON    = (process.env.CRON_SECRET  || "").trim();
-  const _isCron  = req.headers["x-vercel-cron"] === "1" ||
-                   req.headers.authorization === `Bearer ${_CRON}`;
-
-  if (!_isCron && _decoded.trim() !== _ADMIN && _raw.trim() !== _ADMIN && _raw.trim() !== _CRON) {
+  // Admin auth — identičan pattern kao bookings.js
+  const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
+  if (!ADMIN_TOKEN) return res.status(503).json({ ok: false, error: "not_configured" });
+  const _raw = req.headers["x-admin-token"] || "";
+  const _tok = (() => { try { return Buffer.from(_raw, "base64").toString("utf8"); } catch { return _raw; } })();
+  const CRON_SECRET = process.env.CRON_SECRET || "";
+  const isCron = req.headers["x-vercel-cron"] === "1" ||
+                 req.headers.authorization === `Bearer ${CRON_SECRET}`;
+  if (!isCron && (!_tok || _tok.trim() !== ADMIN_TOKEN.trim())) {
     return res.status(401).json({ ok: false, error: "Unauthorized" });
   }
 
@@ -692,6 +692,13 @@ export default async function handler(req, res) {
     else if (action === "stats") result = await actionStats();
     else if (action === "list")  result = await actionList(req.query);
     else if (action === "pause") result = await actionPause(req.body || req.query);
+    else if (action === "whoami") result = {
+      ok: true,
+      raw_len: _raw.length,
+      decoded_preview: _tok.slice(0, 4) + "***",
+      admin_len: ADMIN_TOKEN.length,
+      match: _tok.trim() === ADMIN_TOKEN.trim(),
+    };
     else result = { ok: false, error: `Unknown action: ${action}` };
 
     res.json(result);
