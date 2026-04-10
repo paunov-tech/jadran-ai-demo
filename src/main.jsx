@@ -23,13 +23,14 @@ const isAdmin = path === "/admin" || path === "/admin/";
 const isPartner = path === "/partner" || path.startsWith("/partner/");
 const isQualify = path === "/qualify" || path === "/qualify/";
 const isCampaigns = path === "/campaigns" || path === "/campaigns/";
+const isDelta = path === "/delta" || path === "/delta/";
 const isSegmentLanding = path.startsWith("/m/");
 const hasTrip = params.has("trip");
 
 // /explore is the main entry. / and all unknown paths → explore.
 // Operational paths (room, kiosk, trip, host, ai, tz, admin, partner, marketing) stay unchanged.
 const route = isHost ? "host" : isAI ? "ai" : isTZ ? "tz" : isAdmin ? "admin" : isPartner ? "partner"
-  : isQualify ? "qualify" : isCampaigns ? "campaigns" : isSegmentLanding ? "segment"
+  : isQualify ? "qualify" : isCampaigns ? "campaigns" : isDelta ? "delta" : isSegmentLanding ? "segment"
   : hasTrip ? "trip" : (hasRoom || hasKiosk) ? "app" : isLanding ? "landing" : "explore";
 
 const _ebLang = (() => { try { const s = localStorage.getItem("jadran_lang"); if (s) return s; const n = (navigator.language || "").toLowerCase(); if (n.startsWith("de")) return "de"; if (n.startsWith("it")) return "it"; if (n.startsWith("en")) return "en"; if (n.startsWith("hr")) return "hr"; if (n.startsWith("pl")) return "pl"; if (n.startsWith("sl")) return "si"; } catch {} return "en"; })();
@@ -80,13 +81,14 @@ const App = React.lazy(() =>
   : route === "segment" ? import('./marketing/SegmentLandingPage.jsx').then(m => ({
       default: () => React.createElement(m.default, { slug: segSlug })
     }))
+  : route === "delta" ? import('./DeltaDashboard.jsx')
   : route === "trip" ? import('./TripGuide.jsx')
   : route === "app"  ? import('./App.jsx')
   : route === "landing" ? import('./LandingPage.jsx')
   : import('./DestinationExplorer.jsx')  // default: explore
 );
 
-const labels = { host: "Host Panel", ai: "Jadran AI", tz: "TZ Dashboard", explore: "Jadran", admin: "Admin", partner: "Partner Portal", trip: "JADRAN Trip", app: "JADRAN", landing: "JADRAN", qualify: "JADRAN", campaigns: "Campaigns", segment: "JADRAN" };
+const labels = { host: "Host Panel", ai: "Jadran AI", tz: "TZ Dashboard", delta: "DELTA", explore: "Jadran", admin: "Admin", partner: "Partner Portal", trip: "JADRAN Trip", app: "JADRAN", landing: "JADRAN", qualify: "JADRAN", campaigns: "Campaigns", segment: "JADRAN" };
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

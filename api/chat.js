@@ -2169,7 +2169,7 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: tierPlan === 'vip' ? 'claude-opus-4-6' : 'claude-sonnet-4-6',
+        model: 'claude-opus-4-6',
         max_tokens: walkieMode ? 400 : (TIER_LIMITS[tierPlan] || TIER_LIMITS.free).maxTokens,
         temperature: 0.55,
         system: systemPrompt,
