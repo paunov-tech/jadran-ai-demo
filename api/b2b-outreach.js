@@ -672,13 +672,13 @@ export default async function handler(req, res) {
     </body></html>`);
   }
 
-  // Admin auth — token is sent as btoa(PIN) from the admin panel (same pattern as partner-auth.js)
-  const rawToken  = req.headers["x-admin-token"] || "";
-  const adminToken = (() => { try { return Buffer.from(rawToken, "base64").toString("utf8"); } catch { return rawToken; } })();
-  const validToken = process.env.ADMIN_TOKEN || process.env.CRON_SECRET;
-  const isCron = req.headers["x-vercel-cron"] === "1" || req.headers.authorization === `Bearer ${validToken}`;
+  // Admin auth — identičan pattern kao partner-auth.js
+  const _raw     = req.headers["x-admin-token"] || "";
+  const _decoded = (() => { try { return Buffer.from(_raw, "base64").toString("utf8"); } catch { return _raw; } })();
+  const _isCron  = req.headers["x-vercel-cron"] === "1" ||
+                   req.headers.authorization === `Bearer ${process.env.CRON_SECRET}`;
 
-  if (!isCron && adminToken !== validToken && rawToken !== validToken) {
+  if (!_isCron && _decoded !== process.env.ADMIN_TOKEN && _raw !== process.env.ADMIN_TOKEN && _raw !== process.env.CRON_SECRET) {
     return res.status(401).json({ ok: false, error: "Unauthorized" });
   }
 
