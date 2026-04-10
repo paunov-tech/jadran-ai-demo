@@ -9,22 +9,20 @@
 <script src="https://js.api.here.com/v3/3.2/mapsjs-ui.js" type="text/javascript" charset="utf-8"></script>
 <link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.2/mapsjs-ui.css"/>
 <style>
-  body { margin:0; padding:0; overflow:hidden; background:#0d1b2e; }
+  body { margin:0; padding:0; overflow:hidden; }
   #map { width:100vw; height:100vh; }
-  /* Dark map overlay via CSS */
-  .H_ib_body { font-family: system-ui, sans-serif !important; font-size: 12px !important; }
   #legend {
     position:absolute; bottom:20px; left:14px;
-    background:rgba(6,15,30,0.90); border:1px solid rgba(14,165,233,0.20);
+    background:rgba(6,15,30,0.88); border:1px solid rgba(14,165,233,0.22);
     border-radius:12px; padding:10px 14px; font-family:system-ui,sans-serif;
     font-size:11px; color:#94a3b8; pointer-events:none; z-index:9;
   }
-  #legend .lt { font-size:10px; color:#475569; margin-bottom:6px; letter-spacing:.08em; text-transform:uppercase; }
+  #legend .lt  { font-size:10px; color:#475569; margin-bottom:6px; letter-spacing:.08em; text-transform:uppercase; }
   #legend .row { display:flex; align-items:center; gap:7px; margin:3px 0; }
   #legend .dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
   #status {
     position:absolute; top:10px; right:10px;
-    background:rgba(6,15,30,0.85); border:1px solid rgba(14,165,233,0.18);
+    background:rgba(6,15,30,0.82); border:1px solid rgba(14,165,233,0.18);
     border-radius:8px; padding:5px 12px; font-family:system-ui,sans-serif;
     font-size:11px; color:#64748b; pointer-events:none; z-index:9;
   }
@@ -38,225 +36,195 @@
   <div class="row"><div class="dot" style="background:#f97316"></div> Jako gusto (&gt;100)</div>
   <div class="row"><div class="dot" style="background:#eab308"></div> Umjereno (&gt;50)</div>
   <div class="row"><div class="dot" style="background:#22c55e"></div> Malo (&gt;10)</div>
-  <div class="row"><div class="dot" style="background:#6366f1;opacity:.6"></div> Zona praćenja</div>
+  <div class="row"><div class="dot" style="background:#6366f1;opacity:.7"></div> Zona praćenja</div>
   <div style="margin-top:8px" class="lt">Parking · More · Partneri</div>
   <div class="row"><div class="dot" style="background:#a855f7"></div> Parking (Sentinel-2)</div>
   <div class="row"><div class="dot" style="background:#0ea5e9"></div> Kvalitet mora</div>
-  <div class="row"><div class="dot" style="background:#f59e0b;border:2px solid #fff"></div> Affiliate</div>
+  <div class="row"><div class="dot" style="background:#f59e0b"></div> Affiliate</div>
 </div>
 <div id="status">Inicijalizacija...</div>
 
 <script type="text/javascript">
+// ── Globals ───────────────────────────────────────────────────────────────────
 var map = null;
-var currentKey = null;
+var mapUI = null;
 var overlayGroup = null;
 
-// ── Color config ──────────────────────────────────────────────────────────────
-var LEVEL = {
-  critical: { fill: "rgba(239, 68, 68, 0.42)",   stroke: "rgba(239, 68, 68, 0.90)",  lw: 2.5 },
-  heavy:    { fill: "rgba(249, 115, 22, 0.36)",  stroke: "rgba(249, 115, 22, 0.85)", lw: 2 },
-  moderate: { fill: "rgba(234, 179, 8, 0.30)",   stroke: "rgba(234, 179, 8, 0.80)",  lw: 2 },
-  light:    { fill: "rgba(34, 197, 94, 0.28)",   stroke: "rgba(34, 197, 94, 0.75)",  lw: 1.5 },
-  empty:    { fill: "rgba(99, 102, 241, 0.12)",  stroke: "rgba(99, 102, 241, 0.45)", lw: 1.5 },
+// Level → circle style  (H.map.Circle uses CSS rgba)
+var LEVEL_STYLE = {
+  critical: { f: "rgba(239,68,68,0.45)",   s: "rgba(239,68,68,1)",   lw: 3 },
+  heavy:    { f: "rgba(249,115,22,0.40)",  s: "rgba(249,115,22,1)",  lw: 2.5 },
+  moderate: { f: "rgba(234,179,8,0.38)",   s: "rgba(234,179,8,1)",   lw: 2 },
+  light:    { f: "rgba(34,197,94,0.32)",   s: "rgba(34,197,94,1)",   lw: 2 },
+  empty:    { f: "rgba(99,102,241,0.18)",  s: "rgba(99,102,241,0.8)",lw: 1.5 },
+};
+var SEA_STYLE = {
+  excellent: { f:"rgba(14,165,233,0.38)",  s:"rgba(14,165,233,0.9)" },
+  good:      { f:"rgba(56,189,248,0.32)",  s:"rgba(56,189,248,0.85)" },
+  fair:      { f:"rgba(234,179,8,0.32)",   s:"rgba(234,179,8,0.85)" },
+  poor:      { f:"rgba(249,115,22,0.38)",  s:"rgba(249,115,22,0.9)" },
+  bad:       { f:"rgba(239,68,68,0.42)",   s:"rgba(239,68,68,0.95)" },
+  unknown:   { f:"rgba(71,85,105,0.10)",   s:"rgba(71,85,105,0.4)" },
+};
+var PARK_STYLE = {
+  full:     { f:"rgba(239,68,68,0.50)",    s:"rgba(239,68,68,1)" },
+  heavy:    { f:"rgba(249,115,22,0.45)",   s:"rgba(249,115,22,1)" },
+  moderate: { f:"rgba(168,85,247,0.38)",   s:"rgba(168,85,247,0.9)" },
+  light:    { f:"rgba(168,85,247,0.25)",   s:"rgba(168,85,247,0.7)" },
+  empty:    { f:"rgba(168,85,247,0.12)",   s:"rgba(168,85,247,0.45)" },
+  unknown:  { f:"rgba(71,85,105,0.08)",    s:"rgba(71,85,105,0.3)" },
 };
 
-var SEA_FILL = {
-  excellent: "rgba(14, 165, 233, 0.35)",
-  good:      "rgba(56, 189, 248, 0.30)",
-  fair:      "rgba(234, 179, 8, 0.28)",
-  poor:      "rgba(249, 115, 22, 0.35)",
-  bad:       "rgba(239, 68, 68, 0.38)",
-  unknown:   "rgba(71, 85, 105, 0.15)",
-};
-var SEA_STROKE = {
-  excellent: "rgba(14, 165, 233, 0.80)",
-  good:      "rgba(56, 189, 248, 0.70)",
-  fair:      "rgba(234, 179, 8, 0.70)",
-  poor:      "rgba(249, 115, 22, 0.75)",
-  bad:       "rgba(239, 68, 68, 0.80)",
-  unknown:   "rgba(71, 85, 105, 0.40)",
-};
-var PARK_FILL = {
-  full:     "rgba(239, 68, 68, 0.50)",
-  heavy:    "rgba(249, 115, 22, 0.45)",
-  moderate: "rgba(168, 85, 247, 0.38)",
-  light:    "rgba(168, 85, 247, 0.28)",
-  empty:    "rgba(168, 85, 247, 0.15)",
-  unknown:  "rgba(71, 85, 105, 0.15)",
-};
-var PARK_STROKE = {
-  full:"rgba(239,68,68,0.9)", heavy:"rgba(249,115,22,0.85)", moderate:"rgba(168,85,247,0.85)",
-  light:"rgba(168,85,247,0.7)", empty:"rgba(168,85,247,0.4)", unknown:"rgba(71,85,105,0.4)",
-};
-
-// ── Polygon circle generator (avoids H.map.Circle rendering quirks) ───────────
-function circlePolygon(centerLat, centerLng, radiusKm, pts) {
-  pts = pts || 48;
-  var R = 6371;
-  var lat = centerLat * Math.PI / 180;
-  var lng = centerLng * Math.PI / 180;
-  var d   = radiusKm / R;
-  var ls  = new H.geo.LineString();
-  for (var i = 0; i <= pts; i++) {
-    var bearing = (2 * Math.PI * i) / pts;
-    var pLat = Math.asin(
-      Math.sin(lat) * Math.cos(d) +
-      Math.cos(lat) * Math.sin(d) * Math.cos(bearing)
-    );
-    var pLng = lng + Math.atan2(
-      Math.sin(bearing) * Math.sin(d) * Math.cos(lat),
-      Math.cos(d) - Math.sin(lat) * Math.sin(pLat)
-    );
-    ls.pushPoint({ lat: pLat * 180 / Math.PI, lng: pLng * 180 / Math.PI });
-  }
-  return new H.map.Polygon(ls);
-}
-
-// ── Affiliate SVG pin ──────────────────────────────────────────────────────────
 function affiliatePin(color) {
   return '<svg width="34" height="44" xmlns="http://www.w3.org/2000/svg">'
     + '<path d="M17 2C9.8 2 4 7.8 4 15c0 9 13 27 13 27s13-18 13-27C30 7.8 24.2 2 17 2Z"'
     + ' fill="' + color + '" stroke="#fff" stroke-width="2.5"/>'
-    + '<text x="17" y="20" text-anchor="middle" font-size="14" fill="#fff" font-family="system-ui">★</text>'
+    + '<text x="17" y="20" text-anchor="middle" font-size="14" fill="#fff" font-family="system-ui,sans-serif">&#9733;</text>'
     + '</svg>';
 }
 
+// ── Map init ─────────────────────────────────────────────────────────────────
+// Mirrors map.html initMap — proven pattern
 function initMap(KEY) {
-  currentKey = KEY;
-  var platform = new H.service.Platform({ apikey: KEY });
-  var layers   = platform.createDefaultLayers();
+  try {
+    var platform = new H.service.Platform({ apikey: KEY });
+    var defaultLayers = platform.createDefaultLayers();
 
-  map = new H.Map(
-    document.getElementById("map"),
-    layers.vector.normal.map,
-    { center: { lat: 44.0, lng: 15.8 }, zoom: 7, pixelRatio: window.devicePixelRatio || 1 }
-  );
+    map = new H.Map(
+      document.getElementById("map"),
+      defaultLayers.vector.normal.map,
+      { center: { lat: 44.2, lng: 15.8 }, zoom: 7, pixelRatio: window.devicePixelRatio || 1 }
+    );
 
-  new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
-  H.ui.UI.createDefault(map, layers);
-  window.addEventListener("resize", function() { map.getViewPort().resize(); });
-  setTimeout(function() { map.getViewPort().resize(); }, 120);
+    new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
+    mapUI = H.ui.UI.createDefault(map, defaultLayers); // store reference for bubbles
 
-  overlayGroup = new H.map.Group();
-  map.addObject(overlayGroup);
+    window.addEventListener("resize", function() { map.getViewPort().resize(); });
+    setTimeout(function() { map.getViewPort().resize(); }, 100);
 
-  // Info bubble on tap
-  var ui = H.ui.UI.getInstance(map);
-  map.addEventListener("tap", function(e) {
-    var obj = e.target;
-    var d = obj && obj.getData ? obj.getData() : null;
-    if (!d) return;
-    var html = "";
-    if (d.type === "region") {
-      var lvlLabel = { critical:"KRITIČNO", heavy:"jako gusto", moderate:"umjereno", light:"malo", empty:"zona praćenja" }[d.level] || d.level;
-      html = "<b>" + d.name + "</b><br>Detekcije: <b>" + d.objects + "</b> (" + d.cars + " vozila, " + d.persons + " osoba)<br>Razina: " + lvlLabel;
-    } else if (d.type === "parking") {
-      html = "<b>" + d.name + "</b><br>Zauzetost: <b>" + (d.occupancyPct != null ? d.occupancyPct + "%" : "n/a") + "</b> — " + (d.level || "?") + "<br>Max: " + d.maxCars + " vozila (Sentinel-2)";
-    } else if (d.type === "sea") {
-      html = "<b>" + d.beach + "</b><br>More: <b>" + (d.clarityHR || d.clarity) + "</b>" + (d.algaeRisk && d.algaeRisk !== "none" ? "<br>Alge: " + d.algaeRisk : "");
-    } else if (d.type === "affiliate") {
-      html = "<b>" + d.name + "</b><br>" + d.city + " — affiliate partner";
-    }
-    if (html && ui) {
-      ui.getBubbles().forEach(function(b) { ui.removeBubble(b); });
-      var geom = obj.getGeometry ? obj.getGeometry() : null;
-      if (geom) {
-        ui.addBubble(new H.ui.InfoBubble(geom, { content: "<div style='min-width:160px;font-size:12px;line-height:1.55'>" + html + "</div>" }));
+    overlayGroup = new H.map.Group();
+    map.addObject(overlayGroup);
+
+    // Tap → info bubble
+    map.addEventListener("tap", function(e) {
+      var obj = e.target;
+      var d   = (obj && obj.getData) ? obj.getData() : null;
+      if (!d || !mapUI) return;
+      var lvlHR = { critical:"KRITIČNO", heavy:"jako gusto", moderate:"umjereno", light:"malo", empty:"zona praćenja", full:"PUNO", unknown:"—" };
+      var html  = "";
+      if (d.type === "region")
+        html = "<b>" + d.name + "</b><br>" + d.objects + " detekcija (" + d.cars + " vozila, " + d.persons + " osoba)<br>Razina: " + (lvlHR[d.level] || d.level);
+      else if (d.type === "parking")
+        html = "<b>" + d.name + "</b><br>Zauzetost: " + (d.pct != null ? d.pct + "%" : "n/a") + " — " + (lvlHR[d.level] || d.level) + "<br>Max: " + d.max + " vozila";
+      else if (d.type === "sea")
+        html = "<b>" + d.beach + "</b><br>More: " + d.clarityHR + (d.algaeRisk && d.algaeRisk !== "none" ? "<br>Alge: " + d.algaeRisk : "");
+      else if (d.type === "affiliate")
+        html = "<b>" + d.name + "</b><br>" + d.city + " — affiliate";
+      if (html) {
+        mapUI.getBubbles().forEach(function(b) { mapUI.removeBubble(b); });
+        var pos = obj.getPosition ? obj.getPosition() : (obj.getBoundingBox ? obj.getBoundingBox().getCenter() : null);
+        if (pos) mapUI.addBubble(new H.ui.InfoBubble(pos, { content: "<div style='font-size:12px;line-height:1.5;min-width:160px'>" + html + "</div>" }));
       }
-    }
-  });
+    });
 
-  document.getElementById("status").textContent = "Čeka podatke...";
+    document.getElementById("status").textContent = "Čeka podatke...";
+  } catch(err) {
+    console.error("coast.html initMap error:", err);
+    document.getElementById("status").textContent = "Map error: " + err.message;
+  }
 }
 
+// ── Draw all overlays ─────────────────────────────────────────────────────────
 function drawData(data) {
   if (!map || !overlayGroup) return;
-  overlayGroup.removeAll();
+  try {
+    overlayGroup.removeAll();
 
-  // ── YOLO region density zones ─────────────────────────────────
-  (data.regions || []).forEach(function(r) {
-    if (!r.lat || !r.lng) return;
-    var lv  = r.level || "empty";
-    var col = LEVEL[lv] || LEVEL.empty;
+    // ── YOLO region density (H.map.Circle) ────────────────────────
+    (data.regions || []).forEach(function(r) {
+      if (!r.lat || !r.lng) return;
+      var st  = LEVEL_STYLE[r.level] || LEVEL_STYLE.empty;
+      // 28km minimum radius, scale with detections
+      var rad = Math.max(28000, Math.min(65000, 28000 + r.objects * 180));
+      try {
+        var circ = new H.map.Circle(
+          { lat: r.lat, lng: r.lng }, rad,
+          { style: { fillColor: st.f, strokeColor: st.s, lineWidth: st.lw } }
+        );
+        circ.setData({ type:"region", name:r.name, objects:r.objects, cars:r.cars, persons:r.persons, level:r.level });
+        overlayGroup.addObject(circ);
+      } catch(e) { console.warn("circle region", r.id, e.message); }
 
-    // Radius: 30km base, scales up with objects (max 60km)
-    var radiusKm = Math.max(30, Math.min(60, 30 + r.objects * 0.15));
+      // Label
+      var countColor = { critical:"#fca5a5", heavy:"#fdba74", moderate:"#fde68a", light:"#86efac", empty:"#a5b4fc" }[r.level] || "#94a3b8";
+      var lDiv = document.createElement("div");
+      lDiv.style.cssText = "pointer-events:none;font-family:system-ui,sans-serif;";
+      lDiv.innerHTML = '<div style="background:rgba(6,15,30,0.82);border:1px solid ' + st.s + ';border-radius:6px;padding:3px 8px;white-space:nowrap;">'
+        + '<span style="font-size:11px;font-weight:700;color:#f0f9ff">' + r.name + '</span>'
+        + '<br><span style="font-size:10px;color:' + countColor + '">' + r.objects + ' det</span></div>';
+      overlayGroup.addObject(new H.map.DomMarker({ lat: r.lat, lng: r.lng }, { icon: new H.map.DomIcon(lDiv), zIndex: 15 }));
+    });
 
-    var poly = circlePolygon(r.lat, r.lng, radiusKm);
-    poly.setStyle({ fillColor: col.fill, strokeColor: col.stroke, lineWidth: col.lw });
-    poly.setData({ type: "region", id: r.id, name: r.name, objects: r.objects, cars: r.cars, persons: r.persons, level: lv });
-    overlayGroup.addObject(poly);
+    // ── Sea quality circles ────────────────────────────────────────
+    (data.sea || []).forEach(function(s) {
+      if (!s.lat || !s.lng || s.clarity === "unknown") return;
+      var st = SEA_STYLE[s.clarity] || SEA_STYLE.unknown;
+      try {
+        var circ = new H.map.Circle(
+          { lat: s.lat, lng: s.lng }, 7000,
+          { style: { fillColor: st.f, strokeColor: st.s, lineWidth: 1.5 } }
+        );
+        circ.setData({ type:"sea", beach: s.beach || s.name, clarityHR: s.clarityHR || s.clarity, algaeRisk: s.algaeRisk });
+        overlayGroup.addObject(circ);
+      } catch(e) { console.warn("circle sea", s.id, e.message); }
+    });
 
-    // Region label
-    var div = document.createElement("div");
-    var countColor = lv === "critical" ? "#fca5a5" : lv === "heavy" ? "#fdba74" : lv === "moderate" ? "#fde68a" : lv === "light" ? "#86efac" : "#818cf8";
-    div.style.cssText = "font-family:system-ui,sans-serif;line-height:1.35;pointer-events:none;";
-    div.innerHTML = '<div style="background:rgba(6,15,30,0.85);border:1px solid ' + col.stroke + ';border-radius:6px;padding:3px 8px;white-space:nowrap;">'
-      + '<span style="font-size:11px;font-weight:700;color:#f0f9ff">' + r.name + '</span>'
-      + '<br><span style="font-size:10px;color:' + countColor + '">' + r.objects + ' detekcija</span>'
-      + '</div>';
-    var lIcon   = new H.map.DomIcon(div);
-    var lMarker = new H.map.DomMarker({ lat: r.lat, lng: r.lng }, { icon: lIcon, zIndex: 15 });
-    overlayGroup.addObject(lMarker);
-  });
+    // ── Parking circles ────────────────────────────────────────────
+    (data.parking || []).forEach(function(p) {
+      if (!p.lat || !p.lng || p.level === "unknown") return;
+      var st = PARK_STYLE[p.level] || PARK_STYLE.unknown;
+      try {
+        var circ = new H.map.Circle(
+          { lat: p.lat, lng: p.lng }, 5000,
+          { style: { fillColor: st.f, strokeColor: st.s, lineWidth: 1.5 } }
+        );
+        circ.setData({ type:"parking", name: p.name, pct: p.occupancyPct, level: p.level, max: p.maxCars });
+        overlayGroup.addObject(circ);
+      } catch(e) { console.warn("circle parking", p.id, e.message); }
 
-  // ── Sea quality zones ─────────────────────────────────────────
-  (data.sea || []).forEach(function(s) {
-    if (!s.lat || !s.lng || s.clarity === "unknown") return;
-    var fill   = SEA_FILL[s.clarity]   || SEA_FILL.unknown;
-    var stroke = SEA_STROKE[s.clarity] || SEA_STROKE.unknown;
-    var poly = circlePolygon(s.lat, s.lng, 6, 32);
-    poly.setStyle({ fillColor: fill, strokeColor: stroke, lineWidth: 1.5 });
-    poly.setData({ type: "sea", beach: s.beach || s.name, clarity: s.clarity, clarityHR: s.clarityHR, algaeRisk: s.algaeRisk });
-    overlayGroup.addObject(poly);
-  });
+      // P label
+      var pDiv = document.createElement("div");
+      pDiv.style.cssText = "background:" + st.s + ";color:#fff;font-size:10px;font-weight:700;font-family:system-ui;width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;pointer-events:none;border:1px solid rgba(255,255,255,0.35);";
+      pDiv.textContent = "P";
+      overlayGroup.addObject(new H.map.DomMarker({ lat: p.lat, lng: p.lng }, { icon: new H.map.DomIcon(pDiv, { anchor:{x:9,y:9} }), zIndex: 20 }));
+    });
 
-  // ── Parking zones ─────────────────────────────────────────────
-  (data.parking || []).forEach(function(p) {
-    if (!p.lat || !p.lng || p.level === "unknown") return;
-    var fill   = PARK_FILL[p.level]   || PARK_FILL.unknown;
-    var stroke = PARK_STROKE[p.level] || PARK_STROKE.unknown;
-    var poly = circlePolygon(p.lat, p.lng, 4, 24);
-    poly.setStyle({ fillColor: fill, strokeColor: stroke, lineWidth: 1.5 });
-    poly.setData({ type: "parking", name: p.name, occupancyPct: p.occupancyPct, level: p.level, maxCars: p.maxCars });
-    overlayGroup.addObject(poly);
+    // ── Affiliate pins ─────────────────────────────────────────────
+    (data.affiliates || []).forEach(function(a) {
+      if (!a.lat || !a.lng) return;
+      var color = a.color || "#f59e0b";
+      try {
+        var icon   = new H.map.Icon(affiliatePin(color), { size:{w:34,h:44}, anchor:{x:17,y:42} });
+        var marker = new H.map.Marker({ lat: a.lat, lng: a.lng }, { icon: icon, zIndex: 25 });
+        marker.setData({ type:"affiliate", name: a.name, city: a.city });
+        overlayGroup.addObject(marker);
+      } catch(e) { console.warn("affiliate marker", a.id, e.message); }
 
-    // P label
-    var pDiv = document.createElement("div");
-    pDiv.style.cssText = "background:" + stroke + ";color:#fff;font-size:10px;font-weight:700;font-family:system-ui;width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;pointer-events:none;border:1px solid rgba(255,255,255,0.4);";
-    pDiv.textContent = "P";
-    var pIcon   = new H.map.DomIcon(pDiv, { anchor: { x: 9, y: 9 } });
-    var pMarker = new H.map.DomMarker({ lat: p.lat, lng: p.lng }, { icon: pIcon, zIndex: 20 });
-    overlayGroup.addObject(pMarker);
-  });
+      // Affiliate label
+      var aDiv = document.createElement("div");
+      aDiv.style.cssText = "font-family:system-ui;font-size:10px;font-weight:600;color:" + color + ";background:rgba(6,15,30,0.85);padding:2px 7px;border-radius:5px;border:1px solid " + color.replace(")", ",0.3)").replace("rgb(","rgba(") + ";white-space:nowrap;pointer-events:none;";
+      aDiv.textContent = (a.name || "").split("—")[0].trim();
+      overlayGroup.addObject(new H.map.DomMarker({ lat: a.lat - 0.05, lng: a.lng }, { icon: new H.map.DomIcon(aDiv), zIndex: 24 }));
+    });
 
-  // ── Affiliate pins ────────────────────────────────────────────
-  (data.affiliates || []).forEach(function(a) {
-    if (!a.lat || !a.lng) return;
-    var color  = a.color || "#f59e0b";
-    var svgStr = affiliatePin(color);
-    var icon   = new H.map.Icon(svgStr, { size: { w: 34, h: 44 }, anchor: { x: 17, y: 42 } });
-    var marker = new H.map.Marker({ lat: a.lat, lng: a.lng }, { icon: icon, zIndex: 25 });
-    marker.setData({ type: "affiliate", name: a.name, city: a.city });
-    overlayGroup.addObject(marker);
-
-    // Affiliate label below pin
-    var aDiv = document.createElement("div");
-    aDiv.style.cssText = "font-family:system-ui;font-size:10px;font-weight:600;color:" + color + ";background:rgba(6,15,30,0.85);padding:2px 7px;border-radius:5px;border:1px solid " + color + "44;white-space:nowrap;pointer-events:none;margin-top:2px;";
-    aDiv.textContent = (a.name || "").split("—")[0].trim();
-    var aIcon   = new H.map.DomIcon(aDiv, { anchor: { x: 0, y: -4 } });
-    var aMarker = new H.map.DomMarker({ lat: a.lat - 0.08, lng: a.lng }, { icon: aIcon, zIndex: 24 });
-    overlayGroup.addObject(aMarker);
-  });
-
-  // Status bar
-  var ts       = data.ts ? new Date(data.ts).toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }) : "";
-  var total    = (data.yolo && data.yolo.total) || 0;
-  var activeS  = (data.yolo && data.yolo.active) || 0;
-  var alertCnt = (data.alerts || []).filter(function(a) { return a.severity === "critical"; }).length;
-  var statusTxt = "DELTA " + ts + " · " + total + " det · " + activeS + " senzora";
-  if (alertCnt) statusTxt += " · " + alertCnt + " ⚠";
-  document.getElementById("status").textContent = statusTxt;
+    // Status
+    var ts    = data.ts ? new Date(data.ts).toLocaleTimeString("hr-HR", { hour:"2-digit", minute:"2-digit" }) : "";
+    var total = (data.yolo && data.yolo.total) || 0;
+    var ac    = (data.yolo && data.yolo.active) || 0;
+    document.getElementById("status").textContent = "DELTA " + ts + " · " + total + " det · " + ac + " senzora";
+  } catch(err) {
+    console.error("coast.html drawData error:", err);
+  }
 }
 
 // ── postMessage router ────────────────────────────────────────────────────────
@@ -265,17 +233,17 @@ window.addEventListener("message", function(e) {
 
   if (e.data.type === "coast_init") {
     if (e.data.key && !map) initMap(e.data.key);
-    if (e.data.data) {
-      var d = e.data.data;
-      var doInit = function() { drawData(d); };
-      if (map) setTimeout(doInit, 400); else setTimeout(doInit, 1200);
-    }
+    if (e.data.data && map) setTimeout(function() { drawData(e.data.data); }, 400);
     return;
   }
 
   if (e.data.type === "coast_data") {
-    if (!map && e.data.key) { initMap(e.data.key); setTimeout(function() { if (e.data.data) drawData(e.data.data); }, 1200); }
-    else if (map && e.data.data) drawData(e.data.data);
+    if (!map && e.data.key) {
+      initMap(e.data.key);
+      if (e.data.data) setTimeout(function() { drawData(e.data.data); }, 800);
+    } else if (map && e.data.data) {
+      drawData(e.data.data);
+    }
     return;
   }
 });
