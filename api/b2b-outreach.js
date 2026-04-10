@@ -594,6 +594,38 @@ async function actionStats() {
   return { ok: true, stats };
 }
 
+async function actionList(query) {
+  const { region, type, tier, step, search } = query;
+
+  const filters = [
+    { fieldFilter: { field: { fieldPath: "paused" }, op: "EQUAL", value: boolV(false) } },
+  ];
+  if (region && region !== "all") filters.push({ fieldFilter: { field: { fieldPath: "region" }, op: "EQUAL", value: strV(region) } });
+  if (tier   && tier   !== "all") filters.push({ fieldFilter: { field: { fieldPath: "tier"   }, op: "EQUAL", value: strV(tier)   } });
+  // type filter: must be last — Firestore needs only one inequality, all others EQUAL
+  if (type   && type   !== "all") filters.push({ fieldFilter: { field: { fieldPath: "type"   }, op: "EQUAL", value: strV(type)   } });
+
+  const contacts = await fsQuery(filters, 500);
+
+  if (!contacts) return { ok: false, error: "quota_exceeded", contacts: [], message: "Firestore runQuery kvota iscrpljena — kontakti će biti dostupni nakon aktivacije Blaze plana" };
+
+  let result = contacts;
+  if (step !== undefined && step !== "all") {
+    const stepNum = parseInt(step);
+    result = result.filter(c => (c.step || 0) === stepNum);
+  }
+  if (search) {
+    const q = search.toLowerCase();
+    result = result.filter(c =>
+      (c.email      || "").toLowerCase().includes(q) ||
+      (c.objectName || "").toLowerCase().includes(q) ||
+      (c.city       || "").toLowerCase().includes(q)
+    );
+  }
+
+  return { ok: true, contacts: result, total: result.length };
+}
+
 async function actionPause(query) {
   const { email, id } = query;
   const docId = id || (email ? contactId(email) : null);
@@ -655,6 +687,7 @@ export default async function handler(req, res) {
     else if (action === "add")   result = await actionAdd(req.body || {});
     else if (action === "send")  result = await actionSend();
     else if (action === "stats") result = await actionStats();
+    else if (action === "list")  result = await actionList(req.query);
     else if (action === "pause") result = await actionPause(req.body || req.query);
     else result = { ok: false, error: `Unknown action: ${action}` };
 

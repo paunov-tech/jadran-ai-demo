@@ -85,6 +85,16 @@ export default function AdminPanel() {
   const [pbFilter, setPbFilter] = useState("all");
   const [statusChanging, setStatusChanging] = useState(null);
 
+  // B2B Outreach state
+  const [partnersSubTab, setPartnersSubTab] = useState("registered"); // "registered" | "b2b"
+  const [b2bContacts, setB2bContacts] = useState([]);
+  const [b2bStats, setB2bStats] = useState(null);
+  const [b2bLoading, setB2bLoading] = useState(false);
+  const [b2bQuotaError, setB2bQuotaError] = useState(false);
+  const [b2bFilter, setB2bFilter] = useState({ region: "all", type: "all", tier: "all", step: "all" });
+  const [b2bSearch, setB2bSearch] = useState("");
+  const [selectedB2b, setSelectedB2b] = useState(null);
+
   useEffect(() => {
     try {
       const t = localStorage.getItem("jadran_admin_token");
@@ -217,12 +227,48 @@ export default function AdminPanel() {
     setConfirming(null);
   };
 
+  const fetchB2bStats = useCallback(async () => {
+    try {
+      const r = await fetch("/api/b2b-outreach?action=stats", {
+        headers: { "x-admin-token": encTok(token) },
+      });
+      if (r.ok) { const d = await r.json(); if (d.ok) setB2bStats(d.stats); }
+    } catch {}
+  }, [token]);
+
+  const fetchB2bContacts = useCallback(async (filter, search) => {
+    setB2bLoading(true);
+    setB2bQuotaError(false);
+    try {
+      const params = new URLSearchParams({ action: "list" });
+      if (filter.region !== "all") params.set("region", filter.region);
+      if (filter.type   !== "all") params.set("type",   filter.type);
+      if (filter.tier   !== "all") params.set("tier",   filter.tier);
+      if (filter.step   !== "all") params.set("step",   filter.step);
+      if (search) params.set("search", search);
+      const r = await fetch(`/api/b2b-outreach?${params}`, {
+        headers: { "x-admin-token": encTok(token) },
+      });
+      if (r.ok) {
+        const d = await r.json();
+        if (d.error === "quota_exceeded") { setB2bQuotaError(true); setB2bContacts([]); }
+        else setB2bContacts(d.contacts || []);
+      }
+    } catch {}
+    setB2bLoading(false);
+  }, [token]);
+
   useEffect(() => {
     if (auth && mainTab === "partners") {
-      fetchPartners();
-      fetchPartnerBookings();
+      if (partnersSubTab === "registered") {
+        fetchPartners();
+        fetchPartnerBookings();
+      } else {
+        fetchB2bStats();
+        fetchB2bContacts(b2bFilter, b2bSearch);
+      }
     }
-  }, [auth, mainTab, fetchPartners, fetchPartnerBookings]);
+  }, [auth, mainTab, partnersSubTab, fetchPartners, fetchPartnerBookings, fetchB2bStats, fetchB2bContacts, b2bFilter, b2bSearch]);
 
   const filtered = bookings.filter(b => {
     if (filter === "pending")   return b.status !== "confirmed" && b.status !== "cancelled";
@@ -411,6 +457,22 @@ export default function AdminPanel() {
         {/* ══ PARTNERS TAB ══ */}
         {mainTab === "partners" && <>
 
+          {/* Sub-tab toggle */}
+          <div style={{ display: "flex", gap: 4, marginBottom: 24, background: C.surface, borderRadius: 12, padding: 4, border: `1px solid ${C.border}`, width: "fit-content" }}>
+            {[{ id: "registered", label: "🤝 Registrirani" }, { id: "b2b", label: "📧 B2B Outreach" }].map(t => (
+              <button key={t.id} onClick={() => setPartnersSubTab(t.id)}
+                style={{ padding: "7px 18px", borderRadius: 9, border: "none", cursor: "pointer", fontFamily: "inherit",
+                  fontSize: 12, fontWeight: partnersSubTab === t.id ? 700 : 500,
+                  background: partnersSubTab === t.id ? C.accent : "transparent",
+                  color: partnersSubTab === t.id ? "#fff" : C.muted,
+                  transition: "all 0.15s" }}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* ── Registrirani sub-tab ── */}
+          {partnersSubTab === "registered" && <>
           {/* Stats row */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 28 }}>
             {[
@@ -547,6 +609,200 @@ export default function AdminPanel() {
               )}
             </div>
           </div>
+          </> /* end registered sub-tab */}
+
+          {/* ── B2B Outreach sub-tab ── */}
+          {partnersSubTab === "b2b" && (() => {
+            const B2B_STEP_CFG = {
+              0: { label: "Novi",    color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
+              1: { label: "Email 1", color: "#818cf8", bg: "rgba(129,140,248,0.12)" },
+              2: { label: "Email 2", color: "#818cf8", bg: "rgba(129,140,248,0.12)" },
+              3: { label: "Email 3", color: "#818cf8", bg: "rgba(129,140,248,0.12)" },
+              4: { label: "Email 4", color: "#818cf8", bg: "rgba(129,140,248,0.12)" },
+              5: { label: "Završeno", color: "#7a8fa8", bg: "rgba(122,143,168,0.12)" },
+            };
+            const B2B_TYPE_LABELS = {
+              "kamp": "Kamp", "smje_taj": "Smještaj", "smještaj": "Smještaj",
+              "restoran": "Restoran", "konoba": "Konoba", "marina": "Marina", "other": "Ostalo",
+            };
+            const stats = b2bStats || {};
+            const total = stats.total || 0;
+            const sent  = total - (stats.byStep?.["0"] || 0);
+            return (<>
+
+              {/* Stats row */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 14, marginBottom: 24 }}>
+                {[
+                  { label: "Ukupno kontakata", val: total, color: C.accent },
+                  { label: "Novi (čekaju)",     val: stats.byStep?.["0"] || 0, color: "#f59e0b" },
+                  { label: "Email poslan",       val: sent, color: C.info },
+                  { label: "Otvorili",           val: stats.opened || 0, color: C.success },
+                  { label: "Registrovani",       val: stats.registered || 0, color: "#a855f7" },
+                ].map(({ label, val, color }) => (
+                  <div key={label} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 18px" }}>
+                    <div style={{ fontSize: 26, fontWeight: 800, color, marginBottom: 4 }}>{val}</div>
+                    <div style={{ fontSize: 10, color: C.muted, fontWeight: 600, letterSpacing: "0.5px" }}>{label.toUpperCase()}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Region breakdown mini-bars */}
+              {stats.byRegion && Object.keys(stats.byRegion).length > 0 && (
+                <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+                  {Object.entries(stats.byRegion).sort((a,b) => b[1]-a[1]).map(([r, n]) => (
+                    <div key={r} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "8px 14px", display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 12, color: C.muted, fontWeight: 600 }}>{r.replace("_"," ")}</span>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: C.accent }}>{n}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Filters */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+                {[
+                  { key: "region", opts: ["all","istra","kvarner","zadar_sibenik","dubrovnik"], labels: { all:"Sve regije", istra:"Istra", kvarner:"Kvarner", zadar_sibenik:"Zadar-Šibenik", dubrovnik:"Dubrovnik" } },
+                  { key: "type",   opts: ["all","kamp","smještaj","restoran","konoba","marina","other"], labels: { all:"Sve vrste", kamp:"Kamp", "smještaj":"Smještaj", restoran:"Restoran", konoba:"Konoba", marina:"Marina", other:"Ostalo" } },
+                  { key: "tier",   opts: ["all","A","B","C"], labels: { all:"Sve tier", A:"Tier A", B:"Tier B", C:"Tier C" } },
+                  { key: "step",   opts: ["all","0","1","2","3","4","5"], labels: { all:"Svi koraci", "0":"Novi", "1":"Email 1", "2":"Email 2", "3":"Email 3", "4":"Email 4", "5":"Završeno" } },
+                ].map(({ key, opts, labels }) => (
+                  <select key={key} value={b2bFilter[key]}
+                    onChange={e => setB2bFilter(prev => ({ ...prev, [key]: e.target.value }))}
+                    style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface, color: b2bFilter[key] !== "all" ? C.accent : C.muted,
+                      fontSize: 12, fontFamily: "inherit", cursor: "pointer", outline: "none" }}>
+                    {opts.map(o => <option key={o} value={o}>{labels[o] || o}</option>)}
+                  </select>
+                ))}
+                <input value={b2bSearch} onChange={e => setB2bSearch(e.target.value)}
+                  placeholder="Pretraži po imenu / emailu / gradu…"
+                  style={{ flex: 1, minWidth: 200, padding: "6px 12px", borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface,
+                    color: C.white, fontSize: 12, fontFamily: "inherit", outline: "none" }} />
+                <button onClick={() => fetchB2bContacts(b2bFilter, b2bSearch)} disabled={b2bLoading}
+                  style={{ padding: "6px 14px", borderRadius: 8, border: `1px solid ${C.border}`, background: C.accent, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                  {b2bLoading ? "…" : "Traži"}
+                </button>
+              </div>
+
+              {/* Quota error banner */}
+              {b2bQuotaError && (
+                <div style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 10, padding: "12px 16px", marginBottom: 16, fontSize: 12, color: "#f59e0b" }}>
+                  ⚠️ Firestore runQuery kvota iscrpljena — lista kontakata nije dostupna. Stats rade normalno. Lista će raditi nakon što se Blaze kvota aktivira (obično u roku od par sati od upgraja).
+                </div>
+              )}
+
+              {/* Main 2-col layout */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+
+                {/* Contact list */}
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                    <h3 style={{ fontSize: 13, fontWeight: 700, color: C.muted, letterSpacing: "0.8px" }}>
+                      B2B KONTAKTI {b2bContacts.length > 0 && <span style={{ color: C.accent }}>({b2bContacts.length})</span>}
+                    </h3>
+                    <button onClick={() => { fetchB2bStats(); fetchB2bContacts(b2bFilter, b2bSearch); }} disabled={b2bLoading}
+                      style={{ padding: "5px 12px", borderRadius: 8, background: "transparent", border: `1px solid ${C.border}`, color: C.muted, fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
+                      {b2bLoading ? "…" : "↻"}
+                    </button>
+                  </div>
+                  <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", maxHeight: 520, overflowY: "auto" }}>
+                    {b2bLoading && <div style={{ padding: 24, textAlign: "center", color: C.muted, fontSize: 13 }}>Učitavanje…</div>}
+                    {!b2bLoading && b2bContacts.length === 0 && !b2bQuotaError && (
+                      <div style={{ padding: 24, textAlign: "center", color: C.muted, fontSize: 12 }}>
+                        {total > 0 ? "Klikni Traži za prikaz kontakata." : "Nema kontakata."}
+                      </div>
+                    )}
+                    {b2bContacts.map((c, i) => {
+                      const stepCfg = B2B_STEP_CFG[c.step || 0] || B2B_STEP_CFG[0];
+                      const isSelected = selectedB2b?.id === c.id;
+                      return (
+                        <div key={c.id} onClick={() => setSelectedB2b(c)}
+                          style={{ padding: "10px 14px", borderBottom: i < b2bContacts.length - 1 ? `1px solid ${C.border}` : "none",
+                            cursor: "pointer", background: isSelected ? "rgba(0,180,216,0.06)" : "transparent",
+                            borderLeft: isSelected ? `3px solid ${C.accent}` : "3px solid transparent",
+                            transition: "background 0.15s" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontWeight: 700, fontSize: 12, color: C.white, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.objectName || c.email}</div>
+                              <div style={{ fontSize: 10, color: C.muted, marginTop: 1 }}>
+                                {B2B_TYPE_LABELS[c.type] || c.type} · {c.city}
+                                {c.capacity > 0 && <span style={{ marginLeft: 4 }}>· {c.capacity} mjesta</span>}
+                              </div>
+                              <div style={{ fontSize: 10, color: C.muted, marginTop: 1 }}>{c.email}</div>
+                            </div>
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3, flexShrink: 0, marginLeft: 8 }}>
+                              <span style={{ padding: "2px 7px", borderRadius: 10, fontSize: 9, fontWeight: 700, background: stepCfg.bg, color: stepCfg.color }}>{stepCfg.label}</span>
+                              <span style={{ fontSize: 9, fontWeight: 800, color: c.tier === "A" ? C.success : c.tier === "B" ? C.warning : C.muted }}>T{c.tier}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Contact detail */}
+                <div>
+                  {!selectedB2b ? (
+                    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 24, textAlign: "center", color: C.muted, fontSize: 12 }}>
+                      ← Odaberi kontakt za detalje
+                    </div>
+                  ) : (
+                    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: 18 }}>
+                      <div style={{ marginBottom: 14 }}>
+                        <div style={{ fontWeight: 700, fontSize: 15, color: C.white }}>{selectedB2b.objectName}</div>
+                        <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+                          {B2B_TYPE_LABELS[selectedB2b.type] || selectedB2b.type} · {selectedB2b.city} · {selectedB2b.region}
+                        </div>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7, marginBottom: 14 }}>
+                        {[
+                          ["Email",    selectedB2b.email],
+                          ["Telefon",  selectedB2b.phone || "—"],
+                          ["Adresa",   selectedB2b.address || "—"],
+                          ["Kapacitet",selectedB2b.capacity > 0 ? `${selectedB2b.capacity} mjesta` : "—"],
+                          ["Tier",     selectedB2b.tier || "—"],
+                          ["Jezik",    selectedB2b.lang || "—"],
+                        ].map(([l, v]) => (
+                          <div key={l} style={{ background: C.card, borderRadius: 8, padding: "8px 10px" }}>
+                            <div style={{ fontSize: 9, color: C.muted, fontWeight: 700, letterSpacing: "0.5px" }}>{l.toUpperCase()}</div>
+                            <div style={{ fontSize: 11, fontWeight: 600, marginTop: 2, wordBreak: "break-all" }}>{String(v)}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {/* Email sequence status */}
+                      <div>
+                        <div style={{ fontSize: 10, color: C.muted, fontWeight: 700, marginBottom: 8, letterSpacing: "0.6px" }}>EMAIL SEKVENCA</div>
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          {[0,1,2,3,4,5].map(s => {
+                            const cfg = B2B_STEP_CFG[s];
+                            const done = (selectedB2b.step || 0) > s;
+                            const current = (selectedB2b.step || 0) === s;
+                            return (
+                              <div key={s} style={{ padding: "5px 10px", borderRadius: 8, fontSize: 10, fontWeight: 700,
+                                background: done ? "rgba(34,197,94,0.15)" : current ? cfg.bg : "rgba(0,0,0,0.2)",
+                                color: done ? C.success : current ? cfg.color : C.muted,
+                                border: `1px solid ${done ? "rgba(34,197,94,0.3)" : current ? cfg.color+"40" : "transparent"}` }}>
+                                {s === 0 ? "Novi" : s === 5 ? "Završeno" : `E${s}`}
+                                {done && " ✓"}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {selectedB2b.nextSendAt && (selectedB2b.step || 0) < 5 && (
+                          <div style={{ fontSize: 10, color: C.muted, marginTop: 8 }}>
+                            Sljedeći email: {new Date(selectedB2b.nextSendAt).toLocaleDateString("hr-HR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                          </div>
+                        )}
+                        {selectedB2b.opened && <div style={{ fontSize: 10, color: C.success, marginTop: 4 }}>✓ Otvorio email</div>}
+                        {selectedB2b.clicked && <div style={{ fontSize: 10, color: "#a855f7", marginTop: 2 }}>✓ Kliknuo link</div>}
+                        {selectedB2b.registered && <div style={{ fontSize: 10, color: C.accent, marginTop: 2, fontWeight: 700 }}>★ Registrovan kao partner!</div>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>);
+          })()}
 
         </> /* end partners tab */}
 
