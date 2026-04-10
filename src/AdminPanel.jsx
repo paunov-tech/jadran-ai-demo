@@ -9,6 +9,19 @@ import { useState, useEffect, useCallback } from "react";
 // Token is base64-encoded when sent as HTTP header (handles special characters)
 const encTok = t => { try { return btoa(t); } catch { return t; } };
 
+const B2B_STEP_CFG = {
+  0: { label: "Novi",     color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
+  1: { label: "Email 1",  color: "#818cf8", bg: "rgba(129,140,248,0.12)" },
+  2: { label: "Email 2",  color: "#818cf8", bg: "rgba(129,140,248,0.12)" },
+  3: { label: "Email 3",  color: "#818cf8", bg: "rgba(129,140,248,0.12)" },
+  4: { label: "Email 4",  color: "#818cf8", bg: "rgba(129,140,248,0.12)" },
+  5: { label: "Završeno", color: "#7a8fa8", bg: "rgba(122,143,168,0.12)" },
+};
+const B2B_TYPE_LABELS = {
+  kamp: "Kamp", "smje_taj": "Smještaj", "smještaj": "Smještaj",
+  restoran: "Restoran", konoba: "Konoba", marina: "Marina", other: "Ostalo",
+};
+
 const C = {
   bg: "#07111f", surface: "#0f1e35", card: "#121d30", card2: "#162240",
   accent: "#00b4d8", gold: "#FFB800", white: "#f0f4f8",
@@ -91,6 +104,8 @@ export default function AdminPanel() {
   const [b2bStats, setB2bStats] = useState(null);
   const [b2bLoading, setB2bLoading] = useState(false);
   const [b2bQuotaError, setB2bQuotaError] = useState(false);
+  const [b2bFetchError, setB2bFetchError] = useState("");
+  const [b2bLoaded, setB2bLoaded] = useState(false);
   const [b2bFilter, setB2bFilter] = useState({ region: "all", type: "all", tier: "all", step: "all" });
   const [b2bSearch, setB2bSearch] = useState("");
   const [selectedB2b, setSelectedB2b] = useState(null);
@@ -227,34 +242,35 @@ export default function AdminPanel() {
     setConfirming(null);
   };
 
-  const fetchB2bStats = useCallback(async () => {
-    try {
-      const r = await fetch("/api/b2b-outreach?action=stats", {
-        headers: { "x-admin-token": encTok(token) },
-      });
-      if (r.ok) { const d = await r.json(); if (d.ok) setB2bStats(d.stats); }
-    } catch {}
-  }, [token]);
-
-  const fetchB2bContacts = useCallback(async (filter, search) => {
+  const fetchB2bData = useCallback(async (filter, search) => {
     setB2bLoading(true);
     setB2bQuotaError(false);
+    setB2bFetchError("");
     try {
+      const tok = encTok(token);
+      // Fetch stats (1 point read — always works)
+      const sr = await fetch("/api/b2b-outreach?action=stats", { headers: { "x-admin-token": tok } });
+      if (sr.ok) { const sd = await sr.json(); if (sd.ok) setB2bStats(sd.stats); }
+      else setB2bFetchError(`Stats HTTP ${sr.status}`);
+
+      // Fetch contact list
       const params = new URLSearchParams({ action: "list" });
       if (filter.region !== "all") params.set("region", filter.region);
       if (filter.type   !== "all") params.set("type",   filter.type);
       if (filter.tier   !== "all") params.set("tier",   filter.tier);
       if (filter.step   !== "all") params.set("step",   filter.step);
       if (search) params.set("search", search);
-      const r = await fetch(`/api/b2b-outreach?${params}`, {
-        headers: { "x-admin-token": encTok(token) },
-      });
-      if (r.ok) {
-        const d = await r.json();
-        if (d.error === "quota_exceeded") { setB2bQuotaError(true); setB2bContacts([]); }
-        else setB2bContacts(d.contacts || []);
+      const lr = await fetch(`/api/b2b-outreach?${params}`, { headers: { "x-admin-token": tok } });
+      if (!lr.ok) {
+        setB2bFetchError(`Lista HTTP ${lr.status} — provjeri token`);
+      } else {
+        const ld = await lr.json();
+        if (ld.error === "quota_exceeded") { setB2bQuotaError(true); setB2bContacts([]); }
+        else { setB2bContacts(ld.contacts || []); setB2bLoaded(true); }
       }
-    } catch {}
+    } catch (e) {
+      setB2bFetchError("Network greška: " + (e?.message || "?"));
+    }
     setB2bLoading(false);
   }, [token]);
 
@@ -263,12 +279,11 @@ export default function AdminPanel() {
       if (partnersSubTab === "registered") {
         fetchPartners();
         fetchPartnerBookings();
-      } else {
-        fetchB2bStats();
-        fetchB2bContacts(b2bFilter, b2bSearch);
+      } else if (!b2bLoaded) {
+        fetchB2bData(b2bFilter, b2bSearch);
       }
     }
-  }, [auth, mainTab, partnersSubTab, fetchPartners, fetchPartnerBookings, fetchB2bStats, fetchB2bContacts, b2bFilter, b2bSearch]);
+  }, [auth, mainTab, partnersSubTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = bookings.filter(b => {
     if (filter === "pending")   return b.status !== "confirmed" && b.status !== "cancelled";
@@ -281,6 +296,11 @@ export default function AdminPanel() {
     pending:   bookings.filter(b => b.status === "pending").length,
     confirmed: bookings.filter(b => b.status === "confirmed").length,
   };
+
+  // B2B derived values
+  const b2bSt    = b2bStats || {};
+  const b2bTotal = b2bSt.total || 0;
+  const b2bSent  = b2bTotal - (b2bSt.byStep?.["0"] || 0);
 
   // ── Login screen ──
   if (!auth) {
@@ -612,32 +632,16 @@ export default function AdminPanel() {
           </> /* end registered sub-tab */}
 
           {/* ── B2B Outreach sub-tab ── */}
-          {partnersSubTab === "b2b" && (() => {
-            const B2B_STEP_CFG = {
-              0: { label: "Novi",    color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
-              1: { label: "Email 1", color: "#818cf8", bg: "rgba(129,140,248,0.12)" },
-              2: { label: "Email 2", color: "#818cf8", bg: "rgba(129,140,248,0.12)" },
-              3: { label: "Email 3", color: "#818cf8", bg: "rgba(129,140,248,0.12)" },
-              4: { label: "Email 4", color: "#818cf8", bg: "rgba(129,140,248,0.12)" },
-              5: { label: "Završeno", color: "#7a8fa8", bg: "rgba(122,143,168,0.12)" },
-            };
-            const B2B_TYPE_LABELS = {
-              "kamp": "Kamp", "smje_taj": "Smještaj", "smještaj": "Smještaj",
-              "restoran": "Restoran", "konoba": "Konoba", "marina": "Marina", "other": "Ostalo",
-            };
-            const stats = b2bStats || {};
-            const total = stats.total || 0;
-            const sent  = total - (stats.byStep?.["0"] || 0);
-            return (<>
+          {partnersSubTab === "b2b" && (<>
 
               {/* Stats row */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 14, marginBottom: 24 }}>
                 {[
-                  { label: "Ukupno kontakata", val: total, color: C.accent },
-                  { label: "Novi (čekaju)",     val: stats.byStep?.["0"] || 0, color: "#f59e0b" },
-                  { label: "Email poslan",       val: sent, color: C.info },
-                  { label: "Otvorili",           val: stats.opened || 0, color: C.success },
-                  { label: "Registrovani",       val: stats.registered || 0, color: "#a855f7" },
+                  { label: "Ukupno kontakata", val: b2bTotal, color: C.accent },
+                  { label: "Novi (čekaju)",     val: b2bSt.byStep?.["0"] || 0, color: "#f59e0b" },
+                  { label: "Email poslan",       val: b2bSent, color: C.info },
+                  { label: "Otvorili",           val: b2bSt.opened || 0, color: C.success },
+                  { label: "Registrovani",       val: b2bSt.registered || 0, color: "#a855f7" },
                 ].map(({ label, val, color }) => (
                   <div key={label} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: "16px 18px" }}>
                     <div style={{ fontSize: 26, fontWeight: 800, color, marginBottom: 4 }}>{val}</div>
@@ -647,9 +651,9 @@ export default function AdminPanel() {
               </div>
 
               {/* Region breakdown mini-bars */}
-              {stats.byRegion && Object.keys(stats.byRegion).length > 0 && (
+              {b2bSt.byRegion && Object.keys(b2bSt.byRegion).length > 0 && (
                 <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-                  {Object.entries(stats.byRegion).sort((a,b) => b[1]-a[1]).map(([r, n]) => (
+                  {Object.entries(b2bSt.byRegion).sort((a,b) => b[1]-a[1]).map(([r, n]) => (
                     <div key={r} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "8px 14px", display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ fontSize: 12, color: C.muted, fontWeight: 600 }}>{r.replace("_"," ")}</span>
                       <span style={{ fontSize: 14, fontWeight: 800, color: C.accent }}>{n}</span>
@@ -677,7 +681,7 @@ export default function AdminPanel() {
                   placeholder="Pretraži po imenu / emailu / gradu…"
                   style={{ flex: 1, minWidth: 200, padding: "6px 12px", borderRadius: 8, border: `1px solid ${C.border}`, background: C.surface,
                     color: C.white, fontSize: 12, fontFamily: "inherit", outline: "none" }} />
-                <button onClick={() => fetchB2bContacts(b2bFilter, b2bSearch)} disabled={b2bLoading}
+                <button onClick={() => fetchB2bData(b2bFilter, b2bSearch)} disabled={b2bLoading}
                   style={{ padding: "6px 14px", borderRadius: 8, border: `1px solid ${C.border}`, background: C.accent, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
                   {b2bLoading ? "…" : "Traži"}
                 </button>
@@ -699,16 +703,19 @@ export default function AdminPanel() {
                     <h3 style={{ fontSize: 13, fontWeight: 700, color: C.muted, letterSpacing: "0.8px" }}>
                       B2B KONTAKTI {b2bContacts.length > 0 && <span style={{ color: C.accent }}>({b2bContacts.length})</span>}
                     </h3>
-                    <button onClick={() => { fetchB2bStats(); fetchB2bContacts(b2bFilter, b2bSearch); }} disabled={b2bLoading}
+                    <button onClick={() => fetchB2bData(b2bFilter, b2bSearch)} disabled={b2bLoading}
                       style={{ padding: "5px 12px", borderRadius: 8, background: "transparent", border: `1px solid ${C.border}`, color: C.muted, fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
                       {b2bLoading ? "…" : "↻"}
                     </button>
                   </div>
                   <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, overflow: "hidden", maxHeight: 520, overflowY: "auto" }}>
                     {b2bLoading && <div style={{ padding: 24, textAlign: "center", color: C.muted, fontSize: 13 }}>Učitavanje…</div>}
-                    {!b2bLoading && b2bContacts.length === 0 && !b2bQuotaError && (
+                    {b2bFetchError && (
+                      <div style={{ padding: 16, color: C.danger, fontSize: 12 }}>⚠ {b2bFetchError}</div>
+                    )}
+                    {!b2bLoading && !b2bFetchError && b2bContacts.length === 0 && !b2bQuotaError && (
                       <div style={{ padding: 24, textAlign: "center", color: C.muted, fontSize: 12 }}>
-                        {total > 0 ? "Klikni Traži za prikaz kontakata." : "Nema kontakata."}
+                        {b2bLoaded ? "Nema rezultata." : "Učitavanje…"}
                       </div>
                     )}
                     {b2bContacts.map((c, i) => {
@@ -801,8 +808,7 @@ export default function AdminPanel() {
                   )}
                 </div>
               </div>
-            </>);
-          })()}
+          </>)}
 
         </> /* end partners tab */}
 
