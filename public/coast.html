@@ -41,6 +41,10 @@
   <div class="row"><div class="dot" style="background:#a855f7"></div> Parking (Sentinel-2)</div>
   <div class="row"><div class="dot" style="background:#0ea5e9"></div> Kvalitet mora</div>
   <div class="row"><div class="dot" style="background:#f59e0b"></div> Affiliate</div>
+  <div style="margin-top:8px" class="lt">Real-time</div>
+  <div class="row"><div class="dot" style="background:#ef4444"></div> NASA požar (visoko)</div>
+  <div class="row"><div class="dot" style="background:#f97316"></div> NASA požar (nominal)</div>
+  <div class="row"><div class="dot" style="background:#22d3ee;border-radius:3px"></div> Windy webcam</div>
 </div>
 <div id="status">Inicijalizacija...</div>
 
@@ -74,6 +78,15 @@ var PARK_STYLE = {
   empty:    { f:"rgba(168,85,247,0.12)",   s:"rgba(168,85,247,0.45)" },
   unknown:  { f:"rgba(71,85,105,0.08)",    s:"rgba(71,85,105,0.3)" },
 };
+
+function webcamSvg() {
+  return '<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg">'
+    + '<circle cx="12" cy="12" r="11" fill="rgba(6,15,30,0.92)" stroke="#22d3ee" stroke-width="1.5"/>'
+    + '<rect x="4" y="8" width="11" height="8" rx="1.5" fill="none" stroke="#22d3ee" stroke-width="1.3"/>'
+    + '<polygon points="15,9.5 20,7.5 20,16.5 15,14.5" fill="#22d3ee"/>'
+    + '<circle cx="9.5" cy="12" r="2" fill="#22d3ee" opacity="0.75"/>'
+    + '</svg>';
+}
 
 function affiliatePin(color) {
   return '<svg width="34" height="44" xmlns="http://www.w3.org/2000/svg">'
@@ -120,6 +133,10 @@ function initMap(KEY) {
         html = "<b>" + d.beach + "</b><br>More: " + d.clarityHR + (d.algaeRisk && d.algaeRisk !== "none" ? "<br>Alge: " + d.algaeRisk : "");
       else if (d.type === "affiliate")
         html = "<b>" + d.name + "</b><br>" + d.city + " — affiliate";
+      else if (d.type === "webcam")
+        html = "<b>" + d.title + "</b><br>" + d.city + "<br><a href='" + d.url + "' target='_blank' style='color:#22d3ee;font-size:11px'>Otvori webcam ↗</a>";
+      else if (d.type === "fire")
+        html = "<b>Požarni hotspot</b><br>Povjerenje: " + d.confidence + "<br>Datum: " + d.acqDate + (d.dayNight === "N" ? "<br>(noćno snimanje)" : "");
       if (html) {
         mapUI.getBubbles().forEach(function(b) { mapUI.removeBubble(b); });
         var pos = obj.getPosition ? obj.getPosition() : (obj.getBoundingBox ? obj.getBoundingBox().getCenter() : null);
@@ -197,6 +214,33 @@ function drawData(data) {
       pDiv.style.cssText = "background:" + st.s + ";color:#fff;font-size:10px;font-weight:700;font-family:system-ui;width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;pointer-events:none;border:1px solid rgba(255,255,255,0.35);";
       pDiv.textContent = "P";
       overlayGroup.addObject(new H.map.DomMarker({ lat: p.lat, lng: p.lng }, { icon: new H.map.DomIcon(pDiv, { anchor:{x:9,y:9} }), zIndex: 20 }));
+    });
+
+    // ── NASA FIRMS fire hotspots ───────────────────────────────────
+    (data.fires || []).forEach(function(f) {
+      if (!f.lat || !f.lng) return;
+      var isHigh = f.confidence === "high";
+      var fillC  = isHigh ? "rgba(239,68,68,0.55)"  : "rgba(249,115,22,0.38)";
+      var strkC  = isHigh ? "rgba(239,68,68,1)"      : "rgba(249,115,22,0.9)";
+      try {
+        var circ = new H.map.Circle(
+          { lat: f.lat, lng: f.lng }, 2500,
+          { style: { fillColor: fillC, strokeColor: strkC, lineWidth: 1.5 } }
+        );
+        circ.setData({ type: "fire", confidence: f.confidence, acqDate: f.acqDate, dayNight: f.dayNight });
+        overlayGroup.addObject(circ);
+      } catch(e) { console.warn("fire circle", e.message); }
+    });
+
+    // ── Windy webcam markers ───────────────────────────────────────
+    (data.webcams || []).forEach(function(w) {
+      if (!w.lat || !w.lng) return;
+      try {
+        var icon   = new H.map.Icon(webcamSvg(), { size: { w:24, h:24 }, anchor: { x:12, y:12 } });
+        var marker = new H.map.Marker({ lat: w.lat, lng: w.lng }, { icon: icon, zIndex: 28 });
+        marker.setData({ type: "webcam", title: w.title, city: w.city, url: w.url });
+        overlayGroup.addObject(marker);
+      } catch(e) { console.warn("webcam marker", w.id, e.message); }
     });
 
     // ── Affiliate pins ─────────────────────────────────────────────

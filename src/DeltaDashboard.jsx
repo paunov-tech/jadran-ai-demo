@@ -80,6 +80,30 @@ function RegionRow({ r }) {
   );
 }
 
+function WindCard({ w }) {
+  const bft = w.windMs < 1.6 ? 1 : w.windMs < 3.4 ? 2 : w.windMs < 5.5 ? 3
+    : w.windMs < 8 ? 4 : w.windMs < 10.8 ? 5 : w.windMs < 13.9 ? 6 : w.windMs < 17.2 ? 7 : 8;
+  const wc  = bft <= 3 ? "#22c55e" : bft <= 5 ? "#eab308" : bft <= 6 ? "#f97316" : "#ef4444";
+  const dirs = ["N","NE","E","SE","S","SW","W","NW"];
+  const compass = dirs[Math.round((w.windDeg % 360) / 45) % 8];
+  return (
+    <div style={{
+      background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.1)",
+      borderRadius: 8, padding: "7px 10px", minWidth: 85, flex: "1 1 85px",
+    }}>
+      <div style={{ fontSize: 9, color: "#64748b", marginBottom: 3, textTransform: "uppercase", letterSpacing: ".05em" }}>{w.name}</div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 3 }}>
+        <span style={{ fontSize: 18, fontWeight: 700, color: wc, fontVariantNumeric: "tabular-nums" }}>{w.windKts}</span>
+        <span style={{ fontSize: 9, color: "#64748b" }}>kn {compass}</span>
+      </div>
+      <div style={{ fontSize: 10, color: "#94a3b8", marginTop: 2 }}>
+        {w.tempC}°C
+        {w.waveM != null && <span style={{ color: "#38bdf8" }}> · {w.waveM}m val</span>}
+      </div>
+    </div>
+  );
+}
+
 function ParkingRow({ p }) {
   if (p.level === "unknown" || p.occupancyPct == null) return null;
   return (
@@ -266,6 +290,18 @@ export default function DeltaDashboard() {
           {/* Scrollable content */}
           <div style={{ flex: 1, overflow: "auto", padding: "0 14px 16px" }}>
 
+            {/* ── Wind & Waves (Windy) ── */}
+            {(intel?.forecast || []).length > 0 && (
+              <div style={{ marginBottom: 14, marginTop: 4 }}>
+                <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 6 }}>
+                  Vjetar &amp; Valovi — Windy
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                  {intel.forecast.map(w => <WindCard key={w.id} w={w} />)}
+                </div>
+              </div>
+            )}
+
             {/* ── AI DELTA Briefing ── */}
             <div style={{
               background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.15)",
@@ -291,6 +327,25 @@ export default function DeltaDashboard() {
                   Alerty ({activeAlerts.length})
                 </div>
                 {activeAlerts.slice(0, 8).map((a, i) => <AlertRow key={i} alert={a} />)}
+              </div>
+            )}
+
+            {/* ── NASA FIRMS Fires ── */}
+            {(intel?.fires || []).length > 0 && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 10, color: "#ef4444", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 6 }}>
+                  🔥 NASA FIRMS požari ({intel.fires.length})
+                </div>
+                {intel.fires.filter(f => f.confidence === "high").slice(0, 5).map((f, i) => (
+                  <div key={i} style={{ fontSize: 11, color: "#fca5a5", padding: "4px 0", borderBottom: "1px solid rgba(239,68,68,0.1)", fontVariantNumeric: "tabular-nums" }}>
+                    ◉ {f.lat.toFixed(2)}, {f.lng.toFixed(2)} — {f.acqDate}
+                  </div>
+                ))}
+                {intel.fires.filter(f => f.confidence !== "high").length > 0 && (
+                  <div style={{ fontSize: 10, color: "#f97316", marginTop: 4 }}>
+                    + {intel.fires.filter(f => f.confidence !== "high").length} nominalna detekcija
+                  </div>
+                )}
               </div>
             )}
 
@@ -343,6 +398,49 @@ export default function DeltaDashboard() {
                     </span>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* ── Windy Webcams ── */}
+            {(intel?.webcams || []).length > 0 && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 6 }}>
+                  Live webcami — Windy ({intel.webcams.length})
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                  {intel.webcams.slice(0, 8).map(w => (
+                    <a key={w.id} href={w.url} target="_blank" rel="noopener noreferrer"
+                      style={{ textDecoration: "none", display: "block" }}>
+                      {w.preview ? (
+                        <div style={{ position: "relative", width: 78, height: 52 }}>
+                          <img src={w.preview} alt={w.title}
+                            style={{ width: 78, height: 52, objectFit: "cover", borderRadius: 6, border: "1px solid rgba(34,211,238,0.25)", display: "block" }}
+                          />
+                          <div style={{
+                            position: "absolute", bottom: 0, left: 0, right: 0,
+                            background: "rgba(6,15,30,0.75)", borderRadius: "0 0 5px 5px",
+                            fontSize: 8, color: "#94a3b8", padding: "2px 4px",
+                            overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis",
+                          }}>{w.city || w.title}</div>
+                        </div>
+                      ) : (
+                        <div style={{
+                          width: 78, height: 52, borderRadius: 6,
+                          border: "1px solid rgba(34,211,238,0.2)",
+                          background: "rgba(34,211,238,0.04)",
+                          display: "flex", flexDirection: "column",
+                          alignItems: "center", justifyContent: "center", gap: 2,
+                        }}>
+                          <span style={{ fontSize: 14 }}>📷</span>
+                          <span style={{ fontSize: 8, color: "#475569", textAlign: "center", padding: "0 4px",
+                            overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", maxWidth: 70 }}>
+                            {w.city || w.title}
+                          </span>
+                        </div>
+                      )}
+                    </a>
+                  ))}
+                </div>
               </div>
             )}
 

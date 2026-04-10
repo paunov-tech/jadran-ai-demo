@@ -3,8 +3,10 @@
 // GET /api/coast-intelligence
 // Cache: 60s in-memory
 
-const FB_KEY  = process.env.FIREBASE_API_KEY;
-const CORS    = ["https://jadran.ai", "https://monte-negro.ai"];
+const FB_KEY             = process.env.FIREBASE_API_KEY;
+const WINDY_FORECAST_KEY = process.env.WINDY_FORECAST_KEY;
+const WINDY_WEBCAM_KEY   = process.env.WINDY_WEBCAM_KEY;
+const CORS               = ["https://jadran.ai", "https://monte-negro.ai"];
 
 let _cache = null;
 let _cacheTs = 0;
@@ -47,6 +49,16 @@ const SEA_CENTROIDS = {
   hvar_bay:        { lat: 43.172, lng: 16.443, name: "Hvar luka",             region: "split_makarska" },
   zadar_coastal:   { lat: 44.140, lng: 15.183, name: "Zadar Borik",           region: "zadar_sibenik" },
 };
+
+// ─── FORECAST POINTS — Windy Point Forecast API ──────────────────────────────
+const FORECAST_POINTS = [
+  { id: "split",     name: "Split",     lat: 43.508, lng: 16.440 },
+  { id: "dubrovnik", name: "Dubrovnik", lat: 42.650, lng: 18.094 },
+  { id: "zadar",     name: "Zadar",     lat: 44.119, lng: 15.231 },
+  { id: "rijeka",    name: "Rijeka",    lat: 45.327, lng: 14.442 },
+  { id: "pula",      name: "Pula",      lat: 44.867, lng: 13.848 },
+  { id: "hvar",      name: "Hvar",      lat: 43.172, lng: 16.443 },
+];
 
 // ─── AFFILIATE PINS (server-side copy) ───────────────────────────────────────
 const AFFILIATES = [
@@ -203,6 +215,126 @@ async function fetchHAK() {
   } catch (e) { return []; }
 }
 
+// ─── Windy Point Forecast ────────────────────────────────────────────────────
+async function fetchWindyForecast() {
+  if (!WINDY_FORECAST_KEY) return [];
+  const results = [];
+  await Promise.all(FORECAST_POINTS.map(async pt => {
+    try {
+      const [wRes, waveRes] = await Promise.all([
+        fetch("https://api.windy.com/api/point-forecast/v2", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lat: pt.lat, lon: pt.lng, model: "gfs",
+            parameters: ["wind", "windGust", "temp"],
+            levels: ["surface"],
+            key: WINDY_FORECAST_KEY,
+          }),
+          signal: AbortSignal.timeout(8000),
+        }),
+        fetch("https://api.windy.com/api/point-forecast/v2", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lat: pt.lat, lon: pt.lng, model: "gfsWave",
+            parameters: ["waves"],
+            levels: ["surface"],
+            key: WINDY_FORECAST_KEY,
+          }),
+          signal: AbortSignal.timeout(8000),
+        }),
+      ]);
+      const wd    = wRes.ok    ? await wRes.json()    : null;
+      const waved = waveRes.ok ? await waveRes.json() : null;
+      if (!wd) return;
+      const u   = wd["wind_u-surface"]?.[0] ?? 0;
+      const v   = wd["wind_v-surface"]?.[0] ?? 0;
+      const spd = Math.sqrt(u * u + v * v);
+      const deg = ((270 - Math.atan2(v, u) * 180 / Math.PI) + 360) % 360;
+      const tempK = wd["temp-surface"]?.[0] ?? 273.15;
+      const gust  = wd["windGust-surface"]?.[0] ?? spd;
+      // wave height — try both field name variants
+      const waveH = waved
+        ? (waved["waves_significant_height-surface"]?.[0] ?? waved["waves-surface"]?.[0] ?? null)
+        : null;
+      results.push({
+        id: pt.id, name: pt.name, lat: pt.lat, lng: pt.lng,
+        windMs:  Math.round(spd * 10) / 10,
+        windKts: Math.round(spd * 1.944),
+        windDeg: Math.round(deg),
+        gustMs:  Math.round(gust * 10) / 10,
+        tempC:   Math.round((tempK - 273.15) * 10) / 10,
+        waveM:   waveH != null ? Math.round(waveH * 10) / 10 : null,
+      });
+    } catch (e) {
+      console.warn("[coast-intel] Windy forecast", pt.id, e.message);
+    }
+  }));
+  // keep original order
+  return FORECAST_POINTS.map(p => results.find(r => r.id === p.id)).filter(Boolean);
+}
+
+// ─── Windy Webcams ────────────────────────────────────────────────────────────
+async function fetchWindyWebcams() {
+  if (!WINDY_WEBCAM_KEY) return [];
+  try {
+    const r = await fetch(
+      "https://api.windy.com/webcams/api/v3/webcams?nearby=44.0,16.0,350&limit=15&include=player,images&lang=en",
+      { headers: { "x-windy-api-key": WINDY_WEBCAM_KEY }, signal: AbortSignal.timeout(8000) }
+    );
+    if (!r.ok) { console.warn("[coast-intel] Windy webcams HTTP", r.status); return []; }
+    const data = await r.json();
+    return (data.webcams || [])
+      .filter(w => w.status === "active" && w.location?.latitude && w.location?.longitude)
+      .slice(0, 12)
+      .map(w => ({
+        id:      w.webcamId,
+        title:   w.title || "",
+        city:    w.location?.city || "",
+        lat:     w.location.latitude,
+        lng:     w.location.longitude,
+        preview: w.player?.day?.previewUrl || w.player?.live?.previewUrl || null,
+        url:     `https://www.windy.com/webcams/${w.webcamId}`,
+      }));
+  } catch (e) {
+    console.warn("[coast-intel] Windy webcams:", e.message);
+    return [];
+  }
+}
+
+// ─── NASA FIRMS active fires ──────────────────────────────────────────────────
+async function fetchNASAFires() {
+  try {
+    const r = await fetch(
+      "https://firms.modaps.eosdis.nasa.gov/data/active_fire/suomi-npp-viirs-c2/csv/SUOMI_VIIRS_C2_Europe_24h.csv",
+      { signal: AbortSignal.timeout(8000), headers: { "User-Agent": "Mozilla/5.0 (compatible; JadranBot/1.0)" } }
+    );
+    if (!r.ok) return [];
+    const text  = await r.text();
+    const lines = text.trim().split("\n");
+    const fires = [];
+    for (let i = 1; i < lines.length; i++) {
+      const c   = lines[i].split(",");
+      const lat = parseFloat(c[0]);
+      const lng = parseFloat(c[1]);
+      // Croatia + immediate Adriatic coast bounding box
+      if (lat >= 41.5 && lat <= 47.5 && lng >= 13.0 && lng <= 19.5) {
+        fires.push({
+          lat, lng,
+          confidence: (c[9] || "nominal").trim(),
+          acqDate:    (c[5] || "").trim(),
+          dayNight:   (c[13] || "D").trim(),
+        });
+      }
+    }
+    return fires.slice(0, 40);
+  } catch (e) {
+    console.warn("[coast-intel] NASA FIRMS:", e.message);
+    return [];
+  }
+}
+
 // ─── HANDLER ─────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   const origin = req.headers.origin || "";
@@ -216,11 +348,14 @@ export default async function handler(req, res) {
     return res.status(200).json(_cache);
   }
 
-  const [yolo, parking, sea, traffic] = await Promise.all([
+  const [yolo, parking, sea, traffic, forecast, webcams, fires] = await Promise.all([
     fetchYolo(),
     fetchParkingCache(),
     fetchSeaCache(),
     fetchHAK(),
+    fetchWindyForecast(),
+    fetchWindyWebcams(),
+    fetchNASAFires(),
   ]);
 
   // Build region nodes
@@ -276,6 +411,14 @@ export default async function handler(req, res) {
   }
   alerts.sort((a, b) => (a.severity === "critical" ? 0 : 1) - (b.severity === "critical" ? 0 : 1));
 
+  // Fire alerts → add to alerts list
+  const highFires = fires.filter(f => f.confidence === "high");
+  if (highFires.length > 0)
+    alerts.push({ type: "fire", severity: "critical", text: `NASA FIRMS: ${highFires.length} aktivni požar${highFires.length > 1 ? "a" : ""} u regiji` });
+  else if (fires.length > 0)
+    alerts.push({ type: "fire", severity: "warning", text: `NASA FIRMS: ${fires.length} potencijalnih požarnih točaka` });
+  alerts.sort((a, b) => (a.severity === "critical" ? 0 : 1) - (b.severity === "critical" ? 0 : 1));
+
   const payload = {
     ts: new Date().toISOString(),
     yolo:      { total: yolo.total, active: yolo.active },
@@ -285,6 +428,9 @@ export default async function handler(req, res) {
     affiliates: AFFILIATES,
     traffic:   traffic.slice(0, 6),
     alerts:    alerts.slice(0, 15),
+    forecast,
+    webcams,
+    fires,
   };
 
   _cache   = payload;
