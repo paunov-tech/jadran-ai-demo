@@ -1169,6 +1169,7 @@ PRAVILA:
 
 // ── MAIN ASSEMBLER ──
 function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan, yoloCrowdData, campCatalog }) {
+  console.warn(`[buildPrompt] mode=${mode} region=${region} lang=${lang} hasWeather=${!!weather} hasYolo=${!!yoloCrowdData}`);
   const parts = [];
 
   // 0. DATE/TIME CONTEXT — AI mora znati kad je da može dati relevantne savjete
@@ -1647,6 +1648,7 @@ TVOJ ZADATAK:
     // B2B redirect not critical — fail silently
   }
 
+  console.warn(`[buildPrompt] completed, parts.length=${parts.length}`);
   return parts.join("\n\n");
 }
 
