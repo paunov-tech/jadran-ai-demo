@@ -283,7 +283,7 @@ export default function AdminPanel() {
         fetchB2bData(b2bFilter, b2bSearch);
       }
     }
-  }, [auth, mainTab, partnersSubTab]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [auth, mainTab, partnersSubTab, fetchPartners, fetchPartnerBookings, fetchB2bData, b2bLoaded, b2bFilter, b2bSearch]);
 
   const filtered = bookings.filter(b => {
     if (filter === "pending")   return b.status !== "confirmed" && b.status !== "cancelled";
