@@ -28,6 +28,65 @@ var map = null;
 var markerGroup = null;
 var gpsMarker = null;
 var followGPS = true;
+var currentRouteLine = null;
+var routePoints = [];
+var rerouteTimer = null;
+var currentKey = null;
+var OFFROUTE_M = 300; // meters before rerouting
+
+// Haversine distance in meters
+function haversineM(lat1, lon1, lat2, lon2) {
+  var R = 6371000, d2r = Math.PI/180;
+  var dLat = (lat2-lat1)*d2r, dLon = (lon2-lon1)*d2r;
+  var a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+    Math.cos(lat1*d2r)*Math.cos(lat2*d2r)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Distance from point to nearest point on route polyline
+function distToRouteM(lat, lng) {
+  if (routePoints.length < 2) return Infinity;
+  var minD = Infinity;
+  for (var i = 0; i < routePoints.length - 1; i++) {
+    var a = routePoints[i], b = routePoints[i+1];
+    var dx = b.lat-a.lat, dy = b.lng-a.lng, lenSq = dx*dx+dy*dy;
+    var t = lenSq > 0 ? Math.max(0, Math.min(1, ((lat-a.lat)*dx+(lng-a.lng)*dy)/lenSq)) : 0;
+    var d = haversineM(lat, lng, a.lat+t*dx, a.lng+t*dy);
+    if (d < minD) minD = d;
+  }
+  return minD;
+}
+
+// Draw (or replace) route from sections array
+function drawRoute(sections) {
+  if (currentRouteLine) { try { map.removeObject(currentRouteLine); } catch(e){} currentRouteLine = null; }
+  routePoints = [];
+  var lines = sections.map(function(s) { return H.geo.LineString.fromFlexiblePolyline(s.polyline); });
+  lines.forEach(function(ls) {
+    for (var i = 0, n = ls.getPointCount(); i < n; i++) {
+      var pt = ls.extractPoint(i); routePoints.push({lat:pt.lat, lng:pt.lng});
+    }
+  });
+  currentRouteLine = new H.map.Polyline(new H.geo.MultiLineString(lines), {
+    style: {strokeColor:"rgba(14,165,233,0.85)", lineWidth:5, lineCap:"round", lineJoin:"round"}
+  });
+  map.addObject(currentRouteLine);
+  return currentRouteLine;
+}
+
+// Fetch route from (oLat, oLon) to fixed destination
+function fetchRoute(oLat, oLon) {
+  if (!currentKey) return;
+  fetch("https://router.hereapi.com/v8/routes?transportMode=" + TMODE + "&routingMode=fast"
+    + "&origin=" + oLat + "," + oLon + "&destination=" + tlat + "," + tlon
+    + "&return=polyline,summary&apikey=" + currentKey)
+    .then(function(r) { if (!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+    .then(function(data) {
+      if (!data.routes || !data.routes[0]) return;
+      drawRoute(data.routes[0].sections);
+    })
+    .catch(function() {});
+}
 
 var gpsIcon = new H.map.Icon('<svg width="28" height="28" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="12" fill="rgba(59,130,246,0.15)" stroke="none"><animate attributeName="r" values="8;14;8" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0.4;1" dur="2s" repeatCount="indefinite"/></circle><circle cx="14" cy="14" r="6" fill="#3b82f6" stroke="#fff" stroke-width="2"/></svg>', {size:{w:28,h:28},anchor:{x:14,y:14}});
 
@@ -39,6 +98,7 @@ function showRouteError(msg) {
 }
 
 function initMap(KEY) {
+  currentKey = KEY;
   var platform = new H.service.Platform({ apikey: KEY });
   var defaultLayers = platform.createDefaultLayers();
 
@@ -83,15 +143,8 @@ function initMap(KEY) {
     })
     .then(function(data) {
       if (!data.routes || !data.routes[0]) { showRouteError("Ruta nije dostupna"); return; }
-      var sections = data.routes[0].sections;
-      var lines = sections.map(function(s) {
-        return H.geo.LineString.fromFlexiblePolyline(s.polyline);
-      });
-      var routeLine = new H.map.Polyline(new H.geo.MultiLineString(lines), {
-        style: {strokeColor: "rgba(14,165,233,0.85)", lineWidth: 5, lineCap: "round", lineJoin: "round"}
-      });
-      map.addObject(routeLine);
-      var bb = routeLine.getBoundingBox();
+      var rl = drawRoute(data.routes[0].sections);
+      var bb = rl.getBoundingBox();
       var mb = markerGroup.getBoundingBox();
       if (bb && mb) bb = bb.mergeRect(mb);
       map.getViewModel().setLookAtData({bounds: bb || mb}, {animate: true});
@@ -127,6 +180,18 @@ window.addEventListener("message", function(e) {
     }
     if (followGPS) {
       map.getViewModel().setLookAtData({position: {lat: lat, lng: lng}, zoom: Math.max(map.getZoom(), 9)}, {animate: true});
+    }
+    // Off-route detection — reroute if >300m from route (5s debounce)
+    if (routePoints.length && !rerouteTimer) {
+      if (distToRouteM(lat, lng) > OFFROUTE_M) {
+        var capLat = lat, capLng = lng;
+        rerouteTimer = setTimeout(function() {
+          rerouteTimer = null;
+          if (gpsMarker && distToRouteM(capLat, capLng) > OFFROUTE_M) {
+            fetchRoute(capLat, capLng);
+          }
+        }, 5000);
+      }
     }
   }
 });

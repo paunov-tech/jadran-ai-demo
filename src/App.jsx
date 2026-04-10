@@ -573,8 +573,13 @@ export default function JadranUnified() {
   const [transitFromUrl, setTransitFromUrl] = useState("");
   const [transitToUrl, setTransitToUrl] = useState("");
   const [transitSegUrl, setTransitSegUrl] = useState("");
-  const [transitFromCoords, setTransitFromCoords] = useState(null);
-  const [transitToCoords, setTransitToCoords] = useState(null);
+  // Restore coords from persisted delta on reload (fixes background-kill state loss)
+  const [transitFromCoords, setTransitFromCoords] = useState(() => {
+    const d = loadDelta(); return d.from_coords?.[0] ? d.from_coords : null;
+  });
+  const [transitToCoords, setTransitToCoords] = useState(() => {
+    const d = loadDelta(); return d.destination?.lat ? [d.destination.lat, d.destination.lng] : null;
+  });
   const [transitRouteData, setTransitRouteData] = useState(null);
   const [preTripGuideCards, setPreTripGuideCards] = useState([]);
   // Save real HERE road distance to delta → gpsEngine → pulse.js gets accurate km
@@ -1453,6 +1458,7 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           lastUserMessage: msg,
           camperLen: delta.camperLen || undefined,
           camperHeight: delta.camperHeight || undefined,
+          ...(gpsPosition ? { userLat: gpsPosition.lat, userLng: gpsPosition.lng } : {}),
         }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);

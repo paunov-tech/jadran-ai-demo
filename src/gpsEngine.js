@@ -154,7 +154,7 @@ function checkAndFireZones(lat, lng) {
     const zoneName = zone.name?.[lang] || zone.name?.hr || zone.id;
 
     if (onCardCallback) {
-      onCardCallback({
+      const card = {
         id: approachId,
         type: zone.type,
         severity: zone.type === "bura" ? "warning" : "info",
@@ -164,7 +164,12 @@ function checkAndFireZones(lat, lng) {
         source: "GPS",
         ts: new Date().toISOString(),
         approaching: true,
-      });
+      };
+      onCardCallback(card);
+      // Background notification via service worker
+      if (card.severity === "warning" || card.severity === "critical") {
+        try { navigator.serviceWorker?.controller?.postMessage({ type: "show_alert", title: `JADRAN ${card.icon}`, body: card.title, tag: card.id, urgent: card.severity === "critical" }); } catch {}
+      }
     }
   }
 
@@ -179,7 +184,7 @@ function checkAndFireZones(lat, lng) {
     const zoneName = zone.name?.[lang] || zone.name?.hr || zone.id;
 
     if (onCardCallback) {
-      onCardCallback({
+      const card = {
         id: zone.id,
         type: zone.type,
         severity: zone.type === "bura" ? "critical" : zone.type === "schengen_transition" ? "warning" : "info",
@@ -188,7 +193,12 @@ function checkAndFireZones(lat, lng) {
         body: segExtra ? `${cardText}\n${segExtra}` : cardText,
         source: "GPS Geofence",
         ts: new Date().toISOString(),
-      });
+      };
+      onCardCallback(card);
+      // Background notification via service worker
+      if (card.severity === "warning" || card.severity === "critical") {
+        try { navigator.serviceWorker?.controller?.postMessage({ type: "show_alert", title: `JADRAN ${card.icon}`, body: card.title, tag: card.id, urgent: card.severity === "critical" }); } catch {}
+      }
     }
   }
 

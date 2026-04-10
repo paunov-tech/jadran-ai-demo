@@ -1710,7 +1710,7 @@ export default async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: 'Service temporarily unavailable' });
 
   try {
-    const { system, messages, mode, region: regionRaw, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, plan, deviceId, adriatic_region, delta_context, guide_cards } = req.body;
+    const { system, messages, mode, region: regionRaw, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, plan, deviceId, adriatic_region, delta_context, guide_cards, userLat, userLng } = req.body;
     // Map new Adriatic region keys to existing LOCATIONS keys
     const ADRIATIC_TO_LOCATION = { istra: "istra", kvarner: "kvarner", srednja_dalmacija: "split", juzna_dalmacija: "dubrovnik" };
     const region = regionRaw || (adriatic_region ? ADRIATIC_TO_LOCATION[adriatic_region] : undefined);
@@ -1756,7 +1756,14 @@ Tvoj zadatak je biti KONKRETNI putni operater — ne turistički letak. Daj:
 6. ŠTA PONIJETI/PRIPREMITI: Samo ono specifično za ovu rutu i segment — ne generičku listu.
 Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to direktno i daj što možeš.`.trim());
       }
-      if (d.phase === "transit") parts.push("INSTRUKCIJA: Gost je na putu. Fokus na navigaciju, trajekte, gužve, parking. Proaktivna upozorenja.");
+      if (d.phase === "transit") {
+        const gpsStr = (userLat && userLng)
+          ? `GPS: ${Number(userLat).toFixed(4)}°N, ${Number(userLng).toFixed(4)}°E. `
+          : "";
+        const distStr = d.dist_to_dest ? `Do destinacije: ~${d.dist_to_dest} km. ` : "";
+        const etaStr = d.eta_min ? `ETA: ~${Math.floor(d.eta_min/60)}h${d.eta_min%60}min. ` : "";
+        parts.push(`INSTRUKCIJA: Gost je na putu. ${gpsStr}${distStr}${etaStr}Fokus na navigaciju, trajekte, gužve, parking. Proaktivna upozorenja. NE govori da nemaš pristup GPS-u — imaš koordinate.`);
+      }
       if (d.phase === "arrival") parts.push("INSTRUKCIJA: Gost je stigao. Check-in info, parking, prve preporuke za dan, live kamere.");
       if (d.phase === "odmor") parts.push("INSTRUKCIJA: Gost boravi na destinaciji. Preporuči aktivnosti, restorane, plaže. Direktni partneri uvijek prvi.");
       if (d.phase === "departure") parts.push("INSTRUKCIJA: Gost odlazi. Trajektni red, alternativne rute, produžetak boravka, promo kod za sljedeću godinu.");

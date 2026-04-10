@@ -492,13 +492,16 @@ export default function LandingPage() {
       </nav>
 
       {/* ═══ HERO ═══ */}
-      <section style={{ position: "relative", minHeight: "100dvh", display: "flex", alignItems: "flex-start", overflow: "hidden", paddingBottom: 40 }}>
-        <video autoPlay muted loop playsInline style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.25 }}
-          poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3Crect fill='%230a0e17'/%3E%3C/svg%3E">
-          <source src="https://videos.pexels.com/video-files/1093662/1093662-sd_640_360_30fps.mp4" type="video/mp4" />
-        </video>
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,14,23,0.6) 0%, rgba(10,14,23,0.3) 40%, rgba(10,14,23,0.95) 100%)" }} />
-        <div style={{ position: "relative", maxWidth: 680, margin: "0 auto", padding: selectedMode ? "76px 24px 40px" : "76px 24px 40px", textAlign: "center", opacity: anim ? 1 : 0, transform: anim ? "translateY(0)" : "translateY(40px)", transition: "all 1s cubic-bezier(0.16, 1, 0.3, 1)" }}>
+      <section style={{ position: "relative", minHeight: "100dvh", display: "flex", alignItems: "flex-start", paddingBottom: 40 }}>
+        {/* Video + gradient confined to this wrapper — does NOT clip the content below */}
+        <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
+          <video autoPlay muted loop playsInline style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.25 }}
+            poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3Crect fill='%230a0e17'/%3E%3C/svg%3E">
+            <source src="https://videos.pexels.com/video-files/1093662/1093662-sd_640_360_30fps.mp4" type="video/mp4" />
+          </video>
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,14,23,0.6) 0%, rgba(10,14,23,0.3) 40%, rgba(10,14,23,0.85) 100%)" }} />
+        </div>
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 680, margin: "0 auto", padding: selectedMode ? "76px 24px 40px" : "76px 24px 40px", textAlign: "center", opacity: anim ? 1 : 0, transform: anim ? "translateY(0)" : "translateY(40px)", transition: "all 1s cubic-bezier(0.16, 1, 0.3, 1)" }}>
           <div style={{ display: "inline-block", padding: "5px 14px", borderRadius: 20, background: "rgba(250,204,21,0.1)", border: "1px solid rgba(250,204,21,0.15)", color: "#facc15", fontSize: 11, fontWeight: 600, marginBottom: 20, letterSpacing: 1 }}>{"🛡️"} {tx("badge")}</div>
           <h1 style={{ fontFamily: F, fontSize: "clamp(28px, 5.5vw, 52px)", fontWeight: 800, lineHeight: 1.15, marginBottom: 18 }}>
             <span style={{ color: "#f87171" }}>{tx("h1a")}<br/>{tx("h1b")}</span><br/>
@@ -755,7 +758,7 @@ export default function LandingPage() {
                   const isArrivalMode = selectedMode === "avion";
                   const canActivate = isArrivalMode ? !!toLPCity.trim() : (!!depCity.trim() && !!toLPCity.trim());
                   return (
-                    <div style={{ marginTop: 14, padding: "16px 14px", borderRadius: 16, background: isArrivalMode ? "rgba(6,182,212,0.06)" : "rgba(14,165,233,0.06)", border: `1px solid ${isArrivalMode ? "rgba(6,182,212,0.2)" : "rgba(14,165,233,0.15)"}`, animation: "fadeIn 0.3s both" }}>
+                    <div style={{ marginTop: 14, padding: "16px 14px", borderRadius: 16, background: isArrivalMode ? "rgba(6,182,212,0.14)" : "rgba(14,165,233,0.12)", border: `1px solid ${isArrivalMode ? "rgba(6,182,212,0.35)" : "rgba(14,165,233,0.3)"}`, backdropFilter: "blur(12px)", position: "relative", zIndex: 5, animation: "fadeIn 0.3s both" }}>
                       {isArrivalMode && (
                         <div style={{ fontSize: 11, color: "#06b6d4", marginBottom: 10, letterSpacing: 0.5 }}>
                           {lang === "de" || lang === "at" ? "✈️ Ankunftsbriefing — kein Fahrtweg nötig" : lang === "en" ? "✈️ Arrival briefing — no driving route needed" : lang === "it" ? "✈️ Briefing di arrivo — nessun percorso" : "✈️ Dolazni brief — ruta nije potrebna"}

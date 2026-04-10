@@ -78,6 +78,19 @@ self.addEventListener("push", e => {
   );
 });
 
+// ─── GPS Alert Notifications (from main thread when app is in background) ──
+self.addEventListener("message", e => {
+  if (e.data?.type === "show_alert") {
+    self.registration.showNotification(e.data.title || "JADRAN AI", {
+      body: e.data.body || "",
+      icon: "/icon-192.svg",
+      badge: "/icon-192.svg",
+      tag: e.data.tag || "jadran-gps",
+      requireInteraction: e.data.urgent || false,
+    });
+  }
+});
+
 self.addEventListener("notificationclick", e => {
   e.notification.close();
   const url = e.notification.data?.url || "/";
