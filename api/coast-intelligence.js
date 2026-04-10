@@ -62,6 +62,20 @@ function densityLevel(objects) {
   return "empty";
 }
 
+// Normalize Firestore sub_region strings → canonical centroid keys
+// Handles variant naming from different sensor operators
+function normalizeSubRegion(sub) {
+  const s = (sub || "other").toLowerCase().replace(/[_\-\s]+/g, "_");
+  if (/plitvice/.test(s))                                                    return "np_plitvice";
+  if (/krka/.test(s))                                                        return "np_krka";
+  if (/kvarner|rab|krk|cres|losinj|rijeka|opatija|senj/.test(s))            return "kvarner";
+  if (/split|makarska|bol|hvar|brač|brac|šolta|solta|trogir|omis/.test(s))  return "split_makarska";
+  if (/dubrovnik|peljes|pelješac|korčula|korcula|lastovo/.test(s))           return "dubrovnik";
+  if (/zadar|šibenik|sibenik|murter|vodice|biograd|nin/.test(s))             return "zadar_sibenik";
+  if (/istra|istria|rovinj|pula|poreč|porec|novigrad|umag|labin/.test(s))   return "istra";
+  return "other";
+}
+
 // ─── YOLO from Firestore ──────────────────────────────────────────────────────
 async function fetchYolo() {
   if (!FB_KEY) return { regions: {}, total: 0, active: 0 };
@@ -85,8 +99,9 @@ async function fetchYolo() {
       if (ts) { const t = new Date(ts).getTime(); fresh = !isNaN(t) && t > cutoff; }
       if (!fresh) fresh = !/\d{4}-\d{2}-\d{2}/.test(docId);
       if (!fresh) continue;
-      const sub = f.sub_region?.stringValue || "other";
-      const cnt = parseInt(f.raw_count?.integerValue || "0");
+      const rawSub = f.sub_region?.stringValue || "other";
+      const sub    = normalizeSubRegion(rawSub);
+      const cnt    = parseInt(f.raw_count?.integerValue || "0");
       const counts = {};
       if (f.counts?.mapValue?.fields) {
         for (const [k, v] of Object.entries(f.counts.mapValue.fields)) {

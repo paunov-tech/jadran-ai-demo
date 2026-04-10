@@ -9,21 +9,22 @@
 <script src="https://js.api.here.com/v3/3.2/mapsjs-ui.js" type="text/javascript" charset="utf-8"></script>
 <link rel="stylesheet" type="text/css" href="https://js.api.here.com/v3/3.2/mapsjs-ui.css"/>
 <style>
-  body { margin:0; padding:0; overflow:hidden; background:#0a1628; }
+  body { margin:0; padding:0; overflow:hidden; background:#0d1b2e; }
   #map { width:100vw; height:100vh; }
+  /* Dark map overlay via CSS */
+  .H_ib_body { font-family: system-ui, sans-serif !important; font-size: 12px !important; }
   #legend {
-    position:absolute; bottom:24px; left:16px;
-    background:rgba(10,22,40,0.88); border:1px solid rgba(14,165,233,0.18);
+    position:absolute; bottom:20px; left:14px;
+    background:rgba(6,15,30,0.90); border:1px solid rgba(14,165,233,0.20);
     border-radius:12px; padding:10px 14px; font-family:system-ui,sans-serif;
     font-size:11px; color:#94a3b8; pointer-events:none; z-index:9;
-    backdrop-filter:blur(8px);
   }
-  #legend .lt { font-size:10px; color:#64748b; margin-bottom:6px; letter-spacing:.08em; text-transform:uppercase; }
+  #legend .lt { font-size:10px; color:#475569; margin-bottom:6px; letter-spacing:.08em; text-transform:uppercase; }
   #legend .row { display:flex; align-items:center; gap:7px; margin:3px 0; }
   #legend .dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
   #status {
     position:absolute; top:10px; right:10px;
-    background:rgba(10,22,40,0.82); border:1px solid rgba(14,165,233,0.15);
+    background:rgba(6,15,30,0.85); border:1px solid rgba(14,165,233,0.18);
     border-radius:8px; padding:5px 12px; font-family:system-ui,sans-serif;
     font-size:11px; color:#64748b; pointer-events:none; z-index:9;
   }
@@ -32,15 +33,16 @@
 <body>
 <div id="map"></div>
 <div id="legend">
-  <div class="lt">DELTA — Gustoća turista</div>
-  <div class="row"><div class="dot" style="background:#ef4444;opacity:.8"></div> Kritično</div>
-  <div class="row"><div class="dot" style="background:#f97316;opacity:.8"></div> Jako gusto</div>
-  <div class="row"><div class="dot" style="background:#eab308;opacity:.8"></div> Umjereno</div>
-  <div class="row"><div class="dot" style="background:#22c55e;opacity:.8"></div> Malo</div>
-  <div style="margin-top:8px" class="lt">Parking · More · Affiliate</div>
-  <div class="row"><div class="dot" style="background:#a855f7;opacity:.8"></div> Parking (Sentinel-2)</div>
-  <div class="row"><div class="dot" style="background:#0ea5e9;opacity:.8"></div> Kvalitet mora</div>
-  <div class="row"><div class="dot" style="background:#f59e0b;border:2px solid #fff;opacity:.9"></div> Affiliate partner</div>
+  <div class="lt">Gustoća turista (YOLO)</div>
+  <div class="row"><div class="dot" style="background:#ef4444"></div> Kritično (&gt;200)</div>
+  <div class="row"><div class="dot" style="background:#f97316"></div> Jako gusto (&gt;100)</div>
+  <div class="row"><div class="dot" style="background:#eab308"></div> Umjereno (&gt;50)</div>
+  <div class="row"><div class="dot" style="background:#22c55e"></div> Malo (&gt;10)</div>
+  <div class="row"><div class="dot" style="background:#6366f1;opacity:.6"></div> Zona praćenja</div>
+  <div style="margin-top:8px" class="lt">Parking · More · Partneri</div>
+  <div class="row"><div class="dot" style="background:#a855f7"></div> Parking (Sentinel-2)</div>
+  <div class="row"><div class="dot" style="background:#0ea5e9"></div> Kvalitet mora</div>
+  <div class="row"><div class="dot" style="background:#f59e0b;border:2px solid #fff"></div> Affiliate</div>
 </div>
 <div id="status">Inicijalizacija...</div>
 
@@ -49,172 +51,212 @@ var map = null;
 var currentKey = null;
 var overlayGroup = null;
 
-// Level → circle fill/stroke
-var LEVEL_COLORS = {
-  critical: { fill:"rgba(239,68,68,0.30)",   stroke:"#ef4444" },
-  heavy:    { fill:"rgba(249,115,22,0.25)",   stroke:"#f97316" },
-  moderate: { fill:"rgba(234,179,8,0.22)",    stroke:"#eab308" },
-  light:    { fill:"rgba(34,197,94,0.18)",    stroke:"#22c55e" },
-  empty:    { fill:"rgba(100,116,139,0.10)",  stroke:"#475569" },
-  unknown:  { fill:"rgba(100,116,139,0.08)",  stroke:"#334155" },
+// ── Color config ──────────────────────────────────────────────────────────────
+var LEVEL = {
+  critical: { fill: "rgba(239, 68, 68, 0.42)",   stroke: "rgba(239, 68, 68, 0.90)",  lw: 2.5 },
+  heavy:    { fill: "rgba(249, 115, 22, 0.36)",  stroke: "rgba(249, 115, 22, 0.85)", lw: 2 },
+  moderate: { fill: "rgba(234, 179, 8, 0.30)",   stroke: "rgba(234, 179, 8, 0.80)",  lw: 2 },
+  light:    { fill: "rgba(34, 197, 94, 0.28)",   stroke: "rgba(34, 197, 94, 0.75)",  lw: 1.5 },
+  empty:    { fill: "rgba(99, 102, 241, 0.12)",  stroke: "rgba(99, 102, 241, 0.45)", lw: 1.5 },
 };
 
-// Sea clarity → color
-var SEA_COLORS = {
-  excellent: "#0ea5e9",
-  good:      "#38bdf8",
-  fair:      "#7dd3fc",
-  poor:      "#fb923c",
-  bad:       "#ef4444",
-  unknown:   "#475569",
+var SEA_FILL = {
+  excellent: "rgba(14, 165, 233, 0.35)",
+  good:      "rgba(56, 189, 248, 0.30)",
+  fair:      "rgba(234, 179, 8, 0.28)",
+  poor:      "rgba(249, 115, 22, 0.35)",
+  bad:       "rgba(239, 68, 68, 0.38)",
+  unknown:   "rgba(71, 85, 105, 0.15)",
+};
+var SEA_STROKE = {
+  excellent: "rgba(14, 165, 233, 0.80)",
+  good:      "rgba(56, 189, 248, 0.70)",
+  fair:      "rgba(234, 179, 8, 0.70)",
+  poor:      "rgba(249, 115, 22, 0.75)",
+  bad:       "rgba(239, 68, 68, 0.80)",
+  unknown:   "rgba(71, 85, 105, 0.40)",
+};
+var PARK_FILL = {
+  full:     "rgba(239, 68, 68, 0.50)",
+  heavy:    "rgba(249, 115, 22, 0.45)",
+  moderate: "rgba(168, 85, 247, 0.38)",
+  light:    "rgba(168, 85, 247, 0.28)",
+  empty:    "rgba(168, 85, 247, 0.15)",
+  unknown:  "rgba(71, 85, 105, 0.15)",
+};
+var PARK_STROKE = {
+  full:"rgba(239,68,68,0.9)", heavy:"rgba(249,115,22,0.85)", moderate:"rgba(168,85,247,0.85)",
+  light:"rgba(168,85,247,0.7)", empty:"rgba(168,85,247,0.4)", unknown:"rgba(71,85,105,0.4)",
 };
 
-// Parking occupancy → color
-function parkingColor(level) {
-  return { full:"#ef4444", heavy:"#f97316", moderate:"#eab308", light:"#22c55e", empty:"#475569", unknown:"#334155" }[level] || "#334155";
+// ── Polygon circle generator (avoids H.map.Circle rendering quirks) ───────────
+function circlePolygon(centerLat, centerLng, radiusKm, pts) {
+  pts = pts || 48;
+  var R = 6371;
+  var lat = centerLat * Math.PI / 180;
+  var lng = centerLng * Math.PI / 180;
+  var d   = radiusKm / R;
+  var ls  = new H.geo.LineString();
+  for (var i = 0; i <= pts; i++) {
+    var bearing = (2 * Math.PI * i) / pts;
+    var pLat = Math.asin(
+      Math.sin(lat) * Math.cos(d) +
+      Math.cos(lat) * Math.sin(d) * Math.cos(bearing)
+    );
+    var pLng = lng + Math.atan2(
+      Math.sin(bearing) * Math.sin(d) * Math.cos(lat),
+      Math.cos(d) - Math.sin(lat) * Math.sin(pLat)
+    );
+    ls.pushPoint({ lat: pLat * 180 / Math.PI, lng: pLng * 180 / Math.PI });
+  }
+  return new H.map.Polygon(ls);
+}
+
+// ── Affiliate SVG pin ──────────────────────────────────────────────────────────
+function affiliatePin(color) {
+  return '<svg width="34" height="44" xmlns="http://www.w3.org/2000/svg">'
+    + '<path d="M17 2C9.8 2 4 7.8 4 15c0 9 13 27 13 27s13-18 13-27C30 7.8 24.2 2 17 2Z"'
+    + ' fill="' + color + '" stroke="#fff" stroke-width="2.5"/>'
+    + '<text x="17" y="20" text-anchor="middle" font-size="14" fill="#fff" font-family="system-ui">★</text>'
+    + '</svg>';
 }
 
 function initMap(KEY) {
   currentKey = KEY;
   var platform = new H.service.Platform({ apikey: KEY });
-  var defaultLayers = platform.createDefaultLayers();
+  var layers   = platform.createDefaultLayers();
 
   map = new H.Map(
     document.getElementById("map"),
-    defaultLayers.vector.normal.map,
-    {
-      center: { lat: 44.2, lng: 15.8 },
-      zoom: 7,
-      pixelRatio: window.devicePixelRatio || 1
-    }
+    layers.vector.normal.map,
+    { center: { lat: 44.0, lng: 15.8 }, zoom: 7, pixelRatio: window.devicePixelRatio || 1 }
   );
-  // Dark satellite-like base
-  map.setBaseLayer(defaultLayers.vector.normal.map);
 
   new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
-  H.ui.UI.createDefault(map, defaultLayers);
+  H.ui.UI.createDefault(map, layers);
   window.addEventListener("resize", function() { map.getViewPort().resize(); });
-  setTimeout(function() { map.getViewPort().resize(); }, 100);
+  setTimeout(function() { map.getViewPort().resize(); }, 120);
 
   overlayGroup = new H.map.Group();
   map.addObject(overlayGroup);
 
+  // Info bubble on tap
+  var ui = H.ui.UI.getInstance(map);
+  map.addEventListener("tap", function(e) {
+    var obj = e.target;
+    var d = obj && obj.getData ? obj.getData() : null;
+    if (!d) return;
+    var html = "";
+    if (d.type === "region") {
+      var lvlLabel = { critical:"KRITIČNO", heavy:"jako gusto", moderate:"umjereno", light:"malo", empty:"zona praćenja" }[d.level] || d.level;
+      html = "<b>" + d.name + "</b><br>Detekcije: <b>" + d.objects + "</b> (" + d.cars + " vozila, " + d.persons + " osoba)<br>Razina: " + lvlLabel;
+    } else if (d.type === "parking") {
+      html = "<b>" + d.name + "</b><br>Zauzetost: <b>" + (d.occupancyPct != null ? d.occupancyPct + "%" : "n/a") + "</b> — " + (d.level || "?") + "<br>Max: " + d.maxCars + " vozila (Sentinel-2)";
+    } else if (d.type === "sea") {
+      html = "<b>" + d.beach + "</b><br>More: <b>" + (d.clarityHR || d.clarity) + "</b>" + (d.algaeRisk && d.algaeRisk !== "none" ? "<br>Alge: " + d.algaeRisk : "");
+    } else if (d.type === "affiliate") {
+      html = "<b>" + d.name + "</b><br>" + d.city + " — affiliate partner";
+    }
+    if (html && ui) {
+      ui.getBubbles().forEach(function(b) { ui.removeBubble(b); });
+      var geom = obj.getGeometry ? obj.getGeometry() : null;
+      if (geom) {
+        ui.addBubble(new H.ui.InfoBubble(geom, { content: "<div style='min-width:160px;font-size:12px;line-height:1.55'>" + html + "</div>" }));
+      }
+    }
+  });
+
   document.getElementById("status").textContent = "Čeka podatke...";
-}
-
-function svgAffiliatePin(color) {
-  return '<svg width="32" height="40" xmlns="http://www.w3.org/2000/svg">'
-    + '<path d="M16 2 C9.4 2 4 7.4 4 14 C4 22 16 38 16 38 C16 38 28 22 28 14 C28 7.4 22.6 2 16 2Z" fill="' + color + '" stroke="#fff" stroke-width="2"/>'
-    + '<text x="16" y="19" text-anchor="middle" font-size="13" fill="#fff" font-family="system-ui">★</text>'
-    + '</svg>';
-}
-
-function svgParkingPin(color) {
-  return '<svg width="22" height="22" xmlns="http://www.w3.org/2000/svg">'
-    + '<rect x="1" y="1" width="20" height="20" rx="5" fill="' + color + '" stroke="#fff" stroke-width="1.5"/>'
-    + '<text x="11" y="15.5" text-anchor="middle" font-size="11" fill="#fff" font-family="system-ui" font-weight="bold">P</text>'
-    + '</svg>';
 }
 
 function drawData(data) {
   if (!map || !overlayGroup) return;
   overlayGroup.removeAll();
 
-  // ── YOLO Region density circles ──────────────────────────────
+  // ── YOLO region density zones ─────────────────────────────────
   (data.regions || []).forEach(function(r) {
     if (!r.lat || !r.lng) return;
-    var c = LEVEL_COLORS[r.level] || LEVEL_COLORS.empty;
-    // Radius scales with object count: 8km base, up to 35km
-    var radiusM = Math.max(8000, Math.min(35000, 8000 + r.objects * 80));
-    var circle = new H.map.Circle(
-      { lat: r.lat, lng: r.lng },
-      radiusM,
-      { style: { fillColor: c.fill, strokeColor: c.stroke, lineWidth: 2 } }
-    );
-    circle.setData({ type: "region", id: r.id, name: r.name, objects: r.objects, cars: r.cars, persons: r.persons, level: r.level });
+    var lv  = r.level || "empty";
+    var col = LEVEL[lv] || LEVEL.empty;
 
-    // Label via DomIcon
-    var labelDiv = document.createElement("div");
-    labelDiv.style.cssText = "font-family:system-ui,sans-serif;font-size:11px;color:#f0f9ff;background:rgba(10,22,40,0.75);padding:3px 7px;border-radius:6px;border:1px solid rgba(14,165,233,0.25);white-space:nowrap;pointer-events:none;";
-    labelDiv.innerHTML = "<b>" + r.name + "</b><br><span style='color:#94a3b8'>" + r.objects + " detekcija</span>";
-    var labelIcon  = new H.map.DomIcon(labelDiv, { anchor: { x: 0, y: 0 } });
-    var labelMarker = new H.map.DomMarker({ lat: r.lat, lng: r.lng }, { icon: labelIcon, zIndex: 10 });
+    // Radius: 30km base, scales up with objects (max 60km)
+    var radiusKm = Math.max(30, Math.min(60, 30 + r.objects * 0.15));
 
-    overlayGroup.addObjects([circle, labelMarker]);
+    var poly = circlePolygon(r.lat, r.lng, radiusKm);
+    poly.setStyle({ fillColor: col.fill, strokeColor: col.stroke, lineWidth: col.lw });
+    poly.setData({ type: "region", id: r.id, name: r.name, objects: r.objects, cars: r.cars, persons: r.persons, level: lv });
+    overlayGroup.addObject(poly);
+
+    // Region label
+    var div = document.createElement("div");
+    var countColor = lv === "critical" ? "#fca5a5" : lv === "heavy" ? "#fdba74" : lv === "moderate" ? "#fde68a" : lv === "light" ? "#86efac" : "#818cf8";
+    div.style.cssText = "font-family:system-ui,sans-serif;line-height:1.35;pointer-events:none;";
+    div.innerHTML = '<div style="background:rgba(6,15,30,0.85);border:1px solid ' + col.stroke + ';border-radius:6px;padding:3px 8px;white-space:nowrap;">'
+      + '<span style="font-size:11px;font-weight:700;color:#f0f9ff">' + r.name + '</span>'
+      + '<br><span style="font-size:10px;color:' + countColor + '">' + r.objects + ' detekcija</span>'
+      + '</div>';
+    var lIcon   = new H.map.DomIcon(div);
+    var lMarker = new H.map.DomMarker({ lat: r.lat, lng: r.lng }, { icon: lIcon, zIndex: 15 });
+    overlayGroup.addObject(lMarker);
   });
 
-  // ── Parking markers ───────────────────────────────────────────
-  (data.parking || []).forEach(function(p) {
-    if (!p.lat || !p.lng) return;
-    var color = parkingColor(p.level);
-    var svgStr = svgParkingPin(color);
-    var icon = new H.map.Icon(svgStr, { size: { w: 22, h: 22 }, anchor: { x: 11, y: 11 } });
-    var marker = new H.map.Marker({ lat: p.lat, lng: p.lng }, { icon: icon, zIndex: 15 });
-    marker.setData({ type: "parking", name: p.name, occupancyPct: p.occupancyPct, level: p.level, maxCars: p.maxCars });
-    overlayGroup.addObject(marker);
-  });
-
-  // ── Sea quality circles ───────────────────────────────────────
+  // ── Sea quality zones ─────────────────────────────────────────
   (data.sea || []).forEach(function(s) {
-    if (!s.lat || !s.lng) return;
-    var color = SEA_COLORS[s.clarity] || SEA_COLORS.unknown;
-    var circle = new H.map.Circle(
-      { lat: s.lat, lng: s.lng },
-      4000,
-      { style: { fillColor: color.replace(")", ",0.20)").replace("rgb", "rgba"), strokeColor: color, lineWidth: 1.5 } }
-    );
-    circle.setData({ type: "sea", name: s.beach, clarity: s.clarity, clarityHR: s.clarityHR, algaeRisk: s.algaeRisk });
-    overlayGroup.addObject(circle);
+    if (!s.lat || !s.lng || s.clarity === "unknown") return;
+    var fill   = SEA_FILL[s.clarity]   || SEA_FILL.unknown;
+    var stroke = SEA_STROKE[s.clarity] || SEA_STROKE.unknown;
+    var poly = circlePolygon(s.lat, s.lng, 6, 32);
+    poly.setStyle({ fillColor: fill, strokeColor: stroke, lineWidth: 1.5 });
+    poly.setData({ type: "sea", beach: s.beach || s.name, clarity: s.clarity, clarityHR: s.clarityHR, algaeRisk: s.algaeRisk });
+    overlayGroup.addObject(poly);
+  });
+
+  // ── Parking zones ─────────────────────────────────────────────
+  (data.parking || []).forEach(function(p) {
+    if (!p.lat || !p.lng || p.level === "unknown") return;
+    var fill   = PARK_FILL[p.level]   || PARK_FILL.unknown;
+    var stroke = PARK_STROKE[p.level] || PARK_STROKE.unknown;
+    var poly = circlePolygon(p.lat, p.lng, 4, 24);
+    poly.setStyle({ fillColor: fill, strokeColor: stroke, lineWidth: 1.5 });
+    poly.setData({ type: "parking", name: p.name, occupancyPct: p.occupancyPct, level: p.level, maxCars: p.maxCars });
+    overlayGroup.addObject(poly);
+
+    // P label
+    var pDiv = document.createElement("div");
+    pDiv.style.cssText = "background:" + stroke + ";color:#fff;font-size:10px;font-weight:700;font-family:system-ui;width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;pointer-events:none;border:1px solid rgba(255,255,255,0.4);";
+    pDiv.textContent = "P";
+    var pIcon   = new H.map.DomIcon(pDiv, { anchor: { x: 9, y: 9 } });
+    var pMarker = new H.map.DomMarker({ lat: p.lat, lng: p.lng }, { icon: pIcon, zIndex: 20 });
+    overlayGroup.addObject(pMarker);
   });
 
   // ── Affiliate pins ────────────────────────────────────────────
   (data.affiliates || []).forEach(function(a) {
     if (!a.lat || !a.lng) return;
-    var svgStr = svgAffiliatePin(a.color || "#f59e0b");
-    var icon   = new H.map.Icon(svgStr, { size: { w: 32, h: 40 }, anchor: { x: 16, y: 38 } });
-    var marker = new H.map.Marker({ lat: a.lat, lng: a.lng }, { icon: icon, zIndex: 20 });
+    var color  = a.color || "#f59e0b";
+    var svgStr = affiliatePin(color);
+    var icon   = new H.map.Icon(svgStr, { size: { w: 34, h: 44 }, anchor: { x: 17, y: 42 } });
+    var marker = new H.map.Marker({ lat: a.lat, lng: a.lng }, { icon: icon, zIndex: 25 });
     marker.setData({ type: "affiliate", name: a.name, city: a.city });
     overlayGroup.addObject(marker);
 
-    // Affiliate label
-    var lDiv = document.createElement("div");
-    lDiv.style.cssText = "font-family:system-ui;font-size:10px;color:#fbbf24;background:rgba(10,22,40,0.82);padding:2px 6px;border-radius:5px;border:1px solid rgba(245,158,11,0.3);white-space:nowrap;pointer-events:none;margin-top:42px;margin-left:-20px;";
-    lDiv.textContent = a.name.split("—")[0].trim();
-    var lIcon   = new H.map.DomIcon(lDiv);
-    var lMarker = new H.map.DomMarker({ lat: a.lat, lng: a.lng }, { icon: lIcon, zIndex: 19 });
-    overlayGroup.addObject(lMarker);
+    // Affiliate label below pin
+    var aDiv = document.createElement("div");
+    aDiv.style.cssText = "font-family:system-ui;font-size:10px;font-weight:600;color:" + color + ";background:rgba(6,15,30,0.85);padding:2px 7px;border-radius:5px;border:1px solid " + color + "44;white-space:nowrap;pointer-events:none;margin-top:2px;";
+    aDiv.textContent = (a.name || "").split("—")[0].trim();
+    var aIcon   = new H.map.DomIcon(aDiv, { anchor: { x: 0, y: -4 } });
+    var aMarker = new H.map.DomMarker({ lat: a.lat - 0.08, lng: a.lng }, { icon: aIcon, zIndex: 24 });
+    overlayGroup.addObject(aMarker);
   });
 
-  // Add tap info bubble
-  map.addEventListener("tap", function(e) {
-    var target = e.target;
-    if (target instanceof H.map.AbstractMarker || target instanceof H.map.Circle) {
-      var d = target.getData();
-      if (!d) return;
-      var txt = "";
-      if (d.type === "region")    txt = d.name + "\n" + d.objects + " detekcija (" + d.cars + " vozila, " + d.persons + " osoba)\nRazina: " + d.level;
-      if (d.type === "parking")   txt = d.name + "\nZauzetost: " + (d.occupancyPct != null ? d.occupancyPct + "%" : "n/a") + " — " + d.level + "\nMax: " + d.maxCars + " vozila (Sentinel-2)";
-      if (d.type === "sea")       txt = d.beach + "\nMore: " + d.clarityHR + (d.algaeRisk !== "none" ? "\nAlge: " + d.algaeRisk : "");
-      if (d.type === "affiliate") txt = d.name + "\n" + d.city + " — affiliate partner";
-      if (txt) {
-        var bubble = new H.ui.InfoBubble(target.getGeometry ? target.getGeometry() : e.target.getPosition(), {
-          content: "<div style='font-family:system-ui;font-size:12px;white-space:pre-line;color:#0f172a'>" + txt + "</div>"
-        });
-        map.getObjects(H.map.AbstractMarker).forEach(function(){});
-        // Remove previous bubbles
-        var ui = H.ui.UI.getInstance(map);
-        if (ui) {
-          ui.getBubbles().forEach(function(b) { ui.removeBubble(b); });
-          ui.addBubble(bubble);
-        }
-      }
-    }
-  });
-
-  // Status update
-  var ts = data.ts ? new Date(data.ts).toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }) : "";
-  var totalObj = (data.yolo && data.yolo.total) || 0;
-  document.getElementById("status").textContent = "DELTA " + ts + " · " + totalObj + " detekcija";
+  // Status bar
+  var ts       = data.ts ? new Date(data.ts).toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }) : "";
+  var total    = (data.yolo && data.yolo.total) || 0;
+  var activeS  = (data.yolo && data.yolo.active) || 0;
+  var alertCnt = (data.alerts || []).filter(function(a) { return a.severity === "critical"; }).length;
+  var statusTxt = "DELTA " + ts + " · " + total + " det · " + activeS + " senzora";
+  if (alertCnt) statusTxt += " · " + alertCnt + " ⚠";
+  document.getElementById("status").textContent = statusTxt;
 }
 
 // ── postMessage router ────────────────────────────────────────────────────────
@@ -223,13 +265,17 @@ window.addEventListener("message", function(e) {
 
   if (e.data.type === "coast_init") {
     if (e.data.key && !map) initMap(e.data.key);
-    if (e.data.data && map) setTimeout(function() { drawData(e.data.data); }, 300);
+    if (e.data.data) {
+      var d = e.data.data;
+      var doInit = function() { drawData(d); };
+      if (map) setTimeout(doInit, 400); else setTimeout(doInit, 1200);
+    }
     return;
   }
 
   if (e.data.type === "coast_data") {
-    if (!map && e.data.key) initMap(e.data.key);
-    if (map && e.data.data) drawData(e.data.data);
+    if (!map && e.data.key) { initMap(e.data.key); setTimeout(function() { if (e.data.data) drawData(e.data.data); }, 1200); }
+    else if (map && e.data.data) drawData(e.data.data);
     return;
   }
 });
