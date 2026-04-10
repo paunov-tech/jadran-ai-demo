@@ -672,13 +672,15 @@ export default async function handler(req, res) {
     </body></html>`);
   }
 
-  // Admin auth — identičan pattern kao partner-auth.js
+  // Admin auth — isti pattern kao bookings.js (s .trim())
   const _raw     = req.headers["x-admin-token"] || "";
   const _decoded = (() => { try { return Buffer.from(_raw, "base64").toString("utf8"); } catch { return _raw; } })();
+  const _ADMIN   = (process.env.ADMIN_TOKEN || "").trim();
+  const _CRON    = (process.env.CRON_SECRET  || "").trim();
   const _isCron  = req.headers["x-vercel-cron"] === "1" ||
-                   req.headers.authorization === `Bearer ${process.env.CRON_SECRET}`;
+                   req.headers.authorization === `Bearer ${_CRON}`;
 
-  if (!_isCron && _decoded !== process.env.ADMIN_TOKEN && _raw !== process.env.ADMIN_TOKEN && _raw !== process.env.CRON_SECRET) {
+  if (!_isCron && _decoded.trim() !== _ADMIN && _raw.trim() !== _ADMIN && _raw.trim() !== _CRON) {
     return res.status(401).json({ ok: false, error: "Unauthorized" });
   }
 
