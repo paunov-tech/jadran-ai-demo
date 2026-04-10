@@ -24,7 +24,7 @@
 const PROJECT = "molty-portal";
 const FS      = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents`;
 const FSQ     = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents:runQuery`;
-const FB_KEY  = () => process.env.VITE_FB_API_KEY || process.env.FIREBASE_API_KEY;
+const FB_KEY  = () => process.env.FIREBASE_API_KEY || process.env.VITE_FB_API_KEY;
 const RESEND  = () => process.env.RESEND_API_KEY;
 const FROM_B2B = "Jadran AI Partnerstvo <partneri@jadran.ai>";
 const PARTNER_URL = "https://jadran.ai/partner?action=register";
