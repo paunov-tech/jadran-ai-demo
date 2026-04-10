@@ -1168,8 +1168,7 @@ PRAVILA:
 }
 
 // ── MAIN ASSEMBLER ──
-function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan, yoloCrowdData, campCatalog }) {
-  console.warn(`[buildPrompt] mode=${mode} region=${region} lang=${lang} hasWeather=${!!weather} hasYolo=${!!yoloCrowdData}`);
+function buildPrompt({ mode, region, lang, weather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan, yoloCrowdData, campCatalog, destCity = "" }) {
   const parts = [];
 
   // 0. DATE/TIME CONTEXT — AI mora znati kad je da može dati relevantne savjete
@@ -1478,8 +1477,7 @@ Uvijek navedi izvor: "prema YOLO senzorima", "Sentinel bilježi", "Firestore sta
   if (locPrompt) parts.push(locPrompt);
 
   // 5b. RAB DEEP KNOWLEDGE — inject when destination is Rab (kiosk or delta_context)
-  const destCity = delta_context?.destination?.city || "";
-  const isRabDest = destCity.toLowerCase().includes("rab") || region === "rab";
+  const isRabDest = (destCity || "").toLowerCase().includes("rab") || region === "rab";
   if (isRabDest && region !== "rab") {
     // Already injected if region === "rab", only add when coming from kiosk/delta_context
     const rabPrompt = LOCATIONS["rab"];
@@ -1648,7 +1646,6 @@ TVOJ ZADATAK:
     // B2B redirect not critical — fail silently
   }
 
-  console.warn(`[buildPrompt] completed, parts.length=${parts.length}`);
   return parts.join("\n\n");
 }
 
@@ -2052,10 +2049,10 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
     try {
       // SECURITY: Never use `system` field from req.body — always build server-side
       systemPrompt = mode
-        ? buildPrompt({ mode, region: _reg, lang, weather: resolvedWeather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan, yoloCrowdData, campCatalog })
+        ? buildPrompt({ mode, region: _reg, lang, weather: resolvedWeather, linkCatalog, marinaCatalog, anchorCatalog, cruiseCtx, camperLen, camperHeight, walkieMode, navtexData, userProfile, emergencyAlerts, lastUserMessage, plan, yoloCrowdData, campCatalog, destCity: _dest })
         : 'Ti si Jadran.ai, lokalni turistički vodič za hrvatsku obalu Jadrana. Kratki, korisni odgovori na jeziku korisnika.';
     } catch (promptErr) {
-      console.error('[PROMPT_BUILD_ERROR]', promptErr.message, promptErr.stack);
+      console.error('[PROMPT_BUILD_ERROR]', promptErr.message);
       systemPrompt = 'Ti si Jadran.ai, lokalni turistički vodič za hrvatsku obalu Jadrana. Kratki, korisni odgovori.';
     }
     // Prepend Adriatic region context if available (precise geographic anchor for AI)
@@ -2123,11 +2120,6 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
 4. TONE: No "Super!", "Odlično!", "Great choice!", "Enjoy!" or similar filler openers/closers. Start with the actual answer. End with one concrete next-step recommendation.
 5. LENGTH: Direct answer first. Max 6 paragraphs. Each paragraph max 3 sentences.`;
     systemPrompt = FORMAT_RULES + '\n\n' + systemPrompt;
-
-    // ── DEBUG MODE — return system prompt directly (internal use only) ──
-    if (req.body.__debug === "JADRANTEST_DEBUG_2026") {
-      return res.status(200).json({ _debug: true, promptLen: systemPrompt.length, hasCurrentno: systemPrompt.includes("TRENUTNO VRIJEME"), hasBuildPrompt: systemPrompt.includes("Guardian ANGEL"), excerpt: systemPrompt.substring(0, 800) });
-    }
 
     // ── UV/HEAT INJECTION — inject UV warning directive into last user message ──
     // Claude-sonnet-4-6 does not support assistant prefill.
