@@ -672,12 +672,13 @@ export default async function handler(req, res) {
     </body></html>`);
   }
 
-  // Admin auth for write actions
-  const adminToken = req.headers["x-admin-token"];
+  // Admin auth — token is sent as btoa(PIN) from the admin panel (same pattern as partner-auth.js)
+  const rawToken  = req.headers["x-admin-token"] || "";
+  const adminToken = (() => { try { return Buffer.from(rawToken, "base64").toString("utf8"); } catch { return rawToken; } })();
   const validToken = process.env.ADMIN_TOKEN || process.env.CRON_SECRET;
   const isCron = req.headers["x-vercel-cron"] === "1" || req.headers.authorization === `Bearer ${validToken}`;
 
-  if (!isCron && adminToken !== validToken) {
+  if (!isCron && adminToken !== validToken && rawToken !== validToken) {
     return res.status(401).json({ ok: false, error: "Unauthorized" });
   }
 
