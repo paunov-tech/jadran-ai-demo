@@ -2124,6 +2124,11 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
 5. LENGTH: Direct answer first. Max 6 paragraphs. Each paragraph max 3 sentences.`;
     systemPrompt = FORMAT_RULES + '\n\n' + systemPrompt;
 
+    // ── DEBUG MODE — return system prompt directly (internal use only) ──
+    if (req.body.__debug === "JADRANTEST_DEBUG_2026") {
+      return res.status(200).json({ _debug: true, promptLen: systemPrompt.length, hasCurrentno: systemPrompt.includes("TRENUTNO VRIJEME"), hasBuildPrompt: systemPrompt.includes("Guardian ANGEL"), excerpt: systemPrompt.substring(0, 800) });
+    }
+
     // ── UV/HEAT INJECTION — inject UV warning directive into last user message ──
     // Claude-sonnet-4-6 does not support assistant prefill.
     // We inject a [SYSTEM_NOTE] at the start of the user's last message instead.
