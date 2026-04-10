@@ -262,7 +262,9 @@ export default function AdminPanel() {
       if (search) params.set("search", search);
       const lr = await fetch(`/api/b2b-outreach?${params}`, { headers: { "x-admin-token": tok } });
       if (!lr.ok) {
-        setB2bFetchError(`Lista HTTP ${lr.status} — provjeri token`);
+        const ej = await lr.json().catch(() => ({}));
+        const h = ej.hint || {};
+        setB2bFetchError(`Lista HTTP ${lr.status} | tok_len=${tok.length} raw4=${h.raw4||"?"} dec4=${h.dec4||"?"} dec_len=${h.decoded_len??"-"} adm_len=${h.admin_len??"-"}`);
       } else {
         const ld = await lr.json();
         if (ld.error === "quota_exceeded") { setB2bQuotaError(true); setB2bContacts([]); }
