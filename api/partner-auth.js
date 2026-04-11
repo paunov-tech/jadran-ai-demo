@@ -143,6 +143,42 @@ export default async function handler(req, res) {
     // Check email already exists
     const existing = await fsQuery("partners", "email", "EQUAL", email.toLowerCase().trim());
     if (existing.length > 0) {
+      const prev = existing[0];
+      // Allow pending (pre-created from b2b outreach) to complete registration
+      if (prev.status === "pending" || prev.verified === false) {
+        const passwordHash = await hashPassword(password);
+        await fsSet("partners", prev.id, {
+          passwordHash,
+          name: name || prev.name,
+          type: type || prev.type,
+          city: city || prev.city,
+          address: address || prev.address || "",
+          phone: phone || prev.phone || "",
+          status: "trial",
+          verified: true,
+          trialEnds: TRIAL_ENDS,
+          updatedAt: new Date().toISOString(),
+        });
+        const id = prev.id;
+        // Notify admin + send welcome email (fall through to shared code below)
+        if (ADMIN_EMAIL) {
+          await sendEmail(ADMIN_EMAIL, `🆕 Novi partner (b2b): ${name} (${city}) — ${type}`,
+            `<p>B2B partner je završio registraciju:</p>
+             <ul><li><b>Naziv:</b> ${esc(name)}</li><li><b>Tip:</b> ${esc(type)}</li>
+             <li><b>Grad:</b> ${esc(city)}</li><li><b>Email:</b> ${esc(email)}</li>
+             <li><b>ID:</b> ${esc(id)}</li></ul>`);
+        }
+        await sendEmail(email, "Dobrodošli u JADRAN.ai Partner Program!",
+          `<div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto">
+           <div style="background:linear-gradient(135deg,#0a1628,#0f2a4a);padding:32px;text-align:center;border-radius:12px 12px 0 0">
+             <div style="font-family:Georgia,serif;font-size:28px;font-weight:700;color:#fff">JADRAN<span style="color:#FFB800">.ai</span></div>
+           </div>
+           <div style="padding:28px;background:#fff;border:1px solid #e2e8f0;border-radius:0 0 12px 12px">
+             <h2>Vaš račun je aktiviran!</h2>
+             <p style="color:#64748b">Prijavite se na <strong>jadran.ai/partner</strong>. Trial period do <strong>${TRIAL_ENDS}</strong>.</p>
+           </div></div>`);
+        return res.status(201).json({ ok: true, message: "Račun aktiviran. Prijavite se na jadran.ai/partner" });
+      }
       return res.status(409).json({ error: "Email već postoji. Prijavite se ili resetujte lozinku." });
     }
 
@@ -155,6 +191,7 @@ export default async function handler(req, res) {
       address: address || "",
       phone: phone || "",
       status: "trial",
+      verified: true,
       trialEnds: TRIAL_ENDS,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -210,6 +247,9 @@ export default async function handler(req, res) {
     if (partner.status === "suspended") {
       return res.status(403).json({ error: "Nalog je suspendovan. Kontaktirajte podršku." });
     }
+    if (partner.status === "pending" || partner.verified === false) {
+      return res.status(403).json({ error: "Nalog čeka verifikaciju. Kontaktirajte nas na partneri@jadran.ai" });
+    }
 
     // Create session
     const token     = genToken();
@@ -252,20 +292,23 @@ export default async function handler(req, res) {
   if (action === "admin-list" && req.method === "GET") {
     const raw     = req.headers["x-admin-token"] || "";
     const decoded = (() => { try { return Buffer.from(raw, "base64").toString("utf8"); } catch { return raw; } })();
-    if (decoded !== process.env.ADMIN_TOKEN) return res.status(401).json({ error: "Zabranjen pristup" });
+    if (decoded.trim() !== (process.env.ADMIN_TOKEN || "").trim()) return res.status(401).json({ error: "Zabranjen pristup" });
 
     try {
-      const r = await fetch(
-        `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/partners?key=${FB_KEY}&pageSize=200`
-      );
-      if (!r.ok) return res.status(500).json({ error: "Firestore greška" });
-      const data = await r.json();
-      const docs = (data.documents || []).map(doc => {
-        const p = fromFields(doc.fields || {});
-        const { passwordHash: _, ...safe } = p;
-        return { id: doc.name.split("/").pop(), ...safe };
-      });
-      return res.json({ ok: true, partners: docs });
+      let allDocs = [], pt = null;
+      do {
+        const u = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/partners?key=${FB_KEY}&pageSize=300${pt ? `&pageToken=${pt}` : ""}`;
+        const r2 = await fetch(u);
+        if (!r2.ok) return res.status(500).json({ error: "Firestore greška" });
+        const data = await r2.json();
+        for (const doc of (data.documents || [])) {
+          const p = fromFields(doc.fields || {});
+          const { passwordHash: _, ...safe } = p;
+          allDocs.push({ id: doc.name.split("/").pop(), ...safe });
+        }
+        pt = data.nextPageToken || null;
+      } while (pt);
+      return res.json({ ok: true, partners: allDocs });
     } catch (e) {
       return res.status(500).json({ error: e.message });
     }
@@ -275,14 +318,96 @@ export default async function handler(req, res) {
   if (action === "admin-set-status" && req.method === "POST") {
     const raw     = req.headers["x-admin-token"] || "";
     const decoded = (() => { try { return Buffer.from(raw, "base64").toString("utf8"); } catch { return raw; } })();
-    if (decoded !== process.env.ADMIN_TOKEN) return res.status(401).json({ error: "Zabranjen pristup" });
+    if (decoded.trim() !== (process.env.ADMIN_TOKEN || "").trim()) return res.status(401).json({ error: "Zabranjen pristup" });
 
     const { partnerId, status } = req.body || {};
-    if (!partnerId || !["trial","active","suspended"].includes(status)) {
-      return res.status(400).json({ error: "partnerId i status (trial|active|suspended) su obavezni" });
+    if (!partnerId || !["trial","active","suspended","pending"].includes(status)) {
+      return res.status(400).json({ error: "partnerId i status (trial|active|suspended|pending) su obavezni" });
     }
     await fsSet("partners", partnerId, { status, updatedAt: new Date().toISOString() });
     return res.json({ ok: true });
+  }
+
+  // ── ADMIN: verify pending partner (activates trial) ───────────────
+  if (action === "admin-verify" && req.method === "POST") {
+    const raw     = req.headers["x-admin-token"] || "";
+    const decoded = (() => { try { return Buffer.from(raw, "base64").toString("utf8"); } catch { return raw; } })();
+    if (decoded.trim() !== (process.env.ADMIN_TOKEN || "").trim()) return res.status(401).json({ error: "Zabranjen pristup" });
+
+    const { partnerId } = req.body || {};
+    if (!partnerId) return res.status(400).json({ error: "partnerId je obavezan" });
+
+    await fsSet("partners", partnerId, {
+      status: "trial",
+      verified: true,
+      trialEnds: TRIAL_ENDS,
+      updatedAt: new Date().toISOString(),
+    });
+    return res.json({ ok: true });
+  }
+
+  // ── ADMIN: b2b-prefill — create pending partner cards from b2b_contacts ──
+  if (action === "b2b-prefill" && req.method === "POST") {
+    const raw     = req.headers["x-admin-token"] || "";
+    const decoded = (() => { try { return Buffer.from(raw, "base64").toString("utf8"); } catch { return raw; } })();
+    if (decoded.trim() !== (process.env.ADMIN_TOKEN || "").trim()) return res.status(401).json({ error: "Zabranjen pristup" });
+
+    // Fetch all b2b_contacts (paginated)
+    const contacts = [];
+    let pageToken = null;
+    do {
+      const url = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/b2b_contacts?key=${FB_KEY}&pageSize=300${pageToken ? `&pageToken=${pageToken}` : ""}`;
+      const r = await fetch(url);
+      const data = await r.json();
+      for (const doc of (data.documents || [])) {
+        const f = doc.fields || {};
+        const s = k => f[k]?.stringValue ?? null;
+        const b = k => f[k]?.booleanValue ?? false;
+        contacts.push({
+          email:      s("email"),
+          name:       s("name"),
+          objectName: s("objectName"),
+          type:       s("type"),
+          city:       s("city"),
+          region:     s("region"),
+          address:    s("address"),
+          phone:      s("phone"),
+          paused:     b("paused"),
+        });
+      }
+      pageToken = data.nextPageToken || null;
+    } while (pageToken);
+
+    let created = 0, skipped = 0, errors = 0;
+
+    for (const c of contacts) {
+      if (!c.email || c.paused) { skipped++; continue; }
+
+      // Skip if partner already exists
+      const existing = await fsQuery("partners", "email", "EQUAL", c.email.toLowerCase().trim());
+      if (existing.length > 0) { skipped++; continue; }
+
+      const id = genPartnerId();
+      const ok = await fsSet("partners", id, {
+        id,
+        email:     c.email.toLowerCase().trim(),
+        name:      c.objectName || c.name || c.email,
+        type:      c.type || "smještaj",
+        city:      c.city || "",
+        region:    c.region || "",
+        address:   c.address || "",
+        phone:     c.phone || "",
+        status:    "pending",
+        verified:  false,
+        source:    "b2b_outreach",
+        trialEnds: "2026-12-31",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      if (ok) created++; else errors++;
+    }
+
+    return res.json({ ok: true, total: contacts.length, created, skipped, errors });
   }
 
   return res.status(400).json({ error: "Nepoznata akcija" });

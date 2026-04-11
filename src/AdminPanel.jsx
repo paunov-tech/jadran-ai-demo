@@ -51,6 +51,7 @@ function StatusBadge({ booking }) {
 }
 
 const PARTNER_STATUS_CFG = {
+  pending:   { label: "Na čekanju", color: "#a855f7", bg: "rgba(168,85,247,0.12)" },
   trial:     { label: "Trial",     color: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
   active:    { label: "Aktivan",   color: "#22c55e", bg: "rgba(34,197,94,0.12)"  },
   suspended: { label: "Suspendiran", color: "#ef4444", bg: "rgba(239,68,68,0.12)" },
@@ -225,6 +226,38 @@ export default function AdminPanel() {
       }
     } catch {}
     setStatusChanging(null);
+  };
+
+  const verifyPartner = async (partnerId) => {
+    setStatusChanging(partnerId);
+    try {
+      const r = await fetch("/api/partner-auth?action=admin-verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-token": encTok(token) },
+        body: JSON.stringify({ partnerId }),
+      });
+      if (r.ok) {
+        setPartners(prev => prev.map(p => p.id === partnerId ? { ...p, status: "trial", verified: true } : p));
+        if (selectedPartner?.id === partnerId) setSelectedPartner(p => ({ ...p, status: "trial", verified: true }));
+      }
+    } catch {}
+    setStatusChanging(null);
+  };
+
+  const [prefillStatus, setPrefillStatus] = useState(null);
+  const runB2bPrefill = async () => {
+    setPrefillStatus("running");
+    try {
+      const r = await fetch("/api/partner-auth?action=b2b-prefill", {
+        method: "POST",
+        headers: { "x-admin-token": encTok(token) },
+      });
+      const d = await r.json();
+      setPrefillStatus(d.ok ? `✓ ${d.created} kreirano, ${d.skipped} preskočeno` : `Greška: ${d.error}`);
+      if (d.ok) fetchPartners();
+    } catch (e) {
+      setPrefillStatus(`Greška: ${e.message}`);
+    }
   };
 
   const platformConfirmPB = async (id) => {
@@ -494,18 +527,30 @@ export default function AdminPanel() {
           {/* ── Registrirani sub-tab ── */}
           {partnersSubTab === "registered" && <>
           {/* Stats row */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 28 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 14, marginBottom: 16 }}>
             {[
-              { label: "Ukupno partnera", val: partners.length, color: C.accent },
+              { label: "Ukupno", val: partners.length, color: C.accent },
+              { label: "Na čekanju", val: partners.filter(p => p.status === "pending").length, color: "#a855f7" },
               { label: "Trial",   val: partners.filter(p => p.status === "trial").length,     color: "#f59e0b" },
               { label: "Aktivni", val: partners.filter(p => p.status === "active").length,    color: C.success },
-              { label: "Partner bookingsi", val: partnerBookings.length, color: C.info },
+              { label: "Bookingsi", val: partnerBookings.length, color: C.info },
             ].map(({ label, val, color }) => (
               <div key={label} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "18px 20px" }}>
                 <div style={{ fontSize: 28, fontWeight: 800, color, marginBottom: 4 }}>{val}</div>
                 <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, letterSpacing: "0.5px" }}>{label.toUpperCase()}</div>
               </div>
             ))}
+          </div>
+          {/* B2B Prefill button */}
+          <div style={{ marginBottom: 24, display: "flex", alignItems: "center", gap: 12 }}>
+            <button onClick={runB2bPrefill} disabled={prefillStatus === "running"}
+              style={{ padding: "8px 18px", borderRadius: 10, border: `1px solid #a855f7`, background: "rgba(168,85,247,0.1)",
+                color: "#a855f7", fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+              {prefillStatus === "running" ? "Kreiranje…" : "🔄 B2B Prefill — kreiraj pending kartice"}
+            </button>
+            {prefillStatus && prefillStatus !== "running" && (
+              <span style={{ fontSize: 12, color: prefillStatus.startsWith("✓") ? C.success : "#ef4444" }}>{prefillStatus}</span>
+            )}
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
@@ -568,7 +613,7 @@ export default function AdminPanel() {
                       ["Adresa", selectedPartner.address || "—"],
                       ["Trial do", selectedPartner.trialEnds || "—"],
                       ["Registrovan", selectedPartner.createdAt ? new Date(selectedPartner.createdAt).toLocaleDateString("hr-HR") : "—"],
-                      ["Kapaciteti", Array.isArray(selectedPartner.capacities) ? selectedPartner.capacities.length : 0],
+                      ["Izvor", selectedPartner.source || "direktan"],
                     ].map(([l, v]) => (
                       <div key={l} style={{ background: C.card, borderRadius: 8, padding: "10px 12px" }}>
                         <div style={{ fontSize: 10, color: C.muted, fontWeight: 700, letterSpacing: "0.6px" }}>{l.toUpperCase()}</div>
@@ -580,19 +625,29 @@ export default function AdminPanel() {
                   {/* Status actions */}
                   <div style={{ marginBottom: 16 }}>
                     <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, marginBottom: 8, letterSpacing: "0.6px" }}>STATUS AKCIJE</div>
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {["trial","active","suspended"].map(s => (
-                        <button key={s} onClick={() => setPartnerStatus(selectedPartner.id, s)}
-                          disabled={statusChanging === selectedPartner.id || selectedPartner.status === s}
-                          style={{ padding: "6px 14px", borderRadius: 8, border: `1px solid ${PARTNER_STATUS_CFG[s].color}50`,
-                            background: selectedPartner.status === s ? `${PARTNER_STATUS_CFG[s].color}20` : "transparent",
-                            color: PARTNER_STATUS_CFG[s].color, fontSize: 11, fontWeight: 700,
-                            cursor: selectedPartner.status === s ? "default" : "pointer", fontFamily: "inherit",
-                            opacity: statusChanging === selectedPartner.id ? 0.5 : 1 }}>
-                          {statusChanging === selectedPartner.id ? "…" : s.charAt(0).toUpperCase() + s.slice(1)}
-                        </button>
-                      ))}
-                    </div>
+                    {selectedPartner.status === "pending" ? (
+                      <button onClick={() => verifyPartner(selectedPartner.id)}
+                        disabled={statusChanging === selectedPartner.id}
+                        style={{ padding: "8px 18px", borderRadius: 8, border: "1px solid #22c55e",
+                          background: "rgba(34,197,94,0.15)", color: "#22c55e", fontSize: 12, fontWeight: 700,
+                          cursor: "pointer", fontFamily: "inherit", opacity: statusChanging === selectedPartner.id ? 0.5 : 1 }}>
+                        {statusChanging === selectedPartner.id ? "…" : "✓ Aktiviraj Trial"}
+                      </button>
+                    ) : (
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        {["trial","active","suspended"].map(s => (
+                          <button key={s} onClick={() => setPartnerStatus(selectedPartner.id, s)}
+                            disabled={statusChanging === selectedPartner.id || selectedPartner.status === s}
+                            style={{ padding: "6px 14px", borderRadius: 8, border: `1px solid ${PARTNER_STATUS_CFG[s].color}50`,
+                              background: selectedPartner.status === s ? `${PARTNER_STATUS_CFG[s].color}20` : "transparent",
+                              color: PARTNER_STATUS_CFG[s].color, fontSize: 11, fontWeight: 700,
+                              cursor: selectedPartner.status === s ? "default" : "pointer", fontFamily: "inherit",
+                              opacity: statusChanging === selectedPartner.id ? 0.5 : 1 }}>
+                            {statusChanging === selectedPartner.id ? "…" : s.charAt(0).toUpperCase() + s.slice(1)}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Partner's bookings */}
