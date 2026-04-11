@@ -29,6 +29,7 @@ const FB_KEY  = () => process.env.FIREBASE_API_KEY || process.env.VITE_FB_API_KE
 const RESEND  = () => process.env.RESEND_API_KEY;
 const FROM_B2B = "Jadran AI Partnerstvo <partneri@jadran.ai>";
 const PARTNER_URL = "https://jadran.ai/partner?action=register";
+const EXPLORE_URL = "https://jadran.ai/explore";
 const UNSUBSCRIBE_URL = (email, id) =>
   `https://jadran.ai/api/b2b-outreach?action=pause&email=${encodeURIComponent(email)}&id=${encodeURIComponent(id)}`;
 
@@ -199,44 +200,89 @@ function baseHtml(content, email, id, lang) {
 </div></body></html>`;
 }
 
+// ── TECH PARTNERS FOOTER BLOCK ────────────────────────────────────────────
+function techPartnersBlock(lang) {
+  const label = lang === "de" ? "Technologiepartner" : lang === "en" ? "Technology partners" : "Tehnološki partneri";
+  const by    = lang === "de" ? "Entwickelt von" : lang === "en" ? "Developed by" : "Razvio";
+  return `
+<div style="margin-top:32px;padding-top:24px;border-top:1px solid #e2e8f0;">
+  <p style="font-size:11px;color:#94a3b8;text-align:center;margin:0 0 14px;letter-spacing:1px;text-transform:uppercase">${by} <strong style="color:#334155">SIAL Consulting d.o.o.</strong> &nbsp;·&nbsp; ${label}:</p>
+  <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;align-items:center">
+    <span style="background:#1a1a2e;color:#a78bfa;font-size:10px;font-weight:700;padding:4px 10px;border-radius:4px;letter-spacing:0.5px">ANTHROPIC</span>
+    <span style="background:#1a1a2e;color:#60a5fa;font-size:10px;font-weight:700;padding:4px 10px;border-radius:4px;letter-spacing:0.5px">GOOGLE GEMINI</span>
+    <span style="background:#1a1a2e;color:#34d399;font-size:10px;font-weight:700;padding:4px 10px;border-radius:4px;letter-spacing:0.5px">HERE TECHNOLOGIES</span>
+    <span style="background:#1a1a2e;color:#fb923c;font-size:10px;font-weight:700;padding:4px 10px;border-radius:4px;letter-spacing:0.5px">HETZNER</span>
+    <span style="background:#1a1a2e;color:#f472b6;font-size:10px;font-weight:700;padding:4px 10px;border-radius:4px;letter-spacing:0.5px">STRIPE</span>
+  </div>
+</div>`;
+}
+
 // ── 4 EMAIL TEMPLATES ─────────────────────────────────────────────────────
 function email1(contact) {
   const { lang, name, objectName, city, id, email } = contact;
-  const ctaUrl = `${PARTNER_URL}&utm_source=b2b_email&utm_medium=email&utm_campaign=email1&ref=${id}`;
+  const exploreUrl  = `${EXPLORE_URL}?utm_source=b2b_email&utm_medium=email&utm_campaign=email1&ref=${id}`;
+  const registerUrl = `${PARTNER_URL}&utm_source=b2b_email&utm_medium=email&utm_campaign=email1_reg&ref=${id}`;
 
   const tmpl = {
     hr: {
-      subject: `${objectName || city || "Vaš objekt"} — besplatni AI vodič za vaše goste`,
-      body: `<h2>Vaši gosti pitaju. Vaše osoblje odgovara ručno. Svaki dan.</h2>
+      subject: `${objectName || city || "Vaš objekt"} — AI vodič koji odgovara na sve`,
+      body: `<h2>Stotine pitanja. Stotine odgovora. Svaki dan.</h2>
 <p>${greeting(lang, name)}</p>
-<p>Koliko puta dnevno vaši gosti pitaju: "Gdje je dobra plaža?", "Ima li parking za kamper?", "Koji je restoran otvoren?", "Kako doći do...?"</p>
-<p>Za većinu objekata na Jadranu — odgovor je <strong>30 do 50 puta dnevno</strong>. Na 8 različitih jezika.</p>
-<div class="highlight"><strong>Jadran AI rješava ovaj problem za 20 minuta.</strong><br>Jedan QR kod na recepciji. Gost skenira, otvori AI vodiča na svom jeziku, pita što želi. Vi ne trebate ništa.</div>
-<p>Potpuno besplatno do 1. lipnja 2026.</p>
-<a href="${ctaUrl}" class="cta">Pogledajte kako funkcionira →</a>
-<p style="font-size:13px;color:#94a3b8">Setup traje 20 minuta. Bez tehničkog znanja. Bez kartice.</p>`,
+<p>Vaši gosti pitaju: "Gdje je dobra plaža?", "Može li se kampirati?", "Koji restoran preporučujete?", "Kako do najbliže ljekarne?" — na hrvatskom, njemačkom, talijanskom, engleskom, slovačkom…</p>
+<p>Jadran AI je konciergeu-servis sljedeće generacije. Svaki gost, u sekundi, na svom jeziku, dobiva <strong>precizne, personalizirane odgovore</strong> — o vašem objektu, vašoj destinaciji, prometnim uvjetima, vremenskoj prognozi, eventima u blizini.</p>
+<div class="highlight">
+  <strong>Tehnologija koja stoji iza toga:</strong><br>
+  Kombinacija Anthropic Claude (najnaprednijeg AI na tržištu), Google Gemini, HERE navigacijskih mapa i satelitskih podataka u stvarnom vremenu. Sustav kojeg koriste turistički uredi, hoteli i marine od Kvarnera do Dubrovnika.
+</div>
+<p><strong>Za vaš objekt — besplatno do 1. lipnja 2026.</strong> Jedan QR kod na recepciji. Setup 20 minuta. Bez tehničkog znanja.</p>
+<div style="text-align:center;margin:28px 0">
+  <a href="${exploreUrl}" class="cta">Isprobajte AI vodiča →</a>
+</div>
+<p style="text-align:center;margin:0">
+  <a href="${registerUrl}" style="color:#0ea5e9;font-size:14px;font-weight:600;text-decoration:none">Registrirajte se kao partner →</a>
+</p>
+<p style="font-size:12px;color:#94a3b8;margin-top:20px;text-align:center">Bez kartice · Bez tehničkog znanja · 20 minuta setup</p>
+${techPartnersBlock(lang)}`,
     },
     de: {
-      subject: `${objectName || city || "Ihr Betrieb"} — kostenloser KI-Reiseführer für Ihre Gäste`,
-      body: `<h2>Ihre Gäste fragen. Ihr Personal antwortet manuell. Täglich.</h2>
+      subject: `${objectName || city || "Ihr Betrieb"} — KI-Concierge, der alles beantwortet`,
+      body: `<h2>Hunderte Fragen. Hunderte Antworten. Täglich.</h2>
 <p>${greeting(lang, name)}</p>
-<p>Wie oft fragen Ihre Gäste täglich: "Wo ist ein guter Strand?", "Gibt es Wohnmobil-Parkplätze?", "Welches Restaurant hat offen?", "Wie komme ich zu...?"</p>
-<p>Für die meisten Betriebe an der Adria — die Antwort ist <strong>30 bis 50 Mal täglich</strong>. In 8 verschiedenen Sprachen.</p>
-<div class="highlight"><strong>Jadran AI löst dieses Problem in 20 Minuten.</strong><br>Ein QR-Code an der Rezeption. Der Gast scannt, öffnet den KI-Guide in seiner Sprache, fragt was er will. Sie müssen nichts tun.</div>
-<p>Komplett kostenlos bis 1. Juni 2026.</p>
-<a href="${ctaUrl}" class="cta">So funktioniert es →</a>
-<p style="font-size:13px;color:#94a3b8">Setup dauert 20 Minuten. Kein technisches Wissen. Keine Kreditkarte.</p>`,
+<p>Ihre Gäste fragen: "Wo ist ein guter Strand?", "Kann man zelten?", "Welches Restaurant empfehlen Sie?", "Wo ist die nächste Apotheke?" — auf Deutsch, Kroatisch, Englisch, Italienisch, Slowakisch…</p>
+<p>Jadran AI ist ein Concierge-Service der nächsten Generation. Jeder Gast erhält in Sekunden, in seiner Sprache, <strong>präzise, personalisierte Antworten</strong> — über Ihr Haus, Ihre Destination, Verkehr, Wetter, lokale Events.</p>
+<div class="highlight">
+  <strong>Die Technologie dahinter:</strong><br>
+  Kombination aus Anthropic Claude (dem fortschrittlichsten KI auf dem Markt), Google Gemini, HERE-Navigationskarten und Echtzeit-Satellitendaten. Ein System, das von Tourismusbüros, Hotels und Marinas von Kvarner bis Dubrovnik eingesetzt wird.
+</div>
+<p><strong>Für Ihren Betrieb — kostenlos bis 1. Juni 2026.</strong> Ein QR-Code an der Rezeption. 20 Minuten Setup. Kein technisches Wissen.</p>
+<div style="text-align:center;margin:28px 0">
+  <a href="${exploreUrl}" class="cta">KI-Guide ausprobieren →</a>
+</div>
+<p style="text-align:center;margin:0">
+  <a href="${registerUrl}" style="color:#0ea5e9;font-size:14px;font-weight:600;text-decoration:none">Als Partner registrieren →</a>
+</p>
+<p style="font-size:12px;color:#94a3b8;margin-top:20px;text-align:center">Ohne Kreditkarte · Kein technisches Wissen · 20 Min. Setup</p>
+${techPartnersBlock(lang)}`,
     },
     en: {
-      subject: `${objectName || city || "Your property"} — free AI guide for your guests`,
-      body: `<h2>Your guests ask. Your staff answers manually. Every day.</h2>
+      subject: `${objectName || city || "Your property"} — AI concierge that answers everything`,
+      body: `<h2>Hundreds of questions. Hundreds of answers. Every day.</h2>
 <p>${greeting(lang, name)}</p>
-<p>How many times a day do your guests ask: "Where's a good beach?", "Is there camper parking?", "Which restaurant is open?", "How do I get to...?"</p>
-<p>For most properties on the Adriatic — the answer is <strong>30 to 50 times daily</strong>. In 8 different languages.</p>
-<div class="highlight"><strong>Jadran AI solves this in 20 minutes.</strong><br>One QR code at reception. Guest scans, opens AI guide in their language, asks what they want. You do nothing.</div>
-<p>Completely free until June 1st 2026.</p>
-<a href="${ctaUrl}" class="cta">See how it works →</a>
-<p style="font-size:13px;color:#94a3b8">20-minute setup. No technical knowledge. No credit card.</p>`,
+<p>Your guests ask: "Where's a good beach?", "Can we camp here?", "Which restaurant do you recommend?", "Where's the nearest pharmacy?" — in English, German, Italian, Croatian, Slovak…</p>
+<p>Jadran AI is a next-generation concierge service. Every guest gets <strong>precise, personalised answers</strong> in seconds, in their language — about your property, your destination, traffic conditions, weather, nearby events.</p>
+<div class="highlight">
+  <strong>The technology behind it:</strong><br>
+  A combination of Anthropic Claude (the most advanced AI on the market), Google Gemini, HERE navigation maps, and real-time satellite data. A system used by tourist boards, hotels and marinas from Kvarner to Dubrovnik.
+</div>
+<p><strong>For your property — free until June 1st, 2026.</strong> One QR code at reception. 20-minute setup. No technical knowledge required.</p>
+<div style="text-align:center;margin:28px 0">
+  <a href="${exploreUrl}" class="cta">Try the AI guide →</a>
+</div>
+<p style="text-align:center;margin:0">
+  <a href="${registerUrl}" style="color:#0ea5e9;font-size:14px;font-weight:600;text-decoration:none">Register as a partner →</a>
+</p>
+<p style="font-size:12px;color:#94a3b8;margin-top:20px;text-align:center">No credit card · No technical knowledge · 20-min setup</p>
+${techPartnersBlock(lang)}`,
     },
   };
 
