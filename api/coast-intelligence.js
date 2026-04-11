@@ -498,12 +498,15 @@ async function fetchHERETrafficFlow() {
         count++;
       }
       const avgJam = count > 0 ? totalJam / count : 0;
+      // HERE returns speed in m/s — convert to km/h
+      const rawSpeed    = segs[0]?.currentFlow?.speed    ?? null;
+      const rawFreeFlow = segs[0]?.currentFlow?.freeFlow ?? null;
       results[sec.id] = {
-        jamFactor:     Math.round(avgJam * 10) / 10,
-        status:        jamToStatus(avgJam, anyClosed ? "closed" : "open"),
-        speed:         segs[0]?.currentFlow?.speed ?? null,
-        freeFlow:      segs[0]?.currentFlow?.freeFlow ?? null,
-        segments:      count,
+        jamFactor: Math.round(avgJam * 10) / 10,
+        status:    jamToStatus(avgJam, anyClosed ? "closed" : "open"),
+        speed:     rawSpeed    != null ? Math.round(rawSpeed    * 3.6) : null,
+        freeFlow:  rawFreeFlow != null ? Math.round(rawFreeFlow * 3.6) : null,
+        segments:  count,
       };
     } catch (e) {
       console.warn(`[coast-intel] HERE flow ${sec.id}:`, e.message);
