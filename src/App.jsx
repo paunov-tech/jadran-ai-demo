@@ -2246,45 +2246,63 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           );
         })()}
 
-        {/* ═══ ADRIATIC PULSE — unified weather/sea/UV board ═══ */}
-        <Card style={{ marginBottom: 14, padding: 0, overflow: "hidden", position: "relative" }}>
-          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, opacity: 0.12, pointerEvents: "none" }}>
-            <svg width="100%" height="60" viewBox="0 0 400 60" preserveAspectRatio="none" style={{ display: "block" }}>
-              <path fill={C.accent} d="M0,30 C100,45 200,15 300,30 C350,37 375,25 400,30 L400,60 L0,60 Z">
-                <animate attributeName="d" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
-                  values="M0,30 C100,45 200,15 300,30 C350,37 375,25 400,30 L400,60 L0,60 Z;M0,35 C100,20 200,42 300,28 C350,22 375,38 400,32 L400,60 L0,60 Z;M0,30 C100,45 200,15 300,30 C350,37 375,25 400,30 L400,60 L0,60 Z" />
-              </path>
-              <path fill={C.accent} opacity="0.5" d="M0,35 C80,20 160,45 240,32 C320,20 360,40 400,35 L400,60 L0,60 Z">
-                <animate attributeName="d" dur="5s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
-                  values="M0,35 C80,20 160,45 240,32 C320,20 360,40 400,35 L400,60 L0,60 Z;M0,28 C80,42 160,22 240,38 C320,42 360,25 400,30 L400,60 L0,60 Z;M0,35 C80,20 160,45 240,32 C320,20 360,40 400,35 L400,60 L0,60 Z" />
-              </path>
-            </svg>
-          </div>
-          <div style={{ padding: "16px 20px", position: "relative" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div style={{ ...dm, display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: C.green, boxShadow: `0 0 8px ${C.green}`, animation: "pulse 2s infinite" }} />
-                <span style={{ fontSize: 10, color: C.mut, letterSpacing: 3, fontWeight: 600 }}>ADRIATIC PULSE</span>
+        {/* ═══ JADRAN SENSE™ — unified live weather/sea/UV board ═══ */}
+        {(() => {
+          // Prefer senseData.weather (Open-Meteo, refreshed every 10min with senseData poll)
+          // Fall back to weather state (/api/weather, fetched on coord change)
+          const sw = senseData?.weather;
+          const isLive = !!sw;
+          const seaTemp  = sw?.sea_temp   ?? weather.sea   ?? "—";
+          const airTemp  = sw?.temp       ?? weather.temp  ?? "—";
+          const uvIdx    = sw?.uv         ?? weather.uv    ?? 0;
+          const windVal  = sw ? `${sw.wind_kmh ?? "—"}` : (weather.wind?.split(" ")[1] || "—");
+          const windDir  = sw?.wind_dir   ?? (weather.wind?.split(" ")[0] || "");
+          const waveM    = sw?.wave_m     ?? null;
+          const wxIcon   = sw ? (sw.condition === "vedro" ? "☀️" : sw.condition === "kiša" ? "🌧️" : sw.condition === "oblačno" ? "⛅" : sw.condition === "grmljavina" ? "⛈️" : "🌤️") : (weather.icon || "🌤️");
+          const updatedAt = senseData?.updated ? new Date(senseData.updated).toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" }) : new Date().toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" });
+
+          return (
+            <Card style={{ marginBottom: 14, padding: 0, overflow: "hidden", position: "relative" }}>
+              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, opacity: 0.12, pointerEvents: "none" }}>
+                <svg width="100%" height="60" viewBox="0 0 400 60" preserveAspectRatio="none" style={{ display: "block" }}>
+                  <path fill={C.accent} d="M0,30 C100,45 200,15 300,30 C350,37 375,25 400,30 L400,60 L0,60 Z">
+                    <animate attributeName="d" dur="4s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
+                      values="M0,30 C100,45 200,15 300,30 C350,37 375,25 400,30 L400,60 L0,60 Z;M0,35 C100,20 200,42 300,28 C350,22 375,38 400,32 L400,60 L0,60 Z;M0,30 C100,45 200,15 300,30 C350,37 375,25 400,30 L400,60 L0,60 Z" />
+                  </path>
+                  <path fill={C.accent} opacity="0.5" d="M0,35 C80,20 160,45 240,32 C320,20 360,40 400,35 L400,60 L0,60 Z">
+                    <animate attributeName="d" dur="5s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1"
+                      values="M0,35 C80,20 160,45 240,32 C320,20 360,40 400,35 L400,60 L0,60 Z;M0,28 C80,42 160,22 240,38 C320,42 360,25 400,30 L400,60 L0,60 Z;M0,35 C80,20 160,45 240,32 C320,20 360,40 400,35 L400,60 L0,60 Z" />
+                  </path>
+                </svg>
               </div>
-              <span style={{ ...dm, fontSize: 10, color: C.mut }}>{new Date().toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" })}</span>
-            </div>
-            <div style={{ display: "flex", gap: 0, justifyContent: "space-between" }}>
-              {[
-                { label: {hr:"MORE",de:"MEER",en:"SEA",it:"MARE"}[lang]||"MORE", value: `${weather.sea}°`, sub: "surface", icon: "🌊", color: C.accent },
-                { label: {hr:"ZRAK",de:"LUFT",en:"AIR",it:"ARIA"}[lang]||"ZRAK", value: `${weather.temp}°`, sub: weather.icon, icon: null, color: C.text },
-                { label: "UV", value: weather.uv, sub: weather.uv >= 8 ? "!" : weather.uv >= 5 ? "med" : "low", icon: null, color: weather.uv >= 8 ? C.red : weather.uv >= 5 ? C.warm : C.green },
-                { label: {hr:"VJETAR",de:"WIND",en:"WIND",it:"VENTO"}[lang]||"VJETAR", value: weather.wind?.split(" ")[1] || "—", sub: weather.wind?.split(" ")[0] || "", icon: null, color: C.mut },
-                { label: "🌅", value: weather.sunset || "—", sub: "", icon: null, color: C.warm },
-              ].map((m, i) => (
-                <div key={i} style={{ textAlign: "center", flex: 1 }}>
-                  <div style={{ ...dm, fontSize: 9, color: C.mut, letterSpacing: 1, marginBottom: 4 }}>{m.label}</div>
-                  <div style={{ fontSize: 20, fontWeight: 300, color: m.color, lineHeight: 1 }}>{m.icon || ""}{m.value}</div>
-                  <div style={{ ...dm, fontSize: 10, color: C.mut, marginTop: 2 }}>{m.sub}</div>
+              <div style={{ padding: "16px 20px", position: "relative" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div style={{ ...dm, display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: isLive ? C.green : C.mut, boxShadow: isLive ? `0 0 8px ${C.green}` : "none", animation: isLive ? "pulse 2s infinite" : "none" }} />
+                    <span style={{ fontSize: 10, color: C.mut, letterSpacing: 3, fontWeight: 600 }}>JADRAN SENSE™</span>
+                    {!isLive && <span style={{ fontSize: 9, color: C.mut, opacity: 0.5 }}>~</span>}
+                  </div>
+                  <span style={{ ...dm, fontSize: 10, color: C.mut }}>{updatedAt}</span>
                 </div>
-              ))}
-            </div>
-          </div>
-        </Card>
+                <div style={{ display: "flex", gap: 0, justifyContent: "space-between" }}>
+                  {[
+                    { label: {hr:"MORE",de:"MEER",en:"SEA",it:"MARE"}[lang]||"MORE", value: `${seaTemp}°`, sub: waveM != null ? `${waveM}m` : "surface", icon: "🌊", color: C.accent },
+                    { label: {hr:"ZRAK",de:"LUFT",en:"AIR",it:"ARIA"}[lang]||"ZRAK", value: `${airTemp}°`, sub: wxIcon, icon: null, color: C.text },
+                    { label: "UV", value: uvIdx ?? "—", sub: uvIdx >= 8 ? "!" : uvIdx >= 5 ? "med" : "low", icon: null, color: uvIdx >= 8 ? C.red : uvIdx >= 5 ? C.warm : C.green },
+                    { label: {hr:"VJETAR",de:"WIND",en:"WIND",it:"VENTO"}[lang]||"VJETAR", value: `${windVal}`, sub: windDir, icon: null, color: C.mut },
+                    { label: "🌅", value: weather.sunset || "—", sub: "", icon: null, color: C.warm },
+                  ].map((m, i) => (
+                    <div key={i} style={{ textAlign: "center", flex: 1 }}>
+                      <div style={{ ...dm, fontSize: 9, color: C.mut, letterSpacing: 1, marginBottom: 4 }}>{m.label}</div>
+                      <div style={{ fontSize: 20, fontWeight: 300, color: m.color, lineHeight: 1 }}>{m.icon || ""}{m.value}</div>
+                      <div style={{ ...dm, fontSize: 10, color: C.mut, marginTop: 2 }}>{m.sub}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          );
+        })()}
 
 
         {/* Quick tiles */}
