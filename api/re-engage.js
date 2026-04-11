@@ -56,7 +56,7 @@ async function queryReEngageLeads(reStep) {
             ],
           },
         },
-        limit: 60,
+        limit: 150,
       },
     }),
   });
@@ -94,9 +94,9 @@ function buildReEmail(templateId, email, segmentId, name, leadId) {
   if (templateId === "re_discount") {
     const BODIES = {
       de_camper: `<p>${hi}</p>
-<p>Du hast deinen <strong>${guideName}</strong> fast freigeschaltet — 380+ Reisende aus dem DACH-Raum nutzen ihn bereits diese Saison.</p>
+<p>Du hast deinen <strong>${guideName}</strong> fast freigeschaltet — 1.200+ Reisende aus dem DACH-Raum nutzen ihn bereits diese Saison.</p>
 <p style="background:#fff3cd;border-left:4px solid #f59e0b;padding:10px 14px;border-radius:0 8px 8px 0;color:#92400e"><strong>⚠️ WICHTIG für 2026:</strong> Kroatien hat sein Mautsystem komplett umgestellt — <strong>Free-Flow auf allen Autobahnen</strong>. Keine Schranken mehr, aber Zahlung innerhalb 30 Tage auf hac.hr PFLICHT — sonst Bußgeld bis 500€! Unser Guide erklärt alles Schritt für Schritt.</p>
-<p>Was 380+ DACH-Wohnmobilisten außerdem gefunden haben:</p>
+<p>Was 1.200+ DACH-Wohnmobilisten außerdem gefunden haben:</p>
 <ul style="color:#334155">
   <li>🅿️ Legale Stellplätze direkt am Meer — kostenlos in der Nebensaison</li>
   <li>🌊 Buchten ohne Tagestouristen — nur per Boot oder früh morgens erreichbar</li>
@@ -106,7 +106,7 @@ function buildReEmail(templateId, email, segmentId, name, leadId) {
 ${btn(url, "Guide freischalten →")}${footer}`,
 
       de_family: `<p>${hi}</p>
-<p>Dein <strong>${guideName}</strong> wartet — 380+ Familien aus Deutschland, Österreich und der Schweiz haben ihn bereits benutzt, um Kroatien zu entdecken.</p>
+<p>Dein <strong>${guideName}</strong> wartet — 1.200+ Familien aus Deutschland, Österreich und der Schweiz haben ihn bereits benutzt, um Kroatien zu entdecken.</p>
 <p>Kinderfreundliche Strände mit flachem Wasser, Restaurants ohne Touristenfallen, die beste Anreiseroute für deine Familie — alles auf Deutsch.</p>
 <p><strong>7-Tage-Geld-zurück-Garantie</strong> — kein Risiko.</p>
 ${btn(url, "Jetzt freischalten →")}${footer}`,
@@ -118,24 +118,24 @@ ${btn(url, "Jetzt freischalten →")}${footer}`,
 ${btn(url, "Sblocca la guida →")}${footer}`,
 
       en_cruiser: `<p>${hi}</p>
-<p>Your <strong>${guideName}</strong> is still waiting — 380+ DACH sailors and travellers are already using it this season.</p>
+<p>Your <strong>${guideName}</strong> is still waiting — 1.200+ DACH sailors and travellers are already using it this season.</p>
 <p>Secret anchorages, live Bura forecasts, ACI marina tips, and fish restaurants the locals actually go to — all in English.</p>
 <p><strong>7-day money-back guarantee</strong> — zero risk.</p>
 ${btn(url, "Unlock my sailing guide →")}${footer}`,
 
       en_camper: `<p>${hi}</p>
-<p>Your <strong>${guideName}</strong> is still waiting — 380+ DACH travellers are using it to plan Croatia this summer.</p>
+<p>Your <strong>${guideName}</strong> is still waiting — 1.200+ DACH travellers are using it to plan Croatia this summer.</p>
 <p>Legal camper spots Google Maps doesn't show, height restriction alerts, Bura wind warnings, cheap local restaurants — all in English.</p>
 <p><strong>7-day money-back guarantee</strong> — zero risk.</p>
 ${btn(url, "Unlock my camper guide →")}${footer}`,
 
       en_couple: `<p>${hi}</p>
-<p>Your <strong>${guideName}</strong> is still waiting — 380+ travellers found beaches and restaurants no travel blog has ever mentioned.</p>
+<p>Your <strong>${guideName}</strong> is still waiting — 1.200+ travellers found beaches and restaurants no travel blog has ever mentioned.</p>
 <p>We'll send you to places you'll have to yourself. Guaranteed or your money back within 7 days.</p>
 ${btn(url, "Unlock my Croatia guide →")}${footer}`,
 
       default: `<p>${hi}</p>
-<p>Your <strong>${guideName}</strong> is still waiting — 380+ travellers are already exploring Croatia with JADRAN.AI this season.</p>
+<p>Your <strong>${guideName}</strong> is still waiting — 1.200+ travellers are already exploring Croatia with JADRAN.AI this season.</p>
 <p>Hidden beaches, local restaurants, real-time weather — all AI-powered, in your language.</p>
 <p><strong>7-day money-back guarantee</strong> — zero risk.</p>
 ${btn(url, "Unlock my guide →")}${footer}`,
@@ -185,11 +185,11 @@ function getReSubject(templateId, segmentId, name) {
     re_discount: {
       de_camper: "Kroatien 2026: Free-Flow-Maut, neue Regeln — dein Wohnmobil-Guide erklärt alles 🛣️🚐",
       de_family: "Dein Familien-Kroatien-Guide wartet — hier sind 3 Tipps ⛱️",
-      it_sailor:  "380+ velisti stanno usando la tua guida — sei dentro? ⛵",
-      en_cruiser: "380+ sailors are using their guide — are you? ⛵",
-      en_camper:  "380+ DACH campers are using their guide this summer 🚐",
-      en_couple:  "Secret Croatia spots — 380+ travellers found them 🌊",
-      default:    "380+ travellers are exploring Croatia with JADRAN.AI — are you? 🌊",
+      it_sailor:  "1.200+ velisti stanno usando la tua guida — sei dentro? ⛵",
+      en_cruiser: "1.200+ sailors are using their guide — are you? ⛵",
+      en_camper:  "1.200+ DACH campers are using their guide this summer 🚐",
+      en_couple:  "Secret Croatia spots — 1.200+ travellers found them 🌊",
+      default:    "1.200+ travellers are exploring Croatia with JADRAN.AI — are you? 🌊",
     },
     re_last: {
       de_camper: "⚠️ Neue Maut in Kroatien 2026 — bist du vorbereitet? Bußgeld bis 500€ 🛣️",

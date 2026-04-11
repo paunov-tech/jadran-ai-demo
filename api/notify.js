@@ -5,7 +5,7 @@
 const CORS_ORIGINS = ["https://jadran.ai", "https://monte-negro.ai"];
 const RESEND_API = "https://api.resend.com/emails";
 const FROM = "JADRAN AI <noreply@jadran.ai>";
-const NOTIFY_EMAIL = "info@sialconsulting.com"; // fallback / always CC
+const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || process.env.REPORT_EMAIL;
 
 // Rate limit: 10 notifications/hour per IP (prevents Resend quota drain)
 const _notifyRL = new Map();
@@ -41,8 +41,10 @@ async function getHostEmail(roomCode) {
 async function sendEmail(to, subject, html) {
   const key = process.env.RESEND_API_KEY;
   if (!key) return;
-  const recipients = [NOTIFY_EMAIL];
+  const recipients = [];
+  if (NOTIFY_EMAIL) recipients.push(NOTIFY_EMAIL);
   if (to && to !== NOTIFY_EMAIL) recipients.push(to);
+  if (recipients.length === 0) return;
   await fetch(RESEND_API, {
     method: "POST",
     signal: AbortSignal.timeout(8000),

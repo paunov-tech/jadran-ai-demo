@@ -113,7 +113,7 @@ export default async function handler(req, res) {
 
 async function sendDailyReport(date, campaigns) {
   const key = process.env.RESEND_API_KEY;
-  if (!key) return;
+  if (!key || !process.env.REPORT_EMAIL) return;
 
   const valid = campaigns.filter(c => !c.error && c.impressions !== undefined);
   const totalSpend = valid.reduce((s, c) => s + (c.spend || 0), 0);
@@ -188,7 +188,7 @@ async function sendDailyReport(date, campaigns) {
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       from: "JADRAN.AI <noreply@jadran.ai>",
-      to: process.env.REPORT_EMAIL || "info@sialconsulting.com",
+      to: process.env.REPORT_EMAIL,
       subject: `📊 JADRAN Daily — ${date} · ${totalLeads} lead${totalLeads!==1?"ova":""}, ${totalSpend.toFixed(2)}€${alerts.length>0?" ⚠️":""}`,
       html,
     }),

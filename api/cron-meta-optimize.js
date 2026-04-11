@@ -133,7 +133,7 @@ export default async function handler(req, res) {
 
 async function sendOptimizeReport(date, results) {
   const key = process.env.RESEND_API_KEY;
-  if (!key) return;
+  if (!key || !process.env.REPORT_EMAIL) return;
 
   const paused = results.filter(r => r.action === "pause");
   const flagged = results.filter(r => r.action === "flag");
@@ -189,7 +189,7 @@ async function sendOptimizeReport(date, results) {
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       from: "JADRAN.AI <noreply@jadran.ai>",
-      to: process.env.REPORT_EMAIL || "info@sialconsulting.com",
+      to: process.env.REPORT_EMAIL,
       subject: `🤖 Auto-Optimize ${date} · ${paused.length} pauzirano, ${flagged.length} flagirano`,
       html,
     }),

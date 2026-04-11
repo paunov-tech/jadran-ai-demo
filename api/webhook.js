@@ -88,7 +88,7 @@ async function sendPaymentAlert(email, plan, amount) {
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: "JADRAN AI <noreply@jadran.ai>",
-        to: ["info@sialconsulting.com"],
+        to: [process.env.REPORT_EMAIL || process.env.NOTIFY_EMAIL].filter(Boolean),
         subject: `Nova uplata — ${plan} (${amount ? (amount / 100).toFixed(2) : "?"}€)`,
         html: `<div style="font-family:system-ui,sans-serif;color:#1e293b;max-width:480px;">
           <h2 style="color:#0284c7;">💶 Nova uplata — JADRAN AI</h2>

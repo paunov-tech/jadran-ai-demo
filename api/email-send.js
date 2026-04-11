@@ -63,7 +63,7 @@ async function queryLeadsForStep(step) {
             ],
           },
         },
-        limit: 50, // process 50 per cron run to stay within limits
+        limit: 200,
       },
     }),
   });

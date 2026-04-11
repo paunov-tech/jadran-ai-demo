@@ -33,7 +33,7 @@ async function fetchYolo() {
       const docId = doc.name.split("/").pop();
       let fresh = false;
       if (ts) { const t = new Date(ts).getTime(); fresh = !isNaN(t) && t > cutoff; }
-      if (!fresh) fresh = !/\d{4}-\d{2}-\d{2}/.test(docId);
+      // Bez valjanog timestamp-a: skip — ne uključuj stare dokumente
       if (!fresh) continue;
       const sub = f.sub_region?.stringValue || "other";
       const cnt = parseInt(f.raw_count?.integerValue || "0");
