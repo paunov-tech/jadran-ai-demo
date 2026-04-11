@@ -30,6 +30,7 @@
     "api/np-capacity.js":        { "maxDuration": 20 },
     "api/checkout.js":           { "maxDuration": 20 },
     "api/book.js":               { "maxDuration": 20 },
+    "api/table-book.js":         { "maxDuration": 20 },
     "api/reserve.js":            { "maxDuration": 20 },
     "api/notify.js":             { "maxDuration": 15 },
     "api/daily.js":              { "maxDuration": 15 },

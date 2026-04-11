@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import PartnerPortal from "./PartnerPortal";
 import { DealCards } from "./DealCards";
+import RestaurantFinder from "./RestaurantFinder";
 import { loadGuest, updateGuest, getRoomCode } from "./guestStore";
 import GuestOnboarding from "./GuestOnboarding";
 import { loadDelta, saveDelta } from "./deltaContext";
@@ -2258,8 +2259,9 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           {[
             { k: "parking",   ic: IC.parking, l: t("parking",lang), clr: C.accent, free: true },
             { k: "beach",     ic: IC.beach,   l: t("beaches",lang), clr: "#38bdf8", free: true },
-            { k: "food",      ic: IC.food,    l: ({hr:"Hrana",de:"Essen",en:"Food",it:"Cibo",si:"Hrana",cz:"Jídlo",pl:"Jedzenie"})[lang]||"Hrana", clr: C.terracotta, free: true },
-            { k: "emergency", ic: IC.medic,   l: ({hr:"Hitno",de:"Notfall",en:"Emergency",it:"Emergenza",si:"Nujno",cz:"Nouzové",pl:"Nagłe"})[lang]||"Hitno", clr: C.red, free: true },
+            { k: "food",        ic: IC.food,    l: ({hr:"Hrana",de:"Essen",en:"Food",it:"Cibo",si:"Hrana",cz:"Jídlo",pl:"Jedzenie"})[lang]||"Hrana", clr: C.terracotta, free: true },
+            { k: "restaurants", ic: IC.food,    l: ({hr:"Rezerviraj",de:"Tisch res.",en:"Book table",it:"Prenota",si:"Rezerviraj",cz:"Rezervuj",pl:"Rezerwuj"})[lang]||"Rezerviraj", clr: "#FFB800", free: true },
+            { k: "emergency",   ic: IC.medic,   l: ({hr:"Hitno",de:"Notfall",en:"Emergency",it:"Emergenza",si:"Nujno",cz:"Nouzové",pl:"Nagłe"})[lang]||"Hitno", clr: C.red, free: true },
           ].map(tile => {
             const count = nearbyData?.categories?.[tile.k]?.length;
             return (
@@ -3493,6 +3495,15 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
 
     if (subScreen === "home") return KioskHome();
     if (subScreen === "departure") return KioskDeparture();
+    if (subScreen === "restaurants") return (
+      <>
+        <BackBtn onClick={() => setSubScreen("home")} />
+        <RestaurantFinder lang={lang} initialCity={
+          { "Šibenik":"sibenik", "Korčula":"dubrovnik", "Brač":"split", "Poreč":"rovinj", "Primošten":"sibenik" }[kioskCity]
+          || (kioskCity || "rab").toLowerCase()
+        } />
+      </>
+    );
     if (subScreen === "activities") return KioskActivities();
     if (subScreen === "excursions") return KioskExcursions();
     if (subScreen === "gems") return KioskGems();
