@@ -691,12 +691,12 @@ export default function DeltaDashboard() {
               </div>
             )}
 
+            {/* ── Rab Card QR Generator ─────────────────────────────── */}
+            <RabCardQRSection />
+
           </div>
         </div>
       </div>
-
-      {/* ── Rab Card QR Generator ─────────────────────────────── */}
-      <RabCardQRSection />
 
       <style>{`
         @keyframes pulse {
