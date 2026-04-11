@@ -635,6 +635,36 @@ async function actionPause(query) {
   return { ok: true, message: "Contact paused (unsubscribed)" };
 }
 
+async function actionPreview({ to, emailNum = 1, lang = "hr" }) {
+  if (!to) return { ok: false, error: "to (email) je obavezan" };
+  const key = RESEND();
+  if (!key) return { ok: false, error: "RESEND_API_KEY nije postavljen" };
+
+  const contact = {
+    id: "preview_test",
+    email: to,
+    name: "Marko",
+    objectName: "Hotel Jadran",
+    city: "Split",
+    lang,
+  };
+
+  const templates = { 1: email1, 2: email2, 3: email3, 4: email4 };
+  const fn = templates[parseInt(emailNum)] || email1;
+  const { subject, html } = fn(contact);
+
+  const r = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from: FROM_B2B, to, subject: `[PREVIEW] ${subject}`, html }),
+  });
+  if (!r.ok) {
+    const err = await r.text();
+    return { ok: false, error: err };
+  }
+  return { ok: true, to, emailNum, lang, subject };
+}
+
 async function actionOpenPixel(query) {
   const { id } = query;
   if (id) await fsPatch("b2b_contacts", id, { opened: boolV(true) }).catch(() => {});
@@ -687,11 +717,12 @@ export default async function handler(req, res) {
   try {
     let result;
     if (action === "import") result = await actionImport(req.body || {});
-    else if (action === "add")   result = await actionAdd(req.body || {});
-    else if (action === "send")  result = await actionSend();
-    else if (action === "stats") result = await actionStats();
-    else if (action === "list")  result = await actionList(req.query);
-    else if (action === "pause") result = await actionPause(req.body || req.query);
+    else if (action === "add")     result = await actionAdd(req.body || {});
+    else if (action === "send")    result = await actionSend();
+    else if (action === "stats")   result = await actionStats();
+    else if (action === "list")    result = await actionList(req.query);
+    else if (action === "pause")   result = await actionPause(req.body || req.query);
+    else if (action === "preview") result = await actionPreview(req.body || {});
     else result = { ok: false, error: `Unknown action: ${action}` };
 
     res.json(result);
