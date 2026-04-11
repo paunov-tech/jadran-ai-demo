@@ -202,7 +202,7 @@ function baseHtml(content, email, id, lang) {
 
 // ── TECH PARTNERS FOOTER BLOCK ────────────────────────────────────────────
 function techPartnersBlock(lang) {
-  const label = lang === "de" ? "Technologiepartner" : lang === "en" ? "Technology partners" : "Tehnološki partneri";
+  const label = lang === "de" ? "Powered by" : lang === "en" ? "Powered by" : "Pokreće";
   const by    = lang === "de" ? "Entwickelt von" : lang === "en" ? "Developed by" : "Razvio";
   return `
 <div style="margin-top:32px;padding-top:24px;border-top:1px solid #e2e8f0;">
