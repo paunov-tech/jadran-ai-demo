@@ -3,6 +3,9 @@ import PartnerPortal from "./PartnerPortal";
 import { DealCards } from "./DealCards";
 import RestaurantFinder from "./RestaurantFinder";
 import RabCard from "./RabCard";
+import BeachStatus from "./BeachStatus";
+import OPGDirectory from "./OPGDirectory";
+import WellnessRoutes from "./WellnessRoutes";
 import { loadGuest, updateGuest, getRoomCode } from "./guestStore";
 import GuestOnboarding from "./GuestOnboarding";
 import { loadDelta, saveDelta } from "./deltaContext";
@@ -552,6 +555,20 @@ export default function JadranUnified() {
       return next;
     });
   };
+
+  // ── MY JADRAN: detect returning kiosk user synchronously from localStorage ──
+  const [returningKiosk] = useState(() => {
+    try {
+      const rc = (() => { try { return localStorage.getItem("jadran_room") || ""; } catch { return ""; } })();
+      if (!rc || rc === "DEMO") return null;
+      const raw = localStorage.getItem("jadran_guest_" + rc);
+      if (!raw) return null;
+      const g = JSON.parse(raw);
+      if (g?.phase !== "kiosk") return null;
+      return { city: g.destination || null, lang: g.lang || null, premium: !!g.premium };
+    } catch { return null; }
+  });
+
   const chatEnd = useRef(null);
   // Guest key: roomCode from URL, or deviceId for standalone users
   const roomCode = useRef((() => {
@@ -1678,6 +1695,17 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
   const PreTrip = () => {
     if (subScreen === "onboard") return (
       <div style={{ maxWidth: 540, margin: "32px auto", textAlign: "center" }}>
+        {returningKiosk?.city && (
+          <div onClick={() => { if (returningKiosk.premium) setPremium(true); if (returningKiosk.lang) setLang(returningKiosk.lang); setPhase("kiosk"); setSubScreen("home"); }}
+            style={{ marginBottom: 20, padding: "16px 20px", borderRadius: 18, background: "linear-gradient(135deg,rgba(201,168,76,0.12),rgba(245,215,142,0.06))", border: "1px solid rgba(201,168,76,0.30)", cursor: "pointer", display: "flex", alignItems: "center", gap: 14, textAlign: "left" }}>
+            <span style={{ fontSize: 32 }}>🏝</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ ...dm, fontSize: 13, fontWeight: 700, color: "#F5D78E", letterSpacing: 0.3 }}>My Jadran</div>
+              <div style={{ ...dm, fontSize: 12, color: "rgba(245,215,142,0.6)", marginTop: 2 }}>Nastavi gdje si stao — {returningKiosk.city}</div>
+            </div>
+            <span style={{ color: "#F5D78E", fontSize: 18 }}>→</span>
+          </div>
+        )}
         {onboardStep === 0 && (
           <Card style={{ padding: 40 }}>
             <div style={{ fontSize: 64, marginBottom: 16 }} className="emoji-float">🌊</div>
@@ -2269,6 +2297,11 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
             { k: "restaurants", ic: IC.food,    l: ({hr:"Rezerviraj",de:"Tisch res.",en:"Book table",it:"Prenota",si:"Rezerviraj",cz:"Rezervuj",pl:"Rezerwuj"})[lang]||"Rezerviraj", clr: "#FFB800", free: true },
             { k: "rabcard",     ic: IC.ticket,  l: ({hr:"Rab Card",de:"Rab Card",en:"Rab Card",it:"Rab Card",si:"Rab Card",cz:"Rab Card",pl:"Rab Card"})[lang]||"Rab Card", clr: "#FFB800", free: true },
             { k: "emergency",   ic: IC.medic,   l: ({hr:"Hitno",de:"Notfall",en:"Emergency",it:"Emergenza",si:"Nujno",cz:"Nouzové",pl:"Nagłe"})[lang]||"Hitno", clr: C.red, free: true },
+            ...(kioskCity?.toLowerCase().includes("rab") ? [
+              { k: "beach-status", ic: IC.beach,   l: ({hr:"Plaže",de:"Strände",en:"Beaches",it:"Spiagge"})[lang]||"Plaže", clr: "#38bdf8", free: true },
+              { k: "opg",          ic: IC.shop,    l: ({hr:"OPG",de:"OPG",en:"OPG",it:"OPG"})[lang]||"OPG", clr: "#84cc16", free: true },
+              { k: "wellness",     ic: IC.map,     l: ({hr:"Wellness",de:"Wellness",en:"Wellness",it:"Wellness"})[lang]||"Wellness", clr: "#f472b6", free: true },
+            ] : []),
           ].map(tile => {
             const count = nearbyData?.categories?.[tile.k]?.length;
             return (
@@ -3527,6 +3560,9 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
     if (subScreen === "chat") return KioskChat();
     if (subScreen === "affiliate" && affiliateId) return KioskAffiliate();
     if (subScreen === "emergency") return KioskEmergency();
+    if (subScreen === "beach-status") return (<><BackBtn onClick={() => setSubScreen("home")} /><BeachStatus lang={lang} C={C} dm={dm} hf={hf} /></>);
+    if (subScreen === "opg") return (<><BackBtn onClick={() => setSubScreen("home")} /><OPGDirectory lang={lang} C={C} dm={dm} hf={hf} /></>);
+    if (subScreen === "wellness") return (<><BackBtn onClick={() => setSubScreen("home")} /><WellnessRoutes lang={lang} C={C} dm={dm} hf={hf} /></>);
     if (PRACTICAL[subScreen] || NEARBY_CATS.includes(subScreen)) return KioskDetail();
     return KioskHome();
   };
@@ -3795,17 +3831,34 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
         }}>SIAL Consulting d.o.o. · jadran.ai</div>
       </div>
 
-      {/* Skip button */}
-      <button onClick={() => setSplash(false)} style={{
-        position:"absolute", bottom: 40, fontFamily:"'Outfit',sans-serif",
-        background:"rgba(186,230,253,0.07)", border:"1px solid rgba(186,230,253,0.25)", borderRadius: 20,
-        color:"rgba(186,230,253,0.75)", fontSize: 12, padding:"10px 28px", cursor:"pointer",
-        letterSpacing: 1.5, textTransform:"uppercase", transition:"all 0.2s",
-        animation: "splash-tagline 0.5s ease 1.5s both",
-      }}
-      onMouseEnter={e => { e.currentTarget.style.background="rgba(186,230,253,0.15)"; e.currentTarget.style.color="rgba(186,230,253,1)"; }}
-      onMouseLeave={e => { e.currentTarget.style.background="rgba(186,230,253,0.07)"; e.currentTarget.style.color="rgba(186,230,253,0.75)"; }}
-      >{t("skipBtn",lang)}</button>
+      {/* Skip / My Jadran buttons */}
+      <div style={{ position:"absolute", bottom: 32, display:"flex", flexDirection:"column", alignItems:"center", gap: 12, animation: "splash-tagline 0.5s ease 1.5s both" }}>
+        {returningKiosk?.city && (
+          <button onClick={() => {
+            if (returningKiosk.premium) setPremium(true);
+            if (returningKiosk.lang) setLang(returningKiosk.lang);
+            setPhase("kiosk"); setSubScreen("home"); setSplash(false);
+          }} style={{
+            fontFamily:"'Outfit',sans-serif",
+            background:"linear-gradient(135deg,rgba(201,168,76,0.18),rgba(245,215,142,0.10))",
+            border:"1px solid rgba(201,168,76,0.45)", borderRadius: 22,
+            color:"#F5D78E", fontSize: 14, fontWeight: 600, padding:"12px 32px", cursor:"pointer",
+            letterSpacing: 0.5, transition:"all 0.2s", display:"flex", alignItems:"center", gap: 8,
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background="linear-gradient(135deg,rgba(201,168,76,0.28),rgba(245,215,142,0.18))"; }}
+          onMouseLeave={e => { e.currentTarget.style.background="linear-gradient(135deg,rgba(201,168,76,0.18),rgba(245,215,142,0.10))"; }}
+          >🏝 Nastavi u {returningKiosk.city} →</button>
+        )}
+        <button onClick={() => setSplash(false)} style={{
+          fontFamily:"'Outfit',sans-serif",
+          background:"rgba(186,230,253,0.07)", border:"1px solid rgba(186,230,253,0.25)", borderRadius: 20,
+          color:"rgba(186,230,253,0.75)", fontSize: 12, padding:"10px 28px", cursor:"pointer",
+          letterSpacing: 1.5, textTransform:"uppercase", transition:"all 0.2s",
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background="rgba(186,230,253,0.15)"; e.currentTarget.style.color="rgba(186,230,253,1)"; }}
+        onMouseLeave={e => { e.currentTarget.style.background="rgba(186,230,253,0.07)"; e.currentTarget.style.color="rgba(186,230,253,0.75)"; }}
+        >{t("skipBtn",lang)}</button>
+      </div>
     </div>
   );
   return (
@@ -3884,7 +3937,21 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           {/* Hamburger dropdown */}
           {menuOpen && <>
             <div onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 98 }} />
-            <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 99, minWidth: 210, background: "rgba(5,14,30,0.97)", backdropFilter: "blur(24px)", borderRadius: 14, border: `1px solid ${C.bord}`, boxShadow: "0 12px 40px rgba(0,0,0,0.6)", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 99, minWidth: 220, background: "rgba(5,14,30,0.97)", backdropFilter: "blur(24px)", borderRadius: 14, border: `1px solid ${C.bord}`, boxShadow: "0 12px 40px rgba(0,0,0,0.6)", overflow: "hidden" }}>
+              {returningKiosk?.city && (
+                <button onClick={() => {
+                  setMenuOpen(false);
+                  if (returningKiosk.premium) setPremium(true);
+                  if (returningKiosk.lang) setLang(returningKiosk.lang);
+                  setPhase("kiosk"); setSubScreen("home");
+                }} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", fontSize: 14, fontWeight: 700, background: "linear-gradient(135deg,rgba(201,168,76,0.12),rgba(245,215,142,0.06))", border: "none", borderBottom: `1px solid rgba(201,168,76,0.2)`, cursor: "pointer", width: "100%", fontFamily: "'Outfit',sans-serif", textAlign: "left", color: "#F5D78E" }}>
+                  <span style={{ fontSize: 18 }}>🏝</span>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 0.3 }}>My Jadran</div>
+                    <div style={{ fontSize: 11, color: "rgba(245,215,142,0.6)", fontWeight: 400, marginTop: 1 }}>{returningKiosk.city}</div>
+                  </div>
+                </button>
+              )}
               <button onClick={() => { setMenuOpen(false); setSubScreen("home"); }} style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 18px", color: C.accent, fontSize: 14, fontWeight: 600, background: "none", border: "none", borderBottom: `1px solid ${C.bord}`, cursor: "pointer", width: "100%", fontFamily: "'Outfit',sans-serif", textAlign: "left" }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                 {({hr:"Početna",de:"Startseite",en:"Home",it:"Home",si:"Domov",cz:"Domů",pl:"Strona główna"})[lang]||"Home"}
