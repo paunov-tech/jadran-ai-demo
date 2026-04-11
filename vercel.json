@@ -31,6 +31,8 @@
     "api/checkout.js":           { "maxDuration": 20 },
     "api/book.js":               { "maxDuration": 20 },
     "api/table-book.js":         { "maxDuration": 20 },
+    "api/rab-card.js":           { "maxDuration": 20 },
+    "api/rab-card-scan.js":      { "maxDuration": 10 },
     "api/reserve.js":            { "maxDuration": 20 },
     "api/notify.js":             { "maxDuration": 15 },
     "api/daily.js":              { "maxDuration": 15 },
