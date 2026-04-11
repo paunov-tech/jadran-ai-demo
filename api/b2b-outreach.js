@@ -681,10 +681,7 @@ export default async function handler(req, res) {
   const isCron = req.headers["x-vercel-cron"] === "1" ||
                  req.headers.authorization === `Bearer ${CRON_SECRET}`;
   if (!isCron && (!_tok || _tok.trim() !== ADMIN_TOKEN.trim())) {
-    return res.status(401).json({
-      ok: false, error: "Unauthorized",
-      hint: { raw_len: _raw.length, decoded_len: _tok.length, admin_len: ADMIN_TOKEN.length, raw4: _raw.slice(0,4), dec4: _tok.slice(0,4) },
-    });
+    return res.status(401).json({ ok: false, error: "Unauthorized" });
   }
 
   try {
@@ -695,13 +692,6 @@ export default async function handler(req, res) {
     else if (action === "stats") result = await actionStats();
     else if (action === "list")  result = await actionList(req.query);
     else if (action === "pause") result = await actionPause(req.body || req.query);
-    else if (action === "whoami") result = {
-      ok: true,
-      raw_len: _raw.length,
-      decoded_preview: _tok.slice(0, 4) + "***",
-      admin_len: ADMIN_TOKEN.length,
-      match: _tok.trim() === ADMIN_TOKEN.trim(),
-    };
     else result = { ok: false, error: `Unknown action: ${action}` };
 
     res.json(result);
