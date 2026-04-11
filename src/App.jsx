@@ -4019,41 +4019,60 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
               <button onClick={() => setShowKioskLive(false)} aria-label="Zatvori" style={{ background:"rgba(255,255,255,0.06)", border:`1px solid rgba(14,165,233,0.12)`, borderRadius:10, color:"#94a3b8", fontSize:13, padding:"8px 14px", cursor:"pointer", minHeight:40 }}>✕</button>
             </div>
 
-            {/* Weather row — always shown */}
-            <div style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 14px", borderRadius:14, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.1)", marginBottom:12 }}>
-              <span style={{ fontSize:28 }}>{weather.icon || "🌤"}</span>
-              <div style={{ flex:1 }}>
-                <div style={{ fontSize:20, fontWeight:300, color:"#e2e8f0" }}>{weather.temp ?? "—"}°C</div>
-                <div style={{ fontSize:11, color:"#64748b", marginTop:1 }}>
-                  {weather.condition || ""}
-                  {weather.wind > 0 ? ` · ${({hr:"vjetar",de:"Wind",en:"wind",it:"vento"})[lang]||"wind"} ${weather.wind} km/h` : ""}
-                  {weather.uv > 0 ? ` · UV ${weather.uv}` : ""}
+            {/* Weather + sea row */}
+            <div style={{ display:"flex", gap:8, marginBottom:10 }}>
+              {/* Air */}
+              <div style={{ flex:1, display:"flex", alignItems:"center", gap:10, padding:"10px 12px", borderRadius:12, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.1)" }}>
+                <span style={{ fontSize:24 }}>{weather.icon || "🌤"}</span>
+                <div>
+                  <div style={{ fontSize:18, fontWeight:300, color:"#e2e8f0" }}>{weather.temp ?? "—"}°C</div>
+                  <div style={{ fontSize:10, color:"#64748b", marginTop:1, lineHeight:1.3 }}>
+                    {weather.condition || ""}{weather.wind > 0 ? ` · 💨 ${weather.wind}km/h` : ""}
+                    {weather.uv > 0 ? <span style={{ color: weather.uv >= 8 ? "#ef4444" : weather.uv >= 5 ? "#f59e0b" : "#22c55e" }}> · UV {weather.uv}</span> : null}
+                  </div>
                 </div>
               </div>
-              <div style={{ fontSize:11, color:"#475569", textAlign:"right" }}>📍 {kioskCity}</div>
+              {/* Sea */}
+              <div style={{ flex:1, display:"flex", alignItems:"center", gap:10, padding:"10px 12px", borderRadius:12, background:"rgba(14,165,233,0.05)", border:"1px solid rgba(14,165,233,0.09)" }}>
+                <span style={{ fontSize:24 }}>🌊</span>
+                <div>
+                  <div style={{ fontSize:18, fontWeight:300, color:"#38bdf8" }}>
+                    {senseData?.weather?.sea_temp != null ? `${senseData.weather.sea_temp}°C` : weather.sea ? `${weather.sea}°C` : "—"}
+                  </div>
+                  <div style={{ fontSize:10, color:"#64748b", marginTop:1, lineHeight:1.3 }}>
+                    {({hr:"more",de:"Meer",en:"sea",it:"mare"})[lang]||"sea"}
+                    {senseData?.weather?.wave_m != null ? ` · ${senseData.weather.wave_m}m ${({hr:"val",de:"Welle",en:"wave",it:"onda"})[lang]||"val"}` : ""}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Sense tiles */}
-            <div style={{ display:"grid", gridTemplateColumns: [senseData?.parking, senseData?.beach, senseData?.marina].filter(Boolean).length === 3 ? "1fr 1fr 1fr" : [senseData?.parking, senseData?.beach, senseData?.marina].filter(Boolean).length === 2 ? "1fr 1fr" : "1fr", gap:10 }}>
+            <div style={{ display:"grid", gridTemplateColumns: [senseData?.parking, senseData?.beach, senseData?.marina].filter(Boolean).length === 3 ? "1fr 1fr 1fr" : [senseData?.parking, senseData?.beach, senseData?.marina].filter(Boolean).length === 2 ? "1fr 1fr" : "1fr", gap:8 }}>
               {senseData?.beach && (
-                <div style={{ padding:"14px 10px", borderRadius:14, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.12)", textAlign:"center" }}>
-                  <div style={{ fontSize:24, marginBottom:4 }}>🏖️</div>
-                  <div style={{ fontSize:20, fontWeight:300, color: senseData.beach.crowd==="mirno"?"#22c55e":senseData.beach.crowd==="malo gužve"?"#38bdf8":senseData.beach.crowd==="srednje gužve"?"#f59e0b":"#ef4444" }}>{senseData.beach.occupancy_pct}%</div>
-                  <div style={{ fontSize:10, color:"#64748b", marginTop:2, lineHeight:1.3 }}>{senseData.beach.crowd}</div>
+                <div style={{ padding:"12px 8px", borderRadius:12, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.12)", textAlign:"center" }}>
+                  <div style={{ fontSize:22, marginBottom:3 }}>🏖️</div>
+                  <div style={{ fontSize:19, fontWeight:300, color: senseData.beach.crowd==="mirno"?"#22c55e":senseData.beach.crowd==="malo gužve"?"#38bdf8":senseData.beach.crowd==="srednje gužve"?"#f59e0b":"#ef4444" }}>{senseData.beach.occupancy_pct}%</div>
+                  <div style={{ fontSize:9, color:"#64748b", marginTop:1, lineHeight:1.3 }}>{senseData.beach.crowd}</div>
+                  {senseData.beach.yolo_cams > 0 && <div style={{ fontSize:8, color:"#22c55e", marginTop:2 }}>● {senseData.beach.yolo_cams} CAM</div>}
                 </div>
               )}
               {senseData?.parking && (
-                <div style={{ padding:"14px 10px", borderRadius:14, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.12)", textAlign:"center" }}>
-                  <div style={{ fontSize:24, marginBottom:4 }}>🅿️</div>
-                  <div style={{ fontSize:20, fontWeight:300, color: senseData.parking.status==="slobodno"?"#22c55e":senseData.parking.status==="umjereno"?"#f59e0b":"#ef4444" }}>{senseData.parking.free_spots}<span style={{ fontSize:13, color:"#64748b" }}>/{senseData.parking.total_spots}</span></div>
-                  <div style={{ fontSize:10, color:"#64748b", marginTop:2 }}>{({hr:"slobodnih",de:"frei",en:"free",it:"liberi"})[lang]||"free"}</div>
+                <div style={{ padding:"12px 8px", borderRadius:12, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.12)", textAlign:"center" }}>
+                  <div style={{ fontSize:22, marginBottom:3 }}>🅿️</div>
+                  <div style={{ fontSize:19, fontWeight:300, color: senseData.parking.status==="slobodno"?"#22c55e":senseData.parking.status==="umjereno"?"#f59e0b":"#ef4444" }}>
+                    {senseData.parking.free_spots}<span style={{ fontSize:11, color:"#64748b" }}>/{senseData.parking.total_spots}</span>
+                  </div>
+                  <div style={{ fontSize:9, color:"#64748b", marginTop:1 }}>{({hr:"slobodnih",de:"frei",en:"free",it:"liberi"})[lang]||"free"}</div>
                 </div>
               )}
               {senseData?.marina && (
-                <div style={{ padding:"14px 10px", borderRadius:14, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.12)", textAlign:"center" }}>
-                  <div style={{ fontSize:24, marginBottom:4 }}>⛵</div>
-                  <div style={{ fontSize:20, fontWeight:300, color: senseData.marina.status==="slobodno"?"#22c55e":senseData.marina.status==="umjereno"?"#f59e0b":"#ef4444" }}>{senseData.marina.free_moorings}</div>
-                  <div style={{ fontSize:10, color:"#64748b", marginTop:2 }}>{({hr:"vezova",de:"Plätze",en:"berths",it:"posti"})[lang]||"berths"}</div>
+                <div style={{ padding:"12px 8px", borderRadius:12, background:"rgba(14,165,233,0.06)", border:"1px solid rgba(14,165,233,0.12)", textAlign:"center" }}>
+                  <div style={{ fontSize:22, marginBottom:3 }}>⛵</div>
+                  <div style={{ fontSize:19, fontWeight:300, color: senseData.marina.status==="slobodno"?"#22c55e":senseData.marina.status==="umjereno"?"#f59e0b":"#ef4444" }}>
+                    {senseData.marina.free_moorings}<span style={{ fontSize:11, color:"#64748b" }}>/{senseData.marina.total_berths||30}</span>
+                  </div>
+                  <div style={{ fontSize:9, color:"#64748b", marginTop:1 }}>{({hr:"vezova",de:"Plätze",en:"berths",it:"posti"})[lang]||"berths"}</div>
                 </div>
               )}
               {!senseData && (
@@ -4063,6 +4082,12 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
                 </div>
               )}
             </div>
+            {/* Source note */}
+            {senseData && (
+              <div style={{ marginTop:10, fontSize:9, color:"#334155", textAlign:"center" }}>
+                {senseData.note || (senseData.source === "yolo" ? "LIVE YOLO" : "Procjena")} · {new Date(senseData.updated).toLocaleTimeString("hr-HR",{hour:"2-digit",minute:"2-digit"})}
+              </div>
+            )}
           </div>
         </div>
       )}

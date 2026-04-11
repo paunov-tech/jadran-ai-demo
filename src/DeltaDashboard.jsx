@@ -3,6 +3,7 @@
 // Route: /delta
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { AFFILIATE_DATA, AFFILIATE_TOKENS } from "./affiliates";
 
 const HERE_KEY = import.meta.env.VITE_HERE_API_KEY || "";
 
@@ -143,67 +144,185 @@ function QRCard({ url, label, filename, accent = "#C9A84C" }) {
   );
 }
 
-// ── Full QR section ───────────────────────────────────────────
-function RabCardQRSection() {
-  const TZ_POINTS = [
-    { id: "ferry_terminal", label: "Ferry terminal",  emoji: "⛴" },
-    { id: "beach_rajska",   label: "Plaža Rajska",    emoji: "🏖" },
-    { id: "info_centar",    label: "Info centar Rab", emoji: "ℹ" },
-    { id: "stari_grad",     label: "Stari grad",      emoji: "🏛" },
-    { id: "marina_rab",     label: "Marina Rab",      emoji: "⛵" },
-    { id: "park_komrcar",   label: "Park Komrčar",    emoji: "🌲" },
-  ];
-  const AFFILIATES = [
-    { id: "blackjack", tk: "sial2026", city: "rab",    label: "Black Jack",       emoji: "🃏" },
-    { id: "eufemija",  tk: "rov2026",  city: "rovinj", label: "Konoba Eufemija",  emoji: "🐟" },
-  ];
+// ── TZ location QR points by city ────────────────────────────
+const TZ_POINTS = [
+  { id: "ferry_terminal",  label: "Ferry Terminal",   emoji: "⛴", city: "rab"    },
+  { id: "beach_rajska",    label: "Plaža Rajska",     emoji: "🏖", city: "rab"    },
+  { id: "info_centar",     label: "Info centar Rab",  emoji: "ℹ️", city: "rab"    },
+  { id: "stari_grad",      label: "Stari grad",       emoji: "🏛", city: "rab"    },
+  { id: "marina_rab",      label: "Marina Rab",       emoji: "⛵", city: "rab"    },
+  { id: "park_komrcar",    label: "Park Komrčar",     emoji: "🌲", city: "rab"    },
+  { id: "luka_rovinj",     label: "Luka Rovinj",      emoji: "⚓", city: "rovinj" },
+  { id: "sv_eufemija_rov", label: "Sv. Eufemija",     emoji: "⛪", city: "rovinj" },
+  { id: "info_rovinj",     label: "Info centar",      emoji: "ℹ️", city: "rovinj" },
+  { id: "stara_gradska",   label: "Stara gradska",    emoji: "🏛", city: "rovinj" },
+];
+
+// ── Build all QR items from TZ + Affiliates ───────────────────
+function buildQRItems() {
+  const tz = TZ_POINTS.map(pt => ({
+    id:     `tz-${pt.id}`,
+    rawId:  pt.id,
+    label:  pt.label,
+    emoji:  pt.emoji,
+    city:   pt.city,
+    type:   "tz",
+    url:    `https://jadran.ai/?kiosk=${pt.city}&tz=${pt.id}&action=card`,
+    accent: "#C9A84C",
+  }));
+  const aff = Object.entries(AFFILIATE_DATA).map(([id, a]) => ({
+    id:    `aff-${id}`,
+    rawId: id,
+    label: a.name,
+    emoji: a.emoji || "⭐",
+    city:  (a.city || "").toLowerCase(),
+    type:  "affiliate",
+    url:   `https://jadran.ai/?kiosk=${(a.city||"").toLowerCase()}&affiliate=${id}&tk=${AFFILIATE_TOKENS[id]||""}&action=card`,
+    accent: "#0ea5e9",
+  }));
+  return [...tz, ...aff];
+}
+
+// ── QR Manager — slide-in drawer ─────────────────────────────
+function QRManager({ onClose }) {
+  const [tab,    setTab]    = useState("all");
+  const [view,   setView]   = useState("table"); // table | grid
+  const [search, setSearch] = useState("");
+  const [copied, setCopied] = useState(null);
+
+  const ALL = buildQRItems();
+  const cities = ["all", ...new Set(ALL.map(i => i.city).filter(Boolean).sort())];
+
+  const filtered = ALL.filter(item => {
+    if (tab !== "all" && item.city !== tab) return false;
+    if (search && !`${item.label} ${item.city}`.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  function copyLink(item) {
+    navigator.clipboard?.writeText(item.url).catch(() => {});
+    setCopied(item.id);
+    setTimeout(() => setCopied(c => c === item.id ? null : c), 1600);
+  }
 
   return (
-    <div style={{ padding: "28px 20px", borderTop: "1px solid rgba(201,168,76,0.08)", marginTop: 8 }}>
-      {/* Section header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: "#C9A84C", letterSpacing: ".1em", textTransform: "uppercase" }}>
-          🪪 Rab Card
+    <div style={{ position: "fixed", inset: 0, zIndex: 500, background: "rgba(4,10,22,0.80)", backdropFilter: "blur(6px)", display: "flex" }}
+      onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{
+        marginLeft: "auto", width: "min(100vw, 860px)",
+        background: "#050d1c", borderLeft: "1px solid rgba(14,165,233,0.14)",
+        display: "flex", flexDirection: "column", overflow: "hidden",
+        animation: "slideInRight 0.22s cubic-bezier(0.16,1,0.3,1)",
+      }}>
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "13px 18px", borderBottom: "1px solid rgba(14,165,233,0.1)", flexShrink: 0 }}>
+          <span style={{ fontSize: 18 }}>🪪</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#C9A84C", letterSpacing: ".06em" }}>QR Manager</div>
+            <div style={{ fontSize: 10, color: "#475569", marginTop: 1 }}>{ALL.length} kodova · {cities.length - 1} destinacija</div>
+          </div>
+          <button onClick={() => setView(v => v === "table" ? "grid" : "table")}
+            style={{ padding: "5px 11px", borderRadius: 6, background: "rgba(14,165,233,0.08)", border: "1px solid rgba(14,165,233,0.15)", color: "#7dd3fc", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
+            {view === "table" ? "⊞ Grid" : "≡ Tabla"}
+          </button>
+          <button onClick={onClose}
+            style={{ padding: "5px 11px", borderRadius: 6, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#fca5a5", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>
+            ✕
+          </button>
         </div>
-        <div style={{ fontSize: 10, color: "#3d3520", letterSpacing: ".06em", textTransform: "uppercase", marginTop: 1 }}>
-          QR kodovi za štampu
+
+        {/* Tabs + search */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 18px", borderBottom: "1px solid rgba(14,165,233,0.07)", flexShrink: 0, flexWrap: "wrap" }}>
+          {cities.map(c => {
+            const cnt = c === "all" ? ALL.length : ALL.filter(i => i.city === c).length;
+            return (
+              <button key={c} onClick={() => setTab(c)} style={{
+                padding: "4px 12px", borderRadius: 14, fontSize: 11, cursor: "pointer",
+                background: tab === c ? "rgba(14,165,233,0.14)" : "transparent",
+                border: `1px solid ${tab === c ? "rgba(14,165,233,0.32)" : "rgba(14,165,233,0.09)"}`,
+                color: tab === c ? "#7dd3fc" : "#475569", textTransform: "capitalize", fontFamily: "inherit",
+              }}>
+                {c === "all" ? "Sve" : c} <span style={{ opacity: 0.6 }}>({cnt})</span>
+              </button>
+            );
+          })}
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Pretraži..."
+            style={{ marginLeft: "auto", padding: "5px 11px", background: "rgba(14,165,233,0.05)", border: "1px solid rgba(14,165,233,0.1)", borderRadius: 8, color: "#e2e8f0", fontSize: 12, outline: "none", width: 150, fontFamily: "inherit" }}
+          />
+        </div>
+
+        {/* Content */}
+        <div style={{ flex: 1, overflow: "auto", padding: "10px 18px 20px" }}>
+          {view === "table" ? (
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ fontSize: 9, color: "#475569", textTransform: "uppercase", letterSpacing: ".08em" }}>
+                  {["Naziv", "Grad", "Tip", "URL", ""].map((h, i) => (
+                    <th key={i} style={{ textAlign: i === 4 ? "right" : "left", padding: "6px 8px", borderBottom: "1px solid rgba(14,165,233,0.09)", fontWeight: 700 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(item => (
+                  <tr key={item.id} style={{ borderBottom: "1px solid rgba(14,165,233,0.05)" }}>
+                    <td style={{ padding: "7px 8px", fontSize: 12, color: "#e2e8f0", whiteSpace: "nowrap" }}>
+                      <span style={{ marginRight: 6 }}>{item.emoji}</span>{item.label}
+                    </td>
+                    <td style={{ padding: "7px 8px", fontSize: 11, color: "#64748b", textTransform: "capitalize" }}>{item.city}</td>
+                    <td style={{ padding: "7px 8px" }}>
+                      <span style={{ fontSize: 9, padding: "2px 7px", borderRadius: 10, fontWeight: 700,
+                        background: item.type === "tz" ? "rgba(201,168,76,0.12)" : "rgba(14,165,233,0.09)",
+                        color: item.type === "tz" ? "#C9A84C" : "#7dd3fc" }}>
+                        {item.type === "tz" ? "TZ" : "Partner"}
+                      </span>
+                    </td>
+                    <td style={{ padding: "7px 8px", fontSize: 10, color: "#334155", maxWidth: 260 }}>
+                      <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.url}</div>
+                    </td>
+                    <td style={{ padding: "7px 8px", textAlign: "right" }}>
+                      <div style={{ display: "flex", gap: 5, justifyContent: "flex-end" }}>
+                        <button onClick={() => copyLink(item)} style={{
+                          padding: "3px 9px", borderRadius: 5, fontSize: 10, cursor: "pointer", fontFamily: "inherit",
+                          background: copied === item.id ? "rgba(34,197,94,0.12)" : "rgba(14,165,233,0.07)",
+                          border: `1px solid ${copied === item.id ? "rgba(34,197,94,0.28)" : "rgba(14,165,233,0.14)"}`,
+                          color: copied === item.id ? "#86efac" : "#7dd3fc",
+                        }}>{copied === item.id ? "✓" : "⎘ Link"}</button>
+                        <button onClick={() => {
+                          const qrSrc = `https://quickchart.io/qr?text=${encodeURIComponent(item.url)}&size=200&margin=1&ecLevel=M&dark=0a0c10&light=FFFFFF`;
+                          downloadQR(qrSrc, `${item.emoji} ${item.label}`, `qr-${item.rawId}.png`);
+                        }} style={{
+                          padding: "3px 9px", borderRadius: 5, fontSize: 10, cursor: "pointer", fontFamily: "inherit",
+                          background: item.type === "tz" ? "rgba(201,168,76,0.1)" : "rgba(14,165,233,0.07)",
+                          border: `1px solid ${item.type === "tz" ? "rgba(201,168,76,0.22)" : "rgba(14,165,233,0.14)"}`,
+                          color: item.accent,
+                        }}>⬇ PNG</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(172px,1fr))", gap: 10 }}>
+              {filtered.map(item => (
+                <QRCard
+                  key={item.id}
+                  url={item.url}
+                  label={`${item.emoji} ${item.label}`}
+                  filename={`qr-${item.rawId}.png`}
+                  accent={item.accent}
+                />
+              ))}
+            </div>
+          )}
+          {filtered.length === 0 && (
+            <div style={{ textAlign: "center", padding: "48px 20px", color: "#334155", fontSize: 13 }}>
+              Nema rezultata{search ? ` za "${search}"` : ""}
+            </div>
+          )}
         </div>
       </div>
-      <div style={{ fontSize: 12, color: "#334155", marginBottom: 22 }}>
-        Svaki QR vodi na personaliziranu karticu s atribucijom lokacije. Preuzmite PNG za print, ili kopirajte link.
-      </div>
-
-      {/* TZ locations */}
-      <div style={{ fontSize: 10, color: "#475569", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
-        Turistička zajednica — ulazne točke
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: 10, marginBottom: 24 }}>
-        {TZ_POINTS.map(pt => (
-          <QRCard
-            key={pt.id}
-            url={`https://jadran.ai/?kiosk=rab&tz=${pt.id}&action=card`}
-            label={`${pt.emoji} ${pt.label}`}
-            filename={`rab-card-qr-${pt.id}.png`}
-            accent="#C9A84C"
-          />
-        ))}
-      </div>
-
-      {/* Affiliate partners */}
-      <div style={{ fontSize: 10, color: "#475569", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
-        Affiliate partneri
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: 10 }}>
-        {AFFILIATES.map(af => (
-          <QRCard
-            key={af.id}
-            url={`https://jadran.ai/?kiosk=${af.city}&affiliate=${af.id}&tk=${af.tk}&action=card`}
-            label={`${af.emoji} ${af.label}`}
-            filename={`rab-card-qr-${af.id}.png`}
-            accent="#0ea5e9"
-          />
-        ))}
-      </div>
+      <style>{`@keyframes slideInRight { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`}</style>
     </div>
   );
 }
@@ -326,6 +445,7 @@ export default function DeltaDashboard() {
   const [briefingTs, setBriefTs]  = useState(null);
   const [intelErr, setIntelErr]   = useState(null);
   const [mapReady, setMapReady]   = useState(false);
+  const [showQRManager, setShowQRManager] = useState(false);
 
   // Send data to coast map iframe
   const pushToMap = useCallback((data) => {
@@ -417,6 +537,14 @@ export default function DeltaDashboard() {
           {intelTs && <span>Senzori: {intelTs}</span>}
           {briefingTs && <span>AI: {briefingTs}</span>}
           {intelErr && <span style={{ color: "#f97316" }}>⚠ {intelErr}</span>}
+          <button
+            onClick={() => setShowQRManager(true)}
+            style={{
+              background: "rgba(201,168,76,0.1)", border: "1px solid rgba(201,168,76,0.22)",
+              color: "#C9A84C", borderRadius: 7, padding: "4px 12px", cursor: "pointer",
+              fontSize: 11, fontFamily: "inherit",
+            }}
+          >🪪 QR Manager</button>
           <button
             onClick={() => { fetchIntel(); fetchBriefing(); }}
             style={{
@@ -691,12 +819,12 @@ export default function DeltaDashboard() {
               </div>
             )}
 
-            {/* ── Rab Card QR Generator ─────────────────────────────── */}
-            <RabCardQRSection />
-
           </div>
         </div>
       </div>
+
+      {/* ── QR Manager drawer ── */}
+      {showQRManager && <QRManager onClose={() => setShowQRManager(false)} />}
 
       <style>{`
         @keyframes pulse {
