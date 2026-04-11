@@ -408,7 +408,7 @@ export default function DeltaDashboard() {
                   Live webcami — Windy ({intel.webcams.length})
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                  {intel.webcams.slice(0, 24).map(w => (
+                  {intel.webcams.slice(0, 48).map(w => (
                     <a key={w.id} href={w.url} target="_blank" rel="noopener noreferrer"
                       style={{ textDecoration: "none", display: "block" }}>
                       {w.preview ? (

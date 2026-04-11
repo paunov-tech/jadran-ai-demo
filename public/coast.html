@@ -265,7 +265,8 @@ function drawData(data) {
     var ts    = data.ts ? new Date(data.ts).toLocaleTimeString("hr-HR", { hour:"2-digit", minute:"2-digit" }) : "";
     var total = (data.yolo && data.yolo.total) || 0;
     var ac    = (data.yolo && data.yolo.active) || 0;
-    document.getElementById("status").textContent = "DELTA " + ts + " · " + total + " det · " + ac + " senzora";
+    var wcams = (data.webcams || []).length;
+    document.getElementById("status").textContent = "DELTA " + ts + " · " + total + " det · " + ac + " senzora · " + wcams + " webcam";
   } catch(err) {
     console.error("coast.html drawData error:", err);
   }

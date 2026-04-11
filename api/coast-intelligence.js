@@ -287,27 +287,52 @@ async function fetchWindyForecast() {
 }
 
 // ─── Windy Webcams ────────────────────────────────────────────────────────────
+// 4 zones × 4 pages (offsets 0,50,100,150) = up to 800 raw hits
+// Filtered to HR Adriatic + 50km inland bounding box
 async function fetchWindyWebcams() {
   if (!WINDY_WEBCAM_KEY) return [];
-  // Query 3 zones along the Adriatic coast (max radius 250km, max limit 50 per call)
+
   const ZONES = [
-    { lat: 45.1, lng: 13.9, r: 200, label: "Istra+Kvarner" },
-    { lat: 43.7, lng: 15.9, r: 200, label: "Dalmacija sjever" },
-    { lat: 42.8, lng: 17.6, r: 200, label: "Dalmacija jug+DBK" },
+    { lat: 45.2, lng: 13.8, r: 220 },  // Istra + sjev. Kvarner
+    { lat: 44.4, lng: 15.0, r: 220 },  // Kvarner + Zadar
+    { lat: 43.5, lng: 16.2, r: 220 },  // Split + Šibenik + Makarska
+    { lat: 42.7, lng: 17.8, r: 200 },  // Dubrovnik + jug
   ];
+  const OFFSETS = [0, 50, 100, 150];
+
+  // Croatian Adriatic coast + 50km inland
+  const LAT_MIN = 42.3, LAT_MAX = 46.0;
+  const LNG_MIN = 13.0, LNG_MAX = 18.5;
+
   const seen = new Set();
   const all  = [];
-  try {
-    await Promise.all(ZONES.map(async z => {
-      const r = await fetch(
-        `https://api.windy.com/webcams/api/v3/webcams?nearby=${z.lat},${z.lng},${z.r}&limit=50&include=player,images&lang=en`,
-        { headers: { "x-windy-api-key": WINDY_WEBCAM_KEY }, signal: AbortSignal.timeout(10000) }
-      );
-      if (!r.ok) { console.warn(`[coast-intel] Windy ${z.label} HTTP`, r.status); return; }
-      const data = await r.json();
+
+  // Build all 16 requests
+  const requests = [];
+  for (const z of ZONES) {
+    for (const offset of OFFSETS) {
+      requests.push({ ...z, offset });
+    }
+  }
+
+  await Promise.allSettled(requests.map(async ({ lat, lng, r, offset }) => {
+    try {
+      const url = `https://api.windy.com/webcams/api/v3/webcams?nearby=${lat},${lng},${r}&limit=50&offset=${offset}&include=player,images&lang=en`;
+      const resp = await fetch(url, {
+        headers: { "x-windy-api-key": WINDY_WEBCAM_KEY },
+        signal: AbortSignal.timeout(12000),
+      });
+      if (!resp.ok) {
+        console.warn(`[coast-intel] Windy HTTP ${resp.status} zone ${lat},${lng} off=${offset}`);
+        return;
+      }
+      const data = await resp.json();
       for (const w of (data.webcams || [])) {
         if (w.status !== "active") continue;
-        if (!w.location?.latitude || !w.location?.longitude) continue;
+        const wlat = w.location?.latitude;
+        const wlng = w.location?.longitude;
+        if (!wlat || !wlng) continue;
+        if (wlat < LAT_MIN || wlat > LAT_MAX || wlng < LNG_MIN || wlng > LNG_MAX) continue;
         if (seen.has(w.webcamId)) continue;
         seen.add(w.webcamId);
         all.push({
@@ -315,21 +340,21 @@ async function fetchWindyWebcams() {
           title:   w.title || "",
           city:    w.location?.city || "",
           country: w.location?.country || "",
-          lat:     w.location.latitude,
-          lng:     w.location.longitude,
-          preview: w.player?.day?.previewUrl || w.player?.live?.previewUrl || null,
+          lat:     wlat,
+          lng:     wlng,
+          preview: w.player?.day?.previewUrl  ||
+                   w.player?.live?.previewUrl ||
+                   w.images?.current?.preview  || null,
           url:     `https://www.windy.com/webcams/${w.webcamId}`,
         });
       }
-    }));
-  } catch (e) {
-    console.warn("[coast-intel] Windy webcams:", e.message);
-  }
-  // Sort by view count proximity to Adriatic coast (lng 13-19, lat 42-46)
-  return all
-    .filter(w => w.lng >= 12.5 && w.lng <= 20 && w.lat >= 41.5 && w.lat <= 47)
-    .sort((a, b) => a.id - b.id)
-    .slice(0, 120);
+    } catch (e) {
+      console.warn("[coast-intel] Windy webcam fetch:", e.message);
+    }
+  }));
+
+  console.log(`[coast-intel] Windy webcams: ${all.length} unique in HR bbox`);
+  return all.sort((a, b) => a.id - b.id);
 }
 
 // ─── NASA FIRMS active fires ──────────────────────────────────────────────────
