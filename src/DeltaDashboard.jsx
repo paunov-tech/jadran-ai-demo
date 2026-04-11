@@ -6,6 +6,208 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 const HERE_KEY = import.meta.env.VITE_HERE_API_KEY || "";
 
+// ── Premium QR download helper ────────────────────────────────
+async function downloadQR(qrSrc, label, filename) {
+  const W = 440, H = 540;
+  const canvas = document.createElement("canvas");
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d");
+
+  // Background
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, "#0c0e13"); bg.addColorStop(1, "#14181f");
+  ctx.fillStyle = bg;
+  ctx.beginPath(); ctx.roundRect(0, 0, W, H, 24); ctx.fill();
+
+  // Gold top edge
+  const tg = ctx.createLinearGradient(0, 0, W, 0);
+  tg.addColorStop(0.05, "transparent"); tg.addColorStop(0.25, "#8B6914");
+  tg.addColorStop(0.5, "#F5D78E");     tg.addColorStop(0.75, "#8B6914");
+  tg.addColorStop(0.95, "transparent");
+  ctx.fillStyle = tg; ctx.fillRect(0, 0, W, 2);
+
+  // JADRAN.ai wordmark
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#C9A84C";
+  ctx.font = "bold 22px Georgia, serif";
+  ctx.fillText("JADRAN.ai", W / 2, 52);
+
+  ctx.fillStyle = "#3d3520";
+  ctx.font = "11px Arial";
+  ctx.letterSpacing = "2px";
+  ctx.fillText("RAB CARD", W / 2, 74);
+
+  // QR image
+  try {
+    const img = await new Promise((res, rej) => {
+      const i = new Image(); i.crossOrigin = "anonymous";
+      i.onload = () => res(i); i.onerror = rej;
+      i.src = qrSrc;
+    });
+    // White QR frame
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath(); ctx.roundRect(W/2-130, 95, 260, 260, 14); ctx.fill();
+    ctx.drawImage(img, W/2-118, 107, 236, 236);
+  } catch { /* QR load failed — skip */ }
+
+  // Location label
+  ctx.fillStyle = "#e8e0d0";
+  ctx.font = "bold 17px Arial";
+  ctx.fillText(label.replace(/[^\w\s·-]/gu, "").trim() || label, W / 2, 400);
+
+  // Scan instruction
+  ctx.fillStyle = "#475569";
+  ctx.font = "13px Arial";
+  ctx.fillText("Skeniraj za besplatnu Rab Card", W / 2, 428);
+
+  // Bottom gold line
+  const bg2 = ctx.createLinearGradient(0, 0, W, 0);
+  bg2.addColorStop(0.1, "transparent"); bg2.addColorStop(0.4, "#8B6914");
+  bg2.addColorStop(0.6, "#8B6914");    bg2.addColorStop(0.9, "transparent");
+  ctx.fillStyle = bg2; ctx.fillRect(0, H - 2, W, 2);
+
+  // jadran.ai footer
+  ctx.fillStyle = "#2a2416";
+  ctx.font = "10px Arial";
+  ctx.fillText("jadran.ai", W / 2, H - 14);
+
+  const a = document.createElement("a");
+  a.download = filename; a.href = canvas.toDataURL("image/png"); a.click();
+}
+
+// ── Premium QR card component ─────────────────────────────────
+function QRCard({ url, label, filename, accent = "#C9A84C" }) {
+  const qrSrc = `https://quickchart.io/qr?text=${encodeURIComponent(url)}&size=200&margin=1&ecLevel=M&dark=0a0c10&light=FFFFFF`;
+  const [dl, setDl] = useState(false);
+
+  async function handleDownload() {
+    setDl(true);
+    await downloadQR(qrSrc, label, filename).catch(() => window.open(qrSrc, "_blank"));
+    setTimeout(() => setDl(false), 1500);
+  }
+
+  return (
+    <div style={{
+      background: "linear-gradient(145deg,#0c0e13,#14181f)",
+      border: `1px solid ${accent}22`,
+      borderRadius: 16, overflow: "hidden",
+      boxShadow: `0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 ${accent}18`,
+      display: "flex", flexDirection: "column",
+    }}>
+      {/* Gold top line */}
+      <div style={{ height: 2, background: `linear-gradient(90deg,transparent,${accent}88,transparent)` }} />
+
+      <div style={{ padding: "16px 14px 14px", textAlign: "center", flex: 1 }}>
+        {/* QR */}
+        <div style={{
+          display: "inline-block", background: "#fff",
+          borderRadius: 10, padding: 8, marginBottom: 12,
+          boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+        }}>
+          <img src={qrSrc} alt={label} width={120} height={120}
+            style={{ display: "block", borderRadius: 4 }} crossOrigin="anonymous" />
+        </div>
+
+        {/* Label */}
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#e8e0d0", marginBottom: 3, lineHeight: 1.3 }}>
+          {label}
+        </div>
+        <div style={{ fontSize: 10, color: "#3d3520", marginBottom: 12, letterSpacing: ".04em" }}>
+          Rab Card · JADRAN.ai
+        </div>
+
+        {/* Buttons */}
+        <div style={{ display: "flex", gap: 6 }}>
+          <button onClick={handleDownload} disabled={dl} style={{
+            flex: 1, padding: "7px 0", borderRadius: 8, border: "none",
+            background: dl ? `${accent}30` : `linear-gradient(135deg,${accent},#8B6914)`,
+            color: dl ? accent : "#0a0c10",
+            fontSize: 11, fontWeight: 700, cursor: dl ? "default" : "pointer",
+            letterSpacing: ".04em",
+          }}>
+            {dl ? "✓" : "⬇ PNG"}
+          </button>
+          <a href={url} target="_blank" rel="noopener noreferrer" style={{
+            flex: 1, padding: "7px 0", borderRadius: 8,
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            color: "#475569", fontSize: 11, fontWeight: 600,
+            textDecoration: "none", textAlign: "center",
+            display: "block",
+          }}>
+            ↗ link
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Full QR section ───────────────────────────────────────────
+function RabCardQRSection() {
+  const TZ_POINTS = [
+    { id: "ferry_terminal", label: "Ferry terminal",  emoji: "⛴" },
+    { id: "beach_rajska",   label: "Plaža Rajska",    emoji: "🏖" },
+    { id: "info_centar",    label: "Info centar Rab", emoji: "ℹ" },
+    { id: "stari_grad",     label: "Stari grad",      emoji: "🏛" },
+    { id: "marina_rab",     label: "Marina Rab",      emoji: "⛵" },
+    { id: "park_komrcar",   label: "Park Komrčar",    emoji: "🌲" },
+  ];
+  const AFFILIATES = [
+    { id: "blackjack", tk: "sial2026", city: "rab",    label: "Black Jack",       emoji: "🃏" },
+    { id: "eufemija",  tk: "rov2026",  city: "rovinj", label: "Konoba Eufemija",  emoji: "🐟" },
+  ];
+
+  return (
+    <div style={{ padding: "28px 20px", borderTop: "1px solid rgba(201,168,76,0.08)", marginTop: 8 }}>
+      {/* Section header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: "#C9A84C", letterSpacing: ".1em", textTransform: "uppercase" }}>
+          🪪 Rab Card
+        </div>
+        <div style={{ fontSize: 10, color: "#3d3520", letterSpacing: ".06em", textTransform: "uppercase", marginTop: 1 }}>
+          QR kodovi za štampu
+        </div>
+      </div>
+      <div style={{ fontSize: 12, color: "#334155", marginBottom: 22 }}>
+        Svaki QR vodi na personaliziranu karticu s atribucijom lokacije. Preuzmite PNG za print, ili kopirajte link.
+      </div>
+
+      {/* TZ locations */}
+      <div style={{ fontSize: 10, color: "#475569", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
+        Turistička zajednica — ulazne točke
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: 10, marginBottom: 24 }}>
+        {TZ_POINTS.map(pt => (
+          <QRCard
+            key={pt.id}
+            url={`https://jadran.ai/?kiosk=rab&tz=${pt.id}&action=card`}
+            label={`${pt.emoji} ${pt.label}`}
+            filename={`rab-card-qr-${pt.id}.png`}
+            accent="#C9A84C"
+          />
+        ))}
+      </div>
+
+      {/* Affiliate partners */}
+      <div style={{ fontSize: 10, color: "#475569", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 12 }}>
+        Affiliate partneri
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: 10 }}>
+        {AFFILIATES.map(af => (
+          <QRCard
+            key={af.id}
+            url={`https://jadran.ai/?kiosk=${af.city}&affiliate=${af.id}&tk=${af.tk}&action=card`}
+            label={`${af.emoji} ${af.label}`}
+            filename={`rab-card-qr-${af.id}.png`}
+            accent="#0ea5e9"
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const POLL_INTEL    = 60000;   // 60s — coast data
 const POLL_BRIEFING = 300000;  // 5 min — AI briefing
 
@@ -494,61 +696,7 @@ export default function DeltaDashboard() {
       </div>
 
       {/* ── Rab Card QR Generator ─────────────────────────────── */}
-      <div style={{ padding: "24px 20px", borderTop: "1px solid rgba(14,165,233,0.08)", marginTop: 8 }}>
-        <div style={{ fontSize: 11, color: "#FFB800", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 16 }}>
-          🪪 Rab Card — QR kodovi za štampu
-        </div>
-
-        {/* TZ entry points */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 10, color: "#475569", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 10 }}>
-            TZ lokacije
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: 10 }}>
-            {[
-              { id: "ferry_terminal",  label: "⛴ Ferry terminal" },
-              { id: "beach_rajska",    label: "🏖️ Plaža Rajska" },
-              { id: "info_centar",     label: "ℹ Info centar Rab" },
-              { id: "stari_grad",      label: "🏛️ Stari grad" },
-              { id: "marina_rab",      label: "⛵ Marina Rab" },
-              { id: "park_komrcar",    label: "🌲 Park Komrčar" },
-            ].map(pt => {
-              const url = `https://jadran.ai/?kiosk=rab&tz=${pt.id}&action=card`;
-              const qr  = `https://quickchart.io/qr?text=${encodeURIComponent(url)}&size=120&margin=1`;
-              return (
-                <div key={pt.id} style={{ background: "rgba(255,184,0,0.04)", border: "1px solid rgba(255,184,0,0.12)", borderRadius: 12, padding: 12, textAlign: "center" }}>
-                  <img src={qr} alt={pt.label} width={100} height={100} style={{ borderRadius: 6, background: "#fff", padding: 4, display: "block", margin: "0 auto 8px" }} />
-                  <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 6 }}>{pt.label}</div>
-                  <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#475569", textDecoration: "none" }}>↗ link</a>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Affiliate entry points */}
-        <div>
-          <div style={{ fontSize: 10, color: "#475569", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 10 }}>
-            Affiliate partneri
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: 10 }}>
-            {[
-              { id: "blackjack", tk: "sial2026", city: "rab",    label: "🃏 Black Jack" },
-              { id: "eufemija",  tk: "rov2026",  city: "rovinj", label: "🐟 Konoba Eufemija" },
-            ].map(af => {
-              const url = `https://jadran.ai/?kiosk=${af.city}&affiliate=${af.id}&tk=${af.tk}&action=card`;
-              const qr  = `https://quickchart.io/qr?text=${encodeURIComponent(url)}&size=120&margin=1`;
-              return (
-                <div key={af.id} style={{ background: "rgba(14,165,233,0.04)", border: "1px solid rgba(14,165,233,0.1)", borderRadius: 12, padding: 12, textAlign: "center" }}>
-                  <img src={qr} alt={af.label} width={100} height={100} style={{ borderRadius: 6, background: "#fff", padding: 4, display: "block", margin: "0 auto 8px" }} />
-                  <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 6 }}>{af.label}</div>
-                  <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#475569", textDecoration: "none" }}>↗ link</a>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+      <RabCardQRSection />
 
       <style>{`
         @keyframes pulse {
