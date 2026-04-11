@@ -289,29 +289,47 @@ async function fetchWindyForecast() {
 // ─── Windy Webcams ────────────────────────────────────────────────────────────
 async function fetchWindyWebcams() {
   if (!WINDY_WEBCAM_KEY) return [];
+  // Query 3 zones along the Adriatic coast (max radius 250km, max limit 50 per call)
+  const ZONES = [
+    { lat: 45.1, lng: 13.9, r: 200, label: "Istra+Kvarner" },
+    { lat: 43.7, lng: 15.9, r: 200, label: "Dalmacija sjever" },
+    { lat: 42.8, lng: 17.6, r: 200, label: "Dalmacija jug+DBK" },
+  ];
+  const seen = new Set();
+  const all  = [];
   try {
-    const r = await fetch(
-      "https://api.windy.com/webcams/api/v3/webcams?nearby=44.0,16.0,350&limit=15&include=player,images&lang=en",
-      { headers: { "x-windy-api-key": WINDY_WEBCAM_KEY }, signal: AbortSignal.timeout(8000) }
-    );
-    if (!r.ok) { console.warn("[coast-intel] Windy webcams HTTP", r.status); return []; }
-    const data = await r.json();
-    return (data.webcams || [])
-      .filter(w => w.status === "active" && w.location?.latitude && w.location?.longitude)
-      .slice(0, 12)
-      .map(w => ({
-        id:      w.webcamId,
-        title:   w.title || "",
-        city:    w.location?.city || "",
-        lat:     w.location.latitude,
-        lng:     w.location.longitude,
-        preview: w.player?.day?.previewUrl || w.player?.live?.previewUrl || null,
-        url:     `https://www.windy.com/webcams/${w.webcamId}`,
-      }));
+    await Promise.all(ZONES.map(async z => {
+      const r = await fetch(
+        `https://api.windy.com/webcams/api/v3/webcams?nearby=${z.lat},${z.lng},${z.r}&limit=50&include=player,images&lang=en`,
+        { headers: { "x-windy-api-key": WINDY_WEBCAM_KEY }, signal: AbortSignal.timeout(10000) }
+      );
+      if (!r.ok) { console.warn(`[coast-intel] Windy ${z.label} HTTP`, r.status); return; }
+      const data = await r.json();
+      for (const w of (data.webcams || [])) {
+        if (w.status !== "active") continue;
+        if (!w.location?.latitude || !w.location?.longitude) continue;
+        if (seen.has(w.webcamId)) continue;
+        seen.add(w.webcamId);
+        all.push({
+          id:      w.webcamId,
+          title:   w.title || "",
+          city:    w.location?.city || "",
+          country: w.location?.country || "",
+          lat:     w.location.latitude,
+          lng:     w.location.longitude,
+          preview: w.player?.day?.previewUrl || w.player?.live?.previewUrl || null,
+          url:     `https://www.windy.com/webcams/${w.webcamId}`,
+        });
+      }
+    }));
   } catch (e) {
     console.warn("[coast-intel] Windy webcams:", e.message);
-    return [];
   }
+  // Sort by view count proximity to Adriatic coast (lng 13-19, lat 42-46)
+  return all
+    .filter(w => w.lng >= 12.5 && w.lng <= 20 && w.lat >= 41.5 && w.lat <= 47)
+    .sort((a, b) => a.id - b.id)
+    .slice(0, 120);
 }
 
 // ─── NASA FIRMS active fires ──────────────────────────────────────────────────

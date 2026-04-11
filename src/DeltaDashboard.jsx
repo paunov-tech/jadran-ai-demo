@@ -258,7 +258,7 @@ export default function DeltaDashboard() {
                 fontSize: 12, color: "#94a3b8",
               }}>
                 <span style={{ color: "#0ea5e9", fontWeight: 700, fontSize: 15 }}>{intel.yolo?.total || 0}</span>
-                {" "}detekcija · {intel.yolo?.active || 0} aktivnih senzora
+                {" "}detekcija · {intel.yolo?.active || 0} senzora · {(intel.webcams || []).length} webcam{(intel.webcams || []).length !== 1 ? "a" : ""}
               </div>
               {criticalCount > 0 && (
                 <div style={{
@@ -408,7 +408,7 @@ export default function DeltaDashboard() {
                   Live webcami — Windy ({intel.webcams.length})
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                  {intel.webcams.slice(0, 8).map(w => (
+                  {intel.webcams.slice(0, 24).map(w => (
                     <a key={w.id} href={w.url} target="_blank" rel="noopener noreferrer"
                       style={{ textDecoration: "none", display: "block" }}>
                       {w.preview ? (
