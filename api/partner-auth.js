@@ -9,9 +9,19 @@ import { promisify } from "util";
 
 const scryptAsync = promisify(scrypt);
 const FB_PROJECT  = "molty-portal";
-const FB_KEY      = process.env.VITE_FB_API_KEY;
-const TRIAL_ENDS  = "2026-04-30";
+const FB_KEY      = process.env.VITE_FB_API_KEY || process.env.FIREBASE_API_KEY;
+const TRIAL_ENDS  = "2026-07-31";
 const ADMIN_EMAIL = process.env.ADMIN_NOTIFY_EMAIL || process.env.RESEND_FROM_EMAIL;
+
+// Rate limiting: max 5 register/login attempts per IP per 15 min
+const _rl = new Map();
+function rlOk(ip, action, max = 5) {
+  const key = `${ip}:${action}`, now = Date.now(), win = 15 * 60 * 1000;
+  const e = _rl.get(key);
+  if (!e || now > e.r) { _rl.set(key, { c: 1, r: now + win }); return true; }
+  if (e.c >= max) return false;
+  e.c++; return true;
+}
 
 const CORS = {
   "Access-Control-Allow-Origin":  "*",
@@ -131,6 +141,9 @@ export default async function handler(req, res) {
 
   // ── REGISTER ────────────────────────────────────────────────────
   if (action === "register" && req.method === "POST") {
+    const ip = (req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || "unknown").split(",")[0].trim();
+    if (!rlOk(ip, "register", 5)) return res.status(429).json({ error: "Previše pokušaja. Pričekajte 15 minuta." });
+
     const { email, password, name, type, city, address, phone } = req.body || {};
 
     if (!email || !password || !name || !type || !city) {
@@ -234,6 +247,9 @@ export default async function handler(req, res) {
 
   // ── LOGIN ────────────────────────────────────────────────────────
   if (action === "login" && req.method === "POST") {
+    const ip = (req.headers["x-forwarded-for"] || req.headers["x-real-ip"] || "unknown").split(",")[0].trim();
+    if (!rlOk(ip, "login", 10)) return res.status(429).json({ error: "Previše pokušaja prijave. Pričekajte 15 minuta." });
+
     const { email, password } = req.body || {};
     if (!email || !password) return res.status(400).json({ error: "Email i lozinka su obavezni" });
 
@@ -378,33 +394,49 @@ export default async function handler(req, res) {
       pageToken = data.nextPageToken || null;
     } while (pageToken);
 
+    // Bulk-load all existing partner emails (avoid N individual queries)
+    const existingEmails = new Set();
+    let ept = null;
+    do {
+      const eu = `https://firestore.googleapis.com/v1/projects/${FB_PROJECT}/databases/(default)/documents/partners?key=${FB_KEY}&pageSize=300${ept ? `&pageToken=${ept}` : ""}`;
+      const er = await fetch(eu);
+      const ed = await er.json();
+      for (const doc of (ed.documents || [])) {
+        const em = doc.fields?.email?.stringValue;
+        if (em) existingEmails.add(em.toLowerCase().trim());
+      }
+      ept = ed.nextPageToken || null;
+    } while (ept);
+
     let created = 0, skipped = 0, errors = 0;
+    const now = new Date().toISOString();
 
-    for (const c of contacts) {
-      if (!c.email || c.paused) { skipped++; continue; }
+    // Write new partners in parallel batches of 20 to stay within timeout
+    const toCreate = contacts.filter(c => c.email && !c.paused && !existingEmails.has(c.email.toLowerCase().trim()));
+    skipped = contacts.length - toCreate.length;
 
-      // Skip if partner already exists
-      const existing = await fsQuery("partners", "email", "EQUAL", c.email.toLowerCase().trim());
-      if (existing.length > 0) { skipped++; continue; }
-
-      const id = genPartnerId();
-      const ok = await fsSet("partners", id, {
-        id,
-        email:     c.email.toLowerCase().trim(),
-        name:      c.objectName || c.name || c.email,
-        type:      c.type || "smještaj",
-        city:      c.city || "",
-        region:    c.region || "",
-        address:   c.address || "",
-        phone:     c.phone || "",
-        status:    "pending",
-        verified:  false,
-        source:    "b2b_outreach",
-        trialEnds: "2026-12-31",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      });
-      if (ok) created++; else errors++;
+    for (let i = 0; i < toCreate.length; i += 20) {
+      const batch = toCreate.slice(i, i + 20);
+      const results = await Promise.all(batch.map(c => {
+        const id = genPartnerId();
+        return fsSet("partners", id, {
+          id,
+          email:     c.email.toLowerCase().trim(),
+          name:      c.objectName || c.name || c.email,
+          type:      c.type || "smještaj",
+          city:      c.city || "",
+          region:    c.region || "",
+          address:   c.address || "",
+          phone:     c.phone || "",
+          status:    "pending",
+          verified:  false,
+          source:    "b2b_outreach",
+          trialEnds: "2026-12-31",
+          createdAt: now,
+          updatedAt: now,
+        });
+      }));
+      results.forEach(ok => ok ? created++ : errors++);
     }
 
     return res.json({ ok: true, total: contacts.length, created, skipped, errors });

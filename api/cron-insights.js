@@ -41,7 +41,7 @@ export default async function handler(req, res) {
   const adminDecoded = (() => { try { return Buffer.from(adminRaw, "base64").toString("utf8"); } catch { return adminRaw; } })();
   const ADMIN = (process.env.ADMIN_TOKEN || "").trim();
   const isAdmin = adminDecoded.trim() === ADMIN;
-  if (secret !== process.env.CRON_SECRET && secret !== "1" && !isAdmin) return res.status(401).json({ error: "unauthorized" });
+  if (secret !== process.env.CRON_SECRET && !isAdmin) return res.status(401).json({ error: "unauthorized" });
 
   const token = process.env.META_CAPI_TOKEN;
   const account = process.env.META_AD_ACCOUNT_ID;

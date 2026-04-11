@@ -285,7 +285,7 @@ export default async function handler(req, res) {
       `[Jadran.ai] New booking — ${id} · ${guestName.trim()} → ${destinationName || destination}`,
       operatorEmailHtml(flat, operatorConfirmUrl, adminUrl)
     ));
-    await Promise.all(emailPromises).catch(() => {});
+    await Promise.all(emailPromises).catch(e => console.error("[reserve] email send failed:", e.message));
 
     return res.json({ id, booking: flat });
   }

@@ -6,7 +6,7 @@
     "api/satellite.js":          { "maxDuration": 60 },
     "api/chat.js":               { "maxDuration": 60 },
     "api/room-book.js":          { "maxDuration": 15 },
-    "api/partner-auth.js":       { "maxDuration": 15 },
+    "api/partner-auth.js":       { "maxDuration": 300 },
     "api/partner-data.js":       { "maxDuration": 15 },
     "api/partner-calendar.js":   { "maxDuration": 15 },
     "api/partner-bookings.js":   { "maxDuration": 15 },
@@ -37,7 +37,8 @@
     "api/re-engage.js":          { "maxDuration": 30 },
     "api/cron-reengage.js":      { "maxDuration": 30 },
     "api/cron-insights.js":      { "maxDuration": 60 },
-    "api/cron-meta-optimize.js": { "maxDuration": 60 }
+    "api/cron-meta-optimize.js": { "maxDuration": 60 },
+    "api/cron-b2b.js":           { "maxDuration": 60 }
   },
   "headers": [
     {
@@ -207,7 +208,8 @@
     { "path": "/api/cron-audience",      "schedule": "0 3 * * *"    },
     { "path": "/api/cron-reengage",      "schedule": "0 */12 * * *" },
     { "path": "/api/cron-insights",      "schedule": "0 8 * * *"    },
-    { "path": "/api/cron-meta-optimize", "schedule": "0 7 */3 * *"  }
+    { "path": "/api/cron-meta-optimize", "schedule": "0 7 */3 * *"  },
+    { "path": "/api/cron-b2b",           "schedule": "0 9 * * *"    }
   ],
   "redirects": [
     { "source": "/blog/", "destination": "/blog", "permanent": true }

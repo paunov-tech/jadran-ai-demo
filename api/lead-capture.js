@@ -132,7 +132,7 @@ export default async function handler(req, res) {
     Promise.all([
       fireMetaCAPI(email, "Lead", { ip, ua, fbp, fbc, eventId, externalId }),
       sendWelcomeEmail(email, name, segmentId),
-    ]).catch(() => {});
+    ]).catch(e => console.error("[lead-capture] side-effects failed:", e.message));
 
     return res.status(200).json({ ok: true, leadId });
   } catch (e) {
