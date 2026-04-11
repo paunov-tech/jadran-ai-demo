@@ -203,27 +203,91 @@ async function fetchSeaCache() {
   }
 }
 
-// ─── HAK traffic ─────────────────────────────────────────────────────────────
+// ─── A1/A6/A7/D8 Highway sections — with real GPS checkpoints ───────────────
+const HIGHWAY_SECTIONS = [
+  { id: "a1_zgb_kar", lat: 45.37, lng: 15.56, name: "A1 Zagreb–Karlovac",    road: "A1",
+    match: /zagreb|karlovac|lučko|lucko|demerje|jankomir|sv\.\s*ivan|sveti ivan/i },
+  { id: "a6_kar_rij", lat: 45.18, lng: 14.70, name: "A6/A7 Karlovac–Rijeka", road: "A6",
+    match: /rijeka|opatija|rupa|bosiljevo|a6|a7|gorski|vrata|delnice/i },
+  { id: "a1_kar_gos", lat: 44.85, lng: 15.30, name: "A1 Karlovac–Gospić",    road: "A1",
+    match: /gospić|gospic|plaški|plaski|kapela|mala kapela|brinje/i },
+  { id: "a1_gos_zad", lat: 44.18, lng: 15.18, name: "A1 Gospić–Zadar",       road: "A1",
+    match: /zadar|sv\.\s*rok|sveti rok|maslenica|posedarje|zaton|nadin/i },
+  { id: "a1_zad_sib", lat: 43.72, lng: 15.93, name: "A1 Zadar–Šibenik",      road: "A1",
+    match: /šibenik|sibenik|benkovac|skradin|ražanj|razanj/i },
+  { id: "a1_sib_spl", lat: 43.51, lng: 16.30, name: "A1 Šibenik–Split",      road: "A1",
+    match: /split|trogir|dugopolje|klis|solin/i },
+  { id: "a1_spl_plo", lat: 43.12, lng: 17.02, name: "A1 Split–Ploče",        road: "A1",
+    match: /ploče|ploce|makarska|vrgorac|baška\s*voda|baska\s*voda|brela/i },
+  { id: "d8_plo_dbk", lat: 42.93, lng: 17.52, name: "D8 Ploče–Dubrovnik",    road: "D8",
+    match: /dubrovnik|neum|pelješac|peljesac|ston|metković|metkovic|opuzen/i },
+];
+
+// Classify HAK incident severity from title/desc text
+function hakSeverity(text) {
+  const t = text.toLowerCase();
+  if (/zatvoreno|obustav|nesreća|nesreca|sudar|prevrnuto|požar|pozar/.test(t)) return "critical";
+  if (/zastoj|gužva|guzva|kolona|dugo čekanje|dugo cekanje|radovi.*zatv/.test(t))  return "warning";
+  if (/radovi|usporen|smanjena brzina|naplatn|granica|čekanje|cekanje/.test(t))     return "info";
+  return "info";
+}
+
+// ─── HAK traffic — returns raw items + section assignments ──────────────────
 async function fetchHAK() {
   try {
     const r = await fetch("https://www.hak.hr/info/stanje-na-cestama/feed/", {
       signal: AbortSignal.timeout(5000),
       headers: { "User-Agent": "Mozilla/5.0 (compatible; JadranBot/1.0)" },
     });
-    if (!r.ok) return [];
+    if (!r.ok) return { items: [], sections: [] };
     const xml = await r.text();
-    const items = [];
+
+    const rawItems = [];
     const rx = /<item>([\s\S]*?)<\/item>/g;
     let m;
-    while ((m = rx.exec(xml)) !== null && items.length < 8) {
+    while ((m = rx.exec(xml)) !== null) {
       const chunk = m[1];
-      const title   = (/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/.exec(chunk) || /<title>([^<]*)<\/title>/.exec(chunk))?.[1]?.trim() || "";
+      const title   = (/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/.exec(chunk)   || /<title>([^<]*)<\/title>/.exec(chunk))?.[1]?.trim()   || "";
       const desc    = (/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/.exec(chunk) || /<description>([^<]*)<\/description>/.exec(chunk))?.[1]?.replace(/<[^>]+>/g, "").trim() || "";
       const pubDate = /<pubDate>([^<]*)<\/pubDate>/.exec(chunk)?.[1]?.trim() || "";
-      if (title) items.push({ title, desc: desc.slice(0, 200), pubDate, source: "HAK" });
+      if (title) rawItems.push({ title, desc: desc.slice(0, 200), pubDate });
     }
-    return items;
-  } catch (e) { return []; }
+
+    // Map each incident to a highway section
+    const sectionMap = {};   // section id → { incidents, maxSeverity }
+    for (const item of rawItems) {
+      const combined = item.title + " " + item.desc;
+      for (const sec of HIGHWAY_SECTIONS) {
+        if (sec.match.test(combined)) {
+          if (!sectionMap[sec.id]) sectionMap[sec.id] = { incidents: [], maxSeverity: "clear" };
+          const sev = hakSeverity(combined);
+          sectionMap[sec.id].incidents.push({ title: item.title, desc: item.desc, severity: sev });
+          // escalate max severity
+          if (sev === "critical")                                         sectionMap[sec.id].maxSeverity = "critical";
+          else if (sev === "warning"  && sectionMap[sec.id].maxSeverity !== "critical") sectionMap[sec.id].maxSeverity = "warning";
+          else if (sev === "info"     && sectionMap[sec.id].maxSeverity === "clear")    sectionMap[sec.id].maxSeverity = "info";
+          break; // assign to first matching section only
+        }
+      }
+    }
+
+    // Build sections array (all sections, whether they have incidents or not)
+    const sections = HIGHWAY_SECTIONS.map(sec => ({
+      id:       sec.id,
+      lat:      sec.lat,
+      lng:      sec.lng,
+      name:     sec.name,
+      road:     sec.road,
+      status:   sectionMap[sec.id]?.maxSeverity || "clear",
+      incidents: (sectionMap[sec.id]?.incidents || []).slice(0, 3),
+    }));
+
+    const items = rawItems.slice(0, 8).map(i => ({ ...i, source: "HAK" }));
+    return { items, sections };
+  } catch (e) {
+    console.warn("[coast-intel] HAK:", e.message);
+    return { items: [], sections: HIGHWAY_SECTIONS.map(s => ({ ...s, status: "clear", incidents: [] })) };
+  }
 }
 
 // ─── Windy Point Forecast ────────────────────────────────────────────────────
@@ -402,7 +466,7 @@ export default async function handler(req, res) {
     return res.status(200).json(_cache);
   }
 
-  const [yolo, parking, sea, traffic, forecast, webcams, fires] = await Promise.all([
+  const [yolo, parking, sea, hak, forecast, webcams, fires] = await Promise.all([
     fetchYolo(),
     fetchParkingCache(),
     fetchSeaCache(),
@@ -411,6 +475,8 @@ export default async function handler(req, res) {
     fetchWindyWebcams(),
     fetchNASAFires(),
   ]);
+  const traffic = hak.items;
+  const highwaySections = hak.sections;
 
   // Build region nodes
   const regions = Object.entries(REGION_CENTROIDS).map(([id, c]) => {
@@ -460,8 +526,13 @@ export default async function handler(req, res) {
   for (const s of seaNodes) {
     if (s.algaeRisk === "high")      alerts.push({ type: "sea",     severity: "warning",  text: `Alge: ${s.beach} — povišen klorofil`,                   zone: s.id });
   }
+  for (const sec of highwaySections) {
+    if (sec.status === "critical") alerts.push({ type: "traffic", severity: "critical", text: `${sec.name}: ${sec.incidents[0]?.title || "incident"}`, source: "HAK" });
+    else if (sec.status === "warning") alerts.push({ type: "traffic", severity: "warning", text: `${sec.name}: ${sec.incidents[0]?.title || "zastoj/radovi"}`, source: "HAK" });
+  }
   for (const t of traffic.slice(0, 3)) {
-    alerts.push({ type: "traffic",   severity: "warning",  text: t.title, source: "HAK" });
+    // Only add raw HAK items not already covered by sections
+    alerts.push({ type: "traffic", severity: "warning", text: t.title, source: "HAK" });
   }
   alerts.sort((a, b) => (a.severity === "critical" ? 0 : 1) - (b.severity === "critical" ? 0 : 1));
 
@@ -481,6 +552,7 @@ export default async function handler(req, res) {
     sea:       seaNodes,
     affiliates: AFFILIATES,
     traffic:   traffic.slice(0, 6),
+    highwaySections,
     alerts:    alerts.slice(0, 15),
     forecast,
     webcams,

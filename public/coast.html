@@ -41,6 +41,10 @@
   <div class="row"><div class="dot" style="background:#a855f7"></div> Parking (Sentinel-2)</div>
   <div class="row"><div class="dot" style="background:#0ea5e9"></div> Kvalitet mora</div>
   <div class="row"><div class="dot" style="background:#f59e0b"></div> Affiliate</div>
+  <div style="margin-top:8px" class="lt">Autocesta (HAK)</div>
+  <div class="row"><div class="dot" style="background:#22c55e"></div> A1/A6 — bez incidenata</div>
+  <div class="row"><div class="dot" style="background:#eab308"></div> A1/A6 — radovi / zastoj</div>
+  <div class="row"><div class="dot" style="background:#ef4444"></div> A1/A6 — nesreća / zatvoreno</div>
   <div style="margin-top:8px" class="lt">Real-time</div>
   <div class="row"><div class="dot" style="background:#ef4444"></div> NASA požar (visoko)</div>
   <div class="row"><div class="dot" style="background:#f97316"></div> NASA požar (nominal)</div>
@@ -133,6 +137,11 @@ function initMap(KEY) {
         html = "<b>" + d.beach + "</b><br>More: " + d.clarityHR + (d.algaeRisk && d.algaeRisk !== "none" ? "<br>Alge: " + d.algaeRisk : "");
       else if (d.type === "affiliate")
         html = "<b>" + d.name + "</b><br>" + d.city + " — affiliate";
+      else if (d.type === "highway") {
+        var sev = { clear:"✅ Slobodna cesta", info:"ℹ Manje smetnje", warning:"⚠ Zastoj / radovi", critical:"🔴 Incident / zatvoreno" };
+        var inc = (d.incidents || []).map(function(i){ return "<br>• " + i.title; }).join("") || "<br>Nema prijavljenih incidenata";
+        html = "<b>" + d.name + "</b><br>" + (sev[d.status] || d.status) + inc;
+      }
       else if (d.type === "webcam")
         html = "<b>" + d.title + "</b><br>" + d.city + "<br><a href='" + d.url + "' target='_blank' style='color:#22d3ee;font-size:11px'>Otvori webcam ↗</a>";
       else if (d.type === "fire")
@@ -230,6 +239,36 @@ function drawData(data) {
         circ.setData({ type: "fire", confidence: f.confidence, acqDate: f.acqDate, dayNight: f.dayNight });
         overlayGroup.addObject(circ);
       } catch(e) { console.warn("fire circle", e.message); }
+    });
+
+    // ── A1/A6/A7/D8 Highway section markers (HAK) ─────────────────
+    var HWY_COLOR = { clear:"#22c55e", info:"#3b82f6", warning:"#eab308", critical:"#ef4444" };
+    (data.highwaySections || []).forEach(function(s) {
+      if (!s.lat || !s.lng) return;
+      var col = HWY_COLOR[s.status] || "#22c55e";
+      try {
+        // Outer glow circle (3 km) for critical/warning
+        if (s.status === "critical" || s.status === "warning") {
+          var glow = new H.map.Circle(
+            { lat: s.lat, lng: s.lng }, 8000,
+            { style: { fillColor: col.replace(")", ",0.12)").replace("#","rgba(").replace(/^rgba\(([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i, function(_,r,g,b){return "rgba("+parseInt(r,16)+","+parseInt(g,16)+","+parseInt(b,16);}), strokeColor: col + "55", lineWidth: 1 } }
+          );
+          overlayGroup.addObject(glow);
+        }
+        // Road icon badge
+        var hDiv = document.createElement("div");
+        hDiv.style.cssText = "font-family:system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;pointer-events:none;";
+        hDiv.innerHTML = '<div style="background:' + col + ';color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;border:1px solid rgba(255,255,255,0.3);white-space:nowrap;letter-spacing:.04em;">'
+          + s.road
+          + (s.status !== "clear" ? ' ⚠' : ' ✓')
+          + '</div>'
+          + '<div style="font-size:8px;color:#94a3b8;background:rgba(6,15,30,0.82);padding:1px 5px;border-radius:3px;margin-top:2px;white-space:nowrap;max-width:100px;overflow:hidden;text-overflow:ellipsis;">'
+          + (s.name.split("–")[1] || s.name).split("/")[0].trim()
+          + '</div>';
+        var hMarker = new H.map.DomMarker({ lat: s.lat, lng: s.lng }, { icon: new H.map.DomIcon(hDiv), zIndex: 22 });
+        hMarker.setData({ type: "highway", name: s.name, status: s.status, incidents: s.incidents });
+        overlayGroup.addObject(hMarker);
+      } catch(e) { console.warn("highway section", s.id, e.message); }
     });
 
     // ── Windy webcam markers ───────────────────────────────────────

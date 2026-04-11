@@ -283,7 +283,7 @@ export default function DeltaDashboard() {
           <div style={{ display: "flex", gap: 8, padding: "12px 14px", flexShrink: 0 }}>
             <StatBox label="Detekcije" value={intel?.yolo?.total ?? "—"} color="#0ea5e9" />
             <StatBox label="Kritično" value={criticalCount} color={criticalCount > 0 ? "#ef4444" : "#22c55e"} />
-            <StatBox label="HAK" value={intel?.traffic?.length ?? "—"} color="#f97316" />
+            <StatBox label="A1/A6" value={intel?.highwaySections ? intel.highwaySections.filter(s => s.status !== "clear").length + "/" + intel.highwaySections.length : "—"} color="#f97316" />
             <StatBox label="Partneri" value={intel?.affiliates?.length ?? "—"} color="#f59e0b" />
           </div>
 
@@ -349,17 +349,41 @@ export default function DeltaDashboard() {
               </div>
             )}
 
-            {/* ── HAK Traffic ── */}
-            {(intel?.traffic?.length || 0) > 0 && (
+            {/* ── HAK Highway Sections ── */}
+            {(intel?.highwaySections?.length || 0) > 0 && (
               <div style={{ marginBottom: 14 }}>
                 <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 6 }}>
-                  HAK Promet
+                  Autoceste A1 / A6 — HAK
                 </div>
-                {intel.traffic.slice(0, 4).map((t, i) => (
-                  <div key={i} style={{ fontSize: 11, color: "#94a3b8", padding: "5px 0", borderBottom: "1px solid rgba(14,165,233,0.06)", lineHeight: 1.4 }}>
-                    <span style={{ color: "#f97316" }}>▸ </span>{t.title}
+                {intel.highwaySections.map(s => {
+                  const col = s.status === "critical" ? "#ef4444" : s.status === "warning" ? "#eab308" : s.status === "info" ? "#3b82f6" : "#22c55e";
+                  const icon = s.status === "critical" ? "●" : s.status === "warning" ? "▲" : s.status === "info" ? "●" : "●";
+                  return (
+                    <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 0", borderBottom: "1px solid rgba(14,165,233,0.06)" }}>
+                      <span style={{ color: col, fontSize: 9, flexShrink: 0 }}>{icon}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 11, color: s.status === "clear" ? "#475569" : "#e2e8f0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {s.name}
+                        </div>
+                        {s.incidents?.length > 0 && (
+                          <div style={{ fontSize: 9, color: col, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {s.incidents[0].title}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                {/* Raw HAK items if any */}
+                {(intel?.traffic?.length || 0) > 0 && (
+                  <div style={{ marginTop: 6, fontSize: 10, color: "#475569" }}>
+                    {intel.traffic.slice(0, 2).map((t, i) => (
+                      <div key={i} style={{ padding: "3px 0", lineHeight: 1.3 }}>
+                        <span style={{ color: "#f97316" }}>▸ </span>{t.title}
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             )}
 
