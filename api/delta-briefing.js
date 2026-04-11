@@ -135,7 +135,8 @@ function buildSitPrompt(yolo, parking, sea, traffic, ts) {
   const REGION_NAMES = {
     kvarner: "Kvarner", split_makarska: "Split–Makarska", dubrovnik: "Dubrovnik",
     zadar_sibenik: "Zadar–Šibenik", istra: "Istra", np_plitvice: "NP Plitvice",
-    np_krka: "NP Krka", other: "Ostalo",
+    np_krka: "NP Krka", highway: "Autoceste (HAK)", border: "Granice (HAK)",
+    other: "Ostalo",
   };
   const LEVEL_HR = { critical: "KRITIČNO", heavy: "jako gusto", moderate: "umjereno", light: "malo", empty: "prazno" };
   function densityLevel(o) {

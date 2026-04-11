@@ -21,6 +21,8 @@ const REGION_CENTROIDS = {
   istra:          { lat: 45.22, lng: 13.84, name: "Istra" },
   np_plitvice:    { lat: 44.88, lng: 15.62, name: "NP Plitvice" },
   np_krka:        { lat: 43.83, lng: 15.96, name: "NP Krka" },
+  highway:        { lat: 45.49, lng: 15.58, name: "Autoceste (HAK)" },
+  border:         { lat: 46.32, lng: 15.67, name: "Granice (HAK)" },
   other:          { lat: 44.50, lng: 15.80, name: "Ostalo" },
 };
 
@@ -78,6 +80,13 @@ function densityLevel(objects) {
 // Handles variant naming from different sensor operators
 function normalizeSubRegion(sub) {
   const s = (sub || "other").toLowerCase().replace(/[_\-\s]+/g, "_");
+  // Exact canonical matches first (most Firestore docs use these exact values)
+  if (s === "highway")  return "highway";
+  if (s === "border")   return "border";
+  if (s === "kvarner")  return "kvarner";
+  if (s === "istra")    return "istra";
+  if (s === "dubrovnik") return "dubrovnik";
+  // Regex fallback for variant naming
   if (/plitvice/.test(s))                                                    return "np_plitvice";
   if (/krka/.test(s))                                                        return "np_krka";
   if (/kvarner|rab|krk|cres|losinj|rijeka|opatija|senj/.test(s))            return "kvarner";
@@ -85,6 +94,8 @@ function normalizeSubRegion(sub) {
   if (/dubrovnik|peljes|pelješac|korčula|korcula|lastovo/.test(s))           return "dubrovnik";
   if (/zadar|šibenik|sibenik|murter|vodice|biograd|nin/.test(s))             return "zadar_sibenik";
   if (/istra|istria|rovinj|pula|poreč|porec|novigrad|umag|labin/.test(s))   return "istra";
+  if (/highway|autocesta|a1_|a2_|a6_|a7_|a8_|a9_|hak_a|motorway/.test(s))  return "highway";
+  if (/border|granica|macelj|bregana|rupa|karavanke|obrezje/.test(s))       return "border";
   return "other";
 }
 
