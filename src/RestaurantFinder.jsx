@@ -1,8 +1,9 @@
-// RestaurantFinder.jsx — Live restaurant discovery + table reservation
-// Route: /restaurants
-// Uses: /api/places (Google Places) + /api/table-book
+// RestaurantFinder.jsx — Affiliate-exclusive table reservation
+// Affiliate restaurants: full booking flow
+// Google Places: discovery only, booking locked (exclusive partner perk)
 
 import { useState, useEffect, useCallback } from "react";
+import { AFFILIATE_DATA } from "./affiliates";
 
 const CITY_COORDS = {
   rab:       { lat: 44.7561, lng: 14.7642, name: "Rab" },
@@ -27,7 +28,6 @@ for (let h = 11; h <= 23; h++) {
   if (h < 23) TIME_SLOTS.push(`${String(h).padStart(2, "0")}:30`);
 }
 
-// Next 14 days
 function getDateOptions() {
   const opts = [];
   const now = new Date();
@@ -41,7 +41,29 @@ function getDateOptions() {
   return opts;
 }
 
-function BookingForm({ restaurant, onClose, onSuccess }) {
+// Build affiliate restaurant list for a given city name
+function getAffiliateRestaurants(cityName) {
+  if (!cityName) return [];
+  return Object.entries(AFFILIATE_DATA)
+    .filter(([, aff]) => aff.city?.toLowerCase() === cityName.toLowerCase())
+    .map(([id, aff]) => ({
+      affiliateId: id,
+      name: aff.name,
+      address: typeof aff.address === "object" ? (aff.address.hr || aff.address.en || "") : (aff.address || ""),
+      rating: aff.rating,
+      reviews: aff.reviewCount,
+      photo: aff.heroImg,
+      hours: aff.hours,
+      color: aff.color || "#0ea5e9",
+      tagline: aff.tagline,
+      features: aff.features,
+      isAffiliate: true,
+    }));
+}
+
+// ─── Booking form (affiliate only) ───────────────────────────
+
+function BookingForm({ restaurant, lang, onClose, onSuccess }) {
   const [form, setForm] = useState({
     date: getDateOptions()[0].val,
     time: "20:00",
@@ -59,82 +81,92 @@ function BookingForm({ restaurant, onClose, onSuccess }) {
   async function submit(e) {
     e.preventDefault();
     setError("");
-    if (!form.guestName.trim()) return setError("Unesite ime");
-    if (!form.guestEmail.trim() && !form.guestPhone.trim()) return setError("Email ili telefon obavezan");
+    if (!form.guestName.trim()) { setError("Unesite ime."); return; }
+    if (!form.guestEmail.trim() && !form.guestPhone.trim()) { setError("Email ili telefon je obavezan."); return; }
     setLoading(true);
     try {
       const r = await fetch("/api/table-book", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          restaurantName:    restaurant.name,
+          restaurantName: restaurant.name,
           restaurantAddress: restaurant.address,
-          restaurantId:      restaurant.place_id,
-          ...form,
-          persons: parseInt(form.persons),
-          lang: "hr",
+          restaurantId: restaurant.affiliateId,
+          affiliateId: restaurant.affiliateId,
+          date: form.date, time: form.time,
+          persons: parseInt(form.persons) || 2,
+          guestName: form.guestName,
+          guestEmail: form.guestEmail,
+          guestPhone: form.guestPhone,
+          message: form.message,
+          lang: lang || "hr",
         }),
       });
       const data = await r.json();
-      if (!r.ok) return setError(data.error || "Greška pri slanju");
+      if (!r.ok) { setError(data.error || "Greška. Pokušajte ponovo."); return; }
       onSuccess(data.id);
-    } catch { setError("Greška mreže — pokušajte ponovo"); }
+    } catch { setError("Greška mreže. Provjerite vezu."); }
     finally { setLoading(false); }
   }
 
   const inp = {
-    background: "rgba(255,255,255,0.05)", border: "1px solid rgba(14,165,233,0.25)",
-    borderRadius: 8, padding: "9px 12px", fontSize: 14, color: "#e2e8f0",
-    width: "100%", boxSizing: "border-box", outline: "none",
+    width: "100%", boxSizing: "border-box",
+    padding: "10px 13px", borderRadius: 10,
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid rgba(14,165,233,0.2)",
+    color: "#e2e8f0", fontSize: 14, outline: "none",
   };
+  const dateOpts = getDateOptions();
 
   return (
     <div style={{
-      position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 1000,
-      display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
-    }} onClick={e => e.target === e.currentTarget && onClose()}>
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 1000,
+      display: "flex", alignItems: "flex-end", justifyContent: "center",
+    }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div style={{
-        background: "#0f1e35", border: "1px solid rgba(14,165,233,0.25)",
-        borderRadius: 20, padding: "28px 24px", width: "100%", maxWidth: 420,
-        maxHeight: "90vh", overflowY: "auto",
+        background: "#0d1e35", border: "1px solid rgba(14,165,233,0.2)",
+        borderRadius: "20px 20px 0 0", padding: "24px 20px 32px",
+        width: "100%", maxWidth: 480,
+        maxHeight: "92vh", overflowY: "auto",
       }}>
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
           <div>
-            <div style={{ fontSize: 13, color: "#38bdf8", fontWeight: 700, marginBottom: 3 }}>REZERVACIJA STOLA</div>
             <div style={{ fontSize: 17, fontWeight: 700, color: "#f0f9ff" }}>{restaurant.name}</div>
-            {restaurant.address && <div style={{ fontSize: 12, color: "#475569", marginTop: 2 }}>{restaurant.address}</div>}
+            <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
+              {({ hr:"Rezervacija stola", en:"Table reservation", de:"Tischreservierung", it:"Prenotazione tavolo" })[lang] || "Rezervacija stola"}
+            </div>
           </div>
-          <button onClick={onClose} style={{ background: "none", border: "none", color: "#475569", fontSize: 22, cursor: "pointer", padding: 0, lineHeight: 1 }}>×</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "#475569", fontSize: 22, cursor: "pointer", lineHeight: 1 }}>✕</button>
         </div>
 
         <form onSubmit={submit}>
           {/* Date + Time */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
             <div>
               <div style={{ fontSize: 11, color: "#64748b", fontWeight: 700, letterSpacing: ".06em", marginBottom: 5, textTransform: "uppercase" }}>Datum</div>
-              <select value={form.date} onChange={e => set("date", e.target.value)} style={inp}>
-                {getDateOptions().map(d => <option key={d.val} value={d.val}>{d.label}</option>)}
+              <select value={form.date} onChange={e => set("date", e.target.value)} style={{ ...inp, cursor: "pointer" }}>
+                {dateOpts.map(d => <option key={d.val} value={d.val}>{d.label}</option>)}
               </select>
             </div>
             <div>
               <div style={{ fontSize: 11, color: "#64748b", fontWeight: 700, letterSpacing: ".06em", marginBottom: 5, textTransform: "uppercase" }}>Sat</div>
-              <select value={form.time} onChange={e => set("time", e.target.value)} style={inp}>
+              <select value={form.time} onChange={e => set("time", e.target.value)} style={{ ...inp, cursor: "pointer" }}>
                 {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
           </div>
 
           {/* Persons */}
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 11, color: "#64748b", fontWeight: 700, letterSpacing: ".06em", marginBottom: 5, textTransform: "uppercase" }}>Broj osoba</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              {[1,2,3,4,5,6,7,8].map(n => (
-                <button key={n} type="button" onClick={() => set("persons", String(n))} style={{
+          <div style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 11, color: "#64748b", fontWeight: 700, letterSpacing: ".06em", marginBottom: 8, textTransform: "uppercase" }}>Broj osoba</div>
+            <div style={{ display: "flex", gap: 6 }}>
+              {["1","2","3","4","5","6","7","8"].map(n => (
+                <button key={n} type="button" onClick={() => set("persons", n)} style={{
                   flex: 1, padding: "8px 0", borderRadius: 8, border: "1px solid",
-                  borderColor: form.persons === String(n) ? "#0ea5e9" : "rgba(14,165,233,0.2)",
-                  background: form.persons === String(n) ? "rgba(14,165,233,0.2)" : "rgba(255,255,255,0.03)",
-                  color: form.persons === String(n) ? "#38bdf8" : "#64748b",
+                  borderColor: form.persons === n ? "#0ea5e9" : "rgba(14,165,233,0.15)",
+                  background: form.persons === n ? "rgba(14,165,233,0.2)" : "rgba(255,255,255,0.03)",
+                  color: form.persons === n ? "#38bdf8" : "#64748b",
                   fontSize: 14, fontWeight: 700, cursor: "pointer",
                 }}>{n}</button>
               ))}
@@ -143,8 +175,8 @@ function BookingForm({ restaurant, onClose, onSuccess }) {
 
           {/* Name */}
           <div style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 11, color: "#64748b", fontWeight: 700, letterSpacing: ".06em", marginBottom: 5, textTransform: "uppercase" }}>Vaše ime *</div>
-            <input value={form.guestName} onChange={e => set("guestName", e.target.value)} placeholder="Ime i prezime" style={inp} />
+            <div style={{ fontSize: 11, color: "#64748b", fontWeight: 700, letterSpacing: ".06em", marginBottom: 5, textTransform: "uppercase" }}>Ime i prezime</div>
+            <input value={form.guestName} onChange={e => set("guestName", e.target.value)} placeholder="Vaše ime..." style={inp} />
           </div>
 
           {/* Email + Phone */}
@@ -167,7 +199,9 @@ function BookingForm({ restaurant, onClose, onSuccess }) {
               style={{ ...inp, resize: "none" }} />
           </div>
 
-          {error && <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, padding: "8px 12px", fontSize: 13, color: "#fca5a5", marginBottom: 12 }}>{error}</div>}
+          {error && (
+            <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, padding: "8px 12px", fontSize: 13, color: "#fca5a5", marginBottom: 12 }}>{error}</div>
+          )}
 
           <button type="submit" disabled={loading} style={{
             width: "100%", padding: "13px 0",
@@ -213,49 +247,65 @@ function SuccessScreen({ bookingId, restaurantName, onClose }) {
   );
 }
 
-function RestaurantCard({ place, onBook }) {
-  const stars = Math.round(place.rating || 0);
+// ─── Affiliate restaurant card (full booking) ────────────────
+
+function AffiliateCard({ restaurant, lang, onBook }) {
+  const stars = Math.round(restaurant.rating || 0);
+  const tagline = typeof restaurant.tagline === "object"
+    ? (restaurant.tagline[lang] || restaurant.tagline.en || restaurant.tagline.hr || "")
+    : (restaurant.tagline || "");
+  const hours = typeof restaurant.hours === "object"
+    ? (restaurant.hours[lang] || restaurant.hours.en || restaurant.hours.hr || "")
+    : (restaurant.hours || "");
+
   return (
     <div style={{
-      background: "#0f1e35", border: "1px solid rgba(14,165,233,0.12)",
+      background: "#0f1e35",
+      border: `1px solid ${restaurant.color}40`,
       borderRadius: 16, overflow: "hidden",
-      transition: "border-color .2s",
+      boxShadow: `0 0 0 1px ${restaurant.color}18`,
+      position: "relative",
     }}>
+      {/* Partner badge */}
+      <div style={{
+        position: "absolute", top: 10, left: 10, zIndex: 2,
+        background: "linear-gradient(135deg,#FFB800,#f59e0b)",
+        borderRadius: 6, padding: "3px 8px",
+        fontSize: 10, fontWeight: 800, color: "#0a0f1a",
+        letterSpacing: ".06em", textTransform: "uppercase",
+      }}>⭐ Partner</div>
+
       {/* Photo */}
-      {place.photo ? (
-        <div style={{ height: 140, overflow: "hidden", position: "relative" }}>
-          <img src={place.photo} alt={place.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          {place.open_now === false && (
-            <div style={{ position: "absolute", top: 8, right: 8, background: "rgba(239,68,68,0.9)", borderRadius: 6, padding: "2px 8px", fontSize: 11, color: "#fff", fontWeight: 700 }}>ZATVORENO</div>
-          )}
-          {place.open_now === true && (
-            <div style={{ position: "absolute", top: 8, right: 8, background: "rgba(34,197,94,0.9)", borderRadius: 6, padding: "2px 8px", fontSize: 11, color: "#fff", fontWeight: 700 }}>OTVORENO</div>
-          )}
+      {restaurant.photo ? (
+        <div style={{ height: 150, overflow: "hidden" }}>
+          <img src={restaurant.photo} alt={restaurant.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
         </div>
       ) : (
-        <div style={{ height: 80, background: "rgba(14,165,233,0.06)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32 }}>🍽️</div>
+        <div style={{ height: 80, background: `${restaurant.color}12`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32 }}>🍽️</div>
       )}
 
       {/* Info */}
       <div style={{ padding: "14px 16px" }}>
-        <div style={{ fontWeight: 700, fontSize: 15, color: "#f0f9ff", marginBottom: 4, lineHeight: 1.3 }}>{place.name}</div>
-        <div style={{ fontSize: 12, color: "#475569", marginBottom: 8, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{place.address}</div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-          {place.rating && (
+        <div style={{ fontWeight: 700, fontSize: 15, color: "#f0f9ff", marginBottom: 2 }}>{restaurant.name}</div>
+        {tagline && <div style={{ fontSize: 12, color: "#64748b", marginBottom: 6, lineHeight: 1.4 }}>{tagline}</div>}
+
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          {restaurant.rating && (
             <span style={{ fontSize: 12, color: "#fbbf24" }}>
-              {STAR.repeat(stars)}<span style={{ color: "#64748b" }}>{"★".repeat(5 - stars)}</span>
-              <span style={{ color: "#94a3b8", marginLeft: 4 }}>{place.rating.toFixed(1)}</span>
-              {place.reviews > 0 && <span style={{ color: "#475569" }}> ({place.reviews})</span>}
+              {STAR.repeat(stars)}<span style={{ color: "#475569" }}>{"★".repeat(5 - stars)}</span>
+              <span style={{ color: "#94a3b8", marginLeft: 4 }}>{restaurant.rating.toFixed(1)}</span>
+              {restaurant.reviews > 0 && <span style={{ color: "#475569" }}> ({restaurant.reviews})</span>}
             </span>
-          )}
-          {place.price_level && (
-            <span style={{ fontSize: 12, color: "#22d3ee", fontWeight: 600 }}>{PRICE_LABEL[place.price_level]}</span>
           )}
         </div>
 
-        <button onClick={() => onBook(place)} style={{
-          width: "100%", padding: "10px 0",
-          background: "linear-gradient(135deg,#0ea5e9,#0284c7)",
+        {hours && (
+          <div style={{ fontSize: 11, color: "#475569", marginBottom: 12 }}>🕐 {hours}</div>
+        )}
+
+        <button onClick={() => onBook(restaurant)} style={{
+          width: "100%", padding: "11px 0",
+          background: `linear-gradient(135deg,${restaurant.color},${restaurant.color}cc)`,
           color: "#fff", border: "none", borderRadius: 10,
           fontSize: 14, fontWeight: 700, cursor: "pointer", letterSpacing: ".02em",
         }}>
@@ -266,13 +316,78 @@ function RestaurantCard({ place, onBook }) {
   );
 }
 
-export default function RestaurantFinder({ lang = "hr", initialCity = "rab" }) {
-  const [city, setCity]         = useState(initialCity);
-  const [places, setPlaces]     = useState([]);
-  const [loading, setLoading]   = useState(false);
-  const [booking, setBooking]   = useState(null);   // restaurant being booked
-  const [successId, setSuccessId] = useState(null);
+// ─── Regular (non-affiliate) card — discovery only ───────────
 
+function DiscoveryCard({ place, lang }) {
+  const stars = Math.round(place.rating || 0);
+  const locked = {
+    hr: "Rezervacije samo za Jadran.ai partnere",
+    en: "Reservations exclusive to Jadran.ai partners",
+    de: "Reservierungen nur für Jadran.ai-Partner",
+    it: "Prenotazioni esclusive per i partner Jadran.ai",
+  };
+
+  return (
+    <div style={{
+      background: "#0a1422",
+      border: "1px solid rgba(14,165,233,0.08)",
+      borderRadius: 16, overflow: "hidden",
+      opacity: 0.85,
+    }}>
+      {/* Photo */}
+      {place.photo ? (
+        <div style={{ height: 130, overflow: "hidden" }}>
+          <img src={place.photo} alt={place.name} style={{ width: "100%", height: "100%", objectFit: "cover", filter: "brightness(0.75)" }} loading="lazy" />
+        </div>
+      ) : (
+        <div style={{ height: 70, background: "rgba(14,165,233,0.04)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, opacity: 0.5 }}>🍽️</div>
+      )}
+
+      <div style={{ padding: "12px 14px" }}>
+        <div style={{ fontWeight: 600, fontSize: 14, color: "#94a3b8", marginBottom: 2 }}>{place.name}</div>
+        {place.address && (
+          <div style={{ fontSize: 11, color: "#334155", marginBottom: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{place.address}</div>
+        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          {place.rating && (
+            <span style={{ fontSize: 11, color: "#78716c" }}>
+              {STAR.repeat(stars)}<span style={{ color: "#292524" }}>{"★".repeat(5 - stars)}</span>
+              <span style={{ color: "#57534e", marginLeft: 4 }}>{place.rating.toFixed(1)}</span>
+              {place.reviews > 0 && <span style={{ color: "#44403c" }}> ({place.reviews})</span>}
+            </span>
+          )}
+          {place.price_level && (
+            <span style={{ fontSize: 11, color: "#57534e", fontWeight: 600 }}>{PRICE_LABEL[place.price_level]}</span>
+          )}
+        </div>
+
+        {/* Locked booking */}
+        <div style={{
+          width: "100%", padding: "9px 0",
+          background: "rgba(255,255,255,0.03)",
+          border: "1px solid rgba(255,255,255,0.06)",
+          borderRadius: 10, textAlign: "center",
+          fontSize: 11, color: "#475569",
+          cursor: "default",
+        }}>
+          🔒 {locked[lang] || locked.en}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────
+
+export default function RestaurantFinder({ lang = "hr", initialCity = "rab" }) {
+  const [city, setCity]       = useState(initialCity);
+  const [places, setPlaces]   = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [booking, setBooking] = useState(null);
+  const [successId, setSuccessId] = useState(null);
+  const [successName, setSuccessName] = useState("");
+
+  // Google Places fetch (for discovery section)
   const load = useCallback(async (c) => {
     const coords = CITY_COORDS[c];
     if (!coords) return;
@@ -288,72 +403,105 @@ export default function RestaurantFinder({ lang = "hr", initialCity = "rab" }) {
 
   useEffect(() => { load(city); }, [city, load]);
 
-  const T = {
-    title: { hr: "Restorani & Konobe", en: "Restaurants & Konobas", de: "Restaurants", it: "Ristoranti" },
-    sub:   { hr: "Pronađi i rezerviši stol u jednom koraku", en: "Find and book a table in one step", de: "Tisch reservieren in einem Schritt", it: "Trova e prenota un tavolo in un passo" },
-    empty: { hr: "Nema dostupnih rezultata za ovaj grad.", en: "No results for this city.", de: "Keine Ergebnisse für diese Stadt.", it: "Nessun risultato per questa città." },
+  const cityName = CITY_COORDS[city]?.name || "";
+  const affiliateRests = getAffiliateRestaurants(cityName);
+
+  // Filter out affiliate restaurants from Google Places to avoid duplicates
+  const affiliateNames = new Set(affiliateRests.map(a => a.name.toLowerCase()));
+  const discoveryPlaces = places.filter(p => !affiliateNames.has(p.name?.toLowerCase()));
+
+  const TL = {
+    partner: { hr: "Partner restorani", en: "Partner restaurants", de: "Partnerrestaurants", it: "Ristoranti partner" },
+    more:    { hr: "Više restorana u gradu", en: "More restaurants in town", de: "Weitere Restaurants", it: "Altri ristoranti" },
+    noPartner: {
+      hr: "Nema partner restorana u ovom gradu — još.", en: "No partner restaurants in this city — yet.",
+      de: "Noch keine Partnerrestaurants in dieser Stadt.", it: "Ancora nessun ristorante partner in questa città.",
+    },
+    partnerNote: {
+      hr: "Jedino Jadran.ai partneri nude online rezervaciju stola s email potvrdom.",
+      en: "Only Jadran.ai partner restaurants offer online table booking with email confirmation.",
+      de: "Nur Jadran.ai-Partnerrestaurants bieten Online-Tischreservierung mit E-Mail-Bestätigung.",
+      it: "Solo i ristoranti partner di Jadran.ai offrono prenotazione online con conferma email.",
+    },
   };
-  const t = k => T[k]?.[lang] || T[k]?.en || "";
+  const tl = k => TL[k]?.[lang] || TL[k]?.en || "";
 
   return (
-    <div style={{ minHeight: "100vh", background: "#060f1e", color: "#e2e8f0", padding: "24px 16px" }}>
-      {/* Header */}
-      <div style={{ maxWidth: 900, margin: "0 auto 24px" }}>
-        <div style={{ fontSize: 26, fontWeight: 800, color: "#f0f9ff", marginBottom: 6 }}>🍽️ {t("title")}</div>
-        <div style={{ fontSize: 14, color: "#64748b" }}>{t("sub")}</div>
-      </div>
-
+    <div style={{ color: "#e2e8f0", paddingBottom: 32 }}>
       {/* City selector */}
-      <div style={{ maxWidth: 900, margin: "0 auto 20px", display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 7, flexWrap: "wrap", marginBottom: 20 }}>
         {Object.entries(CITY_COORDS).map(([id, c]) => (
           <button key={id} onClick={() => setCity(id)} style={{
-            padding: "7px 14px", borderRadius: 20, border: "1px solid",
-            borderColor: city === id ? "#0ea5e9" : "rgba(14,165,233,0.2)",
+            padding: "6px 13px", borderRadius: 18, border: "1px solid",
+            borderColor: city === id ? "#0ea5e9" : "rgba(14,165,233,0.18)",
             background: city === id ? "rgba(14,165,233,0.18)" : "rgba(255,255,255,0.03)",
-            color: city === id ? "#38bdf8" : "#94a3b8",
-            fontSize: 13, fontWeight: city === id ? 700 : 400, cursor: "pointer",
-            transition: "all .15s",
+            color: city === id ? "#38bdf8" : "#64748b",
+            fontSize: 12, fontWeight: city === id ? 700 : 400, cursor: "pointer",
           }}>{c.name}</button>
         ))}
       </div>
 
-      {/* Grid */}
-      <div style={{ maxWidth: 900, margin: "0 auto" }}>
-        {loading && (
-          <div style={{ textAlign: "center", padding: "60px 0", color: "#475569" }}>
-            <div style={{ fontSize: 28, marginBottom: 12 }}>🔍</div>
-            <div style={{ fontSize: 14 }}>Učitavam restorane...</div>
+      {/* Partner restaurants section */}
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#FFB800", letterSpacing: ".04em", textTransform: "uppercase" }}>
+            ⭐ {tl("partner")}
+          </span>
+        </div>
+        <div style={{ fontSize: 12, color: "#475569", marginBottom: 14 }}>{tl("partnerNote")}</div>
+
+        {affiliateRests.length === 0 ? (
+          <div style={{
+            background: "rgba(255,184,0,0.04)", border: "1px solid rgba(255,184,0,0.12)",
+            borderRadius: 12, padding: "20px 16px", textAlign: "center",
+            fontSize: 13, color: "#78716c",
+          }}>
+            {tl("noPartner")}
           </div>
-        )}
-        {!loading && places.length === 0 && (
-          <div style={{ textAlign: "center", padding: "60px 0", color: "#475569", fontSize: 14 }}>{t("empty")}</div>
-        )}
-        {!loading && places.length > 0 && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: 16 }}>
-            {places.map(p => (
-              <RestaurantCard key={p.place_id} place={p} onBook={setBooking} />
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: 14 }}>
+            {affiliateRests.map(r => (
+              <AffiliateCard key={r.affiliateId} restaurant={r} lang={lang} onBook={rest => {
+                setSuccessId(null);
+                setBooking(rest);
+              }} />
             ))}
           </div>
         )}
       </div>
 
-      {/* Powered by note */}
-      <div style={{ textAlign: "center", marginTop: 40, fontSize: 11, color: "#1e3a5f" }}>
-        Powered by Google Places · JADRAN.ai
-      </div>
+      {/* Discovery section (no booking) */}
+      {(loading || discoveryPlaces.length > 0) && (
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#334155", letterSpacing: ".04em", textTransform: "uppercase", marginBottom: 12 }}>
+            {tl("more")}
+          </div>
+          {loading && (
+            <div style={{ textAlign: "center", padding: "24px 0", color: "#334155", fontSize: 13 }}>Učitavam...</div>
+          )}
+          {!loading && (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
+              {discoveryPlaces.map(p => (
+                <DiscoveryCard key={p.place_id || p.name} place={p} lang={lang} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Booking modal */}
       {booking && !successId && (
         <BookingForm
           restaurant={booking}
+          lang={lang}
           onClose={() => setBooking(null)}
-          onSuccess={id => { setSuccessId(id); setBooking(null); }}
+          onSuccess={id => { setSuccessId(id); setSuccessName(booking.name); setBooking(null); }}
         />
       )}
       {successId && (
         <SuccessScreen
           bookingId={successId}
-          restaurantName={booking?.name || ""}
+          restaurantName={successName}
           onClose={() => setSuccessId(null)}
         />
       )}

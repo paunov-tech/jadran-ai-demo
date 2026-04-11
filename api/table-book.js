@@ -11,6 +11,14 @@ const FB_PROJECT    = "molty-portal";
 const BOOKING_EMAIL = "booking@jadran.ai";
 const CORS          = ["https://jadran.ai", "https://www.jadran.ai", "https://monte-negro.ai"];
 
+// Affiliate notification emails — set AFFILIATE_EMAIL_<ID> Vercel env vars
+// e.g. AFFILIATE_EMAIL_BLACKJACK, AFFILIATE_EMAIL_EUFEMIJA
+function affiliateEmail(affiliateId) {
+  if (!affiliateId) return null;
+  const key = `AFFILIATE_EMAIL_${affiliateId.toUpperCase()}`;
+  return process.env[key] || null;
+}
+
 const _rl = new Map();
 function rlOk(ip) {
   const now = Date.now(), WIN = 3600000;
@@ -135,6 +143,7 @@ export default async function handler(req, res) {
 
   const {
     restaurantName, restaurantAddress, restaurantId,
+    affiliateId,
     date, time, persons,
     guestName, guestEmail, guestPhone, message,
     lang = "hr",
@@ -151,6 +160,7 @@ export default async function handler(req, res) {
     restaurantName: restaurantName.trim(),
     restaurantAddress: restaurantAddress || "",
     restaurantId: restaurantId || "",
+    affiliateId: affiliateId || "",
     date, time,
     persons: parseInt(persons) || 2,
     guestName: guestName.trim(),
@@ -164,12 +174,17 @@ export default async function handler(req, res) {
 
   await fsWrite(id, booking);
 
-  const emails = [
-    sendEmail(BOOKING_EMAIL,
-      `[Jadran.ai] Rezervacija stola — ${restaurantName} · ${date} ${time} · ${guestName}`,
-      operatorHtml(booking)
-    ),
-  ];
+  // Always notify Jadran.ai booking desk
+  const subj = `[Jadran.ai] Rezervacija stola — ${restaurantName} · ${date} ${time} · ${guestName}`;
+  const emails = [ sendEmail(BOOKING_EMAIL, subj, operatorHtml(booking)) ];
+
+  // Also notify affiliate restaurant directly if they have an email configured
+  const affEmail = affiliateEmail(affiliateId);
+  if (affEmail) {
+    emails.push(sendEmail(affEmail, subj, operatorHtml(booking)));
+  }
+
+  // Guest confirmation
   if (booking.guestEmail) {
     emails.push(sendEmail(booking.guestEmail,
       `Rezervacija stola — ${restaurantName} · ${date} ${time}`,
