@@ -833,8 +833,13 @@ export default function JadranUnified() {
         return;
       }
     }
+    // ── action=card: auto-navigate to Rab Card screen (TZ & affiliate entry QRs) ──
+    const urlAction = p.get("action");
+    const urlTzPoint = p.get("tz"); // TZ entry point ID (ferry_terminal, beach_rajska, etc.)
+    if (urlTzPoint) saveDelta({ tzPoint: urlTzPoint });
+
     setPhase("kiosk");
-    setSubScreen(urlAffiliate ? "affiliate" : "home");
+    setSubScreen(urlAction === "card" ? "rabcard" : urlAffiliate ? "affiliate" : "home");
     setSplash(false);
     // Only grant 72h trial for verified affiliate partners (QR #1 with valid token)
     if (isValidAffiliate) ensureTrialStart();
@@ -3509,7 +3514,11 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
     if (subScreen === "rabcard") return (
       <>
         <BackBtn onClick={() => setSubScreen("home")} />
-        <RabCard lang={lang} affiliateId={affiliateId || ""} C={C} dm={dm} />
+        <RabCard
+          lang={lang}
+          affiliateId={affiliateId || loadDelta().tzPoint || ""}
+          C={C} dm={dm}
+        />
       </>
     );
     if (subScreen === "activities") return KioskActivities();

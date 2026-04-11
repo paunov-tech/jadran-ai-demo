@@ -493,6 +493,63 @@ export default function DeltaDashboard() {
         </div>
       </div>
 
+      {/* ── Rab Card QR Generator ─────────────────────────────── */}
+      <div style={{ padding: "24px 20px", borderTop: "1px solid rgba(14,165,233,0.08)", marginTop: 8 }}>
+        <div style={{ fontSize: 11, color: "#FFB800", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 16 }}>
+          🪪 Rab Card — QR kodovi za štampu
+        </div>
+
+        {/* TZ entry points */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 10, color: "#475569", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 10 }}>
+            TZ lokacije
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: 10 }}>
+            {[
+              { id: "ferry_terminal",  label: "⛴ Ferry terminal" },
+              { id: "beach_rajska",    label: "🏖️ Plaža Rajska" },
+              { id: "info_centar",     label: "ℹ Info centar Rab" },
+              { id: "stari_grad",      label: "🏛️ Stari grad" },
+              { id: "marina_rab",      label: "⛵ Marina Rab" },
+              { id: "park_komrcar",    label: "🌲 Park Komrčar" },
+            ].map(pt => {
+              const url = `https://jadran.ai/?kiosk=rab&tz=${pt.id}&action=card`;
+              const qr  = `https://quickchart.io/qr?text=${encodeURIComponent(url)}&size=120&margin=1`;
+              return (
+                <div key={pt.id} style={{ background: "rgba(255,184,0,0.04)", border: "1px solid rgba(255,184,0,0.12)", borderRadius: 12, padding: 12, textAlign: "center" }}>
+                  <img src={qr} alt={pt.label} width={100} height={100} style={{ borderRadius: 6, background: "#fff", padding: 4, display: "block", margin: "0 auto 8px" }} />
+                  <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 6 }}>{pt.label}</div>
+                  <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#475569", textDecoration: "none" }}>↗ link</a>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Affiliate entry points */}
+        <div>
+          <div style={{ fontSize: 10, color: "#475569", fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", marginBottom: 10 }}>
+            Affiliate partneri
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: 10 }}>
+            {[
+              { id: "blackjack", tk: "sial2026", city: "rab",    label: "🃏 Black Jack" },
+              { id: "eufemija",  tk: "rov2026",  city: "rovinj", label: "🐟 Konoba Eufemija" },
+            ].map(af => {
+              const url = `https://jadran.ai/?kiosk=${af.city}&affiliate=${af.id}&tk=${af.tk}&action=card`;
+              const qr  = `https://quickchart.io/qr?text=${encodeURIComponent(url)}&size=120&margin=1`;
+              return (
+                <div key={af.id} style={{ background: "rgba(14,165,233,0.04)", border: "1px solid rgba(14,165,233,0.1)", borderRadius: 12, padding: 12, textAlign: "center" }}>
+                  <img src={qr} alt={af.label} width={100} height={100} style={{ borderRadius: 6, background: "#fff", padding: 4, display: "block", margin: "0 auto 8px" }} />
+                  <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 6 }}>{af.label}</div>
+                  <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#475569", textDecoration: "none" }}>↗ link</a>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
       <style>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; }
