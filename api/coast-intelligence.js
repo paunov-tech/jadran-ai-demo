@@ -233,62 +233,71 @@ function hakSeverity(text) {
   return "info";
 }
 
-// ─── HAK traffic — returns raw items + section assignments ──────────────────
+// ─── HAK traffic — HTML scrape (RSS retired) ────────────────────────────────
+// HAK removed their RSS feed. We scrape the traffic info page HTML for incident text.
+function defaultSections() {
+  return HIGHWAY_SECTIONS.map(s => ({ id: s.id, lat: s.lat, lng: s.lng, name: s.name, road: s.road, status: "clear", incidents: [] }));
+}
+
 async function fetchHAK() {
+  let rawItems = [];
   try {
-    const r = await fetch("https://www.hak.hr/info/stanje-na-cestama/feed/", {
-      signal: AbortSignal.timeout(5000),
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; JadranBot/1.0)" },
+    // Try HTML page scrape — HAK embeds incident text server-side
+    const r = await fetch("https://www.hak.hr/info/stanje-na-cestama/", {
+      signal: AbortSignal.timeout(8000),
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html",
+      },
     });
-    if (!r.ok) return { items: [], sections: [] };
-    const xml = await r.text();
-
-    const rawItems = [];
-    const rx = /<item>([\s\S]*?)<\/item>/g;
-    let m;
-    while ((m = rx.exec(xml)) !== null) {
-      const chunk = m[1];
-      const title   = (/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/.exec(chunk)   || /<title>([^<]*)<\/title>/.exec(chunk))?.[1]?.trim()   || "";
-      const desc    = (/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/.exec(chunk) || /<description>([^<]*)<\/description>/.exec(chunk))?.[1]?.replace(/<[^>]+>/g, "").trim() || "";
-      const pubDate = /<pubDate>([^<]*)<\/pubDate>/.exec(chunk)?.[1]?.trim() || "";
-      if (title) rawItems.push({ title, desc: desc.slice(0, 200), pubDate });
-    }
-
-    // Map each incident to a highway section
-    const sectionMap = {};   // section id → { incidents, maxSeverity }
-    for (const item of rawItems) {
-      const combined = item.title + " " + item.desc;
-      for (const sec of HIGHWAY_SECTIONS) {
-        if (sec.match.test(combined)) {
-          if (!sectionMap[sec.id]) sectionMap[sec.id] = { incidents: [], maxSeverity: "clear" };
-          const sev = hakSeverity(combined);
-          sectionMap[sec.id].incidents.push({ title: item.title, desc: item.desc, severity: sev });
-          // escalate max severity
-          if (sev === "critical")                                         sectionMap[sec.id].maxSeverity = "critical";
-          else if (sev === "warning"  && sectionMap[sec.id].maxSeverity !== "critical") sectionMap[sec.id].maxSeverity = "warning";
-          else if (sev === "info"     && sectionMap[sec.id].maxSeverity === "clear")    sectionMap[sec.id].maxSeverity = "info";
-          break; // assign to first matching section only
+    if (r.ok) {
+      const html = await r.text();
+      // Strip tags, extract visible text blocks
+      const text = html.replace(/<script[\s\S]*?<\/script>/gi, "")
+                       .replace(/<style[\s\S]*?<\/style>/gi, "")
+                       .replace(/<[^>]+>/g, " ")
+                       .replace(/\s{2,}/g, " ");
+      // Split on sentence-like boundaries and filter for highway mentions
+      const sentences = text.split(/[.!?\n]/).map(s => s.trim()).filter(s => s.length > 20);
+      for (const s of sentences) {
+        if (/\b(A1|A2|A3|A4|A5|A6|A7|A8|A9|D8|D1)\b/.test(s) || /autocest|tunel|čvor|granič|zatvor|nesreć|radovi|zastoj|kolona/i.test(s)) {
+          rawItems.push({ title: s.slice(0, 120), desc: "", pubDate: "" });
+          if (rawItems.length >= 20) break;
         }
       }
     }
-
-    // Build sections array (all sections, whether they have incidents or not)
-    const sections = HIGHWAY_SECTIONS.map(sec => ({
-      id:       sec.id,
-      lat:      sec.lat,
-      lng:      sec.lng,
-      name:     sec.name,
-      road:     sec.road,
-      status:   sectionMap[sec.id]?.maxSeverity || "clear",
-      incidents: (sectionMap[sec.id]?.incidents || []).slice(0, 3),
-    }));
-
-    const items = rawItems.slice(0, 8).map(i => ({ ...i, source: "HAK" }));
-    return { items, sections };
   } catch (e) {
-    console.warn("[coast-intel] HAK:", e.message);
-    return { items: [], sections: HIGHWAY_SECTIONS.map(s => ({ ...s, status: "clear", incidents: [] })) };
+    console.warn("[coast-intel] HAK HTML:", e.message);
   }
+
+  if (rawItems.length === 0) {
+    return { items: [], sections: defaultSections() };
+  }
+
+  // Map each item to a highway section
+  const sectionMap = {};
+  for (const item of rawItems) {
+    const combined = item.title + " " + item.desc;
+    for (const sec of HIGHWAY_SECTIONS) {
+      if (sec.match.test(combined)) {
+        if (!sectionMap[sec.id]) sectionMap[sec.id] = { incidents: [], maxSeverity: "clear" };
+        const sev = hakSeverity(combined);
+        sectionMap[sec.id].incidents.push({ title: item.title, severity: sev });
+        if (sev === "critical") sectionMap[sec.id].maxSeverity = "critical";
+        else if (sev === "warning"  && sectionMap[sec.id].maxSeverity !== "critical") sectionMap[sec.id].maxSeverity = "warning";
+        else if (sev === "info"     && sectionMap[sec.id].maxSeverity === "clear")    sectionMap[sec.id].maxSeverity = "info";
+        break;
+      }
+    }
+  }
+
+  const sections = HIGHWAY_SECTIONS.map(sec => ({
+    id: sec.id, lat: sec.lat, lng: sec.lng, name: sec.name, road: sec.road,
+    status:   sectionMap[sec.id]?.maxSeverity || "clear",
+    incidents: (sectionMap[sec.id]?.incidents || []).slice(0, 3),
+  }));
+
+  return { items: rawItems.slice(0, 8).map(i => ({ ...i, source: "HAK" })), sections };
 }
 
 // ─── Windy Point Forecast ────────────────────────────────────────────────────
