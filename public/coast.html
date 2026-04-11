@@ -107,9 +107,11 @@ function initMap(KEY) {
     var platform = new H.service.Platform({ apikey: KEY });
     var defaultLayers = platform.createDefaultLayers();
 
+    // Use traffic layer as base — shows real-time flow on all roads
+    var baseLayer = defaultLayers.vector.normal.traffic || defaultLayers.vector.normal.map;
     map = new H.Map(
       document.getElementById("map"),
-      defaultLayers.vector.normal.map,
+      baseLayer,
       { center: { lat: 44.2, lng: 15.8 }, zoom: 7, pixelRatio: window.devicePixelRatio || 1 }
     );
 
@@ -138,9 +140,17 @@ function initMap(KEY) {
       else if (d.type === "affiliate")
         html = "<b>" + d.name + "</b><br>" + d.city + " — affiliate";
       else if (d.type === "highway") {
-        var sev = { clear:"✅ Slobodna cesta", info:"ℹ Manje smetnje", warning:"⚠ Zastoj / radovi", critical:"🔴 Incident / zatvoreno" };
-        var inc = (d.incidents || []).map(function(i){ return "<br>• " + i.title; }).join("") || "<br>Nema prijavljenih incidenata";
-        html = "<b>" + d.name + "</b><br>" + (sev[d.status] || d.status) + inc;
+        var sev = { clear:"✅ Slobodan tok", info:"ℹ Blagi zastoj", warning:"⚠ Zastoj / radovi", critical:"🔴 Blokada / zatvoreno" };
+        var flowLine = "";
+        if (d.jamFactor != null) {
+          var jfColor = d.jamFactor < 2 ? "#22c55e" : d.jamFactor < 4 ? "#3b82f6" : d.jamFactor < 7 ? "#eab308" : "#ef4444";
+          flowLine = "<br><span style='color:" + jfColor + ";font-weight:700'>Jam: " + d.jamFactor + "/10</span>"
+            + (d.speed != null ? " · " + Math.round(d.speed) + " km/h" : "")
+            + (d.freeFlow != null ? " (slobodan: " + Math.round(d.freeFlow) + ")" : "");
+        }
+        var inc = (d.incidents || []).map(function(i){ return "<br>• " + i.title; }).join("") || "";
+        html = "<b>" + d.name + "</b><br>" + (sev[d.status] || d.status) + flowLine + inc
+          + "<br><span style='font-size:10px;color:#64748b'>HERE Traffic + HAK</span>";
       }
       else if (d.type === "webcam")
         html = "<b>" + d.title + "</b><br>" + d.city + "<br><a href='" + d.url + "' target='_blank' style='color:#22d3ee;font-size:11px'>Otvori webcam ↗</a>";
@@ -258,9 +268,9 @@ function drawData(data) {
         // Road icon badge
         var hDiv = document.createElement("div");
         hDiv.style.cssText = "font-family:system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;pointer-events:none;";
+        var speedTxt = (s.speed != null) ? Math.round(s.speed) + "km/h" : (s.status !== "clear" ? "⚠" : "✓");
         hDiv.innerHTML = '<div style="background:' + col + ';color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;border:1px solid rgba(255,255,255,0.3);white-space:nowrap;letter-spacing:.04em;">'
-          + s.road
-          + (s.status !== "clear" ? ' ⚠' : ' ✓')
+          + s.road + ' ' + speedTxt
           + '</div>'
           + '<div style="font-size:8px;color:#94a3b8;background:rgba(6,15,30,0.82);padding:1px 5px;border-radius:3px;margin-top:2px;white-space:nowrap;max-width:100px;overflow:hidden;text-overflow:ellipsis;">'
           + (s.name.split("–")[1] || s.name).split("/")[0].trim()

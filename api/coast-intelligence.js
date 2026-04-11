@@ -6,6 +6,7 @@
 const FB_KEY             = process.env.FIREBASE_API_KEY;
 const WINDY_FORECAST_KEY = process.env.WINDY_FORECAST_KEY;
 const WINDY_WEBCAM_KEY   = process.env.WINDY_WEBCAM_KEY;
+const HERE_KEY           = process.env.HERE_API_KEY || process.env.VITE_HERE_API_KEY;
 const CORS               = ["https://jadran.ai", "https://monte-negro.ai"];
 
 let _cache = null;
@@ -453,6 +454,55 @@ async function fetchNASAFires() {
   }
 }
 
+// ─── HERE Traffic Flow — real jam factor per A1/A6 checkpoint ────────────────
+// jamFactor 0-10: 0=free, 10=standstill
+function jamToStatus(jf, traversability) {
+  if (traversability === "closed") return "critical";
+  if (jf >= 7)  return "critical";
+  if (jf >= 4)  return "warning";
+  if (jf >= 2)  return "info";
+  return "clear";
+}
+
+async function fetchHERETrafficFlow() {
+  if (!HERE_KEY) return {};
+  const results = {};
+  await Promise.allSettled(HIGHWAY_SECTIONS.map(async sec => {
+    try {
+      const url = `https://data.traffic.hereapi.com/v7/flow?in=circle:${sec.lat},${sec.lng};r=4000&locationReferencing=none&apiKey=${HERE_KEY}`;
+      const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (!r.ok) {
+        console.warn(`[coast-intel] HERE flow ${sec.id} HTTP ${r.status}`);
+        return;
+      }
+      const data = await r.json();
+      // Average jam factor across all returned segments
+      const segs = data.results || [];
+      if (segs.length === 0) return;
+      let totalJam = 0, count = 0;
+      let anyClosed = false;
+      for (const seg of segs) {
+        const cf = seg.currentFlow;
+        if (!cf) continue;
+        if (cf.traversability === "closed") anyClosed = true;
+        totalJam += (cf.jamFactor ?? 0);
+        count++;
+      }
+      const avgJam = count > 0 ? totalJam / count : 0;
+      results[sec.id] = {
+        jamFactor:     Math.round(avgJam * 10) / 10,
+        status:        jamToStatus(avgJam, anyClosed ? "closed" : "open"),
+        speed:         segs[0]?.currentFlow?.speed ?? null,
+        freeFlow:      segs[0]?.currentFlow?.freeFlow ?? null,
+        segments:      count,
+      };
+    } catch (e) {
+      console.warn(`[coast-intel] HERE flow ${sec.id}:`, e.message);
+    }
+  }));
+  return results;
+}
+
 // ─── HANDLER ─────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   const origin = req.headers.origin || "";
@@ -466,7 +516,7 @@ export default async function handler(req, res) {
     return res.status(200).json(_cache);
   }
 
-  const [yolo, parking, sea, hak, forecast, webcams, fires] = await Promise.all([
+  const [yolo, parking, sea, hak, forecast, webcams, fires, hereFlow] = await Promise.all([
     fetchYolo(),
     fetchParkingCache(),
     fetchSeaCache(),
@@ -474,9 +524,26 @@ export default async function handler(req, res) {
     fetchWindyForecast(),
     fetchWindyWebcams(),
     fetchNASAFires(),
+    fetchHERETrafficFlow(),
   ]);
   const traffic = hak.items;
-  const highwaySections = hak.sections;
+  // Merge: HERE flow data takes precedence for status; HAK incidents supplement
+  const highwaySections = hak.sections.map(sec => {
+    const flow = hereFlow[sec.id];
+    if (!flow) return sec;
+    // HERE flow overrides status unless HAK has a more severe incident
+    const hakSev = { clear:0, info:1, warning:2, critical:3 };
+    const hereSev = hakSev[flow.status] ?? 0;
+    const hakSevVal = hakSev[sec.status] ?? 0;
+    return {
+      ...sec,
+      status:    hereSev >= hakSevVal ? flow.status : sec.status,
+      jamFactor: flow.jamFactor,
+      speed:     flow.speed,
+      freeFlow:  flow.freeFlow,
+      source:    "here+hak",
+    };
+  });
 
   // Build region nodes
   const regions = Object.entries(REGION_CENTROIDS).map(([id, c]) => {

@@ -365,11 +365,14 @@ export default function DeltaDashboard() {
                         <div style={{ fontSize: 11, color: s.status === "clear" ? "#475569" : "#e2e8f0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                           {s.name}
                         </div>
-                        {s.incidents?.length > 0 && (
-                          <div style={{ fontSize: 9, color: col, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {s.incidents[0].title}
-                          </div>
-                        )}
+                        <div style={{ fontSize: 9, color: "#64748b" }}>
+                          {s.jamFactor != null
+                            ? <span style={{ color: col }}>jam {s.jamFactor}/10{s.speed != null ? ` · ${Math.round(s.speed)} km/h` : ""}</span>
+                            : s.incidents?.length > 0
+                              ? <span style={{ color: col }}>{s.incidents[0].title}</span>
+                              : null
+                          }
+                        </div>
                       </div>
                     </div>
                   );
