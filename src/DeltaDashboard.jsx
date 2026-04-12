@@ -1206,6 +1206,87 @@ export default function DeltaDashboard() {
               </div>
             )}
 
+            {/* ── Data Sources — pouzdanost podataka ── */}
+            {(() => {
+              const sources = [
+                {
+                  name: "HERE Traffic",
+                  icon: "🛣",
+                  status: intel?.highwaySections?.length > 0 ? "live" : "wait",
+                  detail: intel?.highwaySections ? intel.highwaySections.length + " dionica · real-time" : "čeka...",
+                },
+                {
+                  name: "AIS Plovila",
+                  icon: "⛵",
+                  status: vessels?.live ? "live" : vessels ? "sim" : "wait",
+                  detail: vessels
+                    ? vessels.total + " plovila" + (vessels.live ? " · aisstream.io" : " · simulacija")
+                    : "čeka...",
+                },
+                {
+                  name: "Windy webcams",
+                  icon: "📷",
+                  status: (intel?.webcams?.length || 0) > 0 ? "live" : "wait",
+                  detail: intel?.webcams
+                    ? intel.webcams.length + " kamera" + (Object.keys(crowdData).length > 0 ? " · " + Object.keys(crowdData).length + " AI" : "")
+                    : "čeka...",
+                },
+                {
+                  name: "YOLO senzori",
+                  icon: "🔍",
+                  status: intel?.yolo ? (intel.yolo.simulated ? "sim" : "live") : "wait",
+                  detail: intel?.yolo
+                    ? (intel.yolo.simulated ? "DEMO model (sezonski)" : intel.yolo.docCount + " zapisa · Firestore")
+                    : "čeka...",
+                },
+                {
+                  name: "Sentinel-2",
+                  icon: "🛰",
+                  status: (intel?.parking?.length > 0 || intel?.sea?.length > 0) ? "delay" : "wait",
+                  detail: "2–3 dana latencija · ESA Copernicus",
+                },
+                {
+                  name: "Rab Card",
+                  icon: "🪪",
+                  status: checkins?.totalToday > 0 ? "live" : checkins ? "empty" : "wait",
+                  detail: checkins
+                    ? (checkins.totalToday > 0
+                        ? checkins.totalToday + " scan · " + checkins.uniqueCards + " kartica"
+                        : "Nema skena danas — QR aktivacija pending")
+                    : "čeka...",
+                },
+              ];
+              const statusMeta = {
+                live:  { col: "#22c55e", dot: "●", label: "LIVE"  },
+                sim:   { col: "#f59e0b", dot: "◐", label: "DEMO"  },
+                delay: { col: "#eab308", dot: "◑", label: "≤3d"   },
+                empty: { col: "#475569", dot: "○", label: "ČEKA"  },
+                wait:  { col: "#334155", dot: "○", label: "..."   },
+              };
+              return (
+                <div style={{ marginTop: 14, paddingTop: 14, borderTop: "1px solid rgba(14,165,233,0.1)" }}>
+                  <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 8 }}>
+                    Pouzdanost podataka
+                  </div>
+                  {sources.map(src => {
+                    const m = statusMeta[src.status] || statusMeta.wait;
+                    return (
+                      <div key={src.name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: "1px solid rgba(14,165,233,0.05)" }}>
+                        <span style={{ fontSize: 13, flexShrink: 0, width: 18, textAlign: "center" }}>{src.icon}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 11, color: src.status === "empty" ? "#475569" : "#94a3b8" }}>{src.name}</div>
+                          <div style={{ fontSize: 9, color: "#334155", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{src.detail}</div>
+                        </div>
+                        <span style={{ flexShrink: 0, fontSize: 10, fontWeight: 700, color: m.col, letterSpacing: ".04em" }}>
+                          {m.dot} {m.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
           </div>
         </div>
       </div>

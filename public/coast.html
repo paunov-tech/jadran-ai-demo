@@ -26,6 +26,14 @@
     border-radius:8px; padding:5px 12px; font-family:system-ui,sans-serif;
     font-size:11px; color:#64748b; pointer-events:none; z-index:9;
   }
+  #zoom-rab {
+    position:absolute; top:42px; right:10px;
+    background:rgba(6,15,30,0.88); border:1px solid rgba(201,168,76,0.38);
+    border-radius:8px; padding:5px 14px; font-family:system-ui,sans-serif;
+    font-size:11px; font-weight:700; color:#C9A84C; cursor:pointer; z-index:9;
+    transition:background .15s,border-color .15s;
+  }
+  #zoom-rab:hover { background:rgba(201,168,76,0.12); border-color:rgba(201,168,76,0.7); }
 </style>
 </head>
 <body>
@@ -57,6 +65,7 @@
   <div class="row"><div class="dot" style="background:#22d3ee;border-radius:3px;transform:rotate(45deg)"></div> Jahta / jedrilica</div>
 </div>
 <div id="status">Inicijalizacija...</div>
+<button id="zoom-rab" onclick="if(map){map.setCenter({lat:44.75,lng:14.78});map.setZoom(11);}">🏝 Rab</button>
 
 <script type="text/javascript">
 // ── Globals ───────────────────────────────────────────────────────────────────
