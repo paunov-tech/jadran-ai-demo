@@ -452,6 +452,8 @@ export default function DeltaDashboard() {
   const [checkinsTs, setCheckinsTs] = useState(null);
   const [vessels, setVessels]     = useState(null);
   const [vesselsTs, setVesselsTs] = useState(null);
+  const [crowdData, setCrowdData] = useState({});   // webcamId → {persons,busyness,scene}
+  const [crowdLoading, setCrowdLoading] = useState(false);
 
   // Send data to coast map iframe
   const pushToMap = useCallback((data) => {
@@ -471,12 +473,13 @@ export default function DeltaDashboard() {
       setIntel(d);
       setIntelTs(new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }));
       setIntelErr(null);
-      // Merge current vessels into map push so both layers render together
       pushToMap({ ...d, vessels: vesselDataRef.current });
+      // Trigger AI crowd analysis on webcam frames (non-blocking)
+      if (d.webcams?.length > 0) fetchCrowd(d.webcams);
     } catch (e) {
       setIntelErr(e.message);
     }
-  }, [pushToMap]);
+  }, [pushToMap, fetchCrowd]);
 
   const fetchBriefing = useCallback(async () => {
     try {
@@ -496,6 +499,43 @@ export default function DeltaDashboard() {
       setCheckins(d);
       setCheckinsTs(new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }));
     } catch {}
+  }, []);
+
+  const fetchCrowd = useCallback(async (webcams) => {
+    if (!webcams || webcams.length === 0) return;
+    setCrowdLoading(true);
+    try {
+      // Pick up to 12 cameras with preview URLs — balanced across regions
+      const REGION_ORDER = ["kvarner", "zadar_sibenik", "split_makarska", "dubrovnik", "istra", "other"];
+      const byRegion = {};
+      for (const w of webcams) {
+        if (!w.preview) continue;
+        const r = w.region || "other";
+        if (!byRegion[r]) byRegion[r] = [];
+        byRegion[r].push(w);
+      }
+      // 2 cameras per region, rotate through regions
+      const selected = [];
+      for (const rk of REGION_ORDER) {
+        const cams = byRegion[rk] || [];
+        selected.push(...cams.slice(0, 2));
+        if (selected.length >= 12) break;
+      }
+
+      const r = await fetch("/api/webcam-crowd", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ webcams: selected.map(w => ({ id: w.id, url: w.preview, region: w.region })) }),
+      });
+      if (!r.ok) return;
+      const d = await r.json();
+      const map = {};
+      for (const result of (d.results || [])) {
+        if (!result.error && result.busyness !== null) map[result.id] = result;
+      }
+      setCrowdData(prev => ({ ...prev, ...map }));
+    } catch {}
+    finally { setCrowdLoading(false); }
   }, []);
 
   const fetchVessels = useCallback(async () => {
@@ -1008,9 +1048,13 @@ export default function DeltaDashboard() {
                         Webcam monitoring — Obala
                       </span>
                     </div>
-                    <span style={{ fontSize: 9, color: "#475569" }}>
-                      <span style={{ color: "#7dd3fc", fontWeight: 700 }}>{totalCams}</span> kamera · {withPreview} live
-                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 9, color: "#475569" }}>
+                      {crowdLoading && <span style={{ color: "#f59e0b" }}>⟳ AI analiza...</span>}
+                      {Object.keys(crowdData).length > 0 && !crowdLoading && (
+                        <span style={{ color: "#22c55e" }}>● {Object.keys(crowdData).length} analizirano</span>
+                      )}
+                      <span><span style={{ color: "#7dd3fc", fontWeight: 700 }}>{totalCams}</span> kamera · {withPreview} live</span>
+                    </div>
                   </div>
 
                   {/* Regional summary bars */}
@@ -1027,18 +1071,50 @@ export default function DeltaDashboard() {
                           </span>
                           <span style={{ fontSize: 11, fontWeight: 700, color: "#22d3ee" }}>{cams.length}</span>
                         </div>
-                        {/* Coverage bar */}
-                        <div style={{ height: 3, background: "rgba(34,211,238,0.08)", borderRadius: 2, marginBottom: 5 }}>
-                          <div style={{ height: 3, borderRadius: 2, width: barW + "%", background: "#22d3ee", transition: "width .5s ease" }} />
-                        </div>
+                        {/* Coverage bar + avg crowd */}
+                        {(() => {
+                          const analyzed = cams.filter(c => crowdData[c.id]);
+                          const avgBusy  = analyzed.length > 0
+                            ? Math.round(analyzed.reduce((s, c) => s + crowdData[c.id].busyness, 0) / analyzed.length)
+                            : null;
+                          const totalPersons = analyzed.reduce((s, c) => s + (crowdData[c.id].persons || 0), 0);
+                          const busyCol = avgBusy !== null ? (avgBusy >= 70 ? "#ef4444" : avgBusy >= 40 ? "#f97316" : "#22c55e") : "#22d3ee";
+                          return (
+                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 5 }}>
+                              <div style={{ flex: 1, height: 3, background: "rgba(34,211,238,0.08)", borderRadius: 2 }}>
+                                <div style={{ height: 3, borderRadius: 2, width: barW + "%", background: "#22d3ee33", transition: "width .5s ease" }} />
+                              </div>
+                              {avgBusy !== null && (
+                                <div style={{ display: "flex", gap: 5, flexShrink: 0 }}>
+                                  <span style={{ fontSize: 9, color: busyCol, fontWeight: 700 }}>{avgBusy}% popunjenost</span>
+                                  {totalPersons > 0 && <span style={{ fontSize: 9, color: "#64748b" }}>· {totalPersons} osoba</span>}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                         {/* Thumbnail strip */}
                         <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                          {previews.map(w => (
+                          {previews.map(w => {
+                            const crowd = crowdData[w.id];
+                            const bColor = crowd ? (crowd.busyness >= 70 ? "#ef4444" : crowd.busyness >= 40 ? "#f97316" : "#22c55e") : null;
+                            return (
                             <a key={w.id} href={w.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
                               <div style={{ position: "relative", width: 72, height: 48 }}>
                                 <img src={w.preview} alt={w.title}
-                                  style={{ width: 72, height: 48, objectFit: "cover", borderRadius: 5, border: "1px solid rgba(34,211,238,0.22)", display: "block" }}
+                                  style={{ width: 72, height: 48, objectFit: "cover", borderRadius: 5, border: `1px solid ${crowd ? bColor + "88" : "rgba(34,211,238,0.22)"}`, display: "block" }}
                                 />
+                                {/* AI crowd badge */}
+                                {crowd && (
+                                  <div style={{
+                                    position: "absolute", top: 2, right: 2,
+                                    background: "rgba(6,15,30,0.9)", borderRadius: 4,
+                                    fontSize: 8, fontWeight: 700, color: bColor,
+                                    padding: "1px 4px", lineHeight: 1.4,
+                                  }}>
+                                    {crowd.persons !== null ? `👥${crowd.persons}` : ""}{crowd.busyness !== null ? ` ${crowd.busyness}%` : ""}
+                                  </div>
+                                )}
                                 <div style={{
                                   position: "absolute", bottom: 0, left: 0, right: 0,
                                   background: "rgba(6,15,30,0.75)", borderRadius: "0 0 4px 4px",
@@ -1047,7 +1123,8 @@ export default function DeltaDashboard() {
                                 }}>{w.city || w.title}</div>
                               </div>
                             </a>
-                          ))}
+                            );
+                          })}
                           {/* +N more badge */}
                           {cams.length > 4 && (
                             <div style={{
