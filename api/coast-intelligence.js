@@ -143,19 +143,21 @@ async function fetchYolo() {
       if (cnt > 0) regions[sub].cams++;
       total  += cnt;
       if (cnt > 0) active++;
-      // Collect per-camera beach-level data
-      cameras.push({
-        camId,
-        name:    locName || camId,
-        region:  sub,
-        rawSub,
-        busyness: busy,
-        objects:  cnt,
-        persons:  counts.person || 0,
-        cars:     counts.car    || 0,
-        boats:    counts.boat   || 0,
-        ts,
-      });
+      // Collect per-camera beach-level data — exclude highway/border cameras
+      if (sub !== "highway" && sub !== "border") {
+        cameras.push({
+          camId,
+          name:    locName || camId,
+          region:  sub,
+          rawSub,
+          busyness: busy,
+          objects:  cnt,
+          persons:  counts.person || 0,
+          cars:     counts.car    || 0,
+          boats:    counts.boat   || 0,
+          ts,
+        });
+      }
     }
     // Sort by busyness desc, then by objects desc
     cameras.sort((a, b) => b.busyness - a.busyness || b.objects - a.objects);

@@ -831,7 +831,7 @@ export default function DeltaDashboard() {
               return (
                 <div style={{ marginBottom: 14 }}>
                   <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 6 }}>
-                    Plaže — kapacitet po senzoru ({activeCams.length})
+                    Turističke lokacije — senzori ({activeCams.length})
                   </div>
                   {Object.entries(byRegion).map(([reg, cams]) => (
                     <div key={reg} style={{ marginBottom: 8 }}>
