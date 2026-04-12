@@ -438,9 +438,11 @@ function ParkingRow({ p }) {
 }
 
 export default function DeltaDashboard() {
-  const iframeRef      = useRef(null);
-  const vesselDataRef  = useRef([]);   // always-fresh vessel list for map push
-  const intelDataRef   = useRef(null); // always-fresh intel for vessel-triggered push
+  const iframeRef        = useRef(null);
+  const vesselDataRef    = useRef([]);   // always-fresh vessel list for map push
+  const intelDataRef     = useRef(null); // always-fresh intel for vessel-triggered push
+  const checkinsDataRef  = useRef([]);   // always-fresh Rab Card check-ins for map push
+  const notifiedAlertsRef = useRef(new Set()); // dedup browser notifications
   const [intel, setIntel]         = useState(null);
   const [briefing, setBriefing]   = useState(null);
   const [intelTs, setIntelTs]     = useState(null);
@@ -510,7 +512,7 @@ export default function DeltaDashboard() {
       setIntel(d);
       setIntelTs(new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }));
       setIntelErr(null);
-      pushToMap({ ...d, vessels: vesselDataRef.current });
+      pushToMap({ ...d, vessels: vesselDataRef.current, checkins: checkinsDataRef.current });
       // Trigger AI crowd analysis on webcam frames (non-blocking)
       if (d.webcams?.length > 0) fetchCrowd(d.webcams);
     } catch (e) {
@@ -533,10 +535,15 @@ export default function DeltaDashboard() {
       const r = await fetch("/api/rab-checkins?hours=24");
       if (!r.ok) return;
       const d = await r.json();
+      checkinsDataRef.current = d.locations || [];
       setCheckins(d);
       setCheckinsTs(new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }));
+      // Re-push to map with fresh check-ins
+      if (intelDataRef.current) {
+        pushToMap({ ...intelDataRef.current, vessels: vesselDataRef.current, checkins: d.locations || [] });
+      }
     } catch {}
-  }, []);
+  }, [pushToMap]);
 
   const fetchVessels = useCallback(async () => {
     try {
@@ -547,7 +554,7 @@ export default function DeltaDashboard() {
       setVessels(d);
       setVesselsTs(new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }));
       // Push vessels to map immediately — merge with latest intel
-      if (intelDataRef.current) pushToMap({ ...intelDataRef.current, vessels: d.vessels || [] });
+      if (intelDataRef.current) pushToMap({ ...intelDataRef.current, vessels: d.vessels || [], checkins: checkinsDataRef.current });
     } catch {}
   }, [pushToMap]);
 
@@ -567,13 +574,36 @@ export default function DeltaDashboard() {
 
   // Re-push to map after mapReady fires (or when intel/vessels refresh)
   useEffect(() => {
-    if (mapReady && intel) pushToMap({ ...intel, vessels: vesselDataRef.current });
+    if (mapReady && intel) pushToMap({ ...intel, vessels: vesselDataRef.current, checkins: checkinsDataRef.current });
   }, [mapReady, intel, pushToMap]);
 
   const activeAlerts   = (intel?.alerts || []).filter(a => a.severity === "critical" || a.severity === "warning");
   const criticalCount  = activeAlerts.filter(a => a.severity === "critical").length;
   const regionsSorted  = [...(intel?.regions || [])].sort((a, b) => b.objects - a.objects).filter(r => r.objects > 0);
   const parkingActive  = (intel?.parking || []).filter(p => p.level !== "unknown" && p.occupancyPct != null);
+
+  // ── Browser notifications for new critical alerts ──────────────
+  useEffect(() => {
+    const criticals = activeAlerts.filter(a => a.severity === "critical");
+    if (criticals.length === 0 || !("Notification" in window)) return;
+    async function fire() {
+      let perm = Notification.permission;
+      if (perm === "default") perm = await Notification.requestPermission().catch(() => "denied");
+      if (perm !== "granted") return;
+      for (const alert of criticals) {
+        if (notifiedAlertsRef.current.has(alert.text)) continue;
+        notifiedAlertsRef.current.add(alert.text);
+        try {
+          new Notification("DELTA ◉ Kritična zona", {
+            body: alert.text,
+            icon: "/favicon.ico",
+            tag: `delta-${alert.text.slice(0, 40)}`,
+          });
+        } catch {}
+      }
+    }
+    fire();
+  }, [activeAlerts]);
 
   return (
     <div style={{

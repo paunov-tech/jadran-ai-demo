@@ -49,6 +49,8 @@
   <div class="row"><div class="dot" style="background:#ef4444"></div> NASA požar (visoko)</div>
   <div class="row"><div class="dot" style="background:#f97316"></div> NASA požar (nominal)</div>
   <div class="row"><div class="dot" style="background:#22d3ee;border-radius:3px"></div> Windy webcam</div>
+  <div style="margin-top:8px" class="lt">Rab Card check-ini</div>
+  <div class="row"><div class="dot" style="background:#C9A84C;opacity:.75"></div> Lokacija (veličina = broj danas)</div>
   <div style="margin-top:8px" class="lt">AIS plovila</div>
   <div class="row"><div class="dot" style="background:#f97316;border-radius:3px;transform:rotate(45deg)"></div> Trajekt</div>
   <div class="row"><div class="dot" style="background:#ef4444;border-radius:3px;transform:rotate(45deg)"></div> Teretni brod</div>
@@ -168,6 +170,11 @@ function initMap(KEY) {
       }
       else if (d.type === "webcam")
         html = "<b>" + d.title + "</b><br>" + d.city + "<br><a href='" + d.url + "' target='_blank' style='color:#22d3ee;font-size:11px'>Otvori webcam ↗</a>";
+      else if (d.type === "checkin")
+        html = "<b>" + d.emoji + " " + d.name + "</b>"
+          + "<br>Danas: <b style='color:#C9A84C'>" + d.today + "</b> check-in" + (d.today !== 1 ? "ova" : "")
+          + (d.uniqueCards ? "<br>Rab Card: " + d.uniqueCards + " jedinstven" + (d.uniqueCards !== 1 ? "ih" : "a") : "")
+          + "<br><span style='font-size:10px;color:#8B6914'>Rab Card · JADRAN.ai</span>";
       else if (d.type === "fire")
         html = "<b>Požarni hotspot</b><br>Povjerenje: " + d.confidence + "<br>Datum: " + d.acqDate + (d.dayNight === "N" ? "<br>(noćno snimanje)" : "");
       if (html) {
@@ -330,6 +337,30 @@ function drawData(data) {
       } catch(e) { console.warn("vessel marker", v.mmsi, e.message); }
     });
 
+    // ── Rab Card check-in heatmap ─────────────────────────────────
+    var maxToday = 1;
+    (data.checkins || []).forEach(function(c) { if ((c.today||0) > maxToday) maxToday = c.today; });
+    (data.checkins || []).forEach(function(c) {
+      if (!c.lat || !c.lng || !c.today) return;
+      var frac = c.today / maxToday;
+      var rad  = Math.round(1500 + frac * 3500);   // 1.5 – 5 km
+      var opa  = (0.15 + frac * 0.38).toFixed(2);
+      try {
+        var circ = new H.map.Circle(
+          { lat: c.lat, lng: c.lng }, rad,
+          { style: { fillColor: "rgba(201,168,76," + opa + ")", strokeColor: "rgba(201,168,76,0.75)", lineWidth: 1.5 } }
+        );
+        circ.setData({ type: "checkin", name: c.name, emoji: c.emoji || "📍", today: c.today, uniqueCards: c.uniqueCards, ctype: c.type });
+        overlayGroup.addObject(circ);
+      } catch(e) { console.warn("checkin circle", c.id, e.message); }
+      // Count badge
+      var cDiv = document.createElement("div");
+      cDiv.style.cssText = "background:rgba(6,15,30,0.88);border:1px solid rgba(201,168,76,0.5);border-radius:8px;padding:2px 7px;font-family:system-ui;pointer-events:none;display:flex;align-items:center;gap:4px;white-space:nowrap;";
+      cDiv.innerHTML = '<span style="font-size:11px">' + (c.emoji||'📍') + '</span>'
+        + '<span style="font-size:10px;font-weight:700;color:#C9A84C">' + c.today + '</span>';
+      overlayGroup.addObject(new H.map.DomMarker({ lat: c.lat, lng: c.lng }, { icon: new H.map.DomIcon(cDiv, { anchor: { x: 22, y: 13 } }), zIndex: 26 }));
+    });
+
     // ── Affiliate pins ─────────────────────────────────────────────
     (data.affiliates || []).forEach(function(a) {
       if (!a.lat || !a.lng) return;
@@ -354,7 +385,10 @@ function drawData(data) {
     var ac    = (data.yolo && data.yolo.active) || 0;
     var wcams   = (data.webcams  || []).length;
     var vessels = (data.vessels  || []).length;
-    document.getElementById("status").textContent = "DELTA " + ts + " · " + total + " det · " + ac + " senzora · " + wcams + " webcam" + (vessels > 0 ? " · " + vessels + " plovila" : "");
+    var rabCI   = (data.checkins || []).reduce(function(s,c){ return s + (c.today||0); }, 0);
+    document.getElementById("status").textContent = "DELTA " + ts + " · " + total + " det · " + ac + " senzora · " + wcams + " webcam"
+      + (vessels > 0 ? " · " + vessels + " plovila" : "")
+      + (rabCI > 0 ? " · " + rabCI + " Rab card" : "");
   } catch(err) {
     console.error("coast.html drawData error:", err);
   }
