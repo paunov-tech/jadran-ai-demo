@@ -616,7 +616,7 @@ export default function DeltaDashboard() {
                 fontSize: 12, color: "#94a3b8",
               }}>
                 <span style={{ color: "#0ea5e9", fontWeight: 700, fontSize: 15 }}>{intel.yolo?.total || 0}</span>
-                {" "}detekcija · {intel.yolo?.active || 0} senzora · {(intel.webcams || []).length} webcam{(intel.webcams || []).length !== 1 ? "a" : ""}
+                {" "}detekcija · {intel.yolo?.active || 0} YOLO senzora · <span style={{ color: "#22d3ee", fontWeight: 600 }}>{(intel.webcams || []).length}</span> webcam
               </div>
               {criticalCount > 0 && (
                 <div style={{
@@ -974,48 +974,90 @@ export default function DeltaDashboard() {
               </div>
             )}
 
-            {/* ── Windy Webcams ── */}
-            {(intel?.webcams || []).length > 0 && (
-              <div style={{ marginBottom: 14 }}>
-                <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 6 }}>
-                  Live webcami — Windy ({intel.webcams.length})
-                </div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                  {intel.webcams.slice(0, 48).map(w => (
-                    <a key={w.id} href={w.url} target="_blank" rel="noopener noreferrer"
-                      style={{ textDecoration: "none", display: "block" }}>
-                      {w.preview ? (
-                        <div style={{ position: "relative", width: 78, height: 52 }}>
-                          <img src={w.preview} alt={w.title}
-                            style={{ width: 78, height: 52, objectFit: "cover", borderRadius: 6, border: "1px solid rgba(34,211,238,0.25)", display: "block" }}
-                          />
-                          <div style={{
-                            position: "absolute", bottom: 0, left: 0, right: 0,
-                            background: "rgba(6,15,30,0.75)", borderRadius: "0 0 5px 5px",
-                            fontSize: 8, color: "#94a3b8", padding: "2px 4px",
-                            overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis",
-                          }}>{w.city || w.title}</div>
-                        </div>
-                      ) : (
-                        <div style={{
-                          width: 78, height: 52, borderRadius: 6,
-                          border: "1px solid rgba(34,211,238,0.2)",
-                          background: "rgba(34,211,238,0.04)",
-                          display: "flex", flexDirection: "column",
-                          alignItems: "center", justifyContent: "center", gap: 2,
-                        }}>
-                          <span style={{ fontSize: 14 }}>📷</span>
-                          <span style={{ fontSize: 8, color: "#475569", textAlign: "center", padding: "0 4px",
-                            overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", maxWidth: 70 }}>
-                            {w.city || w.title}
+            {/* ── Webcam pokrivenost — cijela obala ── */}
+            {(intel?.webcams || []).length > 0 && (() => {
+              const REGIONS = [
+                { key: "istra",         label: "Istra",             flag: "🌿" },
+                { key: "kvarner",       label: "Kvarner / Rab",     flag: "⛵" },
+                { key: "zadar_sibenik", label: "Zadar–Šibenik",     flag: "🏖️" },
+                { key: "split_makarska",label: "Split–Makarska",    flag: "🌅" },
+                { key: "dubrovnik",     label: "Dubrovnik",         flag: "🏛" },
+                { key: "other",         label: "Ostalo",            flag: "📍" },
+              ];
+              const byCam = {};
+              for (const w of intel.webcams) {
+                const r = w.region || "other";
+                if (!byCam[r]) byCam[r] = [];
+                byCam[r].push(w);
+              }
+              const totalCams = intel.webcams.length;
+              const withPreview = intel.webcams.filter(w => w.preview).length;
+              return (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#22d3ee", boxShadow: "0 0 6px #22d3ee", animation: "pulse 2s infinite" }} />
+                      <span style={{ fontSize: 10, color: "#22d3ee", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase" }}>
+                        Webcam monitoring — Obala
+                      </span>
+                    </div>
+                    <span style={{ fontSize: 9, color: "#475569" }}>
+                      <span style={{ color: "#7dd3fc", fontWeight: 700 }}>{totalCams}</span> kamera · {withPreview} live
+                    </span>
+                  </div>
+
+                  {/* Regional summary bars */}
+                  {REGIONS.filter(r => byCam[r.key]?.length > 0).map(reg => {
+                    const cams = byCam[reg.key] || [];
+                    const barW = Math.round((cams.length / totalCams) * 100);
+                    const previews = cams.filter(c => c.preview).slice(0, 4);
+                    return (
+                      <div key={reg.key} style={{ marginBottom: 10 }}>
+                        {/* Region header */}
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                          <span style={{ fontSize: 11, color: "#94a3b8" }}>
+                            <span style={{ marginRight: 5 }}>{reg.flag}</span>{reg.label}
                           </span>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: "#22d3ee" }}>{cams.length}</span>
                         </div>
-                      )}
-                    </a>
-                  ))}
+                        {/* Coverage bar */}
+                        <div style={{ height: 3, background: "rgba(34,211,238,0.08)", borderRadius: 2, marginBottom: 5 }}>
+                          <div style={{ height: 3, borderRadius: 2, width: barW + "%", background: "#22d3ee", transition: "width .5s ease" }} />
+                        </div>
+                        {/* Thumbnail strip */}
+                        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                          {previews.map(w => (
+                            <a key={w.id} href={w.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+                              <div style={{ position: "relative", width: 72, height: 48 }}>
+                                <img src={w.preview} alt={w.title}
+                                  style={{ width: 72, height: 48, objectFit: "cover", borderRadius: 5, border: "1px solid rgba(34,211,238,0.22)", display: "block" }}
+                                />
+                                <div style={{
+                                  position: "absolute", bottom: 0, left: 0, right: 0,
+                                  background: "rgba(6,15,30,0.75)", borderRadius: "0 0 4px 4px",
+                                  fontSize: 7, color: "#94a3b8", padding: "1px 3px",
+                                  overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis",
+                                }}>{w.city || w.title}</div>
+                              </div>
+                            </a>
+                          ))}
+                          {/* +N more badge */}
+                          {cams.length > 4 && (
+                            <div style={{
+                              width: 72, height: 48, borderRadius: 5,
+                              border: "1px solid rgba(34,211,238,0.15)",
+                              background: "rgba(34,211,238,0.04)",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              fontSize: 11, color: "#475569",
+                            }}>+{cams.length - 4}</div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* ── Affiliates ── */}
             {(intel?.affiliates || []).length > 0 && (

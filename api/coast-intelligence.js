@@ -381,6 +381,27 @@ async function fetchWindyForecast() {
   return FORECAST_POINTS.map(p => results.find(r => r.id === p.id)).filter(Boolean);
 }
 
+// ─── GPS → coastal region ─────────────────────────────────────────────────────
+function gpsToCoastalRegion(lat, lng) {
+  if (!lat || !lng) return "other";
+  // Istra: north-west peninsula
+  if (lat > 44.8 && lng < 14.5) return "istra";
+  // Kvarner: islands Krk/Rab/Cres/Lošinj + Rijeka gulf
+  if (lat >= 44.2 && lat <= 45.5 && lng >= 13.8 && lng <= 15.3) return "kvarner";
+  // Zadar–Šibenik belt
+  if (lat >= 43.4 && lat <= 44.3 && lng >= 14.8 && lng <= 16.5) return "zadar_sibenik";
+  // Split–Makarska, central Dalmatia
+  if (lat >= 42.9 && lat <= 43.8 && lng >= 15.8 && lng <= 17.5) return "split_makarska";
+  // Dubrovnik + south
+  if (lat >= 42.3 && lat <= 43.2 && lng >= 17.0 && lng <= 18.5) return "dubrovnik";
+  // Fallback: if it's in the HR bbox at all, guess by latitude
+  if (lat > 44.5) return "istra";
+  if (lat > 44.0) return "kvarner";
+  if (lat > 43.4) return "zadar_sibenik";
+  if (lat > 43.0) return "split_makarska";
+  return "dubrovnik";
+}
+
 // ─── Windy Webcams ────────────────────────────────────────────────────────────
 // 4 zones × 4 pages (offsets 0,50,100,150) = up to 800 raw hits
 // Filtered to HR Adriatic + 50km inland bounding box
@@ -448,8 +469,19 @@ async function fetchWindyWebcams() {
     }
   }));
 
+  // Assign coastal region by GPS
+  for (const w of all) {
+    w.region = gpsToCoastalRegion(w.lat, w.lng);
+  }
+
   console.log(`[coast-intel] Windy webcams: ${all.length} unique in HR bbox`);
-  return all.sort((a, b) => a.id - b.id);
+  // Sort: by region order, then by id
+  const REGION_ORDER = ["istra", "kvarner", "zadar_sibenik", "split_makarska", "dubrovnik", "other"];
+  return all.sort((a, b) => {
+    const ra = REGION_ORDER.indexOf(a.region);
+    const rb = REGION_ORDER.indexOf(b.region);
+    return (ra < 0 ? 99 : ra) - (rb < 0 ? 99 : rb) || a.id - b.id;
+  });
 }
 
 // ─── NASA FIRMS active fires ──────────────────────────────────────────────────
