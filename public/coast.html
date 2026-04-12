@@ -89,13 +89,20 @@ var PARK_STYLE = {
   unknown:  { f:"rgba(71,85,105,0.08)",    s:"rgba(71,85,105,0.3)" },
 };
 
-function webcamSvg() {
-  return '<svg width="24" height="24" xmlns="http://www.w3.org/2000/svg">'
-    + '<circle cx="12" cy="12" r="11" fill="rgba(6,15,30,0.92)" stroke="#22d3ee" stroke-width="1.5"/>'
-    + '<rect x="4" y="8" width="11" height="8" rx="1.5" fill="none" stroke="#22d3ee" stroke-width="1.3"/>'
-    + '<polygon points="15,9.5 20,7.5 20,16.5 15,14.5" fill="#22d3ee"/>'
-    + '<circle cx="9.5" cy="12" r="2" fill="#22d3ee" opacity="0.75"/>'
-    + '</svg>';
+function webcamSvg(busyness) {
+  var c = busyness != null
+    ? (busyness >= 70 ? "#ef4444" : busyness >= 40 ? "#f97316" : "#22c55e")
+    : "#22d3ee";
+  var svg = '<svg width="36" height="36" xmlns="http://www.w3.org/2000/svg">'
+    + '<circle cx="14" cy="19" r="12" fill="rgba(6,15,30,0.92)" stroke="' + c + '" stroke-width="1.8"/>'
+    + '<rect x="7" y="15" width="10" height="8" rx="1.5" fill="none" stroke="' + c + '" stroke-width="1.2"/>'
+    + '<polygon points="17,16 22,14 22,22 17,20" fill="' + c + '"/>'
+    + '<circle cx="12" cy="19" r="2" fill="' + c + '" opacity="0.75"/>';
+  if (busyness != null) {
+    svg += '<rect x="21" y="1" width="15" height="11" rx="3" fill="rgba(6,15,30,0.95)" stroke="' + c + '" stroke-width="1"/>'
+         + '<text x="28.5" y="9.5" text-anchor="middle" font-size="7" font-weight="bold" fill="' + c + '" font-family="system-ui">' + busyness + '%</text>';
+  }
+  return svg + '</svg>';
 }
 
 function affiliatePin(color) {
@@ -168,8 +175,12 @@ function initMap(KEY) {
           + "<br>MMSI: " + d.mmsi
           + (d.name && d.name !== d.mmsi ? "<br><a href='https://www.marinetraffic.com/en/ais/details/ships/shipid:0/mmsi:" + d.mmsi + "' target='_blank' style='color:#22d3ee;font-size:11px'>MarineTraffic ↗</a>" : "");
       }
-      else if (d.type === "webcam")
-        html = "<b>" + d.title + "</b><br>" + d.city + "<br><a href='" + d.url + "' target='_blank' style='color:#22d3ee;font-size:11px'>Otvori webcam ↗</a>";
+      else if (d.type === "webcam") {
+        var bCol = d.busyness != null ? (d.busyness >= 70 ? "#ef4444" : d.busyness >= 40 ? "#f97316" : "#22c55e") : null;
+        html = "<b>" + d.title + "</b><br>" + d.city
+          + (d.busyness != null ? "<br><b style='color:" + bCol + "'>" + d.busyness + "% popunjenost</b>" + (d.persons ? " · " + d.persons + " osoba" : "") + " <span style='font-size:9px;color:#475569'>(Gemini AI)</span>" : "")
+          + "<br><a href='" + d.url + "' target='_blank' style='color:#22d3ee;font-size:11px'>Otvori webcam ↗</a>";
+      }
       else if (d.type === "checkin")
         html = "<b>" + d.emoji + " " + d.name + "</b>"
           + "<br>Danas: <b style='color:#C9A84C'>" + d.today + "</b> check-in" + (d.today !== 1 ? "ova" : "")
@@ -302,13 +313,16 @@ function drawData(data) {
       } catch(e) { console.warn("highway section", s.id, e.message); }
     });
 
-    // ── Windy webcam markers ───────────────────────────────────────
+    // ── Windy webcam markers (crowd-enriched when available) ──────
     (data.webcams || []).forEach(function(w) {
       if (!w.lat || !w.lng) return;
+      var busy = (w.busyness != null && w.busyness >= 0) ? w.busyness : null;
+      var sz   = busy != null ? { w:36, h:36 } : { w:24, h:24 };
+      var anc  = busy != null ? { x:14, y:19 } : { x:12, y:12 };
       try {
-        var icon   = new H.map.Icon(webcamSvg(), { size: { w:24, h:24 }, anchor: { x:12, y:12 } });
-        var marker = new H.map.Marker({ lat: w.lat, lng: w.lng }, { icon: icon, zIndex: 28 });
-        marker.setData({ type: "webcam", title: w.title, city: w.city, url: w.url });
+        var icon   = new H.map.Icon(webcamSvg(busy), { size: sz, anchor: anc });
+        var marker = new H.map.Marker({ lat: w.lat, lng: w.lng }, { icon: icon, zIndex: busy != null ? 30 : 28 });
+        marker.setData({ type: "webcam", title: w.title, city: w.city, url: w.url, busyness: busy, persons: w.persons || null });
         overlayGroup.addObject(marker);
       } catch(e) { console.warn("webcam marker", w.id, e.message); }
     });

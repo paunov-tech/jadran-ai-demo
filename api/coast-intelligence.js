@@ -100,17 +100,55 @@ function normalizeSubRegion(sub) {
   return "other";
 }
 
+// ─── YOLO seasonal simulation (fallback when no live pipeline) ───────────────
+function simulateYolo() {
+  const now = new Date();
+  const hour  = now.getHours();
+  const month = now.getMonth() + 1; // 1-12
+  const dow   = now.getDay();       // 0=Sun
+
+  const season   = month >= 7 && month <= 8 ? 1.0 : month >= 6 && month <= 9 ? 0.72 : month >= 5 && month <= 10 ? 0.38 : 0.12;
+  const daytime  = hour >= 11 && hour <= 17 ? 1.0 : hour >= 9  && hour <= 19 ? 0.62 : 0.04;
+  const weekend  = (dow === 0 || dow === 6) ? 1.25 : 1.0;
+  const mult     = season * daytime * weekend;
+
+  // Peak-season, midday, Saturday baseline per region
+  const bases = {
+    kvarner:        { objects: 1420, cars: 440, persons: 820 },
+    split_makarska: { objects: 2150, cars: 700, persons: 1160 },
+    dubrovnik:      { objects: 1950, cars: 270, persons: 1230 },
+    zadar_sibenik:  { objects: 1080, cars: 350, persons: 590 },
+    istra:          { objects: 1320, cars: 560, persons: 650 },
+    np_plitvice:    { objects:  730, cars: 390, persons: 280 },
+    np_krka:        { objects:  590, cars: 210, persons: 340 },
+  };
+
+  const regions = {};
+  let total = 0, active = 0;
+  for (const [id, b] of Object.entries(bases)) {
+    const jitter = () => 0.82 + Math.random() * 0.36;
+    const objects  = Math.max(0, Math.round(b.objects  * mult * jitter()));
+    const cars     = Math.max(0, Math.round(b.cars     * mult * jitter()));
+    const persons  = Math.max(0, Math.round(b.persons  * mult * jitter()));
+    const cams     = Math.round(4 + Math.random() * 7);
+    regions[id] = { objects, cars, persons, cams };
+    total += objects;
+    if (objects > 0) active++;
+  }
+  return { regions, total, active, cameras: [], docCount: 0, simulated: true };
+}
+
 // ─── YOLO from Firestore ──────────────────────────────────────────────────────
 async function fetchYolo() {
-  if (!FB_KEY) return { regions: {}, total: 0, active: 0, cameras: [] };
+  if (!FB_KEY) return simulateYolo();
   try {
     const r = await fetch(
       `https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_yolo?key=${FB_KEY}&pageSize=300`,
       { signal: AbortSignal.timeout(5000) }
     );
-    if (!r.ok) return { regions: {}, total: 0, active: 0, cameras: [] };
+    if (!r.ok) return simulateYolo();
     const data = await r.json();
-    if (!data.documents) return { regions: {}, total: 0, active: 0, cameras: [] };
+    if (!data.documents || data.documents.length === 0) return simulateYolo();
     const cutoff = Date.now() - 24 * 3600000;
     const regions = {};
     const cameras = [];
@@ -161,10 +199,10 @@ async function fetchYolo() {
     }
     // Sort by busyness desc, then by objects desc
     cameras.sort((a, b) => b.busyness - a.busyness || b.objects - a.objects);
-    return { regions, total, active, cameras };
+    return { regions, total, active, cameras, docCount: data.documents.length, simulated: false };
   } catch (e) {
     console.warn("[coast-intel] YOLO:", e.message);
-    return { regions: {}, total: 0, active: 0, cameras: [] };
+    return simulateYolo();
   }
 }
 
@@ -678,7 +716,7 @@ export default async function handler(req, res) {
 
   const payload = {
     ts: new Date().toISOString(),
-    yolo:      { total: yolo.total, active: yolo.active },
+    yolo:      { total: yolo.total, active: yolo.active, docCount: yolo.docCount, simulated: yolo.simulated },
     regions,
     beaches:   yolo.cameras,   // per-sensor beach-level data for TZ
     parking:   parkingNodes,

@@ -577,6 +577,15 @@ export default function DeltaDashboard() {
     if (mapReady && intel) pushToMap({ ...intel, vessels: vesselDataRef.current, checkins: checkinsDataRef.current });
   }, [mapReady, intel, pushToMap]);
 
+  // Re-push with crowd-enriched webcams after Gemini analysis completes
+  useEffect(() => {
+    if (!intel || Object.keys(crowdData).length === 0) return;
+    const enriched = (intel.webcams || []).map(w =>
+      crowdData[w.id] ? { ...w, busyness: crowdData[w.id].busyness, persons: crowdData[w.id].persons } : w
+    );
+    pushToMap({ ...intel, vessels: vesselDataRef.current, checkins: checkinsDataRef.current, webcams: enriched });
+  }, [crowdData]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const activeAlerts   = (intel?.alerts || []).filter(a => a.severity === "critical" || a.severity === "warning");
   const criticalCount  = activeAlerts.filter(a => a.severity === "critical").length;
   const regionsSorted  = [...(intel?.regions || [])].sort((a, b) => b.objects - a.objects).filter(r => r.objects > 0);
@@ -641,6 +650,12 @@ export default function DeltaDashboard() {
         <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 11, color: "#475569" }}>
           {intelTs && <span>Senzori: {intelTs}</span>}
           {briefingTs && <span>AI: {briefingTs}</span>}
+          {intel?.yolo?.simulated
+            ? <span style={{ color: "#f59e0b" }}>⚠ YOLO DEMO</span>
+            : intel?.yolo?.docCount > 0
+              ? <span style={{ color: "#22c55e" }}>YOLO ● {intel.yolo.docCount}</span>
+              : null
+          }
           {intelErr && <span style={{ color: "#f97316" }}>⚠ {intelErr}</span>}
           <button
             onClick={() => setShowQRManager(true)}
