@@ -154,7 +154,10 @@ function initMap(KEY) {
       var lvlHR = { critical:"KRITIČNO", heavy:"jako gusto", moderate:"umjereno", light:"malo", empty:"zona praćenja", full:"PUNO", unknown:"—" };
       var html  = "";
       if (d.type === "region")
-        html = "<b>" + d.name + "</b><br>" + d.objects + " detekcija (" + d.cars + " vozila, " + d.persons + " osoba)<br>Razina: " + (lvlHR[d.level] || d.level);
+        html = "<b>" + d.name + "</b>" + (d.corridor ? " <span style='font-size:10px;color:#64748b'>↓ turistički koridor</span>" : "")
+          + "<br>" + d.cars + " vozila · " + d.persons + " osoba (" + d.objects + " ukupno)"
+          + (d.corridor ? "<br><span style='font-size:10px;color:#94a3b8'>Karavanke → Macelj/Bregana → A1/A6 → Jadran</span>" : "")
+          + "<br>Razina: " + (lvlHR[d.level] || d.level);
       else if (d.type === "parking")
         html = "<b>" + d.name + "</b><br>Zauzetost: " + (d.pct != null ? d.pct + "%" : "n/a") + " — " + (lvlHR[d.level] || d.level) + "<br>Max: " + d.max + " vozila";
       else if (d.type === "sea")
@@ -220,25 +223,32 @@ function drawData(data) {
     // ── YOLO region density (H.map.Circle) ────────────────────────
     (data.regions || []).forEach(function(r) {
       if (!r.lat || !r.lng) return;
+      var isCorridor = r.id === "highway" || r.id === "border";
       var st  = LEVEL_STYLE[r.level] || LEVEL_STYLE.empty;
-      // 28km minimum radius, scale with detections
-      var rad = Math.max(28000, Math.min(65000, 28000 + r.objects * 180));
+      // Corridor regions use smaller radius (they're linear, not areal)
+      var rad = isCorridor
+        ? Math.max(18000, Math.min(38000, 18000 + r.objects * 28))
+        : Math.max(28000, Math.min(65000, 28000 + r.objects * 180));
       try {
         var circ = new H.map.Circle(
           { lat: r.lat, lng: r.lng }, rad,
-          { style: { fillColor: st.f, strokeColor: st.s, lineWidth: st.lw } }
+          { style: { fillColor: st.f, strokeColor: st.s, lineWidth: isCorridor ? 2 : st.lw,
+                     lineDash: isCorridor ? [6, 4] : [] } }
         );
-        circ.setData({ type:"region", name:r.name, objects:r.objects, cars:r.cars, persons:r.persons, level:r.level });
+        circ.setData({ type:"region", name:r.name, objects:r.objects, cars:r.cars, persons:r.persons, level:r.level, corridor:isCorridor });
         overlayGroup.addObject(circ);
       } catch(e) { console.warn("circle region", r.id, e.message); }
 
-      // Label
+      // Label — corridor regions get a special arrow badge
       var countColor = { critical:"#fca5a5", heavy:"#fdba74", moderate:"#fde68a", light:"#86efac", empty:"#a5b4fc" }[r.level] || "#94a3b8";
       var lDiv = document.createElement("div");
       lDiv.style.cssText = "pointer-events:none;font-family:system-ui,sans-serif;";
-      lDiv.innerHTML = '<div style="background:rgba(6,15,30,0.82);border:1px solid ' + st.s + ';border-radius:6px;padding:3px 8px;white-space:nowrap;">'
-        + '<span style="font-size:11px;font-weight:700;color:#f0f9ff">' + r.name + '</span>'
-        + '<br><span style="font-size:10px;color:' + countColor + '">' + r.objects + ' det</span></div>';
+      var corridorTag = isCorridor
+        ? '<span style="font-size:8px;color:#94a3b8;margin-left:5px;letter-spacing:.06em;">↓ KORIDOR</span>'
+        : '';
+      lDiv.innerHTML = '<div style="background:rgba(6,15,30,0.88);border:1px solid ' + st.s + ';border-radius:6px;padding:3px 8px;white-space:nowrap;">'
+        + '<span style="font-size:11px;font-weight:700;color:#f0f9ff">' + r.name + '</span>' + corridorTag
+        + '<br><span style="font-size:10px;color:' + countColor + '">' + r.cars + ' vozila' + (r.persons > 0 ? ' · ' + r.persons + ' osoba' : '') + '</span></div>';
       overlayGroup.addObject(new H.map.DomMarker({ lat: r.lat, lng: r.lng }, { icon: new H.map.DomIcon(lDiv), zIndex: 15 }));
     });
 

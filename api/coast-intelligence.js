@@ -112,24 +112,39 @@ function simulateYolo() {
   const weekend  = (dow === 0 || dow === 6) ? 1.25 : 1.0;
   const mult     = season * daytime * weekend;
 
+  // Corridor flow: tourists leave early → peak at border/highway 2–4h before coastal peak
+  // Friday (dow=5) adds a pre-weekend surge on corridor cameras
+  const fridaySurge = dow === 5 ? 1.35 : 1.0;
+  // Morning (06–10) is prime border-crossing window; night stays non-zero (freight)
+  const corridorTime = hour >= 6 && hour <= 10 ? 1.0 : hour >= 11 && hour <= 20 ? 0.65 : 0.18;
+  const corridorMult = season * corridorTime * weekend * fridaySurge;
+
   // Peak-season, midday, Saturday baseline per region
   const bases = {
-    kvarner:        { objects: 1420, cars: 440, persons: 820 },
-    split_makarska: { objects: 2150, cars: 700, persons: 1160 },
-    dubrovnik:      { objects: 1950, cars: 270, persons: 1230 },
-    zadar_sibenik:  { objects: 1080, cars: 350, persons: 590 },
-    istra:          { objects: 1320, cars: 560, persons: 650 },
-    np_plitvice:    { objects:  730, cars: 390, persons: 280 },
-    np_krka:        { objects:  590, cars: 210, persons: 340 },
+    // ── Tourist corridor: Austria → Slovenia → Croatia ─────────────────
+    // Karavanke / Macelj / Bregana / Rupa — border booth cameras
+    // Objects = vehicles in queue + visible pedestrians; high cars:persons ratio
+    border:         { objects: 640,  cars: 520,  persons:  75, mult: corridorMult },
+    // A1/A6/A7/A2 motorway cameras — dense vehicle flow, rest-stop persons
+    highway:        { objects: 1480, cars: 1180, persons: 180, mult: corridorMult },
+    // ── Croatian coast & NPs ───────────────────────────────────────────
+    kvarner:        { objects: 1420, cars: 440, persons: 820,  mult },
+    split_makarska: { objects: 2150, cars: 700, persons: 1160, mult },
+    dubrovnik:      { objects: 1950, cars: 270, persons: 1230, mult },
+    zadar_sibenik:  { objects: 1080, cars: 350, persons:  590, mult },
+    istra:          { objects: 1320, cars: 560, persons:  650, mult },
+    np_plitvice:    { objects:  730, cars: 390, persons:  280, mult },
+    np_krka:        { objects:  590, cars: 210, persons:  340, mult },
   };
 
   const regions = {};
   let total = 0, active = 0;
   for (const [id, b] of Object.entries(bases)) {
+    const m = b.mult;
     const jitter = () => 0.82 + Math.random() * 0.36;
-    const objects  = Math.max(0, Math.round(b.objects  * mult * jitter()));
-    const cars     = Math.max(0, Math.round(b.cars     * mult * jitter()));
-    const persons  = Math.max(0, Math.round(b.persons  * mult * jitter()));
+    const objects  = Math.max(0, Math.round(b.objects  * m * jitter()));
+    const cars     = Math.max(0, Math.round(b.cars     * m * jitter()));
+    const persons  = Math.max(0, Math.round(b.persons  * m * jitter()));
     const cams     = Math.round(4 + Math.random() * 7);
     regions[id] = { objects, cars, persons, cams };
     total += objects;
