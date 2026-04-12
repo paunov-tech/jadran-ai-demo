@@ -3956,20 +3956,21 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           {menuOpen && <>
             <div onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 98 }} />
             <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, zIndex: 99, minWidth: 220, background: "rgba(5,14,30,0.97)", backdropFilter: "blur(24px)", borderRadius: 14, border: `1px solid ${C.bord}`, boxShadow: "0 12px 40px rgba(0,0,0,0.6)", overflow: "hidden" }}>
-              {returningKiosk?.city && (
-                <button onClick={() => {
+              <button onClick={() => {
                   setMenuOpen(false);
-                  if (returningKiosk.premium) setPremium(true);
-                  if (returningKiosk.lang) setLang(returningKiosk.lang);
-                  setPhase("kiosk"); setSubScreen("home");
-                }} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", fontSize: 14, fontWeight: 700, background: "linear-gradient(135deg,rgba(201,168,76,0.12),rgba(245,215,142,0.06))", border: "none", borderBottom: `1px solid rgba(201,168,76,0.2)`, cursor: "pointer", width: "100%", fontFamily: "'Outfit',sans-serif", textAlign: "left", color: "#F5D78E" }}>
+                  if (returningKiosk?.premium) setPremium(true);
+                  if (returningKiosk?.lang) setLang(returningKiosk.lang);
+                  if (returningKiosk) { setPhase("kiosk"); setSubScreen("home"); }
+                  else { setPhase("pre"); setSubScreen("onboard"); }
+                }} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 18px", fontSize: 14, fontWeight: 700, background: "linear-gradient(135deg,rgba(201,168,76,0.15),rgba(245,215,142,0.07))", border: "none", borderBottom: `1px solid rgba(201,168,76,0.25)`, cursor: "pointer", width: "100%", fontFamily: "'Outfit',sans-serif", textAlign: "left", color: "#F5D78E" }}>
                   <span style={{ fontSize: 18 }}>🏝</span>
                   <div>
                     <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 0.3 }}>My Jadran</div>
-                    <div style={{ fontSize: 11, color: "rgba(245,215,142,0.6)", fontWeight: 400, marginTop: 1 }}>{returningKiosk.city}</div>
+                    <div style={{ fontSize: 11, color: "rgba(245,215,142,0.6)", fontWeight: 400, marginTop: 1 }}>
+                      {returningKiosk?.city ? returningKiosk.city : "Kiosk pristup"}
+                    </div>
                   </div>
                 </button>
-              )}
               <button onClick={() => { setMenuOpen(false); setSubScreen("home"); }} style={{ display: "flex", alignItems: "center", gap: 12, padding: "13px 18px", color: C.accent, fontSize: 14, fontWeight: 600, background: "none", border: "none", borderBottom: `1px solid ${C.bord}`, cursor: "pointer", width: "100%", fontFamily: "'Outfit',sans-serif", textAlign: "left" }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                 {({hr:"Početna",de:"Startseite",en:"Home",it:"Home",si:"Domov",cz:"Domů",pl:"Strona główna"})[lang]||"Home"}
