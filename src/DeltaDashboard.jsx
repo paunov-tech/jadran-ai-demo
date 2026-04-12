@@ -438,7 +438,9 @@ function ParkingRow({ p }) {
 }
 
 export default function DeltaDashboard() {
-  const iframeRef   = useRef(null);
+  const iframeRef      = useRef(null);
+  const vesselDataRef  = useRef([]);   // always-fresh vessel list for map push
+  const intelDataRef   = useRef(null); // always-fresh intel for vessel-triggered push
   const [intel, setIntel]         = useState(null);
   const [briefing, setBriefing]   = useState(null);
   const [intelTs, setIntelTs]     = useState(null);
@@ -465,10 +467,12 @@ export default function DeltaDashboard() {
       const r = await fetch("/api/coast-intelligence");
       if (!r.ok) throw new Error("HTTP " + r.status);
       const d = await r.json();
+      intelDataRef.current = d;
       setIntel(d);
       setIntelTs(new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }));
       setIntelErr(null);
-      pushToMap(d);
+      // Merge current vessels into map push so both layers render together
+      pushToMap({ ...d, vessels: vesselDataRef.current });
     } catch (e) {
       setIntelErr(e.message);
     }
@@ -499,10 +503,13 @@ export default function DeltaDashboard() {
       const r = await fetch("/api/vessels?lat=44.75&lng=14.78&r=60");
       if (!r.ok) return;
       const d = await r.json();
+      vesselDataRef.current = d.vessels || [];
       setVessels(d);
       setVesselsTs(new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }));
+      // Push vessels to map immediately — merge with latest intel
+      if (intelDataRef.current) pushToMap({ ...intelDataRef.current, vessels: d.vessels || [] });
     } catch {}
-  }, []);
+  }, [pushToMap]);
 
   // Initial load
   useEffect(() => {
@@ -518,9 +525,9 @@ export default function DeltaDashboard() {
   useInterval(fetchCheckins, 30000); // 30s — demo needs live updates
   useInterval(fetchVessels,  5 * 60 * 1000); // 5min — matches server cache
 
-  // Re-push to map after mapReady fires
+  // Re-push to map after mapReady fires (or when intel/vessels refresh)
   useEffect(() => {
-    if (mapReady && intel) pushToMap(intel);
+    if (mapReady && intel) pushToMap({ ...intel, vessels: vesselDataRef.current });
   }, [mapReady, intel, pushToMap]);
 
   const activeAlerts   = (intel?.alerts || []).filter(a => a.severity === "critical" || a.severity === "warning");
