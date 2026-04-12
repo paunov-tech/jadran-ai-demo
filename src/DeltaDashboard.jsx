@@ -464,43 +464,6 @@ export default function DeltaDashboard() {
     );
   }, []);
 
-  const fetchIntel = useCallback(async () => {
-    try {
-      const r = await fetch("/api/coast-intelligence");
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      const d = await r.json();
-      intelDataRef.current = d;
-      setIntel(d);
-      setIntelTs(new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }));
-      setIntelErr(null);
-      pushToMap({ ...d, vessels: vesselDataRef.current });
-      // Trigger AI crowd analysis on webcam frames (non-blocking)
-      if (d.webcams?.length > 0) fetchCrowd(d.webcams);
-    } catch (e) {
-      setIntelErr(e.message);
-    }
-  }, [pushToMap, fetchCrowd]);
-
-  const fetchBriefing = useCallback(async () => {
-    try {
-      const r = await fetch("/api/delta-briefing");
-      if (!r.ok) return;
-      const d = await r.json();
-      setBriefing(d);
-      setBriefTs(new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }));
-    } catch {}
-  }, []);
-
-  const fetchCheckins = useCallback(async () => {
-    try {
-      const r = await fetch("/api/rab-checkins?hours=24");
-      if (!r.ok) return;
-      const d = await r.json();
-      setCheckins(d);
-      setCheckinsTs(new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }));
-    } catch {}
-  }, []);
-
   const fetchCrowd = useCallback(async (webcams) => {
     if (!webcams || webcams.length === 0) return;
     setCrowdLoading(true);
@@ -536,6 +499,43 @@ export default function DeltaDashboard() {
       setCrowdData(prev => ({ ...prev, ...map }));
     } catch {}
     finally { setCrowdLoading(false); }
+  }, []);
+
+  const fetchIntel = useCallback(async () => {
+    try {
+      const r = await fetch("/api/coast-intelligence");
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const d = await r.json();
+      intelDataRef.current = d;
+      setIntel(d);
+      setIntelTs(new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }));
+      setIntelErr(null);
+      pushToMap({ ...d, vessels: vesselDataRef.current });
+      // Trigger AI crowd analysis on webcam frames (non-blocking)
+      if (d.webcams?.length > 0) fetchCrowd(d.webcams);
+    } catch (e) {
+      setIntelErr(e.message);
+    }
+  }, [pushToMap, fetchCrowd]);
+
+  const fetchBriefing = useCallback(async () => {
+    try {
+      const r = await fetch("/api/delta-briefing");
+      if (!r.ok) return;
+      const d = await r.json();
+      setBriefing(d);
+      setBriefTs(new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }));
+    } catch {}
+  }, []);
+
+  const fetchCheckins = useCallback(async () => {
+    try {
+      const r = await fetch("/api/rab-checkins?hours=24");
+      if (!r.ok) return;
+      const d = await r.json();
+      setCheckins(d);
+      setCheckinsTs(new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }));
+    } catch {}
   }, []);
 
   const fetchVessels = useCallback(async () => {
