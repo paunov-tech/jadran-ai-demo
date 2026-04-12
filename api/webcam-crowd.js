@@ -1,5 +1,5 @@
 // api/webcam-crowd.js — AI crowd counting on Windy webcam preview frames
-// POST { webcams: [{id, url, title, region}] }  (max 12 per call)
+// POST { webcams: [{id, url, title, region}] }  (max 80 per call, batched 20×)
 // Uses Gemini 2.0 Flash vision to count persons + estimate busyness %
 // 10-min cache per webcam ID
 
@@ -91,11 +91,16 @@ export default async function handler(req, res) {
   const { webcams } = req.body || {};
   if (!Array.isArray(webcams) || webcams.length === 0) return res.status(400).json({ error: "webcams[] required" });
 
-  // Cap at 12 per call
-  const batch = webcams.slice(0, 12).filter(w => w.id && w.url);
+  // Cap at 80 per call — run in parallel batches of 20
+  const batch = webcams.slice(0, 80).filter(w => w.id && w.url);
 
-  // Run all in parallel
-  const results = await Promise.all(batch.map(w => analyzeFrame(w.id, w.url)));
+  const results = [];
+  const BATCH = 20;
+  for (let i = 0; i < batch.length; i += BATCH) {
+    const chunk = batch.slice(i, i + BATCH);
+    const chunkResults = await Promise.all(chunk.map(w => analyzeFrame(w.id, w.url)));
+    results.push(...chunkResults);
+  }
 
   return res.status(200).json({
     ts:      new Date().toISOString(),

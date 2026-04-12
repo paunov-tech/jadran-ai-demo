@@ -23,7 +23,7 @@
     "api/pulse.js":              { "maxDuration": 60 },
     "api/guide.js":              { "maxDuration": 60 },
     "api/vision.js":             { "maxDuration": 30 },
-    "api/webcam-crowd.js":       { "maxDuration": 60 },
+    "api/webcam-crowd.js":       { "maxDuration": 300 },
     "api/alerts.js":             { "maxDuration": 30 },
     "api/nearby.js":             { "maxDuration": 30 },
     "api/navtex.js":             { "maxDuration": 20 },

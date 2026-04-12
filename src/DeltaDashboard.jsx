@@ -518,8 +518,8 @@ export default function DeltaDashboard() {
       const selected = [];
       for (const rk of REGION_ORDER) {
         const cams = byRegion[rk] || [];
-        selected.push(...cams.slice(0, 2));
-        if (selected.length >= 12) break;
+        selected.push(...cams.slice(0, 15));
+        if (selected.length >= 80) break;
       }
 
       const r = await fetch("/api/webcam-crowd", {
@@ -1061,7 +1061,7 @@ export default function DeltaDashboard() {
                   {REGIONS.filter(r => byCam[r.key]?.length > 0).map(reg => {
                     const cams = byCam[reg.key] || [];
                     const barW = Math.round((cams.length / totalCams) * 100);
-                    const previews = cams.filter(c => c.preview).slice(0, 4);
+                    const previews = cams.filter(c => c.preview).slice(0, 15);
                     return (
                       <div key={reg.key} style={{ marginBottom: 10 }}>
                         {/* Region header */}
@@ -1126,14 +1126,14 @@ export default function DeltaDashboard() {
                             );
                           })}
                           {/* +N more badge */}
-                          {cams.length > 4 && (
+                          {cams.filter(c => c.preview).length > 15 && (
                             <div style={{
                               width: 72, height: 48, borderRadius: 5,
                               border: "1px solid rgba(34,211,238,0.15)",
                               background: "rgba(34,211,238,0.04)",
                               display: "flex", alignItems: "center", justifyContent: "center",
                               fontSize: 11, color: "#475569",
-                            }}>+{cams.length - 4}</div>
+                            }}>+{cams.filter(c => c.preview).length - 15}</div>
                           )}
                         </div>
                       </div>
