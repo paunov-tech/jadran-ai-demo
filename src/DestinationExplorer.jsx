@@ -400,9 +400,24 @@ export default function DestinationExplorer() {
     const h = e => { if (e.key === "Escape") { setShowBJ(false); setSelectedMenuItem(null); setShowLive(false); setActiveFeature(null); } };
     if (anyModal) {
       document.addEventListener("keydown", h);
-      document.body.style.overflow = "hidden";
+      // Android-safe scroll lock: position:fixed preserves touch events in modal
+      // body.overflow="hidden" breaks scroll entirely on some Android WebViews
+      const y = window.scrollY;
+      document.body.dataset.lockY = String(y);
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${y}px`;
+      document.body.style.width = "100%";
     }
-    return () => { document.removeEventListener("keydown", h); document.body.style.overflow = ""; };
+    return () => {
+      document.removeEventListener("keydown", h);
+      if (document.body.style.position === "fixed") {
+        const y = Number(document.body.dataset.lockY || 0);
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+        window.scrollTo(0, y);
+      }
+    };
   }, [showBJ, showLive]);
 
   // ─ Live data: GPS → Open-Meteo weather + marine ─
@@ -462,8 +477,8 @@ export default function DestinationExplorer() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@200;300;400;500;600;700&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        html { scroll-behavior: smooth; overflow-x: hidden !important; max-width: 100%; }
-        body { overscroll-behavior: none; overflow-x: hidden !important; max-width: 100%; }
+        html { scroll-behavior: smooth; }
+        body { overscroll-behavior-x: none; }
         @keyframes heroReveal { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
         @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
         @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
