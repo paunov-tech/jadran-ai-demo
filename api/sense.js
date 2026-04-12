@@ -240,6 +240,53 @@ function getMockData(city, regionKey) {
   };
 }
 
+// ─── Windy webcam fetch for specific region ───────────────────
+const _webcamCache = {};
+const WEBCAM_TTL = 15 * 60 * 1000; // 15 min — webcams change infrequently
+
+async function fetchRegionWebcams(regionKey) {
+  if (_webcamCache[regionKey] && Date.now() - _webcamCache[regionKey].ts < WEBCAM_TTL) {
+    return _webcamCache[regionKey].data;
+  }
+  const key = process.env.WINDY_WEBCAM_KEY;
+  if (!key) return [];
+
+  // GPS centre + radius per region
+  const GEO = {
+    kvarner:        { lat: 44.75, lng: 14.78, r: 40 }, // Rab island focus
+    istra:          { lat: 45.08, lng: 13.64, r: 50 },
+    zadar_sibenik:  { lat: 44.12, lng: 15.23, r: 50 },
+    split_makarska: { lat: 43.51, lng: 16.44, r: 60 },
+    dubrovnik:      { lat: 42.65, lng: 18.09, r: 40 },
+  };
+  const geo = GEO[regionKey] || GEO.split_makarska;
+  try {
+    const url = `https://api.windy.com/webcams/api/v3/webcams?nearby=${geo.lat},${geo.lng},${geo.r}&limit=20&include=player,images&lang=en`;
+    const r = await fetch(url, {
+      headers: { "x-windy-api-key": key },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!r.ok) return [];
+    const d = await r.json();
+    const webcams = (d.webcams || [])
+      .filter(w => w.status === "active")
+      .map(w => ({
+        id:      w.webcamId,
+        title:   w.title || "",
+        city:    w.location?.city || "",
+        lat:     w.location?.latitude  ?? null,
+        lng:     w.location?.longitude ?? null,
+        preview: w.player?.day?.previewUrl || w.player?.live?.previewUrl || w.images?.current?.preview || null,
+        url:     `https://www.windy.com/webcams/${w.webcamId}`,
+      }));
+    _webcamCache[regionKey] = { data: webcams, ts: Date.now() };
+    return webcams;
+  } catch (e) {
+    console.warn("sense.js webcam fetch:", e.message);
+    return [];
+  }
+}
+
 // ─── Handler ──────────────────────────────────────────────────
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", (["https://jadran.ai","https://www.jadran.ai","https://monte-negro.ai"].includes(req.headers.origin) ? req.headers.origin : "https://jadran.ai"));
@@ -257,22 +304,25 @@ export default async function handler(req, res) {
     return res.status(200).json({ ...CACHE.data, cached: true });
   }
 
-  // Fetch YOLO + weather + marine in parallel
-  const [yoloResult, weatherResult] = await Promise.allSettled([
+  // Fetch YOLO + weather + marine + webcams in parallel
+  const [yoloResult, weatherResult, webcamResult] = await Promise.allSettled([
     fetchSenseData(),
     fetchWeatherMarine(regionKey),
+    fetchRegionWebcams(regionKey),
   ]);
 
-  const yoloData   = yoloResult.status   === "fulfilled" ? yoloResult.value   : null;
+  const yoloData    = yoloResult.status    === "fulfilled" ? yoloResult.value    : null;
   const weatherData = weatherResult.status === "fulfilled" ? weatherResult.value : null;
+  const webcamData  = webcamResult.status  === "fulfilled" ? webcamResult.value  : [];
 
   // Build crowd/marina/parking from YOLO or mock
   let data = yoloData ? yoloToBeachStatus(yoloData, city) : null;
   if (!data) data = getMockData(city, regionKey);
 
-  // Attach weather + marine data
-  data.weather = weatherData || null;
-  data.region  = regionKey;
+  // Attach weather + marine + webcam data
+  data.weather  = weatherData || null;
+  data.region   = regionKey;
+  data.webcams  = webcamData;
 
   CACHE.data = data;
   CACHE.key  = cacheKey;

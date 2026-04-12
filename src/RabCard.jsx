@@ -1,7 +1,7 @@
 // RabCard.jsx — Rab Card · Platinum-grade digital pass
 // Visual identity: JADRAN.ai Privilege Card (Amex Centurion aesthetic)
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const GOLD  = "#C9A84C";
 const GOLD2 = "#F5D78E";
@@ -205,11 +205,30 @@ function CardFace({ guestName, cardId, expiresAt, qrUrl, lang }) {
 }
 
 // ── Main component ────────────────────────────────────────────
-export default function RabCard({ lang = "hr", affiliateId = "", C, dm }) {
-  const [name, setName]       = useState("");
+export default function RabCard({ lang = "hr", affiliateId = "", C, dm, guestName = "", roomCode = "" }) {
+  const CARD_KEY = roomCode ? `jadran_rab_card_${roomCode}` : null;
+
+  const [name, setName]       = useState(guestName || "");
   const [loading, setLoading] = useState(false);
   const [card, setCard]       = useState(null);
   const [error, setError]     = useState("");
+
+  // Load saved card on mount — skip form entirely if still valid
+  useEffect(() => {
+    if (!CARD_KEY) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem(CARD_KEY));
+      if (saved?.cardId && saved?.expiresAt && new Date(saved.expiresAt) > new Date()) {
+        setCard(saved);
+        if (saved.guestName && !guestName) setName(saved.guestName);
+      }
+    } catch {}
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync guestName prop if it arrives after mount (async guest load)
+  useEffect(() => {
+    if (guestName && !name) setName(guestName);
+  }, [guestName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function generate() {
     if (!name.trim()) { setError(lang === "hr" ? "Unesite ime." : "Name required."); return; }
@@ -222,9 +241,19 @@ export default function RabCard({ lang = "hr", affiliateId = "", C, dm }) {
       });
       const data = await r.json();
       if (!r.ok) { setError(data.error || "Greška"); return; }
+      // Persist card to localStorage — survives navigation, app restart, phone sleep
+      if (CARD_KEY) {
+        try { localStorage.setItem(CARD_KEY, JSON.stringify(data)); } catch {}
+      }
       setCard(data);
     } catch { setError("Greška mreže."); }
     finally { setLoading(false); }
+  }
+
+  function resetCard() {
+    if (CARD_KEY) { try { localStorage.removeItem(CARD_KEY); } catch {} }
+    setCard(null);
+    setError("");
   }
 
   const benefits = BENEFITS[lang] || BENEFITS.en;
@@ -236,6 +265,16 @@ export default function RabCard({ lang = "hr", affiliateId = "", C, dm }) {
   if (card) {
     return (
       <div>
+        {/* Identity badge — confirms this is a persistent document */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <div style={{ fontSize: 11, color: GOLD, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase" }}>
+            🪪 Rab Card · Identifikacijski dokument
+          </div>
+          <button onClick={resetCard} style={{
+            fontSize: 10, color: "#475569", background: "none", border: "1px solid rgba(255,255,255,0.06)",
+            borderRadius: 6, padding: "3px 9px", cursor: "pointer", fontFamily: "inherit",
+          }}>↩ Ažuriraj</button>
+        </div>
         <CardFace
           guestName={card.guestName}
           cardId={card.cardId}

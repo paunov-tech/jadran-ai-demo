@@ -1,5 +1,6 @@
 // BeachStatus.jsx — Real-time per-beach capacity for Rab island
-// Shows occupancy estimates based on time-of-day + season + beach characteristics
+// Data: /api/sense?city=Rab (YOLO real + Open-Meteo weather + Windy webcams)
+// Fallback: time-of-day simulation
 
 import { useState, useEffect } from "react";
 
@@ -18,9 +19,7 @@ const BEACHES = [
   { id: "podgrad",   name: "Podgrad",         emoji: "🏰", type: "kamenita",  cap: 250,  lat: 44.7580, lng: 14.8020, fac: ["🚿"], color: "#a78bfa", note: { hr: "Ispod starog kaštela, mirna luka", en: "Below the old castle, quiet cove", de: "Unter der alten Burg, ruhige Bucht", it: "Sotto il vecchio castello, baia tranquilla" } },
 ];
 
-// Simulate occupancy based on hour + beach popularity + capacity
 function estimateOccupancy(beach, hour) {
-  // Peak hours 10-14, secondary peak 16-18
   const peakFactor = (() => {
     if (hour >= 10 && hour <= 14) return 0.85 + (beach.cap > 1000 ? 0.1 : 0);
     if (hour >= 15 && hour <= 17) return 0.55 + Math.random() * 0.15;
@@ -28,7 +27,6 @@ function estimateOccupancy(beach, hour) {
     if (hour >= 18 && hour < 20)  return 0.20 + Math.random() * 0.10;
     return 0.05;
   })();
-  // Add slight noise per beach (stable across renders for same beach)
   const noise = ((beach.id.charCodeAt(0) + beach.id.charCodeAt(1)) % 20 - 10) / 100;
   return Math.max(0.02, Math.min(0.98, peakFactor + noise));
 }
@@ -48,14 +46,37 @@ function OccupancyBar({ pct, color }) {
   );
 }
 
+// Get tourist's Rab Card from localStorage for check-in
+function getStoredCard() {
+  try {
+    const room = localStorage.getItem("jadran_room") || "DEMO";
+    const raw  = localStorage.getItem(`jadran_rab_card_${room}`);
+    if (!raw) return null;
+    const card = JSON.parse(raw);
+    if (!card?.cardId || !card?.expiresAt) return null;
+    if (new Date(card.expiresAt) < new Date()) return null;
+    return card;
+  } catch { return null; }
+}
+
 export default function BeachStatus({ lang = "hr", C, dm, hf }) {
-  const [hour, setHour] = useState(() => new Date().getHours());
-  const [filter, setFilter] = useState("all"); // all | free | sandy | pebble
+  const [hour, setHour]       = useState(() => new Date().getHours());
+  const [filter, setFilter]   = useState("all");
   const [selected, setSelected] = useState(null);
+  const [senseData, setSenseData] = useState(null);
+  const [checkedIn, setCheckedIn] = useState({}); // beachId → true
+  const [checkInMsg, setCheckInMsg] = useState(null); // { id, ok }
 
   useEffect(() => {
     const iv = setInterval(() => setHour(new Date().getHours()), 60000);
     return () => clearInterval(iv);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/sense?city=Rab")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setSenseData(d); })
+      .catch(() => {});
   }, []);
 
   const T = {
@@ -68,11 +89,34 @@ export default function BeachStatus({ lang = "hr", C, dm, hf }) {
       sandy:  { hr: "Pješčane",en: "Sandy",  de: "Sandige", it: "Sabbiose" },
       pebble: { hr: "Šljunak", en: "Pebble", de: "Kies",    it: "Ciottoli" },
     },
-    navBtn:   { hr: "Navigiraj",en: "Navigate",de: "Navigation",it: "Naviga" },
+    navBtn:   { hr: "Navigiraj",  en: "Navigate",   de: "Navigation",  it: "Naviga" },
+    checkIn:  { hr: "Prijava",    en: "Check-in",   de: "Einchecken",  it: "Check-in" },
+    checked:  { hr: "Prijavljeni ✓", en: "Checked in ✓", de: "Eingecheckt ✓", it: "Fatto ✓" },
+    noCard:   { hr: "Potrebna Rab Card", en: "Rab Card required", de: "Rab Card erforderlich", it: "Rab Card richiesta" },
     est:      { hr: "📊 Procjena bazirana na tipičnoj popunjenosti za ovo doba dana", en: "📊 Estimate based on typical occupancy for this time of day", de: "📊 Schätzung basierend auf typischer Belegung für diese Tageszeit", it: "📊 Stima basata sull'occupazione tipica per quest'ora del giorno" },
+    webcams:  { hr: "Live webcami — Rab", en: "Live webcams — Rab", de: "Live-Webcams — Rab", it: "Webcam live — Rab" },
+    liveData: { hr: "JADRAN SENSE™ LIVE", en: "JADRAN SENSE™ LIVE", de: "JADRAN SENSE™ LIVE", it: "JADRAN SENSE™ LIVE" },
   };
 
-  const occupancies = BEACHES.map(b => ({ ...b, occ: estimateOccupancy(b, hour) }));
+  const lv = k => T[k]?.[lang] || T[k]?.en || "";
+
+  // Resolve occupancy: prefer YOLO (kvarner region busyness) over simulation
+  const yoloRegion   = senseData?.beach?.occupancy_pct; // region-level %
+  const isLive       = !!senseData && senseData.source === "yolo";
+  const regionFactor = yoloRegion != null ? yoloRegion / 100 : null;
+
+  const occupancies = BEACHES.map(b => {
+    let occ;
+    if (regionFactor != null) {
+      // Scale simulation around live regional factor
+      const simBase = estimateOccupancy(b, hour);
+      occ = Math.max(0.02, Math.min(0.98, (regionFactor * 0.7) + (simBase * 0.3)));
+    } else {
+      occ = estimateOccupancy(b, hour);
+    }
+    return { ...b, occ };
+  });
+
   const filtered = occupancies.filter(b => {
     if (filter === "free")   return b.occ < 0.6;
     if (filter === "sandy")  return b.type === "pješčana";
@@ -80,16 +124,98 @@ export default function BeachStatus({ lang = "hr", C, dm, hf }) {
     return true;
   }).sort((a, b) => a.occ - b.occ);
 
+  const webcams   = senseData?.webcams || [];
   const accentColor = C?.accent || "#0ea5e9";
+
+  async function handleCheckIn(beach, e) {
+    e.stopPropagation();
+    const card = getStoredCard();
+    if (!card) {
+      setCheckInMsg({ id: beach.id, ok: false, msg: lv("noCard") });
+      setTimeout(() => setCheckInMsg(null), 2500);
+      return;
+    }
+    if (checkedIn[beach.id]) return; // already checked in
+    try {
+      const r = await fetch("/api/rab-card-scan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cardId:      card.cardId,
+          partnerId:   beach.id,
+          partnerName: beach.name,
+          scanType:    "beach_checkin",
+        }),
+      });
+      if (r.ok) {
+        setCheckedIn(p => ({ ...p, [beach.id]: true }));
+        setCheckInMsg({ id: beach.id, ok: true, msg: `✓ ${beach.name}` });
+      } else {
+        setCheckInMsg({ id: beach.id, ok: false, msg: "Greška" });
+      }
+    } catch {
+      setCheckInMsg({ id: beach.id, ok: false, msg: "Greška mreže" });
+    }
+    setTimeout(() => setCheckInMsg(m => m?.id === beach.id ? null : m), 2500);
+  }
 
   return (
     <div style={{ paddingBottom: 24 }}>
       {/* Header */}
       <div style={{ textAlign: "center", padding: "24px 0 20px" }}>
         <div style={{ fontSize: 48 }}>🏖️</div>
-        <div style={{ ...(hf||{}), fontSize: 26, fontWeight: 400, marginTop: 8 }}>{(T.title[lang]||T.title.en)}</div>
-        <div style={{ ...(dm||{}), fontSize: 13, color: C?.mut||"#94a3b8", marginTop: 4 }}>{(T.sub[lang]||T.sub.en)}</div>
+        <div style={{ ...(hf||{}), fontSize: 26, fontWeight: 400, marginTop: 8 }}>{lv("title")}</div>
+        <div style={{ ...(dm||{}), fontSize: 13, color: C?.mut||"#94a3b8", marginTop: 4 }}>
+          {lv("sub")}
+          {isLive && (
+            <span style={{ marginLeft: 8, fontSize: 9, background: "rgba(34,197,94,0.15)", color: "#86efac", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 8, padding: "2px 7px", fontWeight: 700, letterSpacing: ".05em", verticalAlign: "middle" }}>
+              {lv("liveData")}
+            </span>
+          )}
+        </div>
       </div>
+
+      {/* Webcam strip */}
+      {webcams.length > 0 && (
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ ...(dm||{}), fontSize: 10, color: C?.mut||"#64748b", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 8 }}>
+            📷 {lv("webcams")} ({webcams.length})
+          </div>
+          <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 6 }}>
+            {webcams.map(w => (
+              <a key={w.id} href={w.url} target="_blank" rel="noopener noreferrer"
+                style={{ textDecoration: "none", flexShrink: 0 }}>
+                {w.preview ? (
+                  <div style={{ position: "relative", width: 110, height: 70 }}>
+                    <img src={w.preview} alt={w.title}
+                      style={{ width: 110, height: 70, objectFit: "cover", borderRadius: 8, border: "1px solid rgba(14,165,233,0.2)", display: "block" }} />
+                    <div style={{
+                      position: "absolute", bottom: 0, left: 0, right: 0,
+                      background: "rgba(6,15,30,0.78)", borderRadius: "0 0 7px 7px",
+                      fontSize: 8, color: "#94a3b8", padding: "2px 5px",
+                      overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis",
+                    }}>{w.city || w.title}</div>
+                  </div>
+                ) : (
+                  <div style={{
+                    width: 110, height: 70, borderRadius: 8,
+                    border: "1px solid rgba(14,165,233,0.15)",
+                    background: "rgba(14,165,233,0.04)",
+                    display: "flex", flexDirection: "column",
+                    alignItems: "center", justifyContent: "center", gap: 3,
+                  }}>
+                    <span style={{ fontSize: 18 }}>📷</span>
+                    <span style={{ fontSize: 8, color: "#475569", textAlign: "center", padding: "0 5px",
+                      overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", maxWidth: 100 }}>
+                      {w.city || w.title}
+                    </span>
+                  </div>
+                )}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Filter pills */}
       <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
@@ -120,14 +246,33 @@ export default function BeachStatus({ lang = "hr", C, dm, hf }) {
               <div style={{ flex: 1 }}>
                 <div style={{ ...(dm||{}), fontWeight: 600, fontSize: 14, color: C?.text||"#e2e8f0" }}>{beach.name}</div>
                 <div style={{ ...(dm||{}), fontSize: 11, color: C?.mut||"#94a3b8", marginTop: 1 }}>
-                  {beach.type} · {beach.cap.toLocaleString()} {(T.cap[lang]||T.cap.en)}
+                  {beach.type} · {beach.cap.toLocaleString()} {lv("cap")}
                 </div>
               </div>
-              <span style={{ ...(dm||{}), fontSize: 11, color: C?.mut||"#94a3b8" }}>
-                {beach.fac.join(" ")}
-              </span>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                <span style={{ ...(dm||{}), fontSize: 11, color: C?.mut||"#94a3b8" }}>{beach.fac.join(" ")}</span>
+                {/* Check-in button */}
+                <button
+                  onClick={e => handleCheckIn(beach, e)}
+                  style={{
+                    fontSize: 9, padding: "3px 9px", borderRadius: 8, cursor: "pointer", fontFamily: "inherit",
+                    background: checkedIn[beach.id] ? "rgba(34,197,94,0.12)" : "rgba(14,165,233,0.08)",
+                    border: `1px solid ${checkedIn[beach.id] ? "rgba(34,197,94,0.3)" : "rgba(14,165,233,0.2)"}`,
+                    color: checkedIn[beach.id] ? "#86efac" : "#7dd3fc",
+                    fontWeight: 600,
+                  }}>
+                  {checkedIn[beach.id] ? lv("checked") : lv("checkIn")}
+                </button>
+              </div>
             </div>
             <OccupancyBar pct={beach.occ} color={beach.color} />
+
+            {/* Check-in feedback */}
+            {checkInMsg?.id === beach.id && (
+              <div style={{ marginTop: 8, fontSize: 11, color: checkInMsg.ok ? "#86efac" : "#fca5a5", textAlign: "center" }}>
+                {checkInMsg.msg}
+              </div>
+            )}
 
             {/* Expanded detail */}
             {selected?.id === beach.id && (
@@ -140,7 +285,7 @@ export default function BeachStatus({ lang = "hr", C, dm, hf }) {
                     target="_blank" rel="noopener noreferrer"
                     onClick={e => e.stopPropagation()}
                     style={{ ...(dm||{}), display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, background: beach.color + "18", border: `1px solid ${beach.color}40`, color: beach.color, fontSize: 12, fontWeight: 600, textDecoration: "none", transition: "all 0.2s" }}>
-                    📍 {T.navBtn[lang]||T.navBtn.en}
+                    📍 {lv("navBtn")}
                   </a>
                 </div>
               </div>
@@ -151,7 +296,10 @@ export default function BeachStatus({ lang = "hr", C, dm, hf }) {
 
       {/* Disclaimer */}
       <div style={{ ...(dm||{}), fontSize: 11, color: C?.mut||"#64748b", marginTop: 20, padding: "12px 16px", borderRadius: 12, background: "rgba(255,255,255,0.03)", border: `1px solid ${C?.bord||"rgba(255,255,255,0.06)"}`, textAlign: "center", lineHeight: 1.6 }}>
-        {T.est[lang]||T.est.en}
+        {isLive
+          ? `JADRAN SENSE™ · ${senseData?.note || "Live YOLO data"}`
+          : lv("est")
+        }
       </div>
     </div>
   );

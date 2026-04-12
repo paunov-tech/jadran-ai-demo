@@ -3569,6 +3569,8 @@ Odgovaraš na ${langName}. Kratko (3-5 rečenica), toplo, konkretno s cijenama i
           lang={lang}
           affiliateId={affiliateId || loadDelta().tzPoint || ""}
           C={C} dm={dm}
+          guestName={G.name !== "Gost" ? G.name : ""}
+          roomCode={roomCode.current}
         />
       </>
     );
