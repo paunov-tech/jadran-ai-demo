@@ -820,6 +820,42 @@ async function fetchYoloCrowd() {
   }
 }
 
+// ═══ BIG EYE — coastal webcam vision cache (jadran_big_eye Firestore) ═══
+let _bigEyeCache   = null;
+let _bigEyeCacheTs = 0;
+const BIG_EYE_TTL  = 5 * 60 * 1000; // 5 min — matches cron interval
+
+async function fetchBigEyeContext() {
+  if (_bigEyeCache && Date.now() - _bigEyeCacheTs < BIG_EYE_TTL) return _bigEyeCache;
+  const key = process.env.FIREBASE_API_KEY;
+  if (!key) return null;
+  try {
+    const r = await fetch(
+      `https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_big_eye?key=${key}&pageSize=50`,
+      { signal: AbortSignal.timeout(5000) }
+    );
+    if (!r.ok) return null;
+    const data = await r.json();
+    const docs  = data.documents || [];
+    if (!docs.length) return null;
+    const lines = docs.map(doc => {
+      const f   = doc.fields || {};
+      const lbl = f.label?.stringValue    || doc.name.split("/").pop();
+      const pct = parseInt(f.crowd_pct?.integerValue  || f.crowd_pct?.doubleValue  || "0");
+      const per = parseInt(f.persons?.integerValue     || "0");
+      const boa = parseInt(f.boats?.integerValue       || "0");
+      const lvl = f.crowd_level?.stringValue || "";
+      const vis = f.visibility?.stringValue  || "clear";
+      if (vis === "offline") return null;
+      return `  ${lbl}: ${pct}% popunjenost, ${per} osoba${boa > 0 ? `, ${boa} brodova` : ""} (${lvl})`;
+    }).filter(Boolean);
+    if (!lines.length) return null;
+    _bigEyeCache   = `## BIG EYE — Live obalne kamere (Gemini Vision)\n${lines.join("\n")}\nIzvor: Gemini 2.0 Flash Vision, osvježava svakih 30 min.`;
+    _bigEyeCacheTs = Date.now();
+    return _bigEyeCache;
+  } catch { return null; }
+}
+
 // Human-readable labels for known sensor ID patterns → shown to AI instead of raw IDs
 const SENSOR_LOCATION_LABELS = {
   // Split
@@ -1885,6 +1921,13 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
       console.error("YOLO fetch failed:", e.message, "— fallback crowd estimate will be used");
     }
 
+    // Fetch BIG EYE coastal camera data (async, cached 5min)
+    let bigEyeContext = null;
+    try {
+      bigEyeContext = await fetchBigEyeContext();
+      if (bigEyeContext) console.warn("BIG EYE injected: coastal camera vision data");
+    } catch {}
+
     // ── PARALLEL INTELLIGENCE GATHER — all 6 layers ──────────────────────
     const _dest = delta_context?.destination?.city || "";
 
@@ -2074,6 +2117,8 @@ Odgovaraj precizno i korisno. Ako nemaš podatke za specifičnu dionicu, reci to
     if (deltaCtxStr && systemPrompt) systemPrompt = deltaCtxStr + '\n' + systemPrompt;
     // Intelligence blocks go BEFORE main prompt — safety/situational info has priority
     if (intelligenceBlocks) systemPrompt = intelligenceBlocks + '\n\n' + systemPrompt;
+    // BIG EYE coastal camera vision — inject after intelligence blocks
+    if (bigEyeContext) systemPrompt = bigEyeContext + '\n\n' + systemPrompt;
     // Camp catalog appended at end (contextual reference, not safety-critical)
     if (campIsRelevant && campCatalog && systemPrompt) systemPrompt += '\n\n' + campCatalog;
 

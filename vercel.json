@@ -44,7 +44,8 @@
     "api/cron-reengage.js":      { "maxDuration": 30 },
     "api/cron-insights.js":      { "maxDuration": 60 },
     "api/cron-meta-optimize.js": { "maxDuration": 60 },
-    "api/cron-b2b.js":           { "maxDuration": 60 }
+    "api/cron-b2b.js":           { "maxDuration": 60 },
+    "api/delta-big-eye.js":      { "maxDuration": 60 }
   },
   "headers": [
     {
@@ -214,7 +215,12 @@
     { "path": "/api/cron-audience",      "schedule": "0 3 * * *"    },
     { "path": "/api/cron-reengage",      "schedule": "0 */12 * * *" },
     { "path": "/api/cron-insights",      "schedule": "0 8 * * *"    },
-    { "path": "/api/cron-meta-optimize", "schedule": "0 7 */3 * *"  }
+    { "path": "/api/cron-meta-optimize", "schedule": "0 7 */3 * *"  },
+    { "path": "/api/delta-big-eye?action=process&region=split_makarska&batch=5", "schedule": "*/30 * * * *" },
+    { "path": "/api/delta-big-eye?action=process&region=kvarner&batch=5",        "schedule": "*/30 * * * *" },
+    { "path": "/api/delta-big-eye?action=process&region=istra&batch=5",          "schedule": "*/30 * * * *" },
+    { "path": "/api/delta-big-eye?action=process&region=zadar_sibenik&batch=5",  "schedule": "*/30 * * * *" },
+    { "path": "/api/delta-big-eye?action=process&region=dubrovnik&batch=5",      "schedule": "*/30 * * * *" }
   ],
   "redirects": [
     { "source": "/blog/", "destination": "/blog", "permanent": true }

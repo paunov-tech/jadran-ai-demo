@@ -456,6 +456,7 @@ export default function DeltaDashboard() {
   const [vesselsTs, setVesselsTs] = useState(null);
   const [crowdData, setCrowdData] = useState({});   // webcamId → {persons,busyness,scene}
   const [crowdLoading, setCrowdLoading] = useState(false);
+  const [bigEye, setBigEye] = useState([]);         // delta-big-eye Firestore cache
 
   // Send data to coast map iframe
   const pushToMap = useCallback((data) => {
@@ -558,17 +559,28 @@ export default function DeltaDashboard() {
     } catch {}
   }, [pushToMap]);
 
+  const fetchBigEye = useCallback(async () => {
+    try {
+      const r = await fetch("/api/delta-big-eye?action=read");
+      if (!r.ok) return;
+      const d = await r.json();
+      if (d.cameras?.length > 0) setBigEye(d.cameras);
+    } catch {}
+  }, []);
+
   // Initial load
   useEffect(() => {
     fetchIntel();
     fetchBriefing();
     fetchCheckins();
     fetchVessels();
-  }, [fetchIntel, fetchBriefing, fetchCheckins, fetchVessels]);
+    fetchBigEye();
+  }, [fetchIntel, fetchBriefing, fetchCheckins, fetchVessels, fetchBigEye]);
 
   // Polling
   useInterval(fetchIntel,    POLL_INTEL);
   useInterval(fetchBriefing, POLL_BRIEFING);
+  useInterval(fetchBigEye,   5 * 60 * 1000); // 5min — matches cron interval
   useInterval(fetchCheckins, 30000); // 30s — demo needs live updates
   useInterval(fetchVessels,  5 * 60 * 1000); // 5min — matches server cache
 
@@ -1188,6 +1200,53 @@ export default function DeltaDashboard() {
               );
             })()}
 
+            {/* ── BIG EYE — Obalne kamere (Gemini Vision) ── */}
+            {bigEye.filter(c => c.visibility !== "offline").length > 0 && (() => {
+              const live   = bigEye.filter(c => c.visibility !== "offline");
+              const avgPct = Math.round(live.reduce((s, c) => s + c.crowd_pct, 0) / live.length);
+              return (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#a78bfa", boxShadow: "0 0 6px #a78bfa", animation: "pulse 2s infinite" }} />
+                      <span style={{ fontSize: 10, color: "#a78bfa", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase" }}>
+                        BIG EYE — Obalne kamere
+                      </span>
+                    </div>
+                    <span style={{ fontSize: 9, color: "#475569" }}>{live.length} kamera · ⌀{avgPct}%</span>
+                  </div>
+                  {live.map(cam => {
+                    const pctCol = cam.crowd_pct >= 70 ? "#ef4444" : cam.crowd_pct >= 40 ? "#f97316" : "#22c55e";
+                    return (
+                      <div key={cam.id} style={{ display: "flex", gap: 6, marginBottom: 7, alignItems: "flex-start" }}>
+                        <img
+                          src={cam.snap}
+                          alt={cam.label}
+                          style={{ width: 62, height: 42, objectFit: "cover", borderRadius: 4, border: `1px solid ${pctCol}55`, flexShrink: 0 }}
+                          onError={e => { e.target.style.display = "none"; }}
+                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 10, color: "#94a3b8", marginBottom: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {cam.label}
+                          </div>
+                          <div style={{ height: 3, background: "rgba(167,139,250,0.1)", borderRadius: 2, marginBottom: 3, overflow: "hidden" }}>
+                            <div style={{ height: 3, borderRadius: 2, width: `${cam.crowd_pct}%`, background: pctCol, transition: "width .5s ease" }} />
+                          </div>
+                          <div style={{ display: "flex", gap: 6, fontSize: 9, color: "#64748b", flexWrap: "wrap" }}>
+                            <span style={{ color: pctCol, fontWeight: 700 }}>{cam.crowd_pct}%</span>
+                            {cam.persons  > 0 && <span>👥{cam.persons}</span>}
+                            {cam.boats    > 0 && <span>⛵{cam.boats}</span>}
+                            {cam.vehicles > 0 && <span>🚗{cam.vehicles}</span>}
+                            {cam.notes && <span style={{ color: "#334155", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{cam.notes}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
             {/* ── Affiliates ── */}
             {(intel?.affiliates || []).length > 0 && (
               <div>
@@ -1238,6 +1297,14 @@ export default function DeltaDashboard() {
                   detail: intel?.yolo
                     ? (intel.yolo.simulated ? "DEMO model (sezonski)" : intel.yolo.docCount + " zapisa · Firestore")
                     : "čeka...",
+                },
+                {
+                  name: "BIG EYE Vision",
+                  icon: "👁",
+                  status: bigEye.filter(c => c.visibility !== "offline").length > 0 ? "live" : "wait",
+                  detail: bigEye.length > 0
+                    ? bigEye.filter(c => c.visibility !== "offline").length + " kamera · Gemini Flash Vision"
+                    : "čeka prvi cron (*/30 min)...",
                 },
                 {
                   name: "Sentinel-2",
