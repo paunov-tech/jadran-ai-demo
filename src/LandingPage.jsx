@@ -436,8 +436,17 @@ export default function LandingPage() {
   const F = "'Playfair Display', Georgia, serif";
   const B = "'Outfit', system-ui, sans-serif";
 
+  // ─── Day / night theme ────────────────────────────────────────
+  const _lh  = new Date().getHours();
+  const _lday = _lh >= 7 && _lh < 20;
+  const LTH = {
+    bg:  _lday ? "#023e73" : "#0a1628",
+    bg2: _lday ? "#0356a0" : "#0e3a5c",
+    bg3: _lday ? "#012d58" : "#0c2d48",
+  };
+
   return (
-    <div style={{ background: "#0a1628", color: "#f0f4f8", fontFamily: B, overflowX: "hidden" }}>
+    <div style={{ background: LTH.bg, color: "#f0f4f8", fontFamily: B, overflowX: "hidden", transition: "background 1.2s ease" }}>
       <style>{`@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
       {/* NAV */}
@@ -828,7 +837,7 @@ export default function LandingPage() {
 
 
       {/* ═══ LIVE DEMO ═══ */}
-      <section style={{ padding: "48px 24px", background: "linear-gradient(180deg, #0a1628, #0e3a5c)" }}>
+      <section style={{ padding: "48px 24px", background: `linear-gradient(180deg, ${LTH.bg}, ${LTH.bg2})` }}>
         <div style={{ maxWidth: 860, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 28 }}>
             <div style={{ fontSize: 9, color: "#0ea5e9", letterSpacing: 5, fontWeight: 600, marginBottom: 8 }}>{tx("demoLabel")}</div>
@@ -873,7 +882,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ DESTINATIONS + AFFILIATE ═══ */}
-      <section style={{ padding: "48px 24px", background: "#0a1628" }}>
+      <section style={{ padding: "48px 24px", background: LTH.bg }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           {/* Destination cards with photos */}
           <div style={{ textAlign: "center", marginBottom: 24 }}>
@@ -950,7 +959,7 @@ export default function LandingPage() {
       </section>
 
       {/* ═══ B2B ═══ */}
-      <section style={{ padding: "48px 24px", background: "linear-gradient(180deg, #0e3a5c, #0a1628)" }}>
+      <section style={{ padding: "48px 24px", background: `linear-gradient(180deg, ${LTH.bg2}, ${LTH.bg})` }}>
         <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
           <h2 style={{ fontFamily: F, fontSize: "clamp(22px, 3.5vw, 32px)", fontWeight: 700, color: "#facc15", marginBottom: 14 }}>{tx("b2bTitle")}</h2>
           <p style={{ fontSize: 15, color: "#94a3b8", lineHeight: 1.7, marginBottom: 28 }}>{tx("b2bDesc")}</p>

@@ -9,6 +9,18 @@ import { DealCards } from "./DealCards";
 const F = "'Playfair Display','Cormorant Garamond',Georgia,serif";
 const B = "'Outfit','system-ui',sans-serif";
 
+// ─── DAY / NIGHT THEME ───────────────────────────────────────────
+const _h   = new Date().getHours();
+const _day = _h >= 7 && _h < 20;
+const TH = {
+  bg:    _day ? "#023e73" : "#0a0e17",  // root + hero bg
+  bg2:   _day ? "#012d58" : "#071828",  // section bg darker variant
+  bg3:   _day ? "#011e3d" : "#050d1a",  // darkest section
+  bg4:   _day ? "#024a87" : "#0a1e36",  // gradient midpoint
+  bg5:   _day ? "#012440" : "#061018",  // live / bottom sections
+  rgb:   _day ? "2,62,115" : "10,14,23",// hero overlay rgba base
+};
+
 // ─── REGIONS — 6 key destinations each ───
 const REGIONS = [
   {
@@ -444,7 +456,7 @@ export default function DestinationExplorer() {
   const destList = activeRegionData?.destinations ?? [];
 
   return (
-    <div style={{ background:"#0a0e17", color:"#f0f4f8", fontFamily:B, minHeight:"100dvh", overflowX:"hidden", maxWidth:"100vw", width:"100%" }}>
+    <div style={{ background:TH.bg, color:"#f0f4f8", fontFamily:B, minHeight:"100dvh", overflowX:"hidden", maxWidth:"100vw", width:"100%", transition:"background 1.2s ease" }}>
 
       {/* ── CSS ── */}
       <style>{`
@@ -521,7 +533,7 @@ export default function DestinationExplorer() {
       </nav>
 
       {/* ═══ HERO ═══ */}
-      <section ref={heroRef} style={{ position:"relative", overflow:"hidden", background:"#0a0e17", minHeight:320 }}>
+      <section ref={heroRef} style={{ position:"relative", overflow:"hidden", background:TH.bg, minHeight:320 }}>
         {/* Pexels Adriatic video — matches transit/pre-trip segment */}
         <video autoPlay muted loop playsInline style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", opacity:0.28 }}
           poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'%3E%3Crect fill='%230a0e17'/%3E%3C/svg%3E">
@@ -532,7 +544,7 @@ export default function DestinationExplorer() {
           <div key={hd.id} style={{ position:"absolute", inset:"-5%", backgroundImage:`url(${hd.img})`, backgroundSize:"cover", backgroundPosition:"center", filter:"brightness(0.22) saturate(1.5)", opacity: i === heroIdx ? 0.6 : 0, transition:"opacity 2.5s ease", willChange:"opacity" }} />
         ))}
         {/* Gradient overlays — like LandingPage */}
-        <div style={{ position:"absolute", inset:0, background:"linear-gradient(180deg, rgba(10,14,23,0.55) 0%, rgba(10,14,23,0.2) 35%, rgba(10,14,23,0.15) 55%, rgba(10,14,23,0.92) 85%, #0a0e17 100%)" }} />
+        <div style={{ position:"absolute", inset:0, background:`linear-gradient(180deg, rgba(${TH.rgb},0.55) 0%, rgba(${TH.rgb},0.2) 35%, rgba(${TH.rgb},0.15) 55%, rgba(${TH.rgb},0.92) 85%, ${TH.bg} 100%)` }} />
         <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 120% 80% at 50% 100%, rgba(14,165,233,0.05) 0%, transparent 70%)" }} />
         {/* Top accent line */}
         <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:"linear-gradient(90deg, transparent, rgba(14,165,233,0.6), rgba(251,191,36,0.4), rgba(14,165,233,0.6), transparent)", backgroundSize:"200% 100%", animation:"gradShift 8s ease infinite" }} />
@@ -586,7 +598,7 @@ export default function DestinationExplorer() {
       </section>
 
       {/* ═══ INSTANT AI CHAT ═══ */}
-      <section style={{ padding:"0 20px 52px", background:"#0a0e17" }}>
+      <section style={{ padding:"0 20px 52px", background:TH.bg }}>
         <style>{`
           @keyframes qc-blink{0%,80%,100%{opacity:.15}40%{opacity:1}}
           @keyframes qc-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -633,7 +645,7 @@ export default function DestinationExplorer() {
       </section>
 
       {/* ═══ DESTINATIONS ═══ */}
-      <section id="destinations" style={{ padding:"32px 20px 28px", background:"linear-gradient(180deg, #071828 0%, #0a1e36 50%, #071828 100%)" }}>
+      <section id="destinations" style={{ padding:"32px 20px 28px", background:`linear-gradient(180deg, ${TH.bg2} 0%, ${TH.bg4} 50%, ${TH.bg2} 100%)` }}>
         <div style={{ maxWidth:960, margin:"0 auto" }}>
 
           <div style={{ textAlign:"center", marginBottom:18 }}>
@@ -669,7 +681,7 @@ export default function DestinationExplorer() {
       </section>
 
       {/* ═══ PARTNERI & BEST DEALS ═══ */}
-      <section style={{ padding:"24px 20px 20px", background:"#050d1a" }}>
+      <section style={{ padding:"24px 20px 20px", background:TH.bg3 }}>
         <div style={{ maxWidth:960, margin:"0 auto" }}>
 
           {/* — Naši partneri — */}
@@ -856,7 +868,7 @@ export default function DestinationExplorer() {
       )}
 
       {/* ═══ PARTNER CTA ═══ */}
-      <section style={{ padding:"32px 20px", background:"linear-gradient(160deg, #050d1a 0%, #0a1628 50%, #061018 100%)", borderTop:"1px solid rgba(14,165,233,0.08)" }}>
+      <section style={{ padding:"32px 20px", background:`linear-gradient(160deg, ${TH.bg3} 0%, ${TH.bg} 50%, ${TH.bg5} 100%)`, borderTop:"1px solid rgba(14,165,233,0.08)" }}>
         <div style={{ maxWidth:960, margin:"0 auto", display:"flex", gap:12, flexWrap:"wrap", justifyContent:"center" }}>
           <a href="/partner" style={{ display:"inline-flex", alignItems:"center", gap:10, padding:"16px 36px", background:"linear-gradient(135deg, #0ea5e9, #0284c7)", borderRadius:18, color:"#fff", fontFamily:B, fontSize:16, fontWeight:700, textDecoration:"none", boxShadow:"0 8px 32px rgba(14,165,233,0.3)" }}>
             🤝 {({hr:"Registriraj se — besplatno",de:"Jetzt registrieren — kostenlos",en:"Register — free",it:"Registrati — gratis"})[lang]||"Register — free"}
