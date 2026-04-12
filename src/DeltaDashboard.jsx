@@ -446,6 +446,8 @@ export default function DeltaDashboard() {
   const [intelErr, setIntelErr]   = useState(null);
   const [mapReady, setMapReady]   = useState(false);
   const [showQRManager, setShowQRManager] = useState(false);
+  const [checkins, setCheckins]   = useState(null);
+  const [checkinsTs, setCheckinsTs] = useState(null);
 
   // Send data to coast map iframe
   const pushToMap = useCallback((data) => {
@@ -480,15 +482,27 @@ export default function DeltaDashboard() {
     } catch {}
   }, []);
 
+  const fetchCheckins = useCallback(async () => {
+    try {
+      const r = await fetch("/api/rab-checkins?hours=24");
+      if (!r.ok) return;
+      const d = await r.json();
+      setCheckins(d);
+      setCheckinsTs(new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }));
+    } catch {}
+  }, []);
+
   // Initial load
   useEffect(() => {
     fetchIntel();
     fetchBriefing();
-  }, [fetchIntel, fetchBriefing]);
+    fetchCheckins();
+  }, [fetchIntel, fetchBriefing, fetchCheckins]);
 
   // Polling
   useInterval(fetchIntel,    POLL_INTEL);
   useInterval(fetchBriefing, POLL_BRIEFING);
+  useInterval(fetchCheckins, 30000); // 30s — demo needs live updates
 
   // Re-push to map after mapReady fires
   useEffect(() => {
@@ -614,8 +628,63 @@ export default function DeltaDashboard() {
             <StatBox label="Detekcije" value={intel?.yolo?.total ?? "—"} color="#0ea5e9" />
             <StatBox label="Kritično" value={criticalCount} color={criticalCount > 0 ? "#ef4444" : "#22c55e"} />
             <StatBox label="A1/A6" value={intel?.highwaySections ? intel.highwaySections.filter(s => s.status !== "clear").length + "/" + intel.highwaySections.length : "—"} color="#f97316" />
-            <StatBox label="Partneri" value={intel?.affiliates?.length ?? "—"} color="#f59e0b" />
+            <StatBox label="Rab danas" value={checkins?.totalToday ?? "—"} color="#C9A84C" />
           </div>
+
+          {/* ── Rab Card Check-ins — per-location tourist tracking ── */}
+          {checkins && (
+            <div style={{ padding: "0 14px 10px", flexShrink: 0, borderBottom: "1px solid rgba(201,168,76,0.1)" }}>
+              {/* Header row */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#C9A84C", boxShadow: "0 0 6px #C9A84C", animation: "pulse 2s infinite" }} />
+                  <span style={{ fontSize: 10, color: "#C9A84C", fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase" }}>
+                    Rab Card — Turisti po lokaciji
+                  </span>
+                </div>
+                <div style={{ display: "flex", gap: 10, fontSize: 9, color: "#475569" }}>
+                  <span><span style={{ color: "#F5D78E", fontWeight: 700 }}>{checkins.uniqueCards}</span> karti · danas</span>
+                  {checkinsTs && <span>{checkinsTs}</span>}
+                </div>
+              </div>
+
+              {checkins.locations.length === 0 ? (
+                <div style={{ fontSize: 11, color: "#334155", textAlign: "center", padding: "8px 0" }}>
+                  Nema aktivnih check-ina danas
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {checkins.locations.slice(0, 8).map(loc => {
+                    const maxToday = Math.max(...checkins.locations.map(l => l.today), 1);
+                    const barW = Math.round((loc.today / maxToday) * 100);
+                    const typeColor = loc.type === "beach" ? "#38bdf8" : loc.type === "partner" ? "#f59e0b" : "#C9A84C";
+                    return (
+                      <div key={loc.id} style={{ position: "relative" }}>
+                        {/* Background bar */}
+                        <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: barW + "%", background: typeColor + "10", borderRadius: 6, transition: "width .5s ease" }} />
+                        <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 6px", borderRadius: 6 }}>
+                          <span style={{ fontSize: 11, color: "#94a3b8" }}>
+                            <span style={{ marginRight: 5 }}>{loc.emoji}</span>{loc.name}
+                          </span>
+                          <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0, marginLeft: 6 }}>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: typeColor }}>{loc.today}</span>
+                            {loc.count > loc.today && (
+                              <span style={{ fontSize: 9, color: "#334155" }}>/ {loc.count}</span>
+                            )}
+                            {loc.uniqueCards > 0 && (
+                              <span style={{ fontSize: 8, color: "#475569", background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.15)", borderRadius: 8, padding: "1px 5px" }}>
+                                {loc.uniqueCards}🪪
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Scrollable content */}
           <div style={{ flex: 1, overflow: "auto", padding: "0 14px 16px" }}>
