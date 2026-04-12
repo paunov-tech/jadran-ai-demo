@@ -730,6 +730,57 @@ export default function DeltaDashboard() {
               </div>
             )}
 
+            {/* ── Beach-level YOLO (per sensor) ── */}
+            {(intel?.beaches || []).filter(b => b.objects > 0 || b.busyness > 0).length > 0 && (() => {
+              const activeCams = intel.beaches.filter(b => b.objects > 0 || b.busyness > 0);
+              // Group by region
+              const byRegion = {};
+              for (const cam of activeCams) {
+                if (!byRegion[cam.region]) byRegion[cam.region] = [];
+                byRegion[cam.region].push(cam);
+              }
+              const REGION_NAMES = {
+                kvarner: "Kvarner", istra: "Istra", zadar_sibenik: "Zadar–Šibenik",
+                split_makarska: "Split–Makarska", dubrovnik: "Dubrovnik",
+                np_plitvice: "NP Plitvice", np_krka: "NP Krka", other: "Ostalo",
+              };
+              return (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 6 }}>
+                    Plaže — kapacitet po senzoru ({activeCams.length})
+                  </div>
+                  {Object.entries(byRegion).map(([reg, cams]) => (
+                    <div key={reg} style={{ marginBottom: 8 }}>
+                      <div style={{ fontSize: 9, color: "#334155", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 3 }}>
+                        {REGION_NAMES[reg] || reg}
+                      </div>
+                      {cams.map(cam => {
+                        const pct = cam.busyness || Math.min(100, Math.round(cam.objects / 2));
+                        const col = pct >= 80 ? "#ef4444" : pct >= 50 ? "#f97316" : pct >= 25 ? "#eab308" : "#22c55e";
+                        return (
+                          <div key={cam.camId} style={{ marginBottom: 5 }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
+                              <span style={{ fontSize: 11, color: "#94a3b8", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {cam.name !== cam.camId ? cam.name : cam.camId}
+                              </span>
+                              <span style={{ fontSize: 11, fontWeight: 600, color: col, flexShrink: 0, marginLeft: 4 }}>
+                                {pct}%
+                                {cam.persons > 0 && <span style={{ fontSize: 9, color: "#475569", fontWeight: 400 }}> · {cam.persons}p</span>}
+                                {cam.boats > 0   && <span style={{ fontSize: 9, color: "#38bdf8", fontWeight: 400 }}> · {cam.boats}⛵</span>}
+                              </span>
+                            </div>
+                            <div style={{ height: 3, background: "rgba(14,165,233,0.08)", borderRadius: 2 }}>
+                              <div style={{ height: 3, borderRadius: 2, width: pct + "%", background: col, transition: "width .5s ease" }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+
             {/* ── Parking ── */}
             {parkingActive.length > 0 && (
               <div style={{ marginBottom: 14 }}>

@@ -102,17 +102,18 @@ function normalizeSubRegion(sub) {
 
 // ─── YOLO from Firestore ──────────────────────────────────────────────────────
 async function fetchYolo() {
-  if (!FB_KEY) return { regions: {}, total: 0, active: 0 };
+  if (!FB_KEY) return { regions: {}, total: 0, active: 0, cameras: [] };
   try {
     const r = await fetch(
       `https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_yolo?key=${FB_KEY}&pageSize=300`,
       { signal: AbortSignal.timeout(5000) }
     );
-    if (!r.ok) return { regions: {}, total: 0, active: 0 };
+    if (!r.ok) return { regions: {}, total: 0, active: 0, cameras: [] };
     const data = await r.json();
-    if (!data.documents) return { regions: {}, total: 0, active: 0 };
+    if (!data.documents) return { regions: {}, total: 0, active: 0, cameras: [] };
     const cutoff = Date.now() - 24 * 3600000;
     const regions = {};
+    const cameras = [];
     let total = 0, active = 0;
     for (const doc of data.documents) {
       const f = doc.fields;
@@ -125,7 +126,10 @@ async function fetchYolo() {
       if (!fresh) continue;
       const rawSub = f.sub_region?.stringValue || "other";
       const sub    = normalizeSubRegion(rawSub);
+      const camId  = f.camera_id?.stringValue || docId;
+      const locName = f.location_name?.stringValue || f.beach_name?.stringValue || null;
       const cnt    = parseInt(f.raw_count?.integerValue || "0");
+      const busy   = parseInt(f.busyness_percent?.integerValue || "0");
       const counts = {};
       if (f.counts?.mapValue?.fields) {
         for (const [k, v] of Object.entries(f.counts.mapValue.fields)) {
@@ -139,11 +143,26 @@ async function fetchYolo() {
       if (cnt > 0) regions[sub].cams++;
       total  += cnt;
       if (cnt > 0) active++;
+      // Collect per-camera beach-level data
+      cameras.push({
+        camId,
+        name:    locName || camId,
+        region:  sub,
+        rawSub,
+        busyness: busy,
+        objects:  cnt,
+        persons:  counts.person || 0,
+        cars:     counts.car    || 0,
+        boats:    counts.boat   || 0,
+        ts,
+      });
     }
-    return { regions, total, active };
+    // Sort by busyness desc, then by objects desc
+    cameras.sort((a, b) => b.busyness - a.busyness || b.objects - a.objects);
+    return { regions, total, active, cameras };
   } catch (e) {
     console.warn("[coast-intel] YOLO:", e.message);
-    return { regions: {}, total: 0, active: 0 };
+    return { regions: {}, total: 0, active: 0, cameras: [] };
   }
 }
 
@@ -627,6 +646,7 @@ export default async function handler(req, res) {
     ts: new Date().toISOString(),
     yolo:      { total: yolo.total, active: yolo.active },
     regions,
+    beaches:   yolo.cameras,   // per-sensor beach-level data for TZ
     parking:   parkingNodes,
     sea:       seaNodes,
     affiliates: AFFILIATES,
