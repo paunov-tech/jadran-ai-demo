@@ -448,6 +448,8 @@ export default function DeltaDashboard() {
   const [showQRManager, setShowQRManager] = useState(false);
   const [checkins, setCheckins]   = useState(null);
   const [checkinsTs, setCheckinsTs] = useState(null);
+  const [vessels, setVessels]     = useState(null);
+  const [vesselsTs, setVesselsTs] = useState(null);
 
   // Send data to coast map iframe
   const pushToMap = useCallback((data) => {
@@ -492,17 +494,29 @@ export default function DeltaDashboard() {
     } catch {}
   }, []);
 
+  const fetchVessels = useCallback(async () => {
+    try {
+      const r = await fetch("/api/vessels?lat=44.75&lng=14.78&r=60");
+      if (!r.ok) return;
+      const d = await r.json();
+      setVessels(d);
+      setVesselsTs(new Date().toLocaleTimeString("hr-HR", { hour: "2-digit", minute: "2-digit" }));
+    } catch {}
+  }, []);
+
   // Initial load
   useEffect(() => {
     fetchIntel();
     fetchBriefing();
     fetchCheckins();
-  }, [fetchIntel, fetchBriefing, fetchCheckins]);
+    fetchVessels();
+  }, [fetchIntel, fetchBriefing, fetchCheckins, fetchVessels]);
 
   // Polling
   useInterval(fetchIntel,    POLL_INTEL);
   useInterval(fetchBriefing, POLL_BRIEFING);
   useInterval(fetchCheckins, 30000); // 30s — demo needs live updates
+  useInterval(fetchVessels,  5 * 60 * 1000); // 5min — matches server cache
 
   // Re-push to map after mapReady fires
   useEffect(() => {
@@ -629,6 +643,7 @@ export default function DeltaDashboard() {
             <StatBox label="Kritično" value={criticalCount} color={criticalCount > 0 ? "#ef4444" : "#22c55e"} />
             <StatBox label="A1/A6" value={intel?.highwaySections ? intel.highwaySections.filter(s => s.status !== "clear").length + "/" + intel.highwaySections.length : "—"} color="#f97316" />
             <StatBox label="Rab danas" value={checkins?.totalToday ?? "—"} color="#C9A84C" />
+            <StatBox label="Plovila" value={vessels ? vessels.total : "—"} color="#22d3ee" />
           </div>
 
           {/* ── Rab Card Check-ins — per-location tourist tracking ── */}
@@ -875,6 +890,87 @@ export default function DeltaDashboard() {
                     </span>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* ── AIS Vessels ── */}
+            {vessels && vessels.total > 0 && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span style={{ fontSize: 10, color: "#22d3ee", textTransform: "uppercase", letterSpacing: ".08em", fontWeight: 700 }}>
+                    ⛵ AIS plovila — Rab / Kvarner
+                  </span>
+                  <div style={{ display: "flex", gap: 8, fontSize: 9, color: "#475569" }}>
+                    {vessels.live
+                      ? <span style={{ color: "#22c55e" }}>● LIVE</span>
+                      : <span style={{ color: "#475569" }}>simulacija</span>
+                    }
+                    {vesselsTs && <span>{vesselsTs}</span>}
+                  </div>
+                </div>
+                {/* Summary chips */}
+                <div style={{ display: "flex", gap: 6, marginBottom: 8, flexWrap: "wrap" }}>
+                  {vessels.ferries > 0 && (
+                    <div style={{ background: "rgba(249,115,22,0.1)", border: "1px solid rgba(249,115,22,0.25)", borderRadius: 6, padding: "3px 8px", fontSize: 10, color: "#fb923c" }}>
+                      ⛴ {vessels.ferries} trajekt{vessels.ferries > 1 ? "a" : ""}
+                    </div>
+                  )}
+                  {vessels.pleasure > 0 && (
+                    <div style={{ background: "rgba(34,211,238,0.08)", border: "1px solid rgba(34,211,238,0.2)", borderRadius: 6, padding: "3px 8px", fontSize: 10, color: "#22d3ee" }}>
+                      ⛵ {vessels.pleasure} jahta/jedrilica
+                    </div>
+                  )}
+                  {vessels.cargo > 0 && (
+                    <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 6, padding: "3px 8px", fontSize: 10, color: "#fca5a5" }}>
+                      🚢 {vessels.cargo} teretni
+                    </div>
+                  )}
+                  <div style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 6, padding: "3px 8px", fontSize: 10, color: "#86efac" }}>
+                    ▶ {vessels.moving} u pokretu
+                  </div>
+                </div>
+                {/* Vessel list — ferries first, then by speed */}
+                {[...(vessels.vessels || [])]
+                  .sort((a, b) => {
+                    const fa = a.type >= 60 && a.type <= 69 ? 1 : 0;
+                    const fb = b.type >= 60 && b.type <= 69 ? 1 : 0;
+                    if (fa !== fb) return fb - fa;
+                    return parseFloat(b.sog) - parseFloat(a.sog);
+                  })
+                  .slice(0, 10)
+                  .map(v => {
+                    const isFerry  = v.type >= 60 && v.type <= 69;
+                    const isCargo  = v.type >= 70 && v.type <= 79;
+                    const col      = isFerry ? "#fb923c" : isCargo ? "#fca5a5" : "#22d3ee";
+                    const moving   = parseFloat(v.sog) > 0.5;
+                    return (
+                      <div key={v.mmsi} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 0", borderBottom: "1px solid rgba(34,211,238,0.05)" }}>
+                        <span style={{ fontSize: 14, flexShrink: 0 }}>{isFerry ? "⛴" : isCargo ? "🚢" : "⛵"}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 11, color: "#e2e8f0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {v.name || v.mmsi}
+                            {v.flag && <span style={{ fontSize: 9, color: "#475569", marginLeft: 4 }}>{v.flag}</span>}
+                          </div>
+                          <div style={{ fontSize: 9, color: "#475569" }}>
+                            {v.typeLabel}
+                            {v.dest && <span style={{ color: "#64748b" }}> → {v.dest}</span>}
+                          </div>
+                        </div>
+                        <div style={{ flexShrink: 0, textAlign: "right" }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: moving ? col : "#334155" }}>
+                            {v.sog} kn
+                          </div>
+                          {!moving && <div style={{ fontSize: 9, color: "#334155" }}>usidren</div>}
+                        </div>
+                      </div>
+                    );
+                  })
+                }
+                {vessels.total > 10 && (
+                  <div style={{ fontSize: 10, color: "#334155", marginTop: 4 }}>
+                    + {vessels.total - 10} plovila prikazano na karti
+                  </div>
+                )}
               </div>
             )}
 

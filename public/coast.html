@@ -49,6 +49,10 @@
   <div class="row"><div class="dot" style="background:#ef4444"></div> NASA požar (visoko)</div>
   <div class="row"><div class="dot" style="background:#f97316"></div> NASA požar (nominal)</div>
   <div class="row"><div class="dot" style="background:#22d3ee;border-radius:3px"></div> Windy webcam</div>
+  <div style="margin-top:8px" class="lt">AIS plovila</div>
+  <div class="row"><div class="dot" style="background:#f97316;border-radius:3px;transform:rotate(45deg)"></div> Trajekt</div>
+  <div class="row"><div class="dot" style="background:#ef4444;border-radius:3px;transform:rotate(45deg)"></div> Teretni brod</div>
+  <div class="row"><div class="dot" style="background:#22d3ee;border-radius:3px;transform:rotate(45deg)"></div> Jahta / jedrilica</div>
 </div>
 <div id="status">Inicijalizacija...</div>
 
@@ -151,6 +155,16 @@ function initMap(KEY) {
         var inc = (d.incidents || []).map(function(i){ return "<br>• " + i.title; }).join("") || "";
         html = "<b>" + d.name + "</b><br>" + (sev[d.status] || d.status) + flowLine + inc
           + "<br><span style='font-size:10px;color:#64748b'>HERE Traffic + HAK</span>";
+      }
+      else if (d.type === "vessel") {
+        var sogKmh = d.sog ? (parseFloat(d.sog) * 1.852).toFixed(1) : "—";
+        html = "<b>" + (d.name || d.mmsi) + "</b>"
+          + (d.flag ? " " + d.flag : "")
+          + "<br>" + (d.typeLabel || "Plovilo")
+          + "<br>Brzina: " + (d.sog || "—") + " čv (" + sogKmh + " km/h)"
+          + (d.dest ? "<br>Odredište: <b>" + d.dest + "</b>" : "")
+          + "<br>MMSI: " + d.mmsi
+          + (d.name && d.name !== d.mmsi ? "<br><a href='https://www.marinetraffic.com/en/ais/details/ships/shipid:0/mmsi:" + d.mmsi + "' target='_blank' style='color:#22d3ee;font-size:11px'>MarineTraffic ↗</a>" : "");
       }
       else if (d.type === "webcam")
         html = "<b>" + d.title + "</b><br>" + d.city + "<br><a href='" + d.url + "' target='_blank' style='color:#22d3ee;font-size:11px'>Otvori webcam ↗</a>";
@@ -290,6 +304,30 @@ function drawData(data) {
         marker.setData({ type: "webcam", title: w.title, city: w.city, url: w.url });
         overlayGroup.addObject(marker);
       } catch(e) { console.warn("webcam marker", w.id, e.message); }
+    });
+
+    // ── AIS Vessels ───────────────────────────────────────────────
+    (data.vessels || []).forEach(function(v) {
+      if (!v.lat || !v.lng) return;
+      var moving  = parseFloat(v.sog) > 0.5;
+      var isFerry = v.type >= 60 && v.type <= 69;
+      var isCargo = v.type >= 70 && v.type <= 79;
+      var color   = isFerry ? "#f97316" : isCargo ? "#ef4444" : "#22d3ee";
+      // Draw vessel triangle pointing in heading direction
+      var angle   = (v.cog || 0) * Math.PI / 180;
+      var s = 9, sx = s * Math.sin(angle), sy = s * Math.cos(angle);
+      var vSvg = '<svg width="30" height="30" xmlns="http://www.w3.org/2000/svg">'
+        + '<circle cx="15" cy="15" r="14" fill="rgba(6,15,30,0.7)" stroke="' + color + '" stroke-width="' + (moving ? 1.8 : 1) + '"/>'
+        + (moving
+          ? '<polygon points="' + (15 + sx) + ',' + (15 - sy) + ' ' + (15 - sx * 0.6 - sy * 0.4) + ',' + (15 + sy * 0.6 - sx * 0.4) + ' ' + (15 - sx * 0.6 + sy * 0.4) + ',' + (15 + sy * 0.6 + sx * 0.4) + '" fill="' + color + '" opacity="0.9"/>'
+          : '<circle cx="15" cy="15" r="4" fill="' + color + '" opacity="0.6"/>')
+        + '</svg>';
+      try {
+        var icon   = new H.map.Icon(vSvg, { size:{w:30,h:30}, anchor:{x:15,y:15} });
+        var marker = new H.map.Marker({ lat: v.lat, lng: v.lng }, { icon: icon, zIndex: moving ? 32 : 18 });
+        marker.setData({ type:"vessel", name: v.name || v.mmsi, typeLabel: v.typeLabel, sog: v.sog, cog: v.cog, dest: v.dest, flag: v.flag, mmsi: v.mmsi });
+        overlayGroup.addObject(marker);
+      } catch(e) { console.warn("vessel marker", v.mmsi, e.message); }
     });
 
     // ── Affiliate pins ─────────────────────────────────────────────
