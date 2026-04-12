@@ -157,18 +157,28 @@ function simulateYolo() {
 async function fetchYolo() {
   if (!FB_KEY) return simulateYolo();
   try {
-    const r = await fetch(
-      `https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_yolo?key=${FB_KEY}&pageSize=300`,
-      { signal: AbortSignal.timeout(5000) }
-    );
-    if (!r.ok) return simulateYolo();
-    const data = await r.json();
-    if (!data.documents || data.documents.length === 0) return simulateYolo();
+    // ── Paginate — Firestore returns max 300/page; pipeline adds ~12 docs/day ──
+    const allDocs = [];
+    let pageToken = null;
+    let pages = 0;
+    do {
+      const url = `https://firestore.googleapis.com/v1/projects/molty-portal/databases/(default)/documents/jadran_yolo?key=${FB_KEY}&pageSize=300`
+        + (pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : "");
+      const r = await fetch(url, { signal: AbortSignal.timeout(7000) });
+      if (!r.ok) break;
+      const data = await r.json();
+      if (data.documents?.length) allDocs.push(...data.documents);
+      pageToken = data.nextPageToken || null;
+      pages++;
+    } while (pageToken && pages < 5); // safety cap: max 1500 docs
+
+    if (allDocs.length === 0) return simulateYolo();
+
     const cutoff = Date.now() - 24 * 3600000;
     const regions = {};
     const cameras = [];
     let total = 0, active = 0;
-    for (const doc of data.documents) {
+    for (const doc of allDocs) {
       const f = doc.fields;
       if (!f) continue;
       const ts = f.timestamp?.stringValue || "";
@@ -196,7 +206,7 @@ async function fetchYolo() {
       if (cnt > 0) regions[sub].cams++;
       total  += cnt;
       if (cnt > 0) active++;
-      // Collect per-camera beach-level data — exclude highway/border cameras
+      // Collect per-camera detail — exclude highway/border (corridor, not tourist zones)
       if (sub !== "highway" && sub !== "border") {
         cameras.push({
           camId,
@@ -212,9 +222,8 @@ async function fetchYolo() {
         });
       }
     }
-    // Sort by busyness desc, then by objects desc
     cameras.sort((a, b) => b.busyness - a.busyness || b.objects - a.objects);
-    return { regions, total, active, cameras, docCount: data.documents.length, simulated: false };
+    return { regions, total, active, cameras, docCount: allDocs.length, simulated: false };
   } catch (e) {
     console.warn("[coast-intel] YOLO:", e.message);
     return simulateYolo();
